@@ -75,22 +75,22 @@ export default function SocialProofSection({ variant }: SocialProofSectionProps)
             </div>
           </Carousel>
           
-          {isVariantB && (
-            <div className="flex justify-between mt-6 text-center">
-              <div className="w-1/3">
-                <p className="font-poppins font-bold text-2xl">4.8/5</p>
-                <p className="text-xs">App rating</p>
-              </div>
-              <div className="w-1/3">
-                <p className="font-poppins font-bold text-2xl">1000+</p>
-                <p className="text-xs">Studenten</p>
-              </div>
-              <div className="w-1/3">
-                <p className="font-poppins font-bold text-2xl">200+</p>
-                <p className="text-xs">Locaties</p>
-              </div>
+          {/* Altijd de rating tonen, ongeacht de variant */}
+          <div className="flex justify-between mt-6 text-center p-4 bg-white rounded-lg shadow-sm">
+            <div className="w-1/3">
+              <p className="font-poppins font-bold text-2xl">4.8/5</p>
+              <p className="text-xs">★★★★★</p>
+              <p className="text-xs text-gray-600">188 reviews</p>
             </div>
-          )}
+            <div className="w-1/3">
+              <p className="font-poppins font-bold text-2xl">1000+</p>
+              <p className="text-xs">Studenten</p>
+            </div>
+            <div className="w-1/3">
+              <p className="font-poppins font-bold text-2xl">200+</p>
+              <p className="text-xs">Locaties</p>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
