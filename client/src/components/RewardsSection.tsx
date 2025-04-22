@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { useAnalytics } from "@/hooks/use-analytics";
-import rewardsImage from "@/assets/rewards_image.png";
+import rewardsGraphic from "@/assets/rewards_graphic.svg";
 
 const rewards = [
   {
@@ -53,7 +53,7 @@ export default function RewardsSection() {
           {/* Rewards showcase afbeelding */}
           <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
             <img 
-              src={rewardsImage} 
+              src={rewardsGraphic} 
               alt="EXTRA rewards - AirPods Pro en andere beloningen" 
               className="w-full h-auto"
             />

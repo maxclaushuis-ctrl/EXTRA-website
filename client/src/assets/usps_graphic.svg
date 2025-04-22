@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="400" rx="20" fill="#F0F4FF"/>
+  
+  <!-- Money/Payment Icon -->
+  <g transform="translate(120, 100)">
+    <circle cx="50" cy="50" r="50" fill="#FF8A3D"/>
+    <path d="M50 25C36.2 25 25 36.2 25 50C25 63.8 36.2 75 50 75C63.8 75 75 63.8 75 50C75 36.2 63.8 25 50 25ZM50 70C39 70 30 61 30 50C30 39 39 30 50 30C61 30 70 39 70 50C70 61 61 70 50 70Z" fill="white"/>
+    <path d="M50 35V65M40 45H60M40 55H60" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Calendar/Flexibility Icon -->
+  <g transform="translate(280, 100)">
+    <circle cx="50" cy="50" r="50" fill="#4A7CFA"/>
+    <rect x="30" y="30" width="40" height="40" rx="4" fill="white"/>
+    <path d="M30 40H70M40 25V35M60 25V35" stroke="#4A7CFA" stroke-width="2"/>
+    <circle cx="40" cy="50" r="3" fill="#4A7CFA"/>
+    <circle cx="50" cy="50" r="3" fill="#4A7CFA"/>
+    <circle cx="60" cy="50" r="3" fill="#4A7CFA"/>
+    <circle cx="40" cy="60" r="3" fill="#4A7CFA"/>
+    <circle cx="50" cy="60" r="3" fill="#4A7CFA"/>
+    <circle cx="60" cy="60" r="3" fill="#4A7CFA"/>
+  </g>
+  
+  <!-- Friends/Community Icon -->
+  <g transform="translate(440, 100)">
+    <circle cx="50" cy="50" r="50" fill="#FF4D8D"/>
+    <circle cx="35" cy="40" r="15" fill="white"/>
+    <circle cx="65" cy="40" r="15" fill="white"/>
+    <path d="M30 75C30 65 40 60 50 60C60 60 70 65 70 75" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Rewards Icon -->
+  <g transform="translate(600, 100)">
+    <circle cx="50" cy="50" r="50" fill="#FFCD1D"/>
+    <rect x="30" y="30" width="40" height="40" rx="6" fill="white"/>
+    <path d="M50 25L55 35H65L57 42L60 52L50 45L40 52L43 42L35 35H45L50 25Z" fill="#FFCD1D"/>
+  </g>
+  
+  <!-- Connecting Lines -->
+  <path d="M190 150H240" stroke="#DDE4F5" stroke-width="4" stroke-dasharray="8 4"/>
+  <path d="M350 150H400" stroke="#DDE4F5" stroke-width="4" stroke-dasharray="8 4"/>
+  <path d="M510 150H560" stroke="#DDE4F5" stroke-width="4" stroke-dasharray="8 4"/>
+  
+  <!-- Labels -->
+  <text x="120" y="220" font-family="Poppins, sans-serif" font-size="18" font-weight="bold" fill="#333333">DIRECT UITBETAALD</text>
+  <text x="280" y="220" font-family="Poppins, sans-serif" font-size="18" font-weight="bold" fill="#333333">WANNEER JE WILT</text>
+  <text x="440" y="220" font-family="Poppins, sans-serif" font-size="18" font-weight="bold" fill="#333333">WERK MET VRIENDEN</text>
+  <text x="600" y="220" font-family="Poppins, sans-serif" font-size="18" font-weight="bold" fill="#333333">SPAAR EXTRAATJES</text>
+  
+  <!-- Decorative Elements -->
+  <circle cx="400" cy="300" r="50" fill="#F7F9FF" stroke="#DDE4F5" stroke-width="2"/>
+  <path d="M375 290H425M375 300H425M375 310H425" stroke="#DDE4F5" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- EXTRA Logo -->
+  <text x="400" y="350" font-family="Poppins, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#4A7CFA">EXTRA</text>
+</svg>
