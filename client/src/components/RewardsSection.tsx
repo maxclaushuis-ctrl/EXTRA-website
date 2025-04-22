@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { useAnalytics } from "@/hooks/use-analytics";
+import rewardsImage from "@/assets/rewards_image.png";
 
 const rewards = [
   {
@@ -48,6 +49,15 @@ export default function RewardsSection() {
         >
           <h2 className="font-poppins font-bold text-2xl mb-2 text-center">SPAAR VOOR EXTRAATJES 🎁</h2>
           <p className="text-center mb-6">Punten sparen, rewards claimen</p>
+          
+          {/* Rewards showcase afbeelding */}
+          <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
+            <img 
+              src={rewardsImage} 
+              alt="EXTRA rewards - AirPods Pro en andere beloningen" 
+              className="w-full h-auto"
+            />
+          </div>
           
           <Carousel className="w-full">
             <CarouselContent>

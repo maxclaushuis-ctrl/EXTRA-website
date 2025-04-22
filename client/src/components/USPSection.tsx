@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import uspsImage from "@/assets/usps_image.png";
 
 const usps = [
   {
@@ -48,6 +49,22 @@ export default function USPSection() {
       <div className="container mx-auto">
         <h2 className="font-poppins font-bold text-2xl mb-6 text-center">Waarom werken bij EXTRA?</h2>
         
+        {/* USP Afbeelding */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <img 
+            src={uspsImage} 
+            alt="Voordelen van werken bij EXTRA" 
+            className="w-full h-auto rounded-lg shadow-md"
+          />
+        </motion.div>
+        
+        {/* USP Cards */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
