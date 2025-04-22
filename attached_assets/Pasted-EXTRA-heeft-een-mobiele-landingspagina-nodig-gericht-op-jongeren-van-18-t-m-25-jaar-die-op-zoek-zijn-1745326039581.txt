@@ -1,0 +1,61 @@
+EXTRA heeft een mobiele landingspagina nodig gericht op jongeren van 18 t/m 25 jaar die op zoek zijn naar een flexibele (bij)baan in de horeca. De pagina moet specifiek ontworpen zijn om zoveel mogelijk aanmeldingen te genereren. Hieronder vind je uitgebreide instructies, inclusief een duidelijke opdracht om te onderzoeken welke opzet van de landingspagina het beste converteert:
+
+Doel
+
+Zoveel mogelijk nieuwe kandidaat-aanmeldingen genereren.
+
+Doelgroep
+
+Leeftijd: 18 tot en met 25 jaar
+
+Studenten en jongeren op zoek naar flexibele (bij)banen
+
+Woonachtig in en rondom Amsterdam
+
+Huisstijl en Tone of Voice
+
+Jong, informeel, energiek en aantrekkelijk
+
+Gebruik de EXTRA huisstijl (zie meegestuurde voorbeelden)
+
+Belangrijkste USP's (must-haves)
+
+Directe uitbetaling na elke gewerkte shift
+
+Zelf bepalen waar en wanneer je werkt
+
+Mogelijkheid om samen met vrienden te werken
+
+Verdienen van toffe "EXTRAatjes" zoals AirPods, Museumjaarkaart, GIG hard seltzer pakketten
+
+Aanmeldbonus: korting op Traimore-abonnement, korting bij Swapfiets en gratis rijminuten bij Check
+
+Opdracht voor onderzoek naar optimale landingspagina-opzet:
+
+Maak minimaal 2 verschillende versies (A/B-test) van de mobiele landingspagina om te testen welke aanpak het beste converteert. Denk aan variaties zoals:
+
+Verschillen in volgorde van secties (bijv. USP's eerst versus social proof eerst)
+
+Variëren van headlines en CTA-teksten (bijvoorbeeld informele vs. humoristische toon)
+
+Gebruik van visuele content (video vs. statische afbeeldingen)
+
+Verschil in hoeveelheid tekst (korte vs. uitgebreide uitleg)
+
+Gebruik tracking-tools om prestaties van elke variant nauwkeurig te meten
+
+Rapporteer na de testperiode welke opzet het beste presteert en implementeer vervolgens de winnende versie definitief
+
+Conversieoptimalisatie tips voor het onderzoek:
+
+Zorg dat de variaties significant genoeg zijn om duidelijke verschillen te kunnen meten
+
+Meet belangrijke statistieken zoals conversieratio, bounce rate, en tijd op pagina
+
+Bouw voort op succesvolle elementen uit bewezen goed converterende pagina’s (zoals Picnic, Bunq en Felyx)
+
+Bijlagen:
+
+Zie toegevoegde voorbeelden van goed converterende landingspagina’s (Picnic, Bunq, Felyx)
+
+Zie bijgevoegde afbeeldingen van EXTRA huisstijl voor visuele referentie
