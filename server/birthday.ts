@@ -69,7 +69,7 @@ export async function awardBirthdayPoints(): Promise<number> {
           continue;
         }
         
-        // Ken punten toe
+        // Ken punten toe via transactie
         await storage.createPointTransaction({
           userId: user.id,
           amount: BIRTHDAY_POINTS,
@@ -84,7 +84,8 @@ export async function awardBirthdayPoints(): Promise<number> {
         });
         
         // Update gebruiker totaal aantal punten
-        await storage.updateUserPoints(user.id, user.points + BIRTHDAY_POINTS);
+        // Omdat updateUserPoints al optelt bij bestaande punten, geven we alleen BIRTHDAY_POINTS door
+        await storage.updateUserPoints(user.id, BIRTHDAY_POINTS);
         
         console.log(`${BIRTHDAY_POINTS} punten toegekend aan ${user.email} voor verjaardag`);
       } catch (error) {
