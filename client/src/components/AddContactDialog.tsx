@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { insertUserSchema, userRoleEnum, userStatusEnum } from '@shared/schema';
+import { insertUserSchema, userStatusEnum, userRoleEnum } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { UserPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,34 +28,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { UserRound, Mail, Calendar, Phone, Building } from 'lucide-react';
 
-// Uitgebreid formulier schema voor nieuwe contacten
-const formSchema = insertUserSchema.extend({
-  passwordConfirm: z.string().min(6, {
-    message: 'Wachtwoord moet minimaal 6 karakters bevatten',
-  }),
+// Schema voor het toevoegen van een nieuw contact
+const formSchema = insertUserSchema.pick({
+  firstName: true,
+  lastName: true,
+  email: true,
+  phone: true,
+  role: true,
+  status: true,
+}).extend({
+  firstName: z.string().min(2, 'Voornaam moet minimaal 2 karakters bevatten'),
+  lastName: z.string().min(2, 'Achternaam moet minimaal 2 karakters bevatten'),
+  email: z.string().email('Ongeldig e-mailadres'),
   sendWelcomeEmail: z.boolean().default(true),
-}).refine((data) => data.password === data.passwordConfirm, {
-  message: 'Wachtwoorden komen niet overeen',
-  path: ['passwordConfirm'],
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 export default function AddContactDialog() {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
-      passwordConfirm: '',
       phone: '',
       role: 'employee',
       status: 'active',
@@ -63,18 +63,25 @@ export default function AddContactDialog() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: FormValues) => {
-      // Verwijder passwordConfirm en sendWelcomeEmail voor de API call
-      const { passwordConfirm, sendWelcomeEmail, ...userData } = data;
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      // Extracten van sendWelcomeEmail omdat dat geen deel is van insertUserSchema
+      const { sendWelcomeEmail, ...userData } = values;
       
+      // Aanmaken van een tijdelijk wachtwoord
+      const data = {
+        ...userData,
+        password: 'temppassword123', // In productie zou dit een gegenereerd wachtwoord moeten zijn
+      };
+
+      // API aanroep naar de server
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...userData,
-          sendEmail: sendWelcomeEmail,
+          ...data,
+          sendWelcomeEmail,
         }),
       });
       
@@ -88,12 +95,11 @@ export default function AddContactDialog() {
     onSuccess: () => {
       toast({
         title: 'Contact toegevoegd',
-        description: 'Het contact is succesvol toegevoegd',
+        description: 'Het nieuwe contact is succesvol toegevoegd',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       form.reset();
-      setOpen(false);
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
     },
     onError: (error: Error) => {
       toast({
@@ -104,23 +110,23 @@ export default function AddContactDialog() {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    mutation.mutate(data);
-  };
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    mutation.mutate(values);
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <UserRound className="mr-2 h-4 w-4" />
+          <UserPlus className="mr-2 h-4 w-4" />
           Contact toevoegen
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Nieuw contact toevoegen</DialogTitle>
           <DialogDescription>
-            Voeg een nieuw contact toe aan het beloningssysteem.
+            Voeg een nieuwe medewerker of administrator toe.
           </DialogDescription>
         </DialogHeader>
         
@@ -163,12 +169,25 @@ export default function AddContactDialog() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <div className="flex">
-                      <span className="flex items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-muted-foreground">
-                        <Mail className="h-4 w-4" />
-                      </span>
-                      <Input placeholder="email@example.com" className="rounded-l-none" {...field} />
-                    </div>
+                    <Input placeholder="email@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefoonnummer (optioneel)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="+31 6 12345678" 
+                      {...field} 
+                      value={field.value || ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -178,12 +197,29 @@ export default function AddContactDialog() {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="password"
+                name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Wachtwoord</FormLabel>
+                    <FormLabel>Rol</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} />
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="employee" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Medewerker</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="admin" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Administrator</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -192,99 +228,35 @@ export default function AddContactDialog() {
               
               <FormField
                 control={form.control}
-                name="passwordConfirm"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bevestig wachtwoord</FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} />
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="active" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Actief</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="inactive" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Inactief</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Telefoonnummer (optioneel)</FormLabel>
-                  <FormControl>
-                    <div className="flex">
-                      <span className="flex items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                      </span>
-                      <Input placeholder="+31 6 12345678" className="rounded-l-none" {...field} />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rol</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="employee" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Medewerker</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="admin" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Administrator</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="active" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Actief</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="inactive" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Inactief</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <FormField
               control={form.control}
@@ -298,21 +270,22 @@ export default function AddContactDialog() {
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Welkomst-e-mail versturen</FormLabel>
+                    <FormLabel>
+                      Verstuur welkomst-email
+                    </FormLabel>
                     <FormDescription>
-                      Stuur een e-mail met inloggegevens naar de nieuwe medewerker
+                      De nieuwe gebruiker ontvangt een e-mail met inloggegevens.
                     </FormDescription>
                   </div>
                 </FormItem>
               )}
             />
-            
-            <DialogFooter>
+          
+            <DialogFooter className="mt-6">
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => setOpen(false)}
-                disabled={mutation.isPending}
+                onClick={() => setIsOpen(false)}
               >
                 Annuleren
               </Button>

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
+import extraLogo from '@/assets/EXTRA_LOGO_BLAUW.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -41,8 +42,11 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-      <Card className="w-full max-w-md">
+    <div className="flex h-screen w-full items-center justify-center bg-[#00dfdf]">
+      <Card className="w-full max-w-md shadow-lg">
+        <div className="mx-auto mb-4 mt-6 flex justify-center">
+          <img src={extraLogo} alt="EXTRA Logo" className="h-16" />
+        </div>
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Inloggen</CardTitle>
           <CardDescription>
@@ -79,7 +83,11 @@ export default function Login() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" type="submit" disabled={isSubmitting}>
+            <Button 
+              className="w-full bg-[#141414] text-white hover:bg-[#333333]" 
+              type="submit" 
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

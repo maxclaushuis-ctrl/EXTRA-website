@@ -24,6 +24,7 @@ import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
 import AddContactDialog from '@/components/AddContactDialog';
 import ContactDetailDialog from '@/components/ContactDetailDialog';
+import ContactsTable from '@/components/ContactsTable';
 
 // Deze imports worden later toegevoegd wanneer we de afzonderlijke tab-componenten maken
 // import ContactsTab from './tabs/ContactsTab';
@@ -224,106 +225,10 @@ export default function AdminDashboard() {
           
           {/* Contacten tabel */}
           <div>
-            {/* Hier zou normaal de geïmporteerde ContactsTab component staan */}
-            {/* Omdat we in deze code nog geen aparte tab componenten hebben gemaakt
-                is de tabel direct geïntegreerd */}
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
-                {usersLoading ? (
-                  <div className="flex justify-center p-8">Contacten laden...</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-muted/50">
-                          <th className="px-4 py-3 text-left text-sm font-medium">Naam</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium">Rol</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium">Punten</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium">Acties</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {/* Weergave van contacten met placeholder data */}
-                        <tr className="hover:bg-muted/50">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
-                                <div className="flex h-full w-full items-center justify-center bg-blue-100 text-lg font-medium text-blue-600">
-                                  AE
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="font-medium">Admin EXTRA</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">admin@extra.nl</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">
-                              Admin
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-medium">0</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600">
-                              Actief
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
-                                Bewerken
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                Punten toekennen
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-muted/50">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
-                                <div className="flex h-full w-full items-center justify-center bg-blue-100 text-lg font-medium text-blue-600">
-                                  TM
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="font-medium">Test Medewerker</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">employee@example.com</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                              Medewerker
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-medium">250</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600">
-                              Actief
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
-                                Bewerken
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                Punten toekennen
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ContactsTable 
+              onEditUser={handleEditUser}
+              onAssignPoints={handleAssignPoints}
+            />
           </div>
         </TabsContent>
         
