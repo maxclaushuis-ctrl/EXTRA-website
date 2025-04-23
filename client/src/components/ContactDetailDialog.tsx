@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import PointsCelebration from './PointsCelebration';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +51,8 @@ interface ContactDetailDialogProps {
 
 export default function ContactDetailDialog({ userId, isOpen, onClose }: ContactDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('profiel');
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationPoints, setCelebrationPoints] = useState(0);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -232,7 +235,14 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
     if (points) {
       const pointsNumber = parseInt(points, 10);
       if (!isNaN(pointsNumber) && pointsNumber > 0) {
-        pointsMutation.mutate(pointsNumber);
+        // Toon animatie voordat de punten worden toegekend
+        setCelebrationPoints(pointsNumber);
+        setShowCelebration(true);
+        
+        // Wacht even voordat we de API call doen om de animatie tijd te geven
+        setTimeout(() => {
+          pointsMutation.mutate(pointsNumber);
+        }, 200);
       } else {
         toast({
           title: 'Ongeldige invoer',
@@ -274,6 +284,13 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[700px]">
+        {/* Points Celebration animatie */}
+        <PointsCelebration 
+          points={celebrationPoints} 
+          isVisible={showCelebration} 
+          onAnimationComplete={() => setShowCelebration(false)}
+        />
+        
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <div className="mr-2 h-10 w-10 overflow-hidden rounded-full bg-blue-100">
@@ -493,7 +510,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                     </div>
                   </div>
                   
-                  <div className="mt-4">
+                  <div className="mt-4 space-y-2">
                     <Button 
                       className="w-full" 
                       onClick={handleSendLogin}
@@ -501,6 +518,15 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                     >
                       <Mail className="mr-2 h-4 w-4" />
                       {sendLoginMutation.isPending ? "Versturen..." : "Inlog versturen"}
+                    </Button>
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={handleAddPoints}
+                      disabled={pointsMutation.isPending}
+                    >
+                      <Award className="mr-2 h-4 w-4" />
+                      {pointsMutation.isPending ? "Toekennen..." : "Punten toekennen"}
                     </Button>
                   </div>
                 </CardContent>
