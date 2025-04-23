@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { 
@@ -20,7 +21,9 @@ import {
   Clock,
   Truck,
   XCircle,
-  PackageOpen
+  PackageOpen,
+  Building2,
+  MoreVertical
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -112,10 +115,20 @@ export default function Transactions() {
     );
   });
 
-  // Get user name by ID
-  const getUserName = (userId: number) => {
-    const user = users?.find((u: { id: number; firstName: string; lastName: string }) => u.id === userId);
-    return user ? `${user.firstName} ${user.lastName}` : 'Onbekende gebruiker';
+  // Get user info by ID
+  const getUserInfo = (userId: number) => {
+    const user = users?.find((u: { 
+      id: number; 
+      firstName: string; 
+      lastName: string;
+      email: string;
+    }) => u.id === userId);
+    
+    return { 
+      name: user ? `${user.firstName} ${user.lastName}` : 'Onbekende gebruiker',
+      email: user?.email || 'onbekend@example.com',
+      initials: user ? (user.firstName[0] + user.lastName[0]).toUpperCase() : '??'
+    };
   };
 
   // Get reward name by ID
@@ -194,11 +207,19 @@ export default function Transactions() {
         {/* Punttransacties tab */}
         <TabsContent value="points">
           <Card>
-            <CardHeader>
-              <CardTitle>Punttransacties</CardTitle>
-              <CardDescription>
-                Overzicht van alle toegekende en afgeschreven punten voor medewerkers
-              </CardDescription>
+            <CardHeader className="px-6 pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Punttransacties</CardTitle>
+                  <CardDescription>
+                    Overzicht van alle toegekende en afgeschreven punten
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filteren
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               {transactionsLoading ? (
@@ -209,63 +230,63 @@ export default function Transactions() {
                 </div>
               ) : !filteredTransactions?.length ? (
                 <div className="flex flex-col items-center justify-center py-8 px-4">
-                  <p className="text-center text-muted-foreground mb-4">
+                  <p className="text-center text-muted-foreground">
                     Geen punttransacties gevonden
                   </p>
-                  <Button variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ken punten toe
-                  </Button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-muted/50">
-                        <th className="px-4 py-3 text-left text-sm font-medium">Datum</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Medewerker</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Punten</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Beschrijving</th>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-6 py-3 text-left text-sm font-medium">E-mail</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Vestiging</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Punten</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Kanaal</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Aangemaakt op</th>
+                        <th className="px-3 py-3 text-center text-sm font-medium"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredTransactions?.map((transaction) => (
-                        <tr key={transaction.id} className="hover:bg-muted/50">
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                              {formatDate(transaction.createdAt)}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center">
-                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                                <User className="h-4 w-4 text-blue-600" />
+                      {filteredTransactions?.map((transaction) => {
+                        const user = getUserInfo(transaction.userId);
+                        return (
+                          <tr key={transaction.id} className="hover:bg-muted/30">
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+                                  <AvatarFallback>{user.initials}</AvatarFallback>
+                                </Avatar>
+                                <span>{user.email}</span>
                               </div>
-                              <span>{getUserName(transaction.userId)}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <Badge variant={transaction.type === 'earned' ? 'default' : 'secondary'}>
-                              {transaction.type === 'earned' ? (
-                                <ArrowUp className="h-3 w-3 mr-1" />
-                              ) : (
-                                <ArrowDown className="h-3 w-3 mr-1" />
-                              )}
-                              {transaction.type === 'earned' ? 'Verdiend' : 'Uitgegeven'}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-medium">
-                            <span className={transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'}>
-                              {transaction.type === 'earned' ? '+' : '-'}{transaction.amount}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {transaction.description}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex items-center">
+                                <div className="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center mr-2">
+                                  <Building2 className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <span>EXTRA</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm font-medium">
+                              <span className={transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'}>
+                                {transaction.type === 'earned' ? '+' : '-'}{transaction.amount}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {transaction.source || 'Handmatig'}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {formatDate(transaction.createdAt)}
+                            </td>
+                            <td className="px-3 py-4 text-sm">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -277,11 +298,19 @@ export default function Transactions() {
         {/* Beloningsverzilveringen tab */}
         <TabsContent value="rewards">
           <Card>
-            <CardHeader>
-              <CardTitle>Beloningsverzilveringen</CardTitle>
-              <CardDescription>
-                Overzicht van alle verzilverde beloningen door medewerkers
-              </CardDescription>
+            <CardHeader className="px-6 pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Beloningsverzilveringen</CardTitle>
+                  <CardDescription>
+                    Overzicht van verzilverde beloningen en puntenminderingen
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filteren
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               {redemptionsLoading ? (
@@ -300,56 +329,55 @@ export default function Transactions() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-muted/50">
-                        <th className="px-4 py-3 text-left text-sm font-medium">Datum</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Medewerker</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Beloning</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Kosten</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-6 py-3 text-left text-sm font-medium">E-mail</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Vestiging</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Punten</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Kanaal</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium">Aangemaakt op</th>
+                        <th className="px-3 py-3 text-center text-sm font-medium"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredRedemptions?.map((redemption) => (
-                        <tr key={redemption.id} className="hover:bg-muted/50">
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                              {formatDate(redemption.createdAt)}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center">
-                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                                <User className="h-4 w-4 text-blue-600" />
+                      {filteredRedemptions?.map((redemption) => {
+                        const user = getUserInfo(redemption.userId);
+                        return (
+                          <tr key={redemption.id} className="hover:bg-muted/30">
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8 bg-purple-500 text-primary-foreground">
+                                  <AvatarFallback>{user.initials}</AvatarFallback>
+                                </Avatar>
+                                <span>{user.email}</span>
                               </div>
-                              <span>{getUserName(redemption.userId)}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center">
-                              <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-2">
-                                <Gift className="h-4 w-4 text-purple-600" />
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex items-center">
+                                <div className="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center mr-2">
+                                  <Building2 className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <span>EXTRA</span>
                               </div>
-                              <span>{getRewardName(redemption.rewardId)}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-medium">
-                            <span className="text-red-600">-{redemption.pointsCost || 0}</span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center">
-                              {getStatusIcon(redemption.status)}
-                              <Badge variant="outline" className="ml-2">
-                                {redemption.status === 'pending' && 'In behandeling'}
-                                {redemption.status === 'processing' && 'Wordt verwerkt'}
-                                {redemption.status === 'shipped' && 'Verzonden'}
-                                {redemption.status === 'completed' && 'Afgerond'}
-                                {redemption.status === 'cancelled' && 'Geannuleerd'}
+                            </td>
+                            <td className="px-6 py-4 text-sm font-medium">
+                              <span className="text-red-600">-{redemption.pointsCost || 0}</span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <Badge variant="outline">
+                                Business Dashboard
                               </Badge>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {formatDate(redemption.createdAt)}
+                            </td>
+                            <td className="px-3 py-4 text-sm">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
