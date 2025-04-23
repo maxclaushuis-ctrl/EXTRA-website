@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import Transactions from './Transactions';
+import Rewards from './Rewards';
 
 import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
@@ -270,65 +271,7 @@ export default function AdminDashboard() {
         </TabsContent>
         
         <TabsContent value="beloningen" className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Beloningen</h2>
-            <Button>
-              <Gift className="mr-2 h-4 w-4" />
-              Nieuwe beloning toevoegen
-            </Button>
-          </div>
-          
-          {/* Beloningen grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Beloning kaart voorbeeld */}
-            <Card>
-              <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                <img 
-                  src="https://images.unsplash.com/photo-1580508244245-c466a205d42e" 
-                  alt="Extra Vrije Dag" 
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <CardContent className="p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="font-bold">Extra Vrije Dag</h3>
-                  <span className="font-semibold text-blue-600">500 punten</span>
-                </div>
-                <p className="mb-4 text-sm text-muted-foreground">Een extra vrije dag naar keuze</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Beschikbaar: 10</span>
-                  <div className="space-x-2">
-                    <Button variant="outline" size="sm">Bewerken</Button>
-                    <Button variant="outline" size="sm">Verwijderen</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                <img 
-                  src="https://images.unsplash.com/photo-1608583020712-a43d0e94f3eb" 
-                  alt="Cadeaubon €25" 
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <CardContent className="p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="font-bold">Cadeaubon €25</h3>
-                  <span className="font-semibold text-blue-600">250 punten</span>
-                </div>
-                <p className="mb-4 text-sm text-muted-foreground">Een cadeaubon van €25 voor je favoriete winkel</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Beschikbaar: 25</span>
-                  <div className="space-x-2">
-                    <Button variant="outline" size="sm">Bewerken</Button>
-                    <Button variant="outline" size="sm">Verwijderen</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Rewards />
         </TabsContent>
         
         <TabsContent value="marketing" className="mt-6">

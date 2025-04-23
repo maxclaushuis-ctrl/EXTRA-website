@@ -1,165 +1,242 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Reward } from '@shared/schema';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, PlusCircle, ArrowLeft } from 'lucide-react';
-import { Link } from 'wouter';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Gift, 
+  MoreVertical, 
+  Edit, 
+  Trash2, 
+  Plus,
+  AlertTriangle
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import AddRewardDialog from '@/components/AddRewardDialog';
+import { Reward } from '@shared/schema';
 
-export default function RewardsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAddRewardOpen, setIsAddRewardOpen] = useState(false);
-
-  const { data: rewards, isLoading } = useQuery({
+export default function Rewards() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [rewardToDelete, setRewardToDelete] = useState<number | null>(null);
+  
+  // Rewards ophalen
+  const { data: rewards, isLoading } = useQuery<Reward[]>({
     queryKey: ['/api/rewards'],
     queryFn: async () => {
       const response = await fetch('/api/rewards');
       if (!response.ok) {
-        throw new Error('Kon beloningen niet ophalen');
+        throw new Error('Kon beloningen niet laden');
       }
-      return response.json() as Promise<Reward[]>;
+      return response.json();
     },
   });
 
-  const filteredRewards = rewards?.filter(
-    (reward) =>
-      reward.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (reward.description && reward.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Delete reward mutatie
+  const deleteRewardMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/rewards/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Kon beloning niet verwijderen');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rewards'] });
+      toast({
+        title: 'Beloning verwijderd',
+        description: 'De beloning is succesvol verwijderd',
+      });
+      setRewardToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fout bij verwijderen',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setRewardToDelete(null);
+    },
+  });
 
-  // Helper function for status badge
-  const getStatusBadge = (status: string) => {
+  // Status label functie
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Beschikbaar</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Beschikbaar</Badge>;
       case 'outofstock':
-        return <Badge variant="destructive" className="bg-yellow-500 hover:bg-yellow-600">Niet op voorraad</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Niet op voorraad</Badge>;
       case 'hidden':
-        return <Badge variant="outline">Verborgen</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Verborgen</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">Onbekend</Badge>;
     }
   };
 
-  return (
-    <div className="container mx-auto max-w-7xl p-4">
-      <div className="mb-8 flex items-center">
-        <Button variant="ghost" size="icon" asChild className="mr-2">
-          <Link href="/admin">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Beloningen</h1>
-          <p className="text-muted-foreground">
-            Beheer beloningen die medewerkers kunnen inwisselen
-          </p>
-        </div>
-      </div>
-
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Beloningen beheren</CardTitle>
-          <CardDescription>
-            Voeg beloningen toe die medewerkers kunnen inwisselen met hun punten
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Zoek beloningen..."
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+  // Beloningkaarten renderen
+  const renderRewards = () => {
+    if (isLoading) {
+      return Array(6).fill(0).map((_, i) => (
+        <Card key={i} className="overflow-hidden">
+          <Skeleton className="aspect-video w-full" />
+          <CardContent className="p-4">
+            <Skeleton className="h-6 w-3/4 mt-2 mb-2" />
+            <Skeleton className="h-4 w-full mb-4" />
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-1/4" />
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16" />
+              </div>
             </div>
-            <Button className="shrink-0" onClick={() => setIsAddRewardOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Beloning toevoegen
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ));
+    }
 
-      {isLoading ? (
-        <div className="flex justify-center p-8">Beloningen laden...</div>
-      ) : filteredRewards?.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <p className="text-lg font-medium">Geen beloningen gevonden</p>
-          <p className="text-sm text-muted-foreground">
-            {searchQuery
-              ? `Geen resultaten voor "${searchQuery}"`
-              : 'Voeg beloningen toe om te beginnen'}
+    if (!rewards || rewards.length === 0) {
+      return (
+        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+          <Gift className="mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="mb-2 text-lg font-semibold">Geen beloningen gevonden</h3>
+          <p className="mb-4 text-muted-foreground">
+            Er zijn nog geen beloningen toegevoegd aan het systeem.
           </p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => setIsAddRewardOpen(true)}
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
             Beloning toevoegen
           </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredRewards?.map((reward) => (
-            <Card key={reward.id} className="overflow-hidden">
-              <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                {reward.imageUrl ? (
-                  <img
-                    src={reward.imageUrl}
-                    alt={reward.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-500">
-                    Geen afbeelding
-                  </div>
-                )}
-              </div>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle>{reward.name}</CardTitle>
-                  <div className="ml-2">{getStatusBadge(reward.status)}</div>
-                </div>
-                <CardDescription>
-                  {reward.description || 'Geen beschrijving beschikbaar'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="text-lg font-bold text-blue-600">{reward.pointsCost}</span>
-                    <span className="ml-1 text-sm text-muted-foreground">punten</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Voorraad: {reward.stock !== null ? reward.stock : 'Onbeperkt'}
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" className="flex-1">
-                    Bewerken
-                  </Button>
-                  <Button variant="secondary" className="flex-1">
-                    Voorraad
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      );
+    }
 
-      {/* Dialog voor toevoegen beloning */}
-      <AddRewardDialog 
-        isOpen={isAddRewardOpen} 
-        onClose={() => setIsAddRewardOpen(false)}
+    return rewards.map((reward) => (
+      <Card key={reward.id} className="overflow-hidden">
+        <div className="aspect-video w-full overflow-hidden bg-gray-100">
+          {reward.imageUrl ? (
+            <img 
+              src={reward.imageUrl} 
+              alt={reward.name} 
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <Gift className="h-12 w-12 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+        <CardContent className="p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-bold">{reward.name}</h3>
+            <span className="font-semibold text-blue-600">{reward.pointsCost} punten</span>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">{reward.description}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getStatusLabel(reward.status)}
+              {reward.stock !== null && (
+                <span className="text-xs text-muted-foreground">
+                  Beschikbaar: {reward.stock}
+                </span>
+              )}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Acties</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Bewerken
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-red-600"
+                  onClick={() => setRewardToDelete(reward.id)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Verwijderen
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardContent>
+      </Card>
+    ));
+  };
+
+  return (
+    <div>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Beloningen</h2>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Gift className="mr-2 h-4 w-4" />
+          Nieuwe beloning toevoegen
+        </Button>
+      </div>
+
+      {/* Beloningen grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {renderRewards()}
+      </div>
+
+      {/* Add dialog */}
+      <AddRewardDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={rewardToDelete !== null} onOpenChange={() => setRewardToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Beloning verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je deze beloning wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => rewardToDelete && deleteRewardMutation.mutate(rewardToDelete)}
+            >
+              <AlertTriangle className="mr-2 h-4 w-4" />
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
