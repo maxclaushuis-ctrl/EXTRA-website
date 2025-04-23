@@ -571,7 +571,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {redemptions?.slice(0, 5).map(redemption => (
+                      {redemptions?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5).map(redemption => (
                         <div key={redemption.id} className="flex items-center justify-between rounded-lg border p-3">
                           <div>
                             <div className="font-medium">{redemption.rewardName}</div>
@@ -615,7 +615,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {transactions?.slice(0, 10).map(transaction => (
+                    {transactions?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10).map(transaction => (
                       <div key={transaction.id} className="flex items-center gap-4 rounded-lg border p-3">
                         <div className={`rounded-full p-2 ${
                           transaction.type === 'earned' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'

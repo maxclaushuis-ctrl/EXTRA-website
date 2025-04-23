@@ -248,7 +248,9 @@ export default function Transactions() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredTransactions?.map((transaction) => {
+                      {filteredTransactions?.slice().sort((a, b) => 
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      ).map((transaction) => {
                         const user = getUserInfo(transaction.userId);
                         return (
                           <tr key={transaction.id} className="hover:bg-muted/30">
@@ -274,7 +276,7 @@ export default function Transactions() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm">
-                              {transaction.source || 'Handmatig'}
+                              {transaction.source || 'admin'}
                             </td>
                             <td className="px-6 py-4 text-sm">
                               {formatDate(transaction.createdAt)}
@@ -339,7 +341,9 @@ export default function Transactions() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredRedemptions?.map((redemption) => {
+                      {filteredRedemptions?.slice().sort((a, b) => 
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      ).map((redemption) => {
                         const user = getUserInfo(redemption.userId);
                         return (
                           <tr key={redemption.id} className="hover:bg-muted/30">

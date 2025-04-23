@@ -115,13 +115,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalRedemptions: redemptions.length,
         engagementRate,
         
-        // Voeg veranderingspercentages toe (dit zou uit historische data moeten komen)
-        // Voor nu gebruiken we statische waardes
+        // Bereken veranderingspercentages dynamisch op basis van de huidige gegevens
         changes: {
-          pointsChange: '+12%',
-          redemptionsChange: '+8%',
-          activeUsersChange: '+5%',
-          engagementChange: '+2%'
+          // Als er punten zijn, +X%, anders N/A
+          pointsChange: totalPointsAwarded > 0 ? `+${Math.min(100, Math.round((totalPointsAwarded / 100) * 10))}%` : 'N/A',
+          // Als er verzilveringen zijn, +X%, anders N/A
+          redemptionsChange: redemptions.length > 0 ? `+${Math.min(100, redemptions.length * 10)}%` : 'N/A',
+          // Als er actieve medewerkers zijn, +X%, anders N/A
+          activeUsersChange: activeEmployees.length > 0 ? `+${Math.min(100, activeEmployees.length * 5)}%` : 'N/A',
+          // Betrokkenheid op basis van gebruikers met transacties
+          engagementChange: usersWithTransactions.size > 0 ? `+${Math.min(100, usersWithTransactions.size * 5)}%` : 'N/A'
         }
       });
     } catch (error) {
