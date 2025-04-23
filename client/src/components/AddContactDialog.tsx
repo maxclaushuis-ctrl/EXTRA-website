@@ -19,6 +19,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -37,10 +43,12 @@ const formSchema = insertUserSchema.pick({
   phone: true,
   role: true,
   status: true,
+  birthDate: true,
 }).extend({
   firstName: z.string().min(2, 'Voornaam moet minimaal 2 karakters bevatten'),
   lastName: z.string().min(2, 'Achternaam moet minimaal 2 karakters bevatten'),
   email: z.string().email('Ongeldig e-mailadres'),
+  birthDate: z.string().nullable().optional(),
   sendWelcomeEmail: z.boolean().default(true),
 });
 
@@ -56,6 +64,7 @@ export default function AddContactDialog() {
       lastName: '',
       email: '',
       phone: '',
+      birthDate: null,
       role: 'employee',
       status: 'active',
       sendWelcomeEmail: true,
@@ -189,6 +198,49 @@ export default function AddContactDialog() {
                       value={field.value || ''}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="birthDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Geboortedatum</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "PPP", { locale: nl })
+                          ) : (
+                            <span>Selecteer een datum</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : null)}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormDescription>
+                    Geboortedatum is nodig voor verjaardagsvoordelen (optioneel)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

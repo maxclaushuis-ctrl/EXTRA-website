@@ -330,6 +330,7 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
                   <tr className="bg-muted/50">
                     <th className="px-4 py-3 text-left text-sm font-medium">Naam</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Geboortedatum</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">Rol</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">Punten</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
@@ -352,6 +353,9 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm">{user.email}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {user.birthDate ? new Date(user.birthDate).toLocaleDateString('nl-NL') : '-'}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <span className={`rounded-full ${
                           user.role === 'admin' 

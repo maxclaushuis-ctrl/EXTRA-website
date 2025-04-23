@@ -62,7 +62,7 @@ export async function awardBirthdayPoints(): Promise<number> {
         
         const transactions = await storage.getPointTransactionsByUserId(user.id);
         const alreadyAwarded = transactions.some(t => 
-          t.source === 'birthday' && 
+          t.source === 'verjaardag' && 
           new Date(t.createdAt) >= today && 
           t.type === 'earned'
         );
@@ -81,7 +81,7 @@ export async function awardBirthdayPoints(): Promise<number> {
             amount: BIRTHDAY_POINTS,
             type: 'earned' as const,
             description: 'Verjaardagsbonus',
-            source: 'birthday',
+            source: 'verjaardag',
             sourceId: null,
             metadata: {
               birthday: [new Date().toISOString()],
