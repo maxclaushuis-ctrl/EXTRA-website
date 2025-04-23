@@ -334,7 +334,7 @@ export default function Transactions() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm font-medium">
-                            <span className="text-red-600">-{redemption.pointsAmount || 0}</span>
+                            <span className="text-red-600">-{redemption.pointsCost || 0}</span>
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <div className="flex items-center">
