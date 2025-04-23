@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { User } from '@shared/schema';
 import ContactDetailDialog from './ContactDetailDialog';
 import { useToast } from '@/hooks/use-toast';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface ContactsTableProps {
   onEditUser?: (userId: number) => void;
@@ -15,6 +16,8 @@ interface ContactsTableProps {
 export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTableProps) {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -96,6 +99,35 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
+  
+  // Berekenen van paginering
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = users ? users.slice(indexOfFirstItem, indexOfLastItem) : [];
+  const totalPages = users ? Math.ceil(users.length / itemsPerPage) : 0;
+  
+  // Pagina wijzigen
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  
+  // Naar eerste pagina
+  const goToFirstPage = () => setCurrentPage(1);
+  
+  // Naar laatste pagina
+  const goToLastPage = () => setCurrentPage(totalPages);
+  
+  // Naar vorige pagina
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  // Naar volgende pagina
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <>
@@ -131,7 +163,7 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {users.map((user) => (
+                  {currentItems.map((user) => (
                     <tr key={user.id} className="hover:bg-muted/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center">
@@ -187,6 +219,85 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
                   ))}
                 </tbody>
               </table>
+              
+              {/* Paginering */}
+              {totalPages > 0 && (
+                <div className="flex items-center justify-between p-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    {users ? (
+                      <>
+                        Toont {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, users.length)} van {users.length} contacten
+                      </>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToFirstPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToPreviousPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* Paginanummers */}
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          // Als er 5 of minder pagina's zijn, toon ze allemaal
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          // Als we aan het begin zijn
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          // Als we aan het einde zijn
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          // Ergens in het midden (huidig in het midden)
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={pageNum === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => paginate(pageNum)}
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToLastPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
