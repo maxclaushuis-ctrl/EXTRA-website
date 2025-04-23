@@ -1,17 +1,36 @@
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'wouter';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Users, Gift, BookOpen, Settings, 
-  BarChart, ArrowUpRight, TrendingUp, 
-  Activity, User
+  Dialog, 
+  DialogTrigger, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription
+} from '@/components/ui/dialog';
+import { 
+  Users, Gift, Settings, Upload, FileSpreadsheet,
+  BarChart, ArrowUpRight, TrendingUp, Database,
+  Activity, User, Import, Download
 } from 'lucide-react';
+
+import CSVImport from '@/components/CSVImport';
+import APIImport from '@/components/APIImport';
+
+// Deze imports worden later toegevoegd wanneer we de afzonderlijke tab-componenten maken
+// import ContactsTab from './tabs/ContactsTab';
+// import RewardsTab from './tabs/RewardsTab';
+// import SettingsTab from './tabs/SettingsTab';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("contacten");
 
   const { data: userStats, isLoading: usersLoading } = useQuery({
     queryKey: ['/api/stats/users'],
@@ -23,58 +42,6 @@ export default function AdminDashboard() {
       return response.json();
     },
   });
-
-  const dashboardItems = [
-    {
-      title: 'Medewerkers',
-      description: 'Beheer medewerkers en hun punten',
-      icon: <Users className="h-5 w-5" />,
-      href: '/admin/employees',
-      stats: usersLoading ? (
-        <Skeleton className="h-8 w-24" />
-      ) : (
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold">{userStats?.totalUsers || 0}</span>
-          <span className="text-sm text-muted-foreground">actieve medewerkers</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Beloningen',
-      description: 'Voeg beloningen toe en beheer voorraad',
-      icon: <Gift className="h-5 w-5" />,
-      href: '/admin/rewards',
-      stats: usersLoading ? (
-        <Skeleton className="h-8 w-24" />
-      ) : (
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold">{userStats?.activeRewards || 0}</span>
-          <span className="text-sm text-muted-foreground">actieve beloningen</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Regels',
-      description: 'Stel regels in voor automatische beloning',
-      icon: <BookOpen className="h-5 w-5" />,
-      href: '/admin/rules',
-      stats: usersLoading ? (
-        <Skeleton className="h-8 w-24" />
-      ) : (
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold">{userStats?.activeRules || 0}</span>
-          <span className="text-sm text-muted-foreground">actieve regels</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Instellingen',
-      description: 'Configureer algemene systeeminstellingen',
-      icon: <Settings className="h-5 w-5" />,
-      href: '/admin/settings',
-      stats: null,
-    },
-  ];
 
   const keyMetrics = [
     {
@@ -158,28 +125,308 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Main categories */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {dashboardItems.map((item, i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardHeader className="space-y-0 pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg font-bold">
-                {item.icon}
-                {item.title}
-              </CardTitle>
-              <CardDescription>{item.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {item.stats && (
-                <div className="mb-4 mt-2">{item.stats}</div>
-              )}
-              <Button asChild className="mt-2 w-full">
-                <Link href={item.href}>Beheren</Link>
+      {/* Tabbladen */}
+      <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="contacten">
+            <Users className="mr-2 h-4 w-4" />
+            Contacten
+          </TabsTrigger>
+          <TabsTrigger value="beloningen">
+            <Gift className="mr-2 h-4 w-4" />
+            Beloningen
+          </TabsTrigger>
+          <TabsTrigger value="instellingen">
+            <Settings className="mr-2 h-4 w-4" />
+            Instellingen
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="contacten" className="mt-6">
+          <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
+            <h2 className="text-2xl font-bold">Contacten</h2>
+            <div className="flex-1"></div>
+            <div className="flex gap-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Import className="mr-2 h-4 w-4" />
+                    Importeren via API
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Importeer contacten via API</DialogTitle>
+                    <DialogDescription>
+                      Verbind met een externe API om contactgegevens te importeren.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <APIImport />
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload className="mr-2 h-4 w-4" />
+                    CSV Uploaden
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>CSV-bestand importeren</DialogTitle>
+                    <DialogDescription>
+                      Upload een CSV-bestand met contactgegevens.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <CSVImport />
+                </DialogContent>
+              </Dialog>
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Exporteren
               </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          </div>
+          
+          {/* Contacten tabel */}
+          <div>
+            {/* Hier zou normaal de geïmporteerde ContactsTab component staan */}
+            {/* Omdat we in deze code nog geen aparte tab componenten hebben gemaakt
+                is de tabel direct geïntegreerd */}
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                {usersLoading ? (
+                  <div className="flex justify-center p-8">Contacten laden...</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="px-4 py-3 text-left text-sm font-medium">Naam</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium">Rol</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium">Punten</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium">Acties</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {/* Weergave van contacten met placeholder data */}
+                        <tr className="hover:bg-muted/50">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
+                                <div className="flex h-full w-full items-center justify-center bg-blue-100 text-lg font-medium text-blue-600">
+                                  AE
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="font-medium">Admin EXTRA</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">admin@extra.nl</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">
+                              Admin
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium">0</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600">
+                              Actief
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex space-x-2">
+                              <Button variant="outline" size="sm">
+                                Bewerken
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Punten toekennen
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr className="hover:bg-muted/50">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
+                                <div className="flex h-full w-full items-center justify-center bg-blue-100 text-lg font-medium text-blue-600">
+                                  TM
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="font-medium">Test Medewerker</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">employee@example.com</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                              Medewerker
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium">250</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600">
+                              Actief
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex space-x-2">
+                              <Button variant="outline" size="sm">
+                                Bewerken
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Punten toekennen
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="beloningen" className="mt-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Beloningen</h2>
+            <Button>
+              <Gift className="mr-2 h-4 w-4" />
+              Nieuwe beloning toevoegen
+            </Button>
+          </div>
+          
+          {/* Beloningen grid */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Beloning kaart voorbeeld */}
+            <Card>
+              <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                <img 
+                  src="https://images.unsplash.com/photo-1580508244245-c466a205d42e" 
+                  alt="Extra Vrije Dag" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="font-bold">Extra Vrije Dag</h3>
+                  <span className="font-semibold text-blue-600">500 punten</span>
+                </div>
+                <p className="mb-4 text-sm text-muted-foreground">Een extra vrije dag naar keuze</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Beschikbaar: 10</span>
+                  <div className="space-x-2">
+                    <Button variant="outline" size="sm">Bewerken</Button>
+                    <Button variant="outline" size="sm">Verwijderen</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                <img 
+                  src="https://images.unsplash.com/photo-1608583020712-a43d0e94f3eb" 
+                  alt="Cadeaubon €25" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="font-bold">Cadeaubon €25</h3>
+                  <span className="font-semibold text-blue-600">250 punten</span>
+                </div>
+                <p className="mb-4 text-sm text-muted-foreground">Een cadeaubon van €25 voor je favoriete winkel</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Beschikbaar: 25</span>
+                  <div className="space-x-2">
+                    <Button variant="outline" size="sm">Bewerken</Button>
+                    <Button variant="outline" size="sm">Verwijderen</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="instellingen" className="mt-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold">Instellingen</h2>
+          </div>
+          
+          {/* Instellingen secties */}
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="mb-4 text-lg font-semibold">API Configuratie</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">API Endpoint</label>
+                    <div className="flex">
+                      <input 
+                        type="text" 
+                        className="flex-1 rounded-l-md border px-3 py-2" 
+                        value="https://api.voorbeeld.com/employees"
+                        readOnly
+                      />
+                      <Button className="rounded-l-none">Verbinden</Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">API Polling Interval (minuten)</label>
+                    <input 
+                      type="number" 
+                      className="w-full rounded-md border px-3 py-2" 
+                      defaultValue="60"
+                    />
+                  </div>
+                  
+                  <div className="pt-2">
+                    <Button>Instellingen opslaan</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="mb-4 text-lg font-semibold">Algemene Instellingen</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Bedrijfsnaam</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border px-3 py-2" 
+                      defaultValue="EXTRA"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Punt Vervaldatum (dagen)</label>
+                    <input 
+                      type="number" 
+                      className="w-full rounded-md border px-3 py-2" 
+                      defaultValue="365"
+                    />
+                  </div>
+                  
+                  <div className="pt-2">
+                    <Button>Instellingen opslaan</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
