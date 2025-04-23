@@ -23,7 +23,16 @@ import {
   XCircle,
   PackageOpen,
   Building2,
-  MoreVertical
+  MoreVertical,
+  Zap,
+  Star,
+  Calendar,
+  Percent,
+  Settings2,
+  X,
+  Save,
+  Award,
+  CalculatorIcon
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -193,7 +202,7 @@ export default function Transactions() {
       </div>
 
       <Tabs defaultValue="points" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="points">
             <Plus className="h-4 w-4 mr-2" />
             Punttransacties
@@ -201,6 +210,10 @@ export default function Transactions() {
           <TabsTrigger value="rewards">
             <Gift className="h-4 w-4 mr-2" />
             Beloningsverzilveringen
+          </TabsTrigger>
+          <TabsTrigger value="rules">
+            <Zap className="h-4 w-4 mr-2" />
+            Regels
           </TabsTrigger>
         </TabsList>
 
