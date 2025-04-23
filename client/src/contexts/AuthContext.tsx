@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; userData?: User }>;
   logout: () => Promise<void>;
 }
 
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   // Login function
-  async function login(email: string, password: string): Promise<boolean> {
+  async function login(email: string, password: string): Promise<{ success: boolean; userData?: User }> {
     setIsLoading(true);
     try {
       const response = await apiRequest('/api/auth/login', {
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           title: 'Ingelogd!',
           description: `Welkom ${data.user.firstName}`,
         });
-        return true;
+        return { success: true, userData: data.user };
       } else {
         const errorData = await response.json();
         toast({
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           description: errorData.message || 'Ongeldige inloggegevens',
           variant: 'destructive',
         });
-        return false;
+        return { success: false };
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         description: 'Er is een fout opgetreden bij het inloggen',
         variant: 'destructive',
       });
-      return false;
+      return { success: false };
     } finally {
       setIsLoading(false);
     }

@@ -13,7 +13,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const { toast } = useToast();
   const [_, navigate] = useLocation();
 
@@ -32,9 +32,14 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate('/dashboard');
+      const result = await login(email, password);
+      if (result.success && result.userData) {
+        // Gebruik de userData direct uit het resultaat om te bepalen waar naartoe te navigeren
+        if (result.userData.role === 'admin') {
+          navigate('/admin'); // Admin dashboard
+        } else {
+          navigate('/dashboard'); // Standaard (employee) dashboard
+        }
       }
     } finally {
       setIsSubmitting(false);
