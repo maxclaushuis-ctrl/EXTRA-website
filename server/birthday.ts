@@ -1,5 +1,5 @@
 import { storage } from './storage';
-import { User } from '@shared/schema';
+import { User, PointTransaction } from '@shared/schema';
 
 // Constante voor verjaardag punten
 export const BIRTHDAY_POINTS = 100;
@@ -72,28 +72,52 @@ export async function awardBirthdayPoints(): Promise<number> {
           continue;
         }
         
-        // Maak een transactie aan
-        const transaction = await storage.createPointTransaction({
-          userId: user.id,
-          amount: BIRTHDAY_POINTS,
-          type: 'earned',
-          description: 'Verjaardagsbonus',
-          source: 'birthday',
-          sourceId: null,
-          metadata: {
-            birthday: [new Date().toISOString()],
-            automaticallyAwarded: [true]
-          }
-        });
-        
-        if (transaction) {
-          // Update gebruiker totaal aantal punten alleen als de transactie is aangemaakt
-          const updatedUser = await storage.updateUserPoints(user.id, BIRTHDAY_POINTS);
+        // Maak een speciale private transactie functie om te voorkomen dat er dubbele punten worden toegekend
+        // Deze functie handelt alles af in één keer, zonder de gebruiker dubbel bij te werken
+        try {
+          // Maak eerst de transactie aan zonder automatische punten-update
+          const transactionData = {
+            userId: user.id,
+            amount: BIRTHDAY_POINTS,
+            type: 'earned' as const,
+            description: 'Verjaardagsbonus',
+            source: 'birthday',
+            sourceId: null,
+            metadata: {
+              birthday: [new Date().toISOString()],
+              automaticallyAwarded: [true]
+            }
+          };
           
+          // Transactie direct aanmaken via storage zonder updateUserPoints
+          const id = storage['currentIds'].pointTransactions++;
+          const now = new Date();
+          
+          const transaction: PointTransaction = {
+            id,
+            ...transactionData,
+            createdAt: now
+          };
+          
+          // Transactie opslaan
+          storage['pointTransactions'].set(id, transaction);
+          
+          // Punten handmatig updaten
+          const updatedUser = await storage.getUser(user.id);
           if (updatedUser) {
+            const newPoints = updatedUser.points + BIRTHDAY_POINTS;
+            
+            // Gebruiker bijwerken met nieuwe punten
+            storage['users'].set(user.id, {
+              ...updatedUser,
+              points: newPoints
+            });
+            
             usersAwarded++;
-            console.log(`${BIRTHDAY_POINTS} punten toegekend aan ${user.email} voor verjaardag, nieuw saldo: ${updatedUser.points} punten`);
+            console.log(`${BIRTHDAY_POINTS} punten toegekend aan ${user.email} voor verjaardag, nieuw saldo: ${newPoints} punten`);
           }
+        } catch (error) {
+          console.error(`Fout bij het aanmaken van verjaardagstransactie voor gebruiker ${user.id}:`, error);
         }
       } catch (error) {
         console.error(`Fout bij toekennen van punten aan gebruiker ${user.id}:`, error);
