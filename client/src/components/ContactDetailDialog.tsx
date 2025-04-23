@@ -237,22 +237,26 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
   };
 
   const handleAddPoints = () => {
-    const points = prompt('Hoeveel punten wil je toekennen?');
+    const points = prompt('Hoeveel punten wil je toekennen? (gebruik - voor minpunten)');
     if (points) {
       const pointsNumber = parseInt(points, 10);
-      if (!isNaN(pointsNumber) && pointsNumber > 0) {
-        // Toon animatie voordat de punten worden toegekend
-        setCelebrationPoints(pointsNumber);
-        setShowCelebration(true);
+      if (!isNaN(pointsNumber) && pointsNumber !== 0) {
+        // Toon animatie voordat de punten worden toegekend (alleen bij positieve punten)
+        if (pointsNumber > 0) {
+          setCelebrationPoints(pointsNumber);
+          setShowCelebration(true);
+        }
         
-        // Wacht even voordat we de API call doen om de animatie tijd te geven
+        // Wacht even voordat we de API call doen om de animatie tijd te geven bij positieve punten
+        // Bij negatieve punten direct uitvoeren
+        const delay = pointsNumber > 0 ? 200 : 0;
         setTimeout(() => {
           pointsMutation.mutate(pointsNumber);
-        }, 200);
+        }, delay);
       } else {
         toast({
           title: 'Ongeldige invoer',
-          description: 'Vul een geldig positief getal in',
+          description: 'Vul een geldig getal in (niet nul)',
           variant: 'destructive',
         });
       }

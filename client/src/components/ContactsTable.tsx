@@ -99,7 +99,7 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
         } else {
           toast({
             title: 'Ongeldige invoer',
-            description: 'Vul een geldig positief getal in',
+            description: 'Vul een geldig getal in (niet nul)',
             variant: 'destructive',
           });
         }
