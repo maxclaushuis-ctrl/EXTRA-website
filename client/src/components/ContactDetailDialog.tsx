@@ -170,7 +170,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
         },
         body: JSON.stringify({
           userId,
-          points,
+          amount: points,
           type: 'earned',
           description: 'Handmatig toegekend',
           source: 'admin',
@@ -194,7 +194,6 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] }); // Voor dashboard statistieken
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/users'] }); // Voor dashboard statistieken
     },
     onError: (error: Error) => {
       toast({
@@ -577,7 +576,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                           <div>
                             <div className="font-medium">{redemption.rewardName}</div>
                             <div className="text-xs text-muted-foreground">
-                              {new Date(redemption.createdAt).toLocaleDateString()} - {redemption.points} punten
+                              {new Date(redemption.createdAt).toLocaleDateString()} - {redemption.pointsCost} punten
                             </div>
                           </div>
                           <Badge
