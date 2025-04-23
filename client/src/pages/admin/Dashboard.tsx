@@ -22,6 +22,8 @@ import {
 
 import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
+import AddContactDialog from '@/components/AddContactDialog';
+import ContactDetailDialog from '@/components/ContactDetailDialog';
 
 // Deze imports worden later toegevoegd wanneer we de afzonderlijke tab-componenten maken
 // import ContactsTab from './tabs/ContactsTab';
@@ -31,6 +33,8 @@ import APIImport from '@/components/APIImport';
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("contacten");
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
   const { data: userStats, isLoading: usersLoading } = useQuery({
     queryKey: ['/api/stats/users'],
@@ -74,8 +78,35 @@ export default function AdminDashboard() {
     },
   ];
 
+  // Functie om een gebruiker te bewerken
+  const handleEditUser = (userId: number) => {
+    setSelectedUserId(userId);
+    setIsDetailDialogOpen(true);
+  };
+
+  // Functie om punten toe te kennen aan een gebruiker
+  const handleAssignPoints = (userId: number) => {
+    const points = prompt('Hoeveel punten wil je toekennen?');
+    if (points) {
+      const pointsNumber = parseInt(points, 10);
+      if (!isNaN(pointsNumber) && pointsNumber > 0) {
+        // Implementatie van het toekennen van punten
+        console.log(`${pointsNumber} punten toegekend aan gebruiker ${userId}`);
+      } else {
+        alert('Vul een geldig positief getal in');
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-6">
+      {/* Contact detail dialog */}
+      <ContactDetailDialog 
+        userId={selectedUserId} 
+        isOpen={isDetailDialogOpen} 
+        onClose={() => setIsDetailDialogOpen(false)} 
+      />
+      
       <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
@@ -146,7 +177,9 @@ export default function AdminDashboard() {
           <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
             <h2 className="text-2xl font-bold">Contacten</h2>
             <div className="flex-1"></div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <AddContactDialog />
+              
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline">
