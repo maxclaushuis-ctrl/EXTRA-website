@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,7 +6,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { User } from '@shared/schema';
 import ContactDetailDialog from './ContactDetailDialog';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { debounce } from '@/lib/utils';
 
 interface ContactsTableProps {
   onEditUser?: (userId: number) => void;
@@ -18,6 +20,12 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<User[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -100,11 +108,100 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
+  // Zoekfunctie
+  const searchUsers = useRef(
+    debounce(async (query: string) => {
+      if (query.length < 2) {
+        setSearchResults(null);
+        setIsSearching(false);
+        return;
+      }
+      
+      setIsSearching(true);
+      
+      try {
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+        
+        if (!response.ok) {
+          throw new Error('Zoeken mislukt');
+        }
+        
+        const data = await response.json();
+        setSearchResults(data);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Zoeken mislukt:', error);
+        toast({
+          title: 'Zoeken mislukt',
+          description: 'Er is een fout opgetreden bij het zoeken van contacten',
+          variant: 'destructive',
+        });
+        setSearchResults(null);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300)
+  ).current;
+  
+  // Handle search input change
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    if (query.length >= 2) {
+      searchUsers(query);
+    } else {
+      setSearchResults(null);
+      setShowSuggestions(false);
+    }
+  };
+  
+  // Handle search suggestion click
+  const handleSuggestionClick = (user: User) => {
+    setSearchQuery('');
+    setSearchResults(null);
+    setShowSuggestions(false);
+    setSelectedUserId(user.id);
+    setIsDetailDialogOpen(true);
+  };
+  
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults(null);
+    setShowSuggestions(false);
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
+  
+  // Click outside handler to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Bepalen welke gebruikers te tonen
+  const displayUsers = searchResults || users;
+  
   // Berekenen van paginering
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = users ? users.slice(indexOfFirstItem, indexOfLastItem) : [];
-  const totalPages = users ? Math.ceil(users.length / itemsPerPage) : 0;
+  const currentItems = displayUsers ? displayUsers.slice(indexOfFirstItem, indexOfLastItem) : [];
+  const totalPages = displayUsers ? Math.ceil(displayUsers.length / itemsPerPage) : 0;
   
   // Pagina wijzigen
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
@@ -151,6 +248,80 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
             </div>
           ) : (
             <div className="overflow-x-auto">
+              {/* Zoekbalk */}
+              <div className="p-4 relative">
+                <div className="relative w-full max-w-md">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <Input
+                    ref={searchInputRef}
+                    type="search"
+                    placeholder="Zoek contacten..."
+                    className="pl-10 pr-10"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      onClick={handleClearSearch}
+                    >
+                      <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  )}
+                  
+                  {/* Zoeksuggesties */}
+                  {showSuggestions && searchResults && searchResults.length > 0 && (
+                    <div 
+                      ref={suggestionsRef}
+                      className="absolute mt-1 w-full max-h-60 overflow-auto rounded-md bg-popover shadow-md z-10"
+                    >
+                      <ul className="py-1 text-sm">
+                        {searchResults.slice(0, 5).map((user) => (
+                          <li 
+                            key={user.id}
+                            className="px-4 py-2 hover:bg-muted cursor-pointer"
+                            onClick={() => handleSuggestionClick(user)}
+                          >
+                            <div className="flex items-center">
+                              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-blue-100">
+                                <div className="flex h-full w-full items-center justify-center text-sm font-medium text-blue-600">
+                                  {getInitials(user.firstName, user.lastName)}
+                                </div>
+                              </div>
+                              <div className="ml-3">
+                                <p className="font-medium">{user.firstName} {user.lastName}</p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                        {searchResults.length > 5 && (
+                          <li className="px-4 py-2 text-center text-xs text-muted-foreground">
+                            + {searchResults.length - 5} meer resultaten
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                {searchResults && searchResults.length > 0 && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {searchResults.length} resultaten gevonden
+                  </p>
+                )}
+                
+                {isSearching && (
+                  <div className="mt-2 flex items-center space-x-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                    <span className="text-sm text-muted-foreground">Zoeken...</span>
+                  </div>
+                )}
+              </div>
+              
               <table className="w-full">
                 <thead>
                   <tr className="bg-muted/50">

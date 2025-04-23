@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/users/search", adminMiddleware, async (req: Request, res: Response) => {
+  app.get("/api/users/search", authMiddleware, async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
       
@@ -387,13 +387,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const users = await storage.searchUsers(query);
       
-      // Strip sensitive info
+      // Strip sensitive info but keep necessary data for the contactentabel
       const sanitizedUsers = users.map(user => ({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        points: user.points
+        points: user.points,
+        role: user.role,
+        status: user.status,
+        phone: user.phone
       }));
       
       return res.status(200).json(sanitizedUsers);
