@@ -17,7 +17,8 @@ import {
 import { 
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
-  Activity, User, Import, Download, Receipt
+  Activity, User, Import, Download, Receipt,
+  Mail, Megaphone, Zap
 } from 'lucide-react';
 
 import Transactions from './Transactions';
@@ -27,6 +28,7 @@ import APIImport from '@/components/APIImport';
 import AddContactDialog from '@/components/AddContactDialog';
 import ContactDetailDialog from '@/components/ContactDetailDialog';
 import ContactsTable from '@/components/ContactsTable';
+import EmailTemplateEditor from '@/components/EmailTemplateEditor';
 
 // Deze imports worden later toegevoegd wanneer we de afzonderlijke tab-componenten maken
 // import ContactsTab from './tabs/ContactsTab';
@@ -162,7 +164,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
@@ -174,6 +176,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="beloningen">
             <Gift className="mr-2 h-4 w-4" />
             Beloningen
+          </TabsTrigger>
+          <TabsTrigger value="marketing">
+            <Megaphone className="mr-2 h-4 w-4" />
+            Marketing
           </TabsTrigger>
           <TabsTrigger value="instellingen">
             <Settings className="mr-2 h-4 w-4" />
@@ -304,6 +310,16 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="marketing" className="mt-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold">Email Marketing</h2>
+            <p className="text-muted-foreground">
+              Beheer email templates en automatiseringen voor communicatie met medewerkers
+            </p>
+          </div>
+          <EmailTemplateEditor />
         </TabsContent>
         
         <TabsContent value="instellingen" className="mt-6">

@@ -37,6 +37,7 @@ const formSchema = insertUserSchema.pick({
   lastName: true,
   email: true,
   phone: true,
+  birthDate: true,
   role: true,
   status: true,
 });
@@ -102,6 +103,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
       lastName: '',
       email: '',
       phone: '',
+      birthDate: '',
       role: 'employee',
       status: 'active',
     },
@@ -114,6 +116,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
         lastName: user.lastName,
         email: user.email,
         phone: user.phone || '',
+        birthDate: user.birthDate || '',
         role: user.role,
         status: user.status,
       });
@@ -398,6 +401,34 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                     )}
                   />
                   
+                  <FormField
+                    control={form.control}
+                    name="birthDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Geboortedatum (optioneel)</FormLabel>
+                        <FormControl>
+                          <div className="flex">
+                            <span className="flex items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                            </span>
+                            <Input 
+                              type="date"
+                              placeholder="DD-MM-JJJJ" 
+                              className="rounded-l-none" 
+                              {...field} 
+                              value={field.value || ''}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Gebruikt voor verjaardagsautomatiseringen.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -513,15 +544,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                   <div className="mt-4 space-y-2">
                     <Button 
                       className="w-full" 
-                      onClick={handleSendLogin}
-                      disabled={sendLoginMutation.isPending}
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      {sendLoginMutation.isPending ? "Versturen..." : "Inlog versturen"}
-                    </Button>
-                    <Button 
-                      className="w-full" 
-                      variant="outline"
+                      variant="secondary"
                       onClick={handleAddPoints}
                       disabled={pointsMutation.isPending}
                     >
