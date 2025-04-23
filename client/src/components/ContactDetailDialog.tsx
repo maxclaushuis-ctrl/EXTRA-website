@@ -173,6 +173,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
           points,
           type: 'earned',
           description: 'Handmatig toegekend',
+          source: 'admin',
         }),
       });
       
@@ -188,9 +189,12 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
         title: 'Punten toegekend',
         description: 'De punten zijn succesvol toegekend aan de gebruiker',
       });
+      // Invalideert alle belangrijke queries zodat de frontend overal wordt bijgewerkt
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] }); // Voor dashboard statistieken
+      queryClient.invalidateQueries({ queryKey: ['/api/stats/users'] }); // Voor dashboard statistieken
     },
     onError: (error: Error) => {
       toast({

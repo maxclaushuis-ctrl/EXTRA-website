@@ -75,13 +75,6 @@ export default function AdminDashboard() {
       change: userStats?.changes?.activeUsersChange || '+0%',
       changeDirection: 'up',
     },
-    {
-      title: 'Betrokkenheid',
-      value: usersLoading ? <Skeleton className="h-8 w-20" /> : `${userStats?.engagementRate || 0}%`,
-      icon: <Activity className="h-4 w-4 text-yellow-600" />,
-      change: userStats?.changes?.engagementChange || '+0%',
-      changeDirection: 'up',
-    },
   ];
 
   // Functie om een gebruiker te bewerken
