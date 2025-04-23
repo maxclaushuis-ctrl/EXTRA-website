@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, PlusCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'wouter';
+import AddRewardDialog from '@/components/AddRewardDialog';
 
 export default function RewardsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddRewardOpen, setIsAddRewardOpen] = useState(false);
 
   const { data: rewards, isLoading } = useQuery({
     queryKey: ['/api/rewards'],
@@ -32,9 +34,9 @@ export default function RewardsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge variant="success">Beschikbaar</Badge>;
+        return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Beschikbaar</Badge>;
       case 'outofstock':
-        return <Badge variant="warning">Niet op voorraad</Badge>;
+        return <Badge variant="destructive" className="bg-yellow-500 hover:bg-yellow-600">Niet op voorraad</Badge>;
       case 'hidden':
         return <Badge variant="outline">Verborgen</Badge>;
       default:
@@ -76,7 +78,7 @@ export default function RewardsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button className="shrink-0">
+            <Button className="shrink-0" onClick={() => setIsAddRewardOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Beloning toevoegen
             </Button>
@@ -94,6 +96,14 @@ export default function RewardsPage() {
               ? `Geen resultaten voor "${searchQuery}"`
               : 'Voeg beloningen toe om te beginnen'}
           </p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => setIsAddRewardOpen(true)}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Beloning toevoegen
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -144,6 +154,12 @@ export default function RewardsPage() {
           ))}
         </div>
       )}
+
+      {/* Dialog voor toevoegen beloning */}
+      <AddRewardDialog 
+        isOpen={isAddRewardOpen} 
+        onClose={() => setIsAddRewardOpen(false)}
+      />
     </div>
   );
 }
