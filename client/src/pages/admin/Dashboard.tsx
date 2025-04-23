@@ -17,8 +17,10 @@ import {
 import { 
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
-  Activity, User, Import, Download
+  Activity, User, Import, Download, Receipt
 } from 'lucide-react';
+
+import Transactions from './Transactions';
 
 import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
@@ -159,10 +161,14 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
+          </TabsTrigger>
+          <TabsTrigger value="transacties">
+            <Receipt className="mr-2 h-4 w-4" />
+            Transacties
           </TabsTrigger>
           <TabsTrigger value="beloningen">
             <Gift className="mr-2 h-4 w-4" />
@@ -230,6 +236,11 @@ export default function AdminDashboard() {
               onAssignPoints={handleAssignPoints}
             />
           </div>
+        </TabsContent>
+        
+        <TabsContent value="transacties" className="mt-6">
+          {/* Transacties component */}
+          <Transactions />
         </TabsContent>
         
         <TabsContent value="beloningen" className="mt-6">
