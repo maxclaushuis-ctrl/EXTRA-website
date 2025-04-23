@@ -155,6 +155,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  app.get("/api/auth/me", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Niet ingelogd" });
+      }
+      
+      const user = await storage.getUser(req.session.userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+      
+      // Strip sensitive info
+      const sanitizedUser = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        birthDate: user.birthDate,
+        dateJoined: user.dateJoined,
+        role: user.role,
+        status: user.status,
+        points: user.points,
+        profileImage: user.profileImage,
+        tags: user.tags
+      };
+      
+      return res.status(200).json(sanitizedUser);
+    } catch (error) {
+      console.error("Get current user error:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de gebruiker" });
+    }
+  });
+  
   // User routes
   app.get("/api/users", adminMiddleware, async (_req: Request, res: Response) => {
     try {
