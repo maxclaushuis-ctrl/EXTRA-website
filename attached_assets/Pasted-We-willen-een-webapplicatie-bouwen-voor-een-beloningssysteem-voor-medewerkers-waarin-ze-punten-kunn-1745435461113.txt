@@ -1,0 +1,63 @@
+We willen een webapplicatie bouwen voor een beloningssysteem voor medewerkers, waarin ze punten kunnen verdienen en verzilveren voor beloningen. De app moet gebruiksvriendelijk zijn, gekoppeld zijn aan ons bestaande plansysteem (middels API), en zowel medewerkers als beheerders voorzien van de juiste functionaliteit.
+
+👨‍💻 Functionaliteiten (Admin/backend):
+
+Dashboard (Admin)
+Instellingen (kleurenthema, logo upload, etc.)
+Contactenoverzicht (zie bijlage voor lay-outinspiratie)
+NAW-gegevens, geboortedatum
+Aantal shifts (vanuit API)
+Spaarpunten
+Aantal verzilveringen (met datum & item)
+Importfunctie voor medewerkers via CSV
+Toevoegen van nieuwe medewerkers via API
+Bij toevoegen automatisch e-mail met login (wachtwoord gegenereerd)
+Puntentransactieoverzicht per medewerker (zoals in afbeelding)
+Transactietype: bijv. “X shifts”, “rating 4.5”, “half jaar in dienst”
+Datum + bron (bijv. API of handmatig)
+Regelsysteem:
+Regels kunnen aan- of uitgezet worden
+Voorwaardes: X aantal shifts, score hoger dan 4.0, startdatum, jubileum
+Puntenwaarde per regel
+Beloningen beheren:
+Beloning toevoegen (naam, omschrijving, afbeelding, puntenwaarde)
+Aantal beschikbare items optioneel
+Verzilveren = automatische afschrijving van punten
+Exporteerbare rapportage (csv)
+👥 Functionaliteiten (Medewerker):
+
+Inlogomgeving met unieke gebruikersaccount
+Dashboard gebruiker:
+Totaal aantal punten
+Overzicht van hoe punten verdiend zijn (transacties)
+Overzicht van beschikbare beloningen
+Beloning verzilveren knop
+Visuele voortgang (zoals “nog 160 punten nodig”)
+Bonusacties (bijv. “Nodig een vriend uit en verdien 1000 EXTRA punten”)
+Mobiele weergave geoptimaliseerd (zie screenshots – app-look)
+E-mailnotificatie bij nieuwe beloning of verzilvering
+🔗 Integraties
+
+API koppeling met plansysteem
+Ophalen van:
+Aantal shifts
+Beoordeling per shift
+Startdatum medewerker
+Medewerker toevoegen via API
+Transacties loggen via API (bijvoorbeeld bij het behalen van een shift milestone)
+E-mailservice (Mailgun / SendGrid) voor verzenden van:
+Welkomstmail met wachtwoord
+Meldingen bij verzilveringen
+🌈 Designrichtlijnen:
+
+Fris, jong, kleurrijk (blauw/geel neon look zoals in app-screenshots)
+Licht thema met donkere app-weergave (voor mobiel)
+Clean en minimalistisch dashboard (zie huidige layout als basis, maar simpeler)
+💡 Aanvullende wensen:
+
+Zoek- en filterfunctie in contactenlijst
+Mogelijkheid tot tags/labels per medewerker (bijv. ‘Team Amsterdam’)
+Admin kan handmatig punten toevoegen of verwijderen
+Mogelijkheid tot statusweergave bij beloningen (bijv. “Verzonden”, “In behandeling”)
+Backend gebouwd in Node.js of Python, frontend in React of Vue.js (flexibel)
+Database: bij voorkeur PostgreSQL of MongoDB
