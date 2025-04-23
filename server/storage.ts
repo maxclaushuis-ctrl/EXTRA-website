@@ -215,7 +215,19 @@ export class MemStorage implements IStorage {
     
     const user: User = {
       id,
-      ...insertUser,
+      email: insertUser.email,
+      password: insertUser.password,
+      firstName: insertUser.firstName,
+      lastName: insertUser.lastName,
+      phone: insertUser.phone || null,
+      birthDate: insertUser.birthDate || null,
+      role: insertUser.role || 'employee',
+      status: insertUser.status || 'active',
+      points: insertUser.points !== undefined ? insertUser.points : 0,
+      profileImage: insertUser.profileImage || null,
+      apiId: insertUser.apiId || null,
+      tags: insertUser.tags || [],
+      settings: insertUser.settings || null,
       dateJoined: now,
     };
     
@@ -297,7 +309,12 @@ export class MemStorage implements IStorage {
     
     const reward: Reward = {
       id,
-      ...insertReward,
+      name: insertReward.name,
+      description: insertReward.description || null,
+      imageUrl: insertReward.imageUrl || null,
+      pointsCost: insertReward.pointsCost,
+      stock: insertReward.stock || null,
+      status: insertReward.status || 'available',
       dateCreated: now,
       dateUpdated: now
     };
@@ -339,7 +356,13 @@ export class MemStorage implements IStorage {
     
     const transaction: PointTransaction = {
       id,
-      ...insertTransaction,
+      userId: insertTransaction.userId,
+      amount: insertTransaction.amount,
+      type: insertTransaction.type,
+      description: insertTransaction.description,
+      source: insertTransaction.source,
+      sourceId: insertTransaction.sourceId || null,
+      metadata: insertTransaction.metadata || null,
       createdAt: now
     };
     
@@ -372,7 +395,11 @@ export class MemStorage implements IStorage {
     
     const redemption: Redemption = {
       id,
-      ...insertRedemption,
+      userId: insertRedemption.userId,
+      rewardId: insertRedemption.rewardId,
+      pointsCost: insertRedemption.pointsCost,
+      status: insertRedemption.status || 'pending',
+      notes: insertRedemption.notes || null,
       createdAt: now,
       updatedAt: now
     };
@@ -437,7 +464,16 @@ export class MemStorage implements IStorage {
     
     const rule: Rule = {
       id,
-      ...insertRule,
+      name: insertRule.name,
+      description: insertRule.description || null,
+      type: insertRule.type,
+      condition: {
+        type: insertRule.condition.type,
+        value: insertRule.condition.value,
+        operator: insertRule.condition.operator || undefined
+      },
+      pointsValue: insertRule.pointsValue,
+      isActive: insertRule.isActive !== undefined ? insertRule.isActive : true,
       createdAt: now,
       updatedAt: now
     };
@@ -460,8 +496,19 @@ export class MemStorage implements IStorage {
     
     const updatedRule: Rule = {
       ...rule,
-      ...ruleData,
-      updatedAt: new Date()
+      name: ruleData.name || rule.name,
+      description: ruleData.description !== undefined ? ruleData.description || null : rule.description,
+      type: ruleData.type || rule.type,
+      condition: ruleData.condition ? {
+        type: ruleData.condition.type || rule.condition.type,
+        value: ruleData.condition.value !== undefined ? ruleData.condition.value : rule.condition.value,
+        operator: ruleData.condition.operator || rule.condition.operator
+      } : rule.condition,
+      pointsValue: ruleData.pointsValue !== undefined ? ruleData.pointsValue : rule.pointsValue,
+      isActive: ruleData.isActive !== undefined ? ruleData.isActive : rule.isActive,
+      updatedAt: new Date(),
+      createdAt: rule.createdAt,
+      id: rule.id
     };
     
     this.rules.set(id, updatedRule);
