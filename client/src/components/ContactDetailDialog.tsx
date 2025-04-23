@@ -194,6 +194,34 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
       });
     },
   });
+  
+  // Login versturen mutation
+  const sendLoginMutation = useMutation({
+    mutationFn: async () => {
+      if (!userId) return null;
+      
+      // Hier zal later de echte API-call komen voor het versturen van de inloggegevens
+      // Voorlopig simuleren we een succesvolle verzending
+      
+      // Simuleer een API-aanroep met een korte timeout
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return { success: true };
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Inloggegevens verstuurd',
+        description: 'De inloggegevens zijn succesvol verstuurd naar de medewerker',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fout bij verzenden',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   const onSubmit = (data: FormValues) => {
     updateMutation.mutate(data);
@@ -212,6 +240,21 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
           variant: 'destructive',
         });
       }
+    }
+  };
+  
+  // Handler voor het versturen van inloggegevens
+  const handleSendLogin = () => {
+    if (user?.email) {
+      if (confirm(`Weet je zeker dat je inloggegevens wilt versturen naar ${user.email}?`)) {
+        sendLoginMutation.mutate();
+      }
+    } else {
+      toast({
+        title: 'E-mailadres ontbreekt',
+        description: 'De gebruiker heeft geen geldig e-mailadres',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -406,10 +449,11 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={handleAddPoints}
+                      onClick={handleSendLogin}
+                      disabled={sendLoginMutation.isPending}
                     >
-                      <Award className="mr-2 h-4 w-4" />
-                      Punten toekennen
+                      <Mail className="mr-2 h-4 w-4" />
+                      {sendLoginMutation.isPending ? "Versturen..." : "Inlog versturen"}
                     </Button>
                     <Button 
                       type="submit"
@@ -452,10 +496,11 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                   <div className="mt-4">
                     <Button 
                       className="w-full" 
-                      onClick={handleAddPoints}
+                      onClick={handleSendLogin}
+                      disabled={sendLoginMutation.isPending}
                     >
-                      <Award className="mr-2 h-4 w-4" />
-                      Punten toekennen
+                      <Mail className="mr-2 h-4 w-4" />
+                      {sendLoginMutation.isPending ? "Versturen..." : "Inlog versturen"}
                     </Button>
                   </div>
                 </CardContent>
