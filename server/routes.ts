@@ -613,9 +613,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Maak de amount parameter aan vanuit points voor compatibiliteit
+      // Zorg dat we de amount parameter gebruiken als die bestaat, 
+      // anders de points parameter (voor oudere code)
       const transactionData = {
         ...result.data,
-        amount: result.data.points || result.data.amount
+        amount: result.data.amount || result.data.points || 0
       };
       
       // Create the transaction

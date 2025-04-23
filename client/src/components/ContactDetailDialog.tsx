@@ -533,11 +533,11 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                     </div>
                     <div className="flex items-center justify-between border-b py-2">
                       <span className="text-sm font-medium">Totaal verdiend</span>
-                      <span>{transactions?.filter(t => t.type === 'earned')?.reduce((sum, t) => sum + t.points, 0) || 0}</span>
+                      <span>{transactions?.filter(t => t.type === 'earned')?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0}</span>
                     </div>
                     <div className="flex items-center justify-between border-b py-2">
                       <span className="text-sm font-medium">Totaal verzilverd</span>
-                      <span>{transactions?.filter(t => t.type === 'redeemed')?.reduce((sum, t) => sum + t.points, 0) || 0}</span>
+                      <span>{transactions?.filter(t => t.type === 'redeemed')?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0}</span>
                     </div>
                     <div className="flex items-center justify-between py-2">
                       <span className="text-sm font-medium">Verzilverde beloningen</span>
@@ -640,7 +640,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                         <div className={`font-semibold ${
                           transaction.type === 'earned' ? 'text-green-600' : 'text-blue-600'
                         }`}>
-                          {transaction.type === 'earned' ? '+' : '-'}{transaction.points} punten
+                          {transaction.type === 'earned' ? '+' : '-'}{transaction.amount || 0} punten
                         </div>
                       </div>
                     ))}
