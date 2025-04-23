@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Bereken totaal aantal uitgegeven punten (alleen positieve transacties)
       const totalPointsAwarded = transactions
         .filter(t => t.type === 'earned')
-        .reduce((sum, t) => sum + t.points, 0);
+        .reduce((sum, t) => sum + t.amount, 0);
       
       // Bereken betrokkenheidsgraad op basis van transacties
       // (percentage medewerkers dat minstens één transactie heeft)

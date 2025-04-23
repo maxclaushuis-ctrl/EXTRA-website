@@ -41,8 +41,8 @@ export default function AdminDashboard() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  const { data: userStats, isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/stats/users'],
+  const { data: userStats, isLoading: usersLoading, refetch: refetchStats } = useQuery({
+    queryKey: ['/api/stats'],
     queryFn: async () => {
       const response = await fetch('/api/stats');
       if (!response.ok) {
@@ -90,7 +90,33 @@ export default function AdminDashboard() {
       const pointsNumber = parseInt(points, 10);
       if (!isNaN(pointsNumber) && pointsNumber > 0) {
         // Implementatie van het toekennen van punten
-        console.log(`${pointsNumber} punten toegekend aan gebruiker ${userId}`);
+        fetch('/api/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            amount: pointsNumber,
+            type: 'earned',
+            description: 'Handmatig toegekend',
+            source: 'admin',
+          }),
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Punten konden niet worden toegekend');
+          }
+          return response.json();
+        })
+        .then(() => {
+          // Vernieuw alle statistieken en lijsten
+          refetchStats();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Er is een fout opgetreden bij het toekennen van punten.');
+        });
       } else {
         alert('Vul een geldig positief getal in');
       }

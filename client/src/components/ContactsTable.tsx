@@ -29,7 +29,7 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading: usersLoading } = useQuery({
+  const { data: users, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
       const response = await fetch('/api/users');
@@ -38,6 +38,8 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
       }
       return response.json() as Promise<User[]>;
     },
+    // Regelmatig de gebruikerslijst vernieuwen om wijzigingen te zien
+    refetchInterval: 5000, // Elke 5 seconden vernieuwen
   });
 
   // Functie om een gebruiker te bewerken
@@ -67,9 +69,10 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
             },
             body: JSON.stringify({
               userId,
-              points: pointsNumber,
+              amount: pointsNumber,
               type: 'earned',
               description: 'Handmatig toegekend',
+              source: 'admin',
             }),
           })
             .then(response => {
