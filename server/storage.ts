@@ -273,8 +273,8 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
     
     // Voeg punten toe aan het bestaande puntensaldo
-    // Voorkom dat punten negatief worden
-    const newPoints = Math.max(0, user.points + points);
+    // Sta ook negatieve punten toe (min-punten)
+    const newPoints = user.points + points;
     
     // Maak een kopie van de gebruiker met bijgewerkte punten
     const updatedUser: User = {
