@@ -612,15 +612,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Gebruiker niet gevonden" });
       }
       
+      // Maak de amount parameter aan vanuit points voor compatibiliteit
+      const transactionData = {
+        ...result.data,
+        amount: result.data.points || result.data.amount
+      };
+      
       // Create the transaction
-      const transaction = await storage.createPointTransaction(result.data);
+      const transaction = await storage.createPointTransaction(transactionData);
       
       // Get updated user
       const updatedUser = await storage.getUser(result.data.userId);
       
+      // Voeg points property toe aan transaction response voor frontend compatibiliteit
+      const transactionResponse = {
+        ...transaction,
+        points: transaction.amount
+      };
+      
       return res.status(201).json({
         message: "Transactie succesvol aangemaakt",
-        transaction,
+        transaction: transactionResponse,
         user: {
           id: updatedUser!.id,
           points: updatedUser!.points
