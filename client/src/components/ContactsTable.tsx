@@ -57,10 +57,10 @@ export default function ContactsTable({ onEditUser, onAssignPoints }: ContactsTa
     if (onAssignPoints) {
       onAssignPoints(userId);
     } else {
-      const points = prompt('Hoeveel punten wil je toekennen?');
+      const points = prompt('Hoeveel punten wil je toekennen? (gebruik - voor minpunten)');
       if (points) {
         const pointsNumber = parseInt(points, 10);
-        if (!isNaN(pointsNumber) && pointsNumber > 0) {
+        if (!isNaN(pointsNumber) && pointsNumber !== 0) {
           // API aanroep om punten toe te kennen
           fetch('/api/transactions', {
             method: 'POST',
