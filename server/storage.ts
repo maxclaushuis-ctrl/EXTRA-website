@@ -272,12 +272,20 @@ export class MemStorage implements IStorage {
     const user = await this.getUser(id);
     if (!user) return undefined;
     
+    // Voeg punten toe aan het bestaande puntensaldo
+    // Voorkom dat punten negatief worden
+    const newPoints = Math.max(0, user.points + points);
+    
+    // Maak een kopie van de gebruiker met bijgewerkte punten
     const updatedUser: User = {
       ...user,
-      points: user.points + points
+      points: newPoints
     };
     
     this.users.set(id, updatedUser);
+    
+    console.log(`Punten voor gebruiker ${id} bijgewerkt: ${user.points} -> ${newPoints} (${points > 0 ? '+' : ''}${points})`);
+    
     return updatedUser;
   }
   
@@ -368,8 +376,11 @@ export class MemStorage implements IStorage {
     
     this.pointTransactions.set(id, transaction);
     
-    // Update user points
-    await this.updateUserPoints(transaction.userId, transaction.amount);
+    // Verjaardagsbonus-updating wordt al gedaan in de birthday.ts, dus als dit een birthday transactie is, update dan niet hier
+    if (transaction.source !== 'birthday') {
+      // Update user points voor alle andere transacties
+      await this.updateUserPoints(transaction.userId, transaction.amount);
+    }
     
     return transaction;
   }

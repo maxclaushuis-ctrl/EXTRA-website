@@ -43,6 +43,9 @@ export async function awardBirthdayPoints(): Promise<number> {
     const birthdayUsers = await getUsersWithBirthdayToday();
     console.log(`${birthdayUsers.length} gebruikers zijn vandaag jarig`);
     
+    // Teller voor aantal gebruikers aan wie punten zijn toegekend
+    let usersAwarded = 0;
+    
     // Kent punten toe aan elke jarige gebruiker
     for (const user of birthdayUsers) {
       try {
@@ -69,8 +72,8 @@ export async function awardBirthdayPoints(): Promise<number> {
           continue;
         }
         
-        // Ken punten toe via transactie
-        await storage.createPointTransaction({
+        // Maak een transactie aan
+        const transaction = await storage.createPointTransaction({
           userId: user.id,
           amount: BIRTHDAY_POINTS,
           type: 'earned',
@@ -83,17 +86,21 @@ export async function awardBirthdayPoints(): Promise<number> {
           }
         });
         
-        // Update gebruiker totaal aantal punten
-        // Omdat updateUserPoints al optelt bij bestaande punten, geven we alleen BIRTHDAY_POINTS door
-        await storage.updateUserPoints(user.id, BIRTHDAY_POINTS);
-        
-        console.log(`${BIRTHDAY_POINTS} punten toegekend aan ${user.email} voor verjaardag`);
+        if (transaction) {
+          // Update gebruiker totaal aantal punten alleen als de transactie is aangemaakt
+          const updatedUser = await storage.updateUserPoints(user.id, BIRTHDAY_POINTS);
+          
+          if (updatedUser) {
+            usersAwarded++;
+            console.log(`${BIRTHDAY_POINTS} punten toegekend aan ${user.email} voor verjaardag, nieuw saldo: ${updatedUser.points} punten`);
+          }
+        }
       } catch (error) {
         console.error(`Fout bij toekennen van punten aan gebruiker ${user.id}:`, error);
       }
     }
     
-    return birthdayUsers.length;
+    return usersAwarded;
   } catch (error) {
     console.error('Fout bij verjaardagspunten toekenning:', error);
     return 0;
