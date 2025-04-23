@@ -170,7 +170,7 @@ export default function Home() {
                     
                     <div className="text-sm text-muted-foreground">
                       <p>Test gebruiker (medewerker): employee@example.com / password123</p>
-                      <p>Test gebruiker (admin): admin@example.com / admin123</p>
+                      <p>Test gebruiker (admin): admin@extra.nl / admin123</p>
                     </div>
                   </CardContent>
                   <CardFooter>
