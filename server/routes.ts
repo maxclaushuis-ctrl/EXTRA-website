@@ -12,6 +12,7 @@ import {
   insertSettingsSchema 
 } from "@shared/schema";
 import { ZodError } from "zod";
+import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
 
 // Auth middleware
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -32,7 +33,50 @@ function adminMiddleware(req: Request, res: Response, next: NextFunction) {
   return res.status(403).json({ message: "Geen toegang" });
 }
 
+// Plan de dagelijkse verjaardagscontrole (elke dag om 00:05)
+let birthdayCheckTimer: NodeJS.Timeout | null = null;
+
+function scheduleBirthdayCheck() {
+  // Verwijder bestaande timer als die bestaat
+  if (birthdayCheckTimer) {
+    clearTimeout(birthdayCheckTimer);
+  }
+  
+  // Bereken tijd tot de volgende controle (00:05 de volgende dag)
+  const now = new Date();
+  const nextCheckTime = new Date(now);
+  
+  // Reset naar vandaag 00:05
+  nextCheckTime.setHours(0, 5, 0, 0);
+  
+  // Als het al voorbij 00:05 is, plan dan voor morgen
+  if (now >= nextCheckTime) {
+    nextCheckTime.setDate(nextCheckTime.getDate() + 1);
+  }
+  
+  // Bereken milliseconden tot de volgende controle
+  const timeUntilNextCheck = nextCheckTime.getTime() - now.getTime();
+  
+  console.log(`Volgende verjaardagscontrole gepland om ${nextCheckTime.toLocaleString()} (over ${Math.round(timeUntilNextCheck / 1000 / 60)} minuten)`);
+  
+  // Plan de verjaardagscontrole
+  birthdayCheckTimer = setTimeout(async () => {
+    try {
+      console.log("Dagelijkse verjaardagscontrole wordt uitgevoerd...");
+      const usersAwarded = await awardBirthdayPoints();
+      console.log(`Verjaardagscontrole voltooid. ${usersAwarded} gebruikers hebben punten ontvangen.`);
+    } catch (error) {
+      console.error("Fout tijdens verjaardagscontrole:", error);
+    } finally {
+      // Plan de volgende controle
+      scheduleBirthdayCheck();
+    }
+  }, timeUntilNextCheck);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Start de verjaardagscontrole planning
+  scheduleBirthdayCheck();
   // Legacy API routes - behouden voor backward compatibility
   app.post("/api/signup", async (req: Request, res: Response) => {
     try {
@@ -943,6 +987,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error updating setting ${req.params.key}:`, error);
       return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de instelling" });
+    }
+  });
+  
+  // Endpoint voor het uitvoeren van een handmatige verjaardagscontrole
+  app.post("/api/admin/check-birthdays", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const usersAwarded = await awardBirthdayPoints();
+      
+      return res.status(200).json({
+        success: true,
+        message: `Verjaardagscontrole uitgevoerd. ${usersAwarded} gebruikers hebben ${BIRTHDAY_POINTS} punten ontvangen.`,
+        usersAwarded,
+        pointsPerUser: BIRTHDAY_POINTS,
+        euroValue: BIRTHDAY_POINTS / POINTS_TO_EURO_RATIO
+      });
+    } catch (error) {
+      console.error("Fout bij handmatige verjaardagscontrole:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Er is een fout opgetreden bij het uitvoeren van de verjaardagscontrole" 
+      });
     }
   });
   
