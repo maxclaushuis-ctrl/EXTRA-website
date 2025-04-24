@@ -58,6 +58,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import EmailTemplateEditor from "@/components/EmailTemplateEditor";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Campaign = {
   id: number;

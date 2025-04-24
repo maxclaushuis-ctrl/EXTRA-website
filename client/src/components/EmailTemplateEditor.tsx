@@ -717,11 +717,11 @@ const EmailTemplateEditor = ({
         </TabsContent>
       </Tabs>
       
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .preview-content * {
           font-family: Poppins, sans-serif;
         }
-      `}</style>
+      `}} />
     </div>
   );
 };
