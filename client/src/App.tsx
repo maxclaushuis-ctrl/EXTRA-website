@@ -13,6 +13,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
 import RulesPage from "@/pages/admin/Rules";
+import MarketingPage from "@/pages/admin/Marketing";
 import SettingsPage from "@/pages/admin/Settings";
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -83,6 +84,9 @@ function Router() {
         </Route>
         <Route path="/admin/rules">
           {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}
+        </Route>
+        <Route path="/admin/marketing">
+          {() => <ProtectedRoute component={MarketingPage} adminOnly={true} />}
         </Route>
         <Route path="/admin/settings">
           {() => <ProtectedRoute component={SettingsPage} adminOnly={true} />}

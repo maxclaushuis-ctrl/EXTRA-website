@@ -281,7 +281,14 @@ export default function AdminDashboard() {
               Beheer email templates en automatiseringen voor communicatie met medewerkers
             </p>
           </div>
-          <EmailTemplateEditor />
+          <div className="flex justify-center pt-4">
+            <Button asChild size="lg">
+              <Link href="/admin/marketing">
+                <Megaphone className="mr-2 h-5 w-5" />
+                Ga naar Marketing
+              </Link>
+            </Button>
+          </div>
         </TabsContent>
         
         <TabsContent value="instellingen" className="mt-6">
