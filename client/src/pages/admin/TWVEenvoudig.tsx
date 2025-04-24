@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -27,10 +27,18 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileEdit, ExternalLink, FileText } from "lucide-react";
+import { 
+  FileEdit, 
+  ExternalLink, 
+  FileText,
+  Search,
+  Filter,
+  X
+} from "lucide-react";
 
 // Status badge component
 const TWVStatusBadge = ({ status }: { status: string }) => {
@@ -198,190 +206,349 @@ const NotitieDialog = ({ notitie }: { notitie: string }) => {
   );
 };
 
+// Zoekbalk component voor tabellen
+const TableSearchBar = ({ 
+  searchTerm, 
+  onSearchChange,
+  placeholderText = "Zoek op naam..."
+}: { 
+  searchTerm: string; 
+  onSearchChange: (value: string) => void;
+  placeholderText?: string;
+}) => {
+  return (
+    <div className="flex items-center space-x-2 py-2">
+      <div className="relative flex-1">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          type="search"
+          placeholder={placeholderText}
+          className="w-full pl-9 pr-4"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+        {searchTerm && (
+          <button
+            onClick={() => onSearchChange("")}
+            className="absolute right-2.5 top-2.5 text-gray-500 hover:text-gray-700"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Standaard tabel component met alleen notitie veld
 const TWVTableBasic = ({ users }: { users: any[] }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return users.filter(user => 
+      (user.firstName?.toLowerCase().includes(lowerCaseSearch) || 
+       user.lastName?.toLowerCase().includes(lowerCaseSearch) ||
+       (user.firstName + ' ' + user.lastName).toLowerCase().includes(lowerCaseSearch) ||
+       (user.notitie && user.notitie.toLowerCase().includes(lowerCaseSearch)))
+    );
+  }, [users, searchTerm]);
+  
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Naam</TableHead>
-            <TableHead>Geboortedatum</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Notitie</TableHead>
-            <TableHead className="text-right">Acties</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">
-                {user.firstName} {user.lastName}
-              </TableCell>
-              <TableCell>
-                {user.birthDate ? 
-                  format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
-                  : '-'}
-              </TableCell>
-              <TableCell>
-                <TWVStatusBadge status={user.status} />
-              </TableCell>
-              <TableCell>
-                <NotitieDialog notitie={user.notitie || ""} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm">
-                  <FileEdit className="h-4 w-4" />
-                </Button>
-              </TableCell>
+    <div>
+      <TableSearchBar 
+        searchTerm={searchTerm} 
+        onSearchChange={setSearchTerm} 
+      />
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Naam</TableHead>
+              <TableHead>Geboortedatum</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Notitie</TableHead>
+              <TableHead className="text-right">Acties</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                  Geen resultaten gevonden voor "{searchTerm}"
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    {user.firstName} {user.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {user.birthDate ? 
+                      format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <TWVStatusBadge status={user.status} />
+                  </TableCell>
+                  <TableCell>
+                    <NotitieDialog notitie={user.notitie || ""} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm">
+                      <FileEdit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
 
 // Tabel voor TWV aanvragen met handeling vereist (extra actie veld)
 const TWVTableActionRequired = ({ users }: { users: any[] }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return users.filter(user => 
+      (user.firstName?.toLowerCase().includes(lowerCaseSearch) || 
+       user.lastName?.toLowerCase().includes(lowerCaseSearch) ||
+       (user.firstName + ' ' + user.lastName).toLowerCase().includes(lowerCaseSearch) ||
+       (user.actie && user.actie.toLowerCase().includes(lowerCaseSearch)) ||
+       (user.notitie && user.notitie.toLowerCase().includes(lowerCaseSearch)))
+    );
+  }, [users, searchTerm]);
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Naam</TableHead>
-            <TableHead>Geboortedatum</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actie</TableHead>
-            <TableHead>Notitie</TableHead>
-            <TableHead className="text-right">Bewerken</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">
-                {user.firstName} {user.lastName}
-              </TableCell>
-              <TableCell>
-                {user.birthDate ? 
-                  format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
-                  : '-'}
-              </TableCell>
-              <TableCell>
-                <TWVStatusBadge status={user.status} />
-              </TableCell>
-              <TableCell className="font-medium text-red-600">
-                {user.actie}
-              </TableCell>
-              <TableCell>
-                <NotitieDialog notitie={user.notitie || ""} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm">
-                  <FileEdit className="h-4 w-4" />
-                </Button>
-              </TableCell>
+    <div>
+      <TableSearchBar 
+        searchTerm={searchTerm} 
+        onSearchChange={setSearchTerm}
+        placeholderText="Zoek op naam of actie..."
+      />
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Naam</TableHead>
+              <TableHead>Geboortedatum</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actie</TableHead>
+              <TableHead>Notitie</TableHead>
+              <TableHead className="text-right">Bewerken</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                  Geen resultaten gevonden voor "{searchTerm}"
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    {user.firstName} {user.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {user.birthDate ? 
+                      format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <TWVStatusBadge status={user.status} />
+                  </TableCell>
+                  <TableCell className="font-medium text-red-600">
+                    {user.actie}
+                  </TableCell>
+                  <TableCell>
+                    <NotitieDialog notitie={user.notitie || ""} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm">
+                      <FileEdit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
 
 // Tabel voor TWV toegewezen met begin- en einddatum
 const TWVTableApproved = ({ users }: { users: any[] }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return users.filter(user => 
+      (user.firstName?.toLowerCase().includes(lowerCaseSearch) || 
+       user.lastName?.toLowerCase().includes(lowerCaseSearch) ||
+       (user.firstName + ' ' + user.lastName).toLowerCase().includes(lowerCaseSearch) ||
+       (user.notitie && user.notitie.toLowerCase().includes(lowerCaseSearch)))
+    );
+  }, [users, searchTerm]);
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Naam</TableHead>
-            <TableHead>Geboortedatum</TableHead>
-            <TableHead>TWV Begin</TableHead>
-            <TableHead>TWV Einde</TableHead>
-            <TableHead>Notitie</TableHead>
-            <TableHead className="text-right">Acties</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">
-                {user.firstName} {user.lastName}
-              </TableCell>
-              <TableCell>
-                {user.birthDate ? 
-                  format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
-                  : '-'}
-              </TableCell>
-              <TableCell>
-                {user.twvStartDate ?
-                  format(new Date(user.twvStartDate), 'dd MMM yyyy', { locale: nl })
-                  : '-'}
-              </TableCell>
-              <TableCell>
-                {user.twvEndDate ?
-                  format(new Date(user.twvEndDate), 'dd MMM yyyy', { locale: nl })
-                  : '-'}
-              </TableCell>
-              <TableCell>
-                <NotitieDialog notitie={user.notitie || ""} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm">
-                  <FileEdit className="h-4 w-4" />
-                </Button>
-              </TableCell>
+    <div>
+      <TableSearchBar 
+        searchTerm={searchTerm} 
+        onSearchChange={setSearchTerm}
+        placeholderText="Zoek op naam..."
+      />
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Naam</TableHead>
+              <TableHead>Geboortedatum</TableHead>
+              <TableHead>TWV Begin</TableHead>
+              <TableHead>TWV Einde</TableHead>
+              <TableHead>Notitie</TableHead>
+              <TableHead className="text-right">Acties</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                  Geen resultaten gevonden voor "{searchTerm}"
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    {user.firstName} {user.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {user.birthDate ? 
+                      format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {user.twvStartDate ?
+                      format(new Date(user.twvStartDate), 'dd MMM yyyy', { locale: nl })
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {user.twvEndDate ?
+                      format(new Date(user.twvEndDate), 'dd MMM yyyy', { locale: nl })
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <NotitieDialog notitie={user.notitie || ""} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm">
+                      <FileEdit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
 
 // Tabel voor TWV afgekeurd met reden
 const TWVTableRejected = ({ users }: { users: any[] }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return users.filter(user => 
+      (user.firstName?.toLowerCase().includes(lowerCaseSearch) || 
+       user.lastName?.toLowerCase().includes(lowerCaseSearch) ||
+       (user.firstName + ' ' + user.lastName).toLowerCase().includes(lowerCaseSearch) ||
+       (user.reden && user.reden.toLowerCase().includes(lowerCaseSearch)) ||
+       (user.notitie && user.notitie.toLowerCase().includes(lowerCaseSearch)))
+    );
+  }, [users, searchTerm]);
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Naam</TableHead>
-            <TableHead>Geboortedatum</TableHead>
-            <TableHead>Reden afkeuring</TableHead>
-            <TableHead>Notitie</TableHead>
-            <TableHead className="text-right">Acties</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">
-                {user.firstName} {user.lastName}
-              </TableCell>
-              <TableCell>
-                {user.birthDate ? 
-                  format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
-                  : '-'}
-              </TableCell>
-              <TableCell className="max-w-xs">
-                <span className="line-clamp-2">{user.reden}</span>
-              </TableCell>
-              <TableCell>
-                <NotitieDialog notitie={user.notitie || ""} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm">
-                  <FileEdit className="h-4 w-4" />
-                </Button>
-              </TableCell>
+    <div>
+      <TableSearchBar 
+        searchTerm={searchTerm} 
+        onSearchChange={setSearchTerm}
+        placeholderText="Zoek op naam of reden afkeuring..."
+      />
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Naam</TableHead>
+              <TableHead>Geboortedatum</TableHead>
+              <TableHead>Reden afkeuring</TableHead>
+              <TableHead>Notitie</TableHead>
+              <TableHead className="text-right">Acties</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                  Geen resultaten gevonden voor "{searchTerm}"
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    {user.firstName} {user.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {user.birthDate ? 
+                      format(new Date(user.birthDate), 'dd MMM yyyy', { locale: nl }) 
+                      : '-'}
+                  </TableCell>
+                  <TableCell className="max-w-xs">
+                    <span className="line-clamp-2">{user.reden}</span>
+                  </TableCell>
+                  <TableCell>
+                    <NotitieDialog notitie={user.notitie || ""} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm">
+                      <FileEdit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
