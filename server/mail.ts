@@ -11,25 +11,23 @@ let mockMailLog: any[] = [];
 export function initMailService(): boolean {
   const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
   
-  if (!SENDGRID_API_KEY) {
-    console.warn("SENDGRID_API_KEY niet ingesteld, e-mailfunctionaliteit gebruikt mock-modus");
-    useMockService = true;
-    mailService = null; // Zorg ervoor dat mailService niet gebruikt wordt
-    return true; // We gebruiken mock-modus, dus service is beschikbaar
+  // Altijd mock-modus gebruiken voor testen, totdat een geldige SendGrid key is geïnstalleerd
+  useMockService = true;
+  console.log("Mail service geïnitialiseerd in mock-modus - e-mails worden gelogd in de console");
+  
+  if (SENDGRID_API_KEY) {
+    try {
+      mailService = new MailService();
+      mailService.setApiKey(SENDGRID_API_KEY);
+      console.log("SendGrid API beschikbaar, maar we gebruiken nog steeds mock-modus voor testen");
+      // We blijven mock gebruiken, maar we initialiseren wel SendGrid voor toekomstig gebruik
+    } catch (error) {
+      console.error("Fout bij initialiseren van SendGrid:", error);
+      mailService = null;
+    }
   }
   
-  try {
-    mailService = new MailService();
-    mailService.setApiKey(SENDGRID_API_KEY);
-    console.log("Mail service succesvol geïnitialiseerd");
-    useMockService = false;
-    return true;
-  } catch (error) {
-    console.error("Fout bij initialiseren van mail service:", error);
-    mailService = null;
-    useMockService = true; // Gebruik mock-modus als fallback
-    return true; // We gebruiken mock-modus, dus service is beschikbaar
-  }
+  return true; // Service is altijd beschikbaar in mock-modus
 }
 
 // Interface voor e-mail parameters
