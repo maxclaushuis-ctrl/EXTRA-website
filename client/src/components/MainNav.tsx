@@ -39,7 +39,7 @@ export function MainNav() {
   return (
     <div className="flex items-center justify-between w-full py-3 px-4 border-b">
       <div className="flex items-center gap-6">
-        <div className="font-bold text-lg">EXTRA Rewards</div>
+        <div className="font-bold text-lg">EXTRAATJE</div>
         
         {isAdmin && (
           <nav className="hidden md:flex gap-6 text-sm">

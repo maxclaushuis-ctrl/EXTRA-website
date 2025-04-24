@@ -18,7 +18,7 @@ import {
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
   Activity, User, Import, Download, Receipt,
-  Mail, Megaphone, Zap
+  Mail, Megaphone, Zap, LineChart
 } from 'lucide-react';
 
 import Transactions from './Transactions';
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
@@ -200,6 +200,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="marketing">
             <Megaphone className="mr-2 h-4 w-4" />
             Marketing
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <LineChart className="mr-2 h-4 w-4" />
+            Analytics
           </TabsTrigger>
           <TabsTrigger value="instellingen">
             <Settings className="mr-2 h-4 w-4" />
@@ -286,6 +290,23 @@ export default function AdminDashboard() {
               <Link href="/admin/marketing">
                 <Megaphone className="mr-2 h-5 w-5" />
                 Ga naar Marketing
+              </Link>
+            </Button>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="mt-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold">Analytics & Rapportages</h2>
+            <p className="text-muted-foreground">
+              Bekijk gedetailleerde statistieken en analyses over punten, beloningen en gebruikersactiviteit
+            </p>
+          </div>
+          <div className="flex justify-center pt-4">
+            <Button asChild size="lg">
+              <Link href="/admin/analytics">
+                <LineChart className="mr-2 h-5 w-5" />
+                Ga naar Analytics
               </Link>
             </Button>
           </div>
