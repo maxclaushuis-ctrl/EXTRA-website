@@ -203,8 +203,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fromDate = req.query.from ? new Date(req.query.from as string) : undefined;
       const toDate = req.query.to ? new Date(req.query.to as string) : undefined;
       
-      // Haal alle benodigde gegevens op
+      // Zorg ervoor dat toDate het einde van de dag is als het is opgegeven
+      if (toDate) {
+        toDate.setHours(23, 59, 59, 999);
+      }
+      
+      // Gebruik de nieuwe analytics methoden
+      const transactionsPerDay = await storage.getTransactionsPerDay(fromDate, toDate);
+      const popularRewards = await storage.getPopularRewards(fromDate, toDate);
+      
+      // Bereken groeipercentages voor verdiende punten
+      const earnedThisPeriod = transactionsPerDay.reduce((sum, day) => sum + day.earned, 0);
+      const earnedPreviousPeriod = await storage.getPointsAwardedPreviousPeriod(fromDate, toDate);
+      
+      let earnedGrowth = 0;
+      if (earnedPreviousPeriod > 0) {
+        earnedGrowth = Math.round(((earnedThisPeriod - earnedPreviousPeriod) / earnedPreviousPeriod) * 100);
+      } else if (earnedThisPeriod > 0) {
+        earnedGrowth = 100; // Als er geen vorige periode was, maar nu wel punten
+      }
+      
+      // Bereken groeipercentages voor verzilveringen
+      const redeemedThisPeriod = transactionsPerDay.reduce((sum, day) => sum + day.redeemed, 0);
+      const redemptionsPreviousPeriod = await storage.getRedemptionsPreviousPeriod(fromDate, toDate);
+      
+      let redeemedGrowth = 0;
+      if (redemptionsPreviousPeriod > 0) {
+        redeemedGrowth = Math.round(((redeemedThisPeriod - redemptionsPreviousPeriod) / redemptionsPreviousPeriod) * 100);
+      } else if (redeemedThisPeriod > 0) {
+        redeemedGrowth = 100; // Als er geen vorige periode was, maar nu wel verzilveringen
+      }
+      
+      // Haal gebruikersstatistieken op
       const users = await storage.getUsers();
+      const activeUsers = users.filter(user => user.status === 'active');
+      const activeEmployees = activeUsers.filter(user => user.role === 'employee');
+      
+      // Haal alle transacties en verzilveringen op
       const transactions = await storage.getPointTransactions();
       const redemptions = await storage.getRedemptions();
       
@@ -215,17 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return (!fromDate || txDate >= fromDate) && (!toDate || txDate <= toDate);
       });
       
-      // Bereken statistieken
-      const activeUsers = users.filter(user => user.status === 'active');
-      const activeEmployees = activeUsers.filter(user => user.role === 'employee');
-      
-      // Bereken totaal aantal uitgegeven punten (alleen positieve transacties)
-      const totalPointsAwarded = filteredTransactions
-        .filter(t => t.type === 'earned')
-        .reduce((sum, t) => sum + t.amount, 0);
-      
       // Bereken betrokkenheidsgraad op basis van transacties
-      // (percentage medewerkers dat minstens één transactie heeft)
       const usersWithTransactions = new Set(filteredTransactions.map(t => t.userId));
       const engagementRate = activeEmployees.length > 0 
         ? Math.round((usersWithTransactions.size / activeEmployees.length) * 100) 
@@ -243,16 +268,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeUsersPercent: activeEmployees.length > 0 
           ? Math.round((activeEmployees.length / users.length) * 100) 
           : 0,
-        totalPointsAwarded,
+        totalPointsAwarded: earnedThisPeriod,
         totalRedemptions: redemptions.length,
         engagementRate,
         
+        // Analytics data
+        transactionsPerDay,
+        popularRewards,
+        earnedGrowth,
+        redeemedGrowth,
+        
         // Bereken veranderingspercentages dynamisch op basis van de huidige gegevens
         changes: {
-          // Als er punten zijn, +X%, anders N/A
-          pointsChange: totalPointsAwarded > 0 ? `+${Math.min(100, Math.round((totalPointsAwarded / 100) * 10))}%` : 'N/A',
-          // Als er verzilveringen zijn, +X%, anders N/A
-          redemptionsChange: redemptions.length > 0 ? `+${Math.min(100, redemptions.length * 10)}%` : 'N/A',
+          // Gebruik de berekende groeipercentages
+          pointsChange: earnedGrowth > 0 ? `+${earnedGrowth}%` : (earnedGrowth < 0 ? `${earnedGrowth}%` : '0%'),
+          redemptionsChange: redeemedGrowth > 0 ? `+${redeemedGrowth}%` : (redeemedGrowth < 0 ? `${redeemedGrowth}%` : '0%'),
           // Als er actieve medewerkers zijn, +X%, anders N/A
           activeUsersChange: activeEmployees.length > 0 ? `+${Math.min(100, activeEmployees.length * 5)}%` : 'N/A',
           // Betrokkenheid op basis van gebruikers met transacties

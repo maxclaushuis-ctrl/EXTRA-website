@@ -44,6 +44,13 @@ export interface IStorage {
   getPointTransactionsByUserId(userId: number): Promise<PointTransaction[]>;
   getPointTransaction(id: number): Promise<PointTransaction | undefined>;
   
+  // Analytics methods
+  getTransactionsPerDay(fromDate?: Date, toDate?: Date): Promise<any[]>;
+  getPopularRewards(fromDate?: Date, toDate?: Date): Promise<any[]>;
+  getPointsAwardedBySource(source: string, fromDate?: Date, toDate?: Date): Promise<number>;
+  getPointsAwardedPreviousPeriod(fromDate?: Date, toDate?: Date): Promise<number>;
+  getRedemptionsPreviousPeriod(fromDate?: Date, toDate?: Date): Promise<number>;
+  
   // Redemption methods
   createRedemption(redemption: InsertRedemption): Promise<Redemption>;
   getRedemptions(): Promise<Redemption[]>;
@@ -424,6 +431,141 @@ export class MemStorage implements IStorage {
   
   async getPointTransaction(id: number): Promise<PointTransaction | undefined> {
     return this.pointTransactions.get(id);
+  }
+  
+  // Analytics methods implementation
+  async getTransactionsPerDay(fromDate?: Date, toDate?: Date): Promise<any[]> {
+    const transactions = Array.from(this.pointTransactions.values());
+    
+    // Filter transactions by date range if specified
+    const filteredTransactions = transactions.filter(t => {
+      if (!fromDate && !toDate) return true;
+      const txDate = new Date(t.createdAt);
+      return (!fromDate || txDate >= fromDate) && (!toDate || txDate <= toDate);
+    });
+    
+    // Group transactions by day
+    const transactionsByDay = new Map<string, { date: string, naam: string, earned: number, redeemed: number }>();
+    
+    filteredTransactions.forEach(tx => {
+      // Format date as YYYY-MM-DD for grouping
+      const date = new Date(tx.createdAt);
+      const dateKey = date.toISOString().split('T')[0];
+      
+      // Get or initialize day entry
+      const dayEntry = transactionsByDay.get(dateKey) || { 
+        date: dateKey, 
+        naam: new Intl.DateTimeFormat('nl-NL', { day: '2-digit', month: 'short' }).format(date),
+        earned: 0, 
+        redeemed: 0 
+      };
+      
+      // Update points based on transaction type
+      if (tx.type === 'earned') {
+        dayEntry.earned += tx.amount;
+      } else if (tx.type === 'redeemed') {
+        dayEntry.redeemed += Math.abs(tx.amount);
+      }
+      
+      // Save updated entry
+      transactionsByDay.set(dateKey, dayEntry);
+    });
+    
+    // Convert map to array and sort by date
+    return Array.from(transactionsByDay.values())
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+  
+  async getPopularRewards(fromDate?: Date, toDate?: Date): Promise<any[]> {
+    const redemptions = Array.from(this.redemptions.values());
+    
+    // Filter redemptions by date range if specified
+    const filteredRedemptions = redemptions.filter(r => {
+      if (!fromDate && !toDate) return true;
+      const txDate = new Date(r.createdAt);
+      return (!fromDate || txDate >= fromDate) && (!toDate || txDate <= toDate);
+    });
+    
+    // Count redemptions per reward
+    const rewardCounts = new Map<number, number>();
+    
+    filteredRedemptions.forEach(redemption => {
+      const count = rewardCounts.get(redemption.rewardId) || 0;
+      rewardCounts.set(redemption.rewardId, count + 1);
+    });
+    
+    // Get reward details and create final array
+    const result = [];
+    
+    for (const [rewardId, count] of rewardCounts.entries()) {
+      const reward = await this.getReward(rewardId);
+      if (reward) {
+        result.push({
+          name: reward.name,
+          value: count
+        });
+      }
+    }
+    
+    // Sort by count (descending) and take top 5
+    return result
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }
+  
+  async getPointsAwardedBySource(source: string, fromDate?: Date, toDate?: Date): Promise<number> {
+    const transactions = Array.from(this.pointTransactions.values());
+    
+    // Filter transactions by date range if specified
+    const filteredTransactions = transactions.filter(t => {
+      if (!fromDate && !toDate) return true;
+      const txDate = new Date(t.createdAt);
+      return (!fromDate || txDate >= fromDate) && (!toDate || txDate <= toDate);
+    });
+    
+    // Sum points awarded from the specified source
+    return filteredTransactions
+      .filter(tx => tx.type === 'earned' && tx.source === source)
+      .reduce((sum, tx) => sum + tx.amount, 0);
+  }
+  
+  async getPointsAwardedPreviousPeriod(fromDate?: Date, toDate?: Date): Promise<number> {
+    if (!fromDate || !toDate) return 0;
+    
+    // Calculate previous period with same duration
+    const periodDuration = toDate.getTime() - fromDate.getTime();
+    const previousPeriodEnd = new Date(fromDate.getTime() - 1); // One millisecond before current period starts
+    const previousPeriodStart = new Date(previousPeriodEnd.getTime() - periodDuration);
+    
+    const transactions = Array.from(this.pointTransactions.values());
+    
+    // Filter transactions for previous period
+    const filteredTransactions = transactions.filter(t => {
+      const txDate = new Date(t.createdAt);
+      return txDate >= previousPeriodStart && txDate <= previousPeriodEnd;
+    });
+    
+    // Sum awarded points in previous period
+    return filteredTransactions
+      .filter(tx => tx.type === 'earned')
+      .reduce((sum, tx) => sum + tx.amount, 0);
+  }
+  
+  async getRedemptionsPreviousPeriod(fromDate?: Date, toDate?: Date): Promise<number> {
+    if (!fromDate || !toDate) return 0;
+    
+    // Calculate previous period with same duration
+    const periodDuration = toDate.getTime() - fromDate.getTime();
+    const previousPeriodEnd = new Date(fromDate.getTime() - 1); // One millisecond before current period starts
+    const previousPeriodStart = new Date(previousPeriodEnd.getTime() - periodDuration);
+    
+    const redemptions = Array.from(this.redemptions.values());
+    
+    // Count redemptions in previous period
+    return redemptions.filter(r => {
+      const txDate = new Date(r.createdAt);
+      return txDate >= previousPeriodStart && txDate <= previousPeriodEnd;
+    }).length;
   }
   
   // Redemption methods
