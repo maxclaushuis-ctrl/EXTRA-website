@@ -1,7 +1,8 @@
 import { storage } from './storage';
 import { User, PointTransaction } from '@shared/schema';
+import { sendBirthdayEmail } from './mail';
 
-// Constante voor verjaardag punten
+// Constante voor verjaardag punten (standaard waarde, kan worden overschreven door instellingen)
 export const BIRTHDAY_POINTS = 100;
 // Constante voor punten waarde in Euro
 export const POINTS_TO_EURO_RATIO = 20; // 20 punten = €1
