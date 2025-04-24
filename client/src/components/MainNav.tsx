@@ -61,44 +61,12 @@ export function MainNav() {
               Werkruimte
             </Link>
             <Link
-              href="/admin/contacts"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/contacts" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              Contacten
-            </Link>
-            <Link
-              href="/admin/transactions"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/transactions" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              Transacties
-            </Link>
-            <Link
-              href="/admin/rewards"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/rewards" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              Beloningen
-            </Link>
-            <Link
               href="/admin/marketing"
               className={`transition-colors hover:text-primary ${
                 location === "/admin/marketing" ? "text-primary font-medium" : "text-muted-foreground"
               }`}
             >
               Marketing
-            </Link>
-            <Link
-              href="/admin/analytics"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/analytics" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              Analytics
             </Link>
             <Link
               href="/admin/settings"
@@ -137,6 +105,20 @@ export function MainNav() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/admin/marketing">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Marketing
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Instellingen
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Andere pagina's</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
                   <Link href="/admin/contacts">
                     <Users className="mr-2 h-4 w-4" />
                     Contacten
@@ -155,21 +137,9 @@ export function MainNav() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/marketing">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Marketing
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
                   <Link href="/admin/analytics">
                     <LineChart className="mr-2 h-4 w-4" />
                     Analytics
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Instellingen
                   </Link>
                 </DropdownMenuItem>
               </>
