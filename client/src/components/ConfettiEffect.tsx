@@ -1,4 +1,5 @@
-import { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
+// @ts-ignore
 import confetti from 'canvas-confetti';
 
 interface ConfettiEffectProps {
@@ -16,7 +17,7 @@ export function ConfettiEffect({
 }: ConfettiEffectProps) {
   const fireConfetti = useCallback(() => {
     // Configuratie op basis van het type mijlpaal
-    const config: confetti.Options = {
+    const config: any = {
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 }
@@ -51,9 +52,9 @@ export function ConfettiEffect({
 
     // Vuurwerk-achtig effect voor speciale gelegenheden
     if (type === 'achievement' || type === 'birthday') {
-      const duration = 5 * 1000;
-      const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      const animDuration = 5 * 1000;
+      const animationEnd = Date.now() + animDuration;
+      const defaults: any = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
       const randomInRange = (min: number, max: number) => {
         return Math.random() * (max - min) + min;
@@ -66,7 +67,7 @@ export function ConfettiEffect({
           return clearInterval(interval);
         }
 
-        const particleCount = 50 * (timeLeft / duration);
+        const particleCount = 50 * (timeLeft / animDuration);
         
         // Confetti links en rechts schieten
         confetti({

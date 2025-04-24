@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMilestoneContext } from '@/contexts/MilestoneContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
@@ -41,6 +42,12 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("contacten");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  
+  // Import de confetti & mijlpalen functionaliteit
+  const { 
+    triggerCustomMilestone, 
+    milestoneTriggered
+  } = useMilestoneContext();
 
   const { data: userStats, isLoading: usersLoading, refetch: refetchStats } = useQuery({
     queryKey: ['/api/stats'],
