@@ -1628,6 +1628,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----- TWV (Tewerkstellingsvergunning) routes -----
+  
+  // Haal alle gebruikers op die een TWV nodig hebben
+  app.get("/api/twv/users", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Filter gebruikers op basis van TWV benodigdheden
+      const twvUsers = users.filter(user => user.needsTwv === true);
+      
+      return res.status(200).json(twvUsers);
+    } catch (error) {
+      console.error("Fout bij ophalen van TWV gebruikers:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van TWV gebruikers" });
+    }
+  });
+  
+  // Werk TWV status van een gebruiker bij
+  app.put("/api/users/:id/twv", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ongeldig gebruiker ID" });
+      }
+      
+      const { twvStatus, twvNotes, twvExpiryDate } = req.body;
+      
+      // Valideer de status
+      if (twvStatus && !['none', 'required', 'pending', 'approved', 'rejected'].includes(twvStatus)) {
+        return res.status(400).json({ message: "Ongeldige TWV status" });
+      }
+      
+      // Bereid de updates voor
+      const updates: any = {};
+      if (twvStatus) {
+        updates.twvStatus = twvStatus;
+        
+        // Automatisch datums instellen afhankelijk van de status
+        if (twvStatus === 'pending' && !req.body.twvRequestDate) {
+          updates.twvRequestDate = new Date();
+        }
+        
+        if ((twvStatus === 'approved' || twvStatus === 'rejected') && !req.body.twvApprovalDate) {
+          updates.twvApprovalDate = new Date();
+        }
+      }
+      
+      if (twvNotes !== undefined) {
+        updates.twvNotes = twvNotes;
+      }
+      
+      if (twvExpiryDate) {
+        updates.twvExpiryDate = new Date(twvExpiryDate);
+      }
+      
+      const updatedUser = await storage.updateUser(userId, updates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+      
+      return res.status(200).json({
+        message: "TWV status succesvol bijgewerkt",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Fout bij bijwerken van TWV status:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de TWV status" });
+    }
+  });
+  
+  // Synchroniseer TWV gegevens met planningsysteem
+  app.post("/api/twv/sync", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      // In een echte implementatie zou dit API calls naar het planningsysteem maken
+      // Voor nu simuleren we dit met een mock response
+      
+      // Simuleer het ophalen van externe data
+      const externalUsers = [
+        // Dit zou normaal gesproken van de externe API komen
+        { apiId: "EXT001", needsTwv: true, name: "Jan Buitenlands" },
+        { apiId: "EXT002", needsTwv: true, name: "Maria International" },
+        { apiId: "EXT003", needsTwv: false, name: "Piet Lokaal" }
+      ];
+      
+      let updatedCount = 0;
+      
+      // Update voor elke gebruiker die we kennen
+      for (const externalUser of externalUsers) {
+        // Vind de overeenkomende gebruiker in onze database
+        const user = await storage.getUserByApiId(externalUser.apiId);
+        
+        if (user) {
+          // Update alleen als status veranderd is
+          if (user.needsTwv !== externalUser.needsTwv) {
+            await storage.updateUser(user.id, {
+              needsTwv: externalUser.needsTwv,
+              // Als TWV niet meer nodig is, zet dan de status terug naar none
+              twvStatus: externalUser.needsTwv ? user.twvStatus : 'none'
+            });
+            updatedCount++;
+          }
+        }
+      }
+      
+      return res.status(200).json({
+        message: `TWV gegevens gesynchroniseerd, ${updatedCount} gebruikers bijgewerkt`,
+        updatedCount
+      });
+    } catch (error) {
+      console.error("Fout bij synchroniseren van TWV gegevens:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het synchroniseren van TWV gegevens" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket server setup voor real-time notificaties
