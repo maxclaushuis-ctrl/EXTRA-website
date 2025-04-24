@@ -5,7 +5,9 @@ import {
   type PointTransaction, type InsertPointTransaction,
   type Redemption, type InsertRedemption,
   type Rule, type InsertRule,
-  type Setting, type InsertSetting
+  type Setting, type InsertSetting,
+  type EmailTemplate, type InsertEmailTemplate,
+  type Campaign, type InsertCampaign
 } from "@shared/schema";
 import { createHash } from "crypto";
 
@@ -112,6 +114,8 @@ export class MemStorage implements IStorage {
     this.redemptions = new Map();
     this.rules = new Map();
     this.settings = new Map();
+    this.emailTemplates = new Map();
+    this.campaigns = new Map();
     
     this.currentIds = {
       applicants: 1,
@@ -121,6 +125,8 @@ export class MemStorage implements IStorage {
       redemptions: 1,
       rules: 1,
       settings: 1,
+      emailTemplates: 1,
+      campaigns: 1,
     };
     
     // Initialiseer een admin gebruiker
@@ -602,6 +608,151 @@ export class MemStorage implements IStorage {
       this.settings.set(key, setting);
       return setting;
     }
+  }
+  
+  // Email template methods
+  async createEmailTemplate(insertTemplate: InsertEmailTemplate): Promise<EmailTemplate> {
+    const id = this.currentIds.emailTemplates++;
+    const now = new Date();
+    
+    const template: EmailTemplate = {
+      id,
+      name: insertTemplate.name,
+      type: insertTemplate.type || 'general',
+      subject: insertTemplate.subject,
+      htmlContent: insertTemplate.htmlContent,
+      textContent: insertTemplate.textContent,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.emailTemplates.set(id, template);
+    return template;
+  }
+  
+  async getEmailTemplates(): Promise<EmailTemplate[]> {
+    return Array.from(this.emailTemplates.values());
+  }
+  
+  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
+    return this.emailTemplates.get(id);
+  }
+  
+  async getEmailTemplatesByType(type: string): Promise<EmailTemplate[]> {
+    return Array.from(this.emailTemplates.values()).filter(
+      (template) => template.type === type
+    );
+  }
+  
+  async updateEmailTemplate(id: number, templateData: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
+    const template = await this.getEmailTemplate(id);
+    if (!template) return undefined;
+    
+    const updatedTemplate: EmailTemplate = {
+      ...template,
+      ...templateData,
+      updatedAt: new Date()
+    };
+    
+    this.emailTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+  
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    return this.emailTemplates.delete(id);
+  }
+  
+  // Campaign methods
+  async createCampaign(insertCampaign: InsertCampaign): Promise<Campaign> {
+    const id = this.currentIds.campaigns++;
+    const now = new Date();
+    
+    const campaign: Campaign = {
+      id,
+      name: insertCampaign.name,
+      description: insertCampaign.description || null,
+      templateId: insertCampaign.templateId || null,
+      subject: insertCampaign.subject,
+      htmlContent: insertCampaign.htmlContent,
+      textContent: insertCampaign.textContent,
+      status: insertCampaign.status || 'draft',
+      scheduledFor: insertCampaign.scheduledFor || null,
+      sentAt: null,
+      sentToCount: 0,
+      openCount: 0,
+      clickCount: 0,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.campaigns.set(id, campaign);
+    return campaign;
+  }
+  
+  async getCampaigns(): Promise<Campaign[]> {
+    return Array.from(this.campaigns.values());
+  }
+  
+  async getCampaign(id: number): Promise<Campaign | undefined> {
+    return this.campaigns.get(id);
+  }
+  
+  async updateCampaign(id: number, campaignData: Partial<InsertCampaign>): Promise<Campaign | undefined> {
+    const campaign = await this.getCampaign(id);
+    if (!campaign) return undefined;
+    
+    const updatedCampaign: Campaign = {
+      ...campaign,
+      ...campaignData,
+      updatedAt: new Date()
+    };
+    
+    this.campaigns.set(id, updatedCampaign);
+    return updatedCampaign;
+  }
+  
+  async updateCampaignStatus(id: number, status: string): Promise<Campaign | undefined> {
+    const campaign = await this.getCampaign(id);
+    if (!campaign) return undefined;
+    
+    const updatedCampaign: Campaign = {
+      ...campaign,
+      status: status as any,
+      updatedAt: new Date()
+    };
+    
+    this.campaigns.set(id, updatedCampaign);
+    return updatedCampaign;
+  }
+  
+  async deleteCampaign(id: number): Promise<boolean> {
+    return this.campaigns.delete(id);
+  }
+  
+  async sendCampaign(id: number): Promise<boolean> {
+    const campaign = await this.getCampaign(id);
+    if (!campaign) return false;
+    
+    // Hier zou in werkelijkheid de e-mail verzending plaatsvinden
+    // Voor nu doen we een mock-implementatie
+    
+    const activeUsers = Array.from(this.users.values()).filter(
+      user => user.status === 'active' && user.role === 'employee'
+    );
+    
+    const updatedCampaign: Campaign = {
+      ...campaign,
+      status: 'sent',
+      sentAt: new Date(),
+      sentToCount: activeUsers.length,
+      updatedAt: new Date()
+    };
+    
+    this.campaigns.set(id, updatedCampaign);
+    
+    console.log(`Campagne "${campaign.name}" is verzonden naar ${activeUsers.length} actieve medewerkers`);
+    
+    return true;
   }
 }
 

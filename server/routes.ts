@@ -9,7 +9,9 @@ import {
   insertPointTransactionSchema,
   insertRedemptionSchema,
   insertRuleSchema,
-  insertSettingsSchema 
+  insertSettingsSchema,
+  insertEmailTemplateSchema,
+  insertCampaignSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
