@@ -9,6 +9,8 @@ export const rewardStatusEnum = pgEnum('reward_status', ['available', 'outofstoc
 export const transactionTypeEnum = pgEnum('transaction_type', ['earned', 'redeemed']);
 export const ruleTypeEnum = pgEnum('rule_type', ['fixed', 'multiplication', 'custom']);
 export const redemptionStatusEnum = pgEnum('redemption_status', ['pending', 'processing', 'shipped', 'completed', 'cancelled']);
+export const campaignStatusEnum = pgEnum('campaign_status', ['draft', 'scheduled', 'sent', 'cancelled']);
+export const emailTemplateTypeEnum = pgEnum('email_template_type', ['general', 'welcome', 'birthday', 'marketing', 'review', 'reward']);
 
 // Gebruikers schema
 export const users = pgTable("users", {
@@ -98,6 +100,37 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// E-mail sjablonen schema
+export const emailTemplates = pgTable("email_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: emailTemplateTypeEnum("type").default('general').notNull(),
+  subject: text("subject").notNull(),
+  htmlContent: text("html_content").notNull(),
+  textContent: text("text_content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Marketing campagnes schema
+export const campaigns = pgTable("campaigns", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  templateId: integer("template_id").references(() => emailTemplates.id),
+  subject: text("subject").notNull(),
+  htmlContent: text("html_content").notNull(),
+  textContent: text("text_content").notNull(), 
+  status: campaignStatusEnum("status").default('draft').notNull(),
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  sentToCount: integer("sent_to_count").default(0),
+  openCount: integer("open_count").default(0),
+  clickCount: integer("click_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schema's
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true, 
@@ -132,6 +165,22 @@ export const insertSettingsSchema = createInsertSchema(settings).omit({
   updatedAt: true
 });
 
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCampaignSchema = createInsertSchema(campaigns).omit({
+  id: true,
+  sentAt: true,
+  sentToCount: true,
+  openCount: true,
+  clickCount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Formulier validatie schemas
 export const userFormSchema = insertUserSchema.extend({
   password: z.string().min(8, { message: "Wachtwoord moet minstens 8 tekens bevatten" }),
@@ -159,6 +208,12 @@ export type Rule = typeof rules.$inferSelect;
 
 export type InsertSetting = z.infer<typeof insertSettingsSchema>;
 export type Setting = typeof settings.$inferSelect;
+
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type Campaign = typeof campaigns.$inferSelect;
 
 // Behouden van bestaande applicant schema voor backward compatibility
 export const applicants = pgTable("applicants", {

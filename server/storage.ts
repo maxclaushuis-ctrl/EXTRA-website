@@ -61,6 +61,23 @@ export interface IStorage {
   getSetting(key: string): Promise<Setting | undefined>;
   getSettingsByCategory(category: string): Promise<Setting[]>;
   upsertSetting(key: string, setting: Partial<InsertSetting>): Promise<Setting>;
+  
+  // Email template methods
+  createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
+  getEmailTemplates(): Promise<EmailTemplate[]>;
+  getEmailTemplate(id: number): Promise<EmailTemplate | undefined>;
+  getEmailTemplatesByType(type: string): Promise<EmailTemplate[]>;
+  updateEmailTemplate(id: number, templateData: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
+  deleteEmailTemplate(id: number): Promise<boolean>;
+  
+  // Campaign methods
+  createCampaign(campaign: InsertCampaign): Promise<Campaign>;
+  getCampaigns(): Promise<Campaign[]>;
+  getCampaign(id: number): Promise<Campaign | undefined>;
+  updateCampaign(id: number, campaignData: Partial<InsertCampaign>): Promise<Campaign | undefined>;
+  updateCampaignStatus(id: number, status: string): Promise<Campaign | undefined>;
+  deleteCampaign(id: number): Promise<boolean>;
+  sendCampaign(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -72,6 +89,8 @@ export class MemStorage implements IStorage {
   private redemptions: Map<number, Redemption>;
   private rules: Map<number, Rule>;
   private settings: Map<string, Setting>;
+  private emailTemplates: Map<number, EmailTemplate>;
+  private campaigns: Map<number, Campaign>;
   
   private currentIds: {
     applicants: number;
@@ -81,6 +100,8 @@ export class MemStorage implements IStorage {
     redemptions: number;
     rules: number;
     settings: number;
+    emailTemplates: number;
+    campaigns: number;
   };
 
   constructor() {
