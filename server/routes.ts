@@ -30,11 +30,29 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
 // Admin middleware
 function adminMiddleware(req: Request, res: Response, next: NextFunction) {
+  // Debug logging voor sessiegegevens
+  console.log("Sessie in adminMiddleware:", req.session);
+  
   // In a real app, we'd validate JWT or session token and check role
   if (req.session && req.session.userId && req.session.userRole === 'admin') {
+    console.log("Toegang verleend voor admin-gebruiker:", req.session.userId);
     return next();
   }
-  return res.status(403).json({ message: "Geen toegang" });
+  
+  // Als geen sessie, probeer opnieuw de gebruiker op te halen
+  if (!req.session || !req.session.userId) {
+    console.log("Geen sessie gevonden, proberen gebruiker opnieuw te authenticeren");
+    // Voeg hier eventueel extra authenticatielogica toe
+  }
+  
+  return res.status(403).json({ 
+    message: "Geen toegang", 
+    sessionInfo: { 
+      hasSession: !!req.session,
+      hasUserId: !!req.session?.userId,
+      role: req.session?.userRole || 'none'
+    } 
+  });
 }
 
 // Plan de dagelijkse verjaardagscontrole (standaard elke dag om 00:05)
