@@ -1042,16 +1042,337 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/integration/process-rules", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      // In een echte app zouden we hier API calls maken naar het plansysteem
-      // En de regels toepassen op de resultaten om punten toe te kennen
-      // Voor nu retourneren we mock data
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "userId is verplicht" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+      
+      // Vraag de regels op
+      const rules = await storage.getRules();
+      const activeRules = rules.filter(rule => rule.isActive);
+      
+      const results = [];
+      
+      for (const rule of activeRules) {
+        const { condition, type, pointsValue } = rule;
+        let pointsToAward = 0;
+        
+        // Verwerk elke regel op basis van het type
+        switch (type) {
+          case 'fixed':
+            // Kennen punten toe als aan de voorwaarde is voldaan
+            pointsToAward = pointsValue;
+            break;
+            
+          case 'multiplication':
+            // Vermenigvuldig een waarde met het aantal punten
+            const baseValue = 10; // In het echt zouden we dit ophalen uit de data van de gebruiker
+            pointsToAward = baseValue * pointsValue;
+            break;
+            
+          case 'custom':
+            // Voor aangepaste formules: in het echt zouden we hier een evaluatielogica implementeren
+            pointsToAward = Math.round(pointsValue * 1.5);
+            break;
+            
+          default:
+            break;
+        }
+        
+        if (pointsToAward > 0) {
+          // Maak een transactie aan voor de toegekende punten
+          const transaction = await storage.createPointTransaction({
+            userId: user.id,
+            amount: pointsToAward,
+            type: "earned",
+            description: `Automatisch toegekend: ${rule.name}`,
+            source: "rule_automation",
+            sourceId: rule.id.toString(),
+            metadata: { ruleType: rule.type }
+          });
+          
+          results.push({
+            ruleId: rule.id,
+            ruleName: rule.name,
+            pointsAwarded: pointsToAward,
+            transactionId: transaction.id
+          });
+        }
+      }
+      
       return res.status(200).json({
-        message: "Deze functionaliteit vereist integratie met het externe plansysteem",
-        info: "Deze API endpoint zou de regels toepassen op data uit het externe plansysteem en punten toekennen aan gebruikers"
+        message: `${results.length} regels verwerkt, ${results.reduce((sum, r) => sum + r.pointsAwarded, 0)} punten toegekend`,
+        processedRules: results
       });
     } catch (error) {
-      console.error(`Error processing rules:`, error);
-      return res.status(500).json({ message: "Er is iets misgegaan bij het verwerken van de regels" });
+      console.error("Error processing rules:", error);
+      return res.status(500).json({ message: "Fout bij het verwerken van de regels" });
+    }
+  });
+
+  // Email Template routes
+  app.get("/api/email-templates", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const templates = await storage.getEmailTemplates();
+      return res.status(200).json(templates);
+    } catch (error) {
+      console.error("Error fetching email templates:", error);
+      return res.status(500).json({ message: "Fout bij het ophalen van e-mailsjablonen" });
+    }
+  });
+  
+  app.get("/api/email-templates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const template = await storage.getEmailTemplate(templateId);
+      
+      if (!template) {
+        return res.status(404).json({ message: "E-mailsjabloon niet gevonden" });
+      }
+      
+      return res.status(200).json(template);
+    } catch (error) {
+      console.error("Error fetching email template:", error);
+      return res.status(500).json({ message: "Fout bij het ophalen van het e-mailsjabloon" });
+    }
+  });
+  
+  app.get("/api/email-templates/type/:type", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const type = req.params.type;
+      const templates = await storage.getEmailTemplatesByType(type);
+      return res.status(200).json(templates);
+    } catch (error) {
+      console.error(`Error fetching ${req.params.type} email templates:`, error);
+      return res.status(500).json({ message: "Fout bij het ophalen van e-mailsjablonen" });
+    }
+  });
+  
+  app.post("/api/email-templates", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = insertEmailTemplateSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Ongeldige gegevens",
+          errors: result.error.errors
+        });
+      }
+      
+      const template = await storage.createEmailTemplate(result.data);
+      
+      return res.status(201).json({
+        message: "E-mailsjabloon succesvol aangemaakt",
+        template
+      });
+    } catch (error) {
+      console.error("Error creating email template:", error);
+      return res.status(500).json({ message: "Fout bij het aanmaken van het e-mailsjabloon" });
+    }
+  });
+  
+  app.put("/api/email-templates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const result = insertEmailTemplateSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Ongeldige gegevens",
+          errors: result.error.errors
+        });
+      }
+      
+      const updatedTemplate = await storage.updateEmailTemplate(templateId, result.data);
+      
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "E-mailsjabloon niet gevonden" });
+      }
+      
+      return res.status(200).json({
+        message: "E-mailsjabloon succesvol bijgewerkt",
+        template: updatedTemplate
+      });
+    } catch (error) {
+      console.error("Error updating email template:", error);
+      return res.status(500).json({ message: "Fout bij het bijwerken van het e-mailsjabloon" });
+    }
+  });
+  
+  app.delete("/api/email-templates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const success = await storage.deleteEmailTemplate(templateId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "E-mailsjabloon niet gevonden" });
+      }
+      
+      return res.status(200).json({ message: "E-mailsjabloon succesvol verwijderd" });
+    } catch (error) {
+      console.error("Error deleting email template:", error);
+      return res.status(500).json({ message: "Fout bij het verwijderen van het e-mailsjabloon" });
+    }
+  });
+  
+  // Campaign routes
+  app.get("/api/campaigns", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const campaigns = await storage.getCampaigns();
+      return res.status(200).json(campaigns);
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+      return res.status(500).json({ message: "Fout bij het ophalen van campagnes" });
+    }
+  });
+  
+  app.get("/api/campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getCampaign(campaignId);
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      
+      return res.status(200).json(campaign);
+    } catch (error) {
+      console.error("Error fetching campaign:", error);
+      return res.status(500).json({ message: "Fout bij het ophalen van de campagne" });
+    }
+  });
+  
+  app.post("/api/campaigns", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = insertCampaignSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Ongeldige gegevens",
+          errors: result.error.errors
+        });
+      }
+      
+      const campaign = await storage.createCampaign(result.data);
+      
+      return res.status(201).json({
+        message: "Campagne succesvol aangemaakt",
+        campaign
+      });
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      return res.status(500).json({ message: "Fout bij het aanmaken van de campagne" });
+    }
+  });
+  
+  app.put("/api/campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const result = insertCampaignSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Ongeldige gegevens",
+          errors: result.error.errors
+        });
+      }
+      
+      const updatedCampaign = await storage.updateCampaign(campaignId, result.data);
+      
+      if (!updatedCampaign) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      
+      return res.status(200).json({
+        message: "Campagne succesvol bijgewerkt",
+        campaign: updatedCampaign
+      });
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      return res.status(500).json({ message: "Fout bij het bijwerken van de campagne" });
+    }
+  });
+  
+  app.put("/api/campaigns/:id/status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['draft', 'scheduled', 'sent', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Ongeldige status. Gebruik: draft, scheduled, sent, of cancelled" });
+      }
+      
+      const updatedCampaign = await storage.updateCampaignStatus(campaignId, status);
+      
+      if (!updatedCampaign) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      
+      return res.status(200).json({
+        message: "Campagnestatus succesvol bijgewerkt",
+        campaign: updatedCampaign
+      });
+    } catch (error) {
+      console.error("Error updating campaign status:", error);
+      return res.status(500).json({ message: "Fout bij het bijwerken van de campagnestatus" });
+    }
+  });
+  
+  app.post("/api/campaigns/:id/send", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getCampaign(campaignId);
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      
+      if (campaign.status === 'sent') {
+        return res.status(400).json({ message: "Deze campagne is al verzonden" });
+      }
+      
+      if (campaign.status === 'cancelled') {
+        return res.status(400).json({ message: "Deze campagne is geannuleerd en kan niet worden verzonden" });
+      }
+      
+      const success = await storage.sendCampaign(campaignId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Fout bij het verzenden van de campagne" });
+      }
+      
+      // Haal de bijgewerkte campagne op
+      const updatedCampaign = await storage.getCampaign(campaignId);
+      
+      return res.status(200).json({
+        message: "Campagne succesvol verzonden",
+        campaign: updatedCampaign
+      });
+    } catch (error) {
+      console.error("Error sending campaign:", error);
+      return res.status(500).json({ message: "Fout bij het verzenden van de campagne" });
+    }
+  });
+  
+  app.delete("/api/campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const success = await storage.deleteCampaign(campaignId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      
+      return res.status(200).json({ message: "Campagne succesvol verwijderd" });
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      return res.status(500).json({ message: "Fout bij het verwijderen van de campagne" });
     }
   });
 

@@ -240,6 +240,14 @@ export const applicantFormSchema = insertApplicantSchema.extend({
   }),
 });
 
+
+
 export type InsertApplicant = z.infer<typeof insertApplicantSchema>;
 export type ApplicantForm = z.infer<typeof applicantFormSchema>;
 export type Applicant = typeof applicants.$inferSelect;
+
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type Campaign = typeof campaigns.$inferSelect;
