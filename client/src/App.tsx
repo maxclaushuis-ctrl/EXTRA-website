@@ -21,8 +21,9 @@ import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import History from "@/pages/user/History";
 
-// Auth context
+// Contexts
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { MilestoneProvider } from "@/contexts/MilestoneContext";
 
 // Beschermde route component
 function ProtectedRoute({ component: Component, adminOnly = false, ...rest }: 
@@ -124,8 +125,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <MilestoneProvider>
+          <Router />
+          <Toaster />
+        </MilestoneProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
