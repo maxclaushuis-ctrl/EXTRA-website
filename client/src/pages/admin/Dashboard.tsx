@@ -120,6 +120,18 @@ export default function AdminDashboard() {
         .then(() => {
           // Vernieuw alle statistieken en lijsten
           refetchStats();
+          
+          // Toon confetti als er een aanzienlijk aantal punten is toegekend
+          if (pointsNumber >= 50) {
+            // Kies het juiste confetti-type op basis van het aantal punten
+            if (pointsNumber >= 500) {
+              triggerCustomMilestone('achievement', `Wow! ${pointsNumber} punten toegekend!`);
+            } else if (pointsNumber >= 100) {
+              triggerCustomMilestone('reward', `${pointsNumber} punten toegekend!`);
+            } else {
+              triggerCustomMilestone('points', `${pointsNumber} punten toegekend!`);
+            }
+          }
         })
         .catch(error => {
           console.error('Error:', error);
@@ -322,6 +334,38 @@ export default function AdminDashboard() {
         <TabsContent value="instellingen" className="mt-6">
           <div className="mb-4">
             <h2 className="text-2xl font-bold">Instellingen</h2>
+          </div>
+          
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-2">Test Confetti Effecten</h3>
+            <p className="text-muted-foreground mb-4">Test de verschillende confetti animaties voor beloningen en mijlpalen</p>
+            
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => triggerCustomMilestone('reward', 'Beloning uitgereikt!')}
+              >
+                Beloning Confetti
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => triggerCustomMilestone('birthday', 'Gefeliciteerd met je verjaardag!')}
+              >
+                Verjaardag Confetti
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => triggerCustomMilestone('achievement', 'Mijlpaal bereikt!')}
+              >
+                Prestatie Confetti
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => triggerCustomMilestone('points', '500 punten behaald!')}
+              >
+                Punten Confetti
+              </Button>
+            </div>
           </div>
           
           {/* Instellingen secties */}

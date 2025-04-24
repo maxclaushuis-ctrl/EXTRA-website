@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 // Definieer verschillende typen mijlpalen
-export type MilestoneType = 'points' | 'rewards' | 'birthday' | 'anniversary' | 'achievement';
+export type MilestoneType = 'points' | 'rewards' | 'birthday' | 'anniversary' | 'achievement' | 'reward';
 
 // Configuratie voor verschillende mijlpalen
 interface MilestoneConfig {
