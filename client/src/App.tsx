@@ -16,6 +16,7 @@ import RulesPage from "@/pages/admin/Rules";
 import MarketingPage from "@/pages/admin/Marketing";
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
+import WerkruimtePage from "@/pages/admin/Werkruimte";
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import History from "@/pages/user/History";
@@ -108,6 +109,9 @@ function Router() {
         </Route>
         <Route path="/admin/settings">
           {() => <ProtectedRoute component={SettingsPage} adminOnly={true} />}
+        </Route>
+        <Route path="/admin/werkruimte">
+          {() => <ProtectedRoute component={WerkruimtePage} adminOnly={true} />}
         </Route>
         
         <Route component={NotFound} />

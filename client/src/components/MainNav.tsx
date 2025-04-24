@@ -52,6 +52,14 @@ export function MainNav() {
               Dashboard
             </Link>
             <Link
+              href="/admin/werkruimte"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/werkruimte" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Werkruimte
+            </Link>
+            <Link
               href="/admin/contacts"
               className={`transition-colors hover:text-primary ${
                 location === "/admin/contacts" ? "text-primary font-medium" : "text-muted-foreground"
@@ -119,6 +127,12 @@ export function MainNav() {
                   <Link href="/admin">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/werkruimte">
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Werkruimte
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
