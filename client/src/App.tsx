@@ -58,7 +58,7 @@ function Router() {
   const { isAuthenticated } = useAuth();
   
   return (
-    <AuthProvider>
+    <>
       {/* Notificatie component, alleen zichtbaar als de gebruiker is ingelogd */}
       {isAuthenticated && <NotificationToast />}
       
@@ -102,15 +102,17 @@ function Router() {
         
         <Route component={NotFound} />
       </Switch>
-    </AuthProvider>
+    </>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

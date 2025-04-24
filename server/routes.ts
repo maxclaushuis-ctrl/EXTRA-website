@@ -906,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Stuur notificatie naar de betreffende gebruiker
           global.sendNotification({
             type: 'reward_redeemed',
-            userId: result.data.userId,
+            userId: userId,
             message: `Je hebt ${reward.name} verzilverd voor ${reward.pointsCost} punten.`,
             data: {
               redemptionId: redemption.id,
@@ -925,14 +925,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             data: {
               redemptionId: redemption.id,
               rewardId: reward.id,
-              userId: result.data.userId,
+              userId: userId,
               userName,
               rewardName: reward.name,
               pointsCost: reward.pointsCost
             }
           });
           
-          console.log(`Verzilvering notificatie verzonden naar gebruiker ${result.data.userId}`);
+          console.log(`Verzilvering notificatie verzonden naar gebruiker ${userId}`);
         } catch (notificationError) {
           console.error('Fout bij versturen verzilvering notificatie:', notificationError);
         }
