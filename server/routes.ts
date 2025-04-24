@@ -197,26 +197,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get current stats (for A/B testing metrics) - legacy
-  app.get("/api/stats", async (_req: Request, res: Response) => {
+  // Get current stats (for A/B testing metrics and analytics)
+  app.get("/api/stats", async (req: Request, res: Response) => {
     try {
+      const fromDate = req.query.from ? new Date(req.query.from as string) : undefined;
+      const toDate = req.query.to ? new Date(req.query.to as string) : undefined;
+      
       // Haal alle benodigde gegevens op
       const users = await storage.getUsers();
       const transactions = await storage.getPointTransactions();
       const redemptions = await storage.getRedemptions();
+      
+      // Filter transactions by date range if specified
+      const filteredTransactions = transactions.filter(t => {
+        if (!fromDate && !toDate) return true;
+        const txDate = new Date(t.createdAt);
+        return (!fromDate || txDate >= fromDate) && (!toDate || txDate <= toDate);
+      });
       
       // Bereken statistieken
       const activeUsers = users.filter(user => user.status === 'active');
       const activeEmployees = activeUsers.filter(user => user.role === 'employee');
       
       // Bereken totaal aantal uitgegeven punten (alleen positieve transacties)
-      const totalPointsAwarded = transactions
+      const totalPointsAwarded = filteredTransactions
         .filter(t => t.type === 'earned')
         .reduce((sum, t) => sum + t.amount, 0);
       
       // Bereken betrokkenheidsgraad op basis van transacties
       // (percentage medewerkers dat minstens één transactie heeft)
-      const usersWithTransactions = new Set(transactions.map(t => t.userId));
+      const usersWithTransactions = new Set(filteredTransactions.map(t => t.userId));
       const engagementRate = activeEmployees.length > 0 
         ? Math.round((usersWithTransactions.size / activeEmployees.length) * 100) 
         : 0;
