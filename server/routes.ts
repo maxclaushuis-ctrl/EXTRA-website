@@ -1633,9 +1633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Haal alle gebruikers op die een TWV nodig hebben
   app.get("/api/twv/users", adminMiddleware, async (_req: Request, res: Response) => {
     try {
-      const users = await storage.getAllUsers();
+      const users = await storage.getUsers();
       // Filter gebruikers op basis van TWV benodigdheden
-      const twvUsers = users.filter(user => user.needsTwv === true);
+      const twvUsers = users.filter((user: User) => user.needsTwv === true);
       
       return res.status(200).json(twvUsers);
     } catch (error) {

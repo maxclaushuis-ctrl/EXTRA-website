@@ -20,6 +20,7 @@ import {
   Mail,
   BarChart,
   ClipboardList,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -59,6 +60,14 @@ export function MainNav() {
               }`}
             >
               Werkruimte
+            </Link>
+            <Link
+              href="/admin/twv"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/twv" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              TWV's
             </Link>
             <Link
               href="/admin/marketing"
@@ -102,6 +111,12 @@ export function MainNav() {
                   <Link href="/admin/werkruimte">
                     <ClipboardList className="mr-2 h-4 w-4" />
                     Werkruimte
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/twv">
+                    <FileCheck className="mr-2 h-4 w-4" />
+                    TWV's
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
