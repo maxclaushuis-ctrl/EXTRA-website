@@ -4,25 +4,30 @@ import { EmailTemplate, User } from '@shared/schema';
 
 // Configuratie voor de mail service
 let mailService: MailService | null = null;
+let useMockService = false;
+let mockMailLog: any[] = [];
 
 // Initialiseer de mail service als de API key beschikbaar is
 export function initMailService(): boolean {
   const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
   
   if (!SENDGRID_API_KEY) {
-    console.warn("SENDGRID_API_KEY niet ingesteld, e-mailfunctionaliteit is uitgeschakeld");
-    return false;
+    console.warn("SENDGRID_API_KEY niet ingesteld, e-mailfunctionaliteit gebruikt mock-modus");
+    useMockService = true;
+    return true; // We gebruiken mock-modus, dus service is beschikbaar
   }
   
   try {
     mailService = new MailService();
     mailService.setApiKey(SENDGRID_API_KEY);
     console.log("Mail service succesvol geïnitialiseerd");
+    useMockService = false;
     return true;
   } catch (error) {
     console.error("Fout bij initialiseren van mail service:", error);
     mailService = null;
-    return false;
+    useMockService = true; // Gebruik mock-modus als fallback
+    return true; // We gebruiken mock-modus, dus service is beschikbaar
   }
 }
 
@@ -100,7 +105,18 @@ export async function sendTemplateEmail(
 
 // Verzend een verjaardag e-mail
 export async function sendBirthdayEmail(user: User, points: number): Promise<boolean> {
-  return await sendTemplateEmail('birthday', user, { points });
+  try {
+    // Gebruik de volledige naam van de gebruiker of val terug op de eerste naam
+    const userName = `${user.firstName} ${user.lastName}`.trim() || user.firstName || "";
+    
+    return await sendTemplateEmail('birthday', user, { 
+      points: points, 
+      naam: userName
+    });
+  } catch (error) {
+    console.error("Fout bij verzenden verjaardags e-mail:", error);
+    return false;
+  }
 }
 
 // Helper functie om placeholders in templates te vervangen
@@ -112,7 +128,8 @@ function replaceTemplatePlaceholders(
   let result = content;
   
   // Vervang gebruiker placeholders
-  result = result.replace(/\{\{naam\}\}/g, user.name || '');
+  const userName = `${user.firstName} ${user.lastName}`.trim();
+  result = result.replace(/\{\{naam\}\}/g, userName || '');
   result = result.replace(/\{\{email\}\}/g, user.email || '');
   result = result.replace(/\{\{punten\}\}/g, user.points?.toString() || '0');
   

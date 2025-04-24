@@ -36,6 +36,75 @@ export async function getUsersWithBirthdayToday(): Promise<User[]> {
 }
 
 /**
+ * Haalt de verjaardagspunten waarde op uit de instellingen of gebruikt de standaardwaarde
+ */
+export async function getBirthdayPointsValue(): Promise<number> {
+  try {
+    const setting = await storage.getSetting('birthday_points');
+    if (setting && setting.value) {
+      const value = parseInt(setting.value, 10);
+      if (!isNaN(value) && value > 0) {
+        return value;
+      }
+    }
+    return BIRTHDAY_POINTS; // Standaardwaarde als geen instelling gevonden
+  } catch (error) {
+    console.error('Fout bij ophalen van verjaardagspunten instelling:', error);
+    return BIRTHDAY_POINTS;
+  }
+}
+
+/**
+ * Controleert of op dit moment verjaardagsmails verzonden mogen worden
+ * op basis van de ingestelde tijdslots in de instellingen
+ */
+export async function shouldSendBirthdayEmails(): Promise<boolean> {
+  try {
+    // Haal ingestelde tijdstip op uit instellingen
+    const setting = await storage.getSetting('birthday_email_time');
+    
+    if (!setting || !setting.value) {
+      // Als geen instelling gevonden, stuur altijd
+      return true;
+    }
+    
+    // Haal uren en minuten uit de instelling (formaat: "HH:MM")
+    const timeParts = setting.value.split(':');
+    if (timeParts.length !== 2) {
+      return true; // Bij ongeldig formaat, stuur altijd
+    }
+    
+    const targetHour = parseInt(timeParts[0], 10);
+    const targetMinute = parseInt(timeParts[1], 10);
+    
+    if (isNaN(targetHour) || isNaN(targetMinute)) {
+      return true; // Bij ongeldige waarden, stuur altijd
+    }
+    
+    // Controleer of het nu binnen het toegestane tijdvenster is
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Check of we binnen 5 minuten van het doeltijdstip zitten
+    if (currentHour === targetHour && 
+        currentMinute >= targetMinute && 
+        currentMinute <= targetMinute + 5) {
+      return true;
+    }
+    
+    // Sta toe om verjaardagspunten toe te kennen rond middernacht voor de automatische controle
+    // maar verstuur dan geen e-mails
+    const isAroundMidnight = currentHour === 0 && currentMinute <= 10;
+    
+    return !isAroundMidnight;
+  } catch (error) {
+    console.error('Fout bij controleren van verjaardags-email tijdstip:', error);
+    return true; // Bij fouten, failsafe: stuur altijd
+  }
+}
+
+/**
  * Ken punten toe aan jarige gebruikers.
  * Returnt het aantal gebruikers dat punten heeft ontvangen.
  */
@@ -43,6 +112,14 @@ export async function awardBirthdayPoints(): Promise<number> {
   try {
     const birthdayUsers = await getUsersWithBirthdayToday();
     console.log(`${birthdayUsers.length} gebruikers zijn vandaag jarig`);
+    
+    // Haal de puntenwaarde op uit instellingen
+    const birthdayPoints = await getBirthdayPointsValue();
+    
+    // Controleer of we e-mails mogen verzenden op dit tijdstip
+    const shouldSendEmails = await shouldSendBirthdayEmails();
+    
+    console.log(`Verjaardagspunten: ${birthdayPoints} punten, e-mails versturen: ${shouldSendEmails ? 'Ja' : 'Nee'}`);
     
     // Teller voor aantal gebruikers aan wie punten zijn toegekend
     let usersAwarded = 0;
@@ -79,7 +156,7 @@ export async function awardBirthdayPoints(): Promise<number> {
           // Maak eerst de transactie aan zonder automatische punten-update
           const transactionData = {
             userId: user.id,
-            amount: BIRTHDAY_POINTS,
+            amount: birthdayPoints,
             type: 'earned' as const,
             description: 'Verjaardagsbonus',
             source: 'verjaardag',
@@ -106,7 +183,7 @@ export async function awardBirthdayPoints(): Promise<number> {
           // Punten handmatig updaten
           const updatedUser = await storage.getUser(user.id);
           if (updatedUser) {
-            const newPoints = updatedUser.points + BIRTHDAY_POINTS;
+            const newPoints = updatedUser.points + birthdayPoints;
             
             // Gebruiker bijwerken met nieuwe punten
             storage['users'].set(user.id, {
@@ -115,7 +192,26 @@ export async function awardBirthdayPoints(): Promise<number> {
             });
             
             usersAwarded++;
-            console.log(`${BIRTHDAY_POINTS} punten toegekend aan ${user.email} voor verjaardag, nieuw saldo: ${newPoints} punten`);
+            console.log(`${birthdayPoints} punten toegekend aan ${user.email} voor verjaardag, nieuw saldo: ${newPoints} punten`);
+            
+            // Verzend een verjaardags e-mail als dat ingesteld is
+            if (shouldSendEmails) {
+              try {
+                // Import de sendBirthdayEmail functie hier om circulaire imports te voorkomen
+                const { sendBirthdayEmail } = await import('./mail');
+                const emailSent = await sendBirthdayEmail(updatedUser, birthdayPoints);
+                
+                if (emailSent) {
+                  console.log(`Verjaardags e-mail succesvol verzonden naar ${user.email}`);
+                } else {
+                  console.warn(`Kon geen verjaardags e-mail verzenden naar ${user.email}`);
+                }
+              } catch (emailError) {
+                console.error(`Fout bij verzenden van verjaardags e-mail naar ${user.email}:`, emailError);
+              }
+            } else {
+              console.log(`Geen verjaardags e-mail verzonden naar ${user.email} (buiten ingestelde verzendtijd)`);
+            }
           }
         } catch (error) {
           console.error(`Fout bij het aanmaken van verjaardagstransactie voor gebruiker ${user.id}:`, error);

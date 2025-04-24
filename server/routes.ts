@@ -15,6 +15,7 @@ import {
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
+import { initMailService } from "./mail";
 
 // Auth middleware
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -35,23 +36,89 @@ function adminMiddleware(req: Request, res: Response, next: NextFunction) {
   return res.status(403).json({ message: "Geen toegang" });
 }
 
-// Plan de dagelijkse verjaardagscontrole (elke dag om 00:05)
+// Plan de dagelijkse verjaardagscontrole (standaard elke dag om 00:05)
 let birthdayCheckTimer: NodeJS.Timeout | null = null;
 
-function scheduleBirthdayCheck() {
+/**
+ * Haalt het ingestelde tijdstip voor de dagelijkse verjaardagscontrole
+ * uit de instellingen of gebruikt de standaardwaarde
+ */
+async function getBirthdayCheckTime(): Promise<{ hour: number, minute: number }> {
+  try {
+    const setting = await storage.getSetting('birthday_check_time');
+    
+    if (setting && setting.value) {
+      // Formaat moet "uur:minuut" zijn, bijv. "00:05" of "09:00"
+      const parts = setting.value.split(':');
+      
+      if (parts.length === 2) {
+        const hour = parseInt(parts[0], 10);
+        const minute = parseInt(parts[1], 10);
+        
+        if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
+          return { hour, minute };
+        }
+      }
+    }
+    
+    // Standaard: 00:05 (middernacht + 5 minuten)
+    return { hour: 0, minute: 5 };
+  } catch (error) {
+    console.error('Fout bij ophalen verjaardagscontrole tijdstip:', error);
+    return { hour: 0, minute: 5 };
+  }
+}
+
+/**
+ * Haalt het geplande tijdstip voor het verzenden van verjaardagsmails
+ * uit de instellingen of gebruikt de standaardwaarde
+ */
+async function getBirthdayEmailTime(): Promise<{ hour: number, minute: number }> {
+  try {
+    const setting = await storage.getSetting('birthday_email_time');
+    
+    if (setting && setting.value) {
+      // Formaat moet "uur:minuut" zijn, bijv. "09:00" of "10:30"
+      const parts = setting.value.split(':');
+      
+      if (parts.length === 2) {
+        const hour = parseInt(parts[0], 10);
+        const minute = parseInt(parts[1], 10);
+        
+        if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
+          return { hour, minute };
+        }
+      }
+    }
+    
+    // Standaard: 09:00 (9 uur 's ochtends)
+    return { hour: 9, minute: 0 };
+  } catch (error) {
+    console.error('Fout bij ophalen verjaardagsmail tijdstip:', error);
+    return { hour: 9, minute: 0 };
+  }
+}
+
+/**
+ * Plant de dagelijkse verjaardagscontrole voor punten en e-mails
+ */
+async function scheduleBirthdayCheck() {
   // Verwijder bestaande timer als die bestaat
   if (birthdayCheckTimer) {
     clearTimeout(birthdayCheckTimer);
   }
   
-  // Bereken tijd tot de volgende controle (00:05 de volgende dag)
+  // Haal de tijd voor de verjaardagscontrole op
+  const { hour, minute } = await getBirthdayCheckTime();
+  
+  // Bereken tijd tot de volgende controle
   const now = new Date();
   const nextCheckTime = new Date(now);
   
-  // Reset naar vandaag 00:05
-  nextCheckTime.setHours(0, 5, 0, 0);
+  // Reset naar het ingestelde tijdstip
+  nextCheckTime.setHours(hour, minute, 0, 0);
   
-  // Als het al voorbij 00:05 is, plan dan voor morgen
+  // Als het tijdstip al voorbij is, plan dan voor morgen
   if (now >= nextCheckTime) {
     nextCheckTime.setDate(nextCheckTime.getDate() + 1);
   }
@@ -59,7 +126,11 @@ function scheduleBirthdayCheck() {
   // Bereken milliseconden tot de volgende controle
   const timeUntilNextCheck = nextCheckTime.getTime() - now.getTime();
   
+  // Haal ook het tijdstip op waarop e-mails verzonden moeten worden
+  const emailTime = await getBirthdayEmailTime();
+  
   console.log(`Volgende verjaardagscontrole gepland om ${nextCheckTime.toLocaleString()} (over ${Math.round(timeUntilNextCheck / 1000 / 60)} minuten)`);
+  console.log(`Verjaardags e-mails worden verzonden rond ${emailTime.hour}:${emailTime.minute.toString().padStart(2, '0')}`);
   
   // Plan de verjaardagscontrole
   birthdayCheckTimer = setTimeout(async () => {
@@ -77,6 +148,10 @@ function scheduleBirthdayCheck() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize mail service
+  const mailServiceInitialized = initMailService();
+  console.log(`Mail service geïnitialiseerd: ${mailServiceInitialized ? 'Ja' : 'Nee'}`);
+  
   // Start de verjaardagscontrole planning
   scheduleBirthdayCheck();
   // Legacy API routes - behouden voor backward compatibility
@@ -1009,6 +1084,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ 
         success: false,
         message: "Er is een fout opgetreden bij het uitvoeren van de verjaardagscontrole" 
+      });
+    }
+  });
+  
+  // Endpoint voor het testen van verjaardagsmail naar specifieke gebruiker
+  app.post("/api/admin/test-birthday-email", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Gebruikers-ID is vereist" });
+      }
+      
+      // Haal de gebruiker op
+      const user = await storage.getUser(parseInt(userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+      
+      // Haal de puntenwaarde op uit de instellingen
+      const birthdayPoints = await storage.getSetting('birthday_points');
+      const pointsValue = birthdayPoints && birthdayPoints.value ? 
+                        parseInt(birthdayPoints.value) : BIRTHDAY_POINTS;
+      
+      // Import de sendBirthdayEmail functie
+      const { sendBirthdayEmail } = await import('./mail');
+      
+      // Verstuur de test e-mail
+      const emailSent = await sendBirthdayEmail(user, pointsValue);
+      
+      if (emailSent) {
+        return res.status(200).json({
+          success: true,
+          message: `Test verjaardagsmail succesvol verzonden naar ${user.email}`,
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          message: `Kon geen test verjaardagsmail verzenden naar ${user.email}`,
+        });
+      }
+    } catch (error) {
+      console.error("Error sending test birthday email:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Fout bij versturen van test verjaardagsmail",
+        error: (error as Error).message
       });
     }
   });
