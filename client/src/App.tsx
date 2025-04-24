@@ -17,8 +17,7 @@ import MarketingPage from "@/pages/admin/Marketing";
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
 import WerkruimtePage from "@/pages/admin/Werkruimte";
-import TWVPage from "@/pages/admin/TWV";
-import TWVTesterPage from "@/pages/admin/TWVTester";
+import TWVEenvoudigPage from "@/pages/admin/TWVEenvoudig";
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import History from "@/pages/user/History";
@@ -117,10 +116,7 @@ function Router() {
           {() => <ProtectedRoute component={WerkruimtePage} adminOnly={true} />}
         </Route>
         <Route path="/admin/twv">
-          {() => <ProtectedRoute component={TWVPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/twv-tester">
-          {() => <ProtectedRoute component={TWVTesterPage} adminOnly={true} />}
+          {() => <ProtectedRoute component={TWVEenvoudigPage} adminOnly={true} />}
         </Route>
         
         <Route component={NotFound} />
