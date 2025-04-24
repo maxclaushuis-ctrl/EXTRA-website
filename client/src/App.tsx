@@ -51,9 +51,17 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
   return <Component {...rest} />;
 }
 
+// NotificationToast component
+import NotificationToast from "@/components/NotificationToast";
+
 function Router() {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <AuthProvider>
+      {/* Notificatie component, alleen zichtbaar als de gebruiker is ingelogd */}
+      {isAuthenticated && <NotificationToast />}
+      
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />

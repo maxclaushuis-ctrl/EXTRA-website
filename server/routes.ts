@@ -757,6 +757,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         points: transaction.amount
       };
       
+      // Stuur notificatie naar de gebruiker over nieuwe punten
+      if (typeof global.sendNotification === 'function') {
+        try {
+          const isPositive = transaction.type === 'earned';
+          const userName = updatedUser ? `${updatedUser.firstName} ${updatedUser.lastName}` : 'Gebruiker';
+          
+          // Stuur notificatie naar de betreffende gebruiker
+          global.sendNotification({
+            type: isPositive ? 'points_earned' : 'points_redeemed',
+            userId: transaction.userId,
+            message: isPositive 
+              ? `Je hebt ${Math.abs(transaction.amount)} punten ontvangen: ${transaction.description}`
+              : `Je hebt ${Math.abs(transaction.amount)} punten ingewisseld: ${transaction.description}`,
+            data: {
+              transactionId: transaction.id,
+              amount: transaction.amount,
+              description: transaction.description,
+              newBalance: updatedUser?.points || 0
+            }
+          });
+          
+          // Stuur ook notificatie naar admins voor monitoring
+          global.sendNotification({
+            type: 'admin_transaction_alert',
+            userRole: 'admin',
+            message: `${isPositive ? 'Punten toegekend' : 'Punten ingewisseld'} voor ${userName}`,
+            data: {
+              transactionId: transaction.id,
+              userId: transaction.userId,
+              userName,
+              amount: transaction.amount,
+              description: transaction.description,
+              newBalance: updatedUser?.points || 0
+            }
+          });
+          
+          console.log(`Transactie notificatie verzonden naar gebruiker ${transaction.userId}`);
+        } catch (notificationError) {
+          console.error('Fout bij versturen transactie notificatie:', notificationError);
+        }
+      }
+      
       return res.status(201).json({
         message: "Transactie succesvol aangemaakt",
         transaction: transactionResponse,
@@ -808,25 +850,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/redemptions", authMiddleware, async (req: Request, res: Response) => {
     try {
-      // Validate request body
-      const result = insertRedemptionSchema.safeParse(req.body);
+      // Valideer de basis van het request
+      const { userId, rewardId, status = "pending", notes } = req.body;
       
-      if (!result.success) {
+      if (!userId || !rewardId) {
         return res.status(400).json({
           message: "Ongeldige data",
-          errors: result.error.errors,
+          errors: [{ message: "userId en rewardId zijn verplicht" }],
         });
       }
       
       // Check if user exists
-      const user = await storage.getUser(result.data.userId);
+      const user = await storage.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "Gebruiker niet gevonden" });
       }
       
       // Check if reward exists and is available
-      const reward = await storage.getReward(result.data.rewardId);
+      const reward = await storage.getReward(rewardId);
       
       if (!reward) {
         return res.status(404).json({ message: "Beloning niet gevonden" });
@@ -841,17 +883,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Niet genoeg punten om deze beloning te verzilveren" });
       }
       
-      // Create redemption with actual cost
+      // Create redemption data with cost from reward
       const redemptionData = {
-        ...result.data,
-        pointsCost: reward.pointsCost
+        userId,
+        rewardId,
+        pointsCost: reward.pointsCost,
+        status,
+        notes
       };
       
       // Create the redemption (this also updates user points and creates a transaction)
       const redemption = await storage.createRedemption(redemptionData);
       
       // Get updated user
-      const updatedUser = await storage.getUser(result.data.userId);
+      const updatedUser = await storage.getUser(userId);
+      
+      // Stuur notificatie over verzilvering
+      if (typeof global.sendNotification === 'function') {
+        try {
+          const userName = updatedUser ? `${updatedUser.firstName} ${updatedUser.lastName}` : 'Gebruiker';
+          
+          // Stuur notificatie naar de betreffende gebruiker
+          global.sendNotification({
+            type: 'reward_redeemed',
+            userId: result.data.userId,
+            message: `Je hebt ${reward.name} verzilverd voor ${reward.pointsCost} punten.`,
+            data: {
+              redemptionId: redemption.id,
+              rewardId: reward.id,
+              rewardName: reward.name,
+              pointsCost: reward.pointsCost,
+              newBalance: updatedUser?.points || 0
+            }
+          });
+          
+          // Stuur ook notificatie naar admins voor verwerking
+          global.sendNotification({
+            type: 'admin_redemption_alert',
+            userRole: 'admin',
+            message: `Nieuwe verzilvering: ${userName} heeft ${reward.name} verzilverd`,
+            data: {
+              redemptionId: redemption.id,
+              rewardId: reward.id,
+              userId: result.data.userId,
+              userName,
+              rewardName: reward.name,
+              pointsCost: reward.pointsCost
+            }
+          });
+          
+          console.log(`Verzilvering notificatie verzonden naar gebruiker ${result.data.userId}`);
+        } catch (notificationError) {
+          console.error('Fout bij versturen verzilvering notificatie:', notificationError);
+        }
+      }
       
       return res.status(201).json({
         message: "Beloning succesvol verzilverd",

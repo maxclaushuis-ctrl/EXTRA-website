@@ -151,7 +151,8 @@ export const insertPointTransactionSchema = createInsertSchema(pointTransactions
 export const insertRedemptionSchema = createInsertSchema(redemptions).omit({
   id: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  pointsCost: true // We halen de pointsCost uit de reward tijdens het aanmaken
 });
 
 export const insertRuleSchema = createInsertSchema(rules).omit({
