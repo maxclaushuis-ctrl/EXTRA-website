@@ -740,9 +740,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Maak de amount parameter aan vanuit points voor compatibiliteit
       // Zorg dat we de amount parameter gebruiken als die bestaat, 
       // anders de points parameter (voor oudere code)
+      // Kopieer de data zonder points property
+      const { points, ...restData } = result.data as any;
+      
       const transactionData = {
-        ...result.data,
-        amount: result.data.amount || result.data.points || 0
+        ...restData,
+        amount: result.data.amount || points || 0
       };
       
       // Create the transaction
@@ -1303,7 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             description: `Automatisch toegekend: ${rule.name}`,
             source: "rule_automation",
             sourceId: rule.id.toString(),
-            metadata: { ruleType: rule.type }
+            metadata: { ruleType: [rule.type] }
           });
           
           results.push({
