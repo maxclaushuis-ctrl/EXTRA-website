@@ -16,6 +16,7 @@ import {
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
 import { initMailService } from "./mail";
+import { WebSocketServer, WebSocket } from 'ws';
 
 // Auth middleware
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -1500,5 +1501,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server setup voor real-time notificaties
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Bijhouden van actieve verbindingen
+  const clients = new Map<WebSocket, { userId?: number, userRole?: string }>();
+  
+  wss.on('connection', (ws) => {
+    console.log('Nieuwe WebSocket verbinding');
+    clients.set(ws, {});
+    
+    // Handle incoming messages (authentication)
+    ws.on('message', (messageData) => {
+      try {
+        const message = JSON.parse(messageData.toString());
+        
+        // Auth bericht ontvangen
+        if (message.type === 'auth') {
+          const { userId, userRole } = message;
+          if (userId) {
+            clients.set(ws, { userId, userRole });
+            console.log(`WebSocket geauthenticeerd voor gebruiker ${userId}, rol: ${userRole}`);
+            
+            // Bevestig authenticatie
+            ws.send(JSON.stringify({
+              type: 'auth_success',
+              userId,
+              userRole
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket bericht verwerkingsfout:', error);
+      }
+    });
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      console.log('WebSocket verbinding gesloten');
+      clients.delete(ws);
+    });
+  });
+  
+  // Functie voor het versturen van notificaties naar gebruikers
+  global.sendNotification = (notification: {
+    type: string;
+    userId?: number;
+    userRole?: string;
+    message: string;
+    data?: any;
+  }) => {
+    const { userId, userRole, type } = notification;
+    
+    clients.forEach((client, ws) => {
+      // Check verbindingstatus
+      if (ws.readyState === WebSocket.OPEN) {
+        // Verstuur aan specifieke gebruiker of alleen aan een bepaalde rol
+        // of aan iedereen als geen specifieke gebruiker/rol is opgegeven
+        if (
+          (!userId && !userRole) || 
+          (userId && client.userId === userId) || 
+          (userRole && client.userRole === userRole)
+        ) {
+          ws.send(JSON.stringify({
+            type,
+            message: notification.message,
+            timestamp: new Date().toISOString(),
+            data: notification.data
+          }));
+        }
+      }
+    });
+  };
+  
+  console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }
