@@ -11,6 +11,12 @@ export async function seedTWVUsers() {
     return; // Niet opnieuw seeden als er al TWV gebruikers zijn
   }
   
+  // Hulpfunctie voor het formatteren van datums voor de database
+  const formatDate = (date: Date | null): string | null => {
+    if (!date) return null;
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD formaat
+  };
+  
   // Anders nieuwe testgebruikers toevoegen
   const users = [
     // TWV Required status
@@ -19,7 +25,7 @@ export async function seedTWVUsers() {
       password: "password123",
       firstName: "Ahmed",
       lastName: "Yilmaz",
-      birthDate: new Date("1995-03-15"),
+      birthDate: "1995-03-15", // ISO string formaat voor datum
       role: "employee",
       status: "active",
       points: 250,
@@ -148,9 +154,19 @@ export async function seedTWVUsers() {
     }
   ];
 
-  // Gebruikers toevoegen aan de database
+  // Gebruikers toevoegen aan de database met juiste datum formaten
   for (const userData of users) {
-    await storage.createUser(userData);
+    // Converteer alle Date objecten naar strings
+    const processedData = {
+      ...userData,
+      role: userData.role as "admin" | "employee", // Expliciet casten naar correcte enum type
+      birthDate: userData.birthDate instanceof Date ? formatDate(userData.birthDate) : userData.birthDate,
+      twvRequestDate: userData.twvRequestDate instanceof Date ? formatDate(userData.twvRequestDate) : userData.twvRequestDate,
+      twvApprovalDate: userData.twvApprovalDate instanceof Date ? formatDate(userData.twvApprovalDate) : userData.twvApprovalDate,
+      twvExpiryDate: userData.twvExpiryDate instanceof Date ? formatDate(userData.twvExpiryDate) : userData.twvExpiryDate
+    };
+    
+    await storage.createUser(processedData);
   }
 
   console.log(`${users.length} TWV testgebruikers succesvol toegevoegd.`);

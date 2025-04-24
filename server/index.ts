@@ -87,5 +87,12 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Seed TWV gebruikers wanneer de server start
+    try {
+      seedTWVUsers();
+    } catch (error) {
+      console.error("Fout bij het seeden van TWV gebruikers:", error);
+    }
   });
 })();
