@@ -14,6 +14,7 @@ import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
 import RulesPage from "@/pages/admin/Rules";
 import MarketingPage from "@/pages/admin/Marketing";
+import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -51,8 +52,9 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
   return <Component {...rest} />;
 }
 
-// NotificationToast component
+// Notificatie en navigatie componenten
 import NotificationToast from "@/components/NotificationToast";
+import { MainNav } from "@/components/MainNav";
 
 function Router() {
   const { isAuthenticated } = useAuth();
@@ -60,7 +62,12 @@ function Router() {
   return (
     <>
       {/* Notificatie component, alleen zichtbaar als de gebruiker is ingelogd */}
-      {isAuthenticated && <NotificationToast />}
+      {isAuthenticated && (
+        <>
+          <MainNav />
+          <NotificationToast />
+        </>
+      )}
       
       <Switch>
         <Route path="/" component={Home} />
@@ -95,6 +102,9 @@ function Router() {
         </Route>
         <Route path="/admin/marketing">
           {() => <ProtectedRoute component={MarketingPage} adminOnly={true} />}
+        </Route>
+        <Route path="/admin/analytics">
+          {() => <ProtectedRoute component={AnalyticsPage} adminOnly={true} />}
         </Route>
         <Route path="/admin/settings">
           {() => <ProtectedRoute component={SettingsPage} adminOnly={true} />}

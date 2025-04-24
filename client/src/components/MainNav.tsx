@@ -1,0 +1,190 @@
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Menu,
+  UserCircle,
+  LayoutDashboard,
+  Users,
+  Gift,
+  LineChart,
+  Settings,
+  LogOut,
+  Mail,
+  BarChart,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+export function MainNav() {
+  const [location] = useLocation();
+  const { user, logout } = useAuth();
+
+  const isAdmin = user?.role === 'admin';
+
+  if (!user) return null;
+
+  const getInitials = () => {
+    if (!user.firstName || !user.lastName) return 'U';
+    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+  };
+
+  return (
+    <div className="flex items-center justify-between w-full py-3 px-4 border-b">
+      <div className="flex items-center gap-6">
+        <div className="font-bold text-lg">EXTRA Rewards</div>
+        
+        {isAdmin && (
+          <nav className="hidden md:flex gap-6 text-sm">
+            <Link
+              href="/admin"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/admin/contacts"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/contacts" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Contacten
+            </Link>
+            <Link
+              href="/admin/transactions"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/transactions" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Transacties
+            </Link>
+            <Link
+              href="/admin/rewards"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/rewards" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Beloningen
+            </Link>
+            <Link
+              href="/admin/marketing"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/marketing" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Marketing
+            </Link>
+            <Link
+              href="/admin/analytics"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/analytics" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Analytics
+            </Link>
+            <Link
+              href="/admin/settings"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/settings" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Instellingen
+            </Link>
+          </nav>
+        )}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="p-2 md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Navigatie</DropdownMenuLabel>
+            {isAdmin && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/contacts">
+                    <Users className="mr-2 h-4 w-4" />
+                    Contacten
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/transactions">
+                    <BarChart className="mr-2 h-4 w-4" />
+                    Transacties
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/rewards">
+                    <Gift className="mr-2 h-4 w-4" />
+                    Beloningen
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/marketing">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Marketing
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/analytics">
+                    <LineChart className="mr-2 h-4 w-4" />
+                    Analytics
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Instellingen
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{getInitials()}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
+                <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Uitloggen
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
