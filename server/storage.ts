@@ -573,11 +573,17 @@ export class MemStorage implements IStorage {
     const id = this.currentIds.redemptions++;
     const now = new Date();
     
+    // Haal de reward op om de pointsCost te bepalen
+    const selectedReward = await this.getReward(insertRedemption.rewardId);
+    if (!selectedReward) {
+      throw new Error(`Reward with id ${insertRedemption.rewardId} not found`);
+    }
+    
     const redemption: Redemption = {
       id,
       userId: insertRedemption.userId,
       rewardId: insertRedemption.rewardId,
-      pointsCost: insertRedemption.pointsCost,
+      pointsCost: selectedReward.pointsCost, // Gebruik de kosten van de reward
       status: insertRedemption.status || 'pending',
       notes: insertRedemption.notes || null,
       createdAt: now,
@@ -587,6 +593,7 @@ export class MemStorage implements IStorage {
     this.redemptions.set(id, redemption);
     
     // Create a transaction for this redemption (negative points)
+    const metadata: Record<string, any> = { rewardId: redemption.rewardId };
     await this.createPointTransaction({
       userId: redemption.userId,
       amount: -redemption.pointsCost,
@@ -594,15 +601,14 @@ export class MemStorage implements IStorage {
       description: `Verzilvering: Reward #${redemption.rewardId}`,
       source: "reward_redemption",
       sourceId: id.toString(),
-      metadata: {}
+      metadata
     });
     
     // Update reward stock if applicable
-    const reward = await this.getReward(redemption.rewardId);
-    if (reward && reward.stock !== null && reward.stock !== undefined) {
+    if (selectedReward.stock !== null && selectedReward.stock !== undefined) {
       await this.updateReward(redemption.rewardId, {
-        stock: reward.stock - 1,
-        status: reward.stock <= 1 ? "outofstock" : "available"
+        stock: selectedReward.stock - 1,
+        status: selectedReward.stock <= 1 ? "outofstock" : "available"
       });
     }
     
@@ -732,7 +738,8 @@ export class MemStorage implements IStorage {
       const updated: Setting = {
         ...existing,
         ...settingData,
-        updatedAt: now
+        updatedAt: now,
+        value: settingData.value !== undefined ? settingData.value : existing.value
       };
       
       this.settings.set(key, updated);
@@ -740,10 +747,17 @@ export class MemStorage implements IStorage {
     } else {
       const id = this.currentIds.settings++;
       
+      // Zorg ervoor dat waarden zijn ingesteld
+      const defaultValue = settingData.value !== undefined ? settingData.value : null;
+      const defaultType = settingData.type || 'string';
+      const defaultCategory = settingData.category || 'general';
+      
       const setting: Setting = {
         id,
         key,
-        ...settingData as InsertSetting,
+        value: defaultValue,
+        type: defaultType,
+        category: defaultCategory,
         updatedAt: now
       };
       
