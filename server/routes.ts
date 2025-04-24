@@ -1635,7 +1635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const users = await storage.getUsers();
       // Filter gebruikers op basis van TWV benodigdheden
-      const twvUsers = users.filter((user: User) => user.needsTwv === true);
+      const twvUsers = users.filter((user) => user.needsTwv === true);
       
       return res.status(200).json(twvUsers);
     } catch (error) {

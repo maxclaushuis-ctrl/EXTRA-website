@@ -148,6 +148,73 @@ export class MemStorage implements IStorage {
       phone: "",
       profileImage: "",
       apiId: "",
+      needsTwv: false,
+      twvStatus: "none",
+      settings: {
+        notifications: true,
+        emailAlerts: true,
+        theme: "light"
+      },
+      tags: [],
+    });
+    
+    // Testgebruikers voor TWV functionaliteit
+    this.createUser({
+      email: "jan@extra.nl",
+      password: this.hashPassword("password123"),
+      firstName: "Jan",
+      lastName: "Buitenlands",
+      role: "employee",
+      status: "active",
+      points: 100,
+      phone: "0612345678",
+      profileImage: "",
+      apiId: "EXT001",
+      needsTwv: true,
+      twvStatus: "required",
+      settings: {
+        notifications: true,
+        emailAlerts: true,
+        theme: "light"
+      },
+      tags: ["internationaal"],
+    });
+    
+    this.createUser({
+      email: "maria@extra.nl",
+      password: this.hashPassword("password123"),
+      firstName: "Maria",
+      lastName: "International",
+      role: "employee",
+      status: "active",
+      points: 150,
+      phone: "0612345679",
+      profileImage: "",
+      apiId: "EXT002",
+      needsTwv: true,
+      twvStatus: "pending",
+      twvRequestDate: new Date(2025, 3, 15),
+      settings: {
+        notifications: true,
+        emailAlerts: true,
+        theme: "light"
+      },
+      tags: ["internationaal"],
+    });
+    
+    this.createUser({
+      email: "piet@extra.nl",
+      password: this.hashPassword("password123"),
+      firstName: "Piet",
+      lastName: "Lokaal",
+      role: "employee",
+      status: "active",
+      points: 200,
+      phone: "0612345670",
+      profileImage: "",
+      apiId: "EXT003",
+      needsTwv: false,
+      twvStatus: "none",
       settings: {
         notifications: true,
         emailAlerts: true,
@@ -262,6 +329,12 @@ export class MemStorage implements IStorage {
       apiId: insertUser.apiId || null,
       tags: insertUser.tags || [],
       settings: insertUser.settings || null,
+      needsTwv: insertUser.needsTwv !== undefined ? insertUser.needsTwv : false,
+      twvStatus: insertUser.twvStatus || 'none',
+      twvRequestDate: insertUser.twvRequestDate || null,
+      twvApprovalDate: insertUser.twvApprovalDate || null,
+      twvExpiryDate: insertUser.twvExpiryDate || null,
+      twvNotes: insertUser.twvNotes || null,
       dateJoined: now,
     };
     
