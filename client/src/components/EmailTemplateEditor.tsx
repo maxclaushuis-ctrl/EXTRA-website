@@ -10,7 +10,7 @@ interface EmailTemplateEditorProps {
   onTextChange: (content: string) => void;
 }
 
-export const EmailTemplateEditor = ({
+const EmailTemplateEditor = ({
   htmlContent,
   onHtmlChange,
   textContent,
@@ -35,7 +35,7 @@ export const EmailTemplateEditor = ({
             className="min-h-[300px] font-mono"
           />
           <p className="text-sm text-gray-500 mt-2">
-            Gebruik {{naam}} als placeholder voor de naam van de ontvanger.
+            Gebruik dubbele accolades met naam erin als placeholder voor ontvanger.
           </p>
         </TabsContent>
         
@@ -47,7 +47,7 @@ export const EmailTemplateEditor = ({
             className="min-h-[300px] font-mono"
           />
           <p className="text-sm text-gray-500 mt-2">
-            Gebruik {{naam}} als placeholder voor de naam van de ontvanger.
+            Gebruik dubbele accolades met naam erin als placeholder voor ontvanger.
           </p>
         </TabsContent>
         
@@ -62,7 +62,7 @@ export const EmailTemplateEditor = ({
             <ScrollArea className="h-[300px] p-4 bg-white">
               <div 
                 className="preview-content" 
-                dangerouslySetInnerHTML={{ __html: htmlContent.replace(/{{naam}}/g, 'John Doe') }} 
+                dangerouslySetInnerHTML={{ __html: htmlContent.replace(/\{\{naam\}\}/g, 'John Doe') }} 
               />
             </ScrollArea>
           </div>
@@ -74,3 +74,5 @@ export const EmailTemplateEditor = ({
     </div>
   );
 };
+
+export default EmailTemplateEditor;

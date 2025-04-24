@@ -29,7 +29,7 @@ import APIImport from '@/components/APIImport';
 import AddContactDialog from '@/components/AddContactDialog';
 import ContactDetailDialog from '@/components/ContactDetailDialog';
 import ContactsTable from '@/components/ContactsTable';
-import EmailTemplateEditor from '@/components/EmailTemplateEditor';
+// Import overige componenten
 
 // Deze imports worden later toegevoegd wanneer we de afzonderlijke tab-componenten maken
 // import ContactsTab from './tabs/ContactsTab';
