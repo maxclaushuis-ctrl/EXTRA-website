@@ -14,6 +14,7 @@ export function initMailService(): boolean {
   if (!SENDGRID_API_KEY) {
     console.warn("SENDGRID_API_KEY niet ingesteld, e-mailfunctionaliteit gebruikt mock-modus");
     useMockService = true;
+    mailService = null; // Zorg ervoor dat mailService niet gebruikt wordt
     return true; // We gebruiken mock-modus, dus service is beschikbaar
   }
   
@@ -42,6 +43,25 @@ interface EmailParams {
 
 // Verzend een e-mail met opgegeven parameters
 export async function sendEmail(params: EmailParams): Promise<boolean> {
+  // Check of we in mock-modus zijn
+  if (useMockService) {
+    // Log de e-mail in console en in-memory voor debugging
+    const mockEmail = {
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      text: params.text?.substring(0, 200) + (params.text && params.text.length > 200 ? '...' : ''),
+      html: params.html?.substring(0, 200) + (params.html && params.html.length > 200 ? '...' : ''),
+      timestamp: new Date().toISOString()
+    };
+    
+    mockMailLog.push(mockEmail);
+    console.log('Mock e-mail verzonden:');
+    console.log(JSON.stringify(mockEmail, null, 2));
+    return true;
+  }
+  
+  // Als niet in mock-modus, gebruik echte SendGrid service
   if (!mailService) {
     console.warn("Mail service niet geïnitialiseerd, kan geen e-mail verzenden");
     return false;
