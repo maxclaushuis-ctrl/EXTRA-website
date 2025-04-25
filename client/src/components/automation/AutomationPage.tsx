@@ -147,8 +147,9 @@ const AutomationPage = () => {
       <div className="flex flex-wrap gap-2">
         <div
           className="flex items-center border rounded-md p-2 cursor-grab bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
-          draggable
+          draggable={true}
           onDragStart={(event) => {
+            console.log('Drag started: trigger');
             event.dataTransfer.setData('application/reactflow', 'trigger');
             event.dataTransfer.effectAllowed = 'move';
           }}
@@ -158,8 +159,9 @@ const AutomationPage = () => {
         </div>
         <div
           className="flex items-center border rounded-md p-2 cursor-grab bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
-          draggable
+          draggable={true}
           onDragStart={(event) => {
+            console.log('Drag started: action');
             event.dataTransfer.setData('application/reactflow', 'action');
             event.dataTransfer.effectAllowed = 'move';
           }}
@@ -169,8 +171,9 @@ const AutomationPage = () => {
         </div>
         <div
           className="flex items-center border rounded-md p-2 cursor-grab bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100"
-          draggable
+          draggable={true}
           onDragStart={(event) => {
+            console.log('Drag started: condition');
             event.dataTransfer.setData('application/reactflow', 'condition');
             event.dataTransfer.effectAllowed = 'move';
           }}
@@ -178,6 +181,10 @@ const AutomationPage = () => {
           <ListFilter className="h-4 w-4 mr-2" />
           <span>Voorwaarde</span>
         </div>
+      </div>
+      <div className="mt-4 text-xs text-gray-500">
+        <p>Sleep een component naar het canvas. Klik op componenten om ze te bewerken.</p>
+        <p>Verbind componenten door van een uitgangspunt naar een ander element te slepen.</p>
       </div>
     </div>
   );

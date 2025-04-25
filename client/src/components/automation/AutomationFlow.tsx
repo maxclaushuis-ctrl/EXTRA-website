@@ -250,6 +250,9 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
     }
   };
 
+  // Debug log om te controleren of we nodes en edges hebben
+  console.log('AutomationFlow rendering:', { nodes, edges, nodeTypes });
+  
   return (
     <div className="h-[600px] w-full border rounded-md bg-slate-50" ref={reactFlowWrapper}>
       <ReactFlow
@@ -263,6 +266,10 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
         fitView
+        deleteKeyCode="Delete"
+        selectionKeyCode="Shift"
+        multiSelectionKeyCode="Control"
+        proOptions={{ hideAttribution: true }}
       >
         <Controls />
         <MiniMap />
@@ -274,6 +281,7 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
               onClick={handleSave}
               className="flex items-center"
               variant="default"
+              type="button"
             >
               <Save className="mr-2 h-4 w-4" />
               Opslaan
@@ -285,6 +293,7 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
                   onClick={handleActivate}
                   className="flex items-center"
                   variant={automation.status === 'active' ? 'secondary' : 'outline'}
+                  type="button"
                 >
                   {automation.status === 'active' ? (
                     <Pause className="mr-2 h-4 w-4" />
@@ -298,6 +307,7 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
                   onClick={handleDelete}
                   className="flex items-center"
                   variant="destructive"
+                  type="button"
                 >
                   <Trash2Icon className="mr-2 h-4 w-4" />
                   Verwijderen
