@@ -55,11 +55,17 @@ const AutomationPage = () => {
   // Create new automation
   const createMutation = useMutation({
     mutationFn: async (newAutomation: any) => {
-      return apiRequest('/api/automations', 'POST', newAutomation);
+      const response = await apiRequest('/api/automations', {
+        method: 'POST',
+        body: JSON.stringify(newAutomation)
+      });
+      return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (responseData: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/automations'] });
-      setSelectedAutomation(data.id);
+      if (responseData && responseData.id) {
+        setSelectedAutomation(responseData.id);
+      }
       setNewAutomationDialogOpen(false);
       toast({
         title: 'Automatisering aangemaakt',
