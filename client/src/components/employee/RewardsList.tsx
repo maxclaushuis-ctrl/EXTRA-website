@@ -1,0 +1,190 @@
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Link } from 'wouter';
+import { Reward } from '@shared/schema';
+import { Loader2, ShoppingBag } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatNumber } from '@/lib/utils';
+import { queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+
+export function RewardsList() {
+  const { user } = useAuth();
+  const userPoints = user?.points || 0;
+  const { toast } = useToast();
+  const [redeemingRewardId, setRedeemingRewardId] = useState<number | null>(null);
+
+  const { data: rewards, isLoading } = useQuery<Reward[]>({
+    queryKey: ['/api/rewards'],
+  });
+  
+  // Mutatie voor het inwisselen van een beloning
+  const redeemMutation = useMutation({
+    mutationFn: async (rewardId: number) => {
+      // Valideren of gebruiker is ingelogd
+      if (!user || !user.id) {
+        throw new Error('Je moet ingelogd zijn om beloningen in te wisselen');
+      }
+      
+      const response = await fetch('/api/redemptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          rewardId: rewardId,
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Er is iets misgegaan bij het inwisselen');
+      }
+      
+      return await response.json();
+    },
+    onMutate: (rewardId) => {
+      setRedeemingRewardId(rewardId);
+    },
+    onSuccess: (data, rewardId) => {
+      // Gevonden beloning in de cache
+      const reward = rewards?.find(r => r.id === rewardId);
+      
+      toast({
+        title: 'Beloning ingewisseld!',
+        description: `Je hebt ${reward?.name || 'een beloning'} ingewisseld voor ${reward?.pointsCost || '?'} punten`,
+      });
+      
+      // Invalidate relevante queries om data te verversen
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['/api/users', user.id, 'redemptions'] });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Inwisselen mislukt',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      setRedeemingRewardId(null);
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-10 w-10 animate-spin text-[#00AAFF]" />
+      </div>
+    );
+  }
+
+  if (!rewards || rewards.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        Geen beloningen beschikbaar op dit moment.
+      </div>
+    );
+  }
+
+  // Sorteer de beloningen op puntwaarde van laag naar hoog
+  const sortedRewards = [...rewards]
+    .filter(reward => reward.status === 'available')
+    .sort((a, b) => a.pointsCost - b.pointsCost);
+
+  return (
+    <div className="mt-20 pb-20">
+      <div className="px-4 mb-4">
+        <h2 className="text-xl font-bold text-white mb-2">EXTRA@JE</h2>
+        <p className="text-gray-400 text-sm">Wissel je punten in voor deze beloningen</p>
+      </div>
+      
+      {sortedRewards.map((reward) => {
+        const pointsNeeded = Math.max(0, reward.pointsCost - userPoints);
+        const canRedeem = userPoints >= reward.pointsCost;
+        
+        return (
+          <div key={reward.id} className="mb-4 px-4">
+            <div className="border-b border-[#E0FF00] pb-4">
+              <div className="flex items-center justify-between">
+                {/* Beloningspunten */}
+                <div className="text-[#E0FF00] font-bold">
+                  {reward.pointsCost} EXTRA punten
+                </div>
+                
+                {/* Afbeelding van beloning indien beschikbaar */}
+                {reward.imageUrl && (
+                  <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center">
+                    <img 
+                      src={reward.imageUrl} 
+                      alt={reward.name}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                )}
+                
+                {/* Fallback icoon als er geen afbeelding is */}
+                {!reward.imageUrl && (
+                  <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center">
+                    <ShoppingBag className="w-6 h-6 text-[#E0FF00]" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Beloningsnaam */}
+              <div className="text-white text-lg font-medium mt-1">{reward.name}</div>
+              
+              {/* Progressbar en resterende punten */}
+              <div className="mt-2">
+                <div className="w-full bg-gray-900 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-[#E0FF00] h-full" 
+                    style={{ width: `${Math.min(100, (userPoints / reward.pointsCost) * 100)}%` }}
+                  ></div>
+                </div>
+                
+                <div className="flex justify-between items-center mt-2">
+                  {pointsNeeded > 0 ? (
+                    <div className="text-gray-400 text-sm">
+                      {pointsNeeded} punten nodig
+                    </div>
+                  ) : (
+                    <div className="text-green-400 text-sm">
+                      Je hebt genoeg punten!
+                    </div>
+                  )}
+                  
+                  {canRedeem && (
+                    <button 
+                      className="bg-[#E0FF00] text-black text-sm font-medium px-4 py-1 rounded-full"
+                      disabled={redeemMutation.isPending && redeemingRewardId === reward.id}
+                      onClick={() => {
+                        // Bevestiging vragen voor het inwisselen
+                        if (window.confirm(`Wil je ${reward.name} inwisselen voor ${reward.pointsCost} punten?`)) {
+                          redeemMutation.mutate(reward.id);
+                        }
+                      }}
+                    >
+                      {redeemMutation.isPending && redeemingRewardId === reward.id ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 inline animate-spin" />
+                          Inwisselen...
+                        </>
+                      ) : (
+                        'Inwisselen'
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

@@ -92,7 +92,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#00dfdf]">
+    <div className="flex h-screen w-full items-center justify-center blue-gradient-bg">
       <Card className="w-full max-w-md shadow-lg">
         <div className="mx-auto mb-4 mt-6 flex justify-center">
           <img src={extraLogo} alt="EXTRA Logo" className="h-16" />
@@ -119,7 +119,7 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Wachtwoord</Label>
-                <Button variant="link" className="px-0 text-xs" type="button">
+                <Button variant="link" className="px-0 text-xs text-[#00AAFF]" type="button">
                   Wachtwoord vergeten?
                 </Button>
               </div>
@@ -134,7 +134,7 @@ export default function Login() {
           </CardContent>
           <CardFooter>
             <Button 
-              className="w-full bg-[#141414] text-white hover:bg-[#333333]" 
+              className="w-full bg-[#00AAFF] text-white hover:bg-[#0088CC]" 
               type="submit" 
               disabled={isSubmitting}
             >

@@ -30,26 +30,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     async function loadUser() {
       try {
+        console.log('Controleren of gebruiker is ingelogd...');
+        
         const response = await fetch('/api/auth/me', {
           credentials: 'include', // Belangrijk: zorgt dat cookies worden meegestuurd
         });
         
+        console.log('Login check response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          console.log('Current user data:', data);
+          console.log('Ingelogde gebruiker gevonden:', data);
           setUser(data);
+          toast({
+            title: 'Welkom terug',
+            description: `Ingelogd als ${data.firstName} ${data.lastName}`,
+          });
         } else {
-          console.log('Geen ingelogde gebruiker gevonden');
+          console.log('Geen ingelogde gebruiker gevonden, status:', response.status);
+          const errorText = await response.text();
+          console.log('Error details:', errorText);
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('Error tijdens gebruiker ophalen:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
     loadUser();
-  }, []);
+  }, [toast]);
 
   // Login function
   async function login(email: string, password: string): Promise<{ success: boolean; userData?: User }> {

@@ -73,6 +73,19 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-poppins font-bold;
   }
+  
+  /* Employee dashboard specifieke stijlen */
+  .employee-dashboard {
+    @apply bg-black text-white min-h-screen;
+  }
+  
+  .blue-gradient-bg {
+    background: linear-gradient(90deg, #00AAFF 0%, #00CCFF 100%);
+  }
+  
+  .extra-pattern-bg {
+    background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H100V100H0V0ZM10 10L20 0L30 10L20 20L10 10ZM30 30L40 20L50 30L40 40L30 30ZM50 50L60 40L70 50L60 60L50 50ZM70 70L80 60L90 70L80 80L70 70ZM10 50L20 40L30 50L20 60L10 50ZM50 10L60 0L70 10L60 20L50 10ZM30 70L40 60L50 70L40 80L30 70ZM70 30L80 20L90 30L80 40L70 30Z" fill="%2300CCFF" fill-opacity="0.2"/></svg>');
+  }
 }
 
 @layer components {

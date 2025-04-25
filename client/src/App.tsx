@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/auth/Login";
-import Dashboard from "@/pages/Dashboard";
+import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
@@ -61,12 +61,16 @@ import NotificationToast from "@/components/NotificationToast";
 import { MainNav } from "@/components/MainNav";
 
 function Router() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const [location] = useLocation();
+  
+  // Bepaal of we op de medewerker dashboard pagina zijn, daar willen we geen navigatie tonen
+  const isEmployeeDashboard = location === '/dashboard' && user?.role !== 'admin';
   
   return (
     <>
-      {/* Notificatie component, alleen zichtbaar als de gebruiker is ingelogd */}
-      {isAuthenticated && (
+      {/* Notificatie en navigatie, maar niet op employee dashboard */}
+      {isAuthenticated && !isEmployeeDashboard && (
         <>
           <MainNav />
           <NotificationToast />
