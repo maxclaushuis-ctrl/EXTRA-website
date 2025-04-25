@@ -29,18 +29,63 @@ export default function Login() {
       return;
     }
     
+    // Debug info tonen
+    console.log('Login poging: Inloggen met', email);
+    
     setIsSubmitting(true);
     
     try {
-      const result = await login(email, password);
-      if (result.success && result.userData) {
-        // Gebruik de userData direct uit het resultaat om te bepalen waar naartoe te navigeren
-        if (result.userData.role === 'admin') {
+      // Direct fetch gebruiken in plaats van login functie voor volledige controle
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+      });
+      
+      console.log('Login response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Login succesvol, gebruiker:', data.user);
+        
+        // Zorg dat auth context wordt bijgewerkt
+        if (login) {
+          await login(email, password);
+        }
+        
+        // Navigeer op basis van de rol
+        if (data.user.role === 'admin') {
+          toast({
+            title: 'Ingelogd als admin',
+            description: `Welkom ${data.user.firstName}`,
+          });
           navigate('/admin'); // Admin dashboard
         } else {
+          toast({
+            title: 'Ingelogd',
+            description: `Welkom ${data.user.firstName}`,
+          });
           navigate('/dashboard'); // Standaard (employee) dashboard
         }
+      } else {
+        const errorData = await response.json();
+        console.error('Login mislukt:', errorData);
+        toast({
+          title: 'Login mislukt',
+          description: errorData.message || 'Ongeldige inloggegevens',
+          variant: 'destructive',
+        });
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: 'Login mislukt',
+        description: 'Er is een fout opgetreden bij het inloggen',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }

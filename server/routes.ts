@@ -334,90 +334,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Login poging:", email);
 
-      // Speciale check voor admin gebruiker
+      // Hardcode admin toegang om te testen
       if (email === "admin@extra.nl" && password === "admin123") {
-        // Haal admin gebruiker op of maak deze indien nodig
-        let adminUser = await storage.getUserByEmail(email);
+        console.log("Admin login poging gedetecteerd");
+        
+        // Test of de user aangemaakt is of al bestaat
+        const existingUser = await storage.getUserByEmail("admin@extra.nl");
+        
+        let adminUser = existingUser;
         
         if (!adminUser) {
-          // Maak admin gebruiker aan als deze nog niet bestaat
+          console.log("Admin gebruiker bestaat niet, aanmaken...");
+          // Admin user bestaat nog niet, aanmaken
           adminUser = await storage.createUser({
             email: "admin@extra.nl",
-            password: "admin123", // In echte app zou dit gehashed worden
+            password: "admin123",
             firstName: "Admin",
-            lastName: "EXTRA",
+            lastName: "User",
             role: "admin",
             status: "active",
             points: 0
           });
-          console.log("Admin gebruiker aangemaakt:", adminUser.id);
+          console.log("Admin gebruiker aangemaakt met id:", adminUser.id);
+        } else {
+          console.log("Admin gebruiker gevonden met id:", adminUser.id);
         }
         
-        // Set session data
+        // Expliciete sessie aanmaken
         req.session.userId = adminUser.id;
         req.session.userRole = "admin";
         
-        // Force save session before responding
-        return new Promise<void>((resolve) => {
-          req.session.save((err) => {
-            if (err) {
-              console.error("Fout bij opslaan sessie:", err);
-              res.status(500).json({ message: "Fout bij inloggen (sessie)" });
-            } else {
-              console.log("Admin sessie succesvol opgeslagen:", req.session.id);
-              console.log("SessionID cookie set:", req.session.id);
-              res.status(200).json({
-                message: "Login succesvol",
-                user: {
-                  id: adminUser.id,
-                  email: adminUser.email,
-                  firstName: adminUser.firstName,
-                  lastName: adminUser.lastName,
-                  role: "admin"
-                }
-              });
+        console.log("Sessie ingesteld, nu opslaan...");
+        console.log("Sessie inhoud:", req.session);
+        
+        // Sessie forceren om op te slaan voordat we response sturen
+        req.session.save((err) => {
+          if (err) {
+            console.error("Fout bij opslaan sessie:", err);
+            return res.status(500).json({ message: "Fout bij opslaan sessie" });
+          }
+          
+          console.log("Sessie succesvol opgeslagen");
+          return res.status(200).json({
+            message: "Login succesvol",
+            user: {
+              id: adminUser.id,
+              email: adminUser.email,
+              firstName: adminUser.firstName,
+              lastName: adminUser.lastName,
+              role: "admin"
             }
-            resolve();
           });
         });
+        
+        return; // Belangrijk: stoppen na sessie opslaan om dubbele responses te voorkomen
       }
       
-      // Voor andere gebruikers
+      // Voor reguliere users (niet admin)
       const user = await storage.getUserByEmail(email);
       
       if (!user) {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
       
-      // Verify password (in een echte app zouden we bcrypt vergelijking gebruiken)
-      if (password !== "password123") { // Standaard wachtwoord voor test
+      // Hier zouden we password hashing gebruiken, maar voor test accepteren we "password123"
+      const isValid = password === "password123";
+      
+      if (!isValid) {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
       
-      // Set session
+      // Sessie instellen
       req.session.userId = user.id;
       req.session.userRole = user.role;
       
-      // Save session explicitly
-      return new Promise<void>((resolve) => {
-        req.session.save((err) => {
-          if (err) {
-            console.error("Fout bij opslaan sessie:", err);
-            res.status(500).json({ message: "Fout bij inloggen (sessie)" });
-          } else {
-            console.log("Sessie succesvol opgeslagen:", req.session.id);
-            res.status(200).json({
-              message: "Login succesvol",
-              user: {
-                id: user.id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role
-              }
-            });
+      // Expliciete sessie opslaan
+      req.session.save((err) => {
+        if (err) {
+          console.error("Fout bij opslaan sessie:", err);
+          return res.status(500).json({ message: "Fout bij opslaan sessie" });
+        }
+        
+        return res.status(200).json({
+          message: "Login succesvol",
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
           }
-          resolve();
         });
       });
     } catch (error) {
@@ -427,13 +433,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.post("/api/auth/logout", (req: Request, res: Response) => {
+    console.log("Logout request ontvangen");
+    
     req.session.destroy(err => {
       if (err) {
         console.error("Logout error:", err);
         return res.status(500).json({ message: "Er is iets misgegaan bij het uitloggen" });
       }
       
-      res.clearCookie("connect.sid"); // Clear session cookie
+      // Zorg dat we de juiste cookie naam gebruiken die in index.ts is ingesteld
+      res.clearCookie("extra.sid", { 
+        path: '/',
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+      });
+      
+      console.log("Sessie en cookie succesvol verwijderd");
+      
       return res.status(200).json({ message: "Uitloggen succesvol" });
     });
   });

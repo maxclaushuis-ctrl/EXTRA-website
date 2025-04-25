@@ -16,17 +16,33 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// CORS headers toevoegen om cross-domain problemen te voorkomen
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-ws-auth');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 // Voeg sessie middleware toe
 app.use(session({
   secret: 'extra-rewards-secret',
-  resave: false,
+  resave: true, // Verander naar true om sessie na elke request op te slaan
   saveUninitialized: false,
   rolling: true, // Vernieuw cookie bij elke request
+  name: 'extra.sid', // Expliciete naam voor cookie voor betere debugging
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Altijd false voor development
     maxAge: 24 * 60 * 60 * 1000, // 24 uur
     httpOnly: true,
-    sameSite: 'lax'
+    sameSite: 'lax',
+    path: '/'
   }
 }));
 
