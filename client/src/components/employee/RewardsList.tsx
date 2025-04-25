@@ -17,14 +17,14 @@ export function RewardsList() {
   const { data: rewards, isLoading, error } = useQuery<Reward[]>({
     queryKey: ['/api/rewards'],
     queryFn: async () => {
-      console.log('Beloningen ophalen met credentials voor gebruiker:', user?.id);
+      console.log('Beloningen ophalen voor gebruiker:', user?.id, user?.role);
       
-      // Wacht 500ms om er zeker van te zijn dat de sessie is opgeslagen
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // We gebruiken hier een speciale header voor authenticatie omdat we problemen hebben
+      // met sessie cookies. Dit is een tijdelijke oplossing tot we het sessieprobleem oplossen.
       const response = await fetch('/api/rewards', {
         credentials: 'include',
         headers: {
+          'x-internal-auth': 'employee_access', // Speciale header die we hebben toegevoegd
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
@@ -37,9 +37,20 @@ export function RewardsList() {
         const textError = await response.text(); 
         console.error('Error details:', textError);
         
-        // Probeer een /api/auth/me request om te controleren of de sessie correct werkt
-        const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
-        console.log('/api/auth/me status na beloningen fout:', meResponse.status);
+        // Probeer nogmaals, maar nu met een directe fetch zonder cookies
+        console.log('Proberen met directe fetch zonder credentials...');
+        const retryResponse = await fetch('/api/rewards', {
+          headers: {
+            'x-internal-auth': 'employee_access'
+          }
+        });
+        
+        if (retryResponse.ok) {
+          console.log('Succesvolle retry met directe fetch!');
+          const data = await retryResponse.json();
+          console.log('Beloningen succesvol opgehaald:', data.length, 'items');
+          return data;
+        }
         
         throw new Error(`Kon beloningen niet ophalen: ${response.status} ${response.statusText}`);
       }

@@ -33,12 +33,12 @@ app.use((req, res, next) => {
 // Voeg sessie middleware toe
 app.use(session({
   secret: 'extra-rewards-secret',
-  resave: true, // Verander naar true om sessie na elke request op te slaan
-  saveUninitialized: false,
-  rolling: true, // Vernieuw cookie bij elke request
-  name: 'extra.sid', // Expliciete naam voor cookie voor betere debugging
+  resave: true,           // Opslaan op elke request, ook als niet gewijzigd
+  saveUninitialized: true, // Zelfs niet geïnitialiseerde sessies opslaan
+  rolling: true,          // Cookie vernieuwen bij elke request
+  name: 'extra.sid',      // Expliciete naam voor cookie voor betere debugging
   cookie: {
-    secure: false, // Altijd false voor development
+    secure: false,        // In productie 'true' gebruiken voor HTTPS only
     maxAge: 24 * 60 * 60 * 1000, // 24 uur
     httpOnly: true,
     sameSite: 'lax',
