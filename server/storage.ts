@@ -193,6 +193,28 @@ export class MemStorage implements IStorage {
       tags: [],
     });
     
+    // Medewerker account met standaard inloggegevens
+    this.createUser({
+      email: "medewerker@extra.nl",
+      password: this.hashPassword("medewerker123"),
+      firstName: "Extra",
+      lastName: "Medewerker",
+      role: "employee",
+      status: "active",
+      points: 500,
+      phone: "0687654321",
+      profileImage: "",
+      apiId: "EXT000",
+      needsTwv: false,
+      twvStatus: "none",
+      settings: {
+        notifications: true,
+        emailAlerts: true,
+        theme: "dark"
+      },
+      tags: ["intern"],
+    });
+    
     // Testgebruikers voor TWV functionaliteit
     this.createUser({
       email: "jan@extra.nl",
