@@ -14,6 +14,7 @@ import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
 import RulesPage from "@/pages/admin/Rules";
 import MarketingPage from "@/pages/admin/Marketing";
+import MarketingSimplePage from "@/pages/admin/MarketingSimple";
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
 import WerkruimtePage from "@/pages/admin/Werkruimte";
@@ -104,7 +105,7 @@ function Router() {
           {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}
         </Route>
         <Route path="/admin/marketing">
-          {() => <ProtectedRoute component={MarketingPage} adminOnly={true} />}
+          {() => <ProtectedRoute component={MarketingSimplePage} adminOnly={true} />}
         </Route>
         <Route path="/admin/analytics">
           {() => <ProtectedRoute component={AnalyticsPage} adminOnly={true} />}
