@@ -30,11 +30,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     async function loadUser() {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include', // Belangrijk: zorgt dat cookies worden meegestuurd
+        });
         
         if (response.ok) {
           const data = await response.json();
+          console.log('Current user data:', data);
           setUser(data);
+        } else {
+          console.log('Geen ingelogde gebruiker gevonden');
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -50,12 +55,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function login(email: string, password: string): Promise<{ success: boolean; userData?: User }> {
     setIsLoading(true);
     try {
-      const response = await apiRequest('/api/auth/login', {
+      // Gebruik gewone fetch in plaats van apiRequest om de login problemen te vermijden
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include', // Belangrijk: zorgt dat cookies worden bewaard
       });
 
       if (response.ok) {
