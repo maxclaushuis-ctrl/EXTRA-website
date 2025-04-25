@@ -65,7 +65,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function login(email: string, password: string): Promise<{ success: boolean; userData?: User }> {
     setIsLoading(true);
     try {
-      // Gebruik gewone fetch in plaats van apiRequest om de login problemen te vermijden
+      // Gebruik gewone fetch om de login te doen
+      console.log('AuthContext - login poging voor:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -75,25 +76,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
         credentials: 'include', // Belangrijk: zorgt dat cookies worden bewaard
       });
 
+      // Debug response status
+      console.log('AuthContext - login response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('AuthContext - login succesvol, data:', data);
+        
+        // Stel user in met data.user informatie
         setUser(data.user);
+        
+        // Nu even controleren of we daadwerkelijk met het juiste account zijn ingelogd
+        try {
+          const meResponse = await fetch('/api/auth/me', {
+            credentials: 'include',
+          });
+          
+          if (meResponse.ok) {
+            const meData = await meResponse.json();
+            console.log('AuthContext - /me check gelukt, gebruikersgegevens:', meData);
+            // Update user met volledige data
+            setUser(meData);
+          } else {
+            console.warn('AuthContext - /me check mislukt maar login was succesvol, vreemd!');
+          }
+        } catch (meError) {
+          console.error('AuthContext - fout bij controleren van login via /me endpoint:', meError);
+        }
+        
         toast({
           title: 'Ingelogd!',
           description: `Welkom ${data.user.firstName}`,
         });
         return { success: true, userData: data.user };
       } else {
-        const errorData = await response.json();
+        let errorMessage = 'Ongeldige inloggegevens';
+        try {
+          const errorData = await response.json();
+          console.log('AuthContext - login mislukt, error data:', errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (err) {
+          console.error('AuthContext - kon error data niet parsen:', err);
+        }
+        
         toast({
           title: 'Login mislukt',
-          description: errorData.message || 'Ongeldige inloggegevens',
+          description: errorMessage,
           variant: 'destructive',
         });
         return { success: false };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('AuthContext - login error:', error);
       toast({
         title: 'Login mislukt',
         description: 'Er is een fout opgetreden bij het inloggen',

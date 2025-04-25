@@ -35,50 +35,28 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      // Direct fetch gebruiken in plaats van login functie voor volledige controle
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
+      // Gebruik alleen de login functie van de AuthContext
+      const result = await login(email, password);
       
-      console.log('Login response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Login succesvol, gebruiker:', data.user);
-        
-        // Zorg dat auth context wordt bijgewerkt
-        if (login) {
-          await login(email, password);
-        }
+      if (result.success && result.userData) {
+        console.log('Login succesvol, gebruiker:', result.userData);
         
         // Navigeer op basis van de rol
-        if (data.user.role === 'admin') {
+        if (result.userData.role === 'admin') {
           toast({
             title: 'Ingelogd als admin',
-            description: `Welkom ${data.user.firstName}`,
+            description: `Welkom ${result.userData.firstName}`,
           });
           navigate('/admin'); // Admin dashboard
         } else {
           toast({
             title: 'Ingelogd',
-            description: `Welkom ${data.user.firstName}`,
+            description: `Welkom ${result.userData.firstName}`,
           });
           navigate('/dashboard'); // Standaard (employee) dashboard
         }
-      } else {
-        const errorData = await response.json();
-        console.error('Login mislukt:', errorData);
-        toast({
-          title: 'Login mislukt',
-          description: errorData.message || 'Ongeldige inloggegevens',
-          variant: 'destructive',
-        });
       }
+      // De foutafhandeling gebeurt al in de login functie van de context
     } catch (error) {
       console.error('Login error:', error);
       toast({
