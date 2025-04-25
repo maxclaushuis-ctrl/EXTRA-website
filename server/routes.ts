@@ -899,6 +899,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test endpoint voor het toevoegen van punten (voor demonstratie van WebSocket)
+  app.post("/api/users/:userId/add-points", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Controleer of gebruiker bestaat
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+      
+      // Controleer of gebruiker zichzelf is of admin
+      if (req.session.userId !== userId && req.session.userRole !== 'admin') {
+        return res.status(403).json({ message: "Geen toegang" });
+      }
+      
+      const { points, description } = req.body;
+      
+      // Valideer dat punten een positief getal is
+      if (!points || typeof points !== 'number' || points <= 0) {
+        return res.status(400).json({ message: "Ongeldig aantal punten" });
+      }
+      
+      // Maak een transactie aan
+      const transaction = await storage.createPointTransaction({
+        userId,
+        amount: points,
+        type: "earned",
+        description: description || "Test punten",
+        source: "test",
+      });
+      
+      // Haal de bijgewerkte gebruiker op
+      const updatedUser = await storage.getUser(userId);
+      
+      // Stuur een response
+      return res.status(200).json({
+        message: "Punten succesvol toegevoegd",
+        transaction,
+        user: {
+          id: updatedUser!.id,
+          points: updatedUser!.points
+        }
+      });
+    } catch (error) {
+      console.error(`Error adding points for user ${req.params.userId}:`, error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het toevoegen van punten" });
+    }
+  });
+  
   app.post("/api/transactions", adminMiddleware, async (req: Request, res: Response) => {
     try {
       // Validate request body
