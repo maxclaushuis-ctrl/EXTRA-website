@@ -893,26 +893,6 @@ export class MemStorage implements IStorage {
     this.emailTemplates.set(id, template);
     return template;
   }
-  
-  async createEmailTemplate(insertTemplate: InsertEmailTemplate): Promise<EmailTemplate> {
-    const id = this.currentIds.emailTemplates++;
-    const now = new Date();
-    
-    const template: EmailTemplate = {
-      id,
-      name: insertTemplate.name,
-      description: insertTemplate.description || null,
-      type: insertTemplate.type || 'general',
-      subject: insertTemplate.subject,
-      html: insertTemplate.html,
-      text: insertTemplate.text || null,
-      createdAt: now,
-      updatedAt: now
-    };
-    
-    this.emailTemplates.set(id, template);
-    return template;
-  }
 
   async getEmailTemplates(): Promise<EmailTemplate[]> {
     return Array.from(this.emailTemplates.values());
