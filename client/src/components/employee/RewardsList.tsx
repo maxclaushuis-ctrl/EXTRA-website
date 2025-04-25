@@ -17,20 +17,39 @@ export function RewardsList() {
   const { data: rewards, isLoading, error } = useQuery<Reward[]>({
     queryKey: ['/api/rewards'],
     queryFn: async () => {
-      console.log('Beloningen ophalen met credentials');
+      console.log('Beloningen ophalen met credentials voor gebruiker:', user?.id);
+      
+      // Wacht 500ms om er zeker van te zijn dat de sessie is opgeslagen
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const response = await fetch('/api/rewards', {
         credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
+      
+      console.log('Beloningen ophalen response status:', response.status);
       
       if (!response.ok) {
         console.error('Fout bij ophalen beloningen:', response.status, response.statusText);
         const textError = await response.text(); 
         console.error('Error details:', textError);
-        throw new Error('Kon beloningen niet ophalen');
+        
+        // Probeer een /api/auth/me request om te controleren of de sessie correct werkt
+        const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
+        console.log('/api/auth/me status na beloningen fout:', meResponse.status);
+        
+        throw new Error(`Kon beloningen niet ophalen: ${response.status} ${response.statusText}`);
       }
       
-      return response.json();
-    }
+      const data = await response.json();
+      console.log('Beloningen succesvol opgehaald:', data.length, 'items');
+      return data;
+    },
+    retry: 3,
+    retryDelay: 1000
   });
   
   // Mutatie voor het inwisselen van een beloning

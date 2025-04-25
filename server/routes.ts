@@ -425,12 +425,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       req.session.userRole = user.role;
       
+      console.log("Medewerker sessie ingesteld, nu opslaan...");
+      console.log("Sessie inhoud voor medewerker:", req.session);
+      
       // Expliciete sessie opslaan
       req.session.save((err) => {
         if (err) {
           console.error("Fout bij opslaan sessie:", err);
           return res.status(500).json({ message: "Fout bij opslaan sessie" });
         }
+        
+        console.log("Medewerker sessie succesvol opgeslagen voor gebruiker:", user.id);
         
         return res.status(200).json({
           message: "Login succesvol",
