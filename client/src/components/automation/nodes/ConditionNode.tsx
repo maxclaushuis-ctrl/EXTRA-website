@@ -1,204 +1,217 @@
-import { memo, useState } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Handle, Position } from 'reactflow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
+import { ListFilter } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
-interface ConditionNodeData {
-  label: string;
-  condition: {
-    field: string;
-    operator: string;
-    value: number | string;
+interface ConditionNodeProps {
+  data: {
+    label: string;
+    condition: {
+      field: string;
+      operator: string;
+      value: string | number;
+    };
   };
+  isConnectable: boolean;
+  selected: boolean;
 }
 
-const ConditionNode = ({ data, isConnectable }: NodeProps<ConditionNodeData>) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [field, setField] = useState(data.condition?.field || 'points');
-  const [operator, setOperator] = useState(data.condition?.operator || '>=');
-  const [value, setValue] = useState(data.condition?.value?.toString() || '100');
+const fieldOptions = [
+  { value: 'points', label: 'Punten' },
+  { value: 'status', label: 'Status' },
+  { value: 'role', label: 'Rol' },
+  { value: 'daysInCompany', label: 'Dagen in dienst' },
+  { value: 'lastLogin', label: 'Laatste login (dagen)' },
+  { value: 'redemptionCount', label: 'Aantal inwisselingen' },
+  { value: 'transactionCount', label: 'Aantal transacties' },
+];
+
+const operatorOptions = [
+  { value: '==', label: 'Is gelijk aan' },
+  { value: '!=', label: 'Is niet gelijk aan' },
+  { value: '>', label: 'Is groter dan' },
+  { value: '>=', label: 'Is groter dan of gelijk aan' },
+  { value: '<', label: 'Is kleiner dan' },
+  { value: '<=', label: 'Is kleiner dan of gelijk aan' },
+  { value: 'contains', label: 'Bevat' },
+  { value: 'startsWith', label: 'Begint met' },
+  { value: 'endsWith', label: 'Eindigt met' },
+];
+
+const statusOptions = [
+  { value: 'active', label: 'Actief' },
+  { value: 'inactive', label: 'Inactief' },
+];
+
+const roleOptions = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'employee', label: 'Medewerker' },
+];
+
+const ConditionNode = ({ data, isConnectable, selected }: ConditionNodeProps) => {
+  const [condition, setCondition] = useState<any>(data.condition || { field: 'points', operator: '>=', value: 100 });
   
-  // Beschrijving op basis van conditie
-  const getConditionDescription = () => {
-    const fieldLabels: Record<string, string> = {
-      'points': 'Punten',
-      'age': 'Leeftijd',
-      'signupDate': 'Registratiedatum',
-      'lastActivity': 'Laatste activiteit'
-    };
-    
-    const operatorLabels: Record<string, string> = {
-      '>=': 'is groter of gelijk aan',
-      '>': 'is groter dan',
-      '=': 'is gelijk aan',
-      '!=': 'is niet gelijk aan',
-      '<': 'is kleiner dan',
-      '<=': 'is kleiner of gelijk aan'
-    };
-    
-    return `${fieldLabels[field] || field} ${operatorLabels[operator] || operator} ${value}`;
+  // Update node data when configuration changes
+  useEffect(() => {
+    data.condition = condition;
+  }, [condition, data]);
+
+  const getValueInputType = () => {
+    switch(condition.field) {
+      case 'points':
+      case 'daysInCompany':
+      case 'lastLogin':
+      case 'redemptionCount':
+      case 'transactionCount':
+        return 'number';
+      default:
+        return 'text';
+    }
   };
-  
-  // Update condition when fields change
-  const updateCondition = () => {
-    data.condition = {
-      field,
-      operator,
-      value: field === 'points' || field === 'age' ? parseInt(value) : value
-    };
+
+  const renderValueInput = () => {
+    switch(condition.field) {
+      case 'status':
+        return (
+          <Select 
+            value={condition.value?.toString() || 'active'} 
+            onValueChange={(value) => setCondition({...condition, value})}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecteer status" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'role':
+        return (
+          <Select 
+            value={condition.value?.toString() || 'employee'} 
+            onValueChange={(value) => setCondition({...condition, value})}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecteer rol" />
+            </SelectTrigger>
+            <SelectContent>
+              {roleOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      default:
+        return (
+          <Input 
+            type={getValueInputType()} 
+            placeholder="Waarde" 
+            value={condition.value || ''}
+            onChange={(e) => {
+              const value = getValueInputType() === 'number' 
+                ? (e.target.value ? parseInt(e.target.value) : 0)
+                : e.target.value;
+              setCondition({...condition, value});
+            }}
+            className="w-full"
+          />
+        );
+    }
   };
 
   return (
-    <Card className="min-w-[250px] border-2 border-orange-400">
-      <CardHeader className="bg-orange-400 text-white p-2">
-        <CardTitle className="text-sm font-medium flex justify-between items-center">
-          <span>Voorwaarde: {data.label}</span>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-orange-900">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Configureer Voorwaarde</DialogTitle>
-                <DialogDescription>
-                  Stel criteria in voor deze voorwaarde.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="conditionLabel" className="text-right">
-                    Label
-                  </Label>
-                  <Input
-                    id="conditionLabel"
-                    defaultValue={data.label}
-                    className="col-span-3"
-                    onChange={e => data.label = e.target.value}
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="conditionField" className="text-right">
-                    Veld
-                  </Label>
-                  <Select 
-                    value={field} 
-                    onValueChange={(v) => {
-                      setField(v);
-                      updateCondition();
-                    }}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Selecteer veld" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="points">Punten</SelectItem>
-                      <SelectItem value="age">Leeftijd</SelectItem>
-                      <SelectItem value="signupDate">Registratiedatum</SelectItem>
-                      <SelectItem value="lastActivity">Laatste activiteit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="conditionOperator" className="text-right">
-                    Operator
-                  </Label>
-                  <Select 
-                    value={operator} 
-                    onValueChange={(v) => {
-                      setOperator(v);
-                      updateCondition();
-                    }}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Selecteer operator" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value=">=">is groter of gelijk aan</SelectItem>
-                      <SelectItem value=">">is groter dan</SelectItem>
-                      <SelectItem value="=">is gelijk aan</SelectItem>
-                      <SelectItem value="!=">is niet gelijk aan</SelectItem>
-                      <SelectItem value="<">is kleiner dan</SelectItem>
-                      <SelectItem value="<=">is kleiner of gelijk aan</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="conditionValue" className="text-right">
-                    Waarde
-                  </Label>
-                  <Input
-                    id="conditionValue"
-                    value={value}
-                    type={field === 'points' || field === 'age' ? 'number' : 'text'}
-                    className="col-span-3"
-                    onChange={e => {
-                      setValue(e.target.value);
-                      updateCondition();
-                    }}
-                  />
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </CardTitle>
+    <Card className={`min-w-[250px] ${selected ? 'ring-2 ring-orange-500' : ''}`}>
+      <CardHeader className="bg-orange-500 text-white p-2 flex flex-row items-center gap-2">
+        <ListFilter className="h-4 w-4" />
+        <CardTitle className="text-sm font-medium">Voorwaarde: {data.label}</CardTitle>
       </CardHeader>
-      <CardContent className="p-3">
-        <div className="text-xs">
-          <p><strong>Voorwaarde:</strong></p>
-          <p className="text-gray-700 mt-1">
-            {getConditionDescription()}
-          </p>
+      <CardContent className="p-3 space-y-4">
+        <div className="space-y-2">
+          <Label>Veld</Label>
+          <Select 
+            value={condition.field} 
+            onValueChange={(value) => setCondition({...condition, field: value})}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecteer veld" />
+            </SelectTrigger>
+            <SelectContent>
+              {fieldOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Vergelijking</Label>
+          <Select 
+            value={condition.operator} 
+            onValueChange={(value) => setCondition({...condition, operator: value})}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecteer operator" />
+            </SelectTrigger>
+            <SelectContent>
+              {operatorOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Waarde</Label>
+          {renderValueInput()}
+        </div>
+        
+        <div className="text-xs text-gray-500 pt-2">
+          Voorbeeld: <span className="font-semibold">{fieldOptions.find(f => f.value === condition.field)?.label}</span> {' '}
+          <span className="font-semibold">{operatorOptions.find(o => o.value === condition.operator)?.label}</span> {' '}
+          <span className="font-semibold">{condition.value}</span>
         </div>
       </CardContent>
       
-      {/* Input handle om verbinding te maken met vorige node */}
       <Handle
         type="target"
-        position={Position.Top}
+        position={Position.Left}
+        id="d"
         isConnectable={isConnectable}
         className="w-3 h-3 bg-orange-500"
       />
       
-      {/* Output handles om verbinding te maken met volgende nodes (ja/nee) */}
-      <div className="flex justify-between absolute w-full -bottom-6">
-        <div className="relative left-5">
-          <div className="text-xs text-green-600 font-bold">Ja</div>
-          <Handle
-            id="yes"
-            type="source"
-            position={Position.Bottom}
-            isConnectable={isConnectable}
-            className="w-3 h-3 bg-green-500 relative -left-5"
-          />
-        </div>
-        <div className="relative right-5">
-          <div className="text-xs text-red-600 font-bold">Nee</div>
-          <Handle
-            id="no"
-            type="source"
-            position={Position.Bottom}
-            isConnectable={isConnectable}
-            className="w-3 h-3 bg-red-500 relative left-5"
-          />
-        </div>
-      </div>
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="e"
+        isConnectable={isConnectable}
+        className="w-3 h-3 bg-orange-500"
+      />
+      
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="f"
+        isConnectable={isConnectable}
+        className="w-3 h-3 bg-orange-500"
+      />
     </Card>
   );
 };
 
-export default memo(ConditionNode);
+export default ConditionNode;

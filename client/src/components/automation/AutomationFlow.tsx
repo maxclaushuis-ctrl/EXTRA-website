@@ -21,30 +21,10 @@ import { Trash2Icon, Save, Play, Pause } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
 
-// Temporary simple node components until we implement the full versions
-// Will be replaced with imports from separate files
-const TriggerNode = ({ data }: any) => (
-  <div className="p-3 border-2 border-blue-400 rounded bg-white">
-    <div className="bg-blue-400 text-white p-1 -m-3 mb-2 font-semibold">Trigger: {data.label}</div>
-    <div className="text-xs">Type: {data.triggerType || 'birthday'}</div>
-  </div>
-);
-
-const ActionNode = ({ data }: any) => (
-  <div className="p-3 border-2 border-green-400 rounded bg-white">
-    <div className="bg-green-400 text-white p-1 -m-3 mb-2 font-semibold">Actie: {data.label}</div>
-    <div className="text-xs">Type: {data.actionType || 'email'}</div>
-  </div>
-);
-
-const ConditionNode = ({ data }: any) => (
-  <div className="p-3 border-2 border-orange-400 rounded bg-white">
-    <div className="bg-orange-400 text-white p-1 -m-3 mb-2 font-semibold">Voorwaarde: {data.label}</div>
-    <div className="text-xs">
-      Vergelijking: {data.condition?.field || 'points'} {data.condition?.operator || '>='} {data.condition?.value || 100}
-    </div>
-  </div>
-);
+// Import custom node components
+import TriggerNode from './nodes/TriggerNode';
+import ActionNode from './nodes/ActionNode';
+import ConditionNode from './nodes/ConditionNode';
 
 // Custom node types
 const nodeTypes = {
