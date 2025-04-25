@@ -68,6 +68,7 @@ type Campaign = {
   htmlContent: string;
   textContent: string;
   templateId: number | null;
+  campaignType: 'nieuwsbrief' | 'aankondiging' | 'verjaardagen' | 'beloning' | 'punten' | 'overig';
   status: 'draft' | 'scheduled' | 'sent' | 'cancelled';
   scheduledFor: string | null;
   sentAt: string | null;
@@ -115,6 +116,42 @@ const CampaignStatus = ({ status }: { status: string }) => {
       {status === 'scheduled' && 'Gepland'}
       {status === 'sent' && 'Verzonden'}
       {status === 'cancelled' && 'Geannuleerd'}
+    </Badge>
+  );
+};
+
+const CampaignType = ({ type }: { type: Campaign['campaignType'] }) => {
+  let color;
+  
+  switch (type) {
+    case 'nieuwsbrief':
+      color = 'bg-blue-100 text-blue-800';
+      break;
+    case 'aankondiging':
+      color = 'bg-orange-100 text-orange-800';
+      break;
+    case 'verjaardagen':
+      color = 'bg-pink-100 text-pink-800';
+      break;
+    case 'beloning':
+      color = 'bg-purple-100 text-purple-800';
+      break;
+    case 'punten':
+      color = 'bg-green-100 text-green-800';
+      break;
+    case 'overig':
+    default:
+      color = 'bg-gray-100 text-gray-800';
+  }
+  
+  return (
+    <Badge variant="outline" className={`${color} font-medium`}>
+      {type === 'nieuwsbrief' && 'Nieuwsbrief'}
+      {type === 'aankondiging' && 'Aankondiging'}
+      {type === 'verjaardagen' && 'Verjaardagen'}
+      {type === 'beloning' && 'Beloning'}
+      {type === 'punten' && 'Punten'}
+      {type === 'overig' && 'Overig'}
     </Badge>
   );
 };
@@ -252,8 +289,8 @@ const CampaignsList = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Naam</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Aangemaakt</TableHead>
                 <TableHead>Verzonden</TableHead>
                 <TableHead className="text-right">Acties</TableHead>
               </TableRow>
@@ -268,6 +305,9 @@ const CampaignsList = () => {
                         <span className="text-sm text-gray-500">{campaign.description}</span>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <CampaignType type={campaign.campaignType || 'overig'} />
                   </TableCell>
                   <TableCell>
                     <CampaignStatus status={campaign.status} />
@@ -354,6 +394,7 @@ const NewCampaignForm = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [subject, setSubject] = useState("");
+  const [campaignType, setCampaignType] = useState<Campaign['campaignType']>('nieuwsbrief');
   const [htmlContent, setHtmlContent] = useState("<p>Beste {{naam}},</p><p>Dit is een e-mail van EXTRA.</p><p>Met vriendelijke groet,<br>Het EXTRA team</p>");
   const [textContent, setTextContent] = useState("Beste {{naam}},\n\nDit is een e-mail van EXTRA.\n\nMet vriendelijke groet,\nHet EXTRA team");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
