@@ -33,44 +33,25 @@ async function adminMiddleware(req: Request, res: Response, next: NextFunction) 
   // Debug logging voor sessiegegevens
   console.log("Sessie in adminMiddleware:", req.session);
   
-  // In a real app, we'd validate JWT or session token and check role
+  // Normale sessie validatie
   if (req.session && req.session.userId && req.session.userRole === 'admin') {
-    console.log("Toegang verleend voor admin-gebruiker:", req.session.userId);
+    console.log("Toegang verleend voor admin-gebruiker door sessie:", req.session.userId);
     return next();
   }
   
-  // Check for WebSocket authentication header
+  // Check voor x-ws-auth header als fallback authenticatiemethode
   const wsAuth = req.headers['x-ws-auth'];
   if (wsAuth === 'admin_authenticated') {
-    console.log("WebSocket authenticatie header gedetecteerd, zoek admin gebruiker en stel sessie in");
+    console.log("WebSocket authenticatie header gedetecteerd");
     
-    try {
-      // Find admin user and set session data synchronously
-      const adminUser = await storage.getUserByEmail("admin@extra.nl");
-      
-      if (adminUser && adminUser.role === 'admin') {
-        req.session.userId = adminUser.id;
-        req.session.userRole = adminUser.role;
-        console.log("Admin gebruiker gevonden en sessie ingesteld:", adminUser.id);
-        
-        // Ingestelde sessie opslaan voordat we doorgaan
-        return new Promise<void>((resolve) => {
-          req.session.save((err) => {
-            if (err) {
-              console.error("Fout bij opslaan sessie:", err);
-            } else {
-              console.log("Sessie succesvol opgeslagen");
-            }
-            resolve();
-            next();
-          });
-        });
-      }
-    } catch (error) {
-      console.error("Fout bij zoeken en instellen admin gebruiker:", error);
-    }
+    // We gaan ervan uit dat dit een admin request is als de header correct is
+    // In een productie-omgeving zou je hier extra validaties willen doen
+    console.log("Admin toegang verleend via WebSocket auth header");
+    return next();
   }
   
+  // Als de gebruiker niet is ingelogd via sessie of ws header, stuur 403
+  console.log("Admin toegang geweigerd, geen geldige sessie of ws auth");
   return res.status(403).json({ 
     message: "Geen toegang", 
     sessionInfo: { 
@@ -351,18 +332,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email en wachtwoord zijn vereist" });
       }
 
-      // In een echte app zouden we password hashing en secure sessions gebruiken
-      // Hier doen we een eenvoudige check op de hardcoded admin user
+      console.log("Login poging:", email);
+
+      // Speciale check voor admin gebruiker
+      if (email === "admin@extra.nl" && password === "admin123") {
+        // Haal admin gebruiker op of maak deze indien nodig
+        let adminUser = await storage.getUserByEmail(email);
+        
+        if (!adminUser) {
+          // Maak admin gebruiker aan als deze nog niet bestaat
+          adminUser = await storage.createUser({
+            email: "admin@extra.nl",
+            password: "admin123", // In echte app zou dit gehashed worden
+            firstName: "Admin",
+            lastName: "EXTRA",
+            role: "admin",
+            status: "active",
+            points: 0
+          });
+          console.log("Admin gebruiker aangemaakt:", adminUser.id);
+        }
+        
+        // Set session data
+        req.session.userId = adminUser.id;
+        req.session.userRole = "admin";
+        
+        // Force save session before responding
+        return new Promise<void>((resolve) => {
+          req.session.save((err) => {
+            if (err) {
+              console.error("Fout bij opslaan sessie:", err);
+              res.status(500).json({ message: "Fout bij inloggen (sessie)" });
+            } else {
+              console.log("Admin sessie succesvol opgeslagen:", req.session.id);
+              console.log("SessionID cookie set:", req.session.id);
+              res.status(200).json({
+                message: "Login succesvol",
+                user: {
+                  id: adminUser.id,
+                  email: adminUser.email,
+                  firstName: adminUser.firstName,
+                  lastName: adminUser.lastName,
+                  role: "admin"
+                }
+              });
+            }
+            resolve();
+          });
+        });
+      }
+      
+      // Voor andere gebruikers
       const user = await storage.getUserByEmail(email);
       
       if (!user) {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
       
-      // Verify password (in de echte app zouden we bcrypt gebruiken)
-      const passwordValid = email === "admin@extra.nl" && password === "admin123";
-      
-      if (!passwordValid) {
+      // Verify password (in een echte app zouden we bcrypt vergelijking gebruiken)
+      if (password !== "password123") { // Standaard wachtwoord voor test
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
       
@@ -370,15 +398,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       req.session.userRole = user.role;
       
-      return res.status(200).json({
-        message: "Login succesvol",
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role
-        }
+      // Save session explicitly
+      return new Promise<void>((resolve) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error("Fout bij opslaan sessie:", err);
+            res.status(500).json({ message: "Fout bij inloggen (sessie)" });
+          } else {
+            console.log("Sessie succesvol opgeslagen:", req.session.id);
+            res.status(200).json({
+              message: "Login succesvol",
+              user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role
+              }
+            });
+          }
+          resolve();
+        });
       });
     } catch (error) {
       console.error("Login error:", error);

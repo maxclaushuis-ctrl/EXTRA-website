@@ -98,16 +98,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Logout function
   async function logout(): Promise<void> {
     try {
-      await apiRequest('/api/auth/logout', {
+      // Gebruik directe fetch met credentials om sessie-cookie mee te sturen
+      const response = await fetch('/api/auth/logout', {
         method: 'POST',
+        credentials: 'include',
       });
-      setUser(null);
-      toast({
-        title: 'Uitgelogd',
-        description: 'Je bent succesvol uitgelogd',
-      });
+      
+      if (response.ok) {
+        setUser(null);
+        toast({
+          title: 'Uitgelogd',
+          description: 'Je bent succesvol uitgelogd',
+        });
+      } else {
+        console.error('Logout response not OK:', response.status);
+        // Reset user state toch maar voor het geval er iets mis is met de sessie
+        setUser(null);
+        toast({
+          title: 'Uitloggen',
+          description: 'Uitgelogd, maar er was een probleem met de server',
+        });
+      }
     } catch (error) {
       console.error('Logout error:', error);
+      // Reset user state toch maar voor het geval er iets mis is
+      setUser(null);
       toast({
         title: 'Uitloggen mislukt',
         description: 'Er is een fout opgetreden bij het uitloggen',
