@@ -45,8 +45,6 @@ import {
   AlertTriangleIcon,
   CheckIcon
 } from "lucide-react";
-// Import de AutomationPage component
-import AutomationPage from '@/components/automation/AutomationPage';
 
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -61,6 +59,7 @@ import { Separator } from "@/components/ui/separator";
 import EmailTemplateEditor from "@/components/EmailTemplateEditor";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
+import AutomationPage from '@/components/automation/AutomationPage';
 
 type Campaign = {
   id: number;
@@ -1241,16 +1240,10 @@ const EditTemplateForm = ({ template }: { template: EmailTemplate }) => {
   );
 };
 
-// Import de AutomationPage component bovenaan het bestand
-import AutomationPage from '@/components/automation/AutomationPage';
-
 // Automatisering component voor marketing
 const AutomatiseringTab = () => {
   // Gebruik de nieuwe drag & drop editor voor automatisering
   return <AutomationPage />;
-}
-
-  // Geen legacy code meer nodig, de AutomationPage component regelt alles nu
 };
 
 const Marketing = () => {
