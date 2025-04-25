@@ -72,8 +72,19 @@ export const useWebSocket = (): UseWebSocketReturn => {
         const data = JSON.parse(event.data);
         console.log('WebSocket bericht ontvangen:', data);
         
+        // Update WebSocket authenticatie status als we een auth_success bericht ontvangen
+        if (data.type === 'auth_success') {
+          try {
+            // Importeer de functie om de authenticatiestatus bij te werken
+            const { setWsAuthenticatedStatus } = require('@/lib/queryClient');
+            setWsAuthenticatedStatus(true);
+            console.log('WebSocket authenticatie succesvol, headers zullen nu worden toegevoegd aan API-verzoeken');
+          } catch (error) {
+            console.error('Fout bij het instellen van WS authenticatiestatus:', error);
+          }
+        }
         // Verwerk alleen notificaties, niet auth berichten
-        if (data.type && data.type !== 'auth_success') {
+        else if (data.type) {
           setNotifications(prev => [...prev, data]);
         }
       } catch (error) {
