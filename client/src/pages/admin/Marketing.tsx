@@ -454,6 +454,7 @@ const NewCampaignForm = () => {
       name,
       description: description || null,
       templateId: selectedTemplate ? parseInt(selectedTemplate) : null,
+      campaignType,
       subject,
       htmlContent,
       textContent,
@@ -511,6 +512,25 @@ const NewCampaignForm = () => {
             placeholder="Optionele beschrijving van de campagne"
             className="col-span-3"
           />
+        </div>
+        
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="campaignType" className="col-span-1">
+            Type *
+          </Label>
+          <Select value={campaignType} onValueChange={(value) => setCampaignType(value as Campaign['campaignType'])}>
+            <SelectTrigger className="col-span-3">
+              <SelectValue placeholder="Kies een type campagne" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nieuwsbrief">Nieuwsbrief</SelectItem>
+              <SelectItem value="aankondiging">Aankondiging</SelectItem>
+              <SelectItem value="verjaardagen">Verjaardagen</SelectItem>
+              <SelectItem value="beloning">Beloning</SelectItem>
+              <SelectItem value="punten">Punten</SelectItem>
+              <SelectItem value="overig">Overig</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="grid grid-cols-4 items-center gap-4">
@@ -572,6 +592,7 @@ const EditCampaignForm = ({ campaign }: { campaign: Campaign }) => {
   const [subject, setSubject] = useState(campaign.subject);
   const [htmlContent, setHtmlContent] = useState(campaign.htmlContent);
   const [textContent, setTextContent] = useState(campaign.textContent);
+  const [campaignType, setCampaignType] = useState<Campaign['campaignType']>(campaign.campaignType || 'overig');
   const [status, setStatus] = useState<string>(campaign.status);
   
   const { toast } = useToast();
@@ -619,6 +640,7 @@ const EditCampaignForm = ({ campaign }: { campaign: Campaign }) => {
       subject,
       htmlContent,
       textContent,
+      campaignType,
       status
     };
     
@@ -658,6 +680,25 @@ const EditCampaignForm = ({ campaign }: { campaign: Campaign }) => {
             onChange={(e) => setDescription(e.target.value)}
             className="col-span-3"
           />
+        </div>
+        
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="edit-campaignType" className="col-span-1">
+            Type *
+          </Label>
+          <Select value={campaignType} onValueChange={(value) => setCampaignType(value as Campaign['campaignType'])}>
+            <SelectTrigger className="col-span-3">
+              <SelectValue placeholder="Kies een type campagne" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nieuwsbrief">Nieuwsbrief</SelectItem>
+              <SelectItem value="aankondiging">Aankondiging</SelectItem>
+              <SelectItem value="verjaardagen">Verjaardagen</SelectItem>
+              <SelectItem value="beloning">Beloning</SelectItem>
+              <SelectItem value="punten">Punten</SelectItem>
+              <SelectItem value="overig">Overig</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="grid grid-cols-4 items-center gap-4">
