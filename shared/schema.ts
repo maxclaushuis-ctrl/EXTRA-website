@@ -12,6 +12,8 @@ export const redemptionStatusEnum = pgEnum('redemption_status', ['pending', 'pro
 export const campaignStatusEnum = pgEnum('campaign_status', ['draft', 'scheduled', 'sent', 'cancelled']);
 export const emailTemplateTypeEnum = pgEnum('email_template_type', ['general', 'welcome', 'birthday', 'marketing', 'review', 'reward']);
 export const twvStatusEnum = pgEnum('twv_status', ['none', 'required', 'pending', 'approved', 'rejected']);
+export const automationStatusEnum = pgEnum('automation_status', ['active', 'inactive', 'draft']);
+export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['birthday', 'new_account', 'points_threshold', 'custom']);
 
 // Gebruikers schema
 export const users = pgTable("users", {
@@ -138,6 +140,52 @@ export const campaigns = pgTable("campaigns", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Automatiserings-flows schema
+export const automations = pgTable("automations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: automationStatusEnum("status").default('draft').notNull(),
+  flowData: json("flow_data").notNull().$type<{
+    nodes: Array<{
+      id: string;
+      type: string;
+      position: { x: number; y: number };
+      data: Record<string, any>;
+    }>;
+    edges: Array<{
+      id: string;
+      source: string;
+      target: string;
+      type?: string;
+    }>;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastRun: timestamp("last_run"),
+  nextRun: timestamp("next_run"),
+});
+
+// Automatiserings-triggers schema
+export const automationTriggers = pgTable("automation_triggers", {
+  id: serial("id").primaryKey(),
+  automationId: integer("automation_id").notNull().references(() => automations.id),
+  triggerType: automationTriggerTypeEnum("trigger_type").notNull(),
+  config: json("config").notNull().$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Automatiserings-acties schema
+export const automationActions = pgTable("automation_actions", {
+  id: serial("id").primaryKey(),
+  automationId: integer("automation_id").notNull().references(() => automations.id),
+  actionType: text("action_type").notNull(), // 'send_email', 'add_points', etc.
+  config: json("config").notNull().$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schema's
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true, 
@@ -222,6 +270,37 @@ export type EmailTemplate = typeof emailTemplates.$inferSelect;
 
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
 export type Campaign = typeof campaigns.$inferSelect;
+
+// Automation insert schema's
+export const insertAutomationSchema = createInsertSchema(automations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastRun: true,
+  nextRun: true
+});
+
+export const insertAutomationTriggerSchema = createInsertSchema(automationTriggers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAutomationActionSchema = createInsertSchema(automationActions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Automation type definities
+export type InsertAutomation = z.infer<typeof insertAutomationSchema>;
+export type Automation = typeof automations.$inferSelect;
+
+export type InsertAutomationTrigger = z.infer<typeof insertAutomationTriggerSchema>;
+export type AutomationTrigger = typeof automationTriggers.$inferSelect;
+
+export type InsertAutomationAction = z.infer<typeof insertAutomationActionSchema>;
+export type AutomationAction = typeof automationActions.$inferSelect;
 
 // Behouden van bestaande applicant schema voor backward compatibility
 export const applicants = pgTable("applicants", {
