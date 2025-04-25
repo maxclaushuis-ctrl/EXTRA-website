@@ -162,9 +162,13 @@ const EmailTemplateEditor = ({
   const [buttonUrl, setButtonUrl] = useState("");
   const [buttonText, setButtonText] = useState("");
   const [selectedButtonStyle, setSelectedButtonStyle] = useState<StyleOption>(buttonStyles[0]);
+  const [selectedFontSize, setSelectedFontSize] = useState("3"); // Default: Normaal
+  const [selectedFontColor, setSelectedFontColor] = useState("#000000"); // Default: Zwart
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showButtonDialog, setShowButtonDialog] = useState(false);
   const [showBannerDialog, setShowBannerDialog] = useState(false);
+  const [showFontSizeDialog, setShowFontSizeDialog] = useState(false);
+  const [showFontColorDialog, setShowFontColorDialog] = useState(false);
   
   // Variabelen die in templates gebruikt kunnen worden
   const variables = [
@@ -265,6 +269,27 @@ const EmailTemplateEditor = ({
   const insertBanner = (bannerHtml: string) => {
     insertAtCursor(bannerHtml);
     setShowBannerDialog(false);
+  };
+
+  // Lettergrootte toepassen op geselecteerde tekst of invoegen op cursor positie
+  const applyFontSize = (size: string) => {
+    const sizeValue = size === "1" ? "10px" : 
+                     size === "2" ? "12px" : 
+                     size === "3" ? "16px" : 
+                     size === "4" ? "20px" : 
+                     size === "5" ? "24px" : 
+                     size === "6" ? "30px" : "36px";
+                     
+    addFormatting(`<span style="font-size: ${sizeValue};">`, '</span>');
+    setSelectedFontSize(size);
+    setShowFontSizeDialog(false);
+  };
+  
+  // Tekstkleur toepassen op geselecteerde tekst of invoegen op cursor positie
+  const applyFontColor = (color: string) => {
+    addFormatting(`<span style="color: ${color};">`, '</span>');
+    setSelectedFontColor(color);
+    setShowFontColorDialog(false);
   };
   
   // Synchroniseer tekst versie wanneer HTML verandert
