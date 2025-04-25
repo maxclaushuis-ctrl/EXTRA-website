@@ -68,7 +68,6 @@ type Campaign = {
   htmlContent: string;
   textContent: string;
   templateId: number | null;
-  campaignType: 'nieuwsbrief' | 'aankondiging' | 'verjaardagen' | 'beloning' | 'punten' | 'overig';
   status: 'draft' | 'scheduled' | 'sent' | 'cancelled';
   scheduledFor: string | null;
   sentAt: string | null;
@@ -120,7 +119,10 @@ const CampaignStatus = ({ status }: { status: string }) => {
   );
 };
 
-const CampaignType = ({ type }: { type: Campaign['campaignType'] }) => {
+// Type definitie voor campagne types
+type CampaignTypeValue = 'nieuwsbrief' | 'aankondiging' | 'verjaardagen' | 'beloning' | 'punten' | 'overig';
+
+const CampaignType = ({ type }: { type: CampaignTypeValue }) => {
   let color;
   
   switch (type) {
@@ -307,7 +309,11 @@ const CampaignsList = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <CampaignType type={campaign.campaignType || 'overig'} />
+                    <CampaignType type={(campaign.description?.includes('nieuwsbrief') ? 'nieuwsbrief' : 
+                      (campaign.description?.includes('aankondiging') ? 'aankondiging' : 
+                      (campaign.description?.includes('verjaardag') ? 'verjaardagen' : 
+                      (campaign.description?.includes('beloning') ? 'beloning' : 
+                      (campaign.description?.includes('punten') ? 'punten' : 'overig'))))) || 'overig'} />
                   </TableCell>
                   <TableCell>
                     <CampaignStatus status={campaign.status} />
@@ -394,7 +400,7 @@ const NewCampaignForm = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [subject, setSubject] = useState("");
-  const [campaignType, setCampaignType] = useState<Campaign['campaignType']>('nieuwsbrief');
+  const [campaignType, setCampaignType] = useState<CampaignTypeValue>('nieuwsbrief');
   const [htmlContent, setHtmlContent] = useState("<p>Beste {{naam}},</p><p>Dit is een e-mail van EXTRA.</p><p>Met vriendelijke groet,<br>Het EXTRA team</p>");
   const [textContent, setTextContent] = useState("Beste {{naam}},\n\nDit is een e-mail van EXTRA.\n\nMet vriendelijke groet,\nHet EXTRA team");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
