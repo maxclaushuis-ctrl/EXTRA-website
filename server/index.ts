@@ -19,11 +19,13 @@ app.use(express.urlencoded({ extended: false }));
 // Voeg sessie middleware toe
 app.use(session({
   secret: 'extra-rewards-secret',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 uur
+    maxAge: 24 * 60 * 60 * 1000, // 24 uur
+    httpOnly: true,
+    sameSite: 'lax'
   }
 }));
 

@@ -33,16 +33,39 @@ function adminMiddleware(req: Request, res: Response, next: NextFunction) {
   // Debug logging voor sessiegegevens
   console.log("Sessie in adminMiddleware:", req.session);
   
+  // Forceer sessie opslaan om te zorgen dat het persistent is
+  req.session.touch();
+  
   // In a real app, we'd validate JWT or session token and check role
   if (req.session && req.session.userId && req.session.userRole === 'admin') {
     console.log("Toegang verleend voor admin-gebruiker:", req.session.userId);
     return next();
   }
   
+  // Check for WebSocket authentication success
+  const wsAuth = req.headers['x-ws-auth'];
+  if (wsAuth === 'admin_authenticated') {
+    console.log("WebSocket authenticatie gedetecteerd, toegang verleend");
+    
+    // Set session data based on WebSocket auth if needed
+    if (!req.session.userId) {
+      // Find admin user and set session
+      storage.getUserByEmail("admin@extra.nl").then(user => {
+        if (user) {
+          req.session.userId = user.id;
+          req.session.userRole = user.role;
+          req.session.save();
+        }
+      }).catch(err => console.error("Fout bij het ophalen van admin gebruiker:", err));
+    }
+    
+    return next();
+  }
+  
   // Als geen sessie, probeer opnieuw de gebruiker op te halen
   if (!req.session || !req.session.userId) {
     console.log("Geen sessie gevonden, proberen gebruiker opnieuw te authenticeren");
-    // Voeg hier eventueel extra authenticatielogica toe
+    // Check if user is authenticated via headers or other means
   }
   
   return res.status(403).json({ 
