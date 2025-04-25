@@ -30,23 +30,45 @@ export async function apiRequest(
   // Voeg WebSocket authenticatie header toe als beschikbaar
   if (wsAuthenticated) {
     headers.set('x-ws-auth', 'admin_authenticated');
+    console.log('WebSocket auth header toegevoegd aan request naar', url);
   }
 
-  const response = await fetch(url, {
+  // Voeg SameSite=None attribuut toe aan cookies om te voorkomen dat ze geblokkeerd worden
+  const fetchOptions = {
     ...options,
     headers,
-    // Zorg dat cookies worden meegestuurd
+    // Zorg dat cookies worden meegestuurd en laat toe vanuit iframes
     credentials: 'include',
-  });
+  };
 
-  // Handle common error scenarios
-  if (!response.ok) {
-    // For 401 Unauthorized, you might want to redirect to login
-    if (response.status === 401) {
-      // Optional: redirect to login page
-      console.log('Niet geautoriseerd, mogelijk moet je opnieuw inloggen');
+  console.log(`Sending request to ${url} with credentials: ${fetchOptions.credentials}`);
+  
+  try {
+    const response = await fetch(url, fetchOptions);
+
+    // Debug logging
+    console.log(`Response from ${url}:`, {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: [...response.headers.entries()].reduce((obj, [key, val]) => {
+        obj[key] = val;
+        return obj;
+      }, {} as Record<string, string>)
+    });
+
+    // Handle common error scenarios
+    if (!response.ok) {
+      // For 401 Unauthorized, you might want to redirect to login
+      if (response.status === 401) {
+        // Optional: redirect to login page
+        console.log('Niet geautoriseerd, mogelijk moet je opnieuw inloggen');
+      }
     }
-  }
 
-  return response;
+    return response;
+  } catch (error) {
+    console.error('API request error:', error);
+    throw error;
+  }
 }
