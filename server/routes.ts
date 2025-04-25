@@ -1646,6 +1646,243 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----- Automation routes -----
+  
+  app.get("/api/automations", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const automations = await storage.getAutomations();
+      return res.status(200).json(automations);
+    } catch (error) {
+      console.error("Error fetching automations:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van automatiseringen" });
+    }
+  });
+
+  app.get("/api/automations/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig automatisering ID" });
+      }
+      
+      const automation = await storage.getAutomation(id);
+      if (automation) {
+        return res.status(200).json(automation);
+      } else {
+        return res.status(404).json({ message: "Automatisering niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error fetching automation:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de automatisering" });
+    }
+  });
+
+  app.post("/api/automations", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const newAutomation = req.body;
+      const automation = await storage.createAutomation(newAutomation);
+      return res.status(201).json(automation);
+    } catch (error) {
+      console.error("Error creating automation:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de automatisering" });
+    }
+  });
+
+  app.put("/api/automations/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig automatisering ID" });
+      }
+      
+      const automationData = req.body;
+      const automation = await storage.updateAutomation(id, automationData);
+      if (automation) {
+        return res.status(200).json(automation);
+      } else {
+        return res.status(404).json({ message: "Automatisering niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error updating automation:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de automatisering" });
+    }
+  });
+
+  app.put("/api/automations/:id/status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig automatisering ID" });
+      }
+      
+      const { status } = req.body;
+      if (!status || !['active', 'inactive', 'draft'].includes(status)) {
+        return res.status(400).json({ message: "Ongeldige status waarde" });
+      }
+      
+      const automation = await storage.updateAutomationStatus(id, status);
+      if (automation) {
+        return res.status(200).json(automation);
+      } else {
+        return res.status(404).json({ message: "Automatisering niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error updating automation status:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de automatisering status" });
+    }
+  });
+
+  app.delete("/api/automations/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig automatisering ID" });
+      }
+      
+      const result = await storage.deleteAutomation(id);
+      if (result) {
+        return res.status(200).json({ message: "Automatisering succesvol verwijderd" });
+      } else {
+        return res.status(404).json({ message: "Automatisering niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error deleting automation:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de automatisering" });
+    }
+  });
+
+  // Automation Trigger routes
+  app.get("/api/automations/:automationId/triggers", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const automationId = parseInt(req.params.automationId);
+      if (isNaN(automationId)) {
+        return res.status(400).json({ message: "Ongeldig automatisering ID" });
+      }
+      
+      const triggers = await storage.getAutomationTriggers(automationId);
+      return res.status(200).json(triggers);
+    } catch (error) {
+      console.error("Error fetching automation triggers:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de automatisering triggers" });
+    }
+  });
+
+  app.post("/api/automation-triggers", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const triggerData = req.body;
+      const trigger = await storage.createAutomationTrigger(triggerData);
+      return res.status(201).json(trigger);
+    } catch (error) {
+      console.error("Error creating automation trigger:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de trigger" });
+    }
+  });
+
+  app.put("/api/automation-triggers/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig trigger ID" });
+      }
+      
+      const triggerData = req.body;
+      const trigger = await storage.updateAutomationTrigger(id, triggerData);
+      if (trigger) {
+        return res.status(200).json(trigger);
+      } else {
+        return res.status(404).json({ message: "Trigger niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error updating automation trigger:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de trigger" });
+    }
+  });
+
+  app.delete("/api/automation-triggers/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig trigger ID" });
+      }
+      
+      const result = await storage.deleteAutomationTrigger(id);
+      if (result) {
+        return res.status(200).json({ message: "Trigger succesvol verwijderd" });
+      } else {
+        return res.status(404).json({ message: "Trigger niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error deleting automation trigger:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de trigger" });
+    }
+  });
+
+  // Automation Action routes
+  app.get("/api/automations/:automationId/actions", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const automationId = parseInt(req.params.automationId);
+      if (isNaN(automationId)) {
+        return res.status(400).json({ message: "Ongeldig automatisering ID" });
+      }
+      
+      const actions = await storage.getAutomationActions(automationId);
+      return res.status(200).json(actions);
+    } catch (error) {
+      console.error("Error fetching automation actions:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de automatisering acties" });
+    }
+  });
+
+  app.post("/api/automation-actions", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const actionData = req.body;
+      const action = await storage.createAutomationAction(actionData);
+      return res.status(201).json(action);
+    } catch (error) {
+      console.error("Error creating automation action:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de actie" });
+    }
+  });
+
+  app.put("/api/automation-actions/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig actie ID" });
+      }
+      
+      const actionData = req.body;
+      const action = await storage.updateAutomationAction(id, actionData);
+      if (action) {
+        return res.status(200).json(action);
+      } else {
+        return res.status(404).json({ message: "Actie niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error updating automation action:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de actie" });
+    }
+  });
+
+  app.delete("/api/automation-actions/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ongeldig actie ID" });
+      }
+      
+      const result = await storage.deleteAutomationAction(id);
+      if (result) {
+        return res.status(200).json({ message: "Actie succesvol verwijderd" });
+      } else {
+        return res.status(404).json({ message: "Actie niet gevonden" });
+      }
+    } catch (error) {
+      console.error("Error deleting automation action:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de actie" });
+    }
+  });
+
   // ----- TWV (Tewerkstellingsvergunning) routes -----
   
   // Haal alle gebruikers op die een TWV nodig hebben
