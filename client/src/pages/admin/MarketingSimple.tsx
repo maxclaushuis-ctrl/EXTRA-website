@@ -39,6 +39,7 @@ import {
   SendIcon, 
   TrashIcon,
 } from "lucide-react";
+import AutomationPage from "@/components/automation/AutomationPage";
 
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -1252,23 +1253,7 @@ const EditTemplateForm = ({ template }: { template: EmailTemplate }) => {
 
 // Component voor automatisering
 const AutomationSettings = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>E-mail Automatisering</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <MailIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-lg font-medium">Automatisering instellingen</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Hier kun je e-mail automatiseringen instellen zoals verjaardagsmails en welkomstmails.
-            Deze functie wordt binnenkort toegevoegd.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return <AutomationPage />;
 };
 
 // Hoofdcomponent

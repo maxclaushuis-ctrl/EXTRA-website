@@ -164,8 +164,11 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
       onSave({ nodes, edges });
     } else if (automation?.id) {
       try {
-        await apiRequest(`/api/automations/${automation.id}`, 'PUT', {
-          flowData: { nodes, edges }
+        await apiRequest(`/api/automations/${automation.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            flowData: { nodes, edges }
+          })
         });
         
         queryClient.invalidateQueries({ queryKey: ['/api/automations'] });
@@ -192,8 +195,11 @@ const AutomationFlow = ({ automation, onSave }: AutomationFlowProps) => {
     const newStatus = automation.status === 'active' ? 'inactive' : 'active';
     
     try {
-      await apiRequest(`/api/automations/${automation.id}/status`, 'PUT', {
-        status: newStatus
+      await apiRequest(`/api/automations/${automation.id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status: newStatus
+        })
       });
       
       queryClient.invalidateQueries({ queryKey: ['/api/automations'] });
