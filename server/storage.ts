@@ -450,6 +450,21 @@ export class MemStorage implements IStorage {
     
     console.log(`Punten voor gebruiker ${id} bijgewerkt: ${user.points} -> ${newPoints} (${points > 0 ? '+' : ''}${points})`);
     
+    // Stuur een realtime notificatie via WebSocket als die functie beschikbaar is
+    if (typeof global.sendNotification === 'function') {
+      global.sendNotification({
+        type: 'points_update',
+        userId: id,
+        message: `Je puntensaldo is bijgewerkt: ${points > 0 ? '+' : ''}${points} punten`,
+        data: {
+          userId: id,
+          points: newPoints,
+          change: points,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+    
     return updatedUser;
   }
   

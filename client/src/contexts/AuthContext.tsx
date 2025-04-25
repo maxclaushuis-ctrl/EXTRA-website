@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { User } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const socketRef = useRef<WebSocket | null>(null);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -183,6 +184,89 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
     }
   }
+
+  // WebSocket setup for realtime updates
+  useEffect(() => {
+    // Als gebruiker is ingelogd, maak een WebSocket verbinding
+    if (user) {
+      // Maak de WebSocket verbinding
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      console.log('WebSocket verbinding maken met:', wsUrl);
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+      
+      // Event handlers
+      socket.onopen = () => {
+        console.log('WebSocket verbinding succesvol');
+        
+        // Authenticeer de verbinding met gebruikers-ID
+        socket.send(JSON.stringify({
+          type: 'auth',
+          userId: user.id,
+          userRole: user.role
+        }));
+      };
+      
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log('WebSocket bericht ontvangen:', message);
+          
+          // Verwerk verschillende soorten berichten
+          if (message.type === 'auth_success') {
+            console.log('WebSocket authenticatie succesvol');
+          } 
+          // Verwerk punten updates
+          else if (message.type === 'points_update' && message.data && message.data.userId === user.id) {
+            console.log('Punten update ontvangen:', message.data);
+            
+            // Update de gebruiker met nieuwe punten
+            setUser(prevUser => {
+              if (!prevUser) return null;
+              
+              const updatedUser = {
+                ...prevUser,
+                points: message.data.points
+              };
+              
+              console.log('Gebruiker bijgewerkt met nieuwe punten:', updatedUser);
+              return updatedUser;
+            });
+            
+            // Toon notificatie
+            toast({
+              title: 'Punten bijgewerkt',
+              description: message.message,
+            });
+          }
+        } catch (error) {
+          console.error('Fout bij verwerken WebSocket bericht:', error);
+        }
+      };
+      
+      socket.onerror = (error) => {
+        console.error('WebSocket fout:', error);
+      };
+      
+      socket.onclose = () => {
+        console.log('WebSocket verbinding gesloten');
+      };
+      
+      // Cleanup functie
+      return () => {
+        console.log('Cleanup WebSocket verbinding');
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          socketRef.current.close();
+          socketRef.current = null;
+        }
+      };
+    }
+    
+    // Als er geen gebruiker is, maak geen verbinding
+    return undefined;
+  }, [user?.id, toast]); // Alleen opnieuw verbinding maken als gebruiker ID verandert
 
   const value = {
     user,

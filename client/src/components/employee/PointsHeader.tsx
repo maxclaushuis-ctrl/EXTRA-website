@@ -1,6 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import extraYellowLogo from '@/assets/extra-logo-yellow.svg';
 import extraPattern from '@/assets/extra-pattern.svg';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export function PointsHeader() {
   const { user } = useAuth();

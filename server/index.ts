@@ -12,6 +12,17 @@ declare module 'express-session' {
   }
 }
 
+// Declareer type voor de globale WebSocket notificatie functie
+declare global {
+  var sendNotification: (notification: {
+    type: string;
+    userId?: number;
+    userRole?: string;
+    message: string;
+    data?: any;
+  }) => void;
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
