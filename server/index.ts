@@ -19,8 +19,9 @@ app.use(express.urlencoded({ extended: false }));
 // Voeg sessie middleware toe
 app.use(session({
   secret: 'extra-rewards-secret',
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
+  rolling: true, // Vernieuw cookie bij elke request
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     maxAge: 24 * 60 * 60 * 1000, // 24 uur

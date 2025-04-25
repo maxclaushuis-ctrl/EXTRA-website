@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { setWsAuthenticatedStatus } from '@/lib/queryClient';
 
 interface Notification {
   type: string;
@@ -74,14 +75,8 @@ export const useWebSocket = (): UseWebSocketReturn => {
         
         // Update WebSocket authenticatie status als we een auth_success bericht ontvangen
         if (data.type === 'auth_success') {
-          try {
-            // Importeer de functie om de authenticatiestatus bij te werken
-            const { setWsAuthenticatedStatus } = require('@/lib/queryClient');
-            setWsAuthenticatedStatus(true);
-            console.log('WebSocket authenticatie succesvol, headers zullen nu worden toegevoegd aan API-verzoeken');
-          } catch (error) {
-            console.error('Fout bij het instellen van WS authenticatiestatus:', error);
-          }
+          setWsAuthenticatedStatus(true);
+          console.log('WebSocket authenticatie succesvol, headers zullen nu worden toegevoegd aan API-verzoeken');
         }
         // Verwerk alleen notificaties, niet auth berichten
         else if (data.type) {

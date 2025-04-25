@@ -29,12 +29,9 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
 }
 
 // Admin middleware
-function adminMiddleware(req: Request, res: Response, next: NextFunction) {
+async function adminMiddleware(req: Request, res: Response, next: NextFunction) {
   // Debug logging voor sessiegegevens
   console.log("Sessie in adminMiddleware:", req.session);
-  
-  // Forceer sessie opslaan om te zorgen dat het persistent is
-  req.session.touch();
   
   // In a real app, we'd validate JWT or session token and check role
   if (req.session && req.session.userId && req.session.userRole === 'admin') {
@@ -42,30 +39,36 @@ function adminMiddleware(req: Request, res: Response, next: NextFunction) {
     return next();
   }
   
-  // Check for WebSocket authentication success
+  // Check for WebSocket authentication header
   const wsAuth = req.headers['x-ws-auth'];
   if (wsAuth === 'admin_authenticated') {
-    console.log("WebSocket authenticatie gedetecteerd, toegang verleend");
+    console.log("WebSocket authenticatie header gedetecteerd, zoek admin gebruiker en stel sessie in");
     
-    // Set session data based on WebSocket auth if needed
-    if (!req.session.userId) {
-      // Find admin user and set session
-      storage.getUserByEmail("admin@extra.nl").then(user => {
-        if (user) {
-          req.session.userId = user.id;
-          req.session.userRole = user.role;
-          req.session.save();
-        }
-      }).catch(err => console.error("Fout bij het ophalen van admin gebruiker:", err));
+    try {
+      // Find admin user and set session data synchronously
+      const adminUser = await storage.getUserByEmail("admin@extra.nl");
+      
+      if (adminUser && adminUser.role === 'admin') {
+        req.session.userId = adminUser.id;
+        req.session.userRole = adminUser.role;
+        console.log("Admin gebruiker gevonden en sessie ingesteld:", adminUser.id);
+        
+        // Ingestelde sessie opslaan voordat we doorgaan
+        return new Promise<void>((resolve) => {
+          req.session.save((err) => {
+            if (err) {
+              console.error("Fout bij opslaan sessie:", err);
+            } else {
+              console.log("Sessie succesvol opgeslagen");
+            }
+            resolve();
+            next();
+          });
+        });
+      }
+    } catch (error) {
+      console.error("Fout bij zoeken en instellen admin gebruiker:", error);
     }
-    
-    return next();
-  }
-  
-  // Als geen sessie, probeer opnieuw de gebruiker op te halen
-  if (!req.session || !req.session.userId) {
-    console.log("Geen sessie gevonden, proberen gebruiker opnieuw te authenticeren");
-    // Check if user is authenticated via headers or other means
   }
   
   return res.status(403).json({ 
@@ -73,7 +76,8 @@ function adminMiddleware(req: Request, res: Response, next: NextFunction) {
     sessionInfo: { 
       hasSession: !!req.session,
       hasUserId: !!req.session?.userId,
-      role: req.session?.userRole || 'none'
+      role: req.session?.userRole || 'none',
+      wsAuth: wsAuth || 'none'
     } 
   });
 }
