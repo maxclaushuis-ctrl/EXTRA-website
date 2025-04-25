@@ -7,7 +7,10 @@ import {
   type Rule, type InsertRule,
   type Setting, type InsertSetting,
   type EmailTemplate, type InsertEmailTemplate,
-  type Campaign, type InsertCampaign
+  type Campaign, type InsertCampaign,
+  type Automation, type InsertAutomation,
+  type AutomationTrigger, type InsertAutomationTrigger,
+  type AutomationAction, type InsertAutomationAction
 } from "@shared/schema";
 import { createHash } from "crypto";
 
@@ -87,6 +90,26 @@ export interface IStorage {
   updateCampaignStatus(id: number, status: string): Promise<Campaign | undefined>;
   deleteCampaign(id: number): Promise<boolean>;
   sendCampaign(id: number): Promise<boolean>;
+  
+  // Automation methods
+  createAutomation(automation: InsertAutomation): Promise<Automation>;
+  getAutomations(): Promise<Automation[]>;
+  getAutomation(id: number): Promise<Automation | undefined>;
+  updateAutomation(id: number, automationData: Partial<InsertAutomation>): Promise<Automation | undefined>;
+  updateAutomationStatus(id: number, status: string): Promise<Automation | undefined>;
+  deleteAutomation(id: number): Promise<boolean>;
+  
+  // Automation Trigger methods
+  createAutomationTrigger(trigger: InsertAutomationTrigger): Promise<AutomationTrigger>;
+  getAutomationTriggers(automationId: number): Promise<AutomationTrigger[]>;
+  updateAutomationTrigger(id: number, triggerData: Partial<InsertAutomationTrigger>): Promise<AutomationTrigger | undefined>;
+  deleteAutomationTrigger(id: number): Promise<boolean>;
+  
+  // Automation Action methods
+  createAutomationAction(action: InsertAutomationAction): Promise<AutomationAction>;
+  getAutomationActions(automationId: number): Promise<AutomationAction[]>;
+  updateAutomationAction(id: number, actionData: Partial<InsertAutomationAction>): Promise<AutomationAction | undefined>;
+  deleteAutomationAction(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -100,6 +123,9 @@ export class MemStorage implements IStorage {
   private settings: Map<string, Setting>;
   private emailTemplates: Map<number, EmailTemplate>;
   private campaigns: Map<number, Campaign>;
+  private automations: Map<number, Automation>;
+  private automationTriggers: Map<number, AutomationTrigger>;
+  private automationActions: Map<number, AutomationAction>;
   
   private currentIds: {
     applicants: number;
@@ -111,6 +137,9 @@ export class MemStorage implements IStorage {
     settings: number;
     emailTemplates: number;
     campaigns: number;
+    automations: number;
+    automationTriggers: number;
+    automationActions: number;
   };
 
   constructor() {
@@ -123,6 +152,9 @@ export class MemStorage implements IStorage {
     this.settings = new Map();
     this.emailTemplates = new Map();
     this.campaigns = new Map();
+    this.automations = new Map();
+    this.automationTriggers = new Map();
+    this.automationActions = new Map();
     
     this.currentIds = {
       applicants: 1,
@@ -134,6 +166,9 @@ export class MemStorage implements IStorage {
       settings: 1,
       emailTemplates: 1,
       campaigns: 1,
+      automations: 1,
+      automationTriggers: 1,
+      automationActions: 1,
     };
     
     // Initialiseer een admin gebruiker
@@ -982,6 +1017,167 @@ export class MemStorage implements IStorage {
     console.log(`Campagne "${campaign.name}" is verzonden naar ${activeUsers.length} actieve medewerkers`);
     
     return true;
+  }
+  
+  // Automation methods
+  async createAutomation(insertAutomation: InsertAutomation): Promise<Automation> {
+    const id = this.currentIds.automations++;
+    const now = new Date();
+    
+    const automation: Automation = {
+      id,
+      name: insertAutomation.name,
+      description: insertAutomation.description || null,
+      status: insertAutomation.status || 'draft',
+      flowData: insertAutomation.flowData,
+      createdAt: now,
+      updatedAt: now,
+      lastRun: null,
+      nextRun: null
+    };
+    
+    this.automations.set(id, automation);
+    return automation;
+  }
+  
+  async getAutomations(): Promise<Automation[]> {
+    return Array.from(this.automations.values());
+  }
+  
+  async getAutomation(id: number): Promise<Automation | undefined> {
+    return this.automations.get(id);
+  }
+  
+  async updateAutomation(id: number, automationData: Partial<InsertAutomation>): Promise<Automation | undefined> {
+    const automation = await this.getAutomation(id);
+    if (!automation) return undefined;
+    
+    const updatedAutomation: Automation = {
+      ...automation,
+      ...automationData,
+      updatedAt: new Date()
+    };
+    
+    this.automations.set(id, updatedAutomation);
+    return updatedAutomation;
+  }
+  
+  async updateAutomationStatus(id: number, status: string): Promise<Automation | undefined> {
+    const automation = await this.getAutomation(id);
+    if (!automation) return undefined;
+    
+    // Controleer of status geldig is
+    if (!['active', 'inactive', 'draft'].includes(status)) {
+      throw new Error(`Ongeldige automation status: ${status}`);
+    }
+    
+    const updatedAutomation: Automation = {
+      ...automation,
+      status: status as 'active' | 'inactive' | 'draft',
+      updatedAt: new Date()
+    };
+    
+    this.automations.set(id, updatedAutomation);
+    return updatedAutomation;
+  }
+  
+  async deleteAutomation(id: number): Promise<boolean> {
+    // Verwijder eerst alle gerelateerde triggers en acties
+    const triggers = await this.getAutomationTriggers(id);
+    for (const trigger of triggers) {
+      await this.deleteAutomationTrigger(trigger.id);
+    }
+    
+    const actions = await this.getAutomationActions(id);
+    for (const action of actions) {
+      await this.deleteAutomationAction(action.id);
+    }
+    
+    return this.automations.delete(id);
+  }
+  
+  // Automation Trigger methods
+  async createAutomationTrigger(insertTrigger: InsertAutomationTrigger): Promise<AutomationTrigger> {
+    const id = this.currentIds.automationTriggers++;
+    const now = new Date();
+    
+    const trigger: AutomationTrigger = {
+      id,
+      automationId: insertTrigger.automationId,
+      triggerType: insertTrigger.triggerType,
+      config: insertTrigger.config,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.automationTriggers.set(id, trigger);
+    return trigger;
+  }
+  
+  async getAutomationTriggers(automationId: number): Promise<AutomationTrigger[]> {
+    return Array.from(this.automationTriggers.values()).filter(
+      trigger => trigger.automationId === automationId
+    );
+  }
+  
+  async updateAutomationTrigger(id: number, triggerData: Partial<InsertAutomationTrigger>): Promise<AutomationTrigger | undefined> {
+    const trigger = this.automationTriggers.get(id);
+    if (!trigger) return undefined;
+    
+    const updatedTrigger: AutomationTrigger = {
+      ...trigger,
+      ...triggerData,
+      updatedAt: new Date()
+    };
+    
+    this.automationTriggers.set(id, updatedTrigger);
+    return updatedTrigger;
+  }
+  
+  async deleteAutomationTrigger(id: number): Promise<boolean> {
+    return this.automationTriggers.delete(id);
+  }
+  
+  // Automation Action methods
+  async createAutomationAction(insertAction: InsertAutomationAction): Promise<AutomationAction> {
+    const id = this.currentIds.automationActions++;
+    const now = new Date();
+    
+    const action: AutomationAction = {
+      id,
+      automationId: insertAction.automationId,
+      actionType: insertAction.actionType,
+      config: insertAction.config,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.automationActions.set(id, action);
+    return action;
+  }
+  
+  async getAutomationActions(automationId: number): Promise<AutomationAction[]> {
+    return Array.from(this.automationActions.values()).filter(
+      action => action.automationId === automationId
+    );
+  }
+  
+  async updateAutomationAction(id: number, actionData: Partial<InsertAutomationAction>): Promise<AutomationAction | undefined> {
+    const action = this.automationActions.get(id);
+    if (!action) return undefined;
+    
+    const updatedAction: AutomationAction = {
+      ...action,
+      ...actionData,
+      updatedAt: new Date()
+    };
+    
+    this.automationActions.set(id, updatedAction);
+    return updatedAction;
+  }
+  
+  async deleteAutomationAction(id: number): Promise<boolean> {
+    return this.automationActions.delete(id);
   }
 }
 
