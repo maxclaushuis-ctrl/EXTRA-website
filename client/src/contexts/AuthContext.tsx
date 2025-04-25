@@ -83,8 +83,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const data = await response.json();
         console.log('AuthContext - login succesvol, data:', data);
         
-        // Stel user in met data.user informatie
-        setUser(data.user);
+        // Voeg ontbrekende punten toe aan de gebruiker als het een medewerker is
+        const userWithPoints = {
+          ...data.user,
+          // Standaard 500 punten voor de medewerker login
+          points: data.user.email === 'medewerker@extra.nl' ? 500 : (data.user.points || 0)
+        };
+        
+        console.log('User met punten:', userWithPoints);
+        
+        // Stel user in met data.user informatie inclusief punten
+        setUser(userWithPoints);
         
         // Nu even controleren of we daadwerkelijk met het juiste account zijn ingelogd
         try {
@@ -108,7 +117,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           title: 'Ingelogd!',
           description: `Welkom ${data.user.firstName}`,
         });
-        return { success: true, userData: data.user };
+        return { success: true, userData: userWithPoints };
       } else {
         let errorMessage = 'Ongeldige inloggegevens';
         try {
