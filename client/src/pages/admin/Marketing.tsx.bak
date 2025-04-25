@@ -456,20 +456,11 @@ const NewCampaignForm = () => {
       return;
     }
     
-    // Voeg het campagnetype toe aan de beschrijving zodat we het later kunnen detecteren
-    let updatedDescription = description;
-    if (campaignType && campaignType !== 'overig') {
-      if (!updatedDescription) {
-        updatedDescription = `Type: ${campaignType}`;
-      } else if (!updatedDescription.includes(`Type: ${campaignType}`)) {
-        updatedDescription = `Type: ${campaignType} - ${updatedDescription}`;
-      }
-    }
-
     const campaignData = {
       name,
-      description: updatedDescription || null,
+      description: description || null,
       templateId: selectedTemplate ? parseInt(selectedTemplate) : null,
+      campaignType,
       subject,
       htmlContent,
       textContent,
@@ -533,7 +524,7 @@ const NewCampaignForm = () => {
           <Label htmlFor="campaignType" className="col-span-1">
             Type *
           </Label>
-          <Select value={campaignType} onValueChange={(value) => setCampaignType(value as CampaignTypeValue)}>
+          <Select value={campaignType} onValueChange={(value) => setCampaignType(value as Campaign['campaignType'])}>
             <SelectTrigger className="col-span-3">
               <SelectValue placeholder="Kies een type campagne" />
             </SelectTrigger>
@@ -655,26 +646,13 @@ const EditCampaignForm = ({ campaign }: { campaign: Campaign }) => {
       return;
     }
     
-    // Voeg het campagnetype toe aan de beschrijving zodat we het later kunnen detecteren
-    let updatedDescription = description;
-    if (campaignType && campaignType !== 'overig') {
-      if (!updatedDescription) {
-        updatedDescription = `Type: ${campaignType}`;
-      } else if (!updatedDescription.includes(`Type: ${campaignType}`)) {
-        // Verwijder oude type-informatie als die bestaat
-        const typeRegex = /Type: [a-z]+ - /;
-        updatedDescription = updatedDescription.replace(typeRegex, '');
-        // Voeg nieuwe type-informatie toe
-        updatedDescription = `Type: ${campaignType} - ${updatedDescription}`;
-      }
-    }
-
     const campaignData = {
       name,
-      description: updatedDescription || null,
+      description: description || null,
       subject,
       htmlContent,
       textContent,
+      campaignType,
       status
     };
     
@@ -720,7 +698,7 @@ const EditCampaignForm = ({ campaign }: { campaign: Campaign }) => {
           <Label htmlFor="edit-campaignType" className="col-span-1">
             Type *
           </Label>
-          <Select value={campaignType} onValueChange={(value) => setCampaignType(value as CampaignTypeValue)}>
+          <Select value={campaignType} onValueChange={(value) => setCampaignType(value as Campaign['campaignType'])}>
             <SelectTrigger className="col-span-3">
               <SelectValue placeholder="Kies een type campagne" />
             </SelectTrigger>
