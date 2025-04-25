@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@example.com",
+      "password": "admin123",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin",
+      "status": "active",
+      "points": 0,
+      "dateJoined": "2025-04-25T07:26:34.950Z"
+    },
+    {
+      "id": 2,
+      "email": "medewerker@example.com",
+      "password": "medewerker123",
+      "firstName": "Test",
+      "lastName": "Medewerker",
+      "role": "employee",
+      "status": "active",
+      "points": 500,
+      "dateJoined": "2025-04-25T07:26:34.950Z"
+    }
+  ],
+  "rewards": [],
+  "pointTransactions": [],
+  "redemptions": [],
+  "rules": [],
+  "settings": [],
+  "emailTemplates": [],
+  "campaigns": []
+}
