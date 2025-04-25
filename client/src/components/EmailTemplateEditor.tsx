@@ -506,6 +506,37 @@ const EmailTemplateEditor = ({
             
             <Separator orientation="vertical" className="h-8" />
             
+            {/* Lettertype grootte knop */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowFontSizeDialog(!showFontSizeDialog)}
+                >
+                  <Type className="h-4 w-4" />
+                  <span className="ml-1 text-xs">Aa</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Lettergrootte aanpassen</TooltipContent>
+            </Tooltip>
+
+            {/* Tekstkleur knop */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowFontColorDialog(!showFontColorDialog)}
+                >
+                  <PaletteIcon className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Tekstkleur aanpassen</TooltipContent>
+            </Tooltip>
+            
+            <Separator orientation="vertical" className="h-8" />
+            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -672,6 +703,76 @@ const EmailTemplateEditor = ({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowBannerDialog(false)}
+                  >
+                    Annuleren
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Lettergrootte popup */}
+          {showFontSizeDialog && (
+            <div className="p-4 mb-4 border rounded-md bg-gray-50">
+              <h3 className="text-sm font-bold mb-2">Lettergrootte aanpassen</h3>
+              <div className="grid gap-4">
+                <div>
+                  <Label>Kies lettergrootte</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {fontSizes.map((size) => (
+                      <Button
+                        key={size.value}
+                        variant={selectedFontSize === size.value ? "default" : "outline"}
+                        className="h-auto py-2"
+                        onClick={() => applyFontSize(size.value)}
+                      >
+                        <span style={{ fontSize: `${parseInt(size.value) * 2 + 8}px` }}>Aa</span>
+                        <span className="ml-1 text-xs">{size.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFontSizeDialog(false)}
+                  >
+                    Annuleren
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Tekstkleur popup */}
+          {showFontColorDialog && (
+            <div className="p-4 mb-4 border rounded-md bg-gray-50">
+              <h3 className="text-sm font-bold mb-2">Tekstkleur aanpassen</h3>
+              <div className="grid gap-4">
+                <div>
+                  <Label>Kies tekstkleur</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {fontColors.map((color) => (
+                      <div
+                        key={color.value}
+                        className={`border rounded-md p-2 cursor-pointer flex flex-col items-center ${selectedFontColor === color.value ? 'ring-2 ring-primary' : ''}`}
+                        onClick={() => applyFontColor(color.value)}
+                      >
+                        <div 
+                          className="w-6 h-6 rounded-full mb-1"
+                          style={{ backgroundColor: color.value }}
+                        ></div>
+                        <span className="text-xs">{color.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFontColorDialog(false)}
                   >
                     Annuleren
                   </Button>
