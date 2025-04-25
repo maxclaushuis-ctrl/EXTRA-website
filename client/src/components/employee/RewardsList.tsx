@@ -14,8 +14,23 @@ export function RewardsList() {
   const { toast } = useToast();
   const [redeemingRewardId, setRedeemingRewardId] = useState<number | null>(null);
 
-  const { data: rewards, isLoading } = useQuery<Reward[]>({
+  const { data: rewards, isLoading, error } = useQuery<Reward[]>({
     queryKey: ['/api/rewards'],
+    queryFn: async () => {
+      console.log('Beloningen ophalen met credentials');
+      const response = await fetch('/api/rewards', {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        console.error('Fout bij ophalen beloningen:', response.status, response.statusText);
+        const textError = await response.text(); 
+        console.error('Error details:', textError);
+        throw new Error('Kon beloningen niet ophalen');
+      }
+      
+      return response.json();
+    }
   });
   
   // Mutatie voor het inwisselen van een beloning
@@ -79,6 +94,16 @@ export function RewardsList() {
     return (
       <div className="flex justify-center items-center py-10">
         <Loader2 className="h-10 w-10 animate-spin text-[#00AAFF]" />
+      </div>
+    );
+  }
+
+  // Als er een fout is opgetreden, toon die dan
+  if (error) {
+    console.error('Error in RewardsList component:', error);
+    return (
+      <div className="p-4 text-center text-red-500">
+        Er is een fout opgetreden bij het laden van de beloningen: {error instanceof Error ? error.message : 'Onbekende fout'}
       </div>
     );
   }

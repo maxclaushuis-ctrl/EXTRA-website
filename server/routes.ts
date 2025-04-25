@@ -21,12 +21,18 @@ import { WebSocketServer, WebSocket } from 'ws';
 
 // Auth middleware
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  // Debug logging voor sessiegegevens
+  console.log("Sessie in authMiddleware:", req.session);
+  
   // In a real app, we'd validate JWT or session token
   // For now, we'll use a simple session-based authentication
   if (req.session && req.session.userId) {
+    console.log("Toegang verleend voor gebruiker door sessie:", req.session.userId);
     return next();
   }
-  return res.status(401).json({ message: "Niet geautoriseerd" });
+  
+  console.log("Toegang geweigerd: Geen geldige gebruikerssessie gevonden");
+  return res.status(401).json({ message: "Niet ingelogd" });
 }
 
 // Admin middleware
