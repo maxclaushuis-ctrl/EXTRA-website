@@ -2,14 +2,17 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tag, Percent, ShoppingBag, Phone, Coffee, Film, Gift } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function DiscountsList() {
+  const { t, language } = useLanguage();
+  
   // Voor de demo gebruiken we een vaste lijst kortingsacties
   // In een productieomgeving zou dit van een API komen
   const discounts = useMemo(() => [
     {
       id: 1,
-      name: "25% korting bij Uber Eats",
+      nameKey: "discounts.uberEats",
       description: "Bestel voedsel met 25% korting bij je eerste Uber Eats bestelling.",
       partner: "Uber Eats",
       discount: "25%",
@@ -20,7 +23,7 @@ export function DiscountsList() {
     },
     {
       id: 2,
-      name: "10% korting bij MediaMarkt",
+      nameKey: "discounts.mediaMarkt",
       description: "Ontvang 10% korting op alle elektronica bij MediaMarkt.",
       partner: "MediaMarkt",
       discount: "10%",
@@ -31,7 +34,7 @@ export function DiscountsList() {
     },
     {
       id: 3,
-      name: "Gratis koffie bij Starbucks",
+      nameKey: "discounts.starbucks",
       description: "Haal een gratis koffie (kleine maat) bij je eerste bezoek aan Starbucks.",
       partner: "Starbucks",
       discount: "100%",
@@ -42,7 +45,7 @@ export function DiscountsList() {
     },
     {
       id: 4,
-      name: "2 voor 1 bij Pathé Bioscopen",
+      nameKey: "discounts.pathe",
       description: "Twee kaartjes voor de prijs van één bij alle Pathé vestigingen.",
       partner: "Pathé",
       discount: "50%",
@@ -53,7 +56,7 @@ export function DiscountsList() {
     },
     {
       id: 5,
-      name: "€10 korting bij Bol.com",
+      nameKey: "discounts.bol",
       description: "€10 korting bij je bestelling vanaf €50 bij Bol.com.",
       partner: "Bol.com",
       discount: "€10",
@@ -66,7 +69,10 @@ export function DiscountsList() {
 
   const handleClaim = (code: string) => {
     navigator.clipboard.writeText(code);
-    alert(`Kortingscode ${code} gekopieerd naar klembord!`);
+    const message = language === 'nl' ? `Kortingscode ${code} gekopieerd naar klembord!` :
+                    language === 'en' ? `Discount code ${code} copied to clipboard!` :
+                    `¡Código de descuento ${code} copiado al portapapeles!`;
+    alert(message);
   };
 
   return (
@@ -79,10 +85,10 @@ export function DiscountsList() {
               <div>
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   {discount.icon}
-                  {discount.name}
+                  {t(discount.nameKey)}
                 </CardTitle>
                 <CardDescription className="text-gray-400 mt-1">
-                  Via {discount.partner} • Geldig tot {discount.expiry}
+                  {t('common.via')} {discount.partner} • {t('common.validUntil')} {discount.expiry}
                 </CardDescription>
               </div>
               <div className="bg-[#00AAFF] text-white font-bold px-2 py-1 rounded-md flex items-center gap-1">
@@ -96,7 +102,7 @@ export function DiscountsList() {
           </CardContent>
           <CardFooter className="flex justify-between items-center pt-0">
             <div className="flex items-center text-sm">
-              <span className="text-gray-400 mr-2">Code:</span>
+              <span className="text-gray-400 mr-2">{t('common.code')}:</span>
               <code className="bg-gray-800 px-2 py-1 rounded">{discount.code}</code>
             </div>
             <Button 
@@ -105,7 +111,7 @@ export function DiscountsList() {
               onClick={() => handleClaim(discount.code)}
               className="bg-transparent hover:bg-[#00AAFF] hover:text-white border-[#00AAFF] text-[#00AAFF]"
             >
-              Kopieer code
+              {t('common.copyCode')}
             </Button>
           </CardFooter>
         </Card>
