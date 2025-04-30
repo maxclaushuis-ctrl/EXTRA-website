@@ -165,6 +165,48 @@ export function PointsHeader() {
       });
     }
   };
+  
+  // Functie om punten direct op een bepaald niveau in te stellen  
+  const handleSetPoints = async (targetPoints: number) => {
+    if (!user) return;
+    
+    // Bereken hoeveel punten nodig zijn om op het doelniveau te komen
+    const diff = targetPoints - (user.points || 0);
+    
+    // Alleen toevoegen als er punten nodig zijn (vermijd aftrekken van punten)
+    if (diff > 0) {
+      return handleAddPoints(diff);
+    } else if (diff < 0) {
+      // Reset punten door terug te gaan naar 0 en dan het targetPoints toe te voegen
+      try {
+        // API aanroep om punten op 0 te zetten
+        await fetch(`/api/users/${user.id}/add-points`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            points: -(user.points || 0), 
+            description: 'Reset punten'
+          }),
+          credentials: 'include',
+        });
+        
+        // Wacht even om de server tijd te geven om de punten te resetten
+        setTimeout(() => {
+          // Voeg de doelpunten toe
+          handleAddPoints(targetPoints);
+        }, 100);
+      } catch (error) {
+        console.error("Fout bij het resetten van punten:", error);
+      }
+    }
+    
+    toast({
+      title: "Punten ingesteld",
+      description: `Punten ingesteld op ${targetPoints}`,
+    });
+  };
 
   return (
     <div className="relative w-full">
@@ -246,6 +288,36 @@ export function PointsHeader() {
                 className="bg-transparent hover:bg-[#00AAFF] hover:text-white border-[#00AAFF] text-[#00AAFF]"
               >
                 +1000 punten
+              </Button>
+            </div>
+
+            {/* Testknop voor specifieke niveaus */}
+            <div className="mt-2 flex justify-between">
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={() => handleSetPoints(1000)}
+                className="bg-amber-700 hover:bg-amber-800"
+              >
+                🥉 Brons (1000)
+              </Button>
+
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={() => handleSetPoints(2500)}
+                className="bg-gray-400 hover:bg-gray-500"
+              >
+                🥈 Zilver (2500)
+              </Button>
+
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={() => handleSetPoints(5000)}
+                className="bg-yellow-500 hover:bg-yellow-600"
+              >
+                🥇 Goud (5000)
               </Button>
             </div>
           </div>
