@@ -71,10 +71,6 @@ export function DiscountsList() {
 
   return (
     <div className="space-y-4 pb-16">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Exclusieve kortingsacties</h2>
-        <Tag className="h-5 w-5 text-[#00AAFF]" />
-      </div>
       
       {discounts.map((discount) => (
         <Card key={discount.id} className="bg-gray-900 border-gray-800 text-white shadow-md">
