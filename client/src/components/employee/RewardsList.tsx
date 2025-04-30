@@ -157,7 +157,6 @@ export function RewardsList() {
         <h2 className="text-xl font-bold text-white">Beschikbare beloningen</h2>
         <ShoppingBag className="h-5 w-5 text-[#00AAFF]" />
       </div>
-      <p className="text-gray-400 text-sm">Wissel je punten in voor deze exclusieve beloningen</p>
       
       {sortedRewards.map((reward) => {
         const pointsNeeded = Math.max(0, reward.pointsCost - userPoints);
