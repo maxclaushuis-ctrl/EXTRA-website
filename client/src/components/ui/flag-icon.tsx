@@ -13,9 +13,9 @@ export function FlagIcon({ language, className = '', size = 20 }: FlagIconProps)
     nl: (
       <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 512 512" className={className}>
         <g fillRule="evenodd" strokeWidth="1pt">
-          <rect width="512" height="170.7" fill="#fff"/>
-          <rect width="512" height="170.7" y="170.7" fill="#21468b"/>
-          <rect width="512" height="170.7" y="341.3" fill="#ae1c28"/>
+          <rect width="512" height="170.7" fill="#ae1c28"/>
+          <rect width="512" height="170.7" y="170.7" fill="#fff"/>
+          <rect width="512" height="170.7" y="341.3" fill="#21468b"/>
         </g>
       </svg>
     ),
