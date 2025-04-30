@@ -6,11 +6,13 @@ import bannerExtraatje from '@/assets/Banner_Extraatje.jpg';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function PointsHeader() {
   const { user } = useAuth();
   const points = user?.points || 0;
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   // Mijlpalen voor puntensysteem
   const milestones = [0, 100, 250, 500, 1000, 2500, 5000, 10000];
@@ -161,7 +163,7 @@ export function PointsHeader() {
       {/* Zwarte box met punten die over de banner heen valt */}
       <div className="absolute bottom-0 left-0 right-0 transform translate-y-3/4 px-4">
         <div className="bg-black text-white rounded-lg shadow-lg p-4">
-          <div className="text-gray-400 text-sm font-medium">EXTRA punten</div>
+          <div className="text-gray-400 text-sm font-medium">{t('common.extraPoints')}</div>
           <div className={`text-white text-4xl font-bold mt-1 ${animating ? 'text-cyan-400' : ''}`} 
                style={{ transition: 'color 0.5s ease' }}>
             {displayPoints}
@@ -170,9 +172,9 @@ export function PointsHeader() {
           {/* Mijlpaal voortgangsbalk */}
           <div className="mt-3">
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-400">Huidige punten</span>
+              <span className="text-gray-400">{t('common.currentPoints')}</span>
               <span className="text-gray-400">
-                Volgende mijlpaal: <span className="text-cyan-400 font-medium">{getNextMilestone(points)}</span>
+                {t('common.nextMilestone')}: <span className="text-cyan-400 font-medium">{getNextMilestone(points)}</span>
               </span>
             </div>
             <Progress 

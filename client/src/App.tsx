@@ -132,9 +132,11 @@ function Router() {
 function App() {
   return (
     <AuthProvider>
-      <MilestoneProvider>
-        <Router />
-      </MilestoneProvider>
+      <LanguageProvider>
+        <MilestoneProvider>
+          <Router />
+        </MilestoneProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

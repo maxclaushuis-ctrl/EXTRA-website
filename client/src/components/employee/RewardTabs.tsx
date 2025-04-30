@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RewardsList } from '@/components/employee/RewardsList';
 import { DiscountsList } from '@/components/employee/DiscountsList';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function RewardTabs() {
   const [activeTab, setActiveTab] = useState('beloningen');
+  const { t } = useLanguage();
 
   return (
     <Tabs defaultValue="beloningen" className="w-full mt-32" onValueChange={(value) => setActiveTab(value)}>
@@ -13,13 +15,13 @@ export function RewardTabs() {
           value="beloningen" 
           className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
         >
-          Beloningen
+          {t('common.rewards')}
         </TabsTrigger>
         <TabsTrigger 
           value="kortingsacties" 
           className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
         >
-          Kortingsacties
+          {t('common.discounts')}
         </TabsTrigger>
       </TabsList>
       
