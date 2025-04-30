@@ -186,15 +186,7 @@ export function PointsHeader() {
             />
           </div>
           
-          {/* Test knop om punten toe te voegen - altijd zichtbaar om testen te vergemakkelijken */}
-          <Button
-            onClick={handleAddPoints}
-            variant="outline"
-            className="mt-3 bg-green-800 hover:bg-green-700 border-none text-white"
-            size="sm"
-          >
-            Test: +25 punten
-          </Button>
+          {/* Testknop verwijderd op verzoek */}
         </div>
       </div>
     </div>
