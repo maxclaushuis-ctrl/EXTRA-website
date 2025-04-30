@@ -158,7 +158,7 @@ export function PointsHeader() {
       </div>
 
       {/* Zwarte box met punten die over de banner heen valt */}
-      <div className="absolute bottom-0 left-0 right-0 transform translate-y-1/2 px-4">
+      <div className="absolute bottom-0 left-0 right-0 transform translate-y-3/4 px-4">
         <div className="bg-black text-white rounded-lg shadow-lg p-4">
           <div className="text-gray-400 text-sm font-medium">EXTRA punten</div>
           <div className={`text-white text-4xl font-bold mt-1 ${animating ? 'text-cyan-400' : ''}`} 
