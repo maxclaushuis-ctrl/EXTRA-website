@@ -8,7 +8,7 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ 
-  title = 'EXTRA@JE', 
+  title = 'EXTRAATJE', 
   showBackButton = true,
   showSettings = true
 }: MobileHeaderProps) {
@@ -19,8 +19,8 @@ export function MobileHeader({
   };
 
   return (
-    <header className="w-full bg-black text-white py-4 px-4 flex justify-between items-center">
-      <div className="w-1/3">
+    <header className="w-full bg-black text-white py-3 px-4 flex justify-between items-center">
+      <div className="w-1/4">
         {showBackButton && (
           <button 
             onClick={goBack} 
@@ -31,14 +31,23 @@ export function MobileHeader({
         )}
       </div>
       
-      <div className="w-1/3 text-center">
-        <h1 className="font-bold text-lg">{title}</h1>
+      <div className="w-2/4 text-center">
+        <h1 
+          className="text-[#c8ff00] text-xl tracking-wide" 
+          style={{ 
+            fontFamily: 'Poppins, sans-serif', 
+            fontWeight: 900,
+            letterSpacing: '0.02em'
+          }}
+        >
+          {title}
+        </h1>
       </div>
       
-      <div className="w-1/3 flex justify-end">
+      <div className="w-1/4 flex justify-end">
         {showSettings && (
           <Link href="/settings">
-            <Settings size={24} className="text-[#E0FF00]" />
+            <Settings size={24} className="text-[#c8ff00]" />
           </Link>
         )}
       </div>

@@ -156,20 +156,6 @@ export function PointsHeader() {
           alt="EXTRA Banner" 
           className="w-full h-full object-cover"
         />
-        
-        {/* EXTRAATJE tekst centraal in Poppins Extra Bold */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h1 
-            className="text-4xl sm:text-5xl md:text-6xl font-black text-[#c8ff00]" 
-            style={{ 
-              fontFamily: 'Poppins, sans-serif', 
-              fontWeight: 900,
-              textShadow: '0 0 10px rgba(0, 0, 0, 0.3)'
-            }}
-          >
-            EXTRAATJE
-          </h1>
-        </div>
       </div>
 
       {/* Zwarte box met punten die over de banner heen valt */}

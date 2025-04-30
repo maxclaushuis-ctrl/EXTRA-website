@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   return (
     <div className="employee-dashboard flex flex-col min-h-screen">
-      <MobileHeader title="EXTRA@JE" showBackButton={false} />
+      <MobileHeader title="EXTRAATJE" showBackButton={false} />
       
       <div className="flex-1">
         <PointsHeader />
