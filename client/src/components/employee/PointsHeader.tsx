@@ -172,7 +172,9 @@ export function PointsHeader() {
           {/* Mijlpaal voortgangsbalk */}
           <div className="mt-3">
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-400">{t('common.currentPoints')}</span>
+              <span className="text-gray-400">
+                {t('common.currentPoints')}: <span className="text-white font-medium">{getCurrentAndNextMilestone(points).current}</span>
+              </span>
               <span className="text-gray-400">
                 {t('common.nextMilestone')}: <span className="text-cyan-400 font-medium">{getNextMilestone(points)}</span>
               </span>
