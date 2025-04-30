@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { BronzeBadge, SilverBadge, GoldBadge } from '@/components/ui/badges';
 
 export function PointsHeader() {
   const { user } = useAuth();
@@ -19,9 +20,9 @@ export function PointsHeader() {
   
   // Badges voor mijlpalen
   const badges = {
-    1000: { name: 'Bronze', icon: '🥉' },
-    2500: { name: 'Silver', icon: '🥈' },
-    5000: { name: 'Gold', icon: '🥇' }
+    1000: { name: 'Bronze', icon: <BronzeBadge size={50} /> },
+    2500: { name: 'Silver', icon: <SilverBadge size={50} /> },
+    5000: { name: 'Gold', icon: <GoldBadge size={50} /> }
   };
   
   // State voor geanimeerde progressbar
@@ -190,8 +191,10 @@ export function PointsHeader() {
             {/* Badge display */}
             {getCurrentBadge(points) && (
               <div className="flex flex-col items-center">
-                <div className="text-3xl">{getCurrentBadge(points)?.icon}</div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="flex items-center justify-center bg-gray-800 rounded-full p-1">
+                  {getCurrentBadge(points)?.icon}
+                </div>
+                <div className="text-xs text-white mt-1 font-medium">
                   {getCurrentBadge(points)?.name && t(`common.badges.${getCurrentBadge(points)?.name}`)}
                 </div>
               </div>
@@ -208,15 +211,12 @@ export function PointsHeader() {
                 {t('common.nextMilestone')}: <span className="text-cyan-400 font-medium">{getNextMilestone(points)}</span>
               </span>
             </div>
-            <Progress 
-              value={progress} 
-              className={`h-2 ${animating ? 'animate-pulse' : ''}`}
-              style={{
-                background: animating 
-                  ? 'linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%)' 
-                  : 'linear-gradient(90deg, #06b6d4 0%, #0284c7 100%)'
-              }}
-            />
+            <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+              <div 
+                className={`bg-[#00AAFF] h-full ${animating ? 'animate-pulse' : ''}`}
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
           </div>
         </div>
       </div>
