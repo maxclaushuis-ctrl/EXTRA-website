@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'wouter';
-import { ArrowLeft, Settings, Globe, Check } from 'lucide-react';
+import { ArrowLeft, Settings, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage, Language, languageNames } from '@/contexts/LanguageContext';
+import { FlagIcon } from '@/components/ui/flag-icon';
 
 interface MobileHeaderProps {
   title?: string;
@@ -45,28 +46,39 @@ export function MobileHeader({
         
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center focus:outline-none">
-            <Globe size={20} className="text-[#c8ff00]" />
+            <div className="rounded-sm overflow-hidden border border-white/30">
+              <FlagIcon language={language} size={22} />
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="bg-gray-900 border-gray-800 text-white">
             <DropdownMenuItem 
               className="flex items-center justify-between"
               onClick={() => changeLanguage('nl')}
             >
-              Nederlands
+              <div className="flex items-center gap-2">
+                <FlagIcon language="nl" size={16} className="rounded-sm" />
+                <span>Nederlands</span>
+              </div>
               {language === 'nl' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="flex items-center justify-between"
               onClick={() => changeLanguage('en')}
             >
-              English
+              <div className="flex items-center gap-2">
+                <FlagIcon language="en" size={16} className="rounded-sm" />
+                <span>English</span>
+              </div>
               {language === 'en' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="flex items-center justify-between"
               onClick={() => changeLanguage('es')}
             >
-              Español
+              <div className="flex items-center gap-2">
+                <FlagIcon language="es" size={16} className="rounded-sm" />
+                <span>Español</span>
+              </div>
               {language === 'es' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
             </DropdownMenuItem>
           </DropdownMenuContent>
