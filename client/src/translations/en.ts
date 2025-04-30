@@ -13,7 +13,8 @@ export default {
     via: 'Through',
     validUntil: 'Valid until',
     code: 'Code',
-    copyCode: 'Copy code'
+    copyCode: 'Copy code',
+    for: 'for'
   },
   dashboard: {
     welcome: 'Welcome to EXTRAATJE',

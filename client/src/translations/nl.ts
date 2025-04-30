@@ -13,7 +13,8 @@ export default {
     via: 'Via',
     validUntil: 'Geldig tot',
     code: 'Code',
-    copyCode: 'Kopieer code'
+    copyCode: 'Kopieer code',
+    for: 'voor'
   },
   dashboard: {
     welcome: 'Welkom bij EXTRAATJE',

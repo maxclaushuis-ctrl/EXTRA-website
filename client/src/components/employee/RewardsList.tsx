@@ -7,11 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatNumber } from '@/lib/utils';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function RewardsList() {
   const { user } = useAuth();
   const userPoints = user?.points || 0;
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [redeemingRewardId, setRedeemingRewardId] = useState<number | null>(null);
 
   const { data: rewards, isLoading, error } = useQuery<Reward[]>({
@@ -164,7 +166,7 @@ export function RewardsList() {
               <div className="flex items-center justify-between">
                 {/* Beloningspunten */}
                 <div className="bg-[#00AAFF] text-white font-bold px-3 py-1 rounded-md">
-                  {reward.pointsCost} punten
+                  {reward.pointsCost} {t('common.points')}
                 </div>
                 
                 {/* Afbeelding van beloning indien beschikbaar */}
@@ -206,11 +208,11 @@ export function RewardsList() {
                 <div className="flex justify-between items-center mt-2">
                   {pointsNeeded > 0 ? (
                     <div className="text-gray-400 text-sm">
-                      Nog {pointsNeeded} punten nodig
+                      {t('common.pointsNeeded').replace('{amount}', pointsNeeded.toString())}
                     </div>
                   ) : (
                     <div className="text-green-400 text-sm">
-                      Je hebt genoeg punten!
+                      {t('common.enoughPoints')}
                     </div>
                   )}
                   
@@ -220,7 +222,8 @@ export function RewardsList() {
                       disabled={redeemMutation.isPending && redeemingRewardId === reward.id}
                       onClick={() => {
                         // Bevestiging vragen voor het inwisselen
-                        if (window.confirm(`Wil je ${reward.name} inwisselen voor ${reward.pointsCost} punten?`)) {
+                        const confirmMsg = `${t('common.redeem')} ${reward.name} ${t('common.for')} ${reward.pointsCost} ${t('common.points')}?`;
+                        if (window.confirm(confirmMsg)) {
                           redeemMutation.mutate(reward.id);
                         }
                       }}
@@ -228,10 +231,10 @@ export function RewardsList() {
                       {redeemMutation.isPending && redeemingRewardId === reward.id ? (
                         <>
                           <Loader2 className="mr-1 h-3 w-3 inline animate-spin" />
-                          Inwisselen...
+                          {t('common.redeeming')}
                         </>
                       ) : (
-                        'Inwisselen'
+                        t('common.redeem')
                       )}
                     </button>
                   )}
