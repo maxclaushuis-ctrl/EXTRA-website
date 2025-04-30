@@ -186,17 +186,15 @@ export function PointsHeader() {
             />
           </div>
           
-          {/* Test knop om punten toe te voegen - alleen zichtbaar in ontwikkelomgeving */}
-          {import.meta.env.DEV && (
-            <Button
-              onClick={handleAddPoints}
-              variant="outline"
-              className="mt-3 bg-green-800 hover:bg-green-700 border-none text-white"
-              size="sm"
-            >
-              Test: +25 punten
-            </Button>
-          )}
+          {/* Test knop om punten toe te voegen - altijd zichtbaar om testen te vergemakkelijken */}
+          <Button
+            onClick={handleAddPoints}
+            variant="outline"
+            className="mt-3 bg-green-800 hover:bg-green-700 border-none text-white"
+            size="sm"
+          >
+            Test: +25 punten
+          </Button>
         </div>
       </div>
     </div>
