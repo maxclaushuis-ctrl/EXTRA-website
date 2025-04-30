@@ -58,6 +58,8 @@ export function PointsHeader() {
     const currentProgress = pts - current;
     const percentage = Math.floor((currentProgress / totalRange) * 100);
     
+    console.log(`Punten: ${pts}, Huidig: ${current}, Volgend: ${next}, Bereik: ${totalRange}, Voortgang: ${currentProgress}, Percentage: ${percentage}%`);
+    
     // Beperk percentage tussen 0 en 100
     return Math.max(0, Math.min(100, percentage));
   };
@@ -124,7 +126,7 @@ export function PointsHeader() {
   }, [points, displayPoints]);
 
   // Test functie om punten toe te voegen
-  const handleAddPoints = async () => {
+  const handleAddPoints = async (amount: number = 25) => {
     if (!user) return;
     
     try {
@@ -135,8 +137,8 @@ export function PointsHeader() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          points: 25, 
-          description: 'Test punten toevoeging'
+          points: amount, 
+          description: `Test punten toevoeging: +${amount}`
         }),
         credentials: 'include',
       });
@@ -216,6 +218,35 @@ export function PointsHeader() {
                 className={`bg-[#00AAFF] h-full ${animating ? 'animate-pulse' : ''}`}
                 style={{ width: `${progress}%` }}
               ></div>
+            </div>
+            {/* Testknop voor punten toevoegen */}
+            <div className="mt-4 flex justify-between">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleAddPoints(100)}
+                className="bg-transparent hover:bg-[#00AAFF] hover:text-white border-[#00AAFF] text-[#00AAFF]"
+              >
+                +100 punten
+              </Button>
+
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleAddPoints(500)}
+                className="bg-transparent hover:bg-[#00AAFF] hover:text-white border-[#00AAFF] text-[#00AAFF]"
+              >
+                +500 punten
+              </Button>
+
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleAddPoints(1000)}
+                className="bg-transparent hover:bg-[#00AAFF] hover:text-white border-[#00AAFF] text-[#00AAFF]"
+              >
+                +1000 punten
+              </Button>
             </div>
           </div>
         </div>
