@@ -1,5 +1,4 @@
 import { useLocation, Link } from 'wouter';
-import { useState } from 'react';
 import { ArrowLeft, Settings, Globe, Check } from 'lucide-react';
 import {
   DropdownMenu,
@@ -7,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage, Language, languageNames } from '@/contexts/LanguageContext';
 
 interface MobileHeaderProps {
   title?: string;
@@ -20,16 +20,15 @@ export function MobileHeader({
   showSettings = true
 }: MobileHeaderProps) {
   const [location, navigate] = useLocation();
-  const [currentLanguage, setCurrentLanguage] = useState('Nederlands');
+  const { language, setLanguage } = useLanguage();
 
   const goBack = () => {
     window.history.back();
   };
 
-  const changeLanguage = (language: string) => {
-    setCurrentLanguage(language);
-    // Hier zou je normaal gesproken een taal-service aanroepen
-    console.log(`Taal veranderd naar: ${language}`);
+  const changeLanguage = (selectedLanguage: Language) => {
+    setLanguage(selectedLanguage);
+    console.log(`Taal veranderd naar: ${languageNames[selectedLanguage]}`);
   };
 
   return (
@@ -51,24 +50,24 @@ export function MobileHeader({
           <DropdownMenuContent align="start" className="bg-gray-900 border-gray-800 text-white">
             <DropdownMenuItem 
               className="flex items-center justify-between"
-              onClick={() => changeLanguage('Nederlands')}
+              onClick={() => changeLanguage('nl')}
             >
               Nederlands
-              {currentLanguage === 'Nederlands' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
+              {language === 'nl' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="flex items-center justify-between"
-              onClick={() => changeLanguage('English')}
+              onClick={() => changeLanguage('en')}
             >
               English
-              {currentLanguage === 'English' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
+              {language === 'en' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="flex items-center justify-between"
-              onClick={() => changeLanguage('Español')}
+              onClick={() => changeLanguage('es')}
             >
               Español
-              {currentLanguage === 'Español' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
+              {language === 'es' && <Check size={16} className="ml-2 text-[#c8ff00]" />}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

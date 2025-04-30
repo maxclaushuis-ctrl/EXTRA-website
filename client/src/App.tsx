@@ -24,6 +24,7 @@ import History from "@/pages/user/History";
 // Contexts
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MilestoneProvider } from "@/contexts/MilestoneContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 // Beschermde route component
 function ProtectedRoute({ component: Component, adminOnly = false, ...rest }: 
