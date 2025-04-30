@@ -33,7 +33,7 @@ export function MobileHeader({
       
       <div className="w-2/4 text-center">
         <h1 
-          className="text-[#c8ff00] text-xl tracking-wide" 
+          className="text-white text-xl tracking-wide" 
           style={{ 
             fontFamily: 'Poppins, sans-serif', 
             fontWeight: 900,

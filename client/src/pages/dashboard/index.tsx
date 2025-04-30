@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { MobileHeader } from '@/components/employee/MobileHeader';
 import { PointsHeader } from '@/components/employee/PointsHeader';
-import { RewardsList } from '@/components/employee/RewardsList';
+import { RewardTabs } from '@/components/employee/RewardTabs';
 
 export default function Dashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -37,8 +37,8 @@ export default function Dashboard() {
       <div className="flex-1">
         <PointsHeader />
         
-        <main>
-          <RewardsList />
+        <main className="px-4">
+          <RewardTabs />
         </main>
       </div>
     </div>

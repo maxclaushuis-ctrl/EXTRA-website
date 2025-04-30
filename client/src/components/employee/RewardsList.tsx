@@ -152,23 +152,24 @@ export function RewardsList() {
     .sort((a, b) => a.pointsCost - b.pointsCost);
 
   return (
-    <div className="mt-20 pb-20">
-      <div className="px-4 mb-4">
-        <h2 className="text-xl font-bold text-white mb-2">EXTRA@JE</h2>
-        <p className="text-gray-400 text-sm">Wissel je punten in voor deze beloningen</p>
+    <div className="space-y-4 pb-16">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white">Beschikbare beloningen</h2>
+        <ShoppingBag className="h-5 w-5 text-[#00AAFF]" />
       </div>
+      <p className="text-gray-400 text-sm">Wissel je punten in voor deze exclusieve beloningen</p>
       
       {sortedRewards.map((reward) => {
         const pointsNeeded = Math.max(0, reward.pointsCost - userPoints);
         const canRedeem = userPoints >= reward.pointsCost;
         
         return (
-          <div key={reward.id} className="mb-4 px-4">
-            <div className="border-b border-[#E0FF00] pb-4">
+          <div key={reward.id} className="mb-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-md p-4">
               <div className="flex items-center justify-between">
                 {/* Beloningspunten */}
-                <div className="text-[#E0FF00] font-bold">
-                  {reward.pointsCost} EXTRA punten
+                <div className="bg-[#00AAFF] text-white font-bold px-3 py-1 rounded-md">
+                  {reward.pointsCost} punten
                 </div>
                 
                 {/* Afbeelding van beloning indien beschikbaar */}
@@ -185,19 +186,24 @@ export function RewardsList() {
                 {/* Fallback icoon als er geen afbeelding is */}
                 {!reward.imageUrl && (
                   <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center">
-                    <ShoppingBag className="w-6 h-6 text-[#E0FF00]" />
+                    <ShoppingBag className="w-6 h-6 text-[#00AAFF]" />
                   </div>
                 )}
               </div>
               
               {/* Beloningsnaam */}
-              <div className="text-white text-lg font-medium mt-1">{reward.name}</div>
+              <div className="text-white text-lg font-medium mt-3">{reward.name}</div>
+              
+              {/* Korte beschrijving indien aanwezig */}
+              {reward.description && (
+                <div className="text-gray-400 text-sm mt-1">{reward.description}</div>
+              )}
               
               {/* Progressbar en resterende punten */}
-              <div className="mt-2">
-                <div className="w-full bg-gray-900 h-2 rounded-full overflow-hidden">
+              <div className="mt-4">
+                <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
                   <div 
-                    className="bg-[#E0FF00] h-full" 
+                    className="bg-[#00AAFF] h-full" 
                     style={{ width: `${Math.min(100, (userPoints / reward.pointsCost) * 100)}%` }}
                   ></div>
                 </div>
@@ -205,7 +211,7 @@ export function RewardsList() {
                 <div className="flex justify-between items-center mt-2">
                   {pointsNeeded > 0 ? (
                     <div className="text-gray-400 text-sm">
-                      {pointsNeeded} punten nodig
+                      Nog {pointsNeeded} punten nodig
                     </div>
                   ) : (
                     <div className="text-green-400 text-sm">
@@ -215,7 +221,7 @@ export function RewardsList() {
                   
                   {canRedeem && (
                     <button 
-                      className="bg-[#E0FF00] text-black text-sm font-medium px-4 py-1 rounded-full"
+                      className="bg-[#00AAFF] text-white text-sm font-medium px-4 py-1 rounded-md"
                       disabled={redeemMutation.isPending && redeemingRewardId === reward.id}
                       onClick={() => {
                         // Bevestiging vragen voor het inwisselen
