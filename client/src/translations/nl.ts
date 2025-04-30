@@ -2,8 +2,13 @@ export default {
   common: {
     points: 'punten',
     extraPoints: 'EXTRA punten',
-    currentPoints: 'Huidige punten',
+    currentPoints: 'Huidige mijlpaal',
     nextMilestone: 'Volgende mijlpaal',
+    badges: {
+      Bronze: 'Brons',
+      Silver: 'Zilver',
+      Gold: 'Goud'
+    },
     rewards: 'Beloningen',
     discounts: 'Kortingsacties',
     redeem: 'Inwisselen',

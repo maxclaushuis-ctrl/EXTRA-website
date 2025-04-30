@@ -2,8 +2,13 @@ export default {
   common: {
     points: 'puntos',
     extraPoints: 'puntos EXTRA',
-    currentPoints: 'Puntos actuales',
+    currentPoints: 'Hito actual',
     nextMilestone: 'Siguiente hito',
+    badges: {
+      Bronze: 'Bronce',
+      Silver: 'Plata',
+      Gold: 'Oro'
+    },
     rewards: 'Recompensas',
     discounts: 'Descuentos',
     redeem: 'Canjear',

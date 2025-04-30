@@ -2,8 +2,13 @@ export default {
   common: {
     points: 'points',
     extraPoints: 'EXTRA points',
-    currentPoints: 'Current points',
+    currentPoints: 'Current milestone',
     nextMilestone: 'Next milestone',
+    badges: {
+      Bronze: 'Bronze',
+      Silver: 'Silver',
+      Gold: 'Gold'
+    },
     rewards: 'Rewards',
     discounts: 'Discounts',
     redeem: 'Redeem',

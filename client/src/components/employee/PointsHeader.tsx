@@ -15,7 +15,14 @@ export function PointsHeader() {
   const { t } = useLanguage();
   
   // Mijlpalen voor puntensysteem
-  const milestones = [0, 100, 250, 500, 1000, 2500, 5000, 10000];
+  const milestones = [0, 500, 1000, 2500, 5000, 10000];
+  
+  // Badges voor mijlpalen
+  const badges = {
+    1000: { name: 'Bronze', icon: '🥉' },
+    2500: { name: 'Silver', icon: '🥈' },
+    5000: { name: 'Gold', icon: '🥇' }
+  };
   
   // State voor geanimeerde progressbar
   const [progress, setProgress] = useState(0);
@@ -58,6 +65,14 @@ export function PointsHeader() {
   const getNextMilestone = (pts: number) => {
     const { next } = getCurrentAndNextMilestone(pts);
     return next;
+  };
+  
+  // Bepaal het huidige badge niveau
+  const getCurrentBadge = (pts: number) => {
+    if (pts >= 5000) return badges[5000];
+    if (pts >= 2500) return badges[2500];
+    if (pts >= 1000) return badges[1000];
+    return null;
   };
   
   // State voor geanimeerde puntenteller
@@ -163,10 +178,24 @@ export function PointsHeader() {
       {/* Zwarte box met punten die over de banner heen valt */}
       <div className="absolute bottom-0 left-0 right-0 transform translate-y-3/4 px-4">
         <div className="bg-black text-white rounded-lg shadow-lg p-4">
-          <div className="text-gray-400 text-sm font-medium">{t('common.extraPoints')}</div>
-          <div className={`text-white text-4xl font-bold mt-1 ${animating ? 'text-cyan-400' : ''}`} 
-               style={{ transition: 'color 0.5s ease' }}>
-            {displayPoints}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-gray-400 text-sm font-medium">{t('common.extraPoints')}</div>
+              <div className={`text-white text-4xl font-bold mt-1 ${animating ? 'text-cyan-400' : ''}`} 
+                   style={{ transition: 'color 0.5s ease' }}>
+                {displayPoints}
+              </div>
+            </div>
+            
+            {/* Badge display */}
+            {getCurrentBadge(points) && (
+              <div className="flex flex-col items-center">
+                <div className="text-3xl">{getCurrentBadge(points)?.icon}</div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {getCurrentBadge(points)?.name && t(`common.badges.${getCurrentBadge(points)?.name}`)}
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Mijlpaal voortgangsbalk */}
@@ -189,8 +218,6 @@ export function PointsHeader() {
               }}
             />
           </div>
-          
-          {/* Testknop verwijderd op verzoek */}
         </div>
       </div>
     </div>
