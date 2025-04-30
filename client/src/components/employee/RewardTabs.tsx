@@ -7,7 +7,7 @@ export function RewardTabs() {
   const [activeTab, setActiveTab] = useState('beloningen');
 
   return (
-    <Tabs defaultValue="beloningen" className="w-full mt-16" onValueChange={(value) => setActiveTab(value)}>
+    <Tabs defaultValue="beloningen" className="w-full mt-32" onValueChange={(value) => setActiveTab(value)}>
       <TabsList className="grid w-full grid-cols-2 bg-gray-900">
         <TabsTrigger 
           value="beloningen" 
