@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import extraYellowLogo from '@/assets/extra-logo-yellow.svg';
 import extraPattern from '@/assets/extra-pattern.svg';
+import bannerExtraatje from '@/assets/Banner_Extraatje.jpg';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,16 +53,13 @@ export function PointsHeader() {
 
   return (
     <div className="relative w-full">
-      {/* Blauwe achtergrond met patroon */}
-      <div className="w-full h-48 blue-gradient-bg relative overflow-hidden extra-pattern-bg">
-        {/* EXTRA logo in het midden */}
-        <div className="flex justify-center items-center h-full">
-          <img 
-            src={extraYellowLogo} 
-            alt="EXTRA" 
-            className="w-48 h-auto"
-          />
-        </div>
+      {/* Banner afbeelding */}
+      <div className="w-full h-48 relative overflow-hidden">
+        <img 
+          src={bannerExtraatje}
+          alt="EXTRA Banner" 
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* Zwarte box met punten die over de banner heen valt */}
