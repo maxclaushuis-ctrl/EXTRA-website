@@ -5,12 +5,14 @@ import { Upload, X } from "lucide-react";
 interface ImageUploadProps {
   value: string | null;
   onChange: (file: File | null) => void;
+  onRemove?: () => void;
   previewHeight?: number;
 }
 
 export function ImageUpload({ 
   value, 
   onChange,
+  onRemove,
   previewHeight = 200
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -47,6 +49,9 @@ export function ImageUpload({
     onChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (onRemove) {
+      onRemove();
     }
   };
 
