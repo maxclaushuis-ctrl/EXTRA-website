@@ -12,7 +12,8 @@ import {
   insertRuleSchema,
   insertSettingsSchema,
   insertEmailTemplateSchema,
-  insertCampaignSchema
+  insertCampaignSchema,
+  insertDiscountSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
