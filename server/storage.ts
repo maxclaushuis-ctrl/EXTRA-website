@@ -10,7 +10,8 @@ import {
   type Campaign, type InsertCampaign,
   type Automation, type InsertAutomation,
   type AutomationTrigger, type InsertAutomationTrigger,
-  type AutomationAction, type InsertAutomationAction
+  type AutomationAction, type InsertAutomationAction,
+  type Discount, type InsertDiscount
 } from "@shared/schema";
 import { createHash } from "crypto";
 
@@ -110,6 +111,13 @@ export interface IStorage {
   getAutomationActions(automationId: number): Promise<AutomationAction[]>;
   updateAutomationAction(id: number, actionData: Partial<InsertAutomationAction>): Promise<AutomationAction | undefined>;
   deleteAutomationAction(id: number): Promise<boolean>;
+  
+  // Discount methods
+  createDiscount(discount: InsertDiscount): Promise<Discount>;
+  getDiscounts(): Promise<Discount[]>;
+  getDiscount(id: number): Promise<Discount | undefined>;
+  updateDiscount(id: number, discountData: Partial<InsertDiscount>): Promise<Discount | undefined>;
+  deleteDiscount(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -126,6 +134,7 @@ export class MemStorage implements IStorage {
   private automations: Map<number, Automation>;
   private automationTriggers: Map<number, AutomationTrigger>;
   private automationActions: Map<number, AutomationAction>;
+  private discounts: Map<number, Discount>;
   
   private currentIds: {
     applicants: number;
@@ -169,7 +178,10 @@ export class MemStorage implements IStorage {
       automations: 1,
       automationTriggers: 1,
       automationActions: 1,
+      discounts: 1,
     };
+    
+    this.discounts = new Map();
     
     // Initialiseer een admin gebruiker
     this.createUser({
