@@ -865,6 +865,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Discounts API routes
+  app.get("/api/discounts", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const discounts = await storage.getDiscounts();
+      
+      // Filter discounts based on status for non-admins
+      let filteredDiscounts = discounts;
+      if (req.session.userRole !== 'admin') {
+        filteredDiscounts = discounts.filter(discount => discount.status === 'active');
+      }
+      
+      return res.status(200).json(filteredDiscounts);
+    } catch (error) {
+      console.error("Error fetching discounts:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de kortingsacties"
+      });
+    }
+  });
+  
+  app.get("/api/discounts/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const discountId = parseInt(req.params.id);
+      
+      // Check if discount exists
+      const discount = await storage.getDiscount(discountId);
+      
+      if (!discount) {
+        return res.status(404).json({
+          message: "Kortingsactie niet gevonden"
+        });
+      }
+      
+      // Check if discount is active/visible for non-admins
+      if (req.session.userRole !== 'admin' && discount.status !== 'active') {
+        return res.status(403).json({
+          message: "Deze kortingsactie is momenteel niet beschikbaar"
+        });
+      }
+      
+      return res.status(200).json(discount);
+    } catch (error) {
+      console.error(`Error fetching discount ${req.params.id}:`, error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de kortingsactie"
+      });
+    }
+  });
+  
+  app.post("/api/discounts", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const result = insertDiscountSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Ongeldige gegevens",
+          errors: result.error.errors,
+        });
+      }
+      
+      // Create the discount
+      const discount = await storage.createDiscount(result.data);
+      
+      return res.status(201).json({
+        message: "Kortingsactie succesvol aangemaakt",
+        discount
+      });
+    } catch (error) {
+      console.error("Error creating discount:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het aanmaken van de kortingsactie"
+      });
+    }
+  });
+  
+  app.put("/api/discounts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const discountId = parseInt(req.params.id);
+      
+      // Check if discount exists
+      const discount = await storage.getDiscount(discountId);
+      
+      if (!discount) {
+        return res.status(404).json({
+          message: "Kortingsactie niet gevonden"
+        });
+      }
+      
+      // Update discount
+      const updatedDiscount = await storage.updateDiscount(discountId, req.body);
+      
+      // Notify connected users of the update if their session is authenticated
+      const notifyData = {
+        type: 'discount_updated',
+        message: 'Een kortingsactie is bijgewerkt',
+        data: updatedDiscount
+      };
+      
+      if (global.sendNotification && typeof global.sendNotification === 'function') {
+        global.sendNotification(notifyData);
+      }
+      
+      return res.status(200).json({
+        message: "Kortingsactie succesvol bijgewerkt",
+        discount: updatedDiscount
+      });
+    } catch (error) {
+      console.error(`Error updating discount ${req.params.id}:`, error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het bijwerken van de kortingsactie"
+      });
+    }
+  });
+  
+  app.delete("/api/discounts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const discountId = parseInt(req.params.id);
+      
+      // Check if discount exists
+      const discount = await storage.getDiscount(discountId);
+      
+      if (!discount) {
+        return res.status(404).json({
+          message: "Kortingsactie niet gevonden"
+        });
+      }
+      
+      // Delete discount
+      const success = await storage.deleteDiscount(discountId);
+      
+      if (success) {
+        // Notify connected users about the deletion
+        if (global.sendNotification && typeof global.sendNotification === 'function') {
+          global.sendNotification({
+            type: 'discount_deleted',
+            message: 'Een kortingsactie is verwijderd',
+            data: { id: discountId }
+          });
+        }
+        
+        return res.status(200).json({
+          message: "Kortingsactie succesvol verwijderd"
+        });
+      } else {
+        return res.status(500).json({
+          message: "Er is iets misgegaan bij het verwijderen van de kortingsactie"
+        });
+      }
+    } catch (error) {
+      console.error(`Error deleting discount ${req.params.id}:`, error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het verwijderen van de kortingsactie"
+      });
+    }
+  });
+  
   // Transaction routes
   app.get("/api/transactions", adminMiddleware, async (_req: Request, res: Response) => {
     try {
