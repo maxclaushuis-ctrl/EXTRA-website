@@ -1,115 +1,130 @@
-import { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tag, Percent, ShoppingBag, Phone, Coffee, Film, Gift } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Clipboard, Check } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Discount } from "@shared/schema";
 
-export function DiscountsList() {
-  const { t, language } = useLanguage();
-  
-  // Voor de demo gebruiken we een vaste lijst kortingsacties
-  // In een productieomgeving zou dit van een API komen
-  const discounts = useMemo(() => [
-    {
-      id: 1,
-      nameKey: "discounts.uberEats",
-      description: "Bestel voedsel met 25% korting bij je eerste Uber Eats bestelling.",
-      partner: "Uber Eats",
-      discount: "25%",
-      expiry: "31 mei 2025",
-      code: "EXTRA25",
-      category: "food",
-      icon: <ShoppingBag className="h-7 w-7 text-[#00AAFF]" />
-    },
-    {
-      id: 2,
-      nameKey: "discounts.mediaMarkt",
-      description: "Ontvang 10% korting op alle elektronica bij MediaMarkt.",
-      partner: "MediaMarkt",
-      discount: "10%",
-      expiry: "15 juni 2025",
-      code: "EXTRA10MM",
-      category: "electronics",
-      icon: <Phone className="h-7 w-7 text-[#00AAFF]" />
-    },
-    {
-      id: 3,
-      nameKey: "discounts.starbucks",
-      description: "Haal een gratis koffie (kleine maat) bij je eerste bezoek aan Starbucks.",
-      partner: "Starbucks",
-      discount: "100%",
-      expiry: "30 juni 2025",
-      code: "EXTRACOFFEE",
-      category: "food",
-      icon: <Coffee className="h-7 w-7 text-[#00AAFF]" />
-    },
-    {
-      id: 4,
-      nameKey: "discounts.pathe",
-      description: "Twee kaartjes voor de prijs van één bij alle Pathé vestigingen.",
-      partner: "Pathé",
-      discount: "50%",
-      expiry: "1 juli 2025",
-      code: "EXTRA2FOR1",
-      category: "entertainment",
-      icon: <Film className="h-7 w-7 text-[#00AAFF]" />
-    },
-    {
-      id: 5,
-      nameKey: "discounts.bol",
-      description: "€10 korting bij je bestelling vanaf €50 bij Bol.com.",
-      partner: "Bol.com",
-      discount: "€10",
-      expiry: "31 juli 2025",
-      code: "EXTRABOL10",
-      category: "shopping",
-      icon: <ShoppingBag className="h-7 w-7 text-[#00AAFF]" />
-    }
-  ], []);
+export default function DiscountsList() {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const handleClaim = (code: string) => {
-    navigator.clipboard.writeText(code);
-    const message = language === 'nl' ? `Kortingscode ${code} gekopieerd naar klembord!` :
-                    language === 'en' ? `Discount code ${code} copied to clipboard!` :
-                    `¡Código de descuento ${code} copiado al portapapeles!`;
-    alert(message);
+  const { data: discounts, isLoading, error } = useQuery<Discount[]>({
+    queryKey: ["/api/discounts"],
+  });
+
+  const handleCopyCode = (discount: Discount) => {
+    navigator.clipboard.writeText(discount.discountCode);
+    setCopiedId(discount.id);
+    toast({
+      title: t("discountCodeCopied"),
+      description: t("discountCodeCopiedMessage", { code: discount.discountCode }),
+    });
+
+    // Reset copy icon after 3 seconds
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 3000);
   };
 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 pt-4 pb-16 md:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="overflow-hidden border-none bg-white shadow-md">
+            <div className="h-48">
+              <Skeleton className="h-full w-full" />
+            </div>
+            <CardHeader className="p-4">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+            <CardFooter className="flex justify-between p-4 pt-0">
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-32" />
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500">{t("errorLoadingDiscounts")}</p>
+      </div>
+    );
+  }
+
+  if (!discounts || discounts.length === 0) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-gray-500">{t("noDiscountsAvailable")}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 pb-16">
-      
+    <div className="grid grid-cols-1 gap-4 pt-4 pb-16 md:grid-cols-2">
       {discounts.map((discount) => (
-        <Card key={discount.id} className="bg-gray-900 border-gray-800 text-white shadow-md">
-          <CardHeader className="pb-2">
-            <div className="flex items-start">
-              <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center mr-3">
-                {discount.icon}
+        <Card key={discount.id} className="overflow-hidden border-none bg-white shadow-md">
+          {discount.imageUrl && (
+            <div
+              className="h-48 w-full bg-cover bg-center"
+              style={{ backgroundImage: `url(${discount.imageUrl})` }}
+            />
+          )}
+          <CardHeader className="p-4">
+            <div className="flex items-center">
+              <div className="mr-2 min-h-10 min-w-10 overflow-hidden rounded-full border border-gray-200 bg-white p-1">
+                <img 
+                  src={`https://logo.clearbit.com/${discount.partner?.toLowerCase().replace(/\s+/g, '')}.com`} 
+                  alt={discount.partner || "Partner logo"}
+                  className="h-8 w-8 object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://via.placeholder.com/40?text=?"; 
+                  }}
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-bold truncate">
-                  {t(discount.nameKey)}
-                </CardTitle>
-                <CardDescription className="text-gray-400 mt-1">
-                  {t('common.via')} {discount.partner} • {t('common.validUntil')} {discount.expiry}
+              <div>
+                <CardTitle className="text-lg">{discount.name}</CardTitle>
+                <CardDescription className="text-xs">
+                  {t("offeredBy")} {discount.partner}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pb-2">
-            <p className="text-sm text-gray-300">{discount.description}</p>
+          <CardContent className="p-4 pt-0">
+            <p className="text-sm text-gray-600">{discount.description}</p>
           </CardContent>
-          <CardFooter className="flex justify-between items-center pt-0">
-            <div className="flex items-center text-sm">
-              <span className="text-gray-400 mr-2">{t('common.code')}:</span>
-              <code className="bg-gray-800 px-2 py-1 rounded">{discount.code}</code>
-            </div>
+          <CardFooter className="flex justify-between p-4 pt-0">
+            <Badge variant="outline" className="bg-blue-50 text-blue-600">{discount.category}</Badge>
             <Button 
-              size="sm" 
               variant="outline" 
-              onClick={() => handleClaim(discount.code)}
-              className="bg-transparent hover:bg-[#00AAFF] hover:text-white border-[#00AAFF] text-[#00AAFF]"
+              className="flex items-center gap-2" 
+              onClick={() => handleCopyCode(discount)}
             >
-              {t('common.copyCode')}
+              {copiedId === discount.id ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  {t("copied")}
+                </>
+              ) : (
+                <>
+                  <Clipboard className="h-4 w-4" />
+                  {t("copyDiscountCode")}
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>

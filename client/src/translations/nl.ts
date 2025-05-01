@@ -19,7 +19,14 @@ export default {
     validUntil: 'Geldig tot',
     code: 'Code',
     copyCode: 'Kopieer code',
-    for: 'voor'
+    for: 'voor',
+    offeredBy: 'Aangeboden door',
+    copyDiscountCode: 'Kopieer code',
+    copied: 'Gekopieerd',
+    discountCodeCopied: 'Code gekopieerd!',
+    discountCodeCopiedMessage: 'De code {code} is gekopieerd naar je klembord',
+    errorLoadingDiscounts: 'Fout bij het laden van kortingsacties',
+    noDiscountsAvailable: 'Geen kortingsacties beschikbaar'
   },
   dashboard: {
     welcome: 'Welkom bij EXTRAATJE',

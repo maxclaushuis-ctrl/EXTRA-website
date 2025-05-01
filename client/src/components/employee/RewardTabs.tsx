@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RewardsList } from '@/components/employee/RewardsList';
-import { DiscountsList } from '@/components/employee/DiscountsList';
+import DiscountsList from '@/components/employee/DiscountsList';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function RewardTabs() {
