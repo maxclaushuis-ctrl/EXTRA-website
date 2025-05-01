@@ -82,7 +82,7 @@ export function Discounts() {
 
   // Query: Alle kortingsacties ophalen
   const { data: discounts, isLoading, error } = useQuery<Discount[]>({
-    queryKey: ['/api/discounts'],
+    queryKey: ['/api/discounts']
   });
 
   // Form initialiseren
