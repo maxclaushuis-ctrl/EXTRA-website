@@ -14,6 +14,7 @@ export const emailTemplateTypeEnum = pgEnum('email_template_type', ['general', '
 export const twvStatusEnum = pgEnum('twv_status', ['none', 'required', 'pending', 'approved', 'rejected']);
 export const automationStatusEnum = pgEnum('automation_status', ['active', 'inactive', 'draft']);
 export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['birthday', 'new_account', 'points_threshold', 'custom']);
+export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
 
 // Gebruikers schema
 export const users = pgTable("users", {
@@ -186,6 +187,20 @@ export const automationActions = pgTable("automation_actions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Kortingsacties schema
+export const discounts = pgTable("discounts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  partner: text("partner").notNull(), // Bedrijf/Organisatie die de korting aanbiedt
+  discountCode: text("discount_code").notNull(), // De kortingscode die gebruikt kan worden
+  category: text("category"), // Categorie van de kortingsactie (bijv. 'food', 'shopping', 'entertainment')
+  status: discountStatusEnum("status").default('active').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schema's
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true, 
@@ -237,6 +252,12 @@ export const insertCampaignSchema = createInsertSchema(campaigns).omit({
   updatedAt: true
 });
 
+export const insertDiscountSchema = createInsertSchema(discounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Formulier validatie schemas
 export const userFormSchema = insertUserSchema.extend({
   password: z.string().min(8, { message: "Wachtwoord moet minstens 8 tekens bevatten" }),
@@ -270,6 +291,9 @@ export type EmailTemplate = typeof emailTemplates.$inferSelect;
 
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
 export type Campaign = typeof campaigns.$inferSelect;
+
+export type InsertDiscount = z.infer<typeof insertDiscountSchema>;
+export type Discount = typeof discounts.$inferSelect;
 
 // Automation insert schema's
 export const insertAutomationSchema = createInsertSchema(automations).omit({
