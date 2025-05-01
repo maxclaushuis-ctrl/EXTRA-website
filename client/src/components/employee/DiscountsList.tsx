@@ -23,7 +23,7 @@ export default function DiscountsList() {
     setCopiedId(discount.id);
     toast({
       title: t("discountCodeCopied"),
-      description: t("discountCodeCopiedMessage", { code: discount.discountCode }),
+      description: t("discountCodeCopiedMessage").replace("{code}", discount.discountCode),
     });
 
     // Reset copy icon after 3 seconds

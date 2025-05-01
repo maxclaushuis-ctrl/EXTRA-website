@@ -54,6 +54,22 @@ export function MainNav() {
               Dashboard
             </Link>
             <Link
+              href="/admin/rewards"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/rewards" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Beloningen
+            </Link>
+            <Link
+              href="/admin/discounts"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/discounts" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Kortingsacties
+            </Link>
+            <Link
               href="/admin/werkruimte"
               className={`transition-colors hover:text-primary ${
                 location === "/admin/werkruimte" ? "text-primary font-medium" : "text-muted-foreground"
@@ -149,6 +165,12 @@ export function MainNav() {
                   <Link href="/admin/rewards">
                     <Gift className="mr-2 h-4 w-4" />
                     Beloningen
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/discounts">
+                    <Tag className="mr-2 h-4 w-4" />
+                    Kortingsacties
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

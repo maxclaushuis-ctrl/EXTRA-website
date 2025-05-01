@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
+import DiscountsPage from "@/pages/admin/Discounts";
 import RulesPage from "@/pages/admin/Rules";
 import MarketingPage from "@/pages/admin/Marketing";
 import MarketingSimplePage from "@/pages/admin/MarketingSimple";
@@ -103,6 +104,9 @@ function Router() {
         </Route>
         <Route path="/admin/rewards">
           {() => <ProtectedRoute component={RewardsPage} adminOnly={true} />}
+        </Route>
+        <Route path="/admin/discounts">
+          {() => <ProtectedRoute component={DiscountsPage} adminOnly={true} />}
         </Route>
         <Route path="/admin/rules">
           {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}
