@@ -102,7 +102,10 @@ export function Discounts() {
   // Mutation: Nieuwe kortingsactie maken
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const res = await apiRequest('POST', '/api/discounts', data);
+      const res = await apiRequest('/api/discounts', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
       return await res.json();
     },
     onSuccess: () => {
@@ -126,7 +129,10 @@ export function Discounts() {
   // Mutation: Kortingsactie bijwerken
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
-      const res = await apiRequest('PUT', `/api/discounts/${id}`, data);
+      const res = await apiRequest(`/api/discounts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
       return await res.json();
     },
     onSuccess: () => {
@@ -150,7 +156,9 @@ export function Discounts() {
   // Mutation: Kortingsactie verwijderen
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/discounts/${id}`);
+      const res = await apiRequest(`/api/discounts/${id}`, {
+        method: 'DELETE',
+      });
       return await res.json();
     },
     onSuccess: () => {
