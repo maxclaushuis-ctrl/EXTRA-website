@@ -7,6 +7,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiRequest } from '@/lib/queryClient';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { 
   Dialog, 
   DialogContent, 
@@ -62,7 +63,8 @@ import {
 const discountFormSchema = z.object({
   name: z.string().min(2, { message: 'Naam moet minstens 2 tekens bevatten' }),
   description: z.string().min(10, { message: 'Beschrijving moet minstens 10 tekens bevatten' }),
-  imageUrl: z.string().url({ message: 'Ongeldige URL voor afbeelding' }),
+  image: z.instanceof(File).optional(),
+  imageUrl: z.string().optional(),
   partner: z.string().min(2, { message: 'Partner naam moet minstens 2 tekens bevatten' }),
   discountCode: z.string().min(3, { message: 'Discount code moet minstens 3 tekens bevatten' }),
   category: z.string().min(2, { message: 'Categorie moet minstens 2 tekens bevatten' }),
@@ -79,6 +81,7 @@ export function Discounts() {
   const [currentDiscount, setCurrentDiscount] = useState<Discount | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Query: Alle kortingsacties ophalen
   const { data: discounts, isLoading, error } = useQuery<Discount[]>({
@@ -102,9 +105,23 @@ export function Discounts() {
   // Mutation: Nieuwe kortingsactie maken
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Als er een afbeelding is, deze eerst verwerken
+      let imageUrl = null;
+      if (data.image) {
+        // Voor nu gebruiken we een lokale URL, in productie zou je hier een echte API call maken
+        // om het bestand te uploaden naar een storage service
+        imageUrl = URL.createObjectURL(data.image);
+      }
+
+      // Verwijder de afbeelding uit de data, want deze sturen we niet naar de API
+      const { image, ...discountData } = data;
+
       const res = await apiRequest('/api/discounts', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...discountData,
+          imageUrl
+        }),
       });
       return await res.json();
     },
@@ -129,9 +146,23 @@ export function Discounts() {
   // Mutation: Kortingsactie bijwerken
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
+      // Als er een nieuwe afbeelding is, deze eerst verwerken
+      let imageUrl = data.imageUrl;
+      if (data.image) {
+        // Voor nu gebruiken we een lokale URL, in productie zou je hier een echte API call maken
+        // om het bestand te uploaden naar een storage service
+        imageUrl = URL.createObjectURL(data.image);
+      }
+
+      // Verwijder de afbeelding uit de data, want deze sturen we niet naar de API
+      const { image, ...discountData } = data;
+
       const res = await apiRequest(`/api/discounts/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...discountData,
+          imageUrl
+        }),
       });
       return await res.json();
     },
@@ -190,6 +221,7 @@ export function Discounts() {
   const openEditModal = (discount?: Discount) => {
     if (discount) {
       setCurrentDiscount(discount);
+      setImagePreview(discount.imageUrl || null);
       form.reset({
         name: discount.name,
         description: discount.description || '',
@@ -201,6 +233,7 @@ export function Discounts() {
       });
     } else {
       setCurrentDiscount(null);
+      setImagePreview(null);
       form.reset({
         name: '',
         description: '',
@@ -212,6 +245,17 @@ export function Discounts() {
       });
     }
     setIsEditModalOpen(true);
+  };
+
+  // Afbeelding upload handler
+  const handleImageChange = (file: File | null) => {
+    if (file) {
+      form.setValue('image', file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      form.setValue('image', undefined);
+      setImagePreview(null);
+    }
   };
 
   // Status veranderen van de korting
@@ -405,14 +449,20 @@ export function Discounts() {
 
               <FormField
                 control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
+                name="image"
+                render={({ field: { value, onChange, ...field } }) => (
                   <FormItem>
-                    <FormLabel>Afbeelding URL</FormLabel>
+                    <FormLabel>Logo afbeelding</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://voorbeeld.com/afbeelding.jpg" {...field} />
+                      <div className="space-y-4">
+                        <ImageUpload
+                          value={imagePreview}
+                          onChange={(file) => handleImageChange(file)}
+                          onRemove={() => handleImageChange(null)}
+                        />
+                      </div>
                     </FormControl>
-                    <FormDescription>URL naar een afbeelding die de kortingsactie visualiseert</FormDescription>
+                    <FormDescription>Upload een logo voor de kortingsactie</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
