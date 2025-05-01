@@ -149,6 +149,7 @@ export class MemStorage implements IStorage {
     automations: number;
     automationTriggers: number;
     automationActions: number;
+    discounts: number;
   };
 
   constructor() {
@@ -336,6 +337,27 @@ export class MemStorage implements IStorage {
       },
       pointsValue: 5,
       isActive: true
+    });
+    
+    // Initialiseer enkele kortingsacties
+    this.createDiscount({
+      name: "10% korting bij Pathé",
+      description: "Ontvang 10% korting op alle bioscoopkaartjes bij Pathé",
+      imageUrl: "https://images.unsplash.com/photo-1478720568477-152d9b164e26",
+      partner: "Pathé",
+      discountCode: "EXTRA10PATH",
+      category: "entertainment",
+      status: "active"
+    });
+    
+    this.createDiscount({
+      name: "Gratis koffie bij Starbucks",
+      description: "Ontvang een gratis koffie naar keuze bij Starbucks Amsterdam",
+      imageUrl: "https://images.unsplash.com/photo-1529892485617-25f63cd7b1e9",
+      partner: "Starbucks",
+      discountCode: "EXTRACOFFEE",
+      category: "food",
+      status: "active"
     });
   }
   
@@ -1227,6 +1249,54 @@ export class MemStorage implements IStorage {
   
   async deleteAutomationAction(id: number): Promise<boolean> {
     return this.automationActions.delete(id);
+  }
+  
+  // Discount methods implementatie
+  async createDiscount(insertDiscount: InsertDiscount): Promise<Discount> {
+    const id = this.currentIds.discounts++;
+    const now = new Date();
+    
+    const discount: Discount = {
+      id,
+      name: insertDiscount.name,
+      description: insertDiscount.description || null,
+      imageUrl: insertDiscount.imageUrl || null,
+      partner: insertDiscount.partner,
+      discountCode: insertDiscount.discountCode,
+      category: insertDiscount.category || null,
+      status: insertDiscount.status || 'active',
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.discounts.set(id, discount);
+    return discount;
+  }
+  
+  async getDiscounts(): Promise<Discount[]> {
+    return Array.from(this.discounts.values());
+  }
+  
+  async getDiscount(id: number): Promise<Discount | undefined> {
+    return this.discounts.get(id);
+  }
+  
+  async updateDiscount(id: number, discountData: Partial<InsertDiscount>): Promise<Discount | undefined> {
+    const discount = await this.getDiscount(id);
+    if (!discount) return undefined;
+    
+    const updatedDiscount: Discount = {
+      ...discount,
+      ...discountData,
+      updatedAt: new Date()
+    };
+    
+    this.discounts.set(id, updatedDiscount);
+    return updatedDiscount;
+  }
+  
+  async deleteDiscount(id: number): Promise<boolean> {
+    return this.discounts.delete(id);
   }
 }
 
