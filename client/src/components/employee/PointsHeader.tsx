@@ -49,16 +49,24 @@ export function PointsHeader() {
     };
   };
   
-  // Bereken progressie percentage
+  // Bereken progressie percentage voor de voortgangsbalk
   const calculateProgress = (pts: number) => {
     const { current, next } = getCurrentAndNextMilestone(pts);
+    
+    // Als de huidige punten precies op een mijlpaal zitten, toon 100%
+    if (pts === current && current > 0) {
+      return 100;
+    }
     
     // Bereken percentage van voortgang tussen huidige en volgende mijlpaal
     const totalRange = next - current;
     const currentProgress = pts - current;
-    const percentage = Math.floor((currentProgress / totalRange) * 100);
     
-    console.log(`Punten: ${pts}, Huidig: ${current}, Volgend: ${next}, Bereik: ${totalRange}, Voortgang: ${currentProgress}, Percentage: ${percentage}%`);
+    // Voorkom delen door nul
+    if (totalRange === 0) return 0;
+    
+    // Bereken percentage en rond af naar beneden
+    const percentage = Math.floor((currentProgress / totalRange) * 100);
     
     // Beperk percentage tussen 0 en 100
     return Math.max(0, Math.min(100, percentage));
