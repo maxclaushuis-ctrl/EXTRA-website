@@ -103,7 +103,7 @@ export function Discounts() {
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const res = await apiRequest('POST', '/api/discounts', data);
-      return res.json();
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/discounts'] });
@@ -127,7 +127,7 @@ export function Discounts() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
       const res = await apiRequest('PUT', `/api/discounts/${id}`, data);
-      return res.json();
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/discounts'] });
@@ -151,7 +151,7 @@ export function Discounts() {
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiRequest('DELETE', `/api/discounts/${id}`);
-      return res.json();
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/discounts'] });
@@ -184,11 +184,11 @@ export function Discounts() {
       setCurrentDiscount(discount);
       form.reset({
         name: discount.name,
-        description: discount.description,
+        description: discount.description || '',
         imageUrl: discount.imageUrl || '',
         partner: discount.partner,
         discountCode: discount.discountCode,
-        category: discount.category,
+        category: discount.category || '',
         status: discount.status as 'active' | 'hidden',
       });
     } else {
@@ -231,7 +231,7 @@ export function Discounts() {
       .filter(discount => 
         discount.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         discount.partner.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        discount.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (discount.description && discount.description.toLowerCase().includes(searchTerm.toLowerCase()))
       )
       .filter(discount => 
         statusFilter === 'all' || discount.status === statusFilter
@@ -308,7 +308,7 @@ export function Discounts() {
                 </div>
               </CardHeader>
               <CardContent className="pb-2">
-                <p className="text-sm text-gray-600">{discount.description}</p>
+                <p className="text-sm text-gray-600">{discount.description || ''}</p>
                 <div className="mt-3 space-y-2">
                   <div className="flex justify-between">
                     <Label>Code:</Label>
@@ -321,7 +321,7 @@ export function Discounts() {
                   </div>
                   <div className="flex justify-between">
                     <Label>Categorie:</Label>
-                    <span className="text-sm">{discount.category}</span>
+                    <span className="text-sm">{discount.category || 'Algemeen'}</span>
                   </div>
                 </div>
               </CardContent>

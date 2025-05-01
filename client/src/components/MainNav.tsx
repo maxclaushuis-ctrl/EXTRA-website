@@ -18,6 +18,7 @@ import {
   Settings,
   LogOut,
   Mail,
+  Tag,
   BarChart,
   ClipboardList,
   FileCheck,
