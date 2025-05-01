@@ -68,7 +68,7 @@ export default function DiscountsList() {
   if (!discounts || discounts.length === 0) {
     return (
       <div className="p-4 text-center">
-        <p className="text-gray-500">{t("noDiscountsAvailable")}</p>
+        <p className="text-gray-500">Geen kortingsacties beschikbaar</p>
       </div>
     );
   }

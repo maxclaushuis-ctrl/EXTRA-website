@@ -63,7 +63,7 @@ import {
 const discountFormSchema = z.object({
   name: z.string().min(2, { message: 'Naam moet minstens 2 tekens bevatten' }),
   description: z.string().min(10, { message: 'Beschrijving moet minstens 10 tekens bevatten' }),
-  image: z.instanceof(File).optional(),
+  image: z.any().optional(),
   imageUrl: z.string().optional(),
   partner: z.string().min(2, { message: 'Partner naam moet minstens 2 tekens bevatten' }),
   discountCode: z.string().min(3, { message: 'Discount code moet minstens 3 tekens bevatten' }),
@@ -447,26 +447,28 @@ export function Discounts() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field: { value, onChange, ...field } }) => (
-                  <FormItem>
-                    <FormLabel>Logo afbeelding</FormLabel>
-                    <FormControl>
-                      <div className="space-y-4">
-                        <ImageUpload
-                          value={imagePreview}
-                          onChange={(file) => handleImageChange(file)}
-                          onRemove={() => handleImageChange(null)}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormDescription>Upload een logo voor de kortingsactie</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="col-span-1 md:col-span-2">
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field: { value, onChange, ...field } }) => (
+                    <FormItem>
+                      <FormLabel>Logo afbeelding</FormLabel>
+                      <FormControl>
+                        <div className="space-y-4">
+                          <ImageUpload
+                            value={imagePreview}
+                            onChange={(file) => handleImageChange(file)}
+                            onRemove={() => handleImageChange(null)}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>Upload een logo voor de kortingsactie</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
