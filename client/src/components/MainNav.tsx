@@ -22,6 +22,11 @@ import {
   BarChart,
   ClipboardList,
   FileCheck,
+  Calendar,
+  Building,
+  MapPin,
+  Briefcase,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -53,6 +58,14 @@ export function MainNav() {
               }`}
             >
               Dashboard
+            </Link>
+            <Link
+              href="/planning/dashboard"
+              className={`transition-colors hover:text-primary ${
+                location.startsWith("/planning") ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Planning
             </Link>
             <Link
               href="/admin/rewards"
@@ -148,6 +161,45 @@ export function MainNav() {
                     Instellingen
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Planning Systeem</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href="/planning/dashboard">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Planning Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/planning/clients">
+                    <Building className="mr-2 h-4 w-4" />
+                    Opdrachtgevers
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/planning/locations">
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Locaties
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/planning/shifts">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    Diensten
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/planning/assignments">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Inschrijvingen
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/planning/staffpools">
+                    <Users className="mr-2 h-4 w-4" />
+                    Teamgroepen
+                  </Link>
+                </DropdownMenuItem>
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Andere pagina's</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
