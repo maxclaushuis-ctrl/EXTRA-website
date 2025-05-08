@@ -11,7 +11,14 @@ import {
   type Automation, type InsertAutomation,
   type AutomationTrigger, type InsertAutomationTrigger,
   type AutomationAction, type InsertAutomationAction,
-  type Discount, type InsertDiscount
+  type Discount, type InsertDiscount,
+  // Plansysteem types
+  type Client, type InsertClient,
+  type Location, type InsertLocation,
+  type Shift, type InsertShift,
+  type Assignment, type InsertAssignment,
+  type StaffPool, type InsertStaffPool,
+  type PoolMember, type InsertPoolMember
 } from "@shared/schema";
 import { createHash } from "crypto";
 
@@ -118,6 +125,59 @@ export interface IStorage {
   getDiscount(id: number): Promise<Discount | undefined>;
   updateDiscount(id: number, discountData: Partial<InsertDiscount>): Promise<Discount | undefined>;
   deleteDiscount(id: number): Promise<boolean>;
+  
+  // Client (opdrachtgever) methods
+  createClient(client: InsertClient): Promise<Client>;
+  getClients(): Promise<Client[]>;
+  getClient(id: number): Promise<Client | undefined>;
+  updateClient(id: number, clientData: Partial<InsertClient>): Promise<Client | undefined>;
+  deleteClient(id: number): Promise<boolean>;
+  searchClients(query: string): Promise<Client[]>;
+  
+  // Location methods
+  createLocation(location: InsertLocation): Promise<Location>;
+  getLocations(): Promise<Location[]>;
+  getLocationsByClientId(clientId: number): Promise<Location[]>;
+  getLocation(id: number): Promise<Location | undefined>;
+  updateLocation(id: number, locationData: Partial<InsertLocation>): Promise<Location | undefined>;
+  deleteLocation(id: number): Promise<boolean>;
+  
+  // Shift methods
+  createShift(shift: InsertShift): Promise<Shift>;
+  getShifts(): Promise<Shift[]>;
+  getShift(id: number): Promise<Shift | undefined>;
+  getShiftsByDate(date: Date): Promise<Shift[]>;
+  getShiftsByDateRange(startDate: Date, endDate: Date): Promise<Shift[]>;
+  getShiftsByClientId(clientId: number): Promise<Shift[]>;
+  updateShift(id: number, shiftData: Partial<InsertShift>): Promise<Shift | undefined>;
+  updateShiftStatus(id: number, status: string): Promise<Shift | undefined>;
+  updateShiftStaffCount(id: number, assignedStaff: number): Promise<Shift | undefined>;
+  deleteShift(id: number): Promise<boolean>;
+  
+  // Assignment methods
+  createAssignment(assignment: InsertAssignment): Promise<Assignment>;
+  getAssignments(): Promise<Assignment[]>;
+  getAssignment(id: number): Promise<Assignment | undefined>;
+  getAssignmentsByShiftId(shiftId: number): Promise<Assignment[]>;
+  getAssignmentsByUserId(userId: number): Promise<Assignment[]>;
+  updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined>;
+  updateAssignmentStatus(id: number, status: string, reason?: string): Promise<Assignment | undefined>;
+  recordCheckInOut(id: number, checkInTime?: Date, checkOutTime?: Date): Promise<Assignment | undefined>;
+  deleteAssignment(id: number): Promise<boolean>;
+  
+  // StaffPool methods
+  createStaffPool(pool: InsertStaffPool): Promise<StaffPool>;
+  getStaffPools(): Promise<StaffPool[]>;
+  getStaffPoolsByCreator(userId: number): Promise<StaffPool[]>;
+  getStaffPool(id: number): Promise<StaffPool | undefined>;
+  updateStaffPool(id: number, poolData: Partial<InsertStaffPool>): Promise<StaffPool | undefined>;
+  deleteStaffPool(id: number): Promise<boolean>;
+  
+  // PoolMember methods
+  addPoolMember(poolMember: InsertPoolMember): Promise<PoolMember>;
+  getPoolMembers(poolId: number): Promise<PoolMember[]>;
+  getPoolMemberships(userId: number): Promise<PoolMember[]>;
+  removePoolMember(poolId: number, userId: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -135,6 +195,13 @@ export class MemStorage implements IStorage {
   private automationTriggers: Map<number, AutomationTrigger>;
   private automationActions: Map<number, AutomationAction>;
   private discounts: Map<number, Discount>;
+  // Plansysteem data
+  private clients: Map<number, Client>;
+  private locations: Map<number, Location>;
+  private shifts: Map<number, Shift>;
+  private assignments: Map<number, Assignment>;
+  private staffPools: Map<number, StaffPool>;
+  private poolMembers: Map<number, PoolMember>;
   
   private currentIds: {
     applicants: number;
@@ -150,6 +217,13 @@ export class MemStorage implements IStorage {
     automationTriggers: number;
     automationActions: number;
     discounts: number;
+    // Plansysteem ids
+    clients: number;
+    locations: number;
+    shifts: number;
+    assignments: number;
+    staffPools: number;
+    poolMembers: number;
   };
 
   constructor() {
@@ -165,6 +239,15 @@ export class MemStorage implements IStorage {
     this.automations = new Map();
     this.automationTriggers = new Map();
     this.automationActions = new Map();
+    this.discounts = new Map();
+    
+    // Plansysteem maps initialiseren
+    this.clients = new Map();
+    this.locations = new Map();
+    this.shifts = new Map();
+    this.assignments = new Map();
+    this.staffPools = new Map();
+    this.poolMembers = new Map();
     
     this.currentIds = {
       applicants: 1,
@@ -180,9 +263,14 @@ export class MemStorage implements IStorage {
       automationTriggers: 1,
       automationActions: 1,
       discounts: 1,
+      // Plansysteem ids
+      clients: 1,
+      locations: 1,
+      shifts: 1,
+      assignments: 1,
+      staffPools: 1,
+      poolMembers: 1,
     };
-    
-    this.discounts = new Map();
     
     // Initialiseer een admin gebruiker
     this.createUser({
@@ -358,6 +446,209 @@ export class MemStorage implements IStorage {
       discountCode: "EXTRACOFFEE",
       category: "food",
       status: "active"
+    });
+    
+    // Initialiseer enkele klanten (opdrachtgevers)
+    const amsterdamMarriott = this.createClient({
+      name: "Amsterdam Marriott Hotel",
+      logo: "https://images.unsplash.com/photo-1564501049412-61c2a3083791",
+      description: "Luxe hotel in het centrum van Amsterdam",
+      address: "Stadhouderskade 12",
+      city: "Amsterdam",
+      postalCode: "1054 ES",
+      country: "Nederland",
+      primaryContactName: "David Cubillos",
+      primaryContactEmail: "david.cubillos@marriott.com",
+      primaryContactPhone: "020-6075555",
+      rating: 9,
+      isActive: true
+    });
+    
+    const nhHotel = this.createClient({
+      name: "NH Collection Amsterdam",
+      logo: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa",
+      description: "Hotelketen met meerdere locaties in Amsterdam",
+      address: "Stadhouderskade 7",
+      city: "Amsterdam",
+      postalCode: "1054 ES",
+      country: "Nederland",
+      primaryContactName: "Sandra Meijer",
+      primaryContactEmail: "s.meijer@nh-hotels.com",
+      primaryContactPhone: "020-5567890",
+      rating: 8,
+      isActive: true
+    });
+    
+    const pulitzer = this.createClient({
+      name: "Pulitzer Amsterdam",
+      logo: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+      description: "Boutique hotel bestaande uit 25 grachtenpanden",
+      address: "Prinsengracht 315-331",
+      city: "Amsterdam",
+      postalCode: "1016 GZ",
+      country: "Nederland",
+      primaryContactName: "Lotte de Vries",
+      primaryContactEmail: "lotte.devries@pulitzeramsterdam.com",
+      primaryContactPhone: "020-5235235",
+      rating: 9,
+      isActive: true
+    });
+    
+    // Voeg enkele locaties toe
+    const marriottCentrum = this.createLocation({
+      clientId: amsterdamMarriott.id,
+      name: "Marriott Centrum",
+      address: "Stadhouderskade 12",
+      city: "Amsterdam",
+      postalCode: "1054 ES",
+      contactName: "Receptie Marriott",
+      contactPhone: "020-6075555"
+    });
+    
+    const nhKrasnapolsky = this.createLocation({
+      clientId: nhHotel.id,
+      name: "NH Collection Grand Hotel Krasnapolsky",
+      address: "Dam 9",
+      city: "Amsterdam",
+      postalCode: "1012 JS",
+      contactName: "Receptie Krasnapolsky",
+      contactPhone: "020-5549111"
+    });
+    
+    const nhBarbizon = this.createLocation({
+      clientId: nhHotel.id,
+      name: "NH Collection Barbizon Palace",
+      address: "Prins Hendrikkade 59-72",
+      city: "Amsterdam",
+      postalCode: "1012 AD",
+      contactName: "Receptie Barbizon",
+      contactPhone: "020-5564564"
+    });
+    
+    const pulitzerMain = this.createLocation({
+      clientId: pulitzer.id,
+      name: "Pulitzer Hoofdgebouw",
+      address: "Prinsengracht 315-331",
+      city: "Amsterdam",
+      postalCode: "1016 GZ",
+      contactName: "Receptie Pulitzer",
+      contactPhone: "020-5235235"
+    });
+    
+    // Voeg enkele diensten toe
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const dayAfterTomorrow = new Date();
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+    
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    
+    this.createShift({
+      clientId: amsterdamMarriott.id,
+      locationId: marriottCentrum.id,
+      title: "Breakfast Chef",
+      description: "Bereiden van warme en koude ontbijtgerechten voor het buffet",
+      date: tomorrow,
+      startTime: "05:00",
+      endTime: "12:00",
+      hoursTotal: 7,
+      requiredStaff: 2,
+      serviceType: "keuken",
+      status: "open",
+      hourlyRate: 1450, // in centen
+      dress_code: "Chef's uniform, wordt verstrekt",
+      isFeatured: true
+    });
+    
+    this.createShift({
+      clientId: amsterdamMarriott.id,
+      locationId: marriottCentrum.id,
+      title: "Breakfast Service",
+      description: "Bedienen van gasten tijdens het ontbijt",
+      date: tomorrow,
+      startTime: "06:00",
+      endTime: "13:00",
+      hoursTotal: 7,
+      requiredStaff: 3,
+      serviceType: "bediening",
+      status: "open",
+      hourlyRate: 1350, // in centen
+      dress_code: "Zwarte broek, wit overhemd, zwarte schoenen"
+    });
+    
+    this.createShift({
+      clientId: nhHotel.id,
+      locationId: nhKrasnapolsky.id,
+      title: "Receptionist",
+      description: "Check-in en check-out van hotelgasten",
+      date: tomorrow,
+      startTime: "14:00",
+      endTime: "22:00",
+      hoursTotal: 8,
+      requiredStaff: 1,
+      serviceType: "receptie",
+      status: "open",
+      hourlyRate: 1400, // in centen
+      dress_code: "Uniform wordt verstrekt"
+    });
+    
+    this.createShift({
+      clientId: pulitzer.id,
+      locationId: pulitzerMain.id,
+      title: "Allround horeca medewerker",
+      description: "Ondersteuning in de bediening en bar tijdens een business event",
+      date: dayAfterTomorrow,
+      startTime: "16:00",
+      endTime: "23:00",
+      hoursTotal: 7,
+      requiredStaff: 4,
+      serviceType: "horeca",
+      status: "open",
+      hourlyRate: 1375, // in centen
+      dress_code: "Zwarte broek, wit overhemd, zwarte schoenen",
+      isFeatured: true
+    });
+    
+    this.createShift({
+      clientId: nhHotel.id,
+      locationId: nhBarbizon.id,
+      title: "Barista / barmedewerker",
+      description: "Bereiden van koffiespecialiteiten en cocktails in onze hotelbar",
+      date: nextWeek,
+      startTime: "15:00",
+      endTime: "23:00",
+      hoursTotal: 8,
+      requiredStaff: 2,
+      serviceType: "bediening",
+      status: "open",
+      hourlyRate: 1425, // in centen
+      dress_code: "Uniform wordt verstrekt"
+    });
+    
+    // Maak een pool aan met enkele medewerkers
+    const horecaPool = this.createStaffPool({
+      name: "Horeca Toppers",
+      description: "Ervaren horecamedewerkers met minimaal 3 jaar ervaring",
+      createdBy: 1, // admin user id
+      isPrivate: false
+    });
+    
+    // Voeg enkele medewerkers toe aan de pool
+    this.addPoolMember({
+      poolId: horecaPool.id,
+      userId: 3 // jan
+    });
+    
+    this.addPoolMember({
+      poolId: horecaPool.id,
+      userId: 4 // maria
+    });
+    
+    this.addPoolMember({
+      poolId: horecaPool.id,
+      userId: 5 // piet
     });
   }
   
@@ -1297,6 +1588,497 @@ export class MemStorage implements IStorage {
   
   async deleteDiscount(id: number): Promise<boolean> {
     return this.discounts.delete(id);
+  }
+  
+  // Client (opdrachtgever) methods
+  async createClient(insertClient: InsertClient): Promise<Client> {
+    const id = this.currentIds.clients++;
+    const now = new Date();
+    
+    const client: Client = {
+      id,
+      name: insertClient.name,
+      logo: insertClient.logo || null,
+      description: insertClient.description || null,
+      address: insertClient.address || null,
+      city: insertClient.city || null,
+      postalCode: insertClient.postalCode || null,
+      country: insertClient.country || "Nederland",
+      primaryContactName: insertClient.primaryContactName || null,
+      primaryContactEmail: insertClient.primaryContactEmail || null,
+      primaryContactPhone: insertClient.primaryContactPhone || null,
+      notes: insertClient.notes || null,
+      rating: insertClient.rating || null,
+      isActive: insertClient.isActive !== undefined ? insertClient.isActive : true,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.clients.set(id, client);
+    return client;
+  }
+  
+  async getClients(): Promise<Client[]> {
+    return Array.from(this.clients.values());
+  }
+  
+  async getClient(id: number): Promise<Client | undefined> {
+    return this.clients.get(id);
+  }
+  
+  async updateClient(id: number, clientData: Partial<InsertClient>): Promise<Client | undefined> {
+    const client = await this.getClient(id);
+    if (!client) return undefined;
+    
+    const now = new Date();
+    
+    const updatedClient: Client = {
+      ...client,
+      ...clientData,
+      updatedAt: now
+    };
+    
+    this.clients.set(id, updatedClient);
+    return updatedClient;
+  }
+  
+  async deleteClient(id: number): Promise<boolean> {
+    return this.clients.delete(id);
+  }
+  
+  async searchClients(query: string): Promise<Client[]> {
+    query = query.toLowerCase();
+    return Array.from(this.clients.values()).filter(
+      (client) => 
+        client.name.toLowerCase().includes(query) ||
+        (client.description && client.description.toLowerCase().includes(query)) ||
+        (client.city && client.city.toLowerCase().includes(query)) ||
+        (client.primaryContactName && client.primaryContactName.toLowerCase().includes(query))
+    );
+  }
+  
+  // Location methods
+  async createLocation(insertLocation: InsertLocation): Promise<Location> {
+    const id = this.currentIds.locations++;
+    const now = new Date();
+    
+    const location: Location = {
+      id,
+      clientId: insertLocation.clientId,
+      name: insertLocation.name,
+      address: insertLocation.address || null,
+      city: insertLocation.city || null,
+      postalCode: insertLocation.postalCode || null,
+      country: insertLocation.country || "Nederland",
+      contactName: insertLocation.contactName || null,
+      contactEmail: insertLocation.contactEmail || null,
+      contactPhone: insertLocation.contactPhone || null,
+      notes: insertLocation.notes || null,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.locations.set(id, location);
+    return location;
+  }
+  
+  async getLocations(): Promise<Location[]> {
+    return Array.from(this.locations.values());
+  }
+  
+  async getLocationsByClientId(clientId: number): Promise<Location[]> {
+    return Array.from(this.locations.values()).filter(
+      (location) => location.clientId === clientId
+    );
+  }
+  
+  async getLocation(id: number): Promise<Location | undefined> {
+    return this.locations.get(id);
+  }
+  
+  async updateLocation(id: number, locationData: Partial<InsertLocation>): Promise<Location | undefined> {
+    const location = await this.getLocation(id);
+    if (!location) return undefined;
+    
+    const now = new Date();
+    
+    const updatedLocation: Location = {
+      ...location,
+      ...locationData,
+      updatedAt: now
+    };
+    
+    this.locations.set(id, updatedLocation);
+    return updatedLocation;
+  }
+  
+  async deleteLocation(id: number): Promise<boolean> {
+    return this.locations.delete(id);
+  }
+  
+  // Shift methods
+  async createShift(insertShift: InsertShift): Promise<Shift> {
+    const id = this.currentIds.shifts++;
+    const now = new Date();
+    
+    // Bereken het totaal aantal uren tussen start- en eindtijd
+    const startHours = typeof insertShift.startTime === 'string' 
+      ? parseInt(insertShift.startTime.split(':')[0], 10) 
+      : 0;
+    const endHours = typeof insertShift.endTime === 'string' 
+      ? parseInt(insertShift.endTime.split(':')[0], 10) 
+      : 0;
+    const hoursTotal = endHours - startHours;
+    
+    const shift: Shift = {
+      id,
+      clientId: insertShift.clientId,
+      locationId: insertShift.locationId || null,
+      title: insertShift.title,
+      description: insertShift.description || null,
+      date: insertShift.date,
+      startTime: insertShift.startTime,
+      endTime: insertShift.endTime,
+      hoursTotal: insertShift.hoursTotal || hoursTotal,
+      requiredStaff: insertShift.requiredStaff || 1,
+      assignedStaff: insertShift.assignedStaff || 0,
+      serviceType: insertShift.serviceType,
+      status: insertShift.status || 'open',
+      hourlyRate: insertShift.hourlyRate || null,
+      notes: insertShift.notes || null,
+      dress_code: insertShift.dress_code || null,
+      isFeatured: insertShift.isFeatured || false,
+      isHoliday: insertShift.isHoliday || false,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.shifts.set(id, shift);
+    return shift;
+  }
+  
+  async getShifts(): Promise<Shift[]> {
+    return Array.from(this.shifts.values());
+  }
+  
+  async getShift(id: number): Promise<Shift | undefined> {
+    return this.shifts.get(id);
+  }
+  
+  async getShiftsByDate(date: Date): Promise<Shift[]> {
+    const dateString = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    
+    return Array.from(this.shifts.values()).filter(shift => {
+      const shiftDateString = new Date(shift.date).toISOString().split('T')[0];
+      return shiftDateString === dateString;
+    });
+  }
+  
+  async getShiftsByDateRange(startDate: Date, endDate: Date): Promise<Shift[]> {
+    return Array.from(this.shifts.values()).filter(shift => {
+      const shiftDate = new Date(shift.date);
+      return shiftDate >= startDate && shiftDate <= endDate;
+    });
+  }
+  
+  async getShiftsByClientId(clientId: number): Promise<Shift[]> {
+    return Array.from(this.shifts.values()).filter(
+      (shift) => shift.clientId === clientId
+    );
+  }
+  
+  async updateShift(id: number, shiftData: Partial<InsertShift>): Promise<Shift | undefined> {
+    const shift = await this.getShift(id);
+    if (!shift) return undefined;
+    
+    const now = new Date();
+    
+    const updatedShift: Shift = {
+      ...shift,
+      ...shiftData,
+      updatedAt: now
+    };
+    
+    this.shifts.set(id, updatedShift);
+    return updatedShift;
+  }
+  
+  async updateShiftStatus(id: number, status: string): Promise<Shift | undefined> {
+    const shift = await this.getShift(id);
+    if (!shift) return undefined;
+    
+    const now = new Date();
+    
+    const updatedShift: Shift = {
+      ...shift,
+      status: status as any, // We casten naar 'any' omdat TypeScript anders klaagt over enum types
+      updatedAt: now
+    };
+    
+    this.shifts.set(id, updatedShift);
+    return updatedShift;
+  }
+  
+  async updateShiftStaffCount(id: number, assignedStaff: number): Promise<Shift | undefined> {
+    const shift = await this.getShift(id);
+    if (!shift) return undefined;
+    
+    const now = new Date();
+    
+    const updatedShift: Shift = {
+      ...shift,
+      assignedStaff,
+      updatedAt: now
+    };
+    
+    this.shifts.set(id, updatedShift);
+    return updatedShift;
+  }
+  
+  async deleteShift(id: number): Promise<boolean> {
+    return this.shifts.delete(id);
+  }
+  
+  // Assignment methods
+  async createAssignment(insertAssignment: InsertAssignment): Promise<Assignment> {
+    const id = this.currentIds.assignments++;
+    const now = new Date();
+    
+    const assignment: Assignment = {
+      id,
+      shiftId: insertAssignment.shiftId,
+      userId: insertAssignment.userId,
+      status: insertAssignment.status || 'pending',
+      assignedAt: now,
+      confirmedAt: insertAssignment.confirmedAt || null,
+      canceledAt: insertAssignment.canceledAt || null,
+      cancelReason: insertAssignment.cancelReason || null,
+      notes: insertAssignment.notes || null,
+      checkInTime: insertAssignment.checkInTime || null,
+      checkOutTime: insertAssignment.checkOutTime || null,
+      actualHours: insertAssignment.actualHours || null,
+      rating: insertAssignment.rating || null,
+      ratingNotes: insertAssignment.ratingNotes || null,
+      updatedAt: now
+    };
+    
+    this.assignments.set(id, assignment);
+    
+    // Update het aantal toegewezen personen voor deze shift
+    const shift = await this.getShift(assignment.shiftId);
+    if (shift) {
+      await this.updateShiftStaffCount(shift.id, shift.assignedStaff + 1);
+    }
+    
+    return assignment;
+  }
+  
+  async getAssignments(): Promise<Assignment[]> {
+    return Array.from(this.assignments.values());
+  }
+  
+  async getAssignment(id: number): Promise<Assignment | undefined> {
+    return this.assignments.get(id);
+  }
+  
+  async getAssignmentsByShiftId(shiftId: number): Promise<Assignment[]> {
+    return Array.from(this.assignments.values()).filter(
+      (assignment) => assignment.shiftId === shiftId
+    );
+  }
+  
+  async getAssignmentsByUserId(userId: number): Promise<Assignment[]> {
+    return Array.from(this.assignments.values()).filter(
+      (assignment) => assignment.userId === userId
+    );
+  }
+  
+  async updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined> {
+    const assignment = await this.getAssignment(id);
+    if (!assignment) return undefined;
+    
+    const now = new Date();
+    
+    const updatedAssignment: Assignment = {
+      ...assignment,
+      ...assignmentData,
+      updatedAt: now
+    };
+    
+    this.assignments.set(id, updatedAssignment);
+    return updatedAssignment;
+  }
+  
+  async updateAssignmentStatus(id: number, status: string, reason?: string): Promise<Assignment | undefined> {
+    const assignment = await this.getAssignment(id);
+    if (!assignment) return undefined;
+    
+    const now = new Date();
+    
+    const updatedAssignment: Assignment = {
+      ...assignment,
+      status: status as any, // Casten naar 'any' vanwege TypeScript type checking
+      updatedAt: now
+    };
+    
+    // Afhankelijk van de nieuwe status, update relevante velden
+    if (status === 'confirmed') {
+      updatedAssignment.confirmedAt = now;
+    } else if (status === 'canceled') {
+      updatedAssignment.canceledAt = now;
+      if (reason) {
+        updatedAssignment.cancelReason = reason;
+      }
+      
+      // Als een assignment wordt geannuleerd, update het aantal toegewezen personen
+      const shift = await this.getShift(assignment.shiftId);
+      if (shift && shift.assignedStaff > 0) {
+        await this.updateShiftStaffCount(shift.id, shift.assignedStaff - 1);
+      }
+    } else if (status === 'completed') {
+      // Als een assignment is voltooid, update het checkOutTime als dat nog niet is ingesteld
+      if (!updatedAssignment.checkOutTime) {
+        updatedAssignment.checkOutTime = now;
+      }
+    }
+    
+    this.assignments.set(id, updatedAssignment);
+    return updatedAssignment;
+  }
+  
+  async recordCheckInOut(id: number, checkInTime?: Date, checkOutTime?: Date): Promise<Assignment | undefined> {
+    const assignment = await this.getAssignment(id);
+    if (!assignment) return undefined;
+    
+    const now = new Date();
+    
+    const updatedAssignment: Assignment = {
+      ...assignment,
+      updatedAt: now
+    };
+    
+    if (checkInTime) {
+      updatedAssignment.checkInTime = checkInTime;
+    }
+    
+    if (checkOutTime) {
+      updatedAssignment.checkOutTime = checkOutTime;
+      
+      // Bereken werkelijke gewerkte uren als beide tijdstippen beschikbaar zijn
+      if (updatedAssignment.checkInTime) {
+        const startTime = updatedAssignment.checkInTime.getTime();
+        const endTime = checkOutTime.getTime();
+        const hoursWorked = Math.round((endTime - startTime) / (1000 * 60 * 60));
+        updatedAssignment.actualHours = hoursWorked;
+      }
+    }
+    
+    this.assignments.set(id, updatedAssignment);
+    return updatedAssignment;
+  }
+  
+  async deleteAssignment(id: number): Promise<boolean> {
+    const assignment = await this.getAssignment(id);
+    if (!assignment) return false;
+    
+    // Update het aantal toegewezen personen voor deze shift
+    const shift = await this.getShift(assignment.shiftId);
+    if (shift && shift.assignedStaff > 0) {
+      await this.updateShiftStaffCount(shift.id, shift.assignedStaff - 1);
+    }
+    
+    return this.assignments.delete(id);
+  }
+  
+  // StaffPool methods
+  async createStaffPool(insertPool: InsertStaffPool): Promise<StaffPool> {
+    const id = this.currentIds.staffPools++;
+    const now = new Date();
+    
+    const pool: StaffPool = {
+      id,
+      name: insertPool.name,
+      description: insertPool.description || null,
+      createdBy: insertPool.createdBy,
+      isPrivate: insertPool.isPrivate || false,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.staffPools.set(id, pool);
+    return pool;
+  }
+  
+  async getStaffPools(): Promise<StaffPool[]> {
+    return Array.from(this.staffPools.values());
+  }
+  
+  async getStaffPoolsByCreator(userId: number): Promise<StaffPool[]> {
+    return Array.from(this.staffPools.values()).filter(
+      (pool) => pool.createdBy === userId
+    );
+  }
+  
+  async getStaffPool(id: number): Promise<StaffPool | undefined> {
+    return this.staffPools.get(id);
+  }
+  
+  async updateStaffPool(id: number, poolData: Partial<InsertStaffPool>): Promise<StaffPool | undefined> {
+    const pool = await this.getStaffPool(id);
+    if (!pool) return undefined;
+    
+    const now = new Date();
+    
+    const updatedPool: StaffPool = {
+      ...pool,
+      ...poolData,
+      updatedAt: now
+    };
+    
+    this.staffPools.set(id, updatedPool);
+    return updatedPool;
+  }
+  
+  async deleteStaffPool(id: number): Promise<boolean> {
+    return this.staffPools.delete(id);
+  }
+  
+  // PoolMember methods
+  async addPoolMember(insertPoolMember: InsertPoolMember): Promise<PoolMember> {
+    const id = this.currentIds.poolMembers++;
+    const now = new Date();
+    
+    const poolMember: PoolMember = {
+      id,
+      poolId: insertPoolMember.poolId,
+      userId: insertPoolMember.userId,
+      addedAt: now
+    };
+    
+    this.poolMembers.set(id, poolMember);
+    return poolMember;
+  }
+  
+  async getPoolMembers(poolId: number): Promise<PoolMember[]> {
+    return Array.from(this.poolMembers.values()).filter(
+      (member) => member.poolId === poolId
+    );
+  }
+  
+  async getPoolMemberships(userId: number): Promise<PoolMember[]> {
+    return Array.from(this.poolMembers.values()).filter(
+      (member) => member.userId === userId
+    );
+  }
+  
+  async removePoolMember(poolId: number, userId: number): Promise<boolean> {
+    const membership = Array.from(this.poolMembers.values()).find(
+      (member) => member.poolId === poolId && member.userId === userId
+    );
+    
+    if (!membership) return false;
+    
+    return this.poolMembers.delete(membership.id);
   }
 }
 
