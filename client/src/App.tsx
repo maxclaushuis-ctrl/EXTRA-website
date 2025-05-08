@@ -22,6 +22,16 @@ import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import History from "@/pages/user/History";
 
+// Planning module
+import PlanningDashboard from "@/pages/planning/Dashboard";
+import ClientsPage from "@/pages/planning/Clients";
+import ClientDetailPage from "@/pages/planning/ClientDetail";
+import LocationsPage from "@/pages/planning/Locations";
+import ShiftsPage from "@/pages/planning/Shifts";
+import ShiftDetailPage from "@/pages/planning/ShiftDetail";
+import AssignmentsPage from "@/pages/planning/Assignments";
+import StaffPoolsPage from "@/pages/planning/StaffPools";
+
 // Contexts
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MilestoneProvider } from "@/contexts/MilestoneContext";
@@ -125,6 +135,32 @@ function Router() {
         </Route>
         <Route path="/admin/twv">
           {() => <ProtectedRoute component={TWVEenvoudigPage} adminOnly={true} />}
+        </Route>
+
+        {/* Planning routes - toegankelijk voor admins en employees */}
+        <Route path="/planning">
+          {() => <ProtectedRoute component={PlanningDashboard} />}
+        </Route>
+        <Route path="/planning/clients">
+          {() => <ProtectedRoute component={ClientsPage} />}
+        </Route>
+        <Route path="/planning/clients/:id">
+          {({ params }) => <ProtectedRoute component={ClientDetailPage} id={params.id} />}
+        </Route>
+        <Route path="/planning/locations">
+          {() => <ProtectedRoute component={LocationsPage} />}
+        </Route>
+        <Route path="/planning/shifts">
+          {() => <ProtectedRoute component={ShiftsPage} />}
+        </Route>
+        <Route path="/planning/shifts/:id">
+          {({ params }) => <ProtectedRoute component={ShiftDetailPage} id={params.id} />}
+        </Route>
+        <Route path="/planning/assignments">
+          {() => <ProtectedRoute component={AssignmentsPage} />}
+        </Route>
+        <Route path="/planning/staffpools">
+          {() => <ProtectedRoute component={StaffPoolsPage} />}
         </Route>
         
         <Route component={NotFound} />
