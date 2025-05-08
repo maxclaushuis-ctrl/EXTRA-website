@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,6 +15,11 @@ export const twvStatusEnum = pgEnum('twv_status', ['none', 'required', 'pending'
 export const automationStatusEnum = pgEnum('automation_status', ['active', 'inactive', 'draft']);
 export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['birthday', 'new_account', 'points_threshold', 'custom']);
 export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
+
+// Plansysteem enumeraties
+export const shiftStatusEnum = pgEnum('shift_status', ['open', 'filled', 'cancelled']);
+export const serviceTypeEnum = pgEnum('service_type', ['horeca', 'bediening', 'keuken', 'receptie', 'schoonmaak', 'other']);
+export const assignmentStatusEnum = pgEnum('assignment_status', ['pending', 'confirmed', 'canceled', 'completed', 'no_show']);
 
 // Gebruikers schema
 export const users = pgTable("users", {
@@ -201,6 +206,105 @@ export const discounts = pgTable("discounts", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Opdrachtgevers (klanten) schema
+export const clients = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  logo: text("logo"), // URL naar logo afbeelding
+  description: text("description"),
+  address: text("address"),
+  city: text("city"),
+  postalCode: text("postal_code"),
+  country: text("country").default("Nederland"),
+  primaryContactName: text("primary_contact_name"),
+  primaryContactEmail: text("primary_contact_email"),
+  primaryContactPhone: text("primary_contact_phone"),
+  notes: text("notes"),
+  rating: integer("rating"), // 1-10 beoordeling van de opdrachtgever
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Locaties schema (bijv. verschillende vestigingen van een client)
+export const locations = pgTable("locations", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").notNull().references(() => clients.id),
+  name: text("name").notNull(),
+  address: text("address"),
+  city: text("city"),
+  postalCode: text("postal_code"),
+  country: text("country").default("Nederland"),
+  contactName: text("contact_name"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Diensten/shifts schema
+export const shifts = pgTable("shifts", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").notNull().references(() => clients.id),
+  locationId: integer("location_id").references(() => locations.id),
+  title: text("title").notNull(), // Bijv. "Breakfast Chef", "Allround horeca medewerker"
+  description: text("description"),
+  date: date("date").notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  hoursTotal: integer("hours_total").notNull(), // Berekende uren tussen start/eind
+  requiredStaff: integer("required_staff").default(1).notNull(), // Aantal benodigde medewerkers
+  assignedStaff: integer("assigned_staff").default(0), // Aantal toegewezen medewerkers
+  serviceType: serviceTypeEnum("service_type").notNull(),
+  status: shiftStatusEnum("status").default('open').notNull(),
+  hourlyRate: integer("hourly_rate"), // Uurtarief in centen
+  notes: text("notes"),
+  dress_code: text("dress_code"), // Kledingvoorschriften
+  isFeatured: boolean("is_featured").default(false), // Hoofdshift (visueel onderscheiden)
+  isHoliday: boolean("is_holiday").default(false), // Is het een feestdag (visueel onderscheiden)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Toewijzingen van personeel aan shifts
+export const assignments = pgTable("assignments", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull().references(() => shifts.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  status: assignmentStatusEnum("status").default('pending').notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  confirmedAt: timestamp("confirmed_at"),
+  canceledAt: timestamp("canceled_at"),
+  cancelReason: text("cancel_reason"), // Reden van annulering indien geannuleerd
+  notes: text("notes"),
+  checkInTime: timestamp("check_in_time"), // Tijdstip van inchecken op locatie
+  checkOutTime: timestamp("check_out_time"), // Tijdstip van uitchecken op locatie
+  actualHours: integer("actual_hours"), // Werkelijk gewerkte uren (kan afwijken van geplande uren)
+  rating: integer("rating"), // 1-5 beoordeling voor de medewerker
+  ratingNotes: text("rating_notes"), // Feedback over de medewerker
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Groepen/pools van personeel
+export const staffPools = pgTable("staff_pools", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isPrivate: boolean("is_private").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Leden van pools
+export const poolMembers = pgTable("pool_members", {
+  id: serial("id").primaryKey(),
+  poolId: integer("pool_id").notNull().references(() => staffPools.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+});
+
 // Insert schema's
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true, 
@@ -356,3 +460,58 @@ export const applicantFormSchema = insertApplicantSchema.extend({
 export type InsertApplicant = z.infer<typeof insertApplicantSchema>;
 export type ApplicantForm = z.infer<typeof applicantFormSchema>;
 export type Applicant = typeof applicants.$inferSelect;
+
+// Plansysteem insert schema's
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertLocationSchema = createInsertSchema(locations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertShiftSchema = createInsertSchema(shifts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAssignmentSchema = createInsertSchema(assignments).omit({
+  id: true,
+  assignedAt: true,
+  updatedAt: true
+});
+
+export const insertStaffPoolSchema = createInsertSchema(staffPools).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPoolMemberSchema = createInsertSchema(poolMembers).omit({
+  id: true,
+  addedAt: true
+});
+
+// Plansysteem type definities
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Client = typeof clients.$inferSelect;
+
+export type InsertLocation = z.infer<typeof insertLocationSchema>;
+export type Location = typeof locations.$inferSelect;
+
+export type InsertShift = z.infer<typeof insertShiftSchema>;
+export type Shift = typeof shifts.$inferSelect;
+
+export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
+export type Assignment = typeof assignments.$inferSelect;
+
+export type InsertStaffPool = z.infer<typeof insertStaffPoolSchema>;
+export type StaffPool = typeof staffPools.$inferSelect;
+
+export type InsertPoolMember = z.infer<typeof insertPoolMemberSchema>;
+export type PoolMember = typeof poolMembers.$inferSelect;
