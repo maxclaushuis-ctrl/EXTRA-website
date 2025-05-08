@@ -1,0 +1,57 @@
+Prompt voor Replit – Bouw een plansysteem voor een uitzendbureau
+
+Ik wil dat je een modern en schaalbaar plansysteem ontwikkelt voor een uitzendbureau. Het systeem moet:
+	•	Gebruiksvriendelijk zijn (zowel desktop als mobiel)
+	•	Visueel aantrekkelijk en overzichtelijk ontworpen zijn (strak design met duidelijke UI/UX)
+	•	Grote hoeveelheden data kunnen verwerken en opslaan zonder performance issues
+
+⸻
+
+1. Inloggen en dashboard
+	•	Start met een inlogscherm (admin & user accounts)
+	•	Na het inloggen kom je terecht op het dashboard, met overzichtelijke navigatie naar:
+	•	Planboard
+	•	Opdrachtgevers
+	•	Medewerkers
+	•	Rapportages/statistieken (eventueel in latere fase)
+
+⸻
+
+2. Planboard (de kern van het systeem)
+	•	Toon een weekoverzicht met alle ingeplande diensten per dag
+	•	Per dienst zijn de volgende gegevens zichtbaar:
+	•	Dienstomschrijving en opdrachtgever
+	•	Diensttijden
+	•	Naam van de medewerker óf de mogelijkheid om iemand toe te voegen
+	•	Eventuele opmerkingen
+	•	Rechts op het scherm een verticale zijbalk met actieve medewerkers
+	•	Sleep & drop-functionaliteit om iemand snel in te plannen
+	•	Als je op een dienst klikt als admin:
+	•	Kun je de dienst bewerken (tijd, datum, omschrijving, aantal mensen)
+	•	Kun je medewerkers toevoegen/verwijderen
+	•	Kun je een favoriete pool uitnodigen (zie screenshots)
+	•	Wanneer een medewerker wordt verwijderd van een dienst:
+	•	Verschijnt een verplichte pop-up met de reden van afmelding
+	•	Het planboard moet zo gebouwd worden dat het AI-ready is:
+	•	Structuur en output moeten geschikt zijn voor een AI-agent die op basis van voorkeuren automatisch diensten kan toewijzen
+
+⸻
+
+3. Tabblad: Opdrachtgevers
+	•	Mogelijkheid om zelf opdrachtgevers toe te voegen en beheren
+	•	Overzichtslijst met alle opdrachtgevers
+	•	Bij het aanklikken van een opdrachtgever zie je:
+	•	Bedrijfsgegevens
+	•	Tarieven per type dienst
+	•	Historie en notities
+	•	Contactpersonen
+	•	Afspraken over werkwijze (denk aan kleding, aan- en afmelden, etc.)
+
+⸻
+
+4. Extra wensen & technische vereisten
+	•	Systemen moeten goed schaalbaar zijn (geschikt voor >10.000 diensten per maand)
+	•	Data moet veilig opgeslagen worden (gebruik bijvoorbeeld Firebase of Supabase)
+	•	In latere fase moet er eventueel een mobiele app-versie van gemaakt kunnen worden
+	•	Gebruik frameworks zoals React of Vue voor frontend, en Node.js of Django voor backend (eventueel met REST API of GraphQL)
+	•	Denk alvast na over mogelijke export van gegevens (CSV/Excel) en rechtenstructuur (admin, planner, opdrachtgever)
