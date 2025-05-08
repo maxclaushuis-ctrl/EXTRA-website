@@ -69,6 +69,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 // Notificatie en navigatie componenten
 import NotificationToast from "@/components/NotificationToast";
 import { MainNav } from "@/components/MainNav";
+import { PlanningLayout } from "@/components/planning/PlanningLayout";
 
 function Router() {
   const { isAuthenticated, user } = useAuth();
@@ -77,10 +78,13 @@ function Router() {
   // Bepaal of we op de medewerker dashboard pagina zijn, daar willen we geen navigatie tonen
   const isEmployeeDashboard = location === '/dashboard' && user?.role !== 'admin';
   
+  // Check of we op een planningspagina zijn
+  const isPlanningPage = location.startsWith('/planning');
+  
   return (
     <>
       {/* Notificatie en navigatie, maar niet op employee dashboard */}
-      {isAuthenticated && !isEmployeeDashboard && (
+      {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && (
         <>
           <MainNav />
           <NotificationToast />
@@ -137,30 +141,103 @@ function Router() {
           {() => <ProtectedRoute component={TWVEenvoudigPage} adminOnly={true} />}
         </Route>
 
-        {/* Planning routes - toegankelijk voor admins en employees */}
+        {/* Planning routes met speciale PlanningLayout wrapper */}
         <Route path="/planning">
-          {() => <ProtectedRoute component={PlanningDashboard} />}
+          {() => {
+            const [_, navigate] = useLocation();
+            useEffect(() => {
+              navigate("/planning/dashboard");
+            }, [navigate]);
+            return null;
+          }}
         </Route>
-        <Route path="/planning/clients">
-          {() => <ProtectedRoute component={ClientsPage} />}
+        <Route path="/planning/dashboard">
+          {() => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <PlanningDashboard {...props} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
         </Route>
         <Route path="/planning/clients/:id">
-          {({ params }) => <ProtectedRoute component={ClientDetailPage} id={params.id} />}
+          {({ params }) => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <ClientDetailPage {...props} id={params.id} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
+        </Route>
+        <Route path="/planning/clients">
+          {() => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <ClientsPage {...props} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
         </Route>
         <Route path="/planning/locations">
-          {() => <ProtectedRoute component={LocationsPage} />}
-        </Route>
-        <Route path="/planning/shifts">
-          {() => <ProtectedRoute component={ShiftsPage} />}
+          {() => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <LocationsPage {...props} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
         </Route>
         <Route path="/planning/shifts/:id">
-          {({ params }) => <ProtectedRoute component={ShiftDetailPage} id={params.id} />}
+          {({ params }) => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <ShiftDetailPage {...props} id={params.id} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
+        </Route>
+        <Route path="/planning/shifts">
+          {() => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <ShiftsPage {...props} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
         </Route>
         <Route path="/planning/assignments">
-          {() => <ProtectedRoute component={AssignmentsPage} />}
+          {() => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <AssignmentsPage {...props} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
         </Route>
         <Route path="/planning/staffpools">
-          {() => <ProtectedRoute component={StaffPoolsPage} />}
+          {() => (
+            <ProtectedRoute 
+              component={(props) => (
+                <PlanningLayout>
+                  <StaffPoolsPage {...props} />
+                </PlanningLayout>
+              )} 
+            />
+          )}
         </Route>
         
         <Route component={NotFound} />

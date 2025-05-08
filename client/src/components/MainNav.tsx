@@ -61,11 +61,10 @@ export function MainNav() {
             </Link>
             <Link
               href="/planning/dashboard"
-              className={`transition-colors hover:text-primary ${
-                location.startsWith("/planning") ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center transition-colors"
             >
-              Planning
+              <Calendar className="mr-1 h-4 w-4" />
+              Planning Systeem
             </Link>
             <Link
               href="/admin/rewards"
@@ -163,9 +162,9 @@ export function MainNav() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Planning Systeem</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <Link href="/planning/dashboard">
-                    <Calendar className="mr-2 h-4 w-4" />
+                <DropdownMenuItem asChild className="bg-blue-50 hover:bg-blue-100">
+                  <Link href="/planning/dashboard" className="font-medium text-blue-600">
+                    <Calendar className="mr-2 h-4 w-4 text-blue-600" />
                     Planning Dashboard
                   </Link>
                 </DropdownMenuItem>
