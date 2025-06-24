@@ -1,8 +1,8 @@
-import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/contexts/AuthContext';
 import Leaderboard from '@/components/Leaderboard';
 
 export default function LeaderboardPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   if (!user) {
     return null;

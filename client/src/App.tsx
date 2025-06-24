@@ -21,6 +21,7 @@ import TWVEenvoudigPage from "@/pages/admin/TWVEenvoudig";
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import History from "@/pages/user/History";
+import LeaderboardPage from "@/pages/LeaderboardPage";
 
 // Planning module
 import PlanningDashboard from "@/pages/planning/Dashboard";
@@ -107,6 +108,9 @@ function Router() {
         </Route>
         <Route path="/history">
           {() => <ProtectedRoute component={History} />}
+        </Route>
+        <Route path="/leaderboard">
+          {() => <ProtectedRoute component={LeaderboardPage} />}
         </Route>
         
         {/* Admin routes */}

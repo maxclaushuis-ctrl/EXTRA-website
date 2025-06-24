@@ -252,6 +252,40 @@ export function MainNav() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            
+            {/* Employee navigation items */}
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard">
+                <Home className="mr-2 h-4 w-4" />
+                Dashboard
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/rewards">
+                <Gift className="mr-2 h-4 w-4" />
+                Beloningen
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/leaderboard">
+                <Trophy className="mr-2 h-4 w-4" />
+                Leaderboard
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/history">
+                <Clock className="mr-2 h-4 w-4" />
+                Geschiedenis
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <User className="mr-2 h-4 w-4" />
+                Profiel
+              </Link>
+            </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
               Uitloggen
