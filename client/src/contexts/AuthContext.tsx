@@ -228,7 +228,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               
               const updatedUser = {
                 ...prevUser,
-                points: message.data.points
+                points: message.data.points,
+                monthlyPoints: message.data.monthlyPoints || prevUser.monthlyPoints || 0
               };
               
               console.log('Gebruiker bijgewerkt met nieuwe punten:', updatedUser);
