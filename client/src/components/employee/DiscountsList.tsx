@@ -16,6 +16,15 @@ export default function DiscountsList() {
 
   const { data: discounts, isLoading, error } = useQuery<Discount[]>({
     queryKey: ["/api/discounts"],
+    queryFn: async () => {
+      const response = await fetch('/api/discounts', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    }
   });
 
   const handleCopyCode = (discount: Discount) => {
@@ -58,9 +67,11 @@ export default function DiscountsList() {
   }
 
   if (error) {
+    console.error('Discount loading error:', error);
     return (
       <div className="p-4 text-center">
         <p className="text-red-500">Fout bij het laden van kortingsacties</p>
+        <p className="text-sm text-gray-400 mt-2">{error.message}</p>
       </div>
     );
   }
