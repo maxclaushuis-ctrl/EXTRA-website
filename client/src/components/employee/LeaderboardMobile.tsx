@@ -160,13 +160,13 @@ export function LeaderboardMobile() {
   const getWinnerData = () => {
     if (previousWinner) {
       return {
-        name: `${previousWinner.firstName} ${previousWinner.lastName[0]}.`,
+        name: `${previousWinner.firstName} ${previousWinner.lastName}`,
         points: previousWinner.monthlyPoints || 0
       };
     }
     // Fallback to user's name as example
     return {
-      name: `${user?.firstName || 'Extra'} ${(user?.lastName || 'Medewerker')[0]}.`,
+      name: `${user?.firstName || 'Extra'} ${user?.lastName || 'Medewerker'}`,
       points: 1250
     };
   };
@@ -175,16 +175,16 @@ export function LeaderboardMobile() {
 
   return (
     <div className="space-y-4">
-      {/* Previous month winner */}
-      <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
-        <div className="flex items-center gap-3">
-          <Crown className="h-5 w-5 text-yellow-400" />
+      {/* Previous month winner - more prominent */}
+      <div className="p-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg border border-blue-500">
+        <div className="flex items-center gap-4">
+          <Crown className="h-8 w-8 text-yellow-400" />
           <div className="flex-1">
-            <p className="text-gray-400 text-sm">Topper van {getCurrentMonth()}</p>
-            <p className="text-white text-base font-medium">
+            <p className="text-blue-200 text-sm font-medium">Topper van {getCurrentMonth()}</p>
+            <p className="text-white text-xl font-bold">
               {winnerData.name}
             </p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-blue-200 text-base font-medium">
               {winnerData.points} punten
             </p>
           </div>
@@ -258,10 +258,10 @@ export function LeaderboardMobile() {
                 {/* User info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-base font-medium truncate">
-                    {isCurrentUser ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName[0]}.`}
+                    {isCurrentUser ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName}`}
                   </p>
                   <p className="text-gray-400 text-sm">
-                    {leaderUser.monthlyPoints} punten
+                    {leaderUser.monthlyPoints || 0} punten
                   </p>
                 </div>
 
