@@ -156,25 +156,40 @@ export function LeaderboardMobile() {
     return months[previousMonth];
   };
 
+  // Get winner data - use fallback if no previousWinner
+  const getWinnerData = () => {
+    if (previousWinner) {
+      return {
+        name: `${previousWinner.firstName} ${previousWinner.lastName[0]}.`,
+        points: previousWinner.monthlyPoints || 0
+      };
+    }
+    // Fallback to user's name as example
+    return {
+      name: `${user?.firstName || 'Extra'} ${(user?.lastName || 'Medewerker')[0]}.`,
+      points: 1250
+    };
+  };
+
+  const winnerData = getWinnerData();
+
   return (
     <div className="space-y-4">
       {/* Previous month winner */}
-      {previousWinner && (
-        <div className="p-4 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
-          <div className="flex items-center gap-3">
-            <Crown className="h-6 w-6 text-yellow-400" />
-            <div className="flex-1">
-              <p className="text-gray-300 text-sm font-medium">Topper van {getCurrentMonth()}</p>
-              <p className="text-white text-lg font-bold">
-                {previousWinner.firstName} {previousWinner.lastName[0]}.
-              </p>
-              <p className="text-gray-400 text-sm">
-                {previousWinner.monthlyPoints || 0} punten
-              </p>
-            </div>
+      <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
+        <div className="flex items-center gap-3">
+          <Crown className="h-5 w-5 text-yellow-400" />
+          <div className="flex-1">
+            <p className="text-gray-400 text-sm">Topper van {getCurrentMonth()}</p>
+            <p className="text-white text-base font-medium">
+              {winnerData.name}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {winnerData.points} punten
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Your position this month */}
       <div className="flex items-center gap-3">
@@ -189,18 +204,23 @@ export function LeaderboardMobile() {
       </div>
 
       {/* Current user position */}
-      <div className="p-4 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
+      <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+          <div className="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-full">
             <span className="text-sm font-bold text-white">
               {getInitials(user?.firstName || 'U', user?.lastName || 'U')}
             </span>
           </div>
           <div className="flex-1">
-            <p className="text-white text-lg font-bold">Jij staat op plek {currentUserRank || '?'}</p>
+            <p className="text-white text-base font-medium">Jij</p>
             <p className="text-gray-400 text-sm">
-              {user?.monthlyPoints || 0} punten deze maand
+              {user?.monthlyPoints || 0} punten
             </p>
+          </div>
+          <div className="text-right">
+            <span className="text-white text-base font-medium">
+              {currentUserRank || '?'}
+            </span>
           </div>
         </div>
       </div>
@@ -222,62 +242,34 @@ export function LeaderboardMobile() {
         <div className="space-y-3">
           {leaderboard.slice(0, 10).map((leaderUser, index) => {
             const isCurrentUser = leaderUser.id === user?.id;
-            const isTopThree = index < 3;
             
             return (
               <div
                 key={leaderUser.id}
-                className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${
-                  isCurrentUser 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : isTopThree 
-                      ? index === 0 ? 'bg-yellow-500 border-yellow-400' :
-                        index === 1 ? 'bg-gray-400 border-gray-300' :
-                        'bg-orange-500 border-orange-400'
-                      : 'bg-gray-900 border-gray-700'
-                }`}
+                className="flex items-center gap-3 p-4 bg-gray-900 rounded-xl border border-gray-700"
               >
-                {/* Avatar with initials or rank */}
-                <div className="flex items-center justify-center w-12 h-12">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base ${
-                    isCurrentUser ? 'bg-white text-blue-600' :
-                    index === 0 ? 'bg-yellow-600 text-white' :
-                    index === 1 ? 'bg-gray-600 text-white' :
-                    index === 2 ? 'bg-orange-600 text-white' :
-                    'bg-gray-600 text-white'
-                  }`}>
-                    {isTopThree || isCurrentUser ? 
-                      getInitials(leaderUser.firstName, leaderUser.lastName) : 
-                      leaderUser.rank
-                    }
-                  </div>
+                {/* Avatar with initials */}
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-full">
+                  <span className="text-sm font-bold text-white">
+                    {getInitials(leaderUser.firstName, leaderUser.lastName)}
+                  </span>
                 </div>
 
                 {/* User info */}
                 <div className="flex-1 min-w-0">
-                  <p className={`font-bold text-lg truncate ${
-                    isCurrentUser || isTopThree ? 'text-white' : 'text-gray-200'
-                  }`}>
+                  <p className="text-white text-base font-medium truncate">
                     {isCurrentUser ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName[0]}.`}
                   </p>
-                  <p className={`text-sm ${
-                    isCurrentUser || isTopThree ? 'text-white text-opacity-80' : 'text-gray-400'
-                  }`}>
+                  <p className="text-gray-400 text-sm">
                     {leaderUser.monthlyPoints} punten
                   </p>
                 </div>
 
-                {/* Rank badge */}
+                {/* Rank */}
                 <div className="text-right">
-                  <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ${
-                    isCurrentUser ? 'bg-white text-blue-600' :
-                    index === 0 ? 'bg-yellow-600 text-white' :
-                    index === 1 ? 'bg-gray-600 text-white' :
-                    index === 2 ? 'bg-orange-600 text-white' :
-                    'bg-gray-700 text-gray-300'
-                  }`}>
+                  <span className="text-white text-base font-medium">
                     {leaderUser.rank}
-                  </div>
+                  </span>
                 </div>
               </div>
             );
