@@ -839,6 +839,76 @@ export class MemStorage implements IStorage {
     );
   }
   
+  // Leaderboard methods
+  async getMonthlyLeaderboard(year?: number, month?: number): Promise<(User & { rank: number })[]> {
+    const currentDate = new Date();
+    const targetYear = year || currentDate.getFullYear();
+    const targetMonth = month || currentDate.getMonth() + 1; // getMonth() returns 0-11, we want 1-12
+    
+    // Get all active users sorted by monthly points (descending)
+    const users = Array.from(this.users.values())
+      .filter(user => user.status === 'active' && user.role === 'employee')
+      .sort((a, b) => b.monthlyPoints - a.monthlyPoints)
+      .slice(0, 10); // Top 10 only
+    
+    // Add rank to each user
+    return users.map((user, index) => ({
+      ...user,
+      rank: index + 1
+    }));
+  }
+
+  async getPreviousMonthWinner(): Promise<User | undefined> {
+    const currentDate = new Date();
+    const previousMonth = currentDate.getMonth() === 0 ? 12 : currentDate.getMonth();
+    const year = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+    
+    // Find the winner from monthly leaders table
+    const winners = Array.from(this.monthlyLeaders.values())
+      .filter(leader => leader.year === year && leader.month === previousMonth)
+      .sort((a, b) => a.rank - b.rank);
+    
+    if (winners.length > 0) {
+      return this.getUser(winners[0].userId);
+    }
+    
+    return undefined;
+  }
+
+  async resetMonthlyPoints(): Promise<number> {
+    let resetCount = 0;
+    
+    for (const [id, user] of this.users.entries()) {
+      if (user.role === 'employee' && user.monthlyPoints > 0) {
+        const updatedUser = { ...user, monthlyPoints: 0 };
+        this.users.set(id, updatedUser);
+        resetCount++;
+      }
+    }
+    
+    return resetCount;
+  }
+
+  async saveMonthlyLeaders(year: number, month: number): Promise<void> {
+    // Get current leaderboard
+    const leaderboard = await this.getMonthlyLeaderboard(year, month);
+    
+    // Save top 10 to monthly leaders table
+    for (const leader of leaderboard) {
+      const monthlyLeader: MonthlyLeader = {
+        id: this.currentIds.monthlyLeaders++,
+        userId: leader.id,
+        year,
+        month,
+        points: leader.monthlyPoints,
+        rank: leader.rank,
+        createdAt: new Date()
+      };
+      
+      this.monthlyLeaders.set(monthlyLeader.id, monthlyLeader);
+    }
+  }
+  
   // Reward methods
   async createReward(insertReward: InsertReward): Promise<Reward> {
     const id = this.currentIds.rewards++;
@@ -909,6 +979,11 @@ export class MemStorage implements IStorage {
     if (transaction.source !== 'birthday') {
       // Update user points voor alle andere transacties
       await this.updateUserPoints(transaction.userId, transaction.amount);
+      
+      // Update monthly points for earned transactions
+      if (transaction.type === 'earned') {
+        await this.updateUserMonthlyPoints(transaction.userId, transaction.amount);
+      }
     }
     
     return transaction;

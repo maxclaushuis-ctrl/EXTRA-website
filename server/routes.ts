@@ -3135,6 +3135,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Leaderboard API routes
+  app.get("/api/leaderboard", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+      const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+      
+      const leaderboard = await storage.getMonthlyLeaderboard(year, month);
+      return res.status(200).json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van het leaderboard" });
+    }
+  });
+
+  app.get("/api/leaderboard/previous-winner", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const winner = await storage.getPreviousMonthWinner();
+      return res.status(200).json(winner);
+    } catch (error) {
+      console.error("Error fetching previous month winner:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de vorige maand winnaar" });
+    }
+  });
+
+  app.post("/api/leaderboard/reset-monthly", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      // Save current month leaders before reset
+      await storage.saveMonthlyLeaders(year, month);
+      
+      // Reset monthly points for all users
+      const resetCount = await storage.resetMonthlyPoints();
+      
+      return res.status(200).json({ 
+        message: `Maandelijkse punten gereset voor ${resetCount} gebruikers`,
+        resetCount,
+        savedMonth: { year, month }
+      });
+    } catch (error) {
+      console.error("Error resetting monthly points:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het resetten van maandelijkse punten" });
+    }
+  });
+
   // WebSocket server setup voor real-time notificaties
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
