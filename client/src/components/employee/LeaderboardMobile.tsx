@@ -104,9 +104,11 @@ export function LeaderboardMobile() {
       
       socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        console.log('Leaderboard WebSocket bericht:', message);
         
         // Refresh leaderboard when points are updated
         if (message.type === 'points_update' || message.type === 'leaderboard_update') {
+          console.log('Leaderboard wordt bijgewerkt vanwege:', message.type);
           refetch();
         }
       };

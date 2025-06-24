@@ -101,7 +101,7 @@ export function PointsHeader() {
       // Teller animatie voor punten (van huidige naar nieuwe waarde)
       let startValue = displayPoints;
       const endValue = points;
-      const duration = 1000;
+      const duration = Math.min(300 + (endValue - startValue) * 2, 800); // Max 800ms, faster for smaller amounts
       const startTime = Date.now();
       
       const countUp = () => {

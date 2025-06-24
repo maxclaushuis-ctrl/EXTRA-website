@@ -1100,13 +1100,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Haal de bijgewerkte gebruiker op
       const updatedUser = await storage.getUser(userId);
       
+      // Send WebSocket notification for real-time updates
+      if (typeof global.sendNotification === 'function') {
+        // Notify the specific user about their points update
+        global.sendNotification({
+          type: 'points_update',
+          userId: userId,
+          message: `Je hebt ${points} punten ontvangen!`,
+          data: {
+            userId: userId,
+            points: updatedUser!.points,
+            monthlyPoints: updatedUser!.monthlyPoints,
+            change: points,
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        // Notify all users about leaderboard update
+        global.sendNotification({
+          type: 'leaderboard_update',
+          message: 'Ranglijst bijgewerkt',
+          data: {
+            userId: userId,
+            newPoints: updatedUser!.points,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
       // Stuur een response
       return res.status(200).json({
         message: "Punten succesvol toegevoegd",
         transaction,
         user: {
           id: updatedUser!.id,
-          points: updatedUser!.points
+          points: updatedUser!.points,
+          monthlyPoints: updatedUser!.monthlyPoints
         }
       });
     } catch (error) {
