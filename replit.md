@@ -107,7 +107,16 @@ The application follows a monorepo structure with clear separation between clien
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- **June 24, 2025**: Implemented realtime leaderboard functionality
+  - Added monthly points tracking system with database schema
+  - Created leaderboard API endpoints (/api/leaderboard, /api/leaderboard/previous-winner)
+  - Built mobile-optimized leaderboard component with realtime WebSocket updates
+  - Integrated leaderboard as third tab in employee dashboard ("Ranglijst")
+  - Added automatic monthly points tracking for all earned point transactions
+  - Displays top 10 employees with rankings, previous month winner, and live updates
+
 ## Changelog
 
-Changelog:
-- June 24, 2025. Initial setup
+- June 24, 2025. Initial setup and leaderboard implementation

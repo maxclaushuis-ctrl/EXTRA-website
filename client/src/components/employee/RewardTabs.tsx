@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RewardsList } from '@/components/employee/RewardsList';
 import DiscountsList from '@/components/employee/DiscountsList';
+import { LeaderboardMobile } from '@/components/employee/LeaderboardMobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function RewardTabs() {
@@ -10,7 +11,7 @@ export function RewardTabs() {
 
   return (
     <Tabs defaultValue="beloningen" className="w-full mt-32" onValueChange={(value) => setActiveTab(value)}>
-      <TabsList className="grid w-full grid-cols-2 bg-gray-900">
+      <TabsList className="grid w-full grid-cols-3 bg-gray-900">
         <TabsTrigger 
           value="beloningen" 
           className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
@@ -23,6 +24,12 @@ export function RewardTabs() {
         >
           {t('common.discounts')}
         </TabsTrigger>
+        <TabsTrigger 
+          value="leaderboard" 
+          className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
+        >
+          Ranglijst
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="beloningen" className="mt-4">
@@ -31,6 +38,10 @@ export function RewardTabs() {
       
       <TabsContent value="kortingsacties" className="mt-4">
         <DiscountsList />
+      </TabsContent>
+      
+      <TabsContent value="leaderboard" className="mt-4">
+        <LeaderboardMobile />
       </TabsContent>
     </Tabs>
   );

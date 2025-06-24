@@ -135,6 +135,23 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">
+              <Link href="/leaderboard" className="flex items-center space-x-2 text-blue-600 hover:underline">
+                <Trophy className="h-5 w-5" />
+                <span>Leaderboard</span>
+              </Link>
+            </CardTitle>
+            <CardDescription>Bekijk de top 10 medewerkers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-muted-foreground">
+              Maandelijkse ranglijst met realtime updates
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
