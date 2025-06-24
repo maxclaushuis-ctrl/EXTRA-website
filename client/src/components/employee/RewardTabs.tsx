@@ -16,19 +16,19 @@ export function RewardTabs() {
           value="beloningen" 
           className="text-sm font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
         >
-          Rewards
+          Beloningen
         </TabsTrigger>
         <TabsTrigger 
           value="kortingsacties" 
           className="text-sm font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
         >
-          Deals
+          Kortingsacties
         </TabsTrigger>
         <TabsTrigger 
           value="leaderboard" 
           className="text-sm font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
         >
-          Ranking
+          Ranglijst
         </TabsTrigger>
       </TabsList>
       

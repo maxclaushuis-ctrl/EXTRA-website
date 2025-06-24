@@ -22,8 +22,8 @@ export default function DiscountsList() {
     navigator.clipboard.writeText(discount.discountCode);
     setCopiedId(discount.id);
     toast({
-      title: t("discountCodeCopied"),
-      description: t("discountCodeCopiedMessage").replace("{code}", discount.discountCode),
+      title: "Kortingscode gekopieerd",
+      description: `De code "${discount.discountCode}" is gekopieerd naar het klembord`,
     });
 
     // Reset copy icon after 3 seconds
@@ -60,7 +60,7 @@ export default function DiscountsList() {
   if (error) {
     return (
       <div className="p-4 text-center">
-        <p className="text-red-500">{t("errorLoadingDiscounts")}</p>
+        <p className="text-red-500">Fout bij het laden van kortingsacties</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function DiscountsList() {
               <div>
                 <CardTitle className="text-lg">{discount.name}</CardTitle>
                 <CardDescription className="text-xs">
-                  {t("offeredBy")} {discount.partner}
+                  Aangeboden door {discount.partner}
                 </CardDescription>
               </div>
             </div>
@@ -117,12 +117,12 @@ export default function DiscountsList() {
               {copiedId === discount.id ? (
                 <>
                   <Check className="h-4 w-4" />
-                  {t("copied")}
+                  Gekopieerd
                 </>
               ) : (
                 <>
                   <Clipboard className="h-4 w-4" />
-                  {t("copyDiscountCode")}
+                  Code kopiëren
                 </>
               )}
             </Button>
