@@ -85,59 +85,74 @@ export default function DiscountsList() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 pt-4 pb-16 md:grid-cols-2">
+    <div className="space-y-4 pt-4 pb-16">
       {discounts.map((discount) => (
-        <Card key={discount.id} className="overflow-hidden border-none bg-white shadow-md">
-          {discount.imageUrl && (
-            <div
-              className="h-48 w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${discount.imageUrl})` }}
-            />
-          )}
-          <CardHeader className="p-4">
-            <div className="flex items-center">
-              <div className="mr-2 min-h-10 min-w-10 overflow-hidden rounded-full border border-gray-200 bg-white p-1">
-                <img 
-                  src={`https://logo.clearbit.com/${discount.partner?.toLowerCase().replace(/\s+/g, '')}.com`} 
-                  alt={discount.partner || "Partner logo"}
-                  className="h-8 w-8 object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://via.placeholder.com/40?text=?"; 
-                  }}
-                />
+        <Card key={discount.id} className="border-none bg-gray-900 text-white overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={`https://logo.clearbit.com/${discount.partner?.toLowerCase().replace(/\s+/g, '')}.com`} 
+                      alt={discount.partner || "Partner logo"}
+                      className="w-8 h-8 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://via.placeholder.com/32x32/6B7280/FFFFFF?text=" + discount.partner.charAt(0); 
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <span className="inline-block px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full mb-2">
+                      Gratis
+                    </span>
+                  </div>
+                </div>
+                
+                <h3 className="text-white text-lg font-semibold mb-2">{discount.name}</h3>
+                <p className="text-gray-400 text-sm mb-3">{discount.description}</p>
+                
+                <div className="w-full bg-gray-700 rounded-full h-2 mb-3">
+                  <div className="bg-blue-600 h-2 rounded-full w-full"></div>
+                </div>
+                
+                <p className="text-green-400 text-sm font-medium">Beschikbaar voor iedereen!</p>
               </div>
-              <div>
-                <CardTitle className="text-lg">{discount.name}</CardTitle>
-                <CardDescription className="text-xs">
-                  Aangeboden door {discount.partner}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <p className="text-sm text-gray-600">{discount.description}</p>
-          </CardContent>
-          <CardFooter className="flex justify-between p-4 pt-0">
-            <Badge variant="outline" className="bg-blue-50 text-blue-600">{discount.category}</Badge>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2" 
-              onClick={() => handleCopyCode(discount)}
-            >
-              {copiedId === discount.id ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Gekopieerd
-                </>
-              ) : (
-                <>
-                  <Clipboard className="h-4 w-4" />
-                  Code kopiëren
-                </>
+              
+              {discount.imageUrl && (
+                <div className="w-16 h-16 rounded-lg overflow-hidden ml-4">
+                  <img 
+                    src={discount.imageUrl} 
+                    alt={discount.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               )}
-            </Button>
-          </CardFooter>
+            </div>
+            
+            <div className="flex justify-between items-center mt-4">
+              <Badge variant="outline" className="bg-gray-800 text-gray-300 border-gray-700">
+                {discount.category}
+              </Badge>
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => handleCopyCode(discount)}
+              >
+                {copiedId === discount.id ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Gekopieerd
+                  </>
+                ) : (
+                  <>
+                    <Clipboard className="h-4 w-4 mr-2" />
+                    Code kopiëren
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       ))}
     </div>
