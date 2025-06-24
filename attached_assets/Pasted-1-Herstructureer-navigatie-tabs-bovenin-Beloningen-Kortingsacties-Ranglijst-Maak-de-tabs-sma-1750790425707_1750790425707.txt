@@ -1,0 +1,43 @@
+1. Herstructureer navigatie-tabs bovenin (Beloningen / Kortingsacties / Ranglijst)
+
+Maak de tabs smaller of gebruik kortere labels:
+💡 Suggestie: verander Ranglijst naar Ranking, Beloningen naar Rewards, Kortingsacties naar Deals — of gebruik icon-only tabs op mobiel.
+Zorg voor betere centrale uitlijning en spacing. Zet de actieve tab duidelijker in een contrasterende kleur met afgeronde hoeken.
+Geef ongeactiveerde tabs een lichter font en grijze kleur, actieve tab in blauw met bold tekst.
+2. Verwijder e-mailadres uit de ranglijst
+
+Laat alleen voornaam + voorletter of alleen voornaam zien, zonder e-mail.
+Voeg eventueel profielinitialen in een gekleurde cirkel toe als visueel element.
+3. Toon het aantal punten per gebruiker in de ranking
+
+Voeg per gebruiker hun huidige maandpunten toe onder of naast hun naam.
+Formaat voorbeeld: 730 punten of Punten: 540
+Laat de score visueel extra opvallen door het vet of in kleur weer te geven.
+4. Maak layout luchtiger en overzichtelijker
+
+Vergroot de verticale padding tussen ranking-cards.
+Geef de top 3 extra visuele elementen:
+🥇 Goud achtergrond (lichtgeel)
+🥈 Zilver achtergrond (lichtgrijs)
+🥉 Brons achtergrond (lichtoranje)
+Gebruik subtiele schaduwen of kaarten met afgeronde hoeken per deelnemer.
+Zet een dunne scheidingslijn tussen gebruiker en de rest van de lijst als iemand niet in de top 3 staat (bijv. “Jij staat op plek 5”).
+5. Voeg sectie toe: "🏆 Topper van vorige maand"
+
+Plaats dit blok boven de huidige ranglijst.
+Inhoudsvoorbeeld:
+🏆 Topper van mei: Maria International
+1.320 punten
+Geef dit een visueel blok met een andere achtergrondkleur (bijv. lichtblauw) en eventueel een kroon-icoon.
+Deze topper blijft zichtbaar tot de eerste dag van de nieuwe maand.
+6. Maak tekst en iconen mobielvriendelijker
+
+Gebruik iets kleiner en consistenter lettertype op mobiel (bijv. 14-15px).
+Zorg dat tekst niet afbreekt of overloopt (voorkom “medewerker@ext...”).
+Vermijd knoppen of badges zonder duidelijke betekenis (bijvoorbeeld: het ‘pnt’-label nu lijkt onduidelijk wat het doet — vervangen of verwijderen).
+7. Extra suggesties (optioneel):
+
+Maak de pagina iets interactiever met een lichte animatie bij het stijgen in ranking (bijv. een flits of groeibalk).
+Laat de eigen ranking altijd sticky onderaan of bovenaan zichtbaar zijn (ook als je buiten de top 10 valt).
+Voeg sorteeroptie toe voor “meeste punten” of “meeste diensten” (voor latere fase).
+Opmerking: Punten moeten blijven gesynchroniseerd met het maandscore-systeem (zie eerdere prompt: monthly_points). Ranglijst moet elke 30 seconden refreshen of via API call updaten. Let op dat reset op 1e van de maand alleen voor monthly_points geldt, niet voor total_points.

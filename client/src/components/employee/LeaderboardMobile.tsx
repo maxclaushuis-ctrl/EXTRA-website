@@ -37,6 +37,23 @@ function getRankBadgeColor(rank: number) {
   }
 }
 
+function getRankBackgroundColor(rank: number) {
+  switch (rank) {
+    case 1:
+      return 'bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200';
+    case 2:
+      return 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200';
+    case 3:
+      return 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200';
+    default:
+      return 'bg-gray-800 border-gray-700';
+  }
+}
+
+function getInitials(firstName: string, lastName: string): string {
+  return (firstName[0] + lastName[0]).toUpperCase();
+}
+
 export function LeaderboardMobile() {
   const { user } = useAuth();
   const [isRealtime, setIsRealtime] = useState(false);
@@ -129,12 +146,12 @@ export function LeaderboardMobile() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header with realtime indicator */}
-      <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
-          <h3 className="text-lg font-bold text-white">Top 10 Ranglijst</h3>
+      <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl shadow-lg">
+        <div className="flex items-center gap-3">
+          <Trophy className="h-6 w-6 text-yellow-500" />
+          <h3 className="text-lg font-bold text-white">Top 10 Ranking</h3>
         </div>
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isRealtime ? 'bg-green-500' : 'bg-gray-400'}`}></div>
@@ -144,113 +161,158 @@ export function LeaderboardMobile() {
         </div>
       </div>
 
-      {/* Current user position if in top 10 */}
-      {currentUserRank && (
-        <div className="p-4 bg-blue-600 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8">
-              {getRankIcon(currentUserRank)}
+      {/* Previous month winner */}
+      {previousWinner && (
+        <div className="p-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 bg-white bg-opacity-20 rounded-full">
+              <Crown className="h-6 w-6 text-yellow-300" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-white">Je staat op plaats {currentUserRank}!</p>
+              <p className="text-sm text-blue-200 font-medium">🏆 Topper van vorige maand</p>
+              <p className="text-lg font-bold text-white">
+                {previousWinner.firstName} {previousWinner.lastName[0]}.
+              </p>
               <p className="text-sm text-blue-200">
-                {user?.monthlyPoints || 0} punten deze maand
+                {previousWinner.monthlyPoints || 0} punten
               </p>
             </div>
-            <Zap className="h-5 w-5 text-yellow-300" />
           </div>
         </div>
       )}
 
-      {/* Previous month winner */}
-      {previousWinner && (
-        <div className="p-4 bg-gradient-to-r from-purple-900 to-pink-900 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Crown className="h-5 w-5 text-purple-300" />
+      {/* Current user position if in top 10 */}
+      {currentUserRank && (
+        <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg border-2 border-blue-400">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-white bg-opacity-20 rounded-full">
+              {getRankIcon(currentUserRank)}
+            </div>
             <div className="flex-1">
-              <p className="text-sm text-purple-200">Winnaar Vorige Maand</p>
-              <p className="font-semibold text-white">
-                {previousWinner.firstName} {previousWinner.lastName}
+              <p className="font-bold text-white">Je staat op plaats {currentUserRank}!</p>
+              <p className="text-sm text-blue-200">
+                {user?.monthlyPoints || 0} punten deze maand
               </p>
             </div>
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-300" />
+              <span className="text-lg font-bold text-white">{user?.monthlyPoints || 0}</span>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Separator if user is not in top 3 but in top 10 */}
+      {currentUserRank && currentUserRank > 3 && (
+        <div className="flex items-center gap-3 px-4">
+          <div className="flex-1 h-px bg-gray-600"></div>
+          <span className="text-xs text-gray-400 px-2">Jouw positie</span>
+          <div className="flex-1 h-px bg-gray-600"></div>
         </div>
       )}
 
       {/* Leaderboard list */}
       {!leaderboard || leaderboard.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 bg-gray-800 rounded-lg">
+        <div className="text-center py-8 text-gray-400 bg-gray-800 rounded-xl shadow-lg">
           <Trophy className="h-12 w-12 mx-auto mb-3 text-gray-600" />
-          <p>Nog geen punten behaald deze maand.</p>
+          <p className="text-base">Nog geen punten behaald deze maand.</p>
           <p className="text-sm">Begin met werken om op de ranglijst te komen!</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {leaderboard.slice(0, 10).map((leaderUser, index) => (
-            <div
-              key={leaderUser.id}
-              className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
-                leaderUser.id === user?.id 
-                  ? 'bg-blue-600 border border-blue-500' 
-                  : index < 3 
-                    ? 'bg-gray-800 border border-gray-700' 
-                    : 'bg-gray-800'
-              }`}
-            >
-              {/* Rank badge */}
-              <div className="flex items-center justify-center w-8 h-8">
-                {index < 3 ? (
-                  getRankIcon(leaderUser.rank)
-                ) : (
-                  <Badge 
-                    variant="outline" 
-                    className={`w-6 h-6 p-0 text-xs font-bold ${getRankBadgeColor(leaderUser.rank)}`}
+        <div className="space-y-3">
+          {leaderboard.slice(0, 10).map((leaderUser, index) => {
+            const isCurrentUser = leaderUser.id === user?.id;
+            const isTopThree = index < 3;
+            
+            return (
+              <div
+                key={leaderUser.id}
+                className={`flex items-center gap-4 p-4 rounded-xl shadow-lg transition-all duration-300 border ${
+                  isCurrentUser 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-400' 
+                    : isTopThree 
+                      ? `${getRankBackgroundColor(leaderUser.rank)} shadow-md` 
+                      : 'bg-gray-800 border-gray-700'
+                }`}
+              >
+                {/* Rank badge */}
+                <div className="flex items-center justify-center w-10 h-10">
+                  {isTopThree ? (
+                    getRankIcon(leaderUser.rank)
+                  ) : (
+                    <Badge 
+                      variant="outline" 
+                      className={`w-8 h-8 p-0 text-sm font-bold ${getRankBadgeColor(leaderUser.rank)}`}
+                    >
+                      {leaderUser.rank}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Avatar with colored background */}
+                <Avatar className={`h-12 w-12 ${isTopThree ? 'border-2 border-yellow-400 shadow-md' : 'border border-gray-600'}`}>
+                  <AvatarFallback 
+                    className={`font-bold text-sm ${
+                      index === 0 ? 'bg-yellow-500 text-white' : 
+                      index === 1 ? 'bg-gray-400 text-white' :
+                      index === 2 ? 'bg-orange-400 text-white' :
+                      isCurrentUser ? 'bg-white text-blue-600' :
+                      'bg-gray-600 text-white'
+                    }`}
                   >
-                    {leaderUser.rank}
+                    {getInitials(leaderUser.firstName, leaderUser.lastName)}
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* User info */}
+                <div className="flex-1 min-w-0">
+                  <p className={`font-bold text-base truncate ${
+                    isCurrentUser ? 'text-white' : 
+                    index === 0 ? 'text-yellow-700' : 
+                    index === 1 ? 'text-gray-700' :
+                    index === 2 ? 'text-orange-700' :
+                    'text-gray-200'
+                  }`}>
+                    {isCurrentUser ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName[0]}.`}
+                  </p>
+                  <p className={`text-sm font-medium ${
+                    isCurrentUser ? 'text-blue-200' :
+                    isTopThree ? 'text-gray-600' :
+                    'text-gray-400'
+                  }`}>
+                    {leaderUser.monthlyPoints} punten
+                  </p>
+                </div>
+
+                {/* Points badge */}
+                <div className="text-right">
+                  <Badge 
+                    className={`px-3 py-2 text-sm font-bold ${
+                      isCurrentUser ? 'bg-white text-blue-600' : 
+                      index === 0 ? 'bg-yellow-500 text-white' :
+                      index === 1 ? 'bg-gray-500 text-white' :
+                      index === 2 ? 'bg-orange-500 text-white' :
+                      'bg-gray-700 text-gray-200'
+                    }`}
+                  >
+                    #{leaderUser.rank}
                   </Badge>
-                )}
+                  {index === 0 && (
+                    <div className="mt-1 text-center">
+                      <span className="text-lg">👑</span>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {/* Avatar */}
-              <Avatar className={`h-10 w-10 ${index < 3 ? 'border-2 border-yellow-300' : ''}`}>
-                <AvatarFallback className={index === 0 ? 'bg-yellow-100 text-yellow-700 font-bold' : 'bg-gray-600 text-white'}>
-                  {leaderUser.firstName[0]}{leaderUser.lastName[0]}
-                </AvatarFallback>
-              </Avatar>
-
-              {/* User info */}
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium truncate ${
-                  leaderUser.id === user?.id ? 'text-white' : 
-                  index === 0 ? 'text-yellow-300' : 'text-gray-200'
-                }`}>
-                  {leaderUser.id === user?.id ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName}`}
-                </p>
-                <p className="text-sm text-gray-400 truncate">{leaderUser.email}</p>
-              </div>
-
-              {/* Points */}
-              <div className="text-right">
-                <Badge 
-                  className={`${
-                    leaderUser.id === user?.id ? 'bg-white text-blue-600' : getRankBadgeColor(leaderUser.rank)
-                  } px-3 py-1 font-bold`}
-                >
-                  {leaderUser.monthlyPoints} pnt
-                </Badge>
-                {index === 0 && (
-                  <p className="text-xs text-yellow-400 mt-1 font-medium">👑</p>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Footer info */}
-      <div className="p-3 bg-gray-800 rounded-lg">
-        <p className="text-xs text-gray-400 text-center">
-          Punten worden maandelijks gereset. Updates elke 30 seconden.
+      <div className="p-4 bg-gray-800 rounded-xl shadow-lg">
+        <p className="text-sm text-gray-400 text-center">
+          Punten worden maandelijks gereset • Updates elke 30 seconden
         </p>
       </div>
     </div>

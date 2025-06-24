@@ -11,24 +11,24 @@ export function RewardTabs() {
 
   return (
     <Tabs defaultValue="beloningen" className="w-full mt-32" onValueChange={(value) => setActiveTab(value)}>
-      <TabsList className="grid w-full grid-cols-3 bg-gray-900">
+      <TabsList className="grid w-full grid-cols-3 bg-gray-900 rounded-lg p-1">
         <TabsTrigger 
           value="beloningen" 
-          className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
+          className="text-sm font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
         >
-          {t('common.rewards')}
+          Rewards
         </TabsTrigger>
         <TabsTrigger 
           value="kortingsacties" 
-          className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
+          className="text-sm font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
         >
-          {t('common.discounts')}
+          Deals
         </TabsTrigger>
         <TabsTrigger 
           value="leaderboard" 
-          className="text-base font-medium data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white"
+          className="text-sm font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
         >
-          Ranglijst
+          Ranking
         </TabsTrigger>
       </TabsList>
       
