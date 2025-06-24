@@ -203,6 +203,7 @@ export class MemStorage implements IStorage {
   private automationTriggers: Map<number, AutomationTrigger>;
   private automationActions: Map<number, AutomationAction>;
   private discounts: Map<number, Discount>;
+  private monthlyLeaders: Map<number, MonthlyLeader>;
   // Plansysteem data
   private clients: Map<number, Client>;
   private locations: Map<number, Location>;
@@ -225,6 +226,7 @@ export class MemStorage implements IStorage {
     automationTriggers: number;
     automationActions: number;
     discounts: number;
+    monthlyLeaders: number;
     // Plansysteem ids
     clients: number;
     locations: number;
@@ -248,6 +250,7 @@ export class MemStorage implements IStorage {
     this.automationTriggers = new Map();
     this.automationActions = new Map();
     this.discounts = new Map();
+    this.monthlyLeaders = new Map();
     
     // Plansysteem maps initialiseren
     this.clients = new Map();
@@ -271,6 +274,7 @@ export class MemStorage implements IStorage {
       automationTriggers: 1,
       automationActions: 1,
       discounts: 1,
+      monthlyLeaders: 1,
       // Plansysteem ids
       clients: 1,
       locations: 1,
@@ -798,6 +802,19 @@ export class MemStorage implements IStorage {
       });
     }
     
+    return updatedUser;
+  }
+
+  async updateUserMonthlyPoints(id: number, points: number): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const updatedUser: User = {
+      ...user,
+      monthlyPoints: user.monthlyPoints + points
+    };
+    
+    this.users.set(id, updatedUser);
     return updatedUser;
   }
   
