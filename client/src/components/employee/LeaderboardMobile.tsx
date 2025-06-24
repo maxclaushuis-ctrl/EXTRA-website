@@ -157,18 +157,18 @@ export function LeaderboardMobile() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Previous month winner */}
       {previousWinner && (
-        <div className="p-5 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-2xl shadow-lg">
-          <div className="flex items-center gap-4">
-            <Crown className="h-8 w-8 text-yellow-300" />
+        <div className="p-4 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
+          <div className="flex items-center gap-3">
+            <Crown className="h-6 w-6 text-yellow-400" />
             <div className="flex-1">
-              <p className="text-white font-bold text-lg">Topper van {getCurrentMonth()}</p>
-              <p className="text-xl font-bold text-white mt-1">
+              <p className="text-gray-300 text-sm font-medium">Topper van {getCurrentMonth()}</p>
+              <p className="text-white text-lg font-bold">
                 {previousWinner.firstName} {previousWinner.lastName[0]}.
               </p>
-              <p className="text-white text-base font-medium">
+              <p className="text-gray-400 text-sm">
                 {previousWinner.monthlyPoints || 0} punten
               </p>
             </div>
@@ -178,10 +178,10 @@ export function LeaderboardMobile() {
 
       {/* Your position this month */}
       <div className="flex items-center gap-3">
-        <Trophy className="h-6 w-6 text-yellow-500" />
+        <Trophy className="h-5 w-5 text-yellow-400" />
         <h3 className="text-lg font-bold text-white">Jouw positie deze maand</h3>
         <div className="flex items-center gap-2 ml-auto">
-          <div className={`w-2 h-2 rounded-full ${isRealtime ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+          <div className={`w-2 h-2 rounded-full ${isRealtime ? 'bg-green-500' : 'bg-gray-500'}`}></div>
           <span className="text-xs text-gray-400">
             {isRealtime ? 'Live' : 'Offline'}
           </span>
@@ -189,16 +189,16 @@ export function LeaderboardMobile() {
       </div>
 
       {/* Current user position */}
-      <div className="p-5 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl shadow-lg">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-white bg-opacity-30 rounded-full">
-            <span className="text-xl font-bold text-white">
+      <div className="p-4 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+            <span className="text-sm font-bold text-white">
               {getInitials(user?.firstName || 'U', user?.lastName || 'U')}
             </span>
           </div>
           <div className="flex-1">
-            <p className="text-xl font-bold text-white">Jij staat op plek {currentUserRank || '?'}</p>
-            <p className="text-white text-base font-medium">
+            <p className="text-white text-lg font-bold">Jij staat op plek {currentUserRank || '?'}</p>
+            <p className="text-gray-400 text-sm">
               {user?.monthlyPoints || 0} punten deze maand
             </p>
           </div>
@@ -206,14 +206,14 @@ export function LeaderboardMobile() {
       </div>
 
       {/* Top 10 header */}
-      <div className="flex items-center gap-3 mt-8">
-        <Trophy className="h-6 w-6 text-yellow-500" />
+      <div className="flex items-center gap-3 mt-6">
+        <Trophy className="h-5 w-5 text-yellow-400" />
         <h3 className="text-lg font-bold text-white">Top 10 Ranglijst</h3>
       </div>
 
       {/* Leaderboard list */}
       {!leaderboard || leaderboard.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 bg-gray-800 rounded-2xl shadow-lg">
+        <div className="text-center py-8 text-gray-400 bg-gray-900 rounded-xl border border-gray-700">
           <Trophy className="h-12 w-12 mx-auto mb-3 text-gray-600" />
           <p className="text-base">Nog geen punten behaald deze maand.</p>
           <p className="text-sm">Begin met werken om op de ranglijst te komen!</p>
@@ -227,33 +227,30 @@ export function LeaderboardMobile() {
             return (
               <div
                 key={leaderUser.id}
-                className={`flex items-center gap-4 p-4 rounded-2xl shadow-lg transition-all duration-300 ${
+                className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${
                   isCurrentUser 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700' 
+                    ? 'bg-blue-600 border-blue-500' 
                     : isTopThree 
-                      ? index === 0 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
-                        index === 1 ? 'bg-gradient-to-r from-gray-300 to-gray-400' :
-                        'bg-gradient-to-r from-orange-400 to-orange-500'
-                      : 'bg-gray-800'
+                      ? index === 0 ? 'bg-yellow-500 border-yellow-400' :
+                        index === 1 ? 'bg-gray-400 border-gray-300' :
+                        'bg-orange-500 border-orange-400'
+                      : 'bg-gray-900 border-gray-700'
                 }`}
               >
-                {/* Rank badge or initials */}
+                {/* Avatar with initials or rank */}
                 <div className="flex items-center justify-center w-12 h-12">
-                  {isTopThree ? (
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                      index === 0 ? 'bg-yellow-600 text-white' :
-                      index === 1 ? 'bg-gray-600 text-white' :
-                      'bg-orange-600 text-white'
-                    }`}>
-                      {getInitials(leaderUser.firstName, leaderUser.lastName)}
-                    </div>
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">
-                        {leaderUser.rank}
-                      </span>
-                    </div>
-                  )}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base ${
+                    isCurrentUser ? 'bg-white text-blue-600' :
+                    index === 0 ? 'bg-yellow-600 text-white' :
+                    index === 1 ? 'bg-gray-600 text-white' :
+                    index === 2 ? 'bg-orange-600 text-white' :
+                    'bg-gray-600 text-white'
+                  }`}>
+                    {isTopThree || isCurrentUser ? 
+                      getInitials(leaderUser.firstName, leaderUser.lastName) : 
+                      leaderUser.rank
+                    }
+                  </div>
                 </div>
 
                 {/* User info */}
@@ -261,26 +258,25 @@ export function LeaderboardMobile() {
                   <p className={`font-bold text-lg truncate ${
                     isCurrentUser || isTopThree ? 'text-white' : 'text-gray-200'
                   }`}>
-                    {isCurrentUser ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName}`}
+                    {isCurrentUser ? 'Jij' : `${leaderUser.firstName} ${leaderUser.lastName[0]}.`}
                   </p>
-                  <p className={`text-base font-medium ${
-                    isCurrentUser || isTopThree ? 'text-white text-opacity-90' : 'text-gray-400'
+                  <p className={`text-sm ${
+                    isCurrentUser || isTopThree ? 'text-white text-opacity-80' : 'text-gray-400'
                   }`}>
                     {leaderUser.monthlyPoints} punten
                   </p>
                 </div>
 
-                {/* Points display */}
+                {/* Rank badge */}
                 <div className="text-right">
-                  <div className={`text-2xl font-bold ${
-                    isCurrentUser || isTopThree ? 'text-white' : 'text-gray-200'
+                  <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ${
+                    isCurrentUser ? 'bg-white text-blue-600' :
+                    index === 0 ? 'bg-yellow-600 text-white' :
+                    index === 1 ? 'bg-gray-600 text-white' :
+                    index === 2 ? 'bg-orange-600 text-white' :
+                    'bg-gray-700 text-gray-300'
                   }`}>
-                    {leaderUser.monthlyPoints}
-                  </div>
-                  <div className={`text-sm ${
-                    isCurrentUser || isTopThree ? 'text-white text-opacity-80' : 'text-gray-400'
-                  }`}>
-                    punten
+                    {leaderUser.rank}
                   </div>
                 </div>
               </div>
@@ -290,7 +286,7 @@ export function LeaderboardMobile() {
       )}
 
       {/* Footer info */}
-      <div className="p-4 bg-gray-800 rounded-2xl shadow-lg mt-6">
+      <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 mt-6">
         <p className="text-sm text-gray-400 text-center">
           Punten worden maandelijks gereset • Updates elke 30 seconden
         </p>
