@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   role: userRoleEnum("role").default('employee').notNull(),
   status: userStatusEnum("status").default('active').notNull(),
   points: integer("points").default(0).notNull(),
+  monthlyPoints: integer("monthly_points").default(0).notNull(),
   profileImage: text("profile_image"),
   apiId: text("api_id"), // ID van medewerker in extern plansysteem
   tags: text("tags").array(), // Labels/tags voor medewerkers
@@ -86,6 +87,17 @@ export const redemptions = pgTable("redemptions", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Maandelijkse toppers schema
+export const monthlyLeaders = pgTable("monthly_leaders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12
+  points: integer("points").notNull(),
+  rank: integer("rank").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Regels voor het verdienen van punten
@@ -515,3 +527,11 @@ export type StaffPool = typeof staffPools.$inferSelect;
 
 export type InsertPoolMember = z.infer<typeof insertPoolMemberSchema>;
 export type PoolMember = typeof poolMembers.$inferSelect;
+
+export const insertMonthlyLeaderSchema = createInsertSchema(monthlyLeaders).omit({
+  id: true,
+  createdAt: true
+});
+
+export type InsertMonthlyLeader = z.infer<typeof insertMonthlyLeaderSchema>;
+export type MonthlyLeader = typeof monthlyLeaders.$inferSelect;

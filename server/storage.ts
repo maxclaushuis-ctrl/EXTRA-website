@@ -12,6 +12,7 @@ import {
   type AutomationTrigger, type InsertAutomationTrigger,
   type AutomationAction, type InsertAutomationAction,
   type Discount, type InsertDiscount,
+  type MonthlyLeader, type InsertMonthlyLeader,
   // Plansysteem types
   type Client, type InsertClient,
   type Location, type InsertLocation,
@@ -38,9 +39,16 @@ export interface IStorage {
   getUserByApiId(apiId: string): Promise<User | undefined>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   updateUserPoints(id: number, points: number): Promise<User | undefined>;
+  updateUserMonthlyPoints(id: number, points: number): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
   searchUsers(query: string): Promise<User[]>;
   getUsersByTag(tag: string): Promise<User[]>;
+  
+  // Leaderboard methods
+  getMonthlyLeaderboard(year?: number, month?: number): Promise<(User & { rank: number })[]>;
+  getPreviousMonthWinner(): Promise<User | undefined>;
+  resetMonthlyPoints(): Promise<number>;
+  saveMonthlyLeaders(year: number, month: number): Promise<void>;
   
   // Reward methods
   createReward(reward: InsertReward): Promise<Reward>;

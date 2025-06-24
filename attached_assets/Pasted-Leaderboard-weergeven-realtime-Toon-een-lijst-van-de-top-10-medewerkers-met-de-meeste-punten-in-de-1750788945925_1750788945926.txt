@@ -1,0 +1,31 @@
+Leaderboard weergeven (realtime)
+Toon een lijst van de top 10 medewerkers met de meeste punten in de huidige kalendermaand.
+Sorteer deze op aflopende maandscore.
+Geef per medewerker op het leaderboard het volgende weer:
+Voornaam + eerste letter van achternaam
+Aantal maandpunten
+Rangnummer (1 t/m 10)
+Badge of visueel icoon voor plek 1, 2, 3 (bijvoorbeeld 🥇🥈🥉)
+Eigen positie tonen (buiten top 10)
+Als een medewerker niet in de top 10 staat, laat onderaan het leaderboard zijn/haar eigen plek en maandpunten zien, met een subtiele tekst zoals:
+“Jij staat op plek 23 met 540 punten deze maand. Nog 120 te gaan tot de top 10!”
+Optioneel: voeg een voortgangsbalk toe die visueel toont hoe ver ze zijn t.o.v. plek 10.
+Topper van de vorige maand tonen
+Toon bovenaan of naast het leaderboard een aparte box:
+Topper van vorige maand
+[Naam] behaalde [X] punten in mei 🏆
+Dit kan op de eerste dag van de maand automatisch geüpdatet worden op basis van de vorige maandscore.
+Punten resetten op 1e van de maand (alleen maandscore)
+Zorg dat elke 1e dag van de maand om 00:00 uur automatisch alle maandpunten per medewerker worden gereset naar 0.
+Belangrijk: reset alleen de maandscore, niet de totaal opgebouwde punten of status in het adminportaal.
+Maandpunten worden opgeslagen in een aparte kolom of tabel, los van het totale puntenaantal.
+Backend-logica
+Voeg een aparte kolom of databasetabel toe voor maandpunten (monthly_points) naast het bestaande veld met totale punten (total_points).
+Bij elke actie waarbij punten worden toegekend, moeten beide velden geüpdatet worden:
+total_points += X
+monthly_points += X
+Zorg dat bij het verstrekken van minpunten (bijv. voor afmelding) dit ook op beide velden correct doorwerkt.
+Styling / UI suggestie (optioneel):
+Gebruik een vaste leaderboardpagina of een sectie in het bestaande medewerkersdashboard.
+Gebruik kleuren en iconen om posities visueel aantrekkelijk te maken (bijv. medailles, confetti bij Topper van de Maand).
+Mobile-friendly, met swipe-functionaliteit als het aantal rangen groeit.
