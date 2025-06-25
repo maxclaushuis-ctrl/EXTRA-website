@@ -14,6 +14,7 @@ import {
   insertEmailTemplateSchema,
   insertCampaignSchema,
   insertDiscountSchema,
+  insertChallengeSchema,
   // Plansysteem schema imports
   insertClientSchema,
   insertLocationSchema,
@@ -872,6 +873,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Challenges API routes
+  app.get("/api/challenges", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const challenges = await storage.getChallenges();
+      
+      // Filter challenges based on status for non-admins
+      let filteredChallenges = challenges;
+      if (req.session.userRole !== 'admin') {
+        filteredChallenges = challenges.filter(challenge => challenge.status === 'active');
+      }
+      
+      return res.status(200).json(filteredChallenges);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de challenges"
+      });
+    }
+  });
+
+  app.get("/api/challenges/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      
+      const challenge = await storage.getChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge niet gevonden" });
+      }
+      
+      return res.status(200).json(challenge);
+    } catch (error) {
+      console.error("Error fetching challenge:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de challenge"
+      });
+    }
+  });
+
+  app.post("/api/challenges", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = insertChallengeSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Ongeldige data",
+          errors: result.error.errors,
+        });
+      }
+      
+      const challenge = await storage.createChallenge(result.data);
+      
+      return res.status(201).json({
+        message: "Challenge succesvol aangemaakt",
+        challenge
+      });
+    } catch (error) {
+      console.error("Error creating challenge:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het aanmaken van de challenge" });
+    }
+  });
+
+  app.put("/api/challenges/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      
+      const challenge = await storage.getChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge niet gevonden" });
+      }
+      
+      const updatedChallenge = await storage.updateChallenge(challengeId, req.body);
+      
+      if (!updatedChallenge) {
+        return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de challenge" });
+      }
+      
+      return res.status(200).json({
+        message: "Challenge succesvol bijgewerkt",
+        challenge: updatedChallenge
+      });
+    } catch (error) {
+      console.error(`Error updating challenge ${req.params.id}:`, error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de challenge" });
+    }
+  });
+
+  app.delete("/api/challenges/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      
+      const challenge = await storage.getChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge niet gevonden" });
+      }
+      
+      const success = await storage.deleteChallenge(challengeId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de challenge" });
+      }
+      
+      return res.status(200).json({ message: "Challenge succesvol verwijderd" });
+    } catch (error) {
+      console.error(`Error deleting challenge ${req.params.id}:`, error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de challenge" });
+    }
+  });
+
   // Discounts API routes
   app.get("/api/discounts", authMiddleware, async (req: Request, res: Response) => {
     try {
