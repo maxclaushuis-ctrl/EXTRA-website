@@ -109,14 +109,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **June 25, 2025**: Added comprehensive Challenges system
+- **June 25, 2025**: Enhanced Challenges system with progressive steps and visual progress tracking
   - Implemented fourth tab "Challenges" in employee dashboard with mobile-optimized layout
   - Created complete database schema for challenges, steps, and user progress tracking
   - Built admin panel for creating/managing challenges with step-by-step progression
-  - Added 3 default challenge categories: Diensten draaien, Last-minute inzet, Vrienden aandragen
-  - Integrated automatic point awarding system with WebSocket notifications
+  - Added 4 default challenge categories with specific progressive targets:
+    - "Diensten draaien": Steps at 10, 25, 50, 100 services (250-1500 points)
+    - "Last-minute inzet": Steps at 5, 10, 20 shifts (300-1200 points)
+    - "Vrienden aandragen": Steps at 3, 5, 10 referrals (400-1000 points)
+    - "Deel een story": Steps at 1, 5, 10 stories (150-600 points)
+  - Added visual progress bars showing completion percentage for each challenge step
+  - Challenges now display specific numbered targets (e.g. "Draai 10 diensten") instead of generic descriptions
+  - Each step shows points reward and current progress (e.g. "7/10")
   - Challenge progress persists indefinitely (unlike monthly leaderboard resets)
-  - Each step awards points and optional badges upon completion
   - Real-time progress tracking with visual progress bars and completion animations
 
 - **June 24, 2025**: Implemented realtime leaderboard functionality

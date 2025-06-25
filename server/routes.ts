@@ -984,6 +984,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Challenge steps API routes
+  app.get("/api/challenges/:id/steps", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      
+      const steps = await storage.getChallengeSteps(challengeId);
+      
+      return res.status(200).json(steps);
+    } catch (error) {
+      console.error("Error fetching challenge steps:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de challenge stappen"
+      });
+    }
+  });
+
   // Discounts API routes
   app.get("/api/discounts", authMiddleware, async (req: Request, res: Response) => {
     try {
