@@ -224,6 +224,9 @@ export class MemStorage implements IStorage {
   private automationActions: Map<number, AutomationAction>;
   private discounts: Map<number, Discount>;
   private monthlyLeaders: Map<number, MonthlyLeader>;
+  private challenges: Map<number, Challenge>;
+  private challengeSteps: Map<number, ChallengeStep>;
+  private userChallengeProgress: Map<number, UserChallengeProgress>;
   // Plansysteem data
   private clients: Map<number, Client>;
   private locations: Map<number, Location>;
@@ -271,6 +274,9 @@ export class MemStorage implements IStorage {
     this.automationActions = new Map();
     this.discounts = new Map();
     this.monthlyLeaders = new Map();
+    this.challenges = new Map();
+    this.challengeSteps = new Map();
+    this.userChallengeProgress = new Map();
     
     // Plansysteem maps initialiseren
     this.clients = new Map();

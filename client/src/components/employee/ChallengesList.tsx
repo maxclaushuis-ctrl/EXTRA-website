@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Trophy, Target, Zap, Users, CheckCircle } from "lucide-react";
 import type { UserChallengeProgress, Challenge, ChallengeStep } from "@shared/schema";
 

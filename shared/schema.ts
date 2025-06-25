@@ -530,7 +530,26 @@ export type PoolMember = typeof poolMembers.$inferSelect;
 
 export const insertMonthlyLeaderSchema = createInsertSchema(monthlyLeaders).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertChallengeStepSchema = createInsertSchema(challengeSteps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertUserChallengeProgressSchema = createInsertSchema(userChallengeProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
 });
 
 export type InsertMonthlyLeader = z.infer<typeof insertMonthlyLeaderSchema>;
