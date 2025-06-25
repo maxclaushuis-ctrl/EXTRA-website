@@ -535,3 +535,12 @@ export const insertMonthlyLeaderSchema = createInsertSchema(monthlyLeaders).omit
 
 export type InsertMonthlyLeader = z.infer<typeof insertMonthlyLeaderSchema>;
 export type MonthlyLeader = typeof monthlyLeaders.$inferSelect;
+
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Challenge = typeof challenges.$inferSelect;
+
+export type InsertChallengeStep = z.infer<typeof insertChallengeStepSchema>;
+export type ChallengeStep = typeof challengeSteps.$inferSelect;
+
+export type InsertUserChallengeProgress = z.infer<typeof insertUserChallengeProgressSchema>;
+export type UserChallengeProgress = typeof userChallengeProgress.$inferSelect;

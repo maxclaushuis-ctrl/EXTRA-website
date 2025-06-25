@@ -13,6 +13,9 @@ import {
   type AutomationAction, type InsertAutomationAction,
   type Discount, type InsertDiscount,
   type MonthlyLeader, type InsertMonthlyLeader,
+  type Challenge, type InsertChallenge,
+  type ChallengeStep, type InsertChallengeStep,
+  type UserChallengeProgress, type InsertUserChallengeProgress,
   // Plansysteem types
   type Client, type InsertClient,
   type Location, type InsertLocation,
@@ -48,6 +51,23 @@ export interface IStorage {
   getMonthlyLeaderboard(year?: number, month?: number): Promise<(User & { rank: number })[]>;
   getPreviousMonthWinner(): Promise<User | undefined>;
   resetMonthlyPoints(): Promise<number>;
+  
+  // Challenge methods
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  getChallenges(): Promise<Challenge[]>;
+  getChallenge(id: number): Promise<Challenge | undefined>;
+  updateChallenge(id: number, data: Partial<InsertChallenge>): Promise<Challenge | undefined>;
+  deleteChallenge(id: number): Promise<boolean>;
+  
+  createChallengeStep(step: InsertChallengeStep): Promise<ChallengeStep>;
+  getChallengeSteps(challengeId: number): Promise<ChallengeStep[]>;
+  getChallengeStep(id: number): Promise<ChallengeStep | undefined>;
+  updateChallengeStep(id: number, data: Partial<InsertChallengeStep>): Promise<ChallengeStep | undefined>;
+  deleteChallengeStep(id: number): Promise<boolean>;
+  
+  getUserChallengeProgress(userId: number): Promise<(UserChallengeProgress & { challenge: Challenge; currentStep?: ChallengeStep; nextStep?: ChallengeStep })[]>;
+  updateUserChallengeProgress(userId: number, challengeId: number, progress: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined>;
+  completeUserChallengeStep(userId: number, challengeId: number, stepId: number): Promise<{ progress: UserChallengeProgress; pointsAwarded: number } | undefined>;
   saveMonthlyLeaders(year: number, month: number): Promise<void>;
   
   // Reward methods

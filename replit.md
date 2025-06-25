@@ -109,6 +109,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **June 25, 2025**: Added comprehensive Challenges system
+  - Implemented fourth tab "Challenges" in employee dashboard with mobile-optimized layout
+  - Created complete database schema for challenges, steps, and user progress tracking
+  - Built admin panel for creating/managing challenges with step-by-step progression
+  - Added 3 default challenge categories: Diensten draaien, Last-minute inzet, Vrienden aandragen
+  - Integrated automatic point awarding system with WebSocket notifications
+  - Challenge progress persists indefinitely (unlike monthly leaderboard resets)
+  - Each step awards points and optional badges upon completion
+  - Real-time progress tracking with visual progress bars and completion animations
+
 - **June 24, 2025**: Implemented realtime leaderboard functionality
   - Added monthly points tracking system with database schema
   - Created leaderboard API endpoints (/api/leaderboard, /api/leaderboard/previous-winner)

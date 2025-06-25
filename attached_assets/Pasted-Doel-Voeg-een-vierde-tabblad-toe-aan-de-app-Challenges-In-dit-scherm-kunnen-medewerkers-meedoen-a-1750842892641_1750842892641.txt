@@ -1,0 +1,48 @@
+Doel:
+Voeg een vierde tabblad toe aan de app: Challenges. In dit scherm kunnen medewerkers meedoen aan interactieve uitdagingen (challenges) om EXTRA punten te verdienen. Elke challenge bestaat uit één of meerdere stappen. Na het behalen van een stap (bijv. 10 diensten gewerkt), wordt automatisch de volgende stap getoond (bijv. 25 diensten gewerkt). Aan elke stap is een vast puntenbedrag gekoppeld.
+
+✅ Functionele wensen:
+Tabblad 'Challenges' toevoegen
+Plaats deze naast de huidige drie tabbladen (Beloningen, Kortingsacties, Ranglijst).
+Gebruik bij voorkeur een compactere layout zodat alles netjes past op mobiele schermen.
+Overzicht van actieve challenges
+Toon alle actieve challenges waar de medewerker aan meedoet.
+Elke challenge bevat:
+Een titel
+Beschrijving
+Voortgangsbalk (bijv. 3/10)
+Puntenbeloning
+Status (Nog bezig / Voltooid)
+Automatisch vervolg-challenge na behalen
+Challenge-voortgang opslaan per gebruiker
+Data moet per gebruiker worden opgeslagen (bijv. in een JSON-object of gekoppeld aan de bestaande gebruikers-ID).
+Punten worden pas toegekend als een stap is voltooid.
+Reset de challenge voortgang niet elke maand (in tegenstelling tot het leaderboard).
+Admin-backend voor beheer
+Maak het mogelijk om nieuwe challenges toe te voegen via het admin-paneel.
+Challenges moeten bestaan uit:
+Titel
+Omschrijving
+Voorwaarden (aantal diensten, type dienst, referrals, etc.)
+Beloning (puntenaantal)
+Eventuele volg-challenge
+🎯 Voorbeeldchallenges (voor testdata & styling):
+Challenge 1 – Diensten draaien
+
+Stap 1: Werk 10 diensten → 200 punten
+Stap 2: Werk 25 diensten → 300 punten
+Stap 3: Werk 50 diensten → 500 punten
+Challenge 2 – Last-minute inzet
+
+Stap 1: Werk 5 last-minute diensten → 150 punten
+Stap 2: Werk 10 last-minute diensten → 250 punten
+Stap 3: Werk 20 last-minute diensten → 400 punten
+Challenge 3 – Vrienden aandragen
+
+Stap 1: Draag 3 vrienden aan → 300 punten
+Stap 2: Draag 5 vrienden aan → 400 punten
+Stap 3: Draag 10 vrienden aan → 600 punten
+💡 Extra visuele opties (optioneel)
+Geef een badge per voltooide challenge (bijv. “Flexheld”, “Last Minute Legend”).
+Gebruik een gekleurde voortgangsbalk met animatie bij het behalen.
+Voeg microcopy toe bij behalen zoals: “Yes! Je hebt 10 diensten voltooid 🔥”
