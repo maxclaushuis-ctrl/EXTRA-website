@@ -34,18 +34,7 @@ export default function ChallengesList() {
     }
   });
 
-  const { data: allChallenges } = useQuery<Challenge[]>({
-    queryKey: ["/api/challenges"],
-    queryFn: async () => {
-      const response = await fetch('/api/challenges', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return response.json();
-    }
-  });
+  // Remove the separate challenges query since userProgress includes challenge details
 
   const completeStepMutation = useMutation({
     mutationFn: async ({ challengeId, stepId }: { challengeId: number; stepId: number }) => {
@@ -138,32 +127,30 @@ export default function ChallengesList() {
     );
   }
 
-  // Combine user progress with available challenges
-  const displayChallenges = allChallenges?.map(challenge => {
-    const progress = userProgress?.find(p => p.challengeId === challenge.id);
-    return {
-      challenge,
-      progress: progress || null
-    };
-  }) || [];
-
-  console.log('All challenges:', allChallenges);
-  console.log('User progress:', userProgress);
-  console.log('Display challenges:', displayChallenges);
+  // Use the user progress data which already includes challenge details
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-400">Challenges laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 pt-4 pb-16">
-      {displayChallenges.map(({ challenge, progress }) => {
-        const isCompleted = progress?.isCompleted || false;
-        const currentStep = progress?.currentStep;
-        const nextStep = progress?.nextStep;
-        const currentValue = progress?.currentValue || 0;
-        const targetValue = currentStep?.targetValue || nextStep?.targetValue || 0;
-        const progressPercentage = targetValue > 0 ? Math.min((currentValue / targetValue) * 100, 100) : 0;
+      {userProgress?.map((progress) => {
+        const { challenge, currentStep, nextStep } = progress;
+        const isCompleted = progress.isCompleted;
+        const currentValue = progress.currentValue;
         const activeStep = currentStep || nextStep;
+        const targetValue = activeStep?.targetValue || 0;
+        const progressPercentage = targetValue > 0 ? Math.min((currentValue / targetValue) * 100, 100) : 0;
         
         return (
-          <Card key={challenge.id} className="border-none bg-gray-900 text-white overflow-hidden">
+          <Card key={progress.challengeId} className="border-none bg-gray-900 text-white overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -251,7 +238,7 @@ export default function ChallengesList() {
         );
       })}
       
-      {displayChallenges.length === 0 && (
+      {!userProgress || userProgress.length === 0 && (
         <div className="text-center py-8">
           <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400">Geen challenges beschikbaar</p>
