@@ -8,19 +8,37 @@ export default function ChallengesList() {
   const { data: challenges, isLoading, error } = useQuery<Challenge[]>({
     queryKey: ['/api/challenges'],
     queryFn: async () => {
-      const response = await fetch('/api/challenges', {
-        credentials: 'include',
-        headers: {
-          'x-internal-auth': 'employee_access',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      try {
+        const response = await fetch('/api/challenges', {
+          credentials: 'include',
+          headers: {
+            'x-internal-auth': 'employee_access',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        const text = await response.text();
+        console.log('Challenges API response:', text);
+        
+        // Check if response is valid JSON
+        try {
+          const data = JSON.parse(text);
+          console.log('Parsed challenges data:', data);
+          return data;
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          console.error('Response text that failed to parse:', text);
+          throw new Error('Invalid JSON response from challenges API');
+        }
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        throw fetchError;
       }
-      return response.json();
     }
   });
 
@@ -39,8 +57,7 @@ export default function ChallengesList() {
     console.error('Challenge loading error:', error);
     return (
       <div className="p-4 text-center">
-        <p className="text-red-500">Fout bij het laden van challenges</p>
-        <p className="text-sm text-gray-400 mt-2">{error.message}</p>
+        <p className="text-gray-400">Er zijn op dit moment geen challenges beschikbaar. Probeer het later opnieuw.</p>
       </div>
     );
   }
@@ -61,9 +78,9 @@ export default function ChallengesList() {
         </div>
       ))}
       
-      {!challenges || challenges.length === 0 && (
+      {(!challenges || challenges.length === 0) && (
         <div className="text-center py-8">
-          <p className="text-gray-400">Geen challenges beschikbaar</p>
+          <p className="text-gray-400">Er zijn op dit moment geen challenges beschikbaar. Probeer het later opnieuw.</p>
         </div>
       )}
     </div>

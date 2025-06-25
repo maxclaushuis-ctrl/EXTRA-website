@@ -1,0 +1,31 @@
+Hi Replit team,
+
+We blijven een foutmelding krijgen bij het laden van de "Challenges"-tab in onze webapp. Zie de bijgevoegde screenshot:
+
+❌ “Fout bij het laden van challenges – The string did not match the expected pattern.”
+Hier is wat jullie moeten checken en fixen:
+
+🔍 Probleemomschrijving
+We hebben een vierde tab toegevoegd aan de interface: Challenges (naast Beloningen / Deals / Ranglijst).
+De bedoeling is dat medewerkers hier challenges kunnen voltooien (zoals “werk 10 diensten” etc.) en dat er een voortgangsbalk per challenge zichtbaar is.
+Op dit moment crasht het laden van deze pagina. De foutmelding lijkt te wijzen op een fout in hoe de challenge-data wordt ingeladen of geïnterpreteerd door het front-end component.
+✅ Wat moet er gebeuren?
+Controleer of het object/datastructuur waarmee challenges worden ingeladen overeenkomt met wat het frontend verwacht.
+Mogelijk wordt een string of onjuiste datatype doorgegeven terwijl een JSON-object, array of ID wordt verwacht.
+Check of het ID van een challenge correct is en geen verkeerde karakters bevat.
+Controleer of de database/fake-database überhaupt challenges bevat.
+Als er geen challenge-objecten zijn aangemaakt, moet dit netjes worden opgevangen zonder foutmelding.
+Voeg indien nodig 3 dummy challenges toe zoals:
+“Voltooi 10 diensten” (500 punten)
+“Werk 5 last-minute diensten” (300 punten)
+“Draag 3 vrienden aan” (700 punten)
+Voeg foutafhandeling toe aan de frontend:
+Als een challenge niet wordt gevonden of onjuist geladen wordt, toon dan:
+"Er zijn op dit moment geen challenges beschikbaar. Probeer het later opnieuw."
+in plaats van een technische foutmelding.
+Zorg dat wij zelf aan de achterkant via het admin panel nieuwe challenges kunnen toevoegen.
+Denk aan velden als: titel, omschrijving, drempel (bv. 10 diensten), beloning (aantal punten), type (diensten / referrals / last-minute).
+💡 Belangrijk:
+Reset niet de EXTRA-punten zelf per maand! Alleen de maandelijkse leaderboard (Ranglijst-tab) wordt gereset.
+Voeg voortgangsbalk toe per challenge (bijv. 3/10 diensten voltooid).
+Maak het tabblad visueel consistent met de andere tabbladen (zie screenshot).
