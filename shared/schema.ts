@@ -100,6 +100,42 @@ export const monthlyLeaders = pgTable("monthly_leaders", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Challenges system
+export const challenges = pgTable('challenges', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  category: text('category').notNull(), // 'shifts', 'lastminute', 'referrals', etc.
+  status: text('status').notNull().default('active'), // 'active', 'inactive'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const challengeSteps = pgTable('challenge_steps', {
+  id: serial('id').primaryKey(),
+  challengeId: integer('challenge_id').references(() => challenges.id, { onDelete: 'cascade' }).notNull(),
+  stepNumber: integer('step_number').notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  targetValue: integer('target_value').notNull(), // aantal diensten, referrals, etc.
+  pointsReward: integer('points_reward').notNull(),
+  badgeTitle: text('badge_title'), // optionele badge naam
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const userChallengeProgress = pgTable('user_challenge_progress', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  challengeId: integer('challenge_id').references(() => challenges.id, { onDelete: 'cascade' }).notNull(),
+  currentStepId: integer('current_step_id').references(() => challengeSteps.id),
+  currentValue: integer('current_value').notNull().default(0), // huidige voortgang
+  completedSteps: integer('completed_steps').array().notNull().default('{}'), // array van voltooide step IDs
+  isCompleted: boolean('is_completed').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
 // Regels voor het verdienen van punten
 export const rules = pgTable("rules", {
   id: serial("id").primaryKey(),
@@ -530,8 +566,7 @@ export type PoolMember = typeof poolMembers.$inferSelect;
 
 export const insertMonthlyLeaderSchema = createInsertSchema(monthlyLeaders).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true
+  createdAt: true
 });
 
 export const insertChallengeSchema = createInsertSchema(challenges).omit({
