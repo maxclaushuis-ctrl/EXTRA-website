@@ -96,6 +96,7 @@ export default function ChallengesList() {
       case 'shifts': return <Target className="h-5 w-5" />;
       case 'lastminute': return <Zap className="h-5 w-5" />;
       case 'referrals': return <Users className="h-5 w-5" />;
+      case 'social': return <Trophy className="h-5 w-5" />;
       default: return <Trophy className="h-5 w-5" />;
     }
   };
@@ -105,7 +106,8 @@ export default function ChallengesList() {
       case 'shifts': return 'bg-blue-600';
       case 'lastminute': return 'bg-orange-600';
       case 'referrals': return 'bg-green-600';
-      default: return 'bg-purple-600';
+      case 'social': return 'bg-purple-600';
+      default: return 'bg-gray-600';
     }
   };
 
@@ -144,6 +146,10 @@ export default function ChallengesList() {
       progress: progress || null
     };
   }) || [];
+
+  console.log('All challenges:', allChallenges);
+  console.log('User progress:', userProgress);
+  console.log('Display challenges:', displayChallenges);
 
   return (
     <div className="space-y-4 pt-4 pb-16">
