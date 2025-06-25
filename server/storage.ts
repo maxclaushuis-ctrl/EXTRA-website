@@ -301,6 +301,9 @@ export class MemStorage implements IStorage {
       automationActions: 1,
       discounts: 1,
       monthlyLeaders: 1,
+      challenges: 1,
+      challengeSteps: 1,
+      userChallengeProgress: 1,
       // Plansysteem ids
       clients: 1,
       locations: 1,
@@ -2584,6 +2587,15 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     });
   }
+
+  // Initialize all default data
+  private initializeData() {
+    console.log("Initializing challenges...");
+    this.initializeChallenges();
+    console.log("Challenges initialized successfully");
+  }
 }
 
 export const storage = new MemStorage();
+// Initialize challenges after storage is created
+(storage as any).initializeData();
