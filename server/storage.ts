@@ -2211,6 +2211,379 @@ export class MemStorage implements IStorage {
     
     return this.poolMembers.delete(membership.id);
   }
+
+  // Challenge methods
+  async createChallenge(insertChallenge: InsertChallenge): Promise<Challenge> {
+    const id = this.currentIds.challenges++;
+    const now = new Date();
+    
+    const challenge: Challenge = {
+      id,
+      title: insertChallenge.title,
+      description: insertChallenge.description,
+      category: insertChallenge.category,
+      status: insertChallenge.status || 'active',
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.challenges.set(id, challenge);
+    return challenge;
+  }
+
+  async getChallenges(): Promise<Challenge[]> {
+    return Array.from(this.challenges.values());
+  }
+
+  async getChallenge(id: number): Promise<Challenge | undefined> {
+    return this.challenges.get(id);
+  }
+
+  async updateChallenge(id: number, data: Partial<InsertChallenge>): Promise<Challenge | undefined> {
+    const challenge = this.challenges.get(id);
+    if (!challenge) return undefined;
+
+    const updatedChallenge: Challenge = {
+      ...challenge,
+      ...data,
+      updatedAt: new Date()
+    };
+
+    this.challenges.set(id, updatedChallenge);
+    return updatedChallenge;
+  }
+
+  async deleteChallenge(id: number): Promise<boolean> {
+    return this.challenges.delete(id);
+  }
+
+  async getChallengeSteps(challengeId: number): Promise<ChallengeStep[]> {
+    return Array.from(this.challengeSteps.values()).filter(
+      (step) => step.challengeId === challengeId
+    );
+  }
+
+  async getUserChallengeProgress(userId: number): Promise<UserChallengeProgressWithDetails[]> {
+    const userProgress = Array.from(this.userChallengeProgress.values()).filter(
+      (progress) => progress.userId === userId
+    );
+
+    const progressWithDetails: UserChallengeProgressWithDetails[] = [];
+
+    for (const progress of userProgress) {
+      const challenge = await this.getChallenge(progress.challengeId);
+      if (!challenge) continue;
+
+      const steps = await this.getChallengeSteps(progress.challengeId);
+      const currentStep = progress.currentStepId ? 
+        steps.find(s => s.id === progress.currentStepId) : 
+        steps.find(s => s.stepNumber === 1);
+      
+      const nextStepNumber = currentStep ? currentStep.stepNumber + 1 : 1;
+      const nextStep = steps.find(s => s.stepNumber === nextStepNumber);
+
+      progressWithDetails.push({
+        ...progress,
+        challenge,
+        currentStep,
+        nextStep
+      });
+    }
+
+    // Add challenges user hasn't started yet
+    const allChallenges = await this.getChallenges();
+    for (const challenge of allChallenges) {
+      if (challenge.status !== 'active') continue;
+      
+      const hasProgress = userProgress.some(p => p.challengeId === challenge.id);
+      if (!hasProgress) {
+        const steps = await this.getChallengeSteps(challenge.id);
+        const firstStep = steps.find(s => s.stepNumber === 1);
+        
+        progressWithDetails.push({
+          id: 0,
+          userId,
+          challengeId: challenge.id,
+          currentStepId: null,
+          currentValue: 0,
+          completedSteps: [],
+          isCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          challenge,
+          currentStep: undefined,
+          nextStep: firstStep
+        });
+      }
+    }
+
+    return progressWithDetails;
+  }
+
+  async completeUserChallengeStep(userId: number, challengeId: number, stepId: number): Promise<{
+    progress: UserChallengeProgress;
+    pointsAwarded: number;
+  } | null> {
+    const step = this.challengeSteps.get(stepId);
+    if (!step || step.challengeId !== challengeId) return null;
+
+    let progress = Array.from(this.userChallengeProgress.values()).find(
+      p => p.userId === userId && p.challengeId === challengeId
+    );
+
+    if (!progress) {
+      // Create new progress
+      const id = this.currentIds.userChallengeProgress++;
+      progress = {
+        id,
+        userId,
+        challengeId,
+        currentStepId: stepId,
+        currentValue: step.targetValue,
+        completedSteps: [stepId],
+        isCompleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.userChallengeProgress.set(id, progress);
+    } else {
+      // Update existing progress
+      const newCompletedSteps = [...progress.completedSteps, stepId];
+      const steps = await this.getChallengeSteps(challengeId);
+      const isCompleted = newCompletedSteps.length >= steps.length;
+      
+      const updatedProgress = {
+        ...progress,
+        currentStepId: stepId,
+        currentValue: step.targetValue,
+        completedSteps: newCompletedSteps,
+        isCompleted,
+        updatedAt: new Date()
+      };
+      
+      this.userChallengeProgress.set(progress.id, updatedProgress);
+      progress = updatedProgress;
+    }
+
+    // Award points
+    await this.addPointTransaction({
+      userId,
+      amount: step.pointsReward,
+      type: 'earned',
+      description: `Challenge stap voltooid: ${step.title}`,
+      source: 'challenge',
+      sourceId: stepId.toString()
+    });
+
+    return {
+      progress,
+      pointsAwarded: step.pointsReward
+    };
+  }
+
+  private initializeChallenges() {
+    // Initialize challenges
+    this.challenges.set(1, {
+      id: 1,
+      title: "Diensten draaien",
+      description: "Verdien punten door diensten te werken en jouw ervaring uit te breiden",
+      category: "shifts",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challenges.set(2, {
+      id: 2,
+      title: "Last-minute inzet",
+      description: "Spring bij wanneer het nodig is en verdien extra punten",
+      category: "lastminute",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challenges.set(3, {
+      id: 3,
+      title: "Vrienden aandragen",
+      description: "Deel de EXTRA ervaring met je vrienden en verdien punten",
+      category: "referrals",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challenges.set(4, {
+      id: 4,
+      title: "Deel een story",
+      description: "Deel EXTRA content op social media en tag ons voor extra punten",
+      category: "social",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Initialize challenge steps
+    // Diensten draaien steps
+    this.challengeSteps.set(1, {
+      id: 1,
+      challengeId: 1,
+      stepNumber: 1,
+      title: "Eerste diensten",
+      description: "Werk 10 diensten",
+      targetValue: 10,
+      pointsReward: 200,
+      badgeTitle: "Starter",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(2, {
+      id: 2,
+      challengeId: 1,
+      stepNumber: 2,
+      title: "Ervaren werker",
+      description: "Werk 25 diensten",
+      targetValue: 25,
+      pointsReward: 300,
+      badgeTitle: "Professional",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(3, {
+      id: 3,
+      challengeId: 1,
+      stepNumber: 3,
+      title: "EXTRA veteraan",
+      description: "Werk 50 diensten",
+      targetValue: 50,
+      pointsReward: 500,
+      badgeTitle: "Veteraan",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Last-minute inzet steps
+    this.challengeSteps.set(4, {
+      id: 4,
+      challengeId: 2,
+      stepNumber: 1,
+      title: "Flexibele helper",
+      description: "Accepteer 5 last-minute diensten",
+      targetValue: 5,
+      pointsReward: 150,
+      badgeTitle: "Helper",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(5, {
+      id: 5,
+      challengeId: 2,
+      stepNumber: 2,
+      title: "Altijd beschikbaar",
+      description: "Accepteer 10 last-minute diensten",
+      targetValue: 10,
+      pointsReward: 250,
+      badgeTitle: "Beschikbaar",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(6, {
+      id: 6,
+      challengeId: 2,
+      stepNumber: 3,
+      title: "Last-minute held",
+      description: "Accepteer 20 last-minute diensten",
+      targetValue: 20,
+      pointsReward: 400,
+      badgeTitle: "Held",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Vrienden aandragen steps
+    this.challengeSteps.set(7, {
+      id: 7,
+      challengeId: 3,
+      stepNumber: 1,
+      title: "Eerste referral",
+      description: "Draag 3 vrienden aan",
+      targetValue: 3,
+      pointsReward: 300,
+      badgeTitle: "Referrer",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(8, {
+      id: 8,
+      challengeId: 3,
+      stepNumber: 2,
+      title: "Netwerker",
+      description: "Draag 5 vrienden aan",
+      targetValue: 5,
+      pointsReward: 400,
+      badgeTitle: "Netwerker",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(9, {
+      id: 9,
+      challengeId: 3,
+      stepNumber: 3,
+      title: "EXTRA ambassadeur",
+      description: "Draag 10 vrienden aan",
+      targetValue: 10,
+      pointsReward: 600,
+      badgeTitle: "Ambassador",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Deel een story steps
+    this.challengeSteps.set(10, {
+      id: 10,
+      challengeId: 4,
+      stepNumber: 1,
+      title: "Eerste story",
+      description: "Deel 1 story met EXTRA content en tag ons",
+      targetValue: 1,
+      pointsReward: 100,
+      badgeTitle: "Storyteller",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(11, {
+      id: 11,
+      challengeId: 4,
+      stepNumber: 2,
+      title: "Social media fan",
+      description: "Deel 5 stories met EXTRA content",
+      targetValue: 5,
+      pointsReward: 200,
+      badgeTitle: "Social Fan",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    this.challengeSteps.set(12, {
+      id: 12,
+      challengeId: 4,
+      stepNumber: 3,
+      title: "EXTRA influencer",
+      description: "Deel 10 stories met EXTRA content",
+      targetValue: 10,
+      pointsReward: 350,
+      badgeTitle: "EXTRA Influencer",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+  }
 }
 
 export const storage = new MemStorage();

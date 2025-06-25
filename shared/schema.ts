@@ -598,3 +598,9 @@ export type ChallengeStep = typeof challengeSteps.$inferSelect;
 
 export type InsertUserChallengeProgress = z.infer<typeof insertUserChallengeProgressSchema>;
 export type UserChallengeProgress = typeof userChallengeProgress.$inferSelect;
+
+export type UserChallengeProgressWithDetails = UserChallengeProgress & {
+  challenge: Challenge;
+  currentStep?: ChallengeStep;
+  nextStep?: ChallengeStep;
+};
