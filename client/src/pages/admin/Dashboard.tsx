@@ -26,6 +26,7 @@ import Transactions from './Transactions';
 import Rewards from './Rewards';
 import { Challenges } from '@/components/admin/Challenges';
 import { Discounts } from '@/components/admin/Discounts';
+import LeaderboardComponent from '@/components/Leaderboard';
 
 import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
@@ -205,7 +206,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
@@ -217,6 +218,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="challenges">
             <TrendingUp className="mr-2 h-4 w-4" />
             Challenges
+          </TabsTrigger>
+          <TabsTrigger value="ranglijst">
+            <BarChart className="mr-2 h-4 w-4" />
+            Ranglijst
           </TabsTrigger>
           <TabsTrigger value="kortingsacties">
             <Receipt className="mr-2 h-4 w-4" />
@@ -303,38 +308,26 @@ export default function AdminDashboard() {
           <Challenges />
         </TabsContent>
 
+        <TabsContent value="ranglijst" className="mt-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold">Ranglijst</h2>
+            <p className="text-muted-foreground">
+              Bekijk de maandelijkse ranglijst met de beste presteerders
+            </p>
+          </div>
+          
+          <div className="grid gap-6">
+            <LeaderboardComponent />
+          </div>
+        </TabsContent>
+        
         <TabsContent value="kortingsacties" className="mt-6">
           <Discounts />
         </TabsContent>
         
-        <TabsContent value="marketing" className="mt-6">
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold">Email Marketing</h2>
-            <p className="text-muted-foreground">
-              Beheer email templates en automatiseringen voor communicatie met medewerkers
-            </p>
-          </div>
-          <div className="flex justify-center pt-4">
 
-          </div>
-        </TabsContent>
         
-        <TabsContent value="analytics" className="mt-6">
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold">Analytics & Rapportages</h2>
-            <p className="text-muted-foreground">
-              Bekijk gedetailleerde statistieken en analyses over punten, beloningen en gebruikersactiviteit
-            </p>
-          </div>
-          <div className="flex justify-center pt-4">
-            <Button asChild size="lg">
-              <Link href="/admin/analytics">
-                <LineChart className="mr-2 h-5 w-5" />
-                Ga naar Analytics
-              </Link>
-            </Button>
-          </div>
-        </TabsContent>
+
         
         <TabsContent value="instellingen" className="mt-6">
           <div className="mb-4">
