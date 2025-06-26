@@ -1,8 +1,8 @@
-# EXTRA Rewards System
+# EXTRAATJE - Test Environment
 
 ## Overview
 
-This is a comprehensive employee rewards platform called "EXTRA" that combines a points-based reward system with shift planning functionality. The application targets the hospitality industry in Amsterdam, providing flexible work opportunities with immediate rewards after shifts.
+This is the EXTRAATJE test environment - a complete copy of the EXTRA Rewards platform for safe testing and development. This environment allows testing changes without affecting the main production system. All functionality is identical to the main system including the challenges with progress bars, leaderboard, and reward systems.
 
 ## System Architecture
 
@@ -108,6 +108,12 @@ The application follows a monorepo structure with clear separation between clien
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+
+- **June 26, 2025**: Created EXTRAATJE test environment as complete system copy
+  - Independent testing environment created from main EXTRA system
+  - All functionality preserved: rewards, leaderboard, challenges with progress bars
+  - Safe environment for testing changes without affecting main system
+  - Port configuration may need adjustment to avoid conflicts
 
 - **June 26, 2025**: Created complete system backup for testing purposes
   - Full backup created at `/home/runner/extra-rewards-backup/`
