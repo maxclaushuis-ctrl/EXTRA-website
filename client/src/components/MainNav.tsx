@@ -82,6 +82,14 @@ export function MainNav() {
               Kortingsacties
             </Link>
             <Link
+              href="/admin/challenges"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/challenges" ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Challenges
+            </Link>
+            <Link
               href="/admin/werkruimte"
               className={`transition-colors hover:text-primary ${
                 location === "/admin/werkruimte" ? "text-primary font-medium" : "text-muted-foreground"
