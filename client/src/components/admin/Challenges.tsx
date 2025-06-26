@@ -53,6 +53,7 @@ export function Challenges() {
   const [newChallengeTitle, setNewChallengeTitle] = useState("");
   const [newChallengeDescription, setNewChallengeDescription] = useState("");
   const [newChallengeCategory, setNewChallengeCategory] = useState("");
+  const [newChallengePoints, setNewChallengePoints] = useState(100);
   const [newChallengeStatus, setNewChallengeStatus] = useState("active");
 
   // Fetch challenges
@@ -90,6 +91,7 @@ export function Challenges() {
     setNewChallengeTitle("");
     setNewChallengeDescription("");
     setNewChallengeCategory("");
+    setNewChallengePoints(100);
     setNewChallengeStatus("active");
   };
 
@@ -107,6 +109,7 @@ export function Challenges() {
       title: newChallengeTitle,
       description: newChallengeDescription,
       category: newChallengeCategory,
+      points: newChallengePoints,
       status: newChallengeStatus,
     });
   };
@@ -196,6 +199,20 @@ export function Challenges() {
                       <SelectItem value="social">Social media</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="points">Punten</Label>
+                  <Input
+                    id="points"
+                    type="number"
+                    value={newChallengePoints}
+                    onChange={(e) => setNewChallengePoints(parseInt(e.target.value) || 100)}
+                    placeholder="Aantal punten voor deze challenge"
+                    min="1"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Het aantal punten dat medewerkers krijgen bij voltooiing van deze challenge
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
