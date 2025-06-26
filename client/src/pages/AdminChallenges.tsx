@@ -132,7 +132,7 @@ export default function AdminChallenges() {
         title: editingChallenge.title,
         description: editingChallenge.description,
         category: editingChallenge.category,
-        isActive: editingChallenge.isActive
+        status: editingChallenge.status
       }
     });
   };
@@ -277,8 +277,8 @@ export default function AdminChallenges() {
                   {editingSteps.map((step, index) => (
                     <div key={step.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
                       <span className="font-medium">Stap {step.stepNumber}:</span>
-                      <span>Target {step.target}</span>
-                      <span className="text-blue-600">({step.points} punten)</span>
+                      <span>Target {step.targetValue}</span>
+                      <span className="text-blue-600">({step.pointsReward} punten)</span>
                       <Button
                         variant="ghost"
                         size="sm"

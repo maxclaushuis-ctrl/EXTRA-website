@@ -109,6 +109,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **June 26, 2025**: Added Challenges management to admin dashboard
+  - Created comprehensive admin interface for managing challenges and challenge steps
+  - Added navigation link "Challenges" in admin menu at `/admin/challenges`
+  - Admin can now create, edit, delete challenges with progressive step targets
+  - Full CRUD operations for challenges with visual step management interface
+  - Integrated with existing challenge system for employee progress tracking
+
 - **June 26, 2025**: Created EXTRAATJE test environment as complete system copy
   - Independent testing environment created from main EXTRA system
   - All functionality preserved: rewards, leaderboard, challenges with progress bars
