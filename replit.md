@@ -109,14 +109,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **June 26, 2025**: Integrated challenges with external planning system for automatic synchronization
-  - Built comprehensive API integration system for real-time challenge progress updates
-  - Created planning system API client for shift data, referrals, and social shares
-  - Implemented automatic challenge synchronization service with bulk and individual sync
-  - Added admin challenge sync interface at `/admin/challenges/sync` for manual control
-  - Challenges now auto-update based on actual planning system data (shifts, last-minute, referrals, social)
-  - Added "Challenges" and "Kortingsacties" tabs to admin dashboard as requested
-  - Full integration ready for production with PLANNING_API_URL and PLANNING_API_KEY configuration
+- **June 26, 2025**: Simplified system to focus purely on rewards functionality
+  - Removed all planning system integration and TWV management features
+  - Cleaned up navigation to show only reward-related sections
+  - Added "Challenges" and "Kortingsacties" tabs to admin dashboard with full CRUD functionality
+  - System now purely focused on employee rewards, challenges, discounts, and leaderboard
+  - Removed unnecessary complexity for streamlined reward system experience
 
 - **June 26, 2025**: Created EXTRAATJE test environment as complete system copy
   - Independent testing environment created from main EXTRA system

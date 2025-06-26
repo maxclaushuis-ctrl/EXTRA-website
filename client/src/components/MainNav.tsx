@@ -19,13 +19,10 @@ import {
   LogOut,
   Tag,
   BarChart,
-  ClipboardList,
-  FileCheck,
   Trophy,
   Home,
   Clock,
-  User,
-  Calendar
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -58,13 +55,7 @@ export function MainNav() {
             >
               Dashboard
             </Link>
-            <Link
-              href="/planning/dashboard"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center transition-colors"
-            >
-              <Calendar className="mr-1 h-4 w-4" />
-              Planning Systeem
-            </Link>
+
             <Link
               href="/admin/rewards"
               className={`transition-colors hover:text-primary ${
@@ -89,22 +80,8 @@ export function MainNav() {
             >
               Challenges
             </Link>
-            <Link
-              href="/admin/werkruimte"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/werkruimte" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              Werkruimte
-            </Link>
-            <Link
-              href="/admin/twv"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/twv" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              TWV's
-            </Link>
+
+
 
             <Link
               href="/admin/settings"
@@ -136,18 +113,8 @@ export function MainNav() {
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/werkruimte">
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                    Werkruimte
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/twv">
-                    <FileCheck className="mr-2 h-4 w-4" />
-                    TWV's
-                  </Link>
-                </DropdownMenuItem>
+
+
 
                 <DropdownMenuItem asChild>
                   <Link href="/admin/settings">
