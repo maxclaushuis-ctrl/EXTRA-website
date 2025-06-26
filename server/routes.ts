@@ -2650,13 +2650,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type,
             message: notification.message,
             timestamp: new Date().toISOString(),
-            data: notification.data
-          }));
-        }
-      }
-    });
-  };
-  
-  console.log('WebSocket server geïnitialiseerd op pad: /ws');
-  return httpServer;
 }
