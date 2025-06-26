@@ -152,12 +152,7 @@ export function MainNav() {
                     TWV's
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/marketing">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Marketing
-                  </Link>
-                </DropdownMenuItem>
+
                 <DropdownMenuItem asChild>
                   <Link href="/admin/settings">
                     <Settings className="mr-2 h-4 w-4" />
