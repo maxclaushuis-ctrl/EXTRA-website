@@ -24,6 +24,8 @@ import {
 
 import Transactions from './Transactions';
 import Rewards from './Rewards';
+import { Challenges } from '@/components/admin/Challenges';
+import { Discounts } from '@/components/admin/Discounts';
 
 import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
