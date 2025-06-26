@@ -204,8 +204,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabbladen */}
-      <Tabs defaultValue="beloningen" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="contacten">
+            <Users className="mr-2 h-4 w-4" />
+            Contacten
+          </TabsTrigger>
           <TabsTrigger value="beloningen">
             <Gift className="mr-2 h-4 w-4" />
             Beloningen
@@ -311,12 +315,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex justify-center pt-4">
-            <Button asChild size="lg">
-              <Link href="/admin/marketing">
-                <Megaphone className="mr-2 h-5 w-5" />
-                Ga naar Marketing
-              </Link>
-            </Button>
+
           </div>
         </TabsContent>
         
