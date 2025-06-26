@@ -12,8 +12,7 @@ import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
 import DiscountsPage from "@/pages/admin/Discounts";
 import RulesPage from "@/pages/admin/Rules";
-import MarketingPage from "@/pages/admin/Marketing";
-import MarketingSimplePage from "@/pages/admin/MarketingSimple";
+
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
 import WerkruimtePage from "@/pages/admin/Werkruimte";

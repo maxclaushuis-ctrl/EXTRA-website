@@ -2576,19 +2576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Planning systeem routes
-  // Client routes
-  app.get("/api/planning/clients", authMiddleware, async (_req: Request, res: Response) => {
-    try {
-      const clients = await storage.getClients();
-      return res.status(200).json(clients);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de opdrachtgevers." });
-    }
-  });
 
-  app.get("/api/planning/clients/:id", authMiddleware, async (req: Request, res: Response) => {
+
     try {
       const client = await storage.getClient(parseInt(req.params.id));
       if (!client) {
@@ -2601,7 +2590,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/planning/clients", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const result = insertClientSchema.safeParse(req.body);
       if (!result.success) {
@@ -2619,7 +2607,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/planning/clients/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const clientId = parseInt(req.params.id);
       const client = await storage.getClient(clientId);
@@ -2643,7 +2630,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/planning/clients/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const clientId = parseInt(req.params.id);
       const client = await storage.getClient(clientId);
@@ -2660,7 +2646,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Location routes
-  app.get("/api/planning/locations", authMiddleware, async (_req: Request, res: Response) => {
     try {
       const locations = await storage.getLocations();
       return res.status(200).json(locations);
@@ -2670,7 +2655,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/planning/clients/:clientId/locations", authMiddleware, async (req: Request, res: Response) => {
     try {
       const clientId = parseInt(req.params.clientId);
       const locations = await storage.getLocationsByClientId(clientId);
@@ -2681,7 +2665,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/planning/locations/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const location = await storage.getLocation(parseInt(req.params.id));
       if (!location) {
@@ -2694,7 +2677,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/planning/locations", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const result = insertLocationSchema.safeParse(req.body);
       if (!result.success) {
@@ -2712,7 +2694,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/planning/locations/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const locationId = parseInt(req.params.id);
       const location = await storage.getLocation(locationId);
@@ -2736,7 +2717,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/planning/locations/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const locationId = parseInt(req.params.id);
       const location = await storage.getLocation(locationId);
@@ -2753,7 +2733,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Shift routes
-  app.get("/api/planning/shifts", authMiddleware, async (req: Request, res: Response) => {
     try {
       // Filter op datum als die in de query staat
       const fromDateStr = req.query.fromDate as string;
@@ -2801,7 +2780,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/planning/shifts/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const shift = await storage.getShift(parseInt(req.params.id));
       if (!shift) {
@@ -2814,7 +2792,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/planning/shifts", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const result = insertShiftSchema.safeParse(req.body);
       if (!result.success) {
@@ -2832,7 +2809,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/planning/shifts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const shiftId = parseInt(req.params.id);
       const shift = await storage.getShift(shiftId);
@@ -2856,7 +2832,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/planning/shifts/:id/status", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const shiftId = parseInt(req.params.id);
       const { status } = req.body;
@@ -2877,7 +2852,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/planning/shifts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const shiftId = parseInt(req.params.id);
       const shift = await storage.getShift(shiftId);
@@ -2894,7 +2868,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Assignment routes
-  app.get("/api/planning/assignments", authMiddleware, async (req: Request, res: Response) => {
     try {
       // Met optionele filters voor shiftId of userId
       const shiftId = req.query.shiftId ? parseInt(req.query.shiftId as string) : undefined;
@@ -2917,7 +2890,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/planning/assignments/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const assignment = await storage.getAssignment(parseInt(req.params.id));
       if (!assignment) {
@@ -2930,7 +2902,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/planning/assignments", authMiddleware, async (req: Request, res: Response) => {
     try {
       const result = insertAssignmentSchema.safeParse(req.body);
       if (!result.success) {
@@ -2973,7 +2944,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/planning/assignments/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const assignmentId = parseInt(req.params.id);
       const assignment = await storage.getAssignment(assignmentId);
@@ -2997,7 +2967,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/planning/assignments/:id/status", authMiddleware, async (req: Request, res: Response) => {
     try {
       const assignmentId = parseInt(req.params.id);
       const { status, reason } = req.body;
@@ -3020,7 +2989,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/planning/assignments/:id/check-in-out", authMiddleware, async (req: Request, res: Response) => {
     try {
       const assignmentId = parseInt(req.params.id);
       const { checkInTime, checkOutTime } = req.body;
@@ -3055,7 +3023,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/planning/assignments/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const assignmentId = parseInt(req.params.id);
       const assignment = await storage.getAssignment(assignmentId);
@@ -3072,7 +3039,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Staff Pool routes
-  app.get("/api/planning/staff-pools", authMiddleware, async (req: Request, res: Response) => {
     try {
       // Met optionele filter voor createdBy
       const createdBy = req.query.createdBy ? parseInt(req.query.createdBy as string) : undefined;
@@ -3092,7 +3058,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/planning/staff-pools/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const pool = await storage.getStaffPool(parseInt(req.params.id));
       if (!pool) {
@@ -3105,7 +3070,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/planning/staff-pools", authMiddleware, async (req: Request, res: Response) => {
     try {
       const result = insertStaffPoolSchema.safeParse(req.body);
       if (!result.success) {
@@ -3123,7 +3087,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/planning/staff-pools/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const poolId = parseInt(req.params.id);
       const pool = await storage.getStaffPool(poolId);
@@ -3152,7 +3115,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/planning/staff-pools/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const poolId = parseInt(req.params.id);
       const pool = await storage.getStaffPool(poolId);
@@ -3174,7 +3136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Pool Member routes
-  app.get("/api/planning/staff-pools/:poolId/members", authMiddleware, async (req: Request, res: Response) => {
     try {
       const poolId = parseInt(req.params.poolId);
       const pool = await storage.getStaffPool(poolId);
@@ -3207,7 +3168,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/planning/staff-pools/:poolId/members", authMiddleware, async (req: Request, res: Response) => {
     try {
       const poolId = parseInt(req.params.poolId);
       const { userId } = req.body;
@@ -3265,7 +3225,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/planning/staff-pools/:poolId/members/:userId", authMiddleware, async (req: Request, res: Response) => {
     try {
       const poolId = parseInt(req.params.poolId);
       const userId = parseInt(req.params.userId);

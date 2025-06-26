@@ -17,16 +17,10 @@ import {
   LineChart,
   Settings,
   LogOut,
-  Mail,
   Tag,
   BarChart,
   ClipboardList,
   FileCheck,
-  Calendar,
-  Building,
-  MapPin,
-  Briefcase,
-  UserPlus,
   Trophy,
   Home,
   Clock,
@@ -102,14 +96,7 @@ export function MainNav() {
             >
               TWV's
             </Link>
-            <Link
-              href="/admin/marketing"
-              className={`transition-colors hover:text-primary ${
-                location === "/admin/marketing" ? "text-primary font-medium" : "text-muted-foreground"
-              }`}
-            >
-              Marketing
-            </Link>
+
             <Link
               href="/admin/settings"
               className={`transition-colors hover:text-primary ${
@@ -159,44 +146,7 @@ export function MainNav() {
                     Instellingen
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Planning Systeem</DropdownMenuLabel>
-                <DropdownMenuItem asChild className="bg-blue-50 hover:bg-blue-100">
-                  <Link href="/planning/dashboard" className="font-medium text-blue-600">
-                    <Calendar className="mr-2 h-4 w-4 text-blue-600" />
-                    Planning Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/planning/clients">
-                    <Building className="mr-2 h-4 w-4" />
-                    Opdrachtgevers
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/planning/locations">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    Locaties
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/planning/shifts">
-                    <Briefcase className="mr-2 h-4 w-4" />
-                    Diensten
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/planning/assignments">
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Inschrijvingen
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/planning/staffpools">
-                    <Users className="mr-2 h-4 w-4" />
-                    Teamgroepen
-                  </Link>
-                </DropdownMenuItem>
+
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Andere pagina's</DropdownMenuLabel>
