@@ -12,6 +12,7 @@ import EmployeesPage from "@/pages/admin/Employees";
 import RewardsPage from "@/pages/admin/Rewards";
 import DiscountsPage from "@/pages/admin/Discounts";
 import ChallengesPage from "@/pages/AdminChallenges";
+import AdminChallengesSync from "@/pages/AdminChallengesSync";
 import RulesPage from "@/pages/admin/Rules";
 
 import AnalyticsPage from "@/pages/admin/Analytics";
@@ -120,6 +121,9 @@ function Router() {
         </Route>
         <Route path="/admin/challenges">
           {() => <ProtectedRoute component={ChallengesPage} adminOnly={true} />}
+        </Route>
+        <Route path="/admin/challenges/sync">
+          {() => <ProtectedRoute component={AdminChallengesSync} adminOnly={true} />}
         </Route>
         <Route path="/admin/rules">
           {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}

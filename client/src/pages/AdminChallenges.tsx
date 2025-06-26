@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Trophy, Target, Users, Share } from "lucide-react";
+import { Plus, Edit, Trash2, Trophy, Target, Users, Share, Sync } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 // Define types based on actual schema
 type Challenge = {
@@ -212,7 +213,13 @@ export default function AdminChallenges() {
           <h1 className="text-3xl font-bold text-gray-900">Challenges Beheer</h1>
           <p className="text-gray-600">Beheer uitdagingen en doelen voor medewerkers</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/challenges/sync">
+              <Sync className="mr-2 h-4 w-4" />
+              Synchronisatie
+            </Link>
+          </Button>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
