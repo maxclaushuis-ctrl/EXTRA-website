@@ -1010,6 +1010,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Planning system integration endpoints
+  app.post("/api/admin/sync-challenges", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const syncService = getChallengeSyncService();
+      if (!syncService) {
+        return res.status(503).json({ 
+          message: "Challenge synchronisatie service niet beschikbaar" 
+        });
+      }
+
+      const { userId } = req.body;
+      
+      if (userId) {
+        // Sync specific user
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "Gebruiker niet gevonden" });
+        }
+        
+        const results = await syncService.syncUserChallenges(user);
+        return res.status(200).json({
+          message: `Challenge synchronisatie voltooid voor ${user.firstName} ${user.lastName}`,
+          results
+        });
+      } else {
+        // Sync all users
+        const summary = await syncService.syncAllUserChallenges();
+        return res.status(200).json({
+          message: `Bulk synchronisatie voltooid: ${summary.successfulSyncs} geslaagd, ${summary.errors} fouten`,
+          summary
+        });
+      }
+    } catch (error) {
+      console.error("Error syncing challenges:", error);
+      return res.status(500).json({ 
+        message: "Er is een fout opgetreden bij het synchroniseren van challenges" 
+      });
+    }
+  });
+
+  app.get("/api/admin/planning-status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const planningAPI = getPlanningAPI();
+      if (!planningAPI) {
+        return res.status(200).json({
+          connected: false,
+          message: "Planning system niet geconfigureerd"
+        });
+      }
+
+      const isConnected = await planningAPI.testConnection();
+      return res.status(200).json({
+        connected: isConnected,
+        message: isConnected ? "Planning system verbonden" : "Planning system niet bereikbaar"
+      });
+    } catch (error) {
+      console.error("Error checking planning system status:", error);
+      return res.status(200).json({
+        connected: false,
+        message: "Fout bij controleren planning system status"
+      });
+    }
+  });
+
+  app.get("/api/users/:userId/challenge-progress", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const sessionUserId = req.session.userId;
+      const userRole = req.session.userRole;
+
+      // Check authorization - users can only see their own progress, admins can see all
+      if (userRole !== 'admin' && sessionUserId !== userId) {
+        return res.status(403).json({ message: "Geen toegang tot deze gebruiker" });
+      }
+
+      const syncService = getChallengeSyncService();
+      if (!syncService) {
+        return res.status(503).json({ 
+          message: "Challenge service niet beschikbaar" 
+        });
+      }
+
+      const summary = await syncService.getUserChallengesSummary(userId);
+      return res.status(200).json(summary);
+    } catch (error) {
+      console.error("Error fetching user challenge progress:", error);
+      return res.status(500).json({ 
+        message: "Er is een fout opgetreden bij het ophalen van challenge voortgang" 
+      });
+    }
+  });
+
   // Discounts API routes
   app.get("/api/discounts", authMiddleware, async (req: Request, res: Response) => {
     try {
