@@ -220,7 +220,8 @@ export default function AdminChallenges() {
               Synchronisatie
             </Link>
           </Button>
-          <DialogTrigger asChild>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nieuwe Challenge
@@ -333,6 +334,7 @@ export default function AdminChallenges() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mb-6">
