@@ -2568,6 +2568,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
               needsTwv: externalUser.needsTwv,
               // Als TWV niet meer nodig is, zet dan de status terug naar none
               twvStatus: externalUser.needsTwv ? user.twvStatus : 'none'
+            });
+            updatedCount++;
+          }
+        }
+      }
+      
+      return res.status(200).json({
+        message: `TWV gegevens gesynchroniseerd, ${updatedCount} gebruikers bijgewerkt`,
+        updatedCount
+      });
+    } catch (error) {
+      console.error("Fout bij synchroniseren van TWV gegevens:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het synchroniseren van TWV gegevens" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  
+  // WebSocket setup
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', function connection(ws, req) {
+    console.log('Nieuwe WebSocket verbinding');
+    
 
   const httpServer = createServer(app);
   
@@ -2623,6 +2647,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Store client info on the connection
     (ws as any).clientInfo = clientInfo;
   });
+  
+  // Broadcast notification function
+  const broadcastNotification = (type: string, notification: { message: string; data?: any }, targetUserId?: number, targetUserRole?: string) => {
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === WebSocket.OPEN && client.clientInfo?.authenticated) {
+        const { userId, userRole } = client.clientInfo;
+        
+        // Stuur alleen naar specifieke gebruiker/rol als opgegeven,
+        // of aan iedereen als geen specifieke gebruiker/rol is opgegeven
+        if (
+          (!targetUserId && !targetUserRole) || 
+          (targetUserId && client.userId === targetUserId) || 
+          (targetUserRole && client.userRole === targetUserRole)
+        ) {
+          ws.send(JSON.stringify({
+            type,
+            message: notification.message,
+            timestamp: new Date().toISOString(),
+            data: notification.data
+          }));
+        }
+      }
+    });
+  };
   
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
