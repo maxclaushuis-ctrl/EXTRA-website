@@ -2568,6 +2568,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               needsTwv: externalUser.needsTwv,
               // Als TWV niet meer nodig is, zet dan de status terug naar none
               twvStatus: externalUser.needsTwv ? user.twvStatus : 'none'
+            });
+          }
+        }
+      }
+
+      return res.status(200).json({ 
+        message: "TWV synchronisatie voltooid",
+        updated: updatedCount 
+      });
+    } catch (error) {
+      console.error("Fout bij synchroniseren van TWV gegevens:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij het synchroniseren van TWV gegevens" });
+    }
+  });
 
   const httpServer = createServer(app);
   
