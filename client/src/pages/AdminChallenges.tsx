@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Trophy, Target, Users, Share, Sync } from "lucide-react";
+import { Plus, Edit, Trash2, Trophy, Target, Users, Share, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 // Define types based on actual schema
@@ -216,7 +216,7 @@ export default function AdminChallenges() {
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href="/admin/challenges/sync">
-              <Sync className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               Synchronisatie
             </Link>
           </Button>

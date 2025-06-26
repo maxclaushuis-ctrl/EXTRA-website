@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Sync, Wifi, WifiOff, User, Users, Zap, Clock } from "lucide-react";
+import { RefreshCw, Wifi, WifiOff, User, Users, Zap, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface PlanningStatus {
@@ -42,7 +42,7 @@ export default function AdminChallengesSync() {
   });
 
   // Get users list for individual sync
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<any[]>({
     queryKey: ["/api/users"],
   });
 
@@ -175,7 +175,7 @@ export default function AdminChallengesSync() {
                 </>
               ) : (
                 <>
-                  <Sync className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Synchroniseer Alle Gebruikers
                 </>
               )}

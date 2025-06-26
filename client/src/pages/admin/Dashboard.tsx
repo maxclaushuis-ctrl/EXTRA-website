@@ -203,7 +203,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
@@ -215,6 +215,14 @@ export default function AdminDashboard() {
           <TabsTrigger value="beloningen">
             <Gift className="mr-2 h-4 w-4" />
             Beloningen
+          </TabsTrigger>
+          <TabsTrigger value="challenges">
+            <TrendingUp className="mr-2 h-4 w-4" />
+            Challenges
+          </TabsTrigger>
+          <TabsTrigger value="kortingsacties">
+            <Receipt className="mr-2 h-4 w-4" />
+            Kortingsacties
           </TabsTrigger>
           <TabsTrigger value="marketing">
             <Megaphone className="mr-2 h-4 w-4" />
@@ -295,6 +303,50 @@ export default function AdminDashboard() {
         
         <TabsContent value="beloningen" className="mt-6">
           <Rewards />
+        </TabsContent>
+
+        <TabsContent value="challenges" className="mt-6">
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Challenges Beheer</h2>
+                <p className="text-muted-foreground">
+                  Beheer uitdagingen en doelen voor medewerkers
+                </p>
+              </div>
+              <Button asChild>
+                <Link href="/admin/challenges">
+                  Volledig Challenges Beheer
+                </Link>
+              </Button>
+            </div>
+            <p className="text-muted-foreground">
+              Challenges worden automatisch gesynchroniseerd met het plansysteem voor realtime voortgang.
+              Klik op "Volledig Challenges Beheer" voor uitgebreide instellingen.
+            </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="kortingsacties" className="mt-6">
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Kortingsacties Beheer</h2>
+                <p className="text-muted-foreground">
+                  Beheer partnerdiscounts en speciale aanbiedingen
+                </p>
+              </div>
+              <Button asChild>
+                <Link href="/admin/discounts">
+                  Volledig Kortingsacties Beheer
+                </Link>
+              </Button>
+            </div>
+            <p className="text-muted-foreground">
+              Maak en beheer kortingsacties van partners om medewerkers extra waarde te bieden.
+              Klik op "Volledig Kortingsacties Beheer" voor uitgebreide instellingen.
+            </p>
+          </div>
         </TabsContent>
         
         <TabsContent value="marketing" className="mt-6">

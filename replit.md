@@ -109,12 +109,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **June 26, 2025**: Added Challenges management to admin dashboard
-  - Created comprehensive admin interface for managing challenges and challenge steps
-  - Added navigation link "Challenges" in admin menu at `/admin/challenges`
-  - Admin can now create, edit, delete challenges with progressive step targets
-  - Full CRUD operations for challenges with visual step management interface
-  - Integrated with existing challenge system for employee progress tracking
+- **June 26, 2025**: Integrated challenges with external planning system for automatic synchronization
+  - Built comprehensive API integration system for real-time challenge progress updates
+  - Created planning system API client for shift data, referrals, and social shares
+  - Implemented automatic challenge synchronization service with bulk and individual sync
+  - Added admin challenge sync interface at `/admin/challenges/sync` for manual control
+  - Challenges now auto-update based on actual planning system data (shifts, last-minute, referrals, social)
+  - Added "Challenges" and "Kortingsacties" tabs to admin dashboard as requested
+  - Full integration ready for production with PLANNING_API_URL and PLANNING_API_KEY configuration
 
 - **June 26, 2025**: Created EXTRAATJE test environment as complete system copy
   - Independent testing environment created from main EXTRA system

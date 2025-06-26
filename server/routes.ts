@@ -21,6 +21,8 @@ import {
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
 import { initMailService } from "./mail";
+import { initPlanningAPI, getPlanningAPI } from "./planning-api";
+import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { WebSocketServer, WebSocket } from 'ws';
 
 // Simple cookie parser function
