@@ -16,12 +16,7 @@ import {
   insertDiscountSchema,
   insertChallengeSchema,
   // Plansysteem schema imports
-  insertClientSchema,
-  insertLocationSchema,
-  insertShiftSchema,
-  insertAssignmentSchema,
-  insertStaffPoolSchema,
-  insertPoolMemberSchema
+
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
@@ -2576,789 +2571,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-
-
-    try {
-      const client = await storage.getClient(parseInt(req.params.id));
-      if (!client) {
-        return res.status(404).json({ message: "Opdrachtgever niet gevonden." });
-      }
-      return res.status(200).json(client);
-    } catch (error) {
-      console.error("Error fetching client:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de opdrachtgever." });
-    }
-  });
-
-    try {
-      const result = insertClientSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de opdrachtgever.",
-          errors: result.error.errors
-        });
-      }
-
-      const client = await storage.createClient(result.data);
-      return res.status(201).json(client);
-    } catch (error) {
-      console.error("Error creating client:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de opdrachtgever." });
-    }
-  });
-
-    try {
-      const clientId = parseInt(req.params.id);
-      const client = await storage.getClient(clientId);
-      if (!client) {
-        return res.status(404).json({ message: "Opdrachtgever niet gevonden." });
-      }
-
-      const result = insertClientSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de opdrachtgever.",
-          errors: result.error.errors
-        });
-      }
-
-      const updatedClient = await storage.updateClient(clientId, result.data);
-      return res.status(200).json(updatedClient);
-    } catch (error) {
-      console.error("Error updating client:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de opdrachtgever." });
-    }
-  });
-
-    try {
-      const clientId = parseInt(req.params.id);
-      const client = await storage.getClient(clientId);
-      if (!client) {
-        return res.status(404).json({ message: "Opdrachtgever niet gevonden." });
-      }
-
-      await storage.deleteClient(clientId);
-      return res.status(200).json({ message: "Opdrachtgever succesvol verwijderd." });
-    } catch (error) {
-      console.error("Error deleting client:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de opdrachtgever." });
-    }
-  });
-
-  // Location routes
-    try {
-      const locations = await storage.getLocations();
-      return res.status(200).json(locations);
-    } catch (error) {
-      console.error("Error fetching locations:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de locaties." });
-    }
-  });
-
-    try {
-      const clientId = parseInt(req.params.clientId);
-      const locations = await storage.getLocationsByClientId(clientId);
-      return res.status(200).json(locations);
-    } catch (error) {
-      console.error("Error fetching locations for client:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de locaties voor deze opdrachtgever." });
-    }
-  });
-
-    try {
-      const location = await storage.getLocation(parseInt(req.params.id));
-      if (!location) {
-        return res.status(404).json({ message: "Locatie niet gevonden." });
-      }
-      return res.status(200).json(location);
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de locatie." });
-    }
-  });
-
-    try {
-      const result = insertLocationSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de locatie.",
-          errors: result.error.errors
-        });
-      }
-
-      const location = await storage.createLocation(result.data);
-      return res.status(201).json(location);
-    } catch (error) {
-      console.error("Error creating location:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de locatie." });
-    }
-  });
-
-    try {
-      const locationId = parseInt(req.params.id);
-      const location = await storage.getLocation(locationId);
-      if (!location) {
-        return res.status(404).json({ message: "Locatie niet gevonden." });
-      }
-
-      const result = insertLocationSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de locatie.",
-          errors: result.error.errors
-        });
-      }
-
-      const updatedLocation = await storage.updateLocation(locationId, result.data);
-      return res.status(200).json(updatedLocation);
-    } catch (error) {
-      console.error("Error updating location:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de locatie." });
-    }
-  });
-
-    try {
-      const locationId = parseInt(req.params.id);
-      const location = await storage.getLocation(locationId);
-      if (!location) {
-        return res.status(404).json({ message: "Locatie niet gevonden." });
-      }
-
-      await storage.deleteLocation(locationId);
-      return res.status(200).json({ message: "Locatie succesvol verwijderd." });
-    } catch (error) {
-      console.error("Error deleting location:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de locatie." });
-    }
-  });
-
-  // Shift routes
-    try {
-      // Filter op datum als die in de query staat
-      const fromDateStr = req.query.fromDate as string;
-      const toDateStr = req.query.toDate as string;
-      const clientId = req.query.clientId ? parseInt(req.query.clientId as string) : undefined;
-      
-      let shifts;
-      
-      // Als er een datum bereik is opgegeven
-      if (fromDateStr && toDateStr) {
-        const fromDate = new Date(fromDateStr);
-        const toDate = new Date(toDateStr);
-        
-        // Als de datums geldig zijn
-        if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
-          shifts = await storage.getShiftsByDateRange(fromDate, toDate);
-        } else {
-          return res.status(400).json({ message: "Ongeldige datum formaat. Gebruik YYYY-MM-DD." });
-        }
-      } 
-      // Als er een enkele datum is opgegeven
-      else if (fromDateStr) {
-        const date = new Date(fromDateStr);
-        
-        // Als de datum geldig is
-        if (!isNaN(date.getTime())) {
-          shifts = await storage.getShiftsByDate(date);
-        } else {
-          return res.status(400).json({ message: "Ongeldige datum formaat. Gebruik YYYY-MM-DD." });
-        }
-      }
-      // Als er een clientId is opgegeven
-      else if (clientId) {
-        shifts = await storage.getShiftsByClientId(clientId);
-      }
-      // Anders haal alle shifts op
-      else {
-        shifts = await storage.getShifts();
-      }
-      
-      return res.status(200).json(shifts);
-    } catch (error) {
-      console.error("Error fetching shifts:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de diensten." });
-    }
-  });
-
-    try {
-      const shift = await storage.getShift(parseInt(req.params.id));
-      if (!shift) {
-        return res.status(404).json({ message: "Dienst niet gevonden." });
-      }
-      return res.status(200).json(shift);
-    } catch (error) {
-      console.error("Error fetching shift:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de dienst." });
-    }
-  });
-
-    try {
-      const result = insertShiftSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de dienst.",
-          errors: result.error.errors
-        });
-      }
-
-      const shift = await storage.createShift(result.data);
-      return res.status(201).json(shift);
-    } catch (error) {
-      console.error("Error creating shift:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de dienst." });
-    }
-  });
-
-    try {
-      const shiftId = parseInt(req.params.id);
-      const shift = await storage.getShift(shiftId);
-      if (!shift) {
-        return res.status(404).json({ message: "Dienst niet gevonden." });
-      }
-
-      const result = insertShiftSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de dienst.",
-          errors: result.error.errors
-        });
-      }
-
-      const updatedShift = await storage.updateShift(shiftId, result.data);
-      return res.status(200).json(updatedShift);
-    } catch (error) {
-      console.error("Error updating shift:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de dienst." });
-    }
-  });
-
-    try {
-      const shiftId = parseInt(req.params.id);
-      const { status } = req.body;
-      
-      if (!status || !['open', 'filled', 'cancelled'].includes(status)) {
-        return res.status(400).json({ message: "Ongeldige status. Toegestane waardes: open, filled, cancelled." });
-      }
-      
-      const updatedShift = await storage.updateShiftStatus(shiftId, status);
-      if (!updatedShift) {
-        return res.status(404).json({ message: "Dienst niet gevonden." });
-      }
-      
-      return res.status(200).json(updatedShift);
-    } catch (error) {
-      console.error("Error updating shift status:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de dienststatus." });
-    }
-  });
-
-    try {
-      const shiftId = parseInt(req.params.id);
-      const shift = await storage.getShift(shiftId);
-      if (!shift) {
-        return res.status(404).json({ message: "Dienst niet gevonden." });
-      }
-
-      await storage.deleteShift(shiftId);
-      return res.status(200).json({ message: "Dienst succesvol verwijderd." });
-    } catch (error) {
-      console.error("Error deleting shift:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de dienst." });
-    }
-  });
-
-  // Assignment routes
-    try {
-      // Met optionele filters voor shiftId of userId
-      const shiftId = req.query.shiftId ? parseInt(req.query.shiftId as string) : undefined;
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-      
-      let assignments;
-      
-      if (shiftId) {
-        assignments = await storage.getAssignmentsByShiftId(shiftId);
-      } else if (userId) {
-        assignments = await storage.getAssignmentsByUserId(userId);
-      } else {
-        assignments = await storage.getAssignments();
-      }
-      
-      return res.status(200).json(assignments);
-    } catch (error) {
-      console.error("Error fetching assignments:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de toewijzingen." });
-    }
-  });
-
-    try {
-      const assignment = await storage.getAssignment(parseInt(req.params.id));
-      if (!assignment) {
-        return res.status(404).json({ message: "Toewijzing niet gevonden." });
-      }
-      return res.status(200).json(assignment);
-    } catch (error) {
-      console.error("Error fetching assignment:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de toewijzing." });
-    }
-  });
-
-    try {
-      const result = insertAssignmentSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de toewijzing.",
-          errors: result.error.errors
-        });
-      }
-
-      // Controleer of de dienst bestaat
-      const shift = await storage.getShift(result.data.shiftId);
-      if (!shift) {
-        return res.status(400).json({ message: "De opgegeven dienst bestaat niet." });
-      }
-      
-      // Controleer of de gebruiker bestaat
-      const user = await storage.getUser(result.data.userId);
-      if (!user) {
-        return res.status(400).json({ message: "De opgegeven gebruiker bestaat niet." });
-      }
-      
-      // Controleer of de dienst al vol is
-      if (shift.assignedStaff !== null && shift.requiredStaff !== null && shift.assignedStaff >= shift.requiredStaff) {
-        return res.status(400).json({ message: "Deze dienst heeft al het maximale aantal medewerkers bereikt." });
-      }
-      
-      // Controleer of de gebruiker al is toegewezen aan deze dienst
-      const existingAssignments = await storage.getAssignmentsByShiftId(result.data.shiftId);
-      const alreadyAssigned = existingAssignments.some(a => a.userId === result.data.userId);
-      
-      if (alreadyAssigned) {
-        return res.status(400).json({ message: "Deze gebruiker is al toegewezen aan deze dienst." });
-      }
-
-      const assignment = await storage.createAssignment(result.data);
-      return res.status(201).json(assignment);
-    } catch (error) {
-      console.error("Error creating assignment:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de toewijzing." });
-    }
-  });
-
-    try {
-      const assignmentId = parseInt(req.params.id);
-      const assignment = await storage.getAssignment(assignmentId);
-      if (!assignment) {
-        return res.status(404).json({ message: "Toewijzing niet gevonden." });
-      }
-
-      const result = insertAssignmentSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de toewijzing.",
-          errors: result.error.errors
-        });
-      }
-
-      const updatedAssignment = await storage.updateAssignment(assignmentId, result.data);
-      return res.status(200).json(updatedAssignment);
-    } catch (error) {
-      console.error("Error updating assignment:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de toewijzing." });
-    }
-  });
-
-    try {
-      const assignmentId = parseInt(req.params.id);
-      const { status, reason } = req.body;
-      
-      if (!status || !['pending', 'confirmed', 'canceled', 'completed', 'no_show'].includes(status)) {
-        return res.status(400).json({ 
-          message: "Ongeldige status. Toegestane waardes: pending, confirmed, canceled, completed, no_show." 
-        });
-      }
-      
-      const updatedAssignment = await storage.updateAssignmentStatus(assignmentId, status, reason);
-      if (!updatedAssignment) {
-        return res.status(404).json({ message: "Toewijzing niet gevonden." });
-      }
-      
-      return res.status(200).json(updatedAssignment);
-    } catch (error) {
-      console.error("Error updating assignment status:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de toewijzingsstatus." });
-    }
-  });
-
-    try {
-      const assignmentId = parseInt(req.params.id);
-      const { checkInTime, checkOutTime } = req.body;
-      
-      // Valideer de tijden als ze zijn opgegeven
-      let checkIn: Date | undefined = undefined;
-      let checkOut: Date | undefined = undefined;
-      
-      if (checkInTime) {
-        checkIn = new Date(checkInTime);
-        if (isNaN(checkIn.getTime())) {
-          return res.status(400).json({ message: "Ongeldige incheck tijd." });
-        }
-      }
-      
-      if (checkOutTime) {
-        checkOut = new Date(checkOutTime);
-        if (isNaN(checkOut.getTime())) {
-          return res.status(400).json({ message: "Ongeldige uitcheck tijd." });
-        }
-      }
-      
-      const updatedAssignment = await storage.recordCheckInOut(assignmentId, checkIn, checkOut);
-      if (!updatedAssignment) {
-        return res.status(404).json({ message: "Toewijzing niet gevonden." });
-      }
-      
-      return res.status(200).json(updatedAssignment);
-    } catch (error) {
-      console.error("Error recording check-in/out:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het registreren van in-/uitchecktijd." });
-    }
-  });
-
-    try {
-      const assignmentId = parseInt(req.params.id);
-      const assignment = await storage.getAssignment(assignmentId);
-      if (!assignment) {
-        return res.status(404).json({ message: "Toewijzing niet gevonden." });
-      }
-
-      await storage.deleteAssignment(assignmentId);
-      return res.status(200).json({ message: "Toewijzing succesvol verwijderd." });
-    } catch (error) {
-      console.error("Error deleting assignment:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de toewijzing." });
-    }
-  });
-
-  // Staff Pool routes
-    try {
-      // Met optionele filter voor createdBy
-      const createdBy = req.query.createdBy ? parseInt(req.query.createdBy as string) : undefined;
-      
-      let pools;
-      
-      if (createdBy) {
-        pools = await storage.getStaffPoolsByCreator(createdBy);
-      } else {
-        pools = await storage.getStaffPools();
-      }
-      
-      return res.status(200).json(pools);
-    } catch (error) {
-      console.error("Error fetching staff pools:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de personeelspools." });
-    }
-  });
-
-    try {
-      const pool = await storage.getStaffPool(parseInt(req.params.id));
-      if (!pool) {
-        return res.status(404).json({ message: "Personeelspool niet gevonden." });
-      }
-      return res.status(200).json(pool);
-    } catch (error) {
-      console.error("Error fetching staff pool:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de personeelspool." });
-    }
-  });
-
-    try {
-      const result = insertStaffPoolSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de personeelspool.",
-          errors: result.error.errors
-        });
-      }
-
-      const pool = await storage.createStaffPool(result.data);
-      return res.status(201).json(pool);
-    } catch (error) {
-      console.error("Error creating staff pool:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de personeelspool." });
-    }
-  });
-
-    try {
-      const poolId = parseInt(req.params.id);
-      const pool = await storage.getStaffPool(poolId);
-      if (!pool) {
-        return res.status(404).json({ message: "Personeelspool niet gevonden." });
-      }
-
-      // Alleen de eigenaar of een admin mag de pool bewerken
-      if (req.session.userRole !== 'admin' && pool.createdBy !== req.session.userId) {
-        return res.status(403).json({ message: "Je hebt geen toestemming om deze personeelspool te bewerken." });
-      }
-
-      const result = insertStaffPoolSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Ongeldige gegevens voor de personeelspool.",
-          errors: result.error.errors
-        });
-      }
-
-      const updatedPool = await storage.updateStaffPool(poolId, result.data);
-      return res.status(200).json(updatedPool);
-    } catch (error) {
-      console.error("Error updating staff pool:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de personeelspool." });
-    }
-  });
-
-    try {
-      const poolId = parseInt(req.params.id);
-      const pool = await storage.getStaffPool(poolId);
-      if (!pool) {
-        return res.status(404).json({ message: "Personeelspool niet gevonden." });
-      }
-
-      // Alleen de eigenaar of een admin mag de pool verwijderen
-      if (req.session.userRole !== 'admin' && pool.createdBy !== req.session.userId) {
-        return res.status(403).json({ message: "Je hebt geen toestemming om deze personeelspool te verwijderen." });
-      }
-
-      await storage.deleteStaffPool(poolId);
-      return res.status(200).json({ message: "Personeelspool succesvol verwijderd." });
-    } catch (error) {
-      console.error("Error deleting staff pool:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de personeelspool." });
-    }
-  });
-
-  // Pool Member routes
-    try {
-      const poolId = parseInt(req.params.poolId);
-      const pool = await storage.getStaffPool(poolId);
-      if (!pool) {
-        return res.status(404).json({ message: "Personeelspool niet gevonden." });
-      }
-
-      const members = await storage.getPoolMembers(poolId);
-      
-      // Verrijk de gegevens met gebruikersinformatie
-      const enrichedMembers = await Promise.all(members.map(async (member) => {
-        const user = await storage.getUser(member.userId);
-        return {
-          ...member,
-          user: user ? {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            profileImage: user.profileImage,
-            twvStatus: user.twvStatus
-          } : null
-        };
-      }));
-      
-      return res.status(200).json(enrichedMembers);
-    } catch (error) {
-      console.error("Error fetching pool members:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de poolleden." });
-    }
-  });
-
-    try {
-      const poolId = parseInt(req.params.poolId);
-      const { userId } = req.body;
-      
-      if (!userId || isNaN(parseInt(userId))) {
-        return res.status(400).json({ message: "Ongeldige gebruiker ID." });
-      }
-      
-      const pool = await storage.getStaffPool(poolId);
-      if (!pool) {
-        return res.status(404).json({ message: "Personeelspool niet gevonden." });
-      }
-      
-      // Alleen de eigenaar of een admin mag leden toevoegen
-      if (req.session.userRole !== 'admin' && pool.createdBy !== req.session.userId) {
-        return res.status(403).json({ message: "Je hebt geen toestemming om leden aan deze personeelspool toe te voegen." });
-      }
-      
-      // Controleer of de gebruiker bestaat
-      const user = await storage.getUser(parseInt(userId));
-      if (!user) {
-        return res.status(400).json({ message: "De opgegeven gebruiker bestaat niet." });
-      }
-      
-      // Controleer of de gebruiker al lid is van de pool
-      const members = await storage.getPoolMembers(poolId);
-      const isAlreadyMember = members.some(member => member.userId === parseInt(userId));
-      
-      if (isAlreadyMember) {
-        return res.status(400).json({ message: "Deze gebruiker is al lid van deze personeelspool." });
-      }
-
-      const member = await storage.addPoolMember({
-        poolId,
-        userId: parseInt(userId)
-      });
-      
-      // Verrijk het resultaat met gebruikersinformatie
-      const enrichedMember = {
-        ...member,
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          profileImage: user.profileImage,
-          twvStatus: user.twvStatus
-        }
-      };
-      
-      return res.status(201).json(enrichedMember);
-    } catch (error) {
-      console.error("Error adding pool member:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het toevoegen van het poollid." });
-    }
-  });
-
-    try {
-      const poolId = parseInt(req.params.poolId);
-      const userId = parseInt(req.params.userId);
-      
-      const pool = await storage.getStaffPool(poolId);
-      if (!pool) {
-        return res.status(404).json({ message: "Personeelspool niet gevonden." });
-      }
-      
-      // Alleen de eigenaar, een admin, of het lid zelf mag verwijderd worden
-      if (req.session.userRole !== 'admin' && pool.createdBy !== req.session.userId && req.session.userId !== userId) {
-        return res.status(403).json({ message: "Je hebt geen toestemming om dit lid uit de personeelspool te verwijderen." });
-      }
-
-      const removed = await storage.removePoolMember(poolId, userId);
-      if (!removed) {
-        return res.status(404).json({ message: "Dit lid is niet gevonden in de personeelspool." });
-      }
-      
-      return res.status(200).json({ message: "Lid succesvol verwijderd uit de personeelspool." });
-    } catch (error) {
-      console.error("Error removing pool member:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van het poollid." });
-    }
-  });
-
-  // Leaderboard API routes
-  app.get("/api/leaderboard", authMiddleware, async (req: Request, res: Response) => {
-    try {
-      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
-      const month = req.query.month ? parseInt(req.query.month as string) : undefined;
-      
-      const leaderboard = await storage.getMonthlyLeaderboard(year, month);
-      return res.status(200).json(leaderboard);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van het leaderboard" });
-    }
-  });
-
-  app.get("/api/leaderboard/previous-winner", authMiddleware, async (req: Request, res: Response) => {
-    try {
-      const winner = await storage.getPreviousMonthWinner();
-      return res.status(200).json(winner);
-    } catch (error) {
-      console.error("Error fetching previous month winner:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de vorige maand winnaar" });
-    }
-  });
-
-  app.post("/api/leaderboard/reset-monthly", adminMiddleware, async (req: Request, res: Response) => {
-    try {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
-      
-      // Save current month leaders before reset
-      await storage.saveMonthlyLeaders(year, month);
-      
-      // Reset monthly points for all users
-      const resetCount = await storage.resetMonthlyPoints();
-      
-      return res.status(200).json({ 
-        message: `Maandelijkse punten gereset voor ${resetCount} gebruikers`,
-        resetCount,
-        savedMonth: { year, month }
-      });
-    } catch (error) {
-      console.error("Error resetting monthly points:", error);
-      return res.status(500).json({ message: "Er is een fout opgetreden bij het resetten van maandelijkse punten" });
-    }
-  });
-
-  // WebSocket server setup voor real-time notificaties
+  // WebSocket setup
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  // Bijhouden van actieve verbindingen
-  const clients = new Map<WebSocket, { userId?: number, userRole?: string }>();
-  
-  wss.on('connection', (ws) => {
+  wss.on('connection', function connection(ws, req) {
     console.log('Nieuwe WebSocket verbinding');
-    clients.set(ws, {});
     
-    // Handle incoming messages (authentication)
-    ws.on('message', (messageData) => {
+
+  const httpServer = createServer(app);
+  
+  // WebSocket setup
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', function connection(ws, req) {
+    console.log('Nieuwe WebSocket verbinding');
+    
+    // Store client info
+    const clientInfo = {
+      userId: null,
+      userRole: null,
+      authenticated: false
+    };
+    
+    ws.on('message', function message(data) {
       try {
-        const message = JSON.parse(messageData.toString());
+        const message = JSON.parse(data.toString());
         
-        // Auth bericht ontvangen
         if (message.type === 'auth') {
-          const { userId, userRole } = message;
-          if (userId) {
-            clients.set(ws, { userId, userRole });
-            console.log(`WebSocket geauthenticeerd voor gebruiker ${userId}, rol: ${userRole}`);
-            
-            // Bevestig authenticatie
-            ws.send(JSON.stringify({
-              type: 'auth_success',
-              userId,
-              userRole
-            }));
+          // Get session from cookie
+          const cookies = parseCookies(req.headers.cookie || '');
+          const sessionId = cookies['extra.sid'];
+          
+          if (sessionId) {
+            // Verify session exists in our session store
+            // For development, we'll assume valid sessions have userId/userRole
+            const sessionData = JSON.parse(message.sessionData || '{}');
+            if (sessionData.userId && sessionData.userRole) {
+              clientInfo.userId = sessionData.userId;
+              clientInfo.userRole = sessionData.userRole;
+              clientInfo.authenticated = true;
+              
+              console.log(`WebSocket geauthenticeerd voor gebruiker ${clientInfo.userId}, rol: ${clientInfo.userRole}`);
+              
+              ws.send(JSON.stringify({
+                type: 'auth_success',
+                message: 'WebSocket verbinding geauthenticeerd'
+              }));
+            }
           }
         }
       } catch (error) {
-        console.error('WebSocket bericht verwerkingsfout:', error);
+        console.error('Fout bij verwerken WebSocket bericht:', error);
       }
     });
     
-    // Handle disconnection
-    ws.on('close', () => {
+    ws.on('close', function close() {
       console.log('WebSocket verbinding gesloten');
-      clients.delete(ws);
     });
+    
+    // Store client info on the connection
+    (ws as any).clientInfo = clientInfo;
   });
   
-  // Functie voor het versturen van notificaties naar gebruikers
-  global.sendNotification = (notification: {
-    type: string;
-    userId?: number;
-    userRole?: string;
-    message: string;
-    data?: any;
-  }) => {
-    const { userId, userRole, type } = notification;
-    
-    clients.forEach((client, ws) => {
-      // Check verbindingstatus
-      if (ws.readyState === WebSocket.OPEN) {
-        // Verstuur aan specifieke gebruiker of alleen aan een bepaalde rol
+  // Broadcast notification function
+  const broadcastNotification = (type: string, notification: { message: string; data?: any }, targetUserId?: number, targetUserRole?: string) => {
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === WebSocket.OPEN && client.clientInfo?.authenticated) {
+        const { userId, userRole } = client.clientInfo;
+        
+        // Stuur alleen naar specifieke gebruiker/rol als opgegeven,
         // of aan iedereen als geen specifieke gebruiker/rol is opgegeven
         if (
-          (!userId && !userRole) || 
-          (userId && client.userId === userId) || 
-          (userRole && client.userRole === userRole)
+          (!targetUserId && !targetUserRole) || 
+          (targetUserId && client.userId === targetUserId) || 
+          (targetUserRole && client.userRole === targetUserRole)
         ) {
           ws.send(JSON.stringify({
             type,

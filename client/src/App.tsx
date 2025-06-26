@@ -120,9 +120,7 @@ function Router() {
         <Route path="/admin/rules">
           {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}
         </Route>
-        <Route path="/admin/marketing">
-          {() => <ProtectedRoute component={MarketingSimplePage} adminOnly={true} />}
-        </Route>
+
         <Route path="/admin/analytics">
           {() => <ProtectedRoute component={AnalyticsPage} adminOnly={true} />}
         </Route>
