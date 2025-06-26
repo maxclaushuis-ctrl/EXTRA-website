@@ -306,47 +306,11 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="challenges" className="mt-6">
-          <div className="rounded-lg border bg-card p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Challenges Beheer</h2>
-                <p className="text-muted-foreground">
-                  Beheer uitdagingen en doelen voor medewerkers
-                </p>
-              </div>
-              <Button asChild>
-                <Link href="/admin/challenges">
-                  Volledig Challenges Beheer
-                </Link>
-              </Button>
-            </div>
-            <p className="text-muted-foreground">
-              Challenges worden automatisch gesynchroniseerd met het plansysteem voor realtime voortgang.
-              Klik op "Volledig Challenges Beheer" voor uitgebreide instellingen.
-            </p>
-          </div>
+          <Challenges />
         </TabsContent>
 
         <TabsContent value="kortingsacties" className="mt-6">
-          <div className="rounded-lg border bg-card p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Kortingsacties Beheer</h2>
-                <p className="text-muted-foreground">
-                  Beheer partnerdiscounts en speciale aanbiedingen
-                </p>
-              </div>
-              <Button asChild>
-                <Link href="/admin/discounts">
-                  Volledig Kortingsacties Beheer
-                </Link>
-              </Button>
-            </div>
-            <p className="text-muted-foreground">
-              Maak en beheer kortingsacties van partners om medewerkers extra waarde te bieden.
-              Klik op "Volledig Kortingsacties Beheer" voor uitgebreide instellingen.
-            </p>
-          </div>
+          <Discounts />
         </TabsContent>
         
         <TabsContent value="marketing" className="mt-6">
