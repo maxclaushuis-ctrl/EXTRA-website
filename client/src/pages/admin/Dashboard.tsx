@@ -19,7 +19,7 @@ import {
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
   Activity, User, Import, Download, Receipt,
-  Mail, Megaphone, Zap, LineChart
+  Mail, Zap, LineChart
 } from 'lucide-react';
 
 import Transactions from './Transactions';
@@ -204,16 +204,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabbladen */}
-      <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="contacten">
-            <Users className="mr-2 h-4 w-4" />
-            Contacten
-          </TabsTrigger>
-          <TabsTrigger value="transacties">
-            <Receipt className="mr-2 h-4 w-4" />
-            Transacties
-          </TabsTrigger>
+      <Tabs defaultValue="beloningen" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="beloningen">
             <Gift className="mr-2 h-4 w-4" />
             Beloningen
@@ -226,13 +218,9 @@ export default function AdminDashboard() {
             <Receipt className="mr-2 h-4 w-4" />
             Kortingsacties
           </TabsTrigger>
-          <TabsTrigger value="marketing">
-            <Megaphone className="mr-2 h-4 w-4" />
-            Marketing
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <LineChart className="mr-2 h-4 w-4" />
-            Analytics
+          <TabsTrigger value="transacties">
+            <Receipt className="mr-2 h-4 w-4" />
+            Transacties
           </TabsTrigger>
           <TabsTrigger value="instellingen">
             <Settings className="mr-2 h-4 w-4" />
