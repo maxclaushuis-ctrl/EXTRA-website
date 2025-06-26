@@ -205,7 +205,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
