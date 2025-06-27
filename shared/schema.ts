@@ -106,6 +106,8 @@ export const challenges = pgTable('challenges', {
   title: text('title').notNull(),
   description: text('description').notNull(),
   category: text('category').notNull(), // 'shifts', 'lastminute', 'referrals', etc.
+  type: text('type').notNull().default('doorlopend'), // 'eenmalig', 'doorlopend'
+  points: integer('points'), // Voor eenmalige challenges
   status: text('status').notNull().default('active'), // 'active', 'inactive'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()

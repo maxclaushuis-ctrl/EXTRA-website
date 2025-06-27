@@ -206,6 +206,27 @@ export interface IStorage {
   getPoolMembers(poolId: number): Promise<PoolMember[]>;
   getPoolMemberships(userId: number): Promise<PoolMember[]>;
   removePoolMember(poolId: number, userId: number): Promise<boolean>;
+
+  // Challenge methods
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  getChallenges(): Promise<Challenge[]>;
+  getChallenge(id: number): Promise<Challenge | undefined>;
+  updateChallenge(id: number, challengeData: Partial<InsertChallenge>): Promise<Challenge | undefined>;
+  deleteChallenge(id: number): Promise<boolean>;
+
+  // Challenge Step methods
+  createChallengeStep(step: InsertChallengeStep): Promise<ChallengeStep>;
+  getChallengeSteps(challengeId: number): Promise<ChallengeStep[]>;
+  getChallengeStep(id: number): Promise<ChallengeStep | undefined>;
+  updateChallengeStep(id: number, stepData: Partial<InsertChallengeStep>): Promise<ChallengeStep | undefined>;
+  deleteChallengeStep(id: number): Promise<boolean>;
+
+  // User Challenge Progress methods
+  createUserChallengeProgress(progress: InsertUserChallengeProgress): Promise<UserChallengeProgress>;
+  getUserChallengeProgress(userId: number): Promise<UserChallengeProgressWithDetails[]>;
+  getUserChallengeProgressById(id: number): Promise<UserChallengeProgress | undefined>;
+  updateUserChallengeProgress(id: number, progressData: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined>;
+  deleteUserChallengeProgress(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Challenge, ChallengeStep } from '@shared/schema';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ChallengesList() {
   const { t } = useLanguage();

@@ -1029,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get all user challenge progress
-      const progressList = await storage.getUserChallengeProgressByUserId(userId);
+      const progressList = await storage.getUserChallengeProgress(userId);
       
       // Enrich with challenge data
       const enrichedProgress = await Promise.all(
