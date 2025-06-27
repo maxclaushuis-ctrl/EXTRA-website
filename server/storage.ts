@@ -16,6 +16,7 @@ import {
   type Challenge, type InsertChallenge,
   type ChallengeStep, type InsertChallengeStep,
   type UserChallengeProgress, type InsertUserChallengeProgress,
+  type UserChallengeProgressWithDetails,
   // Plansysteem types
   type Client, type InsertClient,
   type Location, type InsertLocation,
@@ -223,7 +224,8 @@ export interface IStorage {
 
   // User Challenge Progress methods
   createUserChallengeProgress(progress: InsertUserChallengeProgress): Promise<UserChallengeProgress>;
-  getUserChallengeProgress(userId: number): Promise<UserChallengeProgressWithDetails[]>;
+  getUserChallengeProgress(userId: number): Promise<UserChallengeProgress[]>;
+  getUserChallengeProgressWithDetails(userId: number, challengeId: number): Promise<UserChallengeProgress | undefined>;
   getUserChallengeProgressById(id: number): Promise<UserChallengeProgress | undefined>;
   updateUserChallengeProgress(id: number, progressData: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined>;
   deleteUserChallengeProgress(id: number): Promise<boolean>;
@@ -2506,6 +2508,8 @@ export class MemStorage implements IStorage {
       description: "Verdien punten door diensten te werken en jouw ervaring uit te breiden",
       category: "shifts",
       status: "active",
+      type: "doorlopend",
+      points: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2516,6 +2520,8 @@ export class MemStorage implements IStorage {
       description: "Spring bij wanneer het nodig is en verdien extra punten",
       category: "lastminute",
       status: "active",
+      type: "doorlopend",
+      points: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2526,6 +2532,8 @@ export class MemStorage implements IStorage {
       description: "Deel de EXTRA ervaring met je vrienden en verdien punten",
       category: "referrals",
       status: "active",
+      type: "doorlopend",
+      points: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2536,6 +2544,8 @@ export class MemStorage implements IStorage {
       description: "Deel EXTRA content op social media en tag ons voor extra punten",
       category: "social",
       status: "active",
+      type: "doorlopend",
+      points: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2551,6 +2561,7 @@ export class MemStorage implements IStorage {
       targetValue: 10,
       pointsReward: 200,
       badgeTitle: "Starter",
+      isCompleted: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2564,6 +2575,7 @@ export class MemStorage implements IStorage {
       targetValue: 25,
       pointsReward: 300,
       badgeTitle: "Professional",
+      isCompleted: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2577,6 +2589,7 @@ export class MemStorage implements IStorage {
       targetValue: 50,
       pointsReward: 500,
       badgeTitle: "Veteraan",
+      isCompleted: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -2591,6 +2604,7 @@ export class MemStorage implements IStorage {
       targetValue: 5,
       pointsReward: 150,
       badgeTitle: "Helper",
+      isCompleted: null,
       createdAt: new Date(),
       updatedAt: new Date()
     });
