@@ -87,12 +87,15 @@ export function Challenges() {
       });
     },
     onSuccess: () => {
+      // Invalideer beide admin en employee challenge queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/challenges"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/challenges"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/challenges/steps"] });
       setIsCreateDialogOpen(false);
       resetForm();
       toast({
         title: "Challenge aangemaakt",
-        description: "De nieuwe challenge is succesvol aangemaakt.",
+        description: "De nieuwe challenge is succesvol aangemaakt en verschijnt nu voor alle medewerkers.",
       });
     },
     onError: (error: any) => {
