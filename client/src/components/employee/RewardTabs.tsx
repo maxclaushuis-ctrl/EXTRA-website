@@ -10,11 +10,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export function RewardTabs() {
   const [activeTab, setActiveTab] = useState('beloningen');
+  const { user } = useAuth();
   const { t } = useLanguage();
 
   return (
     <Tabs defaultValue="beloningen" className="w-full mt-32" onValueChange={(value) => setActiveTab(value)}>
-      <TabsList className="grid w-full grid-cols-4 bg-gray-900 rounded-lg p-1">
+      <TabsList className="grid w-full grid-cols-5 bg-gray-900 rounded-lg p-1">
         <TabsTrigger 
           value="beloningen" 
           className="text-xs font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
@@ -39,6 +40,12 @@ export function RewardTabs() {
         >
           Ranglijst
         </TabsTrigger>
+        <TabsTrigger 
+          value="badges" 
+          className="text-xs font-normal text-gray-400 data-[state=active]:bg-[#00AAFF] data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:rounded-md transition-all"
+        >
+          Badges
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="beloningen" className="mt-4">
@@ -55,6 +62,10 @@ export function RewardTabs() {
       
       <TabsContent value="leaderboard" className="mt-4">
         <LeaderboardMobile />
+      </TabsContent>
+      
+      <TabsContent value="badges" className="mt-4">
+        <BadgesList userPoints={user?.points || 0} />
       </TabsContent>
     </Tabs>
   );
