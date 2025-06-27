@@ -19,6 +19,9 @@ type Challenge = {
   title: string;
   description?: string;
   category?: string;
+  type?: 'eenmalig' | 'doorlopend';
+  targetValue?: number;
+  points?: number;
   status?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -33,6 +36,7 @@ type ChallengeStep = {
   pointsReward: number;
   title?: string;
   description?: string;
+  isCompleted?: boolean;
 };
 
 const categoryIcons = {
@@ -53,8 +57,21 @@ export function Challenges() {
   const [newChallengeTitle, setNewChallengeTitle] = useState("");
   const [newChallengeDescription, setNewChallengeDescription] = useState("");
   const [newChallengeCategory, setNewChallengeCategory] = useState("");
+  const [newChallengeType, setNewChallengeType] = useState<'eenmalig' | 'doorlopend'>('eenmalig');
   const [newChallengePoints, setNewChallengePoints] = useState(100);
+  const [newChallengeTargetValue, setNewChallengeTargetValue] = useState(1);
   const [newChallengeStatus, setNewChallengeStatus] = useState("active");
+  
+  // Steps for doorlopend challenges
+  const [challengeSteps, setChallengeSteps] = useState<Array<{
+    stepNumber: number;
+    targetValue: number;
+    pointsReward: number;
+    title: string;
+    description: string;
+  }>>([
+    { stepNumber: 1, targetValue: 10, pointsReward: 250, title: "", description: "" }
+  ]);
 
   // Fetch challenges
   const { data: challenges = [], isLoading } = useQuery<Challenge[]>({
@@ -91,8 +108,13 @@ export function Challenges() {
     setNewChallengeTitle("");
     setNewChallengeDescription("");
     setNewChallengeCategory("");
+    setNewChallengeType('eenmalig');
     setNewChallengePoints(100);
+    setNewChallengeTargetValue(1);
     setNewChallengeStatus("active");
+    setChallengeSteps([
+      { stepNumber: 1, targetValue: 10, pointsReward: 250, title: "", description: "" }
+    ]);
   };
 
   const handleCreateChallenge = () => {
@@ -105,13 +127,26 @@ export function Challenges() {
       return;
     }
 
-    createChallengeMutation.mutate({
-      title: newChallengeTitle,
-      description: newChallengeDescription,
-      category: newChallengeCategory,
-      points: newChallengePoints,
-      status: newChallengeStatus,
-    });
+    if (newChallengeType === 'doorlopend') {
+      createChallengeMutation.mutate({
+        title: newChallengeTitle,
+        description: newChallengeDescription,
+        category: newChallengeCategory,
+        type: newChallengeType,
+        status: newChallengeStatus,
+        steps: challengeSteps,
+      });
+    } else {
+      createChallengeMutation.mutate({
+        title: newChallengeTitle,
+        description: newChallengeDescription,
+        category: newChallengeCategory,
+        type: newChallengeType,
+        targetValue: newChallengeTargetValue,
+        points: newChallengePoints,
+        status: newChallengeStatus,
+      });
+    }
   };
 
   if (isLoading) {
@@ -200,20 +235,141 @@ export function Challenges() {
                     </SelectContent>
                   </Select>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="points">Punten</Label>
-                  <Input
-                    id="points"
-                    type="number"
-                    value={newChallengePoints}
-                    onChange={(e) => setNewChallengePoints(parseInt(e.target.value) || 100)}
-                    placeholder="Aantal punten voor deze challenge"
-                    min="1"
-                  />
+                  <Label htmlFor="type">Challenge Type</Label>
+                  <Select value={newChallengeType} onValueChange={(value: 'eenmalig' | 'doorlopend') => setNewChallengeType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="eenmalig">Eenmalig</SelectItem>
+                      <SelectItem value="doorlopend">Doorlopend (Stapsgewijs)</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-sm text-muted-foreground">
-                    Het aantal punten dat medewerkers krijgen bij voltooiing van deze challenge
+                    Eenmalig: Challenge wordt eenmalig voltooid (bijv. "schrijf een review")<br/>
+                    Doorlopend: Challenge heeft meerdere stappen met verschillende doelen
                   </p>
                 </div>
+                
+                {newChallengeType === 'eenmalig' ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="targetValue">Doelwaarde</Label>
+                      <Input
+                        id="targetValue"
+                        type="number"
+                        value={newChallengeTargetValue}
+                        onChange={(e) => setNewChallengeTargetValue(parseInt(e.target.value) || 1)}
+                        placeholder="Aantal keer dat dit gedaan moet worden"
+                        min="1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="points">Punten</Label>
+                      <Input
+                        id="points"
+                        type="number"
+                        value={newChallengePoints}
+                        onChange={(e) => setNewChallengePoints(parseInt(e.target.value) || 100)}
+                        placeholder="Aantal punten voor deze challenge"
+                        min="1"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Het aantal punten dat medewerkers krijgen bij voltooiing van deze challenge
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Challenge Stappen</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const newStep = {
+                            stepNumber: challengeSteps.length + 1,
+                            targetValue: challengeSteps[challengeSteps.length - 1]?.targetValue * 2 || 10,
+                            pointsReward: 250,
+                            title: "",
+                            description: ""
+                          };
+                          setChallengeSteps([...challengeSteps, newStep]);
+                        }}
+                      >
+                        + Stap Toevoegen
+                      </Button>
+                    </div>
+                    
+                    {challengeSteps.map((step, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">Stap {step.stepNumber}</h4>
+                          {challengeSteps.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const newSteps = challengeSteps.filter((_, i) => i !== index);
+                                // Renumber remaining steps
+                                const renumberedSteps = newSteps.map((s, i) => ({ ...s, stepNumber: i + 1 }));
+                                setChallengeSteps(renumberedSteps);
+                              }}
+                            >
+                              Verwijderen
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Doelwaarde</Label>
+                            <Input
+                              type="number"
+                              value={step.targetValue}
+                              onChange={(e) => {
+                                const newSteps = [...challengeSteps];
+                                newSteps[index].targetValue = parseInt(e.target.value) || 0;
+                                setChallengeSteps(newSteps);
+                              }}
+                              min="1"
+                            />
+                          </div>
+                          <div>
+                            <Label>Punten</Label>
+                            <Input
+                              type="number"
+                              value={step.pointsReward}
+                              onChange={(e) => {
+                                const newSteps = [...challengeSteps];
+                                newSteps[index].pointsReward = parseInt(e.target.value) || 0;
+                                setChallengeSteps(newSteps);
+                              }}
+                              min="1"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label>Stap Titel (optioneel)</Label>
+                          <Input
+                            value={step.title}
+                            onChange={(e) => {
+                              const newSteps = [...challengeSteps];
+                              newSteps[index].title = e.target.value;
+                              setChallengeSteps(newSteps);
+                            }}
+                            placeholder={`Bijv. Draai ${step.targetValue} diensten`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={newChallengeStatus} onValueChange={setNewChallengeStatus}>
@@ -263,12 +419,25 @@ export function Challenges() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">
-                    Categorie: {challenge.category}
+                  <div className="flex items-center gap-2">
+                    <Badge variant={challenge.type === "doorlopend" ? "default" : "secondary"}>
+                      {challenge.type === "doorlopend" ? "Doorlopend" : "Eenmalig"}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {challenge.category}
+                    </span>
                   </div>
-                  {challenge.steps && challenge.steps.length > 0 && (
+                  
+                  {challenge.type === "doorlopend" && challenge.steps && challenge.steps.length > 0 && (
                     <div className="text-sm">
                       <span className="font-medium">{challenge.steps.length}</span> stappen
+                    </div>
+                  )}
+                  
+                  {challenge.type === "eenmalig" && (
+                    <div className="text-sm">
+                      <span className="font-medium">{challenge.points}</span> punten • 
+                      <span className="text-muted-foreground"> Doel: {challenge.targetValue}</span>
                     </div>
                   )}
                 </div>
