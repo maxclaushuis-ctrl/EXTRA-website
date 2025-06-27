@@ -793,6 +793,25 @@ export class MemStorage implements IStorage {
     };
     
     this.users.set(id, user);
+    
+    // Automatisch challenge progress aanmaken voor alle bestaande challenges
+    const challenges = Array.from(this.challenges.values());
+    for (const challenge of challenges) {
+      const progressId = this.currentIds.userChallengeProgress++;
+      const progress: UserChallengeProgress = {
+        id: progressId,
+        userId: user.id,
+        challengeId: challenge.id,
+        currentStepId: null,
+        currentValue: 0,
+        completedSteps: [],
+        isCompleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.userChallengeProgress.set(progressId, progress);
+    }
+    
     return user;
   }
   
@@ -2259,6 +2278,25 @@ export class MemStorage implements IStorage {
     };
     
     this.challenges.set(id, challenge);
+    
+    // Automatisch challenge progress aanmaken voor alle bestaande gebruikers
+    const users = Array.from(this.users.values());
+    for (const user of users) {
+      const progressId = this.currentIds.userChallengeProgress++;
+      const progress: UserChallengeProgress = {
+        id: progressId,
+        userId: user.id,
+        challengeId: challenge.id,
+        currentStepId: null,
+        currentValue: 0,
+        completedSteps: [],
+        isCompleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.userChallengeProgress.set(progressId, progress);
+    }
+    
     return challenge;
   }
 

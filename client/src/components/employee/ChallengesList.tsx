@@ -149,7 +149,7 @@ export default function ChallengesList() {
               </div>
             </div>
             
-            {currentStep && (
+            {currentStep && challenge.type === 'doorlopend' && (
               <div className="mt-3">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
                   <span>Voortgang</span>
