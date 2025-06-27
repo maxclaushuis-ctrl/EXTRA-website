@@ -126,8 +126,10 @@ export function LeaderboardMobile() {
     }
   }, [refetch, user]);
 
-  // Find current user's position
-  const currentUserRank = leaderboard?.find(u => u.id === user?.id)?.rank;
+  // Find current user's position and monthly points
+  const currentUserData = leaderboard?.find(u => u.id === user?.id);
+  const currentUserRank = currentUserData?.rank;
+  const currentUserMonthlyPoints = currentUserData?.monthlyPoints || 0;
 
   if (isLoading) {
     return (
@@ -216,7 +218,7 @@ export function LeaderboardMobile() {
           <div className="flex-1">
             <p className="text-white text-base font-medium">Jij</p>
             <p className="text-gray-400 text-sm">
-              {user?.monthlyPoints || 0} punten
+              {currentUserMonthlyPoints} punten
             </p>
           </div>
           <div className="text-right">
