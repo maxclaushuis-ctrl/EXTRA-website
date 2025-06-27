@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 
 interface LeaderboardUser extends User {
   rank: number;
+  monthlyPoints: number;
 }
 
 function getRankIcon(rank: number) {

@@ -2891,6 +2891,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----- Leaderboard routes -----
+  
+  // Get current month leaderboard based on actual points earned
+  app.get("/api/leaderboard", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      // Get start and end of current month
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      
+      // Get all point transactions for this month (earned points only)
+      const transactions = await storage.getPointTransactions();
+      const thisMonthTransactions = transactions.filter(t => 
+        t.type === 'earned' && 
+        new Date(t.createdAt) >= startOfMonth && 
+        new Date(t.createdAt) <= endOfMonth
+      );
+      
+      // Calculate monthly points per user
+      const userMonthlyPoints = new Map<number, number>();
+      thisMonthTransactions.forEach(transaction => {
+        const currentPoints = userMonthlyPoints.get(transaction.userId) || 0;
+        userMonthlyPoints.set(transaction.userId, currentPoints + transaction.amount);
+      });
+      
+      // Get user details and create leaderboard
+      const users = await storage.getUsers();
+      const leaderboardData = [];
+      
+      Array.from(userMonthlyPoints.entries()).forEach(([userId, monthlyPoints]) => {
+        const user = users.find(u => u.id === userId);
+        if (user && user.role === 'employee' && user.status === 'active') {
+          leaderboardData.push({
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            points: user.points, // Total points
+            monthlyPoints: monthlyPoints, // Points earned this month
+            role: user.role,
+            status: user.status
+          });
+        }
+      });
+      
+      // Sort by monthly points (highest first) and add ranks
+      leaderboardData.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
+      const leaderboard = leaderboardData.slice(0, 10).map((user, index) => ({
+        ...user,
+        rank: index + 1
+      }));
+      
+      return res.status(200).json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de ranglijst"
+      });
+    }
+  });
+
+  // Get previous month winner
+  app.get("/api/leaderboard/previous-winner", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      // Get start and end of previous month
+      const now = new Date();
+      const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      
+      // Get all point transactions for previous month (earned points only)
+      const transactions = await storage.getPointTransactions();
+      const prevMonthTransactions = transactions.filter(t => 
+        t.type === 'earned' && 
+        new Date(t.createdAt) >= startOfPrevMonth && 
+        new Date(t.createdAt) <= endOfPrevMonth
+      );
+      
+      // Calculate monthly points per user
+      const userMonthlyPoints = new Map<number, number>();
+      prevMonthTransactions.forEach(transaction => {
+        const currentPoints = userMonthlyPoints.get(transaction.userId) || 0;
+        userMonthlyPoints.set(transaction.userId, currentPoints + transaction.amount);
+      });
+      
+      // Find user with most points
+      let winnerId = null;
+      let maxPoints = 0;
+      
+      Array.from(userMonthlyPoints.entries()).forEach(([userId, monthlyPoints]) => {
+        if (monthlyPoints > maxPoints) {
+          maxPoints = monthlyPoints;
+          winnerId = userId;
+        }
+      });
+      
+      if (winnerId) {
+        const winner = await storage.getUser(winnerId);
+        if (winner && winner.role === 'employee') {
+          return res.status(200).json({
+            id: winner.id,
+            firstName: winner.firstName,
+            lastName: winner.lastName,
+            email: winner.email,
+            points: winner.points,
+            monthlyPoints: maxPoints,
+            role: winner.role,
+            status: winner.status
+          });
+        }
+      }
+      
+      return res.status(200).json(null);
+    } catch (error) {
+      console.error("Error fetching previous winner:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van de vorige winnaar"
+      });
+    }
+  });
+
   // ----- TWV (Tewerkstellingsvergunning) routes -----
   
   // Haal alle gebruikers op die een TWV nodig hebben
