@@ -906,6 +906,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin challenges endpoint - shows all challenges including inactive ones
+  app.get("/api/admin/challenges", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const challenges = await storage.getChallenges();
+      return res.status(200).json(challenges);
+    } catch (error) {
+      console.error("Error fetching admin challenges:", error);
+      return res.status(500).json({
+        message: "Er is een fout opgetreden bij het ophalen van challenges"
+      });
+    }
+  });
+
   app.get("/api/challenges/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const challengeId = parseInt(req.params.id);
