@@ -122,7 +122,7 @@ Preferred communication style: Simple, everyday language.
   - Safe environment for testing changes without affecting main system
   - Port configuration may need adjustment to avoid conflicts
 
-- **June 27, 2025**: Enhanced Challenges system with two distinct challenge types
+- **June 27, 2025**: Enhanced Challenges system with two distinct challenge types and admin management
   - Implemented "eenmalig" (one-time) challenges for single completion tasks (e.g., "write a review")
   - Implemented "doorlopend" (progressive) challenges with step-by-step progression system
   - Added challenge type selection in admin interface with clear distinction
@@ -131,6 +131,10 @@ Preferred communication style: Simple, everyday language.
   - Enhanced database schema with challenge type field and step completion tracking
   - Updated API to handle both challenge types with proper validation
   - Admin interface allows dynamic step creation for progressive challenges
+  - Added UserChallengeProgress component for manual challenge management from user profiles
+  - Admins can now manually complete one-time challenges and increment progress on progressive challenges
+  - Automatic point awarding when challenges/steps are completed manually
+  - Real-time progress tracking with visual progress bars and step completion indicators
 
 - **June 26, 2025**: Created complete system backup for testing purposes
   - Full backup created at `/home/runner/extra-rewards-backup/`
