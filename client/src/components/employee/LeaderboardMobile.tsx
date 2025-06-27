@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 import { Trophy, Medal, Award, Crown, Star, Zap } from 'lucide-react';
 import { User } from '@shared/schema';
 import { useEffect, useState } from 'react';
@@ -52,6 +53,54 @@ function getRankBackgroundColor(rank: number) {
 
 function getInitials(firstName: string, lastName: string): string {
   return (firstName[0] + lastName[0]).toUpperCase();
+}
+
+interface BadgeData {
+  title: string;
+  description: string;
+  requiredPoints: number;
+  icon: string;
+  earned: boolean;
+}
+
+function getBadges(userPoints: number): BadgeData[] {
+  const badges = [
+    {
+      title: "Starter",
+      description: "Behaald door je eerste 250 punten te verdienen",
+      requiredPoints: 250,
+      icon: "🌟",
+    },
+    {
+      title: "Doorpakker",
+      description: "Behaald door 450 punten te verdienen",
+      requiredPoints: 450,
+      icon: "💪",
+    },
+    {
+      title: "Expert",
+      description: "Behaald door 500 punten te verdienen",
+      requiredPoints: 500,
+      icon: "🏆",
+    },
+    {
+      title: "Champion",
+      description: "Behaald door 750 punten te verdienen",
+      requiredPoints: 750,
+      icon: "🥇",
+    },
+    {
+      title: "Legend",
+      description: "Behaald door 1000 punten te verdienen",
+      requiredPoints: 1000,
+      icon: "👑",
+    },
+  ];
+
+  return badges.map(badge => ({
+    ...badge,
+    earned: userPoints >= badge.requiredPoints
+  }));
 }
 
 export function LeaderboardMobile() {
@@ -280,6 +329,64 @@ export function LeaderboardMobile() {
           })}
         </div>
       )}
+
+      {/* Badges section */}
+      <div className="mt-8 space-y-4">
+        <div className="flex items-center gap-3">
+          <Award className="h-5 w-5 text-yellow-400" />
+          <h3 className="text-lg font-bold text-white">Jouw Badges</h3>
+        </div>
+        
+        <div className="space-y-3">
+          {getBadges(user?.points || 0).map((badge, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-xl border transition-all ${
+                badge.earned 
+                  ? 'bg-gradient-to-r from-yellow-600/20 to-yellow-700/20 border-yellow-500/50' 
+                  : 'bg-gray-900 border-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`text-2xl ${badge.earned ? 'grayscale-0' : 'grayscale opacity-50'}`}>
+                  {badge.icon}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className={`font-semibold ${badge.earned ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      {badge.title}
+                    </h4>
+                    {badge.earned && (
+                      <Badge className="bg-yellow-500 text-black text-xs px-2 py-0.5">
+                        Behaald!
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-400 mb-2">
+                    {badge.description}
+                  </p>
+                  {!badge.earned && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-400">
+                          {user?.points || 0} / {badge.requiredPoints} punten
+                        </span>
+                        <span className="text-gray-400">
+                          {Math.round(((user?.points || 0) / badge.requiredPoints) * 100)}%
+                        </span>
+                      </div>
+                      <Progress 
+                        value={Math.min(((user?.points || 0) / badge.requiredPoints) * 100, 100)} 
+                        className="h-2"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Footer info */}
       <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 mt-6">
