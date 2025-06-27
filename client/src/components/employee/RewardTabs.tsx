@@ -4,6 +4,8 @@ import { RewardsList } from '@/components/employee/RewardsList';
 import DiscountsList from '@/components/employee/DiscountsList';
 import ChallengesList from '@/components/employee/ChallengesList';
 import { LeaderboardMobile } from '@/components/employee/LeaderboardMobile';
+import { BadgesList } from '@/components/employee/BadgesList';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function RewardTabs() {

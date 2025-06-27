@@ -16,6 +16,7 @@ export const twvStatusEnum = pgEnum('twv_status', ['none', 'required', 'pending'
 export const automationStatusEnum = pgEnum('automation_status', ['active', 'inactive', 'draft']);
 export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['birthday', 'new_account', 'points_threshold', 'custom']);
 export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
+export const badgeTypeEnum = pgEnum('badge_type', ['points', 'challenge', 'milestone', 'special']);
 
 // Plansysteem enumeraties
 export const shiftStatusEnum = pgEnum('shift_status', ['open', 'filled', 'cancelled']);
@@ -607,4 +608,50 @@ export type UserChallengeProgressWithDetails = UserChallengeProgress & {
   challenge: Challenge;
   currentStep?: ChallengeStep;
   nextStep?: ChallengeStep;
+};
+
+// Badges systeem
+export const badges = pgTable("badges", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: badgeTypeEnum("type").notNull(),
+  icon: text("icon").notNull(), // emoji of icon naam
+  color: text("color").notNull(), // hex color voor badge
+  requirement: integer("requirement"), // bijv. aantal punten nodig
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// User badges - welke badges een gebruiker heeft verdiend
+export const userBadges = pgTable("user_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  badgeId: integer("badge_id").references(() => badges.id).notNull(),
+  earnedAt: timestamp("earned_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Zod schemas voor badges
+export const insertBadgeSchema = createInsertSchema(badges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserBadgeSchema = createInsertSchema(userBadges).omit({
+  id: true,
+  createdAt: true,
+  earnedAt: true,
+});
+
+export type InsertBadge = z.infer<typeof insertBadgeSchema>;
+export type Badge = typeof badges.$inferSelect;
+
+export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
+export type UserBadge = typeof userBadges.$inferSelect;
+
+export type UserBadgeWithDetails = UserBadge & {
+  badge: Badge;
 };

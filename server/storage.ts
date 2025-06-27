@@ -17,6 +17,9 @@ import {
   type ChallengeStep, type InsertChallengeStep,
   type UserChallengeProgress, type InsertUserChallengeProgress,
   type UserChallengeProgressWithDetails,
+  type Badge, type InsertBadge,
+  type UserBadge, type InsertUserBadge,
+  type UserBadgeWithDetails,
   // Plansysteem types
   type Client, type InsertClient,
   type Location, type InsertLocation,
