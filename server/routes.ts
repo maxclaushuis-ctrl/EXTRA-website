@@ -2918,7 +2918,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user details and create leaderboard
       const users = await storage.getUsers();
-      const leaderboardData = [];
+      const leaderboardData: Array<{
+        id: number;
+        firstName: string;
+        lastName: string;
+        email: string;
+        points: number;
+        monthlyPoints: number;
+        role: string;
+        status: string;
+      }> = [];
       
       Array.from(userMonthlyPoints.entries()).forEach(([userId, monthlyPoints]) => {
         const user = users.find(u => u.id === userId);
