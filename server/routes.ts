@@ -1053,6 +1053,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete a one-time challenge for a user
+  app.post("/api/users/:userId/challenges/:challengeId/complete", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const challengeId = parseInt(req.params.challengeId);
+      
+      if (isNaN(userId) || isNaN(challengeId)) {
+        return res.status(400).json({ message: "Ongeldig gebruiker ID of challenge ID" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+
+      // Check if challenge exists
+      const challenge = await storage.getChallenge(challengeId);
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge niet gevonden" });
+      }
+
+      // Check if it's a one-time challenge
+      if (challenge.type !== 'eenmalig') {
+        return res.status(400).json({ message: "Alleen eenmalige challenges kunnen als voltooid worden gemarkeerd" });
+      }
+
+      // Get or create user challenge progress
+      let progress = await storage.getUserChallengeProgress(userId, challengeId);
+      
+      if (!progress) {
+        // Create new progress entry
+        progress = await storage.createUserChallengeProgress({
+          userId,
+          challengeId,
+          currentValue: 1,
+          isCompleted: true,
+          completedSteps: [],
+          currentStep: 0
+        });
+      } else {
+        // Update existing progress
+        progress = await storage.updateUserChallengeProgress(progress.id, {
+          currentValue: 1,
+          isCompleted: true
+        });
+      }
+
+      // Award points
+      const pointsToAward = challenge.points || 0;
+      if (pointsToAward > 0) {
+        await storage.createPointTransaction({
+          userId,
+          amount: pointsToAward,
+          type: "earned",
+          description: `Challenge voltooid: ${challenge.title}`,
+          source: "challenge_completion",
+          sourceId: challengeId.toString()
+        });
+      }
+
+      return res.status(200).json({
+        message: "Challenge succesvol voltooid",
+        progress,
+        pointsAwarded: pointsToAward
+      });
+    } catch (error) {
+      console.error("Error completing challenge:", error);
+      return res.status(500).json({ 
+        message: "Er is een fout opgetreden bij het voltooien van de challenge" 
+      });
+    }
+  });
+
+  // Increment progress for a progressive challenge step
+  app.post("/api/users/:userId/challenges/:challengeId/increment", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const challengeId = parseInt(req.params.challengeId);
+      const { stepIndex } = req.body;
+      
+      if (isNaN(userId) || isNaN(challengeId) || typeof stepIndex !== 'number') {
+        return res.status(400).json({ message: "Ongeldig gebruiker ID, challenge ID of step index" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+
+      // Check if challenge exists
+      const challenge = await storage.getChallenge(challengeId);
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge niet gevonden" });
+      }
+
+      // Check if it's a progressive challenge
+      if (challenge.type !== 'doorlopend') {
+        return res.status(400).json({ message: "Alleen doorlopende challenges hebben stappen" });
+      }
+
+      // Get challenge steps
+      const steps = await storage.getChallengeSteps(challengeId);
+      const sortedSteps = steps.sort((a, b) => a.stepNumber - b.stepNumber);
+      
+      if (stepIndex >= sortedSteps.length) {
+        return res.status(400).json({ message: "Ongeldige step index" });
+      }
+
+      const targetStep = sortedSteps[stepIndex];
+
+      // Get or create user challenge progress
+      let progress = await storage.getUserChallengeProgress(userId, challengeId);
+      
+      if (!progress) {
+        // Create new progress entry
+        progress = await storage.createUserChallengeProgress({
+          userId,
+          challengeId,
+          currentValue: 1,
+          isCompleted: false,
+          completedSteps: [],
+          currentStep: 0
+        });
+      } else {
+        // Increment current value
+        const newValue = (progress.currentValue || 0) + 1;
+        let completedSteps = [...(progress.completedSteps || [])];
+        let currentStep = progress.currentStep || 0;
+        let pointsAwarded = 0;
+
+        // Check if this increment completes the current step
+        if (newValue >= targetStep.targetValue && !completedSteps.includes(targetStep.id)) {
+          completedSteps.push(targetStep.id);
+          currentStep = stepIndex + 1;
+          pointsAwarded = targetStep.pointsReward || 0;
+
+          // Award points for completing this step
+          if (pointsAwarded > 0) {
+            await storage.createPointTransaction({
+              userId,
+              amount: pointsAwarded,
+              type: "earned",
+              description: `Challenge stap voltooid: ${challenge.title} - Stap ${stepIndex + 1}`,
+              source: "challenge_step_completion",
+              sourceId: targetStep.id.toString()
+            });
+          }
+        }
+
+        // Update progress
+        progress = await storage.updateUserChallengeProgress(progress.id, {
+          currentValue: newValue,
+          completedSteps,
+          currentStep,
+          isCompleted: currentStep >= sortedSteps.length
+        });
+
+        return res.status(200).json({
+          message: "Progress succesvol verhoogd",
+          progress,
+          pointsAwarded,
+          stepCompleted: pointsAwarded > 0
+        });
+      }
+
+      return res.status(200).json({
+        message: "Progress succesvol verhoogd",
+        progress,
+        pointsAwarded: 0
+      });
+    } catch (error) {
+      console.error("Error incrementing challenge progress:", error);
+      return res.status(500).json({ 
+        message: "Er is een fout opgetreden bij het verhogen van de progress" 
+      });
+    }
+  });
+
   // Complete a one-time challenge for user
   app.post("/api/admin/users/:userId/challenges/:challengeId/complete", adminMiddleware, async (req: Request, res: Response) => {
     try {
