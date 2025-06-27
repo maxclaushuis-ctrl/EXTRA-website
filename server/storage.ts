@@ -2246,6 +2246,8 @@ export class MemStorage implements IStorage {
       title: insertChallenge.title,
       description: insertChallenge.description,
       category: insertChallenge.category,
+      type: insertChallenge.type || 'doorlopend',
+      points: insertChallenge.points || null,
       status: insertChallenge.status || 'active',
       createdAt: now,
       updatedAt: now
@@ -2281,10 +2283,76 @@ export class MemStorage implements IStorage {
     return this.challenges.delete(id);
   }
 
+  // Challenge Step methods
+  async createChallengeStep(insertStep: InsertChallengeStep): Promise<ChallengeStep> {
+    const id = this.currentIds.challengeSteps++;
+    const now = new Date();
+    
+    const step: ChallengeStep = {
+      id,
+      challengeId: insertStep.challengeId,
+      stepNumber: insertStep.stepNumber,
+      title: insertStep.title || null,
+      description: insertStep.description || null,
+      targetValue: insertStep.targetValue,
+      pointsReward: insertStep.pointsReward,
+      badgeTitle: insertStep.badgeTitle || null,
+      isCompleted: insertStep.isCompleted || false,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.challengeSteps.set(id, step);
+    return step;
+  }
+
   async getChallengeSteps(challengeId: number): Promise<ChallengeStep[]> {
     return Array.from(this.challengeSteps.values()).filter(
       (step) => step.challengeId === challengeId
     );
+  }
+
+  async getChallengeStep(id: number): Promise<ChallengeStep | undefined> {
+    return this.challengeSteps.get(id);
+  }
+
+  async updateChallengeStep(id: number, stepData: Partial<InsertChallengeStep>): Promise<ChallengeStep | undefined> {
+    const step = this.challengeSteps.get(id);
+    if (!step) return undefined;
+
+    const updatedStep: ChallengeStep = {
+      ...step,
+      ...stepData,
+      updatedAt: new Date()
+    };
+
+    this.challengeSteps.set(id, updatedStep);
+    return updatedStep;
+  }
+
+  async deleteChallengeStep(id: number): Promise<boolean> {
+    return this.challengeSteps.delete(id);
+  }
+
+  // User Challenge Progress methods
+  async createUserChallengeProgress(insertProgress: InsertUserChallengeProgress): Promise<UserChallengeProgress> {
+    const id = this.currentIds.userChallengeProgress++;
+    const now = new Date();
+    
+    const progress: UserChallengeProgress = {
+      id,
+      userId: insertProgress.userId,
+      challengeId: insertProgress.challengeId,
+      currentStepId: insertProgress.currentStepId || null,
+      currentValue: insertProgress.currentValue || 0,
+      completedSteps: insertProgress.completedSteps || [],
+      isCompleted: insertProgress.isCompleted || false,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.userChallengeProgress.set(id, progress);
+    return progress;
   }
 
   async getUserChallengeProgress(userId: number): Promise<UserChallengeProgressWithDetails[]> {
@@ -2342,6 +2410,28 @@ export class MemStorage implements IStorage {
     }
 
     return progressWithDetails;
+  }
+
+  async getUserChallengeProgressById(id: number): Promise<UserChallengeProgress | undefined> {
+    return this.userChallengeProgress.get(id);
+  }
+
+  async updateUserChallengeProgress(id: number, progressData: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined> {
+    const progress = this.userChallengeProgress.get(id);
+    if (!progress) return undefined;
+
+    const updatedProgress: UserChallengeProgress = {
+      ...progress,
+      ...progressData,
+      updatedAt: new Date()
+    };
+
+    this.userChallengeProgress.set(id, updatedProgress);
+    return updatedProgress;
+  }
+
+  async deleteUserChallengeProgress(id: number): Promise<boolean> {
+    return this.userChallengeProgress.delete(id);
   }
 
   async completeUserChallengeStep(userId: number, challengeId: number, stepId: number): Promise<{

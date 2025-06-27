@@ -15,7 +15,7 @@ import {
   insertCampaignSchema,
   insertDiscountSchema,
   insertChallengeSchema,
-  insertDoorlopendChallengeSchema,
+
   // Plansysteem schema imports
 
 } from "@shared/schema";
@@ -1080,22 +1080,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Alleen eenmalige challenges kunnen als voltooid worden gemarkeerd" });
       }
 
-      // Get or create user challenge progress
-      let progress = await storage.getUserChallengeProgress(userId, challengeId);
+      // Get user challenge progress
+      const userProgress = await storage.getUserChallengeProgress(userId);
+      const existingProgress = userProgress.find(p => p.challengeId === challengeId);
       
-      if (!progress) {
+      let progress;
+      if (!existingProgress || existingProgress.id === 0) {
         // Create new progress entry
         progress = await storage.createUserChallengeProgress({
           userId,
           challengeId,
           currentValue: 1,
           isCompleted: true,
-          completedSteps: [],
-          currentStep: 0
+          completedSteps: []
         });
       } else {
         // Update existing progress
-        progress = await storage.updateUserChallengeProgress(progress.id, {
+        progress = await storage.updateUserChallengeProgress(existingProgress.id, {
           currentValue: 1,
           isCompleted: true
         });
