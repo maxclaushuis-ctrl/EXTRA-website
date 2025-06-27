@@ -29,7 +29,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserRound, Mail, Calendar, Phone, Building, Briefcase, Award, BarChart } from 'lucide-react';
+import { UserRound, Mail, Calendar, Phone, Building, Briefcase, Award, BarChart, Target, Plus } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 // Uitgebreid formulier schema voor het bewerken van contacten
 const formSchema = insertUserSchema.pick({
@@ -90,6 +91,19 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
       const response = await fetch(`/api/users/${userId}/redemptions`);
       if (!response.ok) {
         throw new Error('Kon verzilveringen niet ophalen');
+      }
+      return response.json();
+    },
+    enabled: isOpen && userId !== null,
+  });
+
+  const { data: userChallenges, isLoading: isLoadingChallenges } = useQuery({
+    queryKey: ['/api/users', userId, 'challenges'],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await fetch(`/api/users/${userId}/challenges`);
+      if (!response.ok) {
+        throw new Error('Kon challenges niet ophalen');
       }
       return response.json();
     },
@@ -232,6 +246,80 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
     },
   });
 
+  // Challenge progress mutations
+  const completeChallengeeMutation = useMutation({
+    mutationFn: async ({ challengeId }: { challengeId: number }) => {
+      if (!userId) return null;
+      
+      const response = await fetch(`/api/users/${userId}/challenges/${challengeId}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Challenge kon niet worden voltooid');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Challenge voltooid',
+        description: 'De challenge is succesvol voltooid en punten zijn toegekend',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'transactions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fout bij voltooien challenge',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const incrementProgressMutation = useMutation({
+    mutationFn: async ({ challengeId, stepIndex }: { challengeId: number; stepIndex: number }) => {
+      if (!userId) return null;
+      
+      const response = await fetch(`/api/users/${userId}/challenges/${challengeId}/increment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ stepIndex }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Progress kon niet worden verhoogd');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Progress verhoogd',
+        description: 'De challenge progress is succesvol verhoogd',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'transactions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fout bij verhogen progress',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const onSubmit = (data: FormValues) => {
     updateMutation.mutate(data);
   };
@@ -316,7 +404,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
         </DialogHeader>
         
         <Tabs defaultValue="profiel" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profiel">
               <UserRound className="mr-2 h-4 w-4" />
               Profiel
@@ -324,6 +412,10 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
             <TabsTrigger value="punten">
               <Award className="mr-2 h-4 w-4" />
               Punten & Beloningen
+            </TabsTrigger>
+            <TabsTrigger value="challenges">
+              <Target className="mr-2 h-4 w-4" />
+              Challenges
             </TabsTrigger>
             <TabsTrigger value="activiteit">
               <BarChart className="mr-2 h-4 w-4" />
@@ -595,6 +687,118 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                              redemption.status === 'cancelled' ? 'Geannuleerd' :
                              redemption.status === 'pending' ? 'In behandeling' : 'Onbekend'}
                           </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="challenges" className="mt-4">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Challenge overzicht</CardTitle>
+                  <CardDescription>Bekijk en beheer challenge voortgang voor deze medewerker</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingChallenges ? (
+                    <div className="flex justify-center py-8">Laden...</div>
+                  ) : userChallenges?.length === 0 ? (
+                    <div className="py-8 text-center text-muted-foreground">
+                      Nog geen challenges gestart
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {userChallenges?.map((userChallenge: any) => (
+                        <div key={userChallenge.id} className="rounded-lg border p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{userChallenge.challenge.title}</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {userChallenge.challenge.description}
+                              </p>
+                              
+                              {userChallenge.challenge.type === 'eenmalig' ? (
+                                <div className="mt-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm">Status:</span>
+                                    <Badge 
+                                      variant={userChallenge.completed ? 'default' : 'secondary'}
+                                    >
+                                      {userChallenge.completed ? 'Voltooid' : 'Actief'}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <span className="text-sm">Punten:</span>
+                                    <span className="font-medium">{userChallenge.challenge.points}</span>
+                                  </div>
+                                  {!userChallenge.completed && (
+                                    <Button 
+                                      size="sm" 
+                                      className="mt-3 w-full"
+                                      onClick={() => completeChallengeeMutation.mutate({ challengeId: userChallenge.challengeId })}
+                                      disabled={completeChallengeeMutation.isPending}
+                                    >
+                                      {completeChallengeeMutation.isPending ? 'Voltooien...' : 'Als voltooid markeren'}
+                                    </Button>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="mt-3 space-y-3">
+                                  {userChallenge.challenge.steps?.map((step: any, stepIndex: number) => {
+                                    const currentProgress = userChallenge.currentStep > stepIndex ? step.targetValue : 
+                                                          userChallenge.currentStep === stepIndex ? userChallenge.currentValue : 0;
+                                    const progressPercentage = Math.min((currentProgress / step.targetValue) * 100, 100);
+                                    const isCompleted = userChallenge.currentStep > stepIndex;
+                                    const isCurrent = userChallenge.currentStep === stepIndex;
+                                    
+                                    return (
+                                      <div key={stepIndex} className="border rounded-lg p-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className="text-sm font-medium">
+                                            Stap {stepIndex + 1}: {step.targetValue} {userChallenge.challenge.category === 'diensten-draaien' ? 'diensten' : 
+                                                                                   userChallenge.challenge.category === 'last-minute-inzet' ? 'last-minute diensten' :
+                                                                                   userChallenge.challenge.category === 'vrienden-aandragen' ? 'vrienden' :
+                                                                                   userChallenge.challenge.category === 'deel-story' ? 'stories' : 'items'}
+                                          </span>
+                                          <div className="flex items-center gap-2">
+                                            <Badge variant={isCompleted ? 'default' : isCurrent ? 'secondary' : 'outline'}>
+                                              {isCompleted ? 'Voltooid' : isCurrent ? 'Actief' : 'Wachtend'}
+                                            </Badge>
+                                            <span className="text-sm font-medium">{step.points} punten</span>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                          <div className="flex items-center justify-between text-sm">
+                                            <span>Voortgang: {currentProgress}/{step.targetValue}</span>
+                                            <span>{Math.round(progressPercentage)}%</span>
+                                          </div>
+                                          <Progress value={progressPercentage} className="h-2" />
+                                        </div>
+                                        
+                                        {isCurrent && !isCompleted && (
+                                          <Button 
+                                            size="sm" 
+                                            variant="outline"
+                                            className="mt-2 w-full"
+                                            onClick={() => incrementProgressMutation.mutate({ challengeId: userChallenge.challengeId, stepIndex })}
+                                            disabled={incrementProgressMutation.isPending}
+                                          >
+                                            <Plus className="w-4 h-4 mr-1" />
+                                            {incrementProgressMutation.isPending ? 'Verhogen...' : 'Progress verhogen (+1)'}
+                                          </Button>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
