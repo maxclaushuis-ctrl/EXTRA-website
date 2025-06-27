@@ -15,6 +15,7 @@ import {
   insertCampaignSchema,
   insertDiscountSchema,
   insertChallengeSchema,
+  insertDoorlopendChallengeSchema,
   // Plansysteem schema imports
 
 } from "@shared/schema";

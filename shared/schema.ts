@@ -115,11 +115,12 @@ export const challengeSteps = pgTable('challenge_steps', {
   id: serial('id').primaryKey(),
   challengeId: integer('challenge_id').references(() => challenges.id, { onDelete: 'cascade' }).notNull(),
   stepNumber: integer('step_number').notNull(),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
+  title: text('title'),
+  description: text('description'),
   targetValue: integer('target_value').notNull(), // aantal diensten, referrals, etc.
   pointsReward: integer('points_reward').notNull(),
   badgeTitle: text('badge_title'), // optionele badge naam
+  isCompleted: boolean('is_completed').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
