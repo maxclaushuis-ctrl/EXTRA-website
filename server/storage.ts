@@ -271,6 +271,9 @@ export class MemStorage implements IStorage {
     automationActions: number;
     discounts: number;
     monthlyLeaders: number;
+    challenges: number;
+    challengeSteps: number;
+    userChallengeProgress: number;
     // Plansysteem ids
     clients: number;
     locations: number;

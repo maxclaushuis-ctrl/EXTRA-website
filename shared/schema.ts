@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -133,7 +134,7 @@ export const userChallengeProgress = pgTable('user_challenge_progress', {
   challengeId: integer('challenge_id').references(() => challenges.id, { onDelete: 'cascade' }).notNull(),
   currentStepId: integer('current_step_id').references(() => challengeSteps.id),
   currentValue: integer('current_value').notNull().default(0), // huidige voortgang
-  completedSteps: integer('completed_steps').array().notNull().default('{}'), // array van voltooide step IDs
+  completedSteps: integer('completed_steps').array().notNull().default([]), // array van voltooide step IDs
   isCompleted: boolean('is_completed').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
