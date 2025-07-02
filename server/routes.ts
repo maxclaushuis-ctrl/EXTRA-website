@@ -2893,57 +2893,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- Leaderboard routes -----
   
-  // Get current month leaderboard based on actual points earned
+  // Get current month leaderboard based on user points (for testing purposes)
   app.get("/api/leaderboard", authMiddleware, async (req: Request, res: Response) => {
     try {
-      // Get start and end of current month
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-      
-      // Get all point transactions for this month (earned points only)
-      const transactions = await storage.getPointTransactions();
-      const thisMonthTransactions = transactions.filter(t => 
-        t.type === 'earned' && 
-        new Date(t.createdAt) >= startOfMonth && 
-        new Date(t.createdAt) <= endOfMonth
-      );
-      
-      // Calculate monthly points per user
-      const userMonthlyPoints = new Map<number, number>();
-      thisMonthTransactions.forEach(transaction => {
-        const currentPoints = userMonthlyPoints.get(transaction.userId) || 0;
-        userMonthlyPoints.set(transaction.userId, currentPoints + transaction.amount);
-      });
-      
-      // Get user details and create leaderboard
+      // Get all active employees and use their total points as monthly points for demo
       const users = await storage.getUsers();
-      const leaderboardData: Array<{
-        id: number;
-        firstName: string;
-        lastName: string;
-        email: string;
-        points: number;
-        monthlyPoints: number;
-        role: string;
-        status: string;
-      }> = [];
+      const activeEmployees = users.filter(u => u.role === 'employee' && u.status === 'active');
       
-      Array.from(userMonthlyPoints.entries()).forEach(([userId, monthlyPoints]) => {
-        const user = users.find(u => u.id === userId);
-        if (user && user.role === 'employee' && user.status === 'active') {
-          leaderboardData.push({
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            points: user.points, // Total points
-            monthlyPoints: monthlyPoints, // Points earned this month
-            role: user.role,
-            status: user.status
-          });
-        }
-      });
+      // Create leaderboard data using total points as monthly points
+      const leaderboardData = activeEmployees.map(user => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        points: user.points, // Total points
+        monthlyPoints: user.points, // Use total points as monthly points for demo
+        role: user.role,
+        status: user.status
+      }));
       
       // Sort by monthly points (highest first) and add ranks
       leaderboardData.sort((a, b) => b.monthlyPoints - a.monthlyPoints);
@@ -2951,6 +2918,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...user,
         rank: index + 1
       }));
+      
+      console.log('Leaderboard data:', leaderboard);
       
       return res.status(200).json(leaderboard);
     } catch (error) {
