@@ -103,21 +103,10 @@ export default function DiscountsList() {
                       }}
                     />
                   </div>
-                  <div>
-                    <span className="inline-block px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full mb-2">
-                      Gratis
-                    </span>
-                  </div>
                 </div>
                 
                 <h3 className="text-white text-lg font-semibold mb-2">{discount.name}</h3>
                 <p className="text-gray-400 text-sm mb-3">{discount.description}</p>
-                
-                <div className="w-full bg-gray-700 rounded-full h-2 mb-3">
-                  <div className="bg-blue-600 h-2 rounded-full w-full"></div>
-                </div>
-                
-                <p className="text-green-400 text-sm font-medium">Beschikbaar voor iedereen!</p>
               </div>
               
               {discount.imageUrl && (
