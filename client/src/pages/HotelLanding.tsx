@@ -32,7 +32,7 @@ export default function HotelLanding() {
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     trackEvent({
-      name: "hotel_contact_form_submit",
+      name: "client_contact_form_submit",
       properties: {
         company: formData.company,
         email: formData.email
@@ -45,7 +45,7 @@ export default function HotelLanding() {
 
   const handleCtaClick = (location: string) => {
     trackEvent({
-      name: "hotel_cta_click",
+      name: "client_cta_click",
       properties: {
         location: location
       }
@@ -101,12 +101,12 @@ export default function HotelLanding() {
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="font-bold text-5xl md:text-6xl mb-6">
-              HOTELPERSONEEL<br />
-              <span className="text-[#C5FDBB]">GEZOCHT?</span>
+              LOREM IPSUM<br />
+              <span className="text-[#C5FDBB]">DOLOR SIT?</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 font-medium">
-              Snel hotelpersoneel nodig? EXTRA staat voor je klaar<br />
-              <span className="text-[#C5FDBB]">DBA-proof • NEN gecertificeerd • 24/7 bereikbaar</span>
+              Lorem ipsum dolor sit amet consectetur adipiscing elit<br />
+              <span className="text-[#C5FDBB]">Sed do eiusmod • Tempor incididunt • Ut labore</span>
             </p>
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -117,26 +117,26 @@ export default function HotelLanding() {
                 size="lg"
                 className="bg-[#C5FDBB] text-black hover:bg-[#B5ED9F] font-bold text-lg px-8 py-4 rounded-lg"
               >
-                NEEM DIRECT CONTACT OP
+                LOREM IPSUM DOLOR
               </Button>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Hotel Logos Section */}
+      {/* Client Logos Section */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <p className="text-gray-600 font-medium">Vertrouwd door toonaangevende hotels</p>
+            <p className="text-gray-600 font-medium">Lorem ipsum dolor sit amet consectetur</p>
           </div>
           <div className="flex justify-center items-center space-x-8 md:space-x-12 opacity-60">
-            {/* Placeholder hotel logos */}
-            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">MARRIOTT</div>
-            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">HILTON</div>
-            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">NH HOTELS</div>
-            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">AMSTEL</div>
-            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">MERCURE</div>
+            {/* Placeholder client logos */}
+            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">CLIENT A</div>
+            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">CLIENT B</div>
+            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">CLIENT C</div>
+            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">CLIENT D</div>
+            <div className="bg-gray-300 h-12 w-24 rounded flex items-center justify-center text-xs font-bold">CLIENT E</div>
           </div>
         </div>
       </section>
@@ -146,31 +146,31 @@ export default function HotelLanding() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-              De uitdagingen van <span className="text-[#7E3FF2]">hotelmanagement</span>
+              Lorem ipsum <span className="text-[#7E3FF2]">dolor sit amet</span>
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="border-l-4 border-l-red-500">
                 <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-3 text-red-600">Personeelstekort</h3>
-                  <p className="text-gray-600">Last-minute uitval, seizoenspieken en onverwachte drukte zorgen voor personeelstekorten die je service kwaliteit bedreigen.</p>
+                  <h3 className="font-bold text-lg mb-3 text-red-600">Lorem Ipsum</h3>
+                  <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                 </CardContent>
               </Card>
               <Card className="border-l-4 border-l-red-500">
                 <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-3 text-red-600">DBA Wetgeving</h3>
-                  <p className="text-gray-600">Ingewikkelde regelgeving rond schijnzelfstandigheid. Gebruik van ZZP'ers kan resulteren in hoge boetes tot €87.000.</p>
+                  <h3 className="font-bold text-lg mb-3 text-red-600">Dolor Sit Amet</h3>
+                  <p className="text-gray-600">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
                 </CardContent>
               </Card>
               <Card className="border-l-4 border-l-red-500">
                 <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-3 text-red-600">No-shows</h3>
-                  <p className="text-gray-600">Personeel dat niet komt opdagen, waardoor je met onderbezetting zit tijdens belangrijke momenten.</p>
+                  <h3 className="font-bold text-lg mb-3 text-red-600">Consectetur</h3>
+                  <p className="text-gray-600">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
                 </CardContent>
               </Card>
               <Card className="border-l-4 border-l-red-500">
                 <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-3 text-red-600">Compliance Risico's</h3>
-                  <p className="text-gray-600">Complexe TWV procedures, loonheffing en arbeidsrecht zorgen voor administratieve hoofdpijn en juridische risico's.</p>
+                  <h3 className="font-bold text-lg mb-3 text-red-600">Adipiscing Elit</h3>
+                  <p className="text-gray-600">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
                 </CardContent>
               </Card>
             </div>
@@ -189,9 +189,9 @@ export default function HotelLanding() {
               className="text-center mb-12"
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                EXTRA oplossingen voor <span className="text-[#C5FDBB]">jouw hotel</span>
+                EXTRA lorem ipsum <span className="text-[#C5FDBB]">dolor sit</span>
               </h2>
-              <p className="text-xl">Complete ontzorging, van administratie tot dagbetaling</p>
+              <p className="text-xl">Lorem ipsum dolor sit amet consectetur adipiscing elit</p>
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -202,8 +202,8 @@ export default function HotelLanding() {
                 className="bg-white/10 backdrop-blur rounded-lg p-6"
               >
                 <Shield className="h-12 w-12 text-[#C5FDBB] mb-4" />
-                <h3 className="font-bold text-lg mb-3">NEN 4400-1 Gecertificeerd</h3>
-                <p className="text-white/90">Volledig compliant en gecertificeerd volgens de hoogste kwaliteitsnormen voor uitzendwerk.</p>
+                <h3 className="font-bold text-lg mb-3">Lorem Ipsum</h3>
+                <p className="text-white/90">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>
               </motion.div>
 
               <motion.div
@@ -213,8 +213,8 @@ export default function HotelLanding() {
                 className="bg-white/10 backdrop-blur rounded-lg p-6"
               >
                 <Users className="h-12 w-12 text-[#C5FDBB] mb-4" />
-                <h3 className="font-bold text-lg mb-3">Geen ZZP'ers (DBA-proof)</h3>
-                <p className="text-white/90">Al ons personeel is in loondienst. Geen risico op boetes of juridische problemen.</p>
+                <h3 className="font-bold text-lg mb-3">Dolor Sit Amet</h3>
+                <p className="text-white/90">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.</p>
               </motion.div>
 
               <motion.div
@@ -224,8 +224,8 @@ export default function HotelLanding() {
                 className="bg-white/10 backdrop-blur rounded-lg p-6"
               >
                 <CheckCircle className="h-12 w-12 text-[#C5FDBB] mb-4" />
-                <h3 className="font-bold text-lg mb-3">TWV's Geregeld</h3>
-                <p className="text-white/90">Alle vergunningen en administratie volledig geregeld. Jij hoeft je nergens zorgen over te maken.</p>
+                <h3 className="font-bold text-lg mb-3">Consectetur</h3>
+                <p className="text-white/90">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.</p>
               </motion.div>
 
               <motion.div
@@ -235,8 +235,8 @@ export default function HotelLanding() {
                 className="bg-white/10 backdrop-blur rounded-lg p-6"
               >
                 <Clock className="h-12 w-12 text-[#C5FDBB] mb-4" />
-                <h3 className="font-bold text-lg mb-3">24/7 Bereikbaar</h3>
-                <p className="text-white/90">Vaste contactpersoon die altijd bereikbaar is. Ook in het weekend en 's avonds.</p>
+                <h3 className="font-bold text-lg mb-3">Adipiscing</h3>
+                <p className="text-white/90">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.</p>
               </motion.div>
 
               <motion.div
@@ -246,8 +246,8 @@ export default function HotelLanding() {
                 className="bg-white/10 backdrop-blur rounded-lg p-6"
               >
                 <Award className="h-12 w-12 text-[#C5FDBB] mb-4" />
-                <h3 className="font-bold text-lg mb-3">Geselecteerd Bestand</h3>
-                <p className="text-white/90">Groot bestand van ervaren hotelmedewerkers. Allemaal gescreend en getraind.</p>
+                <h3 className="font-bold text-lg mb-3">Tempor Incididunt</h3>
+                <p className="text-white/90">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.</p>
               </motion.div>
 
               <motion.div
@@ -257,8 +257,8 @@ export default function HotelLanding() {
                 className="bg-white/10 backdrop-blur rounded-lg p-6"
               >
                 <Heart className="h-12 w-12 text-[#C5FDBB] mb-4" />
-                <h3 className="font-bold text-lg mb-3">EXTRAATJE Beloning</h3>
-                <p className="text-white/90">Uniek beloningssysteem zorgt voor gemotiveerde medewerkers en lagere no-show rates.</p>
+                <h3 className="font-bold text-lg mb-3">Ut Labore</h3>
+                <p className="text-white/90">Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet consectetur.</p>
               </motion.div>
             </div>
           </div>
@@ -279,7 +279,7 @@ export default function HotelLanding() {
                 <span className="text-2xl font-bold">4.8</span>
                 <span className="text-gray-600">(241 reviews)</span>
               </div>
-              <h2 className="text-3xl font-bold mb-8">Wat onze hotelpartners zeggen</h2>
+              <h2 className="text-3xl font-bold mb-8">Lorem ipsum dolor sit amet</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -291,9 +291,9 @@ export default function HotelLanding() {
                     ))}
                   </div>
                   <p className="text-gray-700 mb-4 italic">
-                    "EXTRA heeft ons enorm geholpen tijdens de drukke zomerperiode. Betrouwbaar personeel dat goed is voorbereid en geen no-shows. Aanrader!"
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam."
                   </p>
-                  <div className="font-semibold">- Hotel Manager, Amsterdam</div>
+                  <div className="font-semibold">- Lorem Ipsum, Amsterdam</div>
                 </CardContent>
               </Card>
 
@@ -305,9 +305,9 @@ export default function HotelLanding() {
                     ))}
                   </div>
                   <p className="text-gray-700 mb-4 italic">
-                    "Eindelijk een uitzendbureau dat begrijpt wat wij nodig hebben. Snelle service, kwaliteit personeel en volledig DBA-compliant."
+                    "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse."
                   </p>
-                  <div className="font-semibold">- Operations Director, Den Haag</div>
+                  <div className="font-semibold">- Dolor Sit, Den Haag</div>
                 </CardContent>
               </Card>
             </div>
@@ -320,7 +320,7 @@ export default function HotelLanding() {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold text-center mb-12">
-              Waarom kiezen hotels voor <span className="text-[#7E3FF2]">EXTRA</span>?
+              Lorem ipsum dolor <span className="text-[#7E3FF2]">EXTRA</span>?
             </h2>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -328,48 +328,48 @@ export default function HotelLanding() {
                 <div className="bg-[#7E3FF2] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3">Favorietenpoule</h3>
-                <p className="text-gray-600">Bouw je eigen team van betrouwbare medewerkers die jouw hotel kennen en waarderen.</p>
+                <h3 className="font-bold text-lg mb-3">Lorem Ipsum</h3>
+                <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
               </div>
 
               <div className="text-center">
                 <div className="bg-[#7E3FF2] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3">Klantportaal</h3>
-                <p className="text-gray-600">Online dashboard waar je eenvoudig personeel kunt aanvragen en planningen kunt inzien.</p>
+                <h3 className="font-bold text-lg mb-3">Dolor Sit</h3>
+                <p className="text-gray-600">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
               </div>
 
               <div className="text-center">
                 <div className="bg-[#7E3FF2] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Clock className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3">Dagbetaling</h3>
-                <p className="text-gray-600">Medewerkers krijgen direct na hun shift betaald, wat zorgt voor hogere motivatie.</p>
+                <h3 className="font-bold text-lg mb-3">Consectetur</h3>
+                <p className="text-gray-600">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.</p>
               </div>
 
               <div className="text-center">
                 <div className="bg-[#7E3FF2] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3">Geen No-shows</h3>
-                <p className="text-gray-600">Door ons beloningssysteem en strenge selectie hebben wij de laagste no-show rates.</p>
+                <h3 className="font-bold text-lg mb-3">Adipiscing</h3>
+                <p className="text-gray-600">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit.</p>
               </div>
 
               <div className="text-center">
                 <div className="bg-[#7E3FF2] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Award className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3">100% Compliant</h3>
-                <p className="text-gray-600">Volledig conform alle wet- en regelgeving. Geen risico's voor jouw organisatie.</p>
+                <h3 className="font-bold text-lg mb-3">Tempor</h3>
+                <p className="text-gray-600">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.</p>
               </div>
 
               <div className="text-center">
                 <div className="bg-[#7E3FF2] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Phone className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3">Persoonlijk Contact</h3>
-                <p className="text-gray-600">Vaste accountmanager die jouw hotel en wensen kent. Altijd bereikbaar voor vragen.</p>
+                <h3 className="font-bold text-lg mb-3">Incididunt</h3>
+                <p className="text-gray-600">Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur adipiscing.</p>
               </div>
             </div>
           </div>
@@ -386,16 +386,16 @@ export default function HotelLanding() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-3xl font-bold mb-6">
-                <span className="text-[#C5FDBB]">Een dienst draaien</span> = een dienst bewijzen
+                <span className="text-[#C5FDBB]">Lorem ipsum dolor</span> = sit amet consectetur
               </h2>
               <p className="text-xl mb-8">
-                Voor elke gewerkte shift doneren wij een maaltijd aan de voedselbank.<br />
-                Samen maken we impact, binnen én buiten de hospitality sector.
+                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br />
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco.
               </p>
               <div className="bg-white/10 backdrop-blur rounded-lg p-6 inline-block">
                 <Heart className="h-12 w-12 text-[#C5FDBB] mx-auto mb-4" />
                 <div className="text-2xl font-bold text-[#C5FDBB]">25.000+</div>
-                <div className="text-white/90">gedoneerde maaltijden</div>
+                <div className="text-white/90">lorem ipsum dolor</div>
               </div>
             </motion.div>
           </div>
@@ -408,10 +408,10 @@ export default function HotelLanding() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">
-                Klaar om je personeelsproblemen op te lossen?
+                Lorem ipsum dolor sit amet consectetur?
               </h2>
               <p className="text-xl text-gray-600">
-                Neem contact op voor een vrijblijvend gesprek over jouw personeelsbehoefte
+                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
               </p>
             </div>
 
@@ -419,7 +419,7 @@ export default function HotelLanding() {
               {/* Contact Form */}
               <Card>
                 <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold mb-6">Verstuur een bericht</h3>
+                  <h3 className="text-2xl font-bold mb-6">Lorem ipsum dolor</h3>
                   <form onSubmit={handleContactSubmit} className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
@@ -428,16 +428,16 @@ export default function HotelLanding() {
                           value={formData.name}
                           onChange={(e) => setFormData({...formData, name: e.target.value})}
                           required
-                          placeholder="Jouw naam"
+                          placeholder="Lorem ipsum"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Hotel/Bedrijf *</label>
+                        <label className="block text-sm font-medium mb-2">Bedrijf *</label>
                         <Input
                           value={formData.company}
                           onChange={(e) => setFormData({...formData, company: e.target.value})}
                           required
-                          placeholder="Hotelnaam"
+                          placeholder="Dolor sit amet"
                         />
                       </div>
                     </div>
@@ -450,7 +450,7 @@ export default function HotelLanding() {
                           value={formData.email}
                           onChange={(e) => setFormData({...formData, email: e.target.value})}
                           required
-                          placeholder="jouw@email.nl"
+                          placeholder="lorem@ipsum.nl"
                         />
                       </div>
                       <div>
@@ -470,7 +470,7 @@ export default function HotelLanding() {
                         value={formData.message}
                         onChange={(e) => setFormData({...formData, message: e.target.value})}
                         rows={4}
-                        placeholder="Vertel ons over je personeelsbehoefte..."
+                        placeholder="Lorem ipsum dolor sit amet..."
                       />
                     </div>
 
@@ -479,7 +479,7 @@ export default function HotelLanding() {
                       className="w-full bg-[#7E3FF2] hover:bg-[#6D35D9] text-white"
                       size="lg"
                     >
-                      VERSTUUR BERICHT
+                      LOREM IPSUM DOLOR
                     </Button>
                   </form>
                 </CardContent>
@@ -488,7 +488,7 @@ export default function HotelLanding() {
               {/* Contact Info */}
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-2xl font-bold mb-6">Direct contact</h3>
+                  <h3 className="text-2xl font-bold mb-6">Consectetur adipiscing</h3>
                   <div className="space-y-4">
                     <a 
                       href="tel:+31203690000" 
@@ -496,7 +496,7 @@ export default function HotelLanding() {
                     >
                       <PhoneCall className="h-6 w-6" />
                       <div>
-                        <div className="font-semibold">Bel direct</div>
+                        <div className="font-semibold">Lorem ipsum</div>
                         <div>020-369 0000</div>
                       </div>
                     </a>
@@ -507,31 +507,31 @@ export default function HotelLanding() {
                     >
                       <MessageCircle className="h-6 w-6" />
                       <div>
-                        <div className="font-semibold">WhatsApp</div>
-                        <div>Direct beschikbaar</div>
+                        <div className="font-semibold">Dolor sit</div>
+                        <div>Consectetur adipiscing</div>
                       </div>
                     </a>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="font-bold text-lg mb-4">Waarom EXTRA kiezen?</h4>
+                  <h4 className="font-bold text-lg mb-4">Lorem ipsum EXTRA?</h4>
                   <ul className="space-y-2">
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span>Binnen 2 uur reactie op aanvragen</span>
+                      <span>Lorem ipsum dolor sit amet</span>
                     </li>
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span>24/7 bereikbare accountmanager</span>
+                      <span>Consectetur adipiscing elit</span>
                     </li>
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span>95%+ tevredenheid van hotelpartners</span>
+                      <span>Sed do eiusmod tempor</span>
                     </li>
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span>Vrijblijvend adviesgesprek</span>
+                      <span>Incididunt ut labore</span>
                     </li>
                   </ul>
                 </div>
@@ -562,8 +562,8 @@ export default function HotelLanding() {
                 EXTRA
               </div>
               <p className="text-gray-400">
-                Dé specialist in flexibel hotelpersoneel.<br />
-                NEN 4400-1 gecertificeerd.
+                Lorem ipsum dolor sit amet consectetur.<br />
+                Adipiscing elit sed do eiusmod.
               </p>
             </div>
             
@@ -571,23 +571,23 @@ export default function HotelLanding() {
               <h4 className="font-bold mb-4">Contact</h4>
               <div className="space-y-2 text-gray-400">
                 <div>020-369 0000</div>
-                <div>hotels@extra.nl</div>
-                <div>Beschikbaar 24/7</div>
+                <div>lorem@extra.nl</div>
+                <div>Consectetur adipiscing 24/7</div>
               </div>
             </div>
 
             <div>
-              <h4 className="font-bold mb-4">Certificeringen</h4>
+              <h4 className="font-bold mb-4">Lorem Ipsum</h4>
               <div className="space-y-2 text-gray-400">
-                <div>✓ NEN 4400-1 Gecertificeerd</div>
-                <div>✓ DBA Compliant</div>
-                <div>✓ ISO Gecertificeerd</div>
+                <div>✓ Dolor Sit Amet</div>
+                <div>✓ Consectetur Adipiscing</div>
+                <div>✓ Sed Do Eiusmod</div>
               </div>
             </div>
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} EXTRA Uitzendbureau. Alle rechten voorbehouden.</p>
+            <p>&copy; {new Date().getFullYear()} EXTRA Lorem Ipsum. Dolor sit amet consectetur adipiscing elit.</p>
           </div>
         </div>
       </footer>
