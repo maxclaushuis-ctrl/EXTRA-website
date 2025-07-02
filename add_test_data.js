@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Gebruik de ingebouwde fetch API
 
 async function addTestData() {
   try {
