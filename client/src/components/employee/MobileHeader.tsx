@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'wouter';
-import { ArrowLeft, Settings, Check, User } from 'lucide-react';
+import { ArrowLeft, Check, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,13 +16,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 interface MobileHeaderProps {
   title?: string;
   showBackButton?: boolean;
-  showSettings?: boolean;
 }
 
 export function MobileHeader({ 
   title = 'EXTRAATJE', 
-  showBackButton = true,
-  showSettings = true
+  showBackButton = true
 }: MobileHeaderProps) {
   const [location, navigate] = useLocation();
   const { language, setLanguage } = useLanguage();
@@ -148,12 +146,6 @@ export function MobileHeader({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
-        
-        {showSettings && (
-          <Link href="/settings">
-            <Settings size={24} className="text-[#c8ff00]" />
-          </Link>
         )}
       </div>
     </header>
