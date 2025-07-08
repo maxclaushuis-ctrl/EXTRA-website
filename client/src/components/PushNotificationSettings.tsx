@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Bell, BellOff, TestTube, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { SafariNotificationTest } from './SafariNotificationTest';
 
 export function PushNotificationSettings() {
   const { 
@@ -63,25 +64,30 @@ export function PushNotificationSettings() {
 
   if (!isSupported) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BellOff className="h-5 w-5" />
-            Push Notificaties
-          </CardTitle>
-          <CardDescription>
-            Je browser ondersteunt geen push notificaties
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <AlertCircle className="h-4 w-4" />
-            <span className="text-sm">
-              Push notificaties zijn niet beschikbaar in deze browser
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BellOff className="h-5 w-5" />
+              Push Notificaties
+            </CardTitle>
+            <CardDescription>
+              Je browser ondersteunt geen push notificaties
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">
+                Push notificaties zijn niet beschikbaar in deze browser
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Safari test component */}
+        <SafariNotificationTest />
+      </div>
     );
   }
 

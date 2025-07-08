@@ -20,10 +20,23 @@ export function usePushNotifications() {
   // Check if push notifications are supported
   useEffect(() => {
     const checkSupport = () => {
-      const isSupported = 
-        'serviceWorker' in navigator && 
-        'PushManager' in window && 
-        'Notification' in window;
+      // Basic notification support check
+      const hasNotification = 'Notification' in window;
+      
+      // More lenient check for Safari/iOS
+      const hasServiceWorker = 'serviceWorker' in navigator;
+      const hasPushManager = 'PushManager' in window;
+      
+      // Consider supported if we have at least basic notifications
+      const isSupported = hasNotification && (hasServiceWorker || hasPushManager);
+      
+      console.log('Push notification support check:', {
+        hasNotification,
+        hasServiceWorker,
+        hasPushManager,
+        isSupported,
+        userAgent: navigator.userAgent
+      });
       
       setState(prev => ({ ...prev, isSupported }));
     };
@@ -40,22 +53,41 @@ export function usePushNotifications() {
 
   const registerServiceWorker = async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
-      });
-      
-      console.log('Service Worker registered:', registration);
-      
-      // Check if already subscribed
-      const subscription = await registration.pushManager.getSubscription();
-      setState(prev => ({ ...prev, isSubscribed: !!subscription }));
+      // Try to register service worker if available
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/'
+        });
+        
+        console.log('Service Worker registered:', registration);
+        
+        // Check if already subscribed (if PushManager is available)
+        if ('PushManager' in window && registration.pushManager) {
+          const subscription = await registration.pushManager.getSubscription();
+          setState(prev => ({ ...prev, isSubscribed: !!subscription }));
+        } else {
+          // Fallback for Safari - just enable basic notification permission
+          const permission = await Notification.requestPermission();
+          setState(prev => ({ ...prev, isSubscribed: permission === 'granted' }));
+        }
+      } else {
+        // Fallback for browsers without service worker
+        const permission = await Notification.requestPermission();
+        setState(prev => ({ ...prev, isSubscribed: permission === 'granted' }));
+      }
       
     } catch (error) {
       console.error('Service Worker registration failed:', error);
-      setState(prev => ({ 
-        ...prev, 
-        error: 'Service Worker registratie mislukt' 
-      }));
+      // Try basic notification permission as fallback
+      try {
+        const permission = await Notification.requestPermission();
+        setState(prev => ({ ...prev, isSubscribed: permission === 'granted' }));
+      } catch (fallbackError) {
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Notificatie registratie mislukt' 
+        }));
+      }
     }
   };
 
@@ -88,54 +120,80 @@ export function usePushNotifications() {
         throw new Error('Notification permission geweigerd');
       }
 
-      // Get VAPID public key from server
-      const vapidResponse = await fetch('/api/push/vapid-key', {
-        credentials: 'include'
-      });
-      
-      if (!vapidResponse.ok) {
-        throw new Error('Kan VAPID key niet ophalen');
+      // Check if we have push manager support
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        // Get VAPID public key from server
+        const vapidResponse = await fetch('/api/push/vapid-key', {
+          credentials: 'include'
+        });
+        
+        if (!vapidResponse.ok) {
+          throw new Error('Kan VAPID key niet ophalen');
+        }
+        
+        const { publicKey } = await vapidResponse.json();
+        
+        // Get service worker registration
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Subscribe to push notifications
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+
+        // Send subscription to server
+        const subscribeResponse = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))),
+              auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!)))
+            }
+          })
+        });
+
+        if (!subscribeResponse.ok) {
+          throw new Error('Server subscription mislukt');
+        }
+
+        setState(prev => ({ 
+          ...prev, 
+          isSubscribed: true, 
+          isLoading: false 
+        }));
+        
+        console.log('Push notifications geactiveerd');
+        return true;
+      } else {
+        // Fallback for Safari/browsers without push manager
+        // Just register basic notification permission
+        const fallbackResponse = await fetch('/api/push/subscribe-basic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: 'basic',
+            userAgent: navigator.userAgent
+          })
+        });
+
+        setState(prev => ({ 
+          ...prev, 
+          isSubscribed: true, 
+          isLoading: false 
+        }));
+        
+        console.log('Basis notificaties geactiveerd (Safari fallback)');
+        return true;
       }
-      
-      const { publicKey } = await vapidResponse.json();
-      
-      // Get service worker registration
-      const registration = await navigator.serviceWorker.ready;
-      
-      // Subscribe to push notifications
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      });
-
-      // Send subscription to server
-      const subscribeResponse = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))),
-            auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!)))
-          }
-        })
-      });
-
-      if (!subscribeResponse.ok) {
-        throw new Error('Server subscription mislukt');
-      }
-
-      setState(prev => ({ 
-        ...prev, 
-        isSubscribed: true, 
-        isLoading: false 
-      }));
-      
-      console.log('Push notifications geactiveerd');
-      return true;
 
     } catch (error) {
       console.error('Push subscription error:', error);

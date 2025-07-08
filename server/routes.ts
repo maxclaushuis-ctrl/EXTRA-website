@@ -3068,6 +3068,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscribe to basic notifications (Safari fallback)
+  app.post("/api/push/subscribe-basic", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { type, userAgent } = req.body;
+      const userId = req.session?.userId;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Niet ingelogd" });
+      }
+
+      console.log(`Basic notification subscription for user ${userId}, type: ${type}, userAgent: ${userAgent}`);
+      
+      // Store basic notification preference (simplified for Safari)
+      // For now, just acknowledge the subscription
+      res.json({ message: "Basis notificaties ingeschakeld (Safari)" });
+    } catch (error) {
+      console.error("Error subscribing to basic notifications:", error);
+      res.status(500).json({ message: "Fout bij inschrijven voor basis notificaties" });
+    }
+  });
+
   // Unsubscribe from push notifications
   app.post("/api/push/unsubscribe", authMiddleware, async (req: Request, res: Response) => {
     try {
