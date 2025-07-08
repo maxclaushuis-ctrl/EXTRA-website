@@ -92,16 +92,16 @@ export function PushNotificationSettings() {
   }
 
   return (
-    <Card>
+    <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-white">
           <Bell className="h-5 w-5" />
           Push Notificaties
-          <Badge variant={isSubscribed ? "default" : "secondary"}>
+          <Badge variant={isSubscribed ? "default" : "secondary"} className={isSubscribed ? "bg-blue-600" : "bg-gray-600"}>
             {isSubscribed ? "Actief" : "Inactief"}
           </Badge>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-400">
           Ontvang real-time notificaties voor achievements, challenges en leaderboard updates
         </CardDescription>
       </CardHeader>
@@ -109,10 +109,10 @@ export function PushNotificationSettings() {
         {/* Main Toggle */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="push-notifications" className="text-base">
+            <Label htmlFor="push-notifications" className="text-base text-white">
               Push Notificaties
             </Label>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-gray-400">
               Krijg notificaties voor belangrijke updates
             </div>
           </div>
@@ -134,27 +134,27 @@ export function PushNotificationSettings() {
         {/* Notification Types Info */}
         {isSubscribed && (
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Je ontvangt notificaties voor:</Label>
+            <Label className="text-sm font-medium text-gray-300">Je ontvangt notificaties voor:</Label>
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>🎉 Achievement behaald (punten verdiend)</span>
+                <span className="text-gray-300">🎉 Achievement behaald (punten verdiend)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>🎯 Challenge voortgang updates</span>
+                <span className="text-gray-300">🎯 Challenge voortgang updates</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>🏆 Leaderboard positie wijzigingen</span>
+                <span className="text-gray-300">🏆 Leaderboard positie wijzigingen</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>🎁 Nieuwe beloningen beschikbaar</span>
+                <span className="text-gray-300">🎁 Nieuwe beloningen beschikbaar</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>💪 Dagelijkse motivatie berichten</span>
+                <span className="text-gray-300">💪 Dagelijkse motivatie berichten</span>
               </div>
             </div>
           </div>
@@ -162,18 +162,18 @@ export function PushNotificationSettings() {
 
         {/* Test Notifications */}
         {isSubscribed && (
-          <div className="space-y-3 pt-4 border-t">
-            <Label className="text-sm font-medium">Test Notificaties</Label>
+          <div className="space-y-3 pt-4 border-t border-gray-700">
+            <Label className="text-sm font-medium text-gray-300">Test Notificaties</Label>
             <div className="flex items-center gap-2">
               <Select value={testType} onValueChange={setTestType}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[200px] bg-gray-700 border-gray-600 text-white">
                   <SelectValue placeholder="Kies test type" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="test">Algemene Test</SelectItem>
-                  <SelectItem value="achievement">Achievement</SelectItem>
-                  <SelectItem value="challenge">Challenge Update</SelectItem>
-                  <SelectItem value="leaderboard">Leaderboard</SelectItem>
+                <SelectContent className="bg-gray-700 border-gray-600">
+                  <SelectItem value="test" className="text-white hover:bg-gray-600">Algemene Test</SelectItem>
+                  <SelectItem value="achievement" className="text-white hover:bg-gray-600">Achievement</SelectItem>
+                  <SelectItem value="challenge" className="text-white hover:bg-gray-600">Challenge Update</SelectItem>
+                  <SelectItem value="leaderboard" className="text-white hover:bg-gray-600">Leaderboard</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -181,6 +181,7 @@ export function PushNotificationSettings() {
                 disabled={isTesting}
                 variant="outline"
                 size="sm"
+                className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
               >
                 {isTesting ? (
                   <>
@@ -195,7 +196,7 @@ export function PushNotificationSettings() {
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-400">
               Test of push notificaties correct werken op je apparaat
             </p>
           </div>
@@ -203,7 +204,7 @@ export function PushNotificationSettings() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-gray-400">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">Notificatie-instellingen worden bijgewerkt...</span>
           </div>
