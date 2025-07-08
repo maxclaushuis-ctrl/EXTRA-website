@@ -107,6 +107,12 @@ The application follows a monorepo structure with clear separation between clien
 
 Preferred communication style: Simple, everyday language.
 
+## Production Deployment Planning
+
+**Current Status**: Test environment fully functional with complete rewards system
+**Next Phase**: Production deployment with Planworks API integration
+**Target**: Automatic point allocation based on real planning system data
+
 ## Recent Changes
 
 - **June 26, 2025**: Simplified system to focus purely on rewards functionality
