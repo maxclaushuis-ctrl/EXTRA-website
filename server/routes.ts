@@ -828,6 +828,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the reward
       const reward = await storage.createReward(result.data);
       
+      // Broadcast new reward to all users
+      if (typeof global.broadcastNotification === 'function') {
+        global.broadcastNotification('reward_created', {
+          message: `Nieuwe beloning beschikbaar: ${reward.name}`,
+          data: {
+            rewardId: reward.id,
+            rewardName: reward.name,
+            pointsRequired: reward.pointsRequired,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
       return res.status(201).json({
         message: "Beloning succesvol aangemaakt",
         reward
@@ -1760,7 +1773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.getUser(userId);
       
       // Send WebSocket notification for real-time updates
-      if (typeof global.sendNotification === 'function') {
+      if (typeof global.broadcastNotification === 'function') {
         // Send push notification for achievement
         const pushService = getPushNotificationService();
         if (pushService && updatedUser) {
@@ -1776,9 +1789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Notify the specific user about their points update
-        global.sendNotification({
-          type: 'points_update',
-          userId: userId,
+        global.broadcastNotification('points_update', {
           message: `Je hebt ${points} punten ontvangen!`,
           data: {
             userId: userId,
@@ -1787,11 +1798,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             change: points,
             timestamp: new Date().toISOString()
           }
-        });
+        }, userId);
         
         // Notify all users about leaderboard update
-        global.sendNotification({
-          type: 'leaderboard_update',
+        global.broadcastNotification('leaderboard_update', {
           message: 'Ranglijst bijgewerkt',
           data: {
             userId: userId,
@@ -3386,26 +3396,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const message = JSON.parse(data.toString());
         
         if (message.type === 'auth') {
-          // Get session from cookie
-          const cookies = parseCookies(req.headers.cookie || '');
-          const sessionId = cookies['extra.sid'];
-          
-          if (sessionId) {
-            // Verify session exists in our session store
-            // For development, we'll assume valid sessions have userId/userRole
-            const sessionData = JSON.parse(message.sessionData || '{}');
-            if (sessionData.userId && sessionData.userRole) {
-              clientInfo.userId = sessionData.userId;
-              clientInfo.userRole = sessionData.userRole;
-              clientInfo.authenticated = true;
-              
-              console.log(`WebSocket geauthenticeerd voor gebruiker ${clientInfo.userId}, rol: ${clientInfo.userRole}`);
-              
-              ws.send(JSON.stringify({
-                type: 'auth_success',
-                message: 'WebSocket verbinding geauthenticeerd'
-              }));
-            }
+          // Simple authentication using userId and userRole from client
+          if (message.userId && message.userRole) {
+            clientInfo.userId = message.userId;
+            clientInfo.userRole = message.userRole;
+            clientInfo.authenticated = true;
+            
+            console.log(`WebSocket geauthenticeerd voor gebruiker ${clientInfo.userId}, rol: ${clientInfo.userRole}`);
+            
+            ws.send(JSON.stringify({
+              type: 'auth_success',
+              message: 'WebSocket verbinding geauthenticeerd'
+            }));
           }
         }
       } catch (error) {
@@ -3420,6 +3422,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Store client info on the connection
     (ws as any).clientInfo = clientInfo;
   });
+  
+  // Broadcast notification function voor real-time synchronisatie
+  const broadcastNotification = (type: string, notification: { message: string; data?: any }, targetUserId?: number, targetUserRole?: string) => {
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === WebSocket.OPEN && client.clientInfo?.authenticated) {
+        const { userId, userRole } = client.clientInfo;
+        
+        // Stuur naar specifieke gebruiker, rol, of iedereen
+        if (
+          (!targetUserId && !targetUserRole) || 
+          (targetUserId && userId === targetUserId) || 
+          (targetUserRole && userRole === targetUserRole)
+        ) {
+          client.send(JSON.stringify({
+            type,
+            message: notification.message,
+            timestamp: new Date().toISOString(),
+            data: notification.data
+          }));
+        }
+      }
+    });
+  };
+  
+  // Store broadcast function globally voor gebruik in routes
+  (global as any).broadcastNotification = broadcastNotification;
   
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
