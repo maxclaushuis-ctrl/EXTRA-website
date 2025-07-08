@@ -91,21 +91,7 @@ export default function DiscountsList() {
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-white text-lg font-semibold">{discount.name}</h3>
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img 
-                      src={`https://logo.clearbit.com/${discount.partner?.toLowerCase().replace(/\s+/g, '')}.com`} 
-                      alt={discount.partner || "Partner logo"}
-                      className="w-8 h-8 object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "https://via.placeholder.com/32x32/6B7280/FFFFFF?text=" + discount.partner.charAt(0); 
-                      }}
-                    />
-                  </div>
-                </div>
-                
+                <h3 className="text-white text-lg font-semibold mb-2">{discount.name}</h3>
                 <p className="text-gray-400 text-sm mb-3">{discount.description}</p>
               </div>
               
