@@ -89,10 +89,11 @@ export default function DiscountsList() {
       {discounts.map((discount) => (
         <Card key={discount.id} className="border-none bg-gray-900 text-white overflow-hidden">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden">
+                  <h3 className="text-white text-lg font-semibold">{discount.name}</h3>
+                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden flex-shrink-0">
                     <img 
                       src={`https://logo.clearbit.com/${discount.partner?.toLowerCase().replace(/\s+/g, '')}.com`} 
                       alt={discount.partner || "Partner logo"}
@@ -105,12 +106,11 @@ export default function DiscountsList() {
                   </div>
                 </div>
                 
-                <h3 className="text-white text-lg font-semibold mb-2">{discount.name}</h3>
                 <p className="text-gray-400 text-sm mb-3">{discount.description}</p>
               </div>
               
               {discount.imageUrl && (
-                <div className="w-16 h-16 rounded-lg overflow-hidden ml-4">
+                <div className="w-16 h-16 rounded-lg overflow-hidden ml-4 flex-shrink-0">
                   <img 
                     src={discount.imageUrl} 
                     alt={discount.name}

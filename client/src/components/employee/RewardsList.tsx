@@ -163,33 +163,37 @@ export function RewardsList() {
         return (
           <div key={reward.id} className="mb-4">
             <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-md p-4">
-              <div className="flex items-center justify-between">
-                {/* Beloningspunten */}
-                <div className="bg-[#00AAFF] text-white font-bold px-3 py-1 rounded-md">
-                  {reward.pointsCost} {t('common.points')}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    {/* Beloningsnaam */}
+                    <div className="text-white text-lg font-medium">{reward.name}</div>
+                    
+                    {/* Afbeelding van beloning indien beschikbaar */}
+                    {reward.imageUrl && (
+                      <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+                        <img 
+                          src={reward.imageUrl} 
+                          alt={reward.name}
+                          className="w-8 h-8 object-contain"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Fallback icoon als er geen afbeelding is */}
+                    {!reward.imageUrl && (
+                      <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag className="w-6 h-6 text-[#00AAFF]" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Beloningspunten */}
+                  <div className="bg-[#00AAFF] text-white font-bold px-3 py-1 rounded-md inline-block">
+                    {reward.pointsCost} {t('common.points')}
+                  </div>
                 </div>
-                
-                {/* Afbeelding van beloning indien beschikbaar */}
-                {reward.imageUrl && (
-                  <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center">
-                    <img 
-                      src={reward.imageUrl} 
-                      alt={reward.name}
-                      className="w-8 h-8 object-contain"
-                    />
-                  </div>
-                )}
-                
-                {/* Fallback icoon als er geen afbeelding is */}
-                {!reward.imageUrl && (
-                  <div className="w-12 h-12 bg-gray-800 rounded-full overflow-hidden flex items-center justify-center">
-                    <ShoppingBag className="w-6 h-6 text-[#00AAFF]" />
-                  </div>
-                )}
               </div>
-              
-              {/* Beloningsnaam */}
-              <div className="text-white text-lg font-medium mt-3">{reward.name}</div>
               
               {/* Korte beschrijving indien aanwezig */}
               {reward.description && (
