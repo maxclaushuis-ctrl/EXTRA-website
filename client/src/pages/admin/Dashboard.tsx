@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMilestoneContext } from '@/contexts/MilestoneContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'wouter';
@@ -19,7 +19,7 @@ import {
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
   Activity, User, Import, Download, Receipt,
-  Mail, Zap, LineChart, Send
+  Mail, Zap, LineChart, Send, Plus
 } from 'lucide-react';
 
 import Transactions from './Transactions';
