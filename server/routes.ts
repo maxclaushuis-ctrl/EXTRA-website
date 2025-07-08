@@ -24,6 +24,7 @@ import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./bi
 import { initMailService } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
+import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
 
 // Simple cookie parser function
@@ -224,6 +225,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize mail service
   const mailServiceInitialized = initMailService();
   console.log(`Mail service geïnitialiseerd: ${mailServiceInitialized ? 'Ja' : 'Nee'}`);
+  
+  // Initialize push notification service
+  const pushService = initPushNotificationService();
+  console.log('Push notification service geïnitialiseerd');
   
   // Start de verjaardagscontrole planning
   scheduleBirthdayCheck();
@@ -1128,6 +1133,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Send push notification for challenge completion
+      const pushService = getPushNotificationService();
+      if (pushService && user) {
+        try {
+          await pushService.sendAchievementNotification(user, {
+            title: 'Challenge Voltooid!',
+            points: pointsToAward,
+            type: 'challenge_complete'
+          });
+        } catch (error) {
+          console.error('Failed to send push notification for challenge completion:', error);
+        }
+      }
+
       return res.status(200).json({
         message: "Challenge succesvol voltooid",
         progress,
@@ -1742,6 +1761,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send WebSocket notification for real-time updates
       if (typeof global.sendNotification === 'function') {
+        // Send push notification for achievement
+        const pushService = getPushNotificationService();
+        if (pushService && updatedUser) {
+          try {
+            await pushService.sendAchievementNotification(updatedUser, {
+              title: 'Punten Verdiend!',
+              points: points,
+              type: 'points_earned'
+            });
+          } catch (error) {
+            console.error('Failed to send push notification for points:', error);
+          }
+        }
+
         // Notify the specific user about their points update
         global.sendNotification({
           type: 'points_update',
@@ -2986,6 +3019,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({
         message: "Er is een fout opgetreden bij het ophalen van de vorige winnaar"
       });
+    }
+  });
+
+  // ----- Push Notification Routes -----
+  
+  // Get VAPID public key for client-side subscription
+  app.get("/api/push/vapid-key", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const pushService = getPushNotificationService();
+      if (!pushService) {
+        return res.status(500).json({ message: "Push notification service niet beschikbaar" });
+      }
+      
+      res.json({ 
+        publicKey: pushService.getVapidPublicKey()
+      });
+    } catch (error) {
+      console.error("Error getting VAPID key:", error);
+      res.status(500).json({ message: "Fout bij ophalen VAPID key" });
+    }
+  });
+
+  // Subscribe to push notifications
+  app.post("/api/push/subscribe", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const pushService = getPushNotificationService();
+      if (!pushService) {
+        return res.status(500).json({ message: "Push notification service niet beschikbaar" });
+      }
+
+      const { endpoint, keys } = req.body;
+      if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+        return res.status(400).json({ message: "Ongeldige subscription data" });
+      }
+
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Niet ingelogd" });
+      }
+
+      pushService.subscribe(userId, { endpoint, keys });
+      
+      res.json({ message: "Push notifications ingeschakeld" });
+    } catch (error) {
+      console.error("Error subscribing to push notifications:", error);
+      res.status(500).json({ message: "Fout bij inschrijven voor push notifications" });
+    }
+  });
+
+  // Unsubscribe from push notifications
+  app.post("/api/push/unsubscribe", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const pushService = getPushNotificationService();
+      if (!pushService) {
+        return res.status(500).json({ message: "Push notification service niet beschikbaar" });
+      }
+
+      const { endpoint } = req.body;
+      if (!endpoint) {
+        return res.status(400).json({ message: "Endpoint vereist" });
+      }
+
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Niet ingelogd" });
+      }
+
+      pushService.unsubscribe(userId, endpoint);
+      
+      res.json({ message: "Push notifications uitgeschakeld" });
+    } catch (error) {
+      console.error("Error unsubscribing from push notifications:", error);
+      res.status(500).json({ message: "Fout bij uitschrijven van push notifications" });
+    }
+  });
+
+  // Test notification (admin only)
+  app.post("/api/push/test", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const pushService = getPushNotificationService();
+      if (!pushService) {
+        return res.status(500).json({ message: "Push notification service niet beschikbaar" });
+      }
+
+      const { userId, type = 'test' } = req.body;
+      if (!userId) {
+        return res.status(400).json({ message: "User ID vereist" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+
+      // Send test notification based on type
+      switch (type) {
+        case 'achievement':
+          await pushService.sendAchievementNotification(user, {
+            title: 'Test Achievement',
+            points: 100,
+            type: 'milestone'
+          });
+          break;
+        case 'challenge':
+          await pushService.sendChallengeProgressNotification(user, {
+            title: 'Test Challenge',
+            currentStep: 2,
+            totalSteps: 5,
+            nextReward: 50
+          });
+          break;
+        case 'leaderboard':
+          await pushService.sendLeaderboardNotification(user, {
+            current: 2,
+            previous: 5,
+            totalUsers: 10
+          });
+          break;
+        default:
+          await pushService.sendMotivationNotification(user, {
+            type: 'daily',
+            message: 'Dit is een test notificatie! Het push notification systeem werkt correct.'
+          });
+      }
+      
+      res.json({ message: `Test ${type} notificatie verzonden naar ${user.firstName}` });
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      res.status(500).json({ message: "Fout bij verzenden test notificatie" });
     }
   });
 

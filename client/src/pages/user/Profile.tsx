@@ -12,6 +12,7 @@ import { ArrowLeft, User as UserIcon, Save, Upload } from 'lucide-react';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { PushNotificationSettings } from '@/components/PushNotificationSettings';
 
 export default function UserProfile() {
   const { user } = useAuth();
@@ -255,19 +256,23 @@ export default function UserProfile() {
         </TabsContent>
 
         <TabsContent value="preferences">
-          <Card>
-            <CardHeader>
-              <CardTitle>Voorkeuren</CardTitle>
-              <CardDescription>
-                Pas je voorkeuren aan
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Voorkeuren worden binnenkort toegevoegd.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <PushNotificationSettings />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Overige Voorkeuren</CardTitle>
+                <CardDescription>
+                  Algemene app instellingen
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Meer voorkeuren worden binnenkort toegevoegd.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
