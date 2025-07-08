@@ -15,6 +15,10 @@ import {
   insertCampaignSchema,
   insertDiscountSchema,
   insertChallengeSchema,
+  insertMarketingTemplateSchema,
+  insertMarketingCampaignSchema,
+  insertMarketingCampaignRecipientSchema,
+  insertMarketingCampaignClickSchema,
 
   // Plansysteem schema imports
 
@@ -3448,6 +3452,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Store broadcast function globally voor gebruik in routes
   (global as any).broadcastNotification = broadcastNotification;
+  
+  // =============================================================================
+  // MARKETING API ROUTES
+  // =============================================================================
+  
+  // Marketing Templates
+  app.get("/api/admin/marketing/templates", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templates = await storage.getMarketingTemplates();
+      return res.json(templates);
+    } catch (error) {
+      console.error("Error fetching marketing templates:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van templates" });
+    }
+  });
+  
+  app.post("/api/admin/marketing/templates", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertMarketingTemplateSchema.parse(req.body);
+      const createdBy = req.session?.userId || 1;
+      const template = await storage.createMarketingTemplate({ ...validatedData, createdBy });
+      return res.status(201).json(template);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error creating marketing template:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het maken van de template" });
+    }
+  });
+  
+  app.get("/api/admin/marketing/templates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const template = await storage.getMarketingTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template niet gevonden" });
+      }
+      return res.json(template);
+    } catch (error) {
+      console.error("Error fetching marketing template:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de template" });
+    }
+  });
+  
+  app.put("/api/admin/marketing/templates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const validatedData = insertMarketingTemplateSchema.partial().parse(req.body);
+      const updatedTemplate = await storage.updateMarketingTemplate(templateId, validatedData);
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "Template niet gevonden" });
+      }
+      return res.json(updatedTemplate);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error updating marketing template:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de template" });
+    }
+  });
+  
+  app.delete("/api/admin/marketing/templates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const deleted = await storage.deleteMarketingTemplate(templateId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Template niet gevonden" });
+      }
+      return res.json({ message: "Template succesvol verwijderd" });
+    } catch (error) {
+      console.error("Error deleting marketing template:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de template" });
+    }
+  });
+  
+  // Marketing Campaigns
+  app.get("/api/admin/marketing/campaigns", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaigns = await storage.getMarketingCampaigns();
+      return res.json(campaigns);
+    } catch (error) {
+      console.error("Error fetching marketing campaigns:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van campagnes" });
+    }
+  });
+  
+  app.post("/api/admin/marketing/campaigns", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertMarketingCampaignSchema.parse(req.body);
+      const createdBy = req.session?.userId || 1;
+      const campaign = await storage.createMarketingCampaign({ ...validatedData, createdBy });
+      return res.status(201).json(campaign);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error creating marketing campaign:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het maken van de campagne" });
+    }
+  });
+  
+  app.get("/api/admin/marketing/campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getMarketingCampaign(campaignId);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      return res.json(campaign);
+    } catch (error) {
+      console.error("Error fetching marketing campaign:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de campagne" });
+    }
+  });
+  
+  app.put("/api/admin/marketing/campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const validatedData = insertMarketingCampaignSchema.partial().parse(req.body);
+      const updatedCampaign = await storage.updateMarketingCampaign(campaignId, validatedData);
+      if (!updatedCampaign) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      return res.json(updatedCampaign);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error updating marketing campaign:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de campagne" });
+    }
+  });
+  
+  app.delete("/api/admin/marketing/campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const deleted = await storage.deleteMarketingCampaign(campaignId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      return res.json({ message: "Campagne succesvol verwijderd" });
+    } catch (error) {
+      console.error("Error deleting marketing campaign:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de campagne" });
+    }
+  });
+  
+  // Send Marketing Campaign
+  app.post("/api/admin/marketing/campaigns/:id/send", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const success = await storage.sendMarketingCampaign(campaignId);
+      if (!success) {
+        return res.status(404).json({ message: "Campagne niet gevonden" });
+      }
+      return res.json({ message: "Campagne succesvol verzonden" });
+    } catch (error) {
+      console.error("Error sending marketing campaign:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verzenden van de campagne" });
+    }
+  });
+  
+  // Marketing Campaign Recipients
+  app.get("/api/admin/marketing/campaigns/:id/recipients", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const recipients = await storage.getMarketingCampaignRecipients(campaignId);
+      return res.json(recipients);
+    } catch (error) {
+      console.error("Error fetching campaign recipients:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van ontvangers" });
+    }
+  });
+  
+  app.post("/api/admin/marketing/campaigns/:id/recipients", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const validatedData = insertMarketingCampaignRecipientSchema.parse({
+        ...req.body,
+        campaignId
+      });
+      const recipient = await storage.createMarketingCampaignRecipient(validatedData);
+      return res.status(201).json(recipient);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error creating campaign recipient:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het toevoegen van een ontvanger" });
+    }
+  });
+  
+  // Marketing Campaign Analytics
+  app.get("/api/admin/marketing/campaigns/:id/analytics", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const recipients = await storage.getMarketingCampaignRecipients(campaignId);
+      const clicks = await storage.getMarketingCampaignClicks(campaignId);
+      
+      const analytics = {
+        totalRecipients: recipients.length,
+        sent: recipients.filter(r => r.status === 'sent').length,
+        delivered: recipients.filter(r => r.status === 'delivered').length,
+        opened: recipients.filter(r => r.status === 'opened').length,
+        clicked: recipients.filter(r => r.status === 'clicked').length,
+        bounced: recipients.filter(r => r.status === 'bounced').length,
+        failed: recipients.filter(r => r.status === 'failed').length,
+        totalClicks: clicks.length,
+        uniqueClicks: new Set(clicks.map(c => c.recipientId)).size
+      };
+      
+      return res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching campaign analytics:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van analytics" });
+    }
+  });
   
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;

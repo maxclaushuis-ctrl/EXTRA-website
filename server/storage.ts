@@ -20,6 +20,11 @@ import {
   type Badge, type InsertBadge,
   type UserBadge, type InsertUserBadge,
   type UserBadgeWithDetails,
+  // Marketing types
+  type MarketingTemplate, type InsertMarketingTemplate,
+  type MarketingCampaign, type InsertMarketingCampaign,
+  type MarketingCampaignRecipient, type InsertMarketingCampaignRecipient,
+  type MarketingCampaignClick, type InsertMarketingCampaignClick,
   // Plansysteem types
   type Client, type InsertClient,
   type Location, type InsertLocation,
@@ -232,6 +237,32 @@ export interface IStorage {
   getUserChallengeProgressById(id: number): Promise<UserChallengeProgress | undefined>;
   updateUserChallengeProgress(id: number, progressData: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined>;
   deleteUserChallengeProgress(id: number): Promise<boolean>;
+
+  // Marketing Template methods
+  createMarketingTemplate(template: InsertMarketingTemplate): Promise<MarketingTemplate>;
+  getMarketingTemplates(): Promise<MarketingTemplate[]>;
+  getMarketingTemplate(id: number): Promise<MarketingTemplate | undefined>;
+  updateMarketingTemplate(id: number, templateData: Partial<InsertMarketingTemplate>): Promise<MarketingTemplate | undefined>;
+  deleteMarketingTemplate(id: number): Promise<boolean>;
+
+  // Marketing Campaign methods
+  createMarketingCampaign(campaign: InsertMarketingCampaign): Promise<MarketingCampaign>;
+  getMarketingCampaigns(): Promise<MarketingCampaign[]>;
+  getMarketingCampaign(id: number): Promise<MarketingCampaign | undefined>;
+  updateMarketingCampaign(id: number, campaignData: Partial<InsertMarketingCampaign>): Promise<MarketingCampaign | undefined>;
+  deleteMarketingCampaign(id: number): Promise<boolean>;
+  sendMarketingCampaign(id: number): Promise<boolean>;
+
+  // Marketing Campaign Recipient methods
+  createMarketingCampaignRecipient(recipient: InsertMarketingCampaignRecipient): Promise<MarketingCampaignRecipient>;
+  getMarketingCampaignRecipients(campaignId: number): Promise<MarketingCampaignRecipient[]>;
+  updateMarketingCampaignRecipient(id: number, recipientData: Partial<InsertMarketingCampaignRecipient>): Promise<MarketingCampaignRecipient | undefined>;
+  deleteMarketingCampaignRecipient(id: number): Promise<boolean>;
+
+  // Marketing Campaign Click methods
+  createMarketingCampaignClick(click: InsertMarketingCampaignClick): Promise<MarketingCampaignClick>;
+  getMarketingCampaignClicks(campaignId: number): Promise<MarketingCampaignClick[]>;
+  getMarketingCampaignClicksByRecipient(recipientId: number): Promise<MarketingCampaignClick[]>;
 }
 
 // In-memory storage implementation
@@ -253,6 +284,11 @@ export class MemStorage implements IStorage {
   private challenges: Map<number, Challenge>;
   private challengeSteps: Map<number, ChallengeStep>;
   private userChallengeProgress: Map<number, UserChallengeProgress>;
+  // Marketing data
+  private marketingTemplates: Map<number, MarketingTemplate>;
+  private marketingCampaigns: Map<number, MarketingCampaign>;
+  private marketingCampaignRecipients: Map<number, MarketingCampaignRecipient>;
+  private marketingCampaignClicks: Map<number, MarketingCampaignClick>;
   // Plansysteem data
   private clients: Map<number, Client>;
   private locations: Map<number, Location>;
@@ -279,6 +315,11 @@ export class MemStorage implements IStorage {
     challenges: number;
     challengeSteps: number;
     userChallengeProgress: number;
+    // Marketing ids
+    marketingTemplates: number;
+    marketingCampaigns: number;
+    marketingCampaignRecipients: number;
+    marketingCampaignClicks: number;
     // Plansysteem ids
     clients: number;
     locations: number;
@@ -307,6 +348,12 @@ export class MemStorage implements IStorage {
     this.challengeSteps = new Map();
     this.userChallengeProgress = new Map();
     
+    // Marketing maps initialiseren
+    this.marketingTemplates = new Map();
+    this.marketingCampaigns = new Map();
+    this.marketingCampaignRecipients = new Map();
+    this.marketingCampaignClicks = new Map();
+    
     // Plansysteem maps initialiseren
     this.clients = new Map();
     this.locations = new Map();
@@ -333,6 +380,11 @@ export class MemStorage implements IStorage {
       challenges: 1,
       challengeSteps: 1,
       userChallengeProgress: 1,
+      // Marketing ids
+      marketingTemplates: 1,
+      marketingCampaigns: 1,
+      marketingCampaignRecipients: 1,
+      marketingCampaignClicks: 1,
       // Plansysteem ids
       clients: 1,
       locations: 1,
@@ -2539,6 +2591,143 @@ export class MemStorage implements IStorage {
       progress,
       pointsAwarded: step.pointsReward
     };
+  }
+
+  // Marketing Template methods
+  async createMarketingTemplate(template: InsertMarketingTemplate): Promise<MarketingTemplate> {
+    const id = this.currentIds.marketingTemplates++;
+    const now = new Date();
+    const newTemplate: MarketingTemplate = {
+      id,
+      ...template,
+      type: template.type || 'email',
+      createdAt: now,
+      updatedAt: now
+    };
+    this.marketingTemplates.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async getMarketingTemplates(): Promise<MarketingTemplate[]> {
+    return Array.from(this.marketingTemplates.values());
+  }
+
+  async getMarketingTemplate(id: number): Promise<MarketingTemplate | undefined> {
+    return this.marketingTemplates.get(id);
+  }
+
+  async updateMarketingTemplate(id: number, templateData: Partial<InsertMarketingTemplate>): Promise<MarketingTemplate | undefined> {
+    const template = this.marketingTemplates.get(id);
+    if (!template) return undefined;
+    
+    const updatedTemplate = { ...template, ...templateData, updatedAt: new Date() };
+    this.marketingTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteMarketingTemplate(id: number): Promise<boolean> {
+    return this.marketingTemplates.delete(id);
+  }
+
+  // Marketing Campaign methods
+  async createMarketingCampaign(campaign: InsertMarketingCampaign): Promise<MarketingCampaign> {
+    const id = this.currentIds.marketingCampaigns++;
+    const now = new Date();
+    const newCampaign: MarketingCampaign = {
+      id,
+      ...campaign,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.marketingCampaigns.set(id, newCampaign);
+    return newCampaign;
+  }
+
+  async getMarketingCampaigns(): Promise<MarketingCampaign[]> {
+    return Array.from(this.marketingCampaigns.values());
+  }
+
+  async getMarketingCampaign(id: number): Promise<MarketingCampaign | undefined> {
+    return this.marketingCampaigns.get(id);
+  }
+
+  async updateMarketingCampaign(id: number, campaignData: Partial<InsertMarketingCampaign>): Promise<MarketingCampaign | undefined> {
+    const campaign = this.marketingCampaigns.get(id);
+    if (!campaign) return undefined;
+    
+    const updatedCampaign = { ...campaign, ...campaignData, updatedAt: new Date() };
+    this.marketingCampaigns.set(id, updatedCampaign);
+    return updatedCampaign;
+  }
+
+  async deleteMarketingCampaign(id: number): Promise<boolean> {
+    return this.marketingCampaigns.delete(id);
+  }
+
+  async sendMarketingCampaign(id: number): Promise<boolean> {
+    const campaign = this.marketingCampaigns.get(id);
+    if (!campaign) return false;
+    
+    // Update campaign status to 'sent'
+    campaign.status = 'sent';
+    campaign.sentAt = new Date();
+    campaign.updatedAt = new Date();
+    this.marketingCampaigns.set(id, campaign);
+    
+    return true;
+  }
+
+  // Marketing Campaign Recipient methods
+  async createMarketingCampaignRecipient(recipient: InsertMarketingCampaignRecipient): Promise<MarketingCampaignRecipient> {
+    const id = this.currentIds.marketingCampaignRecipients++;
+    const now = new Date();
+    const newRecipient: MarketingCampaignRecipient = {
+      id,
+      ...recipient,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.marketingCampaignRecipients.set(id, newRecipient);
+    return newRecipient;
+  }
+
+  async getMarketingCampaignRecipients(campaignId: number): Promise<MarketingCampaignRecipient[]> {
+    return Array.from(this.marketingCampaignRecipients.values()).filter(r => r.campaignId === campaignId);
+  }
+
+  async updateMarketingCampaignRecipient(id: number, recipientData: Partial<InsertMarketingCampaignRecipient>): Promise<MarketingCampaignRecipient | undefined> {
+    const recipient = this.marketingCampaignRecipients.get(id);
+    if (!recipient) return undefined;
+    
+    const updatedRecipient = { ...recipient, ...recipientData, updatedAt: new Date() };
+    this.marketingCampaignRecipients.set(id, updatedRecipient);
+    return updatedRecipient;
+  }
+
+  async deleteMarketingCampaignRecipient(id: number): Promise<boolean> {
+    return this.marketingCampaignRecipients.delete(id);
+  }
+
+  // Marketing Campaign Click methods
+  async createMarketingCampaignClick(click: InsertMarketingCampaignClick): Promise<MarketingCampaignClick> {
+    const id = this.currentIds.marketingCampaignClicks++;
+    const now = new Date();
+    const newClick: MarketingCampaignClick = {
+      id,
+      ...click,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.marketingCampaignClicks.set(id, newClick);
+    return newClick;
+  }
+
+  async getMarketingCampaignClicks(campaignId: number): Promise<MarketingCampaignClick[]> {
+    return Array.from(this.marketingCampaignClicks.values()).filter(c => c.campaignId === campaignId);
+  }
+
+  async getMarketingCampaignClicksByRecipient(recipientId: number): Promise<MarketingCampaignClick[]> {
+    return Array.from(this.marketingCampaignClicks.values()).filter(c => c.recipientId === recipientId);
   }
 
   private initializeChallenges() {

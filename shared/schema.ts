@@ -18,6 +18,12 @@ export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['bir
 export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
 export const badgeTypeEnum = pgEnum('badge_type', ['points', 'challenge', 'milestone', 'special']);
 
+// Marketing campaign enumeraties
+export const marketingCampaignStatusEnum = pgEnum('marketing_campaign_status', ['draft', 'scheduled', 'sending', 'sent', 'paused', 'cancelled']);
+export const marketingCampaignTypeEnum = pgEnum('marketing_campaign_type', ['one_time', 'recurring', 'automated']);
+export const marketingTemplateTypeEnum = pgEnum('marketing_template_type', ['email', 'sms', 'push']);
+export const marketingRecipientStatusEnum = pgEnum('marketing_recipient_status', ['pending', 'sent', 'delivered', 'opened', 'clicked', 'bounced', 'failed']);
+
 // Plansysteem enumeraties
 export const shiftStatusEnum = pgEnum('shift_status', ['open', 'filled', 'cancelled']);
 export const serviceTypeEnum = pgEnum('service_type', ['horeca', 'bediening', 'keuken', 'receptie', 'schoonmaak', 'other']);
@@ -259,6 +265,78 @@ export const discounts = pgTable("discounts", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Marketing campagne tabellen
+export const marketingTemplates = pgTable("marketing_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  subject: text("subject"),
+  type: marketingTemplateTypeEnum("type").default('email').notNull(),
+  htmlContent: text("html_content"), // HTML inhoud van de e-mail
+  textContent: text("text_content"), // Plain text versie
+  grapesjsData: json("grapesjs_data"), // GrapesJS editor data
+  previewImage: text("preview_image"), // Preview afbeelding URL
+  placeholders: json("placeholders").$type<string[]>().default([]), // Gebruikte placeholders zoals %FIRSTNAME%
+  isTemplate: boolean("is_template").default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const marketingCampaigns = pgTable("marketing_campaigns", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  templateId: integer("template_id").references(() => marketingTemplates.id),
+  subject: text("subject").notNull(),
+  htmlContent: text("html_content").notNull(),
+  textContent: text("text_content"),
+  type: marketingCampaignTypeEnum("type").default('one_time').notNull(),
+  status: marketingCampaignStatusEnum("status").default('draft').notNull(),
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  recipientFilters: json("recipient_filters").$type<{
+    roles?: string[];
+    status?: string[];
+    tags?: string[];
+    customFilter?: string;
+  }>().default({}),
+  sentCount: integer("sent_count").default(0),
+  deliveredCount: integer("delivered_count").default(0),
+  openCount: integer("open_count").default(0),
+  clickCount: integer("click_count").default(0),
+  bounceCount: integer("bounce_count").default(0),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const marketingCampaignRecipients = pgTable("marketing_campaign_recipients", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  email: text("email").notNull(),
+  status: marketingRecipientStatusEnum("status").default('pending').notNull(),
+  sentAt: timestamp("sent_at"),
+  deliveredAt: timestamp("delivered_at"),
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+  bounceReason: text("bounce_reason"),
+  errorMessage: text("error_message"),
+  trackingId: text("tracking_id").unique(), // Unique identifier for tracking
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const marketingCampaignClicks = pgTable("marketing_campaign_clicks", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id).notNull(),
+  recipientId: integer("recipient_id").references(() => marketingCampaignRecipients.id).notNull(),
+  url: text("url").notNull(),
+  clickedAt: timestamp("clicked_at").defaultNow().notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+});
+
 // Opdrachtgevers (klanten) schema
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
@@ -415,6 +493,41 @@ export const insertDiscountSchema = createInsertSchema(discounts).omit({
   updatedAt: true
 });
 
+// Marketing insert schemas
+export const insertMarketingTemplateSchema = createInsertSchema(marketingTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaigns).omit({
+  id: true,
+  sentAt: true,
+  sentCount: true,
+  deliveredCount: true,
+  openCount: true,
+  clickCount: true,
+  bounceCount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertMarketingCampaignRecipientSchema = createInsertSchema(marketingCampaignRecipients).omit({
+  id: true,
+  sentAt: true,
+  deliveredAt: true,
+  openedAt: true,
+  clickedAt: true,
+  bounceReason: true,
+  errorMessage: true,
+  createdAt: true
+});
+
+export const insertMarketingCampaignClickSchema = createInsertSchema(marketingCampaignClicks).omit({
+  id: true,
+  clickedAt: true
+});
+
 // Formulier validatie schemas
 export const userFormSchema = insertUserSchema.extend({
   password: z.string().min(8, { message: "Wachtwoord moet minstens 8 tekens bevatten" }),
@@ -451,6 +564,19 @@ export type Campaign = typeof campaigns.$inferSelect;
 
 export type InsertDiscount = z.infer<typeof insertDiscountSchema>;
 export type Discount = typeof discounts.$inferSelect;
+
+// Marketing type definities
+export type InsertMarketingTemplate = z.infer<typeof insertMarketingTemplateSchema>;
+export type MarketingTemplate = typeof marketingTemplates.$inferSelect;
+
+export type InsertMarketingCampaign = z.infer<typeof insertMarketingCampaignSchema>;
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
+
+export type InsertMarketingCampaignRecipient = z.infer<typeof insertMarketingCampaignRecipientSchema>;
+export type MarketingCampaignRecipient = typeof marketingCampaignRecipients.$inferSelect;
+
+export type InsertMarketingCampaignClick = z.infer<typeof insertMarketingCampaignClickSchema>;
+export type MarketingCampaignClick = typeof marketingCampaignClicks.$inferSelect;
 
 // Automation insert schema's
 export const insertAutomationSchema = createInsertSchema(automations).omit({

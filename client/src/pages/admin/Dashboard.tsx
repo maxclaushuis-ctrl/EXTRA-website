@@ -19,7 +19,7 @@ import {
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
   Activity, User, Import, Download, Receipt,
-  Mail, Zap, LineChart
+  Mail, Zap, LineChart, Send
 } from 'lucide-react';
 
 import Transactions from './Transactions';
@@ -206,7 +206,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
@@ -226,6 +226,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="kortingsacties">
             <Receipt className="mr-2 h-4 w-4" />
             Kortingsacties
+          </TabsTrigger>
+          <TabsTrigger value="marketing">
+            <Send className="mr-2 h-4 w-4" />
+            Marketing
           </TabsTrigger>
           <TabsTrigger value="transacties">
             <Receipt className="mr-2 h-4 w-4" />
@@ -430,6 +434,71 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Marketing */}
+        <TabsContent value="marketing" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>E-mail Templates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Button className="w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nieuwe Template
+                  </Button>
+                  <div className="border rounded-lg p-4">
+                    <p className="text-sm text-gray-600">Geen templates gevonden. Maak je eerste e-mail template aan.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Campagnes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Button className="w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nieuwe Campagne
+                  </Button>
+                  <div className="border rounded-lg p-4">
+                    <p className="text-sm text-gray-600">Geen campagnes gevonden. Start je eerste marketing campagne.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Marketing Statistieken</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">0</div>
+                  <div className="text-sm text-gray-600">Verzonden E-mails</div>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">0%</div>
+                  <div className="text-sm text-gray-600">Open Rate</div>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">0%</div>
+                  <div className="text-sm text-gray-600">Click Rate</div>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-orange-600">0</div>
+                  <div className="text-sm text-gray-600">Actieve Campagnes</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
