@@ -129,6 +129,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **July 17, 2025**: Upwork Development Briefing Created
+  - Comprehensive 5,000+ word briefing document created for external development
+  - Detailed technical specifications for Planworks API integration
+  - Complete testing, deployment, and quality assurance requirements
+  - Phase-by-phase development timeline with clear deliverables
+  - Budget breakdown and success criteria defined
+  - Ready for posting to Upwork for external developer recruitment
+
 - **July 17, 2025**: Complete technical removal of all TWV functionality from EXTRAATJE
   - Removed all TWV-related database columns and enum types from PostgreSQL schema
   - Eliminated TWV components, routes, and API endpoints from frontend and backend
