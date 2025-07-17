@@ -113,6 +113,20 @@ Preferred communication style: Simple, everyday language.
 **Next Phase**: Production deployment with Planworks API integration
 **Target**: Automatic point allocation based on real planning system data
 
+## Nieuw TWV Management System
+
+**17 Juli 2025**: Volledig losstaand TWV Management System ontwikkeld
+- Complete nieuwe applicatie structuur in `/twv-system/` directory
+- Eigen PostgreSQL database schema voor TWV workflow
+- React + TypeScript frontend met moderne UI (shadcn/ui)
+- Express.js backend met volledige API
+- Authenticatie systeem met rol-gebaseerde toegang (Admin/HR/Viewer)
+- Dashboard met real-time statistieken
+- Demo accounts: admin@twv.nl/admin123, hr@twv.nl/hr123
+- Volledig gescheiden van EXTRAATJE rewards platform
+- Eigen port (3000) en database configuratie
+- Klaar voor verdere ontwikkeling via Upwork outsourcing
+
 ## Recent Changes
 
 - **June 26, 2025**: Simplified system to focus purely on rewards functionality
