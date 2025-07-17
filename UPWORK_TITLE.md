@@ -52,9 +52,11 @@ Perfect for developers who love taking great projects to the finish line! 🚀
 - **Milestone-based payments:** 25% increments
 
 ## 📊 **EXPERIENCE LEVEL:**
-**Expert Level** - This is a complex integration and deployment project requiring:
-- 5+ years full-stack development
-- Production deployment experience
-- API integration expertise
-- Testing framework knowledge
-- Performance optimization skills
+**Expert Level** - Top 5 required skills:
+1. **Full-Stack Development** (React, Node.js, TypeScript, PostgreSQL)
+2. **Production Deployment & DevOps** (VPS, SSL, monitoring)
+3. **API Integration & Webhooks** (REST APIs, data sync)
+4. **Testing Frameworks** (Jest, Cypress, performance testing)
+5. **Performance Optimization** (500+ concurrent users)
+
+**Minimum:** 5+ years experience, proven production deployments
