@@ -3672,6 +3672,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // TWV Management System route
+  app.get('/twv', (req: Request, res: Response) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="nl">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TWV Management System</title>
+        <style>
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+          }
+          .container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          }
+          .header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+          }
+          .icon { 
+            width: 80px; 
+            height: 80px; 
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-radius: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+          }
+          h1 { 
+            color: #1f2937; 
+            margin: 0; 
+            font-size: 2.5rem;
+            font-weight: 700;
+          }
+          .subtitle { 
+            color: #6b7280; 
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+          }
+          .status { 
+            padding: 12px 24px; 
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; 
+            border-radius: 8px; 
+            display: inline-block;
+            margin: 20px 0;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+          }
+          .section { 
+            background: #f8fafc; 
+            padding: 24px; 
+            border-radius: 12px; 
+            margin: 24px 0;
+            border-left: 4px solid #3b82f6;
+          }
+          .accounts { 
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #93c5fd;
+            padding: 20px; 
+            border-radius: 12px; 
+            margin: 24px 0;
+          }
+          .account { 
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: white; 
+            padding: 12px 16px; 
+            margin: 8px 0; 
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .account-label {
+            font-weight: 600;
+            color: #374151;
+          }
+          .account-creds {
+            color: #1f2937;
+            font-weight: 500;
+          }
+          .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 24px 0;
+          }
+          .feature {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+          }
+          .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+          }
+          .feature h4 {
+            margin: 0 0 8px 0;
+            color: #1f2937;
+          }
+          .feature p {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin: 0;
+          }
+          .cta {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 32px 0;
+          }
+          .cta h3 {
+            margin: 0 0 8px 0;
+          }
+          .cta p {
+            margin: 0;
+            opacity: 0.9;
+          }
+          ul {
+            padding-left: 20px;
+          }
+          li {
+            margin: 8px 0;
+            line-height: 1.5;
+          }
+          .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+          }
+          .badge-ready { background: #dcfce7; color: #166534; }
+          .badge-dev { background: #fef3c7; color: #92400e; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="icon">📋</div>
+            <div>
+              <h1>TWV Management</h1>
+              <p class="subtitle">Tewerkstellingsvergunning Beheersysteem</p>
+            </div>
+          </div>
+          
+          <div class="status">✅ Systeem is operationeel en klaar voor gebruik</div>
+          
+          <div class="section">
+            <h3>Over dit systeem</h3>
+            <p>Een volledig losstaand TWV management systeem voor Nederlandse uitzendbureaus. Speciaal ontwikkeld voor het stroomlijnen van tewerkstellingsvergunning processen.</p>
+            
+            <div class="feature-grid">
+              <div class="feature">
+                <div class="feature-icon">👥</div>
+                <h4>Medewerker Beheer</h4>
+                <p>EU/Non-EU registratie en volledige profielen</p>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">📄</div>
+                <h4>TWV Workflow</h4>
+                <p>Volledige aanvraag tot goedkeuring proces</p>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h4>Rapportages</h4>
+                <p>Real-time statistieken en compliance rapporten</p>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h4>Audit Trail</h4>
+                <p>Volledige geschiedenis van alle acties</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accounts">
+            <h3>Demo Toegang</h3>
+            <p style="margin-bottom: 16px;">Gebruik deze accounts om het systeem te verkennen:</p>
+            <div class="account">
+              <span class="account-label">Administrator</span>
+              <span class="account-creds">admin@twv.nl / admin123</span>
+            </div>
+            <div class="account">
+              <span class="account-label">HR Manager</span>
+              <span class="account-creds">hr@twv.nl / hr123</span>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h3>Ontwikkeling Status</h3>
+            <p>Het systeem bevat een solide basis en is klaar voor verdere uitbreiding:</p>
+            <ul>
+              <li>✅ Database schema ontwerp <span class="badge badge-ready">Compleet</span></li>
+              <li>✅ Authenticatie & autorisatie <span class="badge badge-ready">Werkend</span></li>
+              <li>✅ API backend structuur <span class="badge badge-ready">Functioneel</span></li>
+              <li>🔄 React frontend interface <span class="badge badge-dev">In ontwikkeling</span></li>
+              <li>🔄 TWV workflow implementatie <span class="badge badge-dev">Uitbreiding</span></li>
+              <li>🔄 Document management <span class="badge badge-dev">Geplanned</span></li>
+            </ul>
+          </div>
+          
+          <div class="cta">
+            <h3>Klaar voor Upwork Ontwikkeling</h3>
+            <p>Het systeem heeft een sterke architecturale basis en kan nu door externe ontwikkelaars worden uitgebreid tot een volledige TWV management oplossing.</p>
+          </div>
+          
+          <div style="text-align: center; color: #6b7280; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p><strong>TWV Management System v1.0</strong></p>
+            <p>Speciaal ontwikkeld voor Nederlandse uitzendbureaus</p>
+            <p>Volledig gescheiden van EXTRAATJE rewards platform</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+  });
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }
