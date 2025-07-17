@@ -27,7 +27,7 @@ import Rewards from './Rewards';
 import { Challenges } from '@/components/admin/Challenges';
 import { Discounts } from '@/components/admin/Discounts';
 import LeaderboardComponent from '@/components/Leaderboard';
-import TWVNew from './TWVNew';
+
 
 import CSVImport from '@/components/CSVImport';
 import APIImport from '@/components/APIImport';
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
 
       {/* Tabbladen */}
       <Tabs defaultValue="contacten" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="contacten">
             <Users className="mr-2 h-4 w-4" />
             Contacten
@@ -228,10 +228,7 @@ export default function AdminDashboard() {
             <Receipt className="mr-2 h-4 w-4" />
             Kortingsacties
           </TabsTrigger>
-          <TabsTrigger value="twv">
-            <FileCheck className="mr-2 h-4 w-4" />
-            TWV's
-          </TabsTrigger>
+
           <TabsTrigger value="marketing">
             <Send className="mr-2 h-4 w-4" />
             Marketing
@@ -334,9 +331,7 @@ export default function AdminDashboard() {
           <Discounts />
         </TabsContent>
         
-        <TabsContent value="twv" className="mt-6">
-          <TWVNew />
-        </TabsContent>
+
 
         
         <TabsContent value="instellingen" className="mt-6">

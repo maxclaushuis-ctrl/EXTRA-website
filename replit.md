@@ -129,6 +129,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **July 17, 2025**: Complete technical removal of all TWV functionality from EXTRAATJE
+  - Removed all TWV-related database columns and enum types from PostgreSQL schema
+  - Eliminated TWV components, routes, and API endpoints from frontend and backend
+  - Cleaned all TWV references from storage layer and test data
+  - Removed TWV HTML landing page route and seed functions
+  - System now completely clean and focused purely on rewards functionality
+  - Database schema updated to remove all TWV fields (needs_twv, twv_status, etc.)
+  - EXTRAATJE is now fully restored to original clean rewards-only state
+
 - **June 26, 2025**: Simplified system to focus purely on rewards functionality
   - Removed all planning system integration and TWV management features
   - Cleaned up navigation to show only reward-related sections

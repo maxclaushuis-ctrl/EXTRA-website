@@ -18,7 +18,7 @@ import RulesPage from "@/pages/admin/Rules";
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
 import WerkruimtePage from "@/pages/admin/Werkruimte";
-import TWVEenvoudigPage from "@/pages/admin/TWVEenvoudig";
+
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import History from "@/pages/user/History";
@@ -138,9 +138,7 @@ function Router() {
         <Route path="/admin/werkruimte">
           {() => <ProtectedRoute component={WerkruimtePage} adminOnly={true} />}
         </Route>
-        <Route path="/admin/twv">
-          {() => <ProtectedRoute component={TWVEenvoudigPage} adminOnly={true} />}
-        </Route>
+
 
 
         

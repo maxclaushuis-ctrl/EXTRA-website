@@ -407,8 +407,6 @@ export class MemStorage implements IStorage {
       phone: "",
       profileImage: "",
       apiId: "",
-      needsTwv: false,
-      twvStatus: "none",
       settings: {
         notifications: true,
         emailAlerts: true,
@@ -430,8 +428,6 @@ export class MemStorage implements IStorage {
       phone: "0687654321",
       profileImage: "",
       apiId: "EXT000",
-      needsTwv: false,
-      twvStatus: "none",
       settings: {
         notifications: true,
         emailAlerts: true,
@@ -440,12 +436,12 @@ export class MemStorage implements IStorage {
       tags: ["intern"],
     });
     
-    // Testgebruikers voor TWV functionaliteit
+    // Testgebruikers voor rewards functionaliteit
     this.createUser({
       email: "jan@extra.nl",
       password: this.hashPassword("password123"),
       firstName: "Jan",
-      lastName: "Buitenlands",
+      lastName: "Bakker",
       role: "employee",
       status: "active",
       points: 100,
@@ -453,21 +449,19 @@ export class MemStorage implements IStorage {
       phone: "0612345678",
       profileImage: "",
       apiId: "EXT001",
-      needsTwv: true,
-      twvStatus: "required",
       settings: {
         notifications: true,
         emailAlerts: true,
         theme: "light"
       },
-      tags: ["internationaal"],
+      tags: ["actief"],
     });
     
     this.createUser({
       email: "maria@extra.nl",
       password: this.hashPassword("password123"),
       firstName: "Maria",
-      lastName: "International",
+      lastName: "de Vries",
       role: "employee",
       status: "active",
       points: 150,
@@ -475,22 +469,19 @@ export class MemStorage implements IStorage {
       phone: "0612345679",
       profileImage: "",
       apiId: "EXT002",
-      needsTwv: true,
-      twvStatus: "pending",
-      twvRequestDate: new Date(2025, 3, 15),
       settings: {
         notifications: true,
         emailAlerts: true,
         theme: "light"
       },
-      tags: ["internationaal"],
+      tags: ["ervaren"],
     });
     
     this.createUser({
       email: "piet@extra.nl",
       password: this.hashPassword("password123"),
       firstName: "Piet",
-      lastName: "Lokaal",
+      lastName: "Jansen",
       role: "employee",
       status: "active",
       points: 200,
@@ -498,14 +489,12 @@ export class MemStorage implements IStorage {
       phone: "0612345670",
       profileImage: "",
       apiId: "EXT003",
-      needsTwv: false,
-      twvStatus: "none",
       settings: {
         notifications: true,
         emailAlerts: true,
         theme: "light"
       },
-      tags: [],
+      tags: ["loyaal"],
     });
     
     // Initialiseer enkele beloningen
@@ -834,16 +823,13 @@ export class MemStorage implements IStorage {
       role: insertUser.role || 'employee',
       status: insertUser.status || 'active',
       points: insertUser.points !== undefined ? insertUser.points : 0,
+      monthlyPoints: insertUser.monthlyPoints !== undefined ? insertUser.monthlyPoints : 0,
       profileImage: insertUser.profileImage || null,
       apiId: insertUser.apiId || null,
       tags: insertUser.tags || [],
       settings: insertUser.settings || null,
-      needsTwv: insertUser.needsTwv !== undefined ? insertUser.needsTwv : false,
-      twvStatus: insertUser.twvStatus || 'none',
-      twvRequestDate: insertUser.twvRequestDate || null,
-      twvApprovalDate: insertUser.twvApprovalDate || null,
-      twvExpiryDate: insertUser.twvExpiryDate || null,
-      twvNotes: insertUser.twvNotes || null,
+
+
       dateJoined: now,
     };
     

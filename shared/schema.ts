@@ -12,7 +12,7 @@ export const ruleTypeEnum = pgEnum('rule_type', ['fixed', 'multiplication', 'cus
 export const redemptionStatusEnum = pgEnum('redemption_status', ['pending', 'processing', 'shipped', 'completed', 'cancelled']);
 export const campaignStatusEnum = pgEnum('campaign_status', ['draft', 'scheduled', 'sent', 'cancelled']);
 export const emailTemplateTypeEnum = pgEnum('email_template_type', ['general', 'welcome', 'birthday', 'marketing', 'review', 'reward']);
-export const twvStatusEnum = pgEnum('twv_status', ['none', 'required', 'pending', 'approved', 'rejected']);
+
 export const automationStatusEnum = pgEnum('automation_status', ['active', 'inactive', 'draft']);
 export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['birthday', 'new_account', 'points_threshold', 'custom']);
 export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
@@ -46,12 +46,7 @@ export const users = pgTable("users", {
   profileImage: text("profile_image"),
   apiId: text("api_id"), // ID van medewerker in extern plansysteem
   tags: text("tags").array(), // Labels/tags voor medewerkers
-  needsTwv: boolean("needs_twv").default(false), // Geeft aan of medewerker TWV nodig heeft
-  twvStatus: twvStatusEnum("twv_status").default('none'), // Status van TWV aanvraag
-  twvRequestDate: timestamp("twv_request_date"), // Wanneer de TWV is aangevraagd
-  twvApprovalDate: timestamp("twv_approval_date"), // Wanneer de TWV is goedgekeurd/afgekeurd
-  twvExpiryDate: date("twv_expiry_date"), // Vervaldatum van de TWV vergunning
-  twvNotes: text("twv_notes"), // Opmerkingen over TWV aanvraag
+
   settings: json("settings").$type<{
     notifications: boolean,
     emailAlerts: boolean,

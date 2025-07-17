@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedTWVUsers } from "./seed/twv-users";
+
 
 // Declareer type voor session gegevens
 declare module 'express-session' {
@@ -118,11 +118,6 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
     
-    // Seed TWV gebruikers wanneer de server start
-    try {
-      seedTWVUsers();
-    } catch (error) {
-      console.error("Fout bij het seeden van TWV gebruikers:", error);
-    }
+
   });
 })();
