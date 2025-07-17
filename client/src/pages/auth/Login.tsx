@@ -127,6 +127,14 @@ export default function Login() {
             </Button>
           </CardFooter>
         </form>
+        
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Test Accounts:</h3>
+          <div className="text-xs text-gray-600 space-y-1">
+            <div><strong>Admin:</strong> admin@extra.nl / admin123</div>
+            <div><strong>Medewerker:</strong> medewerker@extra.nl / medewerker123</div>
+          </div>
+        </div>
       </Card>
     </div>
   );
