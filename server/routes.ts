@@ -3672,7 +3672,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // TWV Management System route
+  // TWV Admin Login Page
+  app.get('/twv-admin', (req: Request, res: Response) => {
+    res.sendFile(require('path').join(__dirname, '../twv-admin.html'));
+  });
+
+  // TWV Dashboard (after login)
+  app.get('/twv-dashboard', (req: Request, res: Response) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="nl">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TWV Dashboard</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }
+          .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+          .header h1 { color: #333; }
+          .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+          .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+          .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+          .card h3 { color: #333; margin-bottom: 15px; }
+          .card p { color: #666; line-height: 1.5; }
+          .status { padding: 8px 16px; background: #10b981; color: white; border-radius: 4px; display: inline-block; margin: 10px 0; }
+          .logout { position: absolute; top: 20px; right: 20px; background: #dc2626; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>TWV Management Dashboard</h1>
+          <button class="logout" onclick="logout()">Uitloggen</button>
+        </div>
+        
+        <div class="container">
+          <div class="status">✅ TWV Systeem Actief</div>
+          
+          <div class="grid">
+            <div class="card">
+              <h3>🏢 Werkgevers</h3>
+              <p>Beheer werkgevers en hun TWV aanvragen. Database schema is klaar voor uitbreiding.</p>
+            </div>
+            
+            <div class="card">
+              <h3>👥 Werknemers</h3>
+              <p>Registratie en beheer van EU/Non-EU werknemers met volledige TWV tracking.</p>
+            </div>
+            
+            <div class="card">
+              <h3>📄 TWV Aanvragen</h3>
+              <p>Volledige workflow van aanvraag tot goedkeuring met statustracking.</p>
+            </div>
+            
+            <div class="card">
+              <h3>📊 Rapportages</h3>
+              <p>Real-time statistieken en compliance rapporten voor TWV management.</p>
+            </div>
+            
+            <div class="card">
+              <h3>🔍 Audit Trail</h3>
+              <p>Complete geschiedenis van alle acties voor compliance en tracking.</p>
+            </div>
+            
+            <div class="card">
+              <h3>⚙️ Ontwikkeling</h3>
+              <p>Systeem is klaar voor Upwork ontwikkeling. Database schema en API basis zijn compleet.</p>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          function logout() {
+            fetch('/api/auth/logout', { method: 'POST' })
+              .then(() => window.location.href = '/twv-admin');
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  });
+
+  // TWV Management System route (old one)
   app.get('/twv', (req: Request, res: Response) => {
     res.send(`
       <!DOCTYPE html>
