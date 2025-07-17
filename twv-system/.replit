@@ -1,4 +1,4 @@
-run = "npm run dev"
+run = "node start.js"
 
 [nix]
 channel = "stable-24_05"
@@ -7,5 +7,5 @@ channel = "stable-24_05"
 run = ["sh", "-c", "npm run build && npm start"]
 
 [[ports]]
-localPort = 3000
-externalPort = 3000
+localPort = 8080
+externalPort = 80
