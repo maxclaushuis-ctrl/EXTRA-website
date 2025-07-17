@@ -131,11 +131,13 @@ Preferred communication style: Simple, everyday language.
 
 - **July 17, 2025**: Upwork Development Briefing Created
   - Comprehensive 5,000+ word briefing document created for external development
+  - Professional job title: "Complete Employee Rewards Platform - Integration & Production Deployment"
   - Detailed technical specifications for Planworks API integration
   - Complete testing, deployment, and quality assurance requirements
   - Phase-by-phase development timeline with clear deliverables
-  - Budget breakdown and success criteria defined
-  - Ready for posting to Upwork for external developer recruitment
+  - Budget breakdown (€3,000-€5,000) and success criteria defined
+  - Multiple title options and posting strategy document created
+  - Ready for immediate posting to Upwork for expert-level developer recruitment
 
 - **July 17, 2025**: Complete technical removal of all TWV functionality from EXTRAATJE
   - Removed all TWV-related database columns and enum types from PostgreSQL schema
