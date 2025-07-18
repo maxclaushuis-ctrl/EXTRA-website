@@ -74,8 +74,13 @@ export interface IStorage {
   updateChallengeStep(id: number, data: Partial<InsertChallengeStep>): Promise<ChallengeStep | undefined>;
   deleteChallengeStep(id: number): Promise<boolean>;
   
+  // Overloaded methods for getUserChallengeProgress
   getUserChallengeProgress(userId: number): Promise<(UserChallengeProgress & { challenge: Challenge; currentStep?: ChallengeStep; nextStep?: ChallengeStep })[]>;
-  updateUserChallengeProgress(userId: number, challengeId: number, progress: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined>;
+  getUserChallengeProgress(userId: number, challengeId: number): Promise<UserChallengeProgress | undefined>;
+  getUserChallengeProgress(userId: number, challengeId?: number): Promise<any>;
+  
+  createUserChallengeProgress(progress: InsertUserChallengeProgress): Promise<UserChallengeProgress>;
+  updateUserChallengeProgress(progressId: number, progress: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined>;
   completeUserChallengeStep(userId: number, challengeId: number, stepId: number): Promise<{ progress: UserChallengeProgress; pointsAwarded: number } | undefined>;
   saveMonthlyLeaders(year: number, month: number): Promise<void>;
   
@@ -2439,7 +2444,18 @@ export class MemStorage implements IStorage {
     return progress;
   }
 
-  async getUserChallengeProgress(userId: number): Promise<UserChallengeProgressWithDetails[]> {
+  // Overloaded implementation for getUserChallengeProgress
+  async getUserChallengeProgress(userId: number): Promise<UserChallengeProgressWithDetails[]>;
+  async getUserChallengeProgress(userId: number, challengeId: number): Promise<UserChallengeProgress | undefined>;
+  async getUserChallengeProgress(userId: number, challengeId?: number): Promise<UserChallengeProgressWithDetails[] | UserChallengeProgress | undefined> {
+    if (challengeId !== undefined) {
+      // Return specific challenge progress
+      return Array.from(this.userChallengeProgress.values()).find(
+        (progress) => progress.userId === userId && progress.challengeId === challengeId
+      );
+    }
+    
+    // Return all challenge progress for user (original implementation)
     const userProgress = Array.from(this.userChallengeProgress.values()).filter(
       (progress) => progress.userId === userId
     );
@@ -2496,12 +2512,36 @@ export class MemStorage implements IStorage {
     return progressWithDetails;
   }
 
+  // New method to create user challenge progress
+  async createUserChallengeProgress(insertProgress: InsertUserChallengeProgress): Promise<UserChallengeProgress> {
+    const id = this.currentIds.userChallengeProgress++;
+    const now = new Date();
+    
+    const progress: UserChallengeProgress = {
+      id,
+      userId: insertProgress.userId,
+      challengeId: insertProgress.challengeId,
+      currentStepId: insertProgress.currentStepId || null,
+      currentValue: insertProgress.currentValue || 0,
+      completedSteps: insertProgress.completedSteps || [],
+      isCompleted: insertProgress.isCompleted || false,
+      lastSyncAt: insertProgress.lastSyncAt || null,
+      planworksData: insertProgress.planworksData || null,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.userChallengeProgress.set(id, progress);
+    return progress;
+  }
+
   async getUserChallengeProgressById(id: number): Promise<UserChallengeProgress | undefined> {
     return this.userChallengeProgress.get(id);
   }
 
-  async updateUserChallengeProgress(id: number, progressData: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined> {
-    const progress = this.userChallengeProgress.get(id);
+  // Updated method to use progressId instead of compound key
+  async updateUserChallengeProgress(progressId: number, progressData: Partial<InsertUserChallengeProgress>): Promise<UserChallengeProgress | undefined> {
+    const progress = this.userChallengeProgress.get(progressId);
     if (!progress) return undefined;
 
     const updatedProgress: UserChallengeProgress = {
@@ -2510,7 +2550,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
 
-    this.userChallengeProgress.set(id, updatedProgress);
+    this.userChallengeProgress.set(progressId, updatedProgress);
     return updatedProgress;
   }
 
@@ -2716,8 +2756,26 @@ export class MemStorage implements IStorage {
     return Array.from(this.marketingCampaignClicks.values()).filter(c => c.recipientId === recipientId);
   }
 
-  private initializeChallenges() {
-    // Initialize challenges
+  private async initializeChallenges() {
+    // Skip initialization if challenges already exist
+    if (this.challenges.size > 0) {
+      return;
+    }
+    
+    // Import and run Planworks seed
+    try {
+      const { seedPlanworksChallenges } = await import('./planworks-seed');
+      await seedPlanworksChallenges();
+    } catch (error) {
+      console.error('Failed to seed Planworks challenges:', error);
+      // Fall back to basic challenges for development
+      this.initializeBasicChallenges();
+    }
+  }
+
+  private initializeBasicChallenges() {
+    console.log('Initializing basic challenges as fallback...');
+    
     this.challenges.set(1, {
       id: 1,
       title: "Diensten draaien",
@@ -2732,7 +2790,7 @@ export class MemStorage implements IStorage {
 
     this.challenges.set(2, {
       id: 2,
-      title: "Last-minute inzet",
+      title: "Last-minute inzet", 
       description: "Spring bij wanneer het nodig is en verdien extra punten",
       category: "lastminute",
       status: "active",
@@ -2758,7 +2816,7 @@ export class MemStorage implements IStorage {
       id: 4,
       title: "Deel een story",
       description: "Deel EXTRA content op social media en tag ons voor extra punten",
-      category: "social",
+      category: "social_media",
       status: "active",
       type: "doorlopend",
       points: null,
@@ -2933,9 +2991,9 @@ export class MemStorage implements IStorage {
   }
 
   // Initialize all default data
-  private initializeData() {
+  private async initializeData() {
     console.log("Initializing challenges...");
-    this.initializeChallenges();
+    await this.initializeChallenges();
     console.log("Challenges initialized successfully");
   }
 }

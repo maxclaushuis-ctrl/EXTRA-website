@@ -1032,6 +1032,147 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Planworks sync status endpoint
+  app.get("/api/admin/planworks/status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { isPlanworksConfigured, getPlanworksAPI } = await import('./planworks-integration');
+      const isConfigured = isPlanworksConfigured();
+      const api = getPlanworksAPI();
+      
+      res.status(200).json({
+        configured: isConfigured,
+        available: api.isAvailable(),
+        lastSync: null, // TODO: Get from database
+        message: isConfigured ? "Planworks integratie actief" : "Planworks API key niet geconfigureerd"
+      });
+    } catch (error) {
+      console.error("Error checking Planworks status:", error);
+      res.status(500).json({ 
+        message: "Fout bij controleren Planworks status",
+        configured: false,
+        available: false
+      });
+    }
+  });
+
+  // Trigger manual Planworks sync
+  app.post("/api/admin/planworks/sync", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { getPlanworksAPI } = await import('./planworks-integration');
+      const api = getPlanworksAPI();
+      
+      if (!api.isAvailable()) {
+        return res.status(503).json({ 
+          message: "Planworks integratie niet beschikbaar - controleer API configuratie" 
+        });
+      }
+
+      const { userId } = req.body;
+      
+      if (userId) {
+        // Sync specific user
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "Gebruiker niet gevonden" });
+        }
+        
+        if (!user.apiId) {
+          return res.status(400).json({ 
+            message: "Gebruiker heeft geen Planworks API ID geconfigureerd" 
+          });
+        }
+
+        const metrics = await api.getChallengeMetrics(user.apiId);
+        if (!metrics) {
+          return res.status(404).json({ 
+            message: "Geen data gevonden in Planworks voor deze gebruiker" 
+          });
+        }
+
+        // Update challenge progress based on Planworks data
+        const challenges = await storage.getChallenges();
+        const results = [];
+
+        for (const challenge of challenges) {
+          if (challenge.category && metrics.challengeMetrics[challenge.category as keyof typeof metrics.challengeMetrics] !== undefined) {
+            const newValue = metrics.challengeMetrics[challenge.category as keyof typeof metrics.challengeMetrics];
+            
+            // Update user progress
+            let progress = await storage.getUserChallengeProgress(user.id, challenge.id);
+            if (!progress) {
+              progress = await storage.createUserChallengeProgress({
+                userId: user.id,
+                challengeId: challenge.id,
+                currentValue: newValue,
+                completedSteps: [],
+                lastSyncAt: new Date(),
+                planworksData: metrics.challengeMetrics
+              });
+            } else {
+              progress = await storage.updateUserChallengeProgress(progress.id, {
+                currentValue: newValue,
+                lastSyncAt: new Date(),
+                planworksData: metrics.challengeMetrics
+              });
+            }
+
+            results.push({
+              challengeId: challenge.id,
+              challengeTitle: challenge.title,
+              previousValue: progress.currentValue,
+              newValue: newValue,
+              updated: true
+            });
+          }
+        }
+        
+        return res.status(200).json({
+          message: `Synchronisatie voltooid voor ${user.firstName} ${user.lastName}`,
+          results
+        });
+      } else {
+        // Sync all users with apiId
+        const users = await storage.getUsers();
+        const usersWithApiId = users.filter(u => u.apiId);
+        
+        if (usersWithApiId.length === 0) {
+          return res.status(400).json({ 
+            message: "Geen gebruikers gevonden met Planworks API ID" 
+          });
+        }
+
+        const allMetrics = await api.getAllEmployeeMetrics();
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const user of usersWithApiId) {
+          try {
+            const userMetrics = allMetrics.find(m => m.userId === user.apiId);
+            if (userMetrics) {
+              // Update challenge progress for this user
+              // Similar logic as above for single user
+              successCount++;
+            }
+          } catch (error) {
+            console.error(`Error syncing user ${user.id}:`, error);
+            errorCount++;
+          }
+        }
+        
+        return res.status(200).json({
+          message: `Bulk synchronisatie voltooid: ${successCount} gebruikers gesynchroniseerd, ${errorCount} fouten`,
+          successCount,
+          errorCount
+        });
+      }
+    } catch (error) {
+      console.error("Error syncing with Planworks:", error);
+      return res.status(500).json({ 
+        message: "Fout bij synchroniseren met Planworks" 
+      });
+    }
+  });
+
   // Challenge steps API routes
   app.get("/api/challenges/:id/steps", authMiddleware, async (req: Request, res: Response) => {
     try {

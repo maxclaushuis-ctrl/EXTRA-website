@@ -40,15 +40,29 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/i18n";
-import { Plus, Edit, Trash2, Target, Zap, Users, Trophy } from "lucide-react";
+import { Plus, Edit, Trash2, Target, Zap, Users, Trophy, Clock, TrendingUp, Star, GraduationCap, Share2, Calendar } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { Challenge, ChallengeStep } from "@shared/schema";
+import PlanworksSync from "@/components/admin/PlanworksSync";
 
 const challengeFormSchema = z.object({
   title: z.string().min(2, { message: 'Titel moet minstens 2 tekens bevatten' }),
   description: z.string().min(10, { message: 'Beschrijving moet minstens 10 tekens bevatten' }),
-  category: z.enum(['shifts', 'lastminute', 'referrals', 'other']),
-  status: z.enum(['active', 'inactive'])
+  category: z.enum([
+    'shifts', // Totaal aantal gedraaide diensten
+    'overtime', // Overwerk uren
+    'lastminute', // Last-minute diensten  
+    'punctuality', // Stiptheid (op tijd komen)
+    'availability', // Beschikbaarheid percentages
+    'client_rating', // Klantbeoordelingen
+    'training_completion', // Training voltooiing
+    'referrals', // Vrienden werven
+    'social_media', // Social media activiteit
+    'special_events' // Speciale evenementen
+  ]),
+  type: z.enum(['eenmalig', 'doorlopend']),
+  status: z.enum(['active', 'inactive']),
+  autoSync: z.boolean().optional()
 });
 
 const stepFormSchema = z.object({
@@ -257,18 +271,82 @@ export function Challenges() {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'shifts': return <Target className="h-4 w-4" />;
+      case 'overtime': return <Clock className="h-4 w-4" />;
       case 'lastminute': return <Zap className="h-4 w-4" />;
+      case 'punctuality': return <Clock className="h-4 w-4" />;
+      case 'availability': return <TrendingUp className="h-4 w-4" />;
+      case 'client_rating': return <Star className="h-4 w-4" />;
+      case 'training_completion': return <GraduationCap className="h-4 w-4" />;
       case 'referrals': return <Users className="h-4 w-4" />;
+      case 'social_media': return <Share2 className="h-4 w-4" />;
+      case 'special_events': return <Calendar className="h-4 w-4" />;
       default: return <Trophy className="h-4 w-4" />;
     }
   };
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
+      case 'shifts': return 'Diensten draaien';
+      case 'overtime': return 'Overwerk uren';
+      case 'lastminute': return 'Last-minute inzet';
+      case 'punctuality': return 'Stiptheid';
+      case 'availability': return 'Beschikbaarheid';
+      case 'client_rating': return 'Klantbeoordelingen';
+      case 'training_completion': return 'Training voltooiing';
+      case 'referrals': return 'Vrienden werven';
+      case 'social_media': return 'Social media';
+      case 'special_events': return 'Speciale evenementen';
+      default: return category;
+    }
+  };
+
+  const getCategoryDescription = (category: string) => {
+    switch (category) {
+      case 'shifts': return 'Gebaseerd op totaal aantal gedraaide diensten uit Planworks';
+      case 'overtime': return 'Gebaseerd op overwerk uren uit planning systeem';
+      case 'lastminute': return 'Gebaseerd op last-minute ingevallen diensten';
+      case 'punctuality': return 'Gebaseerd op stiptheid score uit Planworks';
+      case 'availability': return 'Gebaseerd op beschikbaarheid percentage';
+      case 'client_rating': return 'Gebaseerd op klantbeoordelingen uit systeem';
+      case 'training_completion': return 'Gebaseerd op voltooide trainingen';
+      case 'referrals': return 'Handmatig bijgehouden referrals';
+      case 'social_media': return 'Handmatig bijgehouden social media activiteit';
+      case 'special_events': return 'Handmatig bijgehouden speciale evenementen';
+      default: return 'Challenge categorie';
+    }
+  };
+
+  const isPlanworksCategory = (category: string) => {
+    return ['shifts', 'overtime', 'lastminute', 'punctuality', 'availability', 'client_rating', 'training_completion'].includes(category);
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
       case 'shifts': return 'Diensten';
+      case 'overtime': return 'Overwerk';
       case 'lastminute': return 'Last-minute';
+      case 'punctuality': return 'Stiptheid';
+      case 'availability': return 'Beschikbaarheid';
+      case 'client_rating': return 'Klantbeoordeling';
+      case 'training_completion': return 'Training';
       case 'referrals': return 'Referrals';
+      case 'social_media': return 'Social Media';
       default: return 'Overig';
+    }
+  };
+
+  const getCategoryDescription = (category: string) => {
+    switch (category) {
+      case 'shifts': return 'Automatisch gesynchroniseerd vanuit Planworks planning data';
+      case 'overtime': return 'Gebaseerd op extra gewerkte uren uit Planworks';
+      case 'lastminute': return 'Tracking van spoedinzet diensten uit Planworks';
+      case 'punctuality': return 'Stiptheidsscore berekend uit Planworks check-in data';
+      case 'availability': return 'Beschikbaarheidspercentage uit Planworks';
+      case 'client_rating': return 'Gemiddelde klantbeoordelingen uit Planworks';
+      case 'training_completion': return 'Voltooide trainingen uit Planworks systeem';
+      case 'referrals': return 'Handmatig beheerd - nieuwe medewerkers aangebracht';
+      case 'social_media': return 'Handmatig beheerd - social media activiteit';
+      default: return 'Challenge categorie';
     }
   };
 
@@ -289,6 +367,11 @@ export function Challenges() {
         </Button>
       </div>
 
+      {/* Planworks Integration Section */}
+      <div className="mb-8">
+        <PlanworksSync />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {challenges?.map((challenge) => (
           <Card key={challenge.id}>
@@ -305,11 +388,22 @@ export function Challenges() {
               <CardDescription>{challenge.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
                 <Badge variant="outline">
                   {getCategoryLabel(challenge.category)}
                 </Badge>
+                {isPlanworksCategory(challenge.category) && (
+                  <Badge variant="secondary" className="text-xs">
+                    🔗 Planworks
+                  </Badge>
+                )}
+                <Badge variant={challenge.type === 'eenmalig' ? 'default' : 'secondary'} className="text-xs">
+                  {challenge.type === 'eenmalig' ? 'Eenmalig' : 'Doorlopend'}
+                </Badge>
               </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                {getCategoryDescription(challenge.category)}
+              </p>
               <Button
                 variant="outline"
                 onClick={() => openStepModal(challenge.id)}
@@ -393,10 +487,134 @@ export function Challenges() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="shifts">Diensten</SelectItem>
-                        <SelectItem value="lastminute">Last-minute</SelectItem>
-                        <SelectItem value="referrals">Referrals</SelectItem>
-                        <SelectItem value="other">Overig</SelectItem>
+                        <optgroup label="🔗 Planworks Gekoppeld">
+                          <SelectItem value="shifts">
+                            <div className="flex items-center gap-2">
+                              <Target className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Diensten draaien</div>
+                                <div className="text-xs text-muted-foreground">Totaal aantal gedraaide diensten</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="overtime">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Overwerk uren</div>
+                                <div className="text-xs text-muted-foreground">Extra gewerkte uren</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="lastminute">
+                            <div className="flex items-center gap-2">
+                              <Zap className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Last-minute inzet</div>
+                                <div className="text-xs text-muted-foreground">Spoedingevallen diensten</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="punctuality">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Stiptheid</div>
+                                <div className="text-xs text-muted-foreground">Op tijd komen</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="availability">
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Beschikbaarheid</div>
+                                <div className="text-xs text-muted-foreground">Beschikbaarheid percentage</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="client_rating">
+                            <div className="flex items-center gap-2">
+                              <Star className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Klantbeoordelingen</div>
+                                <div className="text-xs text-muted-foreground">Gemiddelde beoordeling</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="training_completion">
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Training voltooiing</div>
+                                <div className="text-xs text-muted-foreground">Voltooide trainingen</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        </optgroup>
+                        <optgroup label="✋ Handmatig Beheerd">
+                          <SelectItem value="referrals">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Vrienden werven</div>
+                                <div className="text-xs text-muted-foreground">Nieuwe medewerkers aanbrengen</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="social_media">
+                            <div className="flex items-center gap-2">
+                              <Share2 className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Social media</div>
+                                <div className="text-xs text-muted-foreground">Social media activiteit</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="special_events">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">Speciale evenementen</div>
+                                <div className="text-xs text-muted-foreground">Bijzondere activiteiten</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        </optgroup>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    <div className="text-sm text-muted-foreground mt-2">
+                      💡 Planworks gekoppelde categorieën worden automatisch gesynchroniseerd
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Challenge Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecteer challenge type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="eenmalig">
+                          <div>
+                            <div className="font-medium">Eenmalig</div>
+                            <div className="text-xs text-muted-foreground">Challenge wordt eenmalig voltooid</div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="doorlopend">
+                          <div>
+                            <div className="font-medium">Doorlopend</div>
+                            <div className="text-xs text-muted-foreground">Challenge heeft meerdere stappen</div>
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

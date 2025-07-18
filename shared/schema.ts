@@ -103,15 +103,31 @@ export const monthlyLeaders = pgTable("monthly_leaders", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Challenges system
+// Challenge categorieën enum voor Planworks integratie
+export const challengeCategoryEnum = pgEnum('challenge_category', [
+  'shifts', // Totaal aantal gedraaide diensten
+  'overtime', // Overwerk uren 
+  'lastminute', // Last-minute diensten
+  'punctuality', // Stiptheid (op tijd komen)
+  'availability', // Beschikbaarheid percentages
+  'client_rating', // Klantbeoordelingen
+  'training_completion', // Training voltooiing
+  'referrals', // Vrienden werven
+  'social_media', // Social media activiteit
+  'special_events' // Speciale evenementen
+]);
+
+// Challenges system met Planworks integratie
 export const challenges = pgTable('challenges', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   description: text('description').notNull(),
-  category: text('category').notNull(), // 'shifts', 'lastminute', 'referrals', etc.
+  category: challengeCategoryEnum('category').notNull(),
   type: text('type').notNull().default('doorlopend'), // 'eenmalig', 'doorlopend'
   points: integer('points'), // Voor eenmalige challenges
   status: text('status').notNull().default('active'), // 'active', 'inactive'
+  planworksField: text('planworks_field'), // Welk veld uit Planworks data (bijv. 'shiftsCompleted')
+  autoSync: boolean('auto_sync').default(true), // Automatisch syncen met Planworks
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
@@ -138,6 +154,17 @@ export const userChallengeProgress = pgTable('user_challenge_progress', {
   currentValue: integer('current_value').notNull().default(0), // huidige voortgang
   completedSteps: integer('completed_steps').array().notNull().default([]), // array van voltooide step IDs
   isCompleted: boolean('is_completed').notNull().default(false),
+  lastSyncAt: timestamp('last_sync_at'), // Laatste sync met Planworks
+  planworksData: json('planworks_data').$type<{
+    shiftsCompleted?: number;
+    overtimeHours?: number;
+    lastMinuteShifts?: number;
+    punctualityScore?: number;
+    availabilityPercentage?: number;
+    clientRating?: number;
+    trainingsCompleted?: number;
+    lastUpdated?: string;
+  }>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
