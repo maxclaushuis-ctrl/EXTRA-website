@@ -1229,8 +1229,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update challenge progress manually (for admin use)
+  app.put("/api/admin/users/:userId/challenges/:challengeId/progress", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const challengeId = parseInt(req.params.challengeId);
+      const { currentValue } = req.body;
+      
+      if (isNaN(userId) || isNaN(challengeId) || typeof currentValue !== 'number') {
+        return res.status(400).json({ message: "Ongeldig gebruiker ID, challenge ID of voortgang waarde" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Gebruiker niet gevonden" });
+      }
+
+      // Check if challenge exists
+      const challenge = await storage.getChallenge(challengeId);
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge niet gevonden" });
+      }
+
+      // Get or create user challenge progress
+      let progress = await storage.getUserChallengeProgress(userId, challengeId);
+      if (!progress) {
+        progress = await storage.createUserChallengeProgress({
+          userId,
+          challengeId,
+          currentValue,
+          completedSteps: [],
+          lastSyncAt: new Date()
+        });
+      } else {
+        progress = await storage.updateUserChallengeProgress(progress.id, {
+          currentValue,
+          lastSyncAt: new Date()
+        });
+      }
+
+      // Check if any steps should be completed
+      const steps = await storage.getChallengeSteps(challengeId);
+      const completedSteps = [...(progress?.completedSteps || [])];
+      let pointsAwarded = 0;
+
+      for (const step of steps) {
+        if (currentValue >= step.targetValue && !completedSteps.includes(step.id)) {
+          completedSteps.push(step.id);
+          pointsAwarded += step.pointsReward;
+          
+          // Award points to user
+          await storage.updateUserPoints(userId, step.pointsReward);
+          
+          // Create point transaction
+          await storage.createPointTransaction({
+            userId,
+            amount: step.pointsReward,
+            type: 'earned',
+            source: 'challenge_step',
+            description: `Challenge stap voltooid: ${step.title}`,
+            metadata: {
+              challengeId,
+              stepId: step.id,
+              stepTitle: step.title
+            }
+          });
+        }
+      }
+
+      // Update completed steps if any new ones
+      if (pointsAwarded > 0) {
+        await storage.updateUserChallengeProgress(progress.id, {
+          completedSteps,
+          currentValue
+        });
+      }
+
+      return res.status(200).json({
+        message: pointsAwarded > 0 
+          ? `Voortgang bijgewerkt en ${pointsAwarded} punten toegekend`
+          : "Voortgang bijgewerkt",
+        progress,
+        pointsAwarded
+      });
+    } catch (error) {
+      console.error("Error updating challenge progress:", error);
+      return res.status(500).json({ 
+        message: "Er is een fout opgetreden bij het bijwerken van de voortgang" 
+      });
+    }
+  });
+
   // Complete a one-time challenge for a user
-  app.post("/api/users/:userId/challenges/:challengeId/complete", adminMiddleware, async (req: Request, res: Response) => {
+  app.post("/api/admin/users/:userId/challenges/:challengeId/complete", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
       const challengeId = parseInt(req.params.challengeId);

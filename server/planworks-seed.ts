@@ -314,7 +314,7 @@ const planworksChallenges: ChallengeDefinition[] = [
   }
 ];
 
-export async function seedPlanworksChallenges() {
+async function seedPlanworksChallenges() {
   console.log('🌱 Seeding Planworks challenges...');
   
   try {
@@ -372,13 +372,5 @@ export async function seedPlanworksChallenges() {
   }
 }
 
-// Call this function during server initialization
-if (require.main === module) {
-  seedPlanworksChallenges().then(() => {
-    console.log('Seeding completed');
-    process.exit(0);
-  }).catch((error) => {
-    console.error('Seeding failed:', error);
-    process.exit(1);
-  });
-}
+// Export the seeding function
+export { seedPlanworksChallenges };

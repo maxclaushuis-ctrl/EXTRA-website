@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Trophy, Target, Users, Share, 
   CheckCircle, Plus, Minus,
-  Award, TrendingUp
+  Award, TrendingUp, Zap, Clock, Star, GraduationCap, Calendar, Edit3
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -54,16 +54,41 @@ interface UserChallengeProgressProps {
 }
 
 const categoryIcons = {
-  diensten: Trophy,
-  "last-minute": Target,
+  shifts: Trophy,
+  overtime: Zap,
+  lastminute: Target,
+  punctuality: Clock,
+  availability: Calendar,
+  client_rating: Star,
+  training_completion: GraduationCap,
   referrals: Users,
-  social: Share,
+  social_media: Share,
 } as const;
+
+const isPlanworksCategory = (category: string) => {
+  return ['shifts', 'overtime', 'lastminute', 'punctuality', 'availability', 'client_rating', 'training_completion'].includes(category);
+};
+
+const getCategoryLabel = (category: string) => {
+  switch (category) {
+    case 'shifts': return 'Diensten';
+    case 'overtime': return 'Overwerk';
+    case 'lastminute': return 'Last-minute';
+    case 'punctuality': return 'Stiptheid';
+    case 'availability': return 'Beschikbaarheid';
+    case 'client_rating': return 'Klantbeoordeling';
+    case 'training_completion': return 'Training';
+    case 'referrals': return 'Referrals';
+    case 'social_media': return 'Social Media';
+    default: return 'Overig';
+  }
+};
 
 export default function UserChallengeProgress({ userId }: UserChallengeProgressProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [updatingProgress, setUpdatingProgress] = useState<Record<number, boolean>>({});
+  const [editingValues, setEditingValues] = useState<Record<number, number>>({});
 
   // Fetch user's challenge progress
   const { data: userProgress = [], isLoading } = useQuery<UserChallengeProgress[]>({
@@ -103,18 +128,16 @@ export default function UserChallengeProgress({ userId }: UserChallengeProgressP
   // Update progress for ongoing challenges
   const updateProgressMutation = useMutation({
     mutationFn: async ({ challengeId, newValue }: { challengeId: number; newValue: number }) => {
-      return apiRequest(`/api/admin/users/${userId}/challenges/${challengeId}/progress`, {
-        method: "PUT",
-        body: JSON.stringify({ currentValue: newValue }),
-      });
+      return apiRequest(`/api/admin/users/${userId}/challenges/${challengeId}/progress`, 'PUT', { currentValue: newValue });
     },
-    onSuccess: (_, { challengeId }) => {
+    onSuccess: (data, { challengeId }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", userId, "challenges"] });
       toast({
         title: "Voortgang bijgewerkt",
-        description: "De challenge voortgang is succesvol bijgewerkt.",
+        description: data.message || "De challenge voortgang is succesvol bijgewerkt.",
       });
       setUpdatingProgress(prev => ({ ...prev, [challengeId]: false }));
+      setEditingValues(prev => ({ ...prev, [challengeId]: 0 }));
     },
     onError: (error: any) => {
       toast({
@@ -126,14 +149,32 @@ export default function UserChallengeProgress({ userId }: UserChallengeProgressP
     },
   });
 
+  const handleUpdateProgress = (challengeId: number, newValue: number) => {
+    if (newValue < 0) return;
+    
+    setUpdatingProgress(prev => ({ ...prev, [challengeId]: true }));
+    updateProgressMutation.mutate({ challengeId, newValue });
+  };
+
   const handleCompleteChallenge = (challengeId: number) => {
     setUpdatingProgress(prev => ({ ...prev, [challengeId]: true }));
     completeChallengeMutation.mutate(challengeId);
   };
 
-  const handleUpdateProgress = (challengeId: number, newValue: number) => {
-    setUpdatingProgress(prev => ({ ...prev, [challengeId]: true }));
-    updateProgressMutation.mutate({ challengeId, newValue });
+  const incrementProgress = (challengeId: number, currentValue: number) => {
+    const newValue = currentValue + 1;
+    handleUpdateProgress(challengeId, newValue);
+  };
+
+  const decrementProgress = (challengeId: number, currentValue: number) => {
+    const newValue = Math.max(0, currentValue - 1);
+    handleUpdateProgress(challengeId, newValue);
+  };
+
+  const updateProgressToValue = (challengeId: number, targetValue: number) => {
+    const editValue = editingValues[challengeId];
+    const newValue = editValue !== undefined ? editValue : targetValue;
+    handleUpdateProgress(challengeId, newValue);
   };
 
   const getUserProgressForChallenge = (challengeId: number) => {
@@ -224,72 +265,165 @@ export default function UserChallengeProgress({ userId }: UserChallengeProgressP
               </CardHeader>
               
               <CardContent className="space-y-4">
-                {challenge.type === 'eenmalig' ? (
-                  // One-time challenge
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="font-medium">Doel:</span> {challenge.targetValue || 1}x
-                      </div>
-                      <div className="text-sm">
-                        <span className="font-medium">Punten:</span> {challenge.points}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm text-muted-foreground">
-                        Status: {currentValue >= (challenge.targetValue || 1) ? "Voltooid" : "In uitvoering"}
-                      </div>
-                      
-                      {!isCompleted && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleCompleteChallenge(challenge.id)}
-                          disabled={isUpdating}
-                        >
-                          {isUpdating ? "Bezig..." : "Markeer als voltooid"}
-                        </Button>
-                      )}
-                    </div>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {getCategoryLabel(challenge.category)}
+                    </Badge>
+                    {isPlanworksCategory(challenge.category) && (
+                      <Badge variant="secondary" className="text-xs">
+                        🔗 Planworks
+                      </Badge>
+                    )}
                   </div>
-                ) : (
-                  // Progressive challenge
-                  <div className="space-y-4">
+                  <span className="font-medium">
+                    Huidige waarde: {currentValue}
+                  </span>
+                </div>
+
+                {challenge.type === "doorlopend" && challenge.steps && (
+                  <div className="space-y-3">
+                    {challenge.steps
+                      .sort((a, b) => a.stepNumber - b.stepNumber)
+                      .map((step) => {
+                        const isStepCompleted = currentValue >= step.targetValue;
+                        const progress = Math.min((currentValue / step.targetValue) * 100, 100);
+                        
+                        return (
+                          <div key={step.id} className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-medium">
+                                Stap {step.stepNumber}: {step.title}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs ${isStepCompleted ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                  {currentValue}/{step.targetValue}
+                                </span>
+                                {isStepCompleted && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                              </div>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                            <p className="text-xs text-muted-foreground">
+                              {step.description} • {step.pointsReward} punten
+                            </p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+
+                {/* Manual editing controls for non-Planworks challenges */}
+                {!isPlanworksCategory(challenge.category) && (
+                  <div className="space-y-3 mt-4 pt-4 border-t">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="font-medium">Huidige voortgang:</span> {currentValue}
-                      </div>
+                      <Label className="text-sm font-medium">Handmatig bijwerken:</Label>
                       <div className="flex items-center gap-2">
                         <Button
-                          size="sm"
                           variant="outline"
-                          onClick={() => handleUpdateProgress(challenge.id, Math.max(0, currentValue - 1))}
+                          size="sm"
+                          onClick={() => decrementProgress(challenge.id, currentValue)}
                           disabled={isUpdating || currentValue <= 0}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
                         <Input
                           type="number"
-                          value={currentValue}
-                          onChange={(e) => {
-                            const newValue = parseInt(e.target.value) || 0;
-                            if (newValue !== currentValue) {
-                              handleUpdateProgress(challenge.id, newValue);
-                            }
-                          }}
-                          className="w-20 text-center"
                           min="0"
+                          value={editingValues[challenge.id] !== undefined ? editingValues[challenge.id] : currentValue}
+                          onChange={(e) => setEditingValues(prev => ({ 
+                            ...prev, 
+                            [challenge.id]: parseInt(e.target.value) || 0 
+                          }))}
+                          className="w-16 text-center"
+                          disabled={isUpdating}
                         />
                         <Button
-                          size="sm"
                           variant="outline"
-                          onClick={() => handleUpdateProgress(challenge.id, currentValue + 1)}
+                          size="sm"
+                          onClick={() => incrementProgress(challenge.id, currentValue)}
                           disabled={isUpdating}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          const newValue = editingValues[challenge.id];
+                          if (newValue !== undefined && newValue !== currentValue) {
+                            handleUpdateProgress(challenge.id, newValue);
+                          }
+                        }}
+                        disabled={isUpdating || editingValues[challenge.id] === undefined || editingValues[challenge.id] === currentValue}
+                        className="flex-1"
+                      >
+                        <Edit3 className="h-3 w-3 mr-1" />
+                        Update naar waarde
+                      </Button>
+                      
+                      {challenge.type === "eenmalig" && !isCompleted && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleCompleteChallenge(challenge.id)}
+                          disabled={isUpdating}
+                          className="flex-1"
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Markeer voltooid
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Info for Planworks challenges */}
+                {isPlanworksCategory(challenge.category) && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <Zap className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-blue-800">Automatische synchronisatie</p>
+                          <p className="text-blue-700 mt-1">
+                            Deze challenge wordt automatisch bijgewerkt vanuit Planworks data. 
+                            Gebruik de Planworks Sync functie bovenaan de pagina om handmatig te synchroniseren.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {isUpdating && (
+                  <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Bezig met bijwerken...
+                    </div>
+                  </div>
+                )}
+            </Card>
+          );
+        })}
+      </div>
+      
+      {allChallenges.length === 0 && (
+        <Card>
+          <CardContent className="py-6 text-center text-muted-foreground">
+            Geen challenges beschikbaar
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
 
                     {challenge.steps && challenge.steps.length > 0 && (
                       <div className="space-y-3">
