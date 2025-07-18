@@ -281,6 +281,81 @@ export default function UserChallengeProgress({ userId }: UserChallengeProgressP
                   </span>
                 </div>
 
+                {/* Manual Control Section for Non-Planworks Challenges */}
+                {!isPlanworksCategory(challenge.category) && (
+                  <div className="border-t pt-4 space-y-3">
+                    <Label className="text-sm font-medium text-blue-700">🎯 Handmatige Bewerking</Label>
+                    
+                    {/* Current Value Display and Edit */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground">Nieuwe waarde:</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={editingValues[challenge.id] !== undefined ? editingValues[challenge.id] : currentValue}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setEditingValues(prev => ({ ...prev, [challenge.id]: value }));
+                        }}
+                        className="w-20 h-8 text-sm"
+                        disabled={isUpdating}
+                      />
+                    </div>
+                    
+                    {/* Quick Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => decrementProgress(challenge.id, currentValue)}
+                        disabled={isUpdating || currentValue <= 0}
+                      >
+                        <Minus className="h-3 w-3" />
+                        -1
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => incrementProgress(challenge.id, currentValue)}
+                        disabled={isUpdating}
+                      >
+                        <Plus className="h-3 w-3" />
+                        +1
+                      </Button>
+                      
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          const newValue = editingValues[challenge.id];
+                          if (newValue !== undefined && newValue !== currentValue) {
+                            handleUpdateProgress(challenge.id, newValue);
+                          }
+                        }}
+                        disabled={isUpdating || editingValues[challenge.id] === undefined || editingValues[challenge.id] === currentValue}
+                        className="flex-1"
+                      >
+                        <Edit3 className="h-3 w-3 mr-1" />
+                        Update
+                      </Button>
+                      
+                      {challenge.type === "eenmalig" && !isCompleted && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleCompleteChallenge(challenge.id)}
+                          disabled={isUpdating}
+                          className="flex-1"
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Voltooid
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {challenge.type === "doorlopend" && challenge.steps && (
                   <div className="space-y-3">
                     {challenge.steps
