@@ -5,11 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, UserPlus, ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Search, UserPlus, ArrowLeft, Eye } from 'lucide-react';
 import { Link } from 'wouter';
+import UserChallengeProgress from '@/components/admin/UserChallengeProgress';
 
 export default function EmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ['/api/users'],
@@ -143,6 +147,17 @@ export default function EmployeesPage() {
                       <Button variant="outline" size="sm">
                         Punten toekennen
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUserId(employee.id);
+                          setIsDetailDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Challenges
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -151,6 +166,27 @@ export default function EmployeesPage() {
           </table>
         </div>
       )}
+
+      {/* User Challenge Progress Dialog */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Challenge Voortgang - {
+                selectedUserId 
+                  ? `${employees?.find(e => e.id === selectedUserId)?.firstName} ${employees?.find(e => e.id === selectedUserId)?.lastName}`
+                  : 'Medewerker'
+              }
+            </DialogTitle>
+            <DialogDescription>
+              Beheer de challenge voortgang van deze medewerker. Handmatige challenges kunnen hier worden bijgewerkt.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUserId && (
+            <UserChallengeProgress userId={selectedUserId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

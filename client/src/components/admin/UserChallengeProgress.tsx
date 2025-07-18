@@ -409,6 +409,7 @@ export default function UserChallengeProgress({ userId }: UserChallengeProgressP
                     </div>
                   </div>
                 )}
+              </CardContent>
             </Card>
           );
         })}
@@ -420,65 +421,6 @@ export default function UserChallengeProgress({ userId }: UserChallengeProgressP
             Geen challenges beschikbaar
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
-}
-
-                    {challenge.steps && challenge.steps.length > 0 && (
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">Stappen:</Label>
-                        {challenge.steps
-                          .sort((a, b) => a.stepNumber - b.stepNumber)
-                          .map((step) => {
-                            const isStepCompleted = currentValue >= step.targetValue;
-                            const progress = Math.min((currentValue / step.targetValue) * 100, 100);
-                            
-                            return (
-                              <div key={step.id} className="border rounded-lg p-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">
-                                      Stap {step.stepNumber}: {step.targetValue} {challenge.category}
-                                    </span>
-                                    {isStepCompleted && (
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    )}
-                                  </div>
-                                  <span className="text-sm text-muted-foreground">
-                                    {step.pointsReward} punten
-                                  </span>
-                                </div>
-                                
-                                <div className="space-y-1">
-                                  <Progress value={progress} className="h-2" />
-                                  <div className="text-xs text-muted-foreground">
-                                    {currentValue}/{step.targetValue} ({Math.round(progress)}%)
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {allChallenges.length === 0 && (
-        <div className="text-center py-8">
-          <Award className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-muted-foreground mb-2">
-            Geen challenges gevonden
-          </h3>
-          <p className="text-muted-foreground">
-            Er zijn nog geen challenges aangemaakt in het systeem.
-          </p>
-        </div>
       )}
     </div>
   );
