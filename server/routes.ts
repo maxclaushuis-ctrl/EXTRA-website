@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { createHash } from "crypto";
 import { 
@@ -452,22 +453,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
       
-      // We gebruiken de hashPassword en verifyPassword methodes in storage.ts
-      // Speciale accounts als medewerker@extra.nl/medewerker123 hebben een gehashed wachtwoord
-      if (email === "medewerker@extra.nl" && password === "medewerker123") {
-        // Medewerker login
-        console.log("Medewerker login poging gedetecteerd");
-      } else if (password === "password123") {
-        // Bestaand gedrag voor de test accounts
-        console.log("Test account login met standaard wachtwoord");
-      } else {
-        // Als het geen standaard wachtwoord is, dan verifiëren we het wachtwoord
-        const isValid = password === user.password || createHash('sha256').update(password).digest('hex') === user.password;
-        
-        if (!isValid) {
-          return res.status(401).json({ message: "Ongeldige inloggegevens" });
-        }
+      // Debug logging
+      console.log("Wachtwoord hash in database:", user.password.substring(0, 30) + "...");
+      console.log("Ingevoerd wachtwoord:", password);
+      
+      // Controleer wachtwoord met bcrypt
+      const isValidPassword = bcrypt.compareSync(password, user.password);
+      
+      console.log("Wachtwoord verificatie resultaat:", isValidPassword);
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
+      
+      console.log("Medewerker login poging gedetecteerd");
       
       // Sessie instellen
       req.session.userId = user.id;
