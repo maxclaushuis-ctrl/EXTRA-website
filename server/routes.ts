@@ -34,6 +34,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
+import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 
 // Simple cookie parser function
 function parseCookies(cookieString?: string): Record<string, string> {

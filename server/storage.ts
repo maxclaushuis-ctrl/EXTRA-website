@@ -124,6 +124,17 @@ export interface IStorage {
   getSettingsByCategory(category: string): Promise<Setting[]>;
   upsertSetting(key: string, setting: Partial<InsertSetting>): Promise<Setting>;
   
+  // Additional user methods
+  getAllUsers(): Promise<User[]>;
+  
+  // Challenge request methods
+  createChallengeRequest(request: any): Promise<any>;
+  getChallengeRequests(): Promise<any[]>;
+  updateChallengeRequest(id: number, data: any): Promise<any>;
+  
+  // Challenge completion methods
+  completeChallengeStep(userId: number, challengeId: number, stepNumber: number, reason: string): Promise<void>;
+  
   // Email template methods
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   getEmailTemplates(): Promise<EmailTemplate[]>;
@@ -301,6 +312,7 @@ export class MemStorage implements IStorage {
   private assignments: Map<number, Assignment>;
   private staffPools: Map<number, StaffPool>;
   private poolMembers: Map<number, PoolMember>;
+  private challengeRequests: Map<number, any>;
   
   private currentIds: {
     applicants: number;
@@ -332,6 +344,7 @@ export class MemStorage implements IStorage {
     assignments: number;
     staffPools: number;
     poolMembers: number;
+    challengeRequests: number;
   };
 
   constructor() {
@@ -397,6 +410,7 @@ export class MemStorage implements IStorage {
       assignments: 1,
       staffPools: 1,
       poolMembers: 1,
+      challengeRequests: 1
     };
     
     // Initialiseer een admin gebruiker
@@ -2995,6 +3009,92 @@ export class MemStorage implements IStorage {
     console.log("Initializing challenges...");
     await this.initializeChallenges();
     console.log("Challenges initialized successfully");
+  }
+
+  // Additional user methods
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  // Challenge request methods
+  async createChallengeRequest(request: any): Promise<any> {
+    const id = this.currentIds.challengeRequests || 1;
+    this.currentIds.challengeRequests = id + 1;
+    
+    const challengeRequest = {
+      id,
+      challengeId: request.challengeId,
+      userId: request.userId,
+      message: request.message || '',
+      evidence: request.evidence || null,
+      status: request.status || 'pending',
+      adminNote: null,
+      processedAt: null,
+      createdAt: new Date()
+    };
+
+    // Store in a temporary map (in production this would be database)
+    if (!this.challengeRequests) {
+      this.challengeRequests = new Map();
+    }
+    this.challengeRequests.set(id, challengeRequest);
+    return challengeRequest;
+  }
+
+  async getChallengeRequests(): Promise<any[]> {
+    if (!this.challengeRequests) return [];
+    return Array.from(this.challengeRequests.values());
+  }
+
+  async updateChallengeRequest(id: number, data: any): Promise<any> {
+    if (!this.challengeRequests) return undefined;
+    
+    const request = this.challengeRequests.get(id);
+    if (!request) return undefined;
+
+    const updatedRequest = {
+      ...request,
+      ...data,
+      processedAt: data.status !== 'pending' ? new Date() : request.processedAt
+    };
+
+    this.challengeRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+
+  // Challenge completion methods
+  async completeChallengeStep(userId: number, challengeId: number, stepNumber: number, reason: string): Promise<void> {
+    // This would normally interact with the challenge progress system
+    console.log(`Completing challenge step for user ${userId}, challenge ${challengeId}, step ${stepNumber}: ${reason}`);
+    
+    // Award points if step exists
+    const steps = await this.getChallengeSteps(challengeId);
+    const step = steps.find(s => s.stepNumber === stepNumber);
+    
+    if (step) {
+      await this.createPointTransaction({
+        userId,
+        amount: step.pointsReward,
+        type: 'earned',
+        description: `Challenge voltooid: ${step.title || `Step ${stepNumber}`}`,
+        source: 'challenge_manual',
+        metadata: {
+          challengeId,
+          stepId: step.id,
+          stepNumber,
+          adminReason: reason
+        }
+      });
+
+      // Update user points
+      const user = await this.getUser(userId);
+      if (user) {
+        await this.updateUser(userId, {
+          points: user.points + step.pointsReward,
+          monthlyPoints: user.monthlyPoints + step.pointsReward
+        });
+      }
+    }
   }
 }
 

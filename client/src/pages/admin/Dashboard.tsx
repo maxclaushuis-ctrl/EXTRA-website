@@ -19,7 +19,8 @@ import {
   Users, Gift, Settings, Upload, FileSpreadsheet,
   BarChart, ArrowUpRight, TrendingUp, Database,
   Activity, User, Import, Download, Receipt,
-  Mail, Zap, LineChart, Send, Plus, FileCheck
+  Mail, Zap, LineChart, Send, Plus, FileCheck,
+  Shield
 } from 'lucide-react';
 
 import Transactions from './Transactions';
@@ -27,6 +28,7 @@ import Rewards from './Rewards';
 import { Challenges } from '@/components/admin/Challenges';
 import { Discounts } from '@/components/admin/Discounts';
 import LeaderboardComponent from '@/components/Leaderboard';
+import SystemManagement from './SystemManagement';
 
 
 import CSVImport from '@/components/CSVImport';
@@ -329,6 +331,10 @@ export default function AdminDashboard() {
         
         <TabsContent value="kortingsacties" className="mt-6">
           <Discounts />
+        </TabsContent>
+
+        <TabsContent value="systeembeheer" className="mt-6">
+          <SystemManagement />
         </TabsContent>
         
 

@@ -18,6 +18,9 @@ export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['bir
 export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
 export const badgeTypeEnum = pgEnum('badge_type', ['points', 'challenge', 'milestone', 'special']);
 
+// Challenge request enumeraties
+export const challengeRequestStatusEnum = pgEnum('challenge_request_status', ['pending', 'approved', 'rejected']);
+
 // Marketing campaign enumeraties
 export const marketingCampaignStatusEnum = pgEnum('marketing_campaign_status', ['draft', 'scheduled', 'sending', 'sent', 'paused', 'cancelled']);
 export const marketingCampaignTypeEnum = pgEnum('marketing_campaign_type', ['one_time', 'recurring', 'automated']);
@@ -46,6 +49,9 @@ export const users = pgTable("users", {
   profileImage: text("profile_image"),
   apiId: text("api_id"), // ID van medewerker in extern plansysteem
   tags: text("tags").array(), // Labels/tags voor medewerkers
+  lastActivityDate: timestamp("last_activity_date"), // Laatste dienst/activiteit
+  inactivityResetOverride: boolean("inactivity_reset_override").default(false), // Admin override
+  employeeType: text("employee_type").default('general'), // 'chef', 'horecamedewerker', 'general'
 
   settings: json("settings").$type<{
     notifications: boolean,
@@ -144,7 +150,20 @@ export const challengeSteps = pgTable('challenge_steps', {
   isCompleted: boolean('is_completed').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
-});
+})
+
+// Challenge verzoeken schema (voor handmatige challenges)
+export const challengeRequests = pgTable("challenge_requests", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  message: text("message"),
+  evidence: text("evidence"), // URL naar foto/bewijs
+  status: challengeRequestStatusEnum("status").default('pending').notNull(),
+  adminNote: text("admin_note"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});;
 
 export const userChallengeProgress = pgTable('user_challenge_progress', {
   id: serial('id').primaryKey(),
