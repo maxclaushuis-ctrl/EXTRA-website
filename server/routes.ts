@@ -462,26 +462,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Wachtwoord hash in database:", user.password.substring(0, 30) + "...");
       console.log("Ingevoerd wachtwoord:", password);
       
-      // Controleer wachtwoord met bcrypt
-      let isValidPassword = bcrypt.compareSync(password, user.password);
-      
-      // Workaround voor cache probleem - als verificatie faalt, probeer directe database check
-      if (!isValidPassword && password === "admin123") {
-        console.log("Bcrypt verificatie gefaald, proberen van directe database check...");
-        
-        // Directe database query om caching probleem te omzeilen
-        const directResult = await db.select()
-          .from(users)
-          .where(eq(users.email, email))
-          .limit(1);
-          
-        if (directResult.length > 0) {
-          const directUser = directResult[0];
-          console.log("Directe database hash:", directUser.password.substring(0, 30) + "...");
-          isValidPassword = bcrypt.compareSync(password, directUser.password);
-          console.log("Directe database verificatie resultaat:", isValidPassword);
-        }
-      }
+      // Controleer wachtwoord met SHA256 (zoals opgeslagen in database)
+      const hashedInputPassword = createHash('sha256').update(password).digest('hex');
+      const isValidPassword = hashedInputPassword === user.password;
       
       console.log("Finale wachtwoord verificatie resultaat:", isValidPassword);
       
