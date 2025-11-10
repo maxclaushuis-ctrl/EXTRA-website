@@ -2,17 +2,26 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clipboard, Check } from "lucide-react";
+import { Clipboard, Check, QrCode } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { Discount } from "@shared/schema";
 
 export default function DiscountsList() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>(null);
 
   const { data: discounts, isLoading, error } = useQuery<Discount[]>({
     queryKey: ["/api/discounts"],
@@ -39,6 +48,11 @@ export default function DiscountsList() {
     setTimeout(() => {
       setCopiedId(null);
     }, 3000);
+  };
+
+  const handleShowQR = (discount: Discount) => {
+    setSelectedDiscount(discount);
+    setQrDialogOpen(true);
   };
 
   if (isLoading) {
@@ -85,51 +99,102 @@ export default function DiscountsList() {
   }
 
   return (
-    <div className="space-y-4 pt-4 pb-16">
-      {discounts.map((discount) => (
-        <Card key={discount.id} className="border-none bg-gray-900 text-white overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="text-white text-lg font-semibold mb-2">{discount.name}</h3>
-                <p className="text-gray-400 text-sm mb-3">{discount.description}</p>
+    <>
+      <div className="space-y-4 pt-4 pb-16">
+        {discounts.map((discount) => (
+          <Card key={discount.id} className="border-none bg-gray-900 text-white overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-white text-lg font-semibold mb-2">{discount.name}</h3>
+                  <p className="text-gray-400 text-sm mb-3">{discount.description}</p>
+                </div>
+                
+                {discount.imageUrl && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden ml-4 flex-shrink-0">
+                    <img 
+                      src={discount.imageUrl} 
+                      alt={discount.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
               
-              {discount.imageUrl && (
-                <div className="w-16 h-16 rounded-lg overflow-hidden ml-4 flex-shrink-0">
-                  <img 
-                    src={discount.imageUrl} 
-                    alt={discount.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              <div className="flex justify-between items-center mt-4">
+                <Badge variant="outline" className="bg-gray-800 text-gray-300 border-gray-700">
+                  {discount.category}
+                </Badge>
+                
+                {discount.redemptionType === 'qr' ? (
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => handleShowQR(discount)}
+                    data-testid={`button-show-qr-${discount.id}`}
+                  >
+                    <QrCode className="h-4 w-4 mr-2" />
+                    Bekijk QR-code
+                  </Button>
+                ) : (
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => handleCopyCode(discount)}
+                    data-testid={`button-copy-code-${discount.id}`}
+                  >
+                    {copiedId === discount.id ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Gekopieerd
+                      </>
+                    ) : (
+                      <>
+                        <Clipboard className="h-4 w-4 mr-2" />
+                        Code kopiëren
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedDiscount?.name}</DialogTitle>
+            <DialogDescription>
+              Toon deze QR-code bij de partner om korting te ontvangen
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center justify-center space-y-4 py-6">
+            {selectedDiscount?.qrCode && (
+              <div className="rounded-lg bg-white p-4">
+                <img 
+                  src={selectedDiscount.qrCode} 
+                  alt={`QR code voor ${selectedDiscount.name}`}
+                  className="w-64 h-64"
+                  data-testid="img-qr-code"
+                />
+              </div>
+            )}
+            
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-1">Kortingscode</p>
+              <p className="font-mono font-bold text-lg" data-testid="text-discount-code">
+                {selectedDiscount?.discountCode}
+              </p>
             </div>
             
-            <div className="flex justify-between items-center mt-4">
-              <Badge variant="outline" className="bg-gray-800 text-gray-300 border-gray-700">
-                {discount.category}
-              </Badge>
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => handleCopyCode(discount)}
-              >
-                {copiedId === discount.id ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Gekopieerd
-                  </>
-                ) : (
-                  <>
-                    <Clipboard className="h-4 w-4 mr-2" />
-                    Code kopiëren
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            <p className="text-xs text-muted-foreground text-center max-w-sm">
+              {selectedDiscount?.description}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
