@@ -36,6 +36,7 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
+import { generateDiscountQR } from "./qr-utils";
 
 // Simple cookie parser function
 function parseCookies(cookieString?: string): Record<string, string> {
@@ -1847,8 +1848,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      let discountData = { ...result.data };
+      
+      // Genereer QR-code als redemptionType 'qr' is
+      if (discountData.redemptionType === 'qr') {
+        try {
+          const { qrCode, code } = await generateDiscountQR(
+            0, // Temp ID, wordt vervangen na insert
+            discountData.name
+          );
+          
+          discountData.qrCode = qrCode;
+          discountData.discountCode = code; // Gebruik de gegenereerde code ook als discount code
+          discountData.qrMetadata = {
+            generatedAt: new Date().toISOString(),
+          };
+        } catch (qrError) {
+          console.error("Fout bij genereren QR-code:", qrError);
+          return res.status(500).json({
+            message: "Fout bij genereren QR-code"
+          });
+        }
+      }
+      
       // Create the discount
-      const discount = await storage.createDiscount(result.data);
+      const discount = await storage.createDiscount(discountData);
+      
+      // Regenereer QR-code met echte discount ID als het een QR type is
+      if (discount.redemptionType === 'qr' && discount.id) {
+        try {
+          const { qrCode, code } = await generateDiscountQR(
+            discount.id,
+            discount.name
+          );
+          
+          const updatedDiscount = await storage.updateDiscount(discount.id, {
+            qrCode,
+            discountCode: code,
+            qrMetadata: {
+              generatedAt: new Date().toISOString(),
+            }
+          });
+          
+          return res.status(201).json({
+            message: "Kortingsactie met QR-code succesvol aangemaakt",
+            discount: updatedDiscount
+          });
+        } catch (qrError) {
+          console.error("Fout bij regenereren QR-code met discount ID:", qrError);
+        }
+      }
       
       return res.status(201).json({
         message: "Kortingsactie succesvol aangemaakt",
@@ -1875,8 +1924,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      let updateData = { ...req.body };
+      
+      // Genereer nieuwe QR-code als redemptionType wordt gewijzigd naar 'qr'
+      // of als het al 'qr' is en er geen QR-code bestaat
+      if (updateData.redemptionType === 'qr' && 
+          (discount.redemptionType !== 'qr' || !discount.qrCode)) {
+        try {
+          const { qrCode, code } = await generateDiscountQR(
+            discountId,
+            updateData.name || discount.name
+          );
+          
+          updateData.qrCode = qrCode;
+          updateData.discountCode = code;
+          updateData.qrMetadata = {
+            generatedAt: new Date().toISOString(),
+          };
+        } catch (qrError) {
+          console.error("Fout bij genereren QR-code:", qrError);
+          return res.status(500).json({
+            message: "Fout bij genereren QR-code"
+          });
+        }
+      }
+      
       // Update discount
-      const updatedDiscount = await storage.updateDiscount(discountId, req.body);
+      const updatedDiscount = await storage.updateDiscount(discountId, updateData);
       
       // Notify connected users of the update if their session is authenticated
       const notifyData = {
