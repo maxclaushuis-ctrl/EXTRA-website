@@ -163,10 +163,10 @@ export default function DiscountsList() {
 
       {/* QR Code Dialog */}
       <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-gray-900 border-gray-800 text-white">
           <DialogHeader>
-            <DialogTitle>{selectedDiscount?.name}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white text-xl font-semibold">{selectedDiscount?.name}</DialogTitle>
+            <DialogDescription className="text-gray-400">
               Toon deze QR-code bij de partner om korting te ontvangen
             </DialogDescription>
           </DialogHeader>
@@ -184,13 +184,13 @@ export default function DiscountsList() {
             )}
             
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-1">Kortingscode</p>
-              <p className="font-mono font-bold text-lg" data-testid="text-discount-code">
+              <p className="text-sm text-gray-400 mb-1">Kortingscode</p>
+              <p className="font-mono font-bold text-lg text-white" data-testid="text-discount-code">
                 {selectedDiscount?.discountCode}
               </p>
             </div>
             
-            <p className="text-xs text-muted-foreground text-center max-w-sm">
+            <p className="text-xs text-gray-400 text-center max-w-sm">
               {selectedDiscount?.description}
             </p>
           </div>

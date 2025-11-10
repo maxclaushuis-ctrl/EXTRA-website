@@ -73,21 +73,21 @@ export default function RewardDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       <Button
         variant="ghost"
         onClick={() => setLocation('/rewards')}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 text-white hover:text-gray-300"
         data-testid="button-back"
       >
         <ArrowLeft className="h-4 w-4" />
         Terug naar beloningen
       </Button>
 
-      <Card>
+      <Card className="border-none bg-gray-900 text-white">
         <CardHeader>
-          <CardTitle className="text-2xl">{reward.name}</CardTitle>
-          <CardDescription className="text-lg">
+          <CardTitle className="text-2xl text-white font-semibold">{reward.name}</CardTitle>
+          <CardDescription className="text-lg text-gray-400">
             {reward.pointsCost} punten
           </CardDescription>
         </CardHeader>
@@ -105,34 +105,25 @@ export default function RewardDetail() {
 
           {reward.description && (
             <div>
-              <h3 className="font-semibold mb-2">Beschrijving</h3>
-              <p className="text-muted-foreground">{reward.description}</p>
+              <h3 className="font-semibold mb-2 text-white">Beschrijving</h3>
+              <p className="text-gray-400">{reward.description}</p>
             </div>
           )}
 
           {reward.extraDescription && (
             <div>
-              <h3 className="font-semibold mb-2">Meer informatie</h3>
-              <p className="text-muted-foreground whitespace-pre-wrap">
+              <h3 className="font-semibold mb-2 text-white">Meer informatie</h3>
+              <p className="text-gray-400 whitespace-pre-wrap">
                 {reward.extraDescription}
               </p>
             </div>
           )}
 
-          {reward.stock !== null && (
-            <div>
-              <h3 className="font-semibold mb-2">Voorraad</h3>
-              <p className="text-muted-foreground">
-                {reward.stock > 0 ? `${reward.stock} beschikbaar` : 'Uitverkocht'}
-              </p>
-            </div>
-          )}
-
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t border-gray-800">
             <Button
               onClick={() => redeemMutation.mutate(reward.id)}
               disabled={redeemMutation.isPending || (reward.stock !== null && reward.stock <= 0)}
-              className="w-full"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               size="lg"
               data-testid="button-redeem"
             >
