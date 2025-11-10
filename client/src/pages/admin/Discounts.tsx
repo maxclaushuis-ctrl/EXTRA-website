@@ -126,6 +126,11 @@ export function Discounts() {
 
       // Verwijder de afbeelding uit de data, want deze sturen we niet naar de API
       const { image, ...discountData } = data;
+      
+      // Bij QR type, verwijder discountCode (wordt automatisch gegenereerd door backend)
+      if (discountData.redemptionType === 'qr') {
+        delete discountData.discountCode;
+      }
 
       const res = await apiRequest('/api/discounts', {
         method: 'POST',
@@ -136,13 +141,25 @@ export function Discounts() {
       });
       return await res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/discounts'] });
-      setIsEditModalOpen(false);
-      form.reset();
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/discounts'] });
+      
+      // Als het een QR type is, open direct de edit modal om de QR te tonen
+      if (response.discount?.redemptionType === 'qr') {
+        setIsEditModalOpen(false);
+        setTimeout(() => {
+          openEditModal(response.discount);
+        }, 100);
+      } else {
+        setIsEditModalOpen(false);
+        form.reset();
+      }
+      
       toast({
         title: 'Kortingsactie aangemaakt',
-        description: 'De kortingsactie is succesvol toegevoegd.'
+        description: response.discount?.redemptionType === 'qr' 
+          ? 'QR-code is gegenereerd en wordt nu getoond.'
+          : 'De kortingsactie is succesvol toegevoegd.'
       });
     },
     onError: (error) => {
@@ -167,6 +184,12 @@ export function Discounts() {
 
       // Verwijder de afbeelding uit de data, want deze sturen we niet naar de API
       const { image, ...discountData } = data;
+      
+      // Bij QR type, verwijder discountCode om bestaande QR niet te overschrijven
+      // (tenzij we expliciet van code naar qr switchen, dan genereert backend nieuwe QR)
+      if (discountData.redemptionType === 'qr' && currentDiscount?.redemptionType === 'qr') {
+        delete discountData.discountCode;
+      }
 
       const res = await apiRequest(`/api/discounts/${id}`, {
         method: 'PUT',

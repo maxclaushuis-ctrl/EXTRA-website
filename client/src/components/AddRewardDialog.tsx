@@ -199,18 +199,49 @@ export default function AddRewardDialog({ isOpen, onClose }: AddRewardDialogProp
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Omschrijving</FormLabel>
+                  <FormLabel>Korte omschrijving</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Voer een omschrijving in"
-                      className="min-h-[100px]"
+                      placeholder="Voer een korte omschrijving in"
+                      className="min-h-[80px]"
                       value={field.value || ""}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                       ref={field.ref}
                       name={field.name}
+                      data-testid="textarea-description"
                     />
                   </FormControl>
+                  <FormDescription>
+                    Korte samenvatting die op de kaart verschijnt
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Extra omschrijving */}
+            <FormField
+              control={form.control}
+              name="extraDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Uitgebreide beschrijving (optioneel)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Voer een uitgebreide beschrijving in met extra details"
+                      className="min-h-[120px]"
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                      name={field.name}
+                      data-testid="textarea-extra-description"
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Extra informatie die verschijnt in de detail pop-up
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

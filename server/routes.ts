@@ -1926,10 +1926,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let updateData = { ...req.body };
       
-      // Genereer nieuwe QR-code als redemptionType wordt gewijzigd naar 'qr'
-      // of als het al 'qr' is en er geen QR-code bestaat
-      if (updateData.redemptionType === 'qr' && 
-          (discount.redemptionType !== 'qr' || !discount.qrCode)) {
+      // Genereer nieuwe QR-code ALLEEN als redemptionType wisselt van 'code' naar 'qr'
+      // OF als het 'qr' is maar er nog geen QR-code bestaat
+      const isTransitioningToQR = discount.redemptionType !== 'qr' && updateData.redemptionType === 'qr';
+      const isQRButMissingCode = updateData.redemptionType === 'qr' && !discount.qrCode;
+      
+      if (isTransitioningToQR || isQRButMissingCode) {
         try {
           const { qrCode, code } = await generateDiscountQR(
             discountId,
@@ -1941,12 +1943,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updateData.qrMetadata = {
             generatedAt: new Date().toISOString(),
           };
+          
+          console.log(`QR-code gegenereerd voor discount ${discountId} (transitie: ${isTransitioningToQR}, missing: ${isQRButMissingCode})`);
         } catch (qrError) {
           console.error("Fout bij genereren QR-code:", qrError);
           return res.status(500).json({
             message: "Fout bij genereren QR-code"
           });
         }
+      } else if (updateData.redemptionType === 'qr' && discount.redemptionType === 'qr') {
+        // Bij QR-naar-QR update, bewaar bestaande QR-code en discountCode
+        console.log(`QR-discount ${discountId} update: behoud bestaande QR-code`);
+        updateData.qrCode = discount.qrCode;
+        updateData.discountCode = discount.discountCode;
       }
       
       // Update discount
