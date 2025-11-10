@@ -26,8 +26,8 @@ The application follows a monorepo structure with clear separation between clien
 
 ### Database Schema (Drizzle)
 - **Users**: Employee management with roles (admin/employee), TWV tracking, points system
-- **Rewards**: Physical rewards that can be redeemed with points
-- **Discounts**: Percentage-based discounts from partners
+- **Rewards**: Physical rewards that can be redeemed with points, with optional extraDescription field for detailed information
+- **Discounts**: Partner discounts with dual redemption methods (QR-code or discount code), including QR code PNG storage
 - **Point Transactions**: Complete audit trail of all point movements
 - **Redemptions**: Tracking of reward claims and fulfillment
 - **Rules**: Configurable point-earning rules
@@ -128,6 +128,21 @@ Preferred communication style: Simple, everyday language.
 - Klaar voor verdere ontwikkeling via Upwork outsourcing
 
 ## Recent Changes
+
+- **November 10, 2025**: Implemented QR-code redemption system and enhanced reward detail display
+  - Added dual redemption system for discounts: traditional discount codes AND QR-code based redemption
+  - Implemented server-side QR-code generation using qrcode library with automatic PNG generation
+  - QR-codes stored as data URLs in database for instant display without external dependencies
+  - Admin interface: redemption type selector (code/QR) with conditional form fields and QR-code preview with download
+  - Smart QR regeneration: only generates new QR when switching from code to QR type (not on every edit)
+  - Employee deals view: conditional display showing "Bekijk QR-code" button for QR-type deals and "Code kopiëren" for code-type deals
+  - QR-code dialog displays scannable QR image, readable discount code, and deal description
+  - Enhanced rewards with extraDescription field for detailed product/service information
+  - Clickable reward cards with hover effects and info icon indicator for extended descriptions
+  - Reward detail pop-up shows full information including extra description, points cost, and redemption option
+  - Admin rewards form includes both short description (for card view) and extended description (for detail view)
+  - All new features fully tested with proper error handling and responsive mobile design
+  - Database schema updated: discounts table now includes redemptionType, qrCode, qrMetadata fields; rewards table includes extraDescription field
 
 - **July 27, 2025**: System ready for online deployment
   - All functionality tested and working: rewards system, challenges, leaderboard
