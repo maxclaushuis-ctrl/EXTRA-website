@@ -132,12 +132,9 @@ export default function Login() {
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Test Accounts:</h3>
           <div className="text-xs text-gray-600 space-y-1">
             <div><strong>Admin:</strong> admin@extra.nl / admin123</div>
-            <div><strong>Medewerkers:</strong> (alle met wachtwoord: admin123)</div>
-            <div>• lisa.van.berg@extra.nl - Lisa van Berg (450 punten)</div>
-            <div>• mike.peters@extra.nl - Mike Peters (380 punten)</div>
-            <div>• sara.janssen@extra.nl - Sara Janssen (520 punten)</div>
-            <div>• tom.de.wit@extra.nl - Tom de Wit (290 punten)</div>
-            <div>• anna.smits@extra.nl - Anna Smits (610 punten)</div>
+            <div><strong>Medewerkers:</strong></div>
+            <div>• medewerker@extra.nl / medewerker123 (500 punten)</div>
+            <div>• jan@extra.nl / password123</div>
           </div>
         </div>
       </Card>

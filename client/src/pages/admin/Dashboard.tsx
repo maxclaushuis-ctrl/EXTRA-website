@@ -26,7 +26,7 @@ import {
 import Transactions from './Transactions';
 import Rewards from './Rewards';
 import { Challenges } from '@/components/admin/Challenges';
-import { Discounts } from '@/components/admin/Discounts';
+import Discounts from './Discounts';
 import LeaderboardComponent from '@/components/Leaderboard';
 import SystemManagement from './SystemManagement';
 
