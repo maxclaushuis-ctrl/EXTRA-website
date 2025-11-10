@@ -132,16 +132,26 @@ export function Discounts() {
   // Mutation: Nieuwe kortingsactie maken
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Helper functie om File naar data URL te converteren
+      const fileToDataUrl = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
       // Als er een afbeelding is, deze eerst verwerken
-      let imageUrl = null;
-      if (data.image) {
-        imageUrl = URL.createObjectURL(data.image);
+      let imageUrl = data.imageUrl || null;
+      if (data.image && data.image instanceof File) {
+        imageUrl = await fileToDataUrl(data.image);
       }
 
       // Als er een QR-afbeelding is, deze verwerken
-      let qrImageUrl = null;
-      if (data.qrImage) {
-        qrImageUrl = URL.createObjectURL(data.qrImage);
+      let qrImageUrl = data.qrImageUrl || null;
+      if (data.qrImage && data.qrImage instanceof File) {
+        qrImageUrl = await fileToDataUrl(data.qrImage);
       }
 
       // Verwijder de bestanden uit de data, want deze sturen we niet naar de API
@@ -190,16 +200,26 @@ export function Discounts() {
   // Mutation: Kortingsactie bijwerken
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
+      // Helper functie om File naar data URL te converteren
+      const fileToDataUrl = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
       // Als er een nieuwe afbeelding is, deze eerst verwerken
       let imageUrl = data.imageUrl;
-      if (data.image) {
-        imageUrl = URL.createObjectURL(data.image);
+      if (data.image && data.image instanceof File) {
+        imageUrl = await fileToDataUrl(data.image);
       }
 
       // Als er een nieuwe QR-afbeelding is, deze verwerken
       let qrImageUrl = data.qrImageUrl;
-      if (data.qrImage) {
-        qrImageUrl = URL.createObjectURL(data.qrImage);
+      if (data.qrImage && data.qrImage instanceof File) {
+        qrImageUrl = await fileToDataUrl(data.qrImage);
       }
 
       // Verwijder de bestanden uit de data, want deze sturen we niet naar de API
