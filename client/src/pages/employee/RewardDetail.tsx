@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MobileHeader } from '@/components/employee/MobileHeader';
 import type { Reward } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -42,7 +43,7 @@ export default function RewardDetail() {
         title: 'Beloning inwisselen gelukt!',
         description: 'Je beloning wordt zo snel mogelijk verwerkt',
       });
-      setLocation('/rewards');
+      setLocation('/dashboard');
     },
     onError: (error: Error) => {
       toast({
@@ -55,34 +56,44 @@ export default function RewardDetail() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-96 w-full" />
+      <div className="min-h-screen bg-black">
+        <MobileHeader title="Beloning" showBackButton={true} />
+        <div className="space-y-6 p-4">
+          <Skeleton className="h-8 w-48 bg-gray-800" />
+          <Skeleton className="h-96 w-full bg-gray-800" />
+        </div>
       </div>
     );
   }
 
   if (!reward) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Beloning niet gevonden</p>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-black">
+        <MobileHeader title="Beloning" showBackButton={true} />
+        <div className="p-4">
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="pt-6">
+              <p className="text-center text-gray-400">Beloning niet gevonden</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6 pb-16">
-      <Button
-        variant="ghost"
-        onClick={() => setLocation('/rewards')}
-        className="flex items-center gap-2 text-white hover:text-gray-300"
-        data-testid="button-back"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Terug naar beloningen
-      </Button>
+    <div className="min-h-screen bg-black">
+      <MobileHeader title="Beloning" showBackButton={true} />
+      <div className="space-y-6 pb-16 p-4">
+        <Button
+          variant="ghost"
+          onClick={() => setLocation('/dashboard')}
+          className="flex items-center gap-2 text-white hover:text-gray-300"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Terug naar beloningen
+        </Button>
 
       <Card className="border-none bg-gray-900 text-white">
         <CardHeader>
@@ -133,6 +144,7 @@ export default function RewardDetail() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
