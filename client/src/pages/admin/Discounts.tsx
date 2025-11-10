@@ -66,9 +66,19 @@ const discountFormSchema = z.object({
   image: z.any().optional(),
   imageUrl: z.string().optional(),
   partner: z.string().min(2, { message: 'Partner naam moet minstens 2 tekens bevatten' }),
-  discountCode: z.string().min(3, { message: 'Discount code moet minstens 3 tekens bevatten' }),
+  redemptionType: z.enum(['code', 'qr']).default('code'),
+  discountCode: z.string().optional(), // Optioneel, verplicht bij type 'code'
   category: z.string().min(2, { message: 'Categorie moet minstens 2 tekens bevatten' }),
   status: z.enum(['active', 'hidden'])
+}).refine((data) => {
+  // Als redemptionType 'code' is, moet discountCode aanwezig zijn
+  if (data.redemptionType === 'code' && (!data.discountCode || data.discountCode.length < 3)) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Kortingscode is verplicht bij type "Code" en moet minimaal 3 tekens bevatten',
+  path: ['discountCode']
 });
 
 type FormData = z.infer<typeof discountFormSchema>;
@@ -96,6 +106,7 @@ export function Discounts() {
       description: '',
       imageUrl: '',
       partner: '',
+      redemptionType: 'code',
       discountCode: '',
       category: '',
       status: 'active'
@@ -227,7 +238,8 @@ export function Discounts() {
         description: discount.description || '',
         imageUrl: discount.imageUrl || '',
         partner: discount.partner,
-        discountCode: discount.discountCode,
+        redemptionType: discount.redemptionType || 'code',
+        discountCode: discount.discountCode || '',
         category: discount.category || '',
         status: discount.status as 'active' | 'hidden',
       });
@@ -239,6 +251,7 @@ export function Discounts() {
         description: '',
         imageUrl: '',
         partner: '',
+        redemptionType: 'code',
         discountCode: '',
         category: '',
         status: 'active'
@@ -470,20 +483,84 @@ export function Discounts() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="discountCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Kortingscode</FormLabel>
+              <FormField
+                control={form.control}
+                name="redemptionType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Verzilver Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       <FormControl>
-                        <Input placeholder="EXTRA20" {...field} />
+                        <SelectTrigger data-testid="select-redemption-type">
+                          <SelectValue placeholder="Selecteer verzilver type" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <SelectContent>
+                        <SelectItem value="code">Kortingscode</SelectItem>
+                        <SelectItem value="qr">QR-code</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Kies hoe medewerkers deze deal kunnen verzilveren
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {form.watch('redemptionType') === 'code' && (
+                  <FormField
+                    control={form.control}
+                    name="discountCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Kortingscode</FormLabel>
+                        <FormControl>
+                          <Input placeholder="EXTRA20" {...field} data-testid="input-discount-code" />
+                        </FormControl>
+                        <FormDescription>
+                          Code die medewerkers kunnen gebruiken
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {form.watch('redemptionType') === 'qr' && currentDiscount?.qrCode && (
+                  <div className="space-y-2">
+                    <Label>Gegenereerde QR-code</Label>
+                    <div className="border rounded-lg p-4 bg-white flex flex-col items-center gap-2">
+                      <img 
+                        src={currentDiscount.qrCode} 
+                        alt="QR Code" 
+                        className="w-48 h-48"
+                        data-testid="img-qr-code-preview"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = currentDiscount.qrCode!;
+                          link.download = `qr-${currentDiscount.name.replace(/\s/g, '-')}.png`;
+                          link.click();
+                        }}
+                        data-testid="button-download-qr"
+                      >
+                        Download QR-code
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      QR-code wordt automatisch gegenereerd bij opslaan
+                    </p>
+                  </div>
+                )}
 
                 <FormField
                   control={form.control}
@@ -492,7 +569,7 @@ export function Discounts() {
                     <FormItem>
                       <FormLabel>Categorie</FormLabel>
                       <FormControl>
-                        <Input placeholder="eten, entertainment, etc." {...field} />
+                        <Input placeholder="eten, entertainment, etc." {...field} data-testid="input-category" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
