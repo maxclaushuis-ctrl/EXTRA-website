@@ -568,6 +568,7 @@ export class MemStorage implements IStorage {
       description: "Ontvang 10% korting op alle bioscoopkaartjes bij Pathé",
       imageUrl: "https://images.unsplash.com/photo-1478720568477-152d9b164e26",
       partner: "Pathé",
+      redemptionType: "code",
       discountCode: "EXTRA10PATH",
       category: "entertainment",
       status: "active"
@@ -578,6 +579,7 @@ export class MemStorage implements IStorage {
       description: "Ontvang een gratis koffie naar keuze bij Starbucks Amsterdam",
       imageUrl: "https://images.unsplash.com/photo-1529892485617-25f63cd7b1e9",
       partner: "Starbucks",
+      redemptionType: "code",
       discountCode: "EXTRACOFFEE",
       category: "food",
       status: "active"
@@ -1792,7 +1794,9 @@ export class MemStorage implements IStorage {
       description: insertDiscount.description || null,
       imageUrl: insertDiscount.imageUrl || null,
       partner: insertDiscount.partner,
-      discountCode: insertDiscount.discountCode,
+      redemptionType: insertDiscount.redemptionType || 'code',
+      discountCode: insertDiscount.discountCode || null,
+      qrImageUrl: insertDiscount.qrImageUrl || null,
       category: insertDiscount.category || null,
       status: insertDiscount.status || 'active',
       createdAt: now,

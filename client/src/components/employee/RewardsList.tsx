@@ -8,13 +8,6 @@ import { formatNumber } from '@/lib/utils';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
 export function RewardsList() {
   const { user } = useAuth();
@@ -22,8 +15,6 @@ export function RewardsList() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [redeemingRewardId, setRedeemingRewardId] = useState<number | null>(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
 
   const { data: rewards, isLoading, error } = useQuery<Reward[]>({
     queryKey: ['/api/rewards'],
@@ -172,14 +163,11 @@ export function RewardsList() {
         
         return (
           <div key={reward.id} className="mb-4">
-            <div 
-              className="bg-gray-900 border border-gray-800 rounded-lg shadow-md p-4 cursor-pointer hover:border-[#00AAFF] transition-colors relative"
-              onClick={() => {
-                setSelectedReward(reward);
-                setDetailDialogOpen(true);
-              }}
-              data-testid={`card-reward-${reward.id}`}
-            >
+            <Link href={`/employee/rewards/${reward.id}`}>
+              <div 
+                className="bg-gray-900 border border-gray-800 rounded-lg shadow-md p-4 cursor-pointer hover:border-[#00AAFF] transition-colors relative"
+                data-testid={`card-reward-${reward.id}`}
+              >
               {/* Info icoon in rechterbovenhoek */}
               {reward.extraDescription && (
                 <div className="absolute top-3 right-3 text-gray-400 hover:text-[#00AAFF]">
@@ -270,92 +258,13 @@ export function RewardsList() {
                   )}
                 </div>
               </div>
-            </div>
+              </div>
+            </Link>
           </div>
         );
         })}
       </div>
-
-      {/* Reward Detail Dialog */}
-      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">{selectedReward?.name}</DialogTitle>
-            {selectedReward?.description && (
-              <DialogDescription className="text-base">
-                {selectedReward.description}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Afbeelding indien aanwezig */}
-            {selectedReward?.imageUrl && (
-              <div className="rounded-lg overflow-hidden">
-                <img 
-                  src={selectedReward.imageUrl} 
-                  alt={selectedReward.name}
-                  className="w-full h-48 object-cover"
-                  data-testid="img-reward-detail"
-                />
-              </div>
-            )}
-            
-            {/* Extra beschrijving */}
-            {selectedReward?.extraDescription && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-sm text-muted-foreground">Details</h4>
-                <p className="text-sm leading-relaxed whitespace-pre-line" data-testid="text-extra-description">
-                  {selectedReward.extraDescription}
-                </p>
-              </div>
-            )}
-            
-            {/* Puntenkost */}
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-              <span className="font-medium">Puntenkost</span>
-              <span className="text-xl font-bold text-[#00AAFF]">
-                {selectedReward?.pointsCost} punten
-              </span>
-            </div>
-            
-            {/* Redeem button */}
-            {selectedReward && userPoints >= selectedReward.pointsCost && (
-              <button 
-                className="w-full bg-[#00AAFF] hover:bg-blue-600 text-white font-medium py-3 rounded-lg transition-colors"
-                disabled={redeemMutation.isPending}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const confirmMsg = `${t('common.redeem')} ${selectedReward.name} ${t('common.for')} ${selectedReward.pointsCost} ${t('common.points')}?`;
-                  if (window.confirm(confirmMsg)) {
-                    redeemMutation.mutate(selectedReward.id);
-                    setDetailDialogOpen(false);
-                  }
-                }}
-                data-testid="button-redeem-dialog"
-              >
-                {redeemMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 inline animate-spin" />
-                    {t('common.redeeming')}
-                  </>
-                ) : (
-                  t('common.redeem')
-                )}
-              </button>
-            )}
-            
-            {/* Not enough points message */}
-            {selectedReward && userPoints < selectedReward.pointsCost && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  Je hebt nog <strong>{selectedReward.pointsCost - userPoints} punten</strong> nodig om deze beloning in te wisselen.
-                </p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
+

@@ -303,11 +303,7 @@ export const discounts = pgTable("discounts", {
   partner: text("partner").notNull(), // Bedrijf/Organisatie die de korting aanbiedt
   redemptionType: discountRedemptionTypeEnum("redemption_type").default('code').notNull(), // Type verzilvering: code of qr
   discountCode: text("discount_code"), // De kortingscode (alleen voor type 'code')
-  qrCode: text("qr_code"), // QR-code data URL (alleen voor type 'qr')
-  qrMetadata: json("qr_metadata").$type<{
-    generatedAt?: string;
-    expiresAt?: string;
-  }>(), // Extra QR metadata
+  qrImageUrl: text("qr_image_url"), // Uploaded QR-afbeelding URL (alleen voor type 'qr')
   category: text("category"), // Categorie van de kortingsactie (bijv. 'food', 'shopping', 'entertainment')
   status: discountStatusEnum("status").default('active').notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

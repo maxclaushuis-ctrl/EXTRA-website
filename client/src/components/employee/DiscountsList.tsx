@@ -172,10 +172,10 @@ export default function DiscountsList() {
           </DialogHeader>
           
           <div className="flex flex-col items-center justify-center space-y-4 py-6">
-            {selectedDiscount?.qrCode && (
+            {selectedDiscount?.qrImageUrl && (
               <div className="rounded-lg bg-white p-4">
                 <img 
-                  src={selectedDiscount.qrCode} 
+                  src={selectedDiscount.qrImageUrl} 
                   alt={`QR code voor ${selectedDiscount.name}`}
                   className="w-64 h-64"
                   data-testid="img-qr-code"

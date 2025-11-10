@@ -21,6 +21,7 @@ import WerkruimtePage from "@/pages/admin/Werkruimte";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
+import RewardDetail from "@/pages/employee/RewardDetail";
 import History from "@/pages/user/History";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 
@@ -98,6 +99,9 @@ function Router() {
         </Route>
         <Route path="/rewards">
           {() => <ProtectedRoute component={Rewards} />}
+        </Route>
+        <Route path="/employee/rewards/:id">
+          {() => <ProtectedRoute component={RewardDetail} />}
         </Route>
         <Route path="/history">
           {() => <ProtectedRoute component={History} />}

@@ -65,6 +65,8 @@ const discountFormSchema = z.object({
   description: z.string().min(10, { message: 'Beschrijving moet minstens 10 tekens bevatten' }),
   image: z.any().optional(),
   imageUrl: z.string().optional(),
+  qrImage: z.any().optional(), // QR-afbeelding upload
+  qrImageUrl: z.string().optional(), // QR-afbeelding URL
   partner: z.string().min(2, { message: 'Partner naam moet minstens 2 tekens bevatten' }),
   redemptionType: z.enum(['code', 'qr']).default('code'),
   discountCode: z.string().optional(), // Optioneel, verplicht bij type 'code'
@@ -75,9 +77,13 @@ const discountFormSchema = z.object({
   if (data.redemptionType === 'code' && (!data.discountCode || data.discountCode.length < 3)) {
     return false;
   }
+  // Als redemptionType 'qr' is, moet qrImage of qrImageUrl aanwezig zijn
+  if (data.redemptionType === 'qr' && !data.qrImage && !data.qrImageUrl) {
+    return false;
+  }
   return true;
 }, {
-  message: 'Kortingscode is verplicht bij type "Code" en moet minimaal 3 tekens bevatten',
+  message: 'Kortingscode is verplicht bij type "Code", QR-afbeelding is verplicht bij type "QR"',
   path: ['discountCode']
 });
 
@@ -92,6 +98,7 @@ export function Discounts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [qrImagePreview, setQrImagePreview] = useState<string | null>(null);
 
   // Query: Alle kortingsacties ophalen
   const { data: discounts, isLoading, error } = useQuery<Discount[]>({
@@ -128,24 +135,24 @@ export function Discounts() {
       // Als er een afbeelding is, deze eerst verwerken
       let imageUrl = null;
       if (data.image) {
-        // Voor nu gebruiken we een lokale URL, in productie zou je hier een echte API call maken
-        // om het bestand te uploaden naar een storage service
         imageUrl = URL.createObjectURL(data.image);
       }
 
-      // Verwijder de afbeelding uit de data, want deze sturen we niet naar de API
-      const { image, ...discountData } = data;
-      
-      // Bij QR type, verwijder discountCode (wordt automatisch gegenereerd door backend)
-      if (discountData.redemptionType === 'qr') {
-        delete discountData.discountCode;
+      // Als er een QR-afbeelding is, deze verwerken
+      let qrImageUrl = null;
+      if (data.qrImage) {
+        qrImageUrl = URL.createObjectURL(data.qrImage);
       }
+
+      // Verwijder de bestanden uit de data, want deze sturen we niet naar de API
+      const { image, qrImage, ...discountData } = data;
 
       const res = await apiRequest('/api/discounts', {
         method: 'POST',
         body: JSON.stringify({
           ...discountData,
-          imageUrl
+          imageUrl,
+          qrImageUrl
         }),
       });
       return await res.json();
@@ -186,25 +193,24 @@ export function Discounts() {
       // Als er een nieuwe afbeelding is, deze eerst verwerken
       let imageUrl = data.imageUrl;
       if (data.image) {
-        // Voor nu gebruiken we een lokale URL, in productie zou je hier een echte API call maken
-        // om het bestand te uploaden naar een storage service
         imageUrl = URL.createObjectURL(data.image);
       }
 
-      // Verwijder de afbeelding uit de data, want deze sturen we niet naar de API
-      const { image, ...discountData } = data;
-      
-      // Bij QR type, verwijder discountCode om bestaande QR niet te overschrijven
-      // (tenzij we expliciet van code naar qr switchen, dan genereert backend nieuwe QR)
-      if (discountData.redemptionType === 'qr' && currentDiscount?.redemptionType === 'qr') {
-        delete discountData.discountCode;
+      // Als er een nieuwe QR-afbeelding is, deze verwerken
+      let qrImageUrl = data.qrImageUrl;
+      if (data.qrImage) {
+        qrImageUrl = URL.createObjectURL(data.qrImage);
       }
+
+      // Verwijder de bestanden uit de data, want deze sturen we niet naar de API
+      const { image, qrImage, ...discountData } = data;
 
       const res = await apiRequest(`/api/discounts/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
           ...discountData,
-          imageUrl
+          imageUrl,
+          qrImageUrl
         }),
       });
       return await res.json();
@@ -265,10 +271,12 @@ export function Discounts() {
     if (discount) {
       setCurrentDiscount(discount);
       setImagePreview(discount.imageUrl || null);
+      setQrImagePreview(discount.qrImageUrl || null);
       form.reset({
         name: discount.name,
         description: discount.description || '',
         imageUrl: discount.imageUrl || '',
+        qrImageUrl: discount.qrImageUrl || '',
         partner: discount.partner,
         redemptionType: discount.redemptionType || 'code',
         discountCode: discount.discountCode || '',
@@ -278,10 +286,12 @@ export function Discounts() {
     } else {
       setCurrentDiscount(null);
       setImagePreview(null);
+      setQrImagePreview(null);
       form.reset({
         name: '',
         description: '',
         imageUrl: '',
+        qrImageUrl: '',
         partner: '',
         redemptionType: 'code',
         discountCode: '',
@@ -300,6 +310,16 @@ export function Discounts() {
     } else {
       form.setValue('image', undefined);
       setImagePreview(null);
+    }
+  };
+
+  const handleQrImageChange = (file: File | null) => {
+    if (file) {
+      form.setValue('qrImage', file);
+      setQrImagePreview(URL.createObjectURL(file));
+    } else {
+      form.setValue('qrImage', undefined);
+      setQrImagePreview(null);
     }
   };
 
@@ -571,35 +591,27 @@ export function Discounts() {
                   />
                 )}
 
-                {form.watch('redemptionType') === 'qr' && currentDiscount?.qrCode && (
-                  <div className="space-y-2">
-                    <Label>Gegenereerde QR-code</Label>
-                    <div className="border rounded-lg p-4 bg-white flex flex-col items-center gap-2">
-                      <img 
-                        src={currentDiscount.qrCode} 
-                        alt="QR Code" 
-                        className="w-48 h-48"
-                        data-testid="img-qr-code-preview"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = currentDiscount.qrCode!;
-                          link.download = `qr-${currentDiscount.name.replace(/\s/g, '-')}.png`;
-                          link.click();
-                        }}
-                        data-testid="button-download-qr"
-                      >
-                        Download QR-code
-                      </Button>
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      QR-code wordt automatisch gegenereerd bij opslaan
-                    </p>
-                  </div>
+                {form.watch('redemptionType') === 'qr' && (
+                  <FormField
+                    control={form.control}
+                    name="qrImage"
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <FormItem>
+                        <FormLabel>QR-code afbeelding</FormLabel>
+                        <FormControl>
+                          <div className="space-y-4">
+                            <ImageUpload
+                              value={qrImagePreview || currentDiscount?.qrImageUrl}
+                              onChange={(file) => handleQrImageChange(file)}
+                              onRemove={() => handleQrImageChange(null)}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>Upload de QR-code afbeelding van de partner</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
 
                 <FormField
