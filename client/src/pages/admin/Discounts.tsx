@@ -95,7 +95,16 @@ export function Discounts() {
 
   // Query: Alle kortingsacties ophalen
   const { data: discounts, isLoading, error } = useQuery<Discount[]>({
-    queryKey: ['/api/discounts']
+    queryKey: ['/api/discounts'],
+    queryFn: async () => {
+      const response = await fetch('/api/discounts', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Fout bij het ophalen van kortingsacties');
+      }
+      return response.json();
+    },
   });
 
   // Form initialiseren
@@ -399,13 +408,21 @@ export function Discounts() {
                 <p className="text-sm text-gray-600">{discount.description || ''}</p>
                 <div className="mt-3 space-y-2">
                   <div className="flex justify-between">
-                    <Label>Code:</Label>
-                    <div className="flex items-center gap-1">
-                      <code className="bg-gray-100 px-2 py-0.5 rounded text-sm">{discount.discountCode}</code>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyDiscountCode(discount.discountCode)}>
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <Label>{discount.redemptionType === 'qr' ? 'Type:' : 'Code:'}</Label>
+                    {discount.redemptionType === 'qr' ? (
+                      <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-semibold">
+                        QR-code
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <code className="bg-gray-100 px-2 py-0.5 rounded text-sm">{discount.discountCode || 'N/A'}</code>
+                        {discount.discountCode && (
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyDiscountCode(discount.discountCode!)}>
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-between">
                     <Label>Categorie:</Label>

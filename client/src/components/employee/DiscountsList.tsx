@@ -37,11 +37,12 @@ export default function DiscountsList() {
   });
 
   const handleCopyCode = (discount: Discount) => {
-    navigator.clipboard.writeText(discount.discountCode);
+    const code = discount.discountCode || '';
+    navigator.clipboard.writeText(code);
     setCopiedId(discount.id);
     toast({
       title: "Kortingscode gekopieerd",
-      description: `De code "${discount.discountCode}" is gekopieerd naar het klembord`,
+      description: `De code "${code}" is gekopieerd naar het klembord`,
     });
 
     // Reset copy icon after 3 seconds
