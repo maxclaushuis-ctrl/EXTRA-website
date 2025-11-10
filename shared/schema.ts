@@ -16,6 +16,7 @@ export const emailTemplateTypeEnum = pgEnum('email_template_type', ['general', '
 export const automationStatusEnum = pgEnum('automation_status', ['active', 'inactive', 'draft']);
 export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', ['birthday', 'new_account', 'points_threshold', 'custom']);
 export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'hidden']);
+export const discountRedemptionTypeEnum = pgEnum('discount_redemption_type', ['code', 'qr']);
 export const badgeTypeEnum = pgEnum('badge_type', ['points', 'challenge', 'milestone', 'special']);
 
 // Challenge request enumeraties
@@ -65,6 +66,7 @@ export const rewards = pgTable("rewards", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  extraDescription: text("extra_description"), // Uitgebreide beschrijving voor detail pop-up
   imageUrl: text("image_url"),
   pointsCost: integer("points_cost").notNull(),
   stock: integer("stock"), // Optioneel, alleen als beperkte voorraad
@@ -299,7 +301,13 @@ export const discounts = pgTable("discounts", {
   description: text("description"),
   imageUrl: text("image_url"),
   partner: text("partner").notNull(), // Bedrijf/Organisatie die de korting aanbiedt
-  discountCode: text("discount_code").notNull(), // De kortingscode die gebruikt kan worden
+  redemptionType: discountRedemptionTypeEnum("redemption_type").default('code').notNull(), // Type verzilvering: code of qr
+  discountCode: text("discount_code"), // De kortingscode (alleen voor type 'code')
+  qrCode: text("qr_code"), // QR-code data URL (alleen voor type 'qr')
+  qrMetadata: json("qr_metadata").$type<{
+    generatedAt?: string;
+    expiresAt?: string;
+  }>(), // Extra QR metadata
   category: text("category"), // Categorie van de kortingsactie (bijv. 'food', 'shopping', 'entertainment')
   status: discountStatusEnum("status").default('active').notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
