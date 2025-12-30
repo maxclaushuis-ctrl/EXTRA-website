@@ -1037,116 +1037,99 @@
 
                 <!-- Statistics Tab -->
                 <div id="content-stats" class="modal-content hidden">
-                    <div class="mb-6">
-                        <h3 class="font-semibold text-gray-900 mb-1">Werkstatistieken</h3>
-                        <p class="text-sm text-gray-500">Overzicht van diensten en beoordelingen</p>
-                    </div>
-                    
-                    <!-- Summary cards -->
-                    <div class="grid grid-cols-4 gap-4 mb-6">
-                        <div class="bg-purple-50 rounded-xl p-4 text-center">
+                    <!-- Summary cards row 1 -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-purple-50 rounded-xl p-3 text-center">
                             <p id="statShifts" class="text-2xl font-bold text-purple-600">42</p>
                             <p class="text-xs text-gray-600">Diensten</p>
                         </div>
-                        <div class="bg-green-50 rounded-xl p-4 text-center">
+                        <div class="bg-green-50 rounded-xl p-3 text-center">
                             <p id="statCompliments" class="text-2xl font-bold text-green-600">3</p>
                             <p class="text-xs text-gray-600">Complimenten</p>
                         </div>
-                        <div class="bg-red-50 rounded-xl p-4 text-center">
+                        <div class="bg-red-50 rounded-xl p-3 text-center">
                             <p id="statComplaints" class="text-2xl font-bold text-red-600">0</p>
                             <p class="text-xs text-gray-600">Klachten</p>
                         </div>
-                        <div class="bg-blue-50 rounded-xl p-4 text-center">
-                            <p id="statAvgRating" class="text-2xl font-bold text-blue-600">8.0</p>
-                            <p class="text-xs text-gray-600">Gem. cijfer</p>
+                    </div>
+
+                    <!-- Beoordelingen met percentages -->
+                    <div class="bg-white border border-gray-200 rounded-xl mb-4">
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <h4 class="font-semibold text-gray-900">Beoordelingen</h4>
+                            <p class="text-xs text-gray-500">Gebaseerd op reviews (😊=100%, 😐=30%, 😞=0%)</p>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            <div class="flex items-center justify-between px-4 py-3">
+                                <span class="text-sm text-gray-700">Op tijd</span>
+                                <div class="flex items-center gap-3 w-48">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                        <div id="bar-ontime" class="h-2.5 rounded-full bg-green-500" style="width: 100%"></div>
+                                    </div>
+                                    <span id="pct-ontime" class="text-sm font-medium text-gray-700 w-10 text-right">100%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                                <span class="text-sm text-gray-700">Verzorging</span>
+                                <div class="flex items-center gap-3 w-48">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                        <div id="bar-appearance" class="h-2.5 rounded-full bg-green-500" style="width: 100%"></div>
+                                    </div>
+                                    <span id="pct-appearance" class="text-sm font-medium text-gray-700 w-10 text-right">100%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between px-4 py-3">
+                                <span class="text-sm text-gray-700">Vaardigheid</span>
+                                <div class="flex items-center gap-3 w-48">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                        <div id="bar-skills" class="h-2.5 rounded-full bg-green-500" style="width: 100%"></div>
+                                    </div>
+                                    <span id="pct-skills" class="text-sm font-medium text-gray-700 w-10 text-right">100%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                                <span class="text-sm text-gray-700">Houding</span>
+                                <div class="flex items-center gap-3 w-48">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                        <div id="bar-attitude" class="h-2.5 rounded-full bg-green-500" style="width: 100%"></div>
+                                    </div>
+                                    <span id="pct-attitude" class="text-sm font-medium text-gray-700 w-10 text-right">100%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between px-4 py-3">
+                                <span class="text-sm text-gray-700">No-show</span>
+                                <div class="flex items-center gap-3 w-48">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                        <div id="bar-noshow" class="h-2.5 rounded-full bg-red-500" style="width: 0%"></div>
+                                    </div>
+                                    <span id="pct-noshow" class="text-sm font-medium text-gray-700 w-10 text-right">0%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Beoordelingscriteria -->
-                    <div class="border border-gray-200 rounded-xl mb-6 overflow-hidden">
-                        <table class="w-full">
-                            <thead class="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Op tijd</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Verzorging</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Vaardigheid</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Houding</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Beoordeling</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-4 py-4 text-center">
-                                        <span id="emoji-ontime" class="text-2xl">😐</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <span id="emoji-appearance" class="text-2xl">😐</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <span id="emoji-skills" class="text-2xl">😐</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <span id="emoji-attitude" class="text-2xl">😐</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <span id="stat-rating-number" class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-gray-300 text-lg font-semibold text-gray-700">8</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <!-- Complimenten & Klachten in 2 kolommen -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Complimenten -->
+                        <div class="border border-gray-200 rounded-xl overflow-hidden">
+                            <div class="flex items-center justify-between px-3 py-2 bg-green-50 border-b border-gray-100">
+                                <h4 class="font-semibold text-gray-900 text-sm">Complimenten (<span id="complimentCount">0</span>)</h4>
+                                <button class="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700">Toevoegen</button>
+                            </div>
+                            <div id="complimentsList" class="max-h-32 overflow-y-auto">
+                                <p class="px-3 py-4 text-center text-xs text-gray-400">Nog geen complimenten</p>
+                            </div>
+                        </div>
 
-                    <!-- Complimenten sectie -->
-                    <div class="border border-gray-200 rounded-xl mb-6 overflow-hidden">
-                        <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
-                            <h4 class="font-semibold text-gray-900">Complimenten (<span id="complimentCount">0</span>)</h4>
-                            <button class="px-4 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">Toevoegen</button>
-                        </div>
-                        <table class="w-full">
-                            <thead class="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Dienst</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Compliment</th>
-                                </tr>
-                            </thead>
-                            <tbody id="complimentsTableBody">
-                                <tr>
-                                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Nog geen complimenten</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="px-4 py-2 border-t border-gray-100 flex justify-end items-center gap-2 text-sm text-gray-500">
-                            <span>- van 0</span>
-                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- Klachten sectie -->
-                    <div class="border border-gray-200 rounded-xl overflow-hidden">
-                        <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
-                            <h4 class="font-semibold text-gray-900">Klachten (<span id="complaintCount">0</span>)</h4>
-                            <button class="px-4 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">Toevoegen</button>
-                        </div>
-                        <table class="w-full">
-                            <thead class="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Dienst</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Klacht</th>
-                                </tr>
-                            </thead>
-                            <tbody id="complaintsTableBody">
-                                <tr>
-                                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Nog geen klachten</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="px-4 py-2 border-t border-gray-100 flex justify-end items-center gap-2 text-sm text-gray-500">
-                            <span>- van 0</span>
-                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        <!-- Klachten -->
+                        <div class="border border-gray-200 rounded-xl overflow-hidden">
+                            <div class="flex items-center justify-between px-3 py-2 bg-red-50 border-b border-gray-100">
+                                <h4 class="font-semibold text-gray-900 text-sm">Klachten (<span id="complaintCount">0</span>)</h4>
+                                <button class="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700">Toevoegen</button>
+                            </div>
+                            <div id="complaintsList" class="max-h-32 overflow-y-auto">
+                                <p class="px-3 py-4 text-center text-xs text-gray-400">Nog geen klachten</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1683,78 +1666,78 @@
         // =====================================
         
         // 10 test users, sorted alphabetically by last name
-        // stats: onTime, appearance, skills, attitude are 'good', 'neutral', or 'bad'
-        // avgRating is 1-10 cijfer, compliments and complaints are counts
+        // stats: onTime, appearance, skills, attitude are 'good', 'neutral', or 'bad' (😊=100%, 😐=30%, 😞=0%)
+        // noShow is percentage (0-100), compliments and complaints are counts
         const allUsers = [
             { 
                 id: 1, name: 'Anna Bakker', avatar: 'AB', 
                 phone: '06-12345678', age: 28, hireDate: '15-03-2022',
                 rating: 4.5, points: 3250, role: 'Housekeeping', roleKey: 'housekeeping',
                 status: 'Actief', email: 'anna.bakker@example.com',
-                stats: { shifts: 42, onTime: 'good', appearance: 'good', skills: 'neutral', attitude: 'good', avgRating: 8, compliments: 3, complaints: 0 }
+                stats: { shifts: 42, onTime: 'good', appearance: 'good', skills: 'neutral', attitude: 'good', noShow: 0, compliments: 3, complaints: 0 }
             },
             { 
                 id: 2, name: 'Dennis de Groot', avatar: 'DG', 
                 phone: '06-23456789', age: 35, hireDate: '01-06-2021',
                 rating: 4.8, points: 6500, role: 'Chef', roleKey: 'chef',
                 status: 'Actief', email: 'dennis.degroot@example.com',
-                stats: { shifts: 89, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 9, compliments: 7, complaints: 0 }
+                stats: { shifts: 89, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', noShow: 0, compliments: 7, complaints: 0 }
             },
             { 
                 id: 3, name: 'Emma van Dijk', avatar: 'ED', 
                 phone: '06-34567890', age: 24, hireDate: '10-01-2024',
                 rating: 4.2, points: 1850, role: 'Receptie', roleKey: 'receptie',
                 status: 'Actief', email: 'emma.vandijk@example.com',
-                stats: { shifts: 18, onTime: 'neutral', appearance: 'good', skills: 'neutral', attitude: 'good', avgRating: 7, compliments: 1, complaints: 0 }
+                stats: { shifts: 18, onTime: 'neutral', appearance: 'good', skills: 'neutral', attitude: 'good', noShow: 5, compliments: 1, complaints: 0 }
             },
             { 
                 id: 4, name: 'Jan Hendriks', avatar: 'JH', 
                 phone: '06-45678901', age: 42, hireDate: '20-09-2019',
                 rating: 5.0, points: 12500, role: 'Chef', roleKey: 'chef',
                 status: 'Actief', email: 'jan.hendriks@example.com',
-                stats: { shifts: 156, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 10, compliments: 12, complaints: 0 }
+                stats: { shifts: 156, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', noShow: 0, compliments: 12, complaints: 0 }
             },
             { 
                 id: 5, name: 'Lisa Jansen', avatar: 'LJ', 
                 phone: '06-56789012', age: 31, hireDate: '05-11-2020',
                 rating: 4.0, points: 4200, role: 'Horecamedewerker', roleKey: 'horeca',
                 status: 'Actief', email: 'lisa.jansen@example.com',
-                stats: { shifts: 67, onTime: 'neutral', appearance: 'neutral', skills: 'neutral', attitude: 'neutral', avgRating: 7, compliments: 2, complaints: 1 }
+                stats: { shifts: 67, onTime: 'neutral', appearance: 'neutral', skills: 'neutral', attitude: 'neutral', noShow: 3, compliments: 2, complaints: 1 }
             },
             { 
                 id: 6, name: 'Mark Mulder', avatar: 'MM', 
                 phone: '06-67890123', age: 29, hireDate: '12-07-2023',
                 rating: 3.8, points: 2100, role: 'Housekeeping', roleKey: 'housekeeping',
                 status: 'Actief', email: 'mark.mulder@example.com',
-                stats: { shifts: 28, onTime: 'bad', appearance: 'neutral', skills: 'neutral', attitude: 'neutral', avgRating: 6, compliments: 0, complaints: 2 }
+                stats: { shifts: 28, onTime: 'bad', appearance: 'neutral', skills: 'neutral', attitude: 'neutral', noShow: 12, compliments: 0, complaints: 2 }
             },
             { 
                 id: 7, name: 'Nina Smit', avatar: 'NS', 
                 phone: '06-78901234', age: 26, hireDate: '28-02-2022',
                 rating: 4.6, points: 5800, role: 'Receptie', roleKey: 'receptie',
                 status: 'Actief', email: 'nina.smit@example.com',
-                stats: { shifts: 58, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 9, compliments: 5, complaints: 0 }
+                stats: { shifts: 58, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', noShow: 0, compliments: 5, complaints: 0 }
             },
             { 
                 id: 8, name: 'Peter Visser', avatar: 'PV', 
                 phone: '06-89012345', age: 38, hireDate: '03-04-2018',
                 rating: 4.9, points: 8900, role: 'Chef', roleKey: 'chef',
                 status: 'Actief', email: 'peter.visser@example.com',
-                stats: { shifts: 124, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 9, compliments: 8, complaints: 0 }
+                stats: { shifts: 124, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', noShow: 0, compliments: 8, complaints: 0 }
             },
             { 
                 id: 9, name: 'Sophie de Vries', avatar: 'SV', 
                 phone: '06-90123456', age: 33, hireDate: '17-08-2021',
                 rating: 4.3, points: 3750, role: 'Horecamedewerker', roleKey: 'horeca',
                 status: 'Inactief', email: 'sophie.devries@example.com',
-                stats: { shifts: 45, onTime: 'good', appearance: 'neutral', skills: 'good', attitude: 'good', avgRating: 8, compliments: 2, complaints: 0 }
+                stats: { shifts: 45, onTime: 'good', appearance: 'neutral', skills: 'good', attitude: 'good', noShow: 2, compliments: 2, complaints: 0 }
             },
             { 
                 id: 10, name: 'Thomas Willems', avatar: 'TW', 
                 phone: '06-01234567', age: 27, hireDate: '22-05-2023',
                 rating: 4.1, points: 2850, role: 'Housekeeping', roleKey: 'housekeeping',
                 status: 'Actief', email: 'thomas.willems@example.com',
-                stats: { shifts: 32, onTime: 'neutral', appearance: 'neutral', skills: 'neutral', attitude: 'good', avgRating: 7, compliments: 1, complaints: 1 }
+                stats: { shifts: 32, onTime: 'neutral', appearance: 'neutral', skills: 'neutral', attitude: 'good', noShow: 6, compliments: 1, complaints: 1 }
             }
         ];
 
@@ -2050,20 +2033,41 @@
             document.getElementById('statShifts').textContent = stats.shifts;
             document.getElementById('statCompliments').textContent = stats.compliments;
             document.getElementById('statComplaints').textContent = stats.complaints;
-            document.getElementById('statAvgRating').textContent = stats.avgRating.toFixed(1);
             
-            // Helper function for emoji based on rating
-            const getEmoji = (val) => {
-                if (val === 'good') return '😊';
-                if (val === 'bad') return '😞';
-                return '😐';
+            // Convert emoji ratings to percentages: good=100%, neutral=30%, bad=0%
+            const toPercent = (val) => {
+                if (val === 'good') return 100;
+                if (val === 'neutral') return 30;
+                return 0;
             };
             
-            document.getElementById('emoji-ontime').textContent = getEmoji(stats.onTime);
-            document.getElementById('emoji-appearance').textContent = getEmoji(stats.appearance);
-            document.getElementById('emoji-skills').textContent = getEmoji(stats.skills);
-            document.getElementById('emoji-attitude').textContent = getEmoji(stats.attitude);
-            document.getElementById('stat-rating-number').textContent = stats.avgRating;
+            // Get bar color based on percentage
+            const getBarColor = (pct) => {
+                if (pct >= 80) return 'bg-green-500';
+                if (pct >= 50) return 'bg-yellow-500';
+                return 'bg-red-500';
+            };
+            
+            // Update percentage bars
+            const updateBar = (id, val) => {
+                const pct = toPercent(val);
+                const bar = document.getElementById(`bar-${id}`);
+                const pctEl = document.getElementById(`pct-${id}`);
+                bar.style.width = pct + '%';
+                bar.className = `h-2.5 rounded-full ${getBarColor(pct)}`;
+                pctEl.textContent = pct + '%';
+            };
+            
+            updateBar('ontime', stats.onTime);
+            updateBar('appearance', stats.appearance);
+            updateBar('skills', stats.skills);
+            updateBar('attitude', stats.attitude);
+            
+            // No-show bar (already percentage, lower is better so red color)
+            const noShowBar = document.getElementById('bar-noshow');
+            const noShowPct = document.getElementById('pct-noshow');
+            noShowBar.style.width = stats.noShow + '%';
+            noShowPct.textContent = stats.noShow + '%';
             
             // Update compliments/complaints counts in headers
             document.getElementById('complimentCount').textContent = stats.compliments;
