@@ -1042,69 +1042,111 @@
                         <p class="text-sm text-gray-500">Overzicht van diensten en beoordelingen</p>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4 mb-6">
+                    <!-- Summary cards -->
+                    <div class="grid grid-cols-4 gap-4 mb-6">
                         <div class="bg-purple-50 rounded-xl p-4 text-center">
-                            <p id="statShifts" class="text-3xl font-bold text-purple-600">42</p>
-                            <p class="text-sm text-gray-600">Diensten</p>
+                            <p id="statShifts" class="text-2xl font-bold text-purple-600">42</p>
+                            <p class="text-xs text-gray-600">Diensten</p>
                         </div>
                         <div class="bg-green-50 rounded-xl p-4 text-center">
-                            <p id="statAvgRating" class="text-3xl font-bold text-green-600">4.5</p>
-                            <p class="text-sm text-gray-600">Gem. beoordeling</p>
+                            <p id="statCompliments" class="text-2xl font-bold text-green-600">3</p>
+                            <p class="text-xs text-gray-600">Complimenten</p>
+                        </div>
+                        <div class="bg-red-50 rounded-xl p-4 text-center">
+                            <p id="statComplaints" class="text-2xl font-bold text-red-600">0</p>
+                            <p class="text-xs text-gray-600">Klachten</p>
                         </div>
                         <div class="bg-blue-50 rounded-xl p-4 text-center">
-                            <p id="statExperience" class="text-3xl font-bold text-blue-600">2</p>
-                            <p class="text-sm text-gray-600">Jaar ervaring</p>
+                            <p id="statAvgRating" class="text-2xl font-bold text-blue-600">8.0</p>
+                            <p class="text-xs text-gray-600">Gem. cijfer</p>
                         </div>
                     </div>
 
-                    <div class="bg-purple-100 text-purple-800 font-medium px-4 py-2 rounded-t-xl">
-                        Beoordelingscriteria
+                    <!-- Beoordelingscriteria -->
+                    <div class="border border-gray-200 rounded-xl mb-6 overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Op tijd</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Verzorging</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Vaardigheid</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Houding</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Beoordeling</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-4 text-center">
+                                        <span id="emoji-ontime" class="text-2xl">😐</span>
+                                    </td>
+                                    <td class="px-4 py-4 text-center">
+                                        <span id="emoji-appearance" class="text-2xl">😐</span>
+                                    </td>
+                                    <td class="px-4 py-4 text-center">
+                                        <span id="emoji-skills" class="text-2xl">😐</span>
+                                    </td>
+                                    <td class="px-4 py-4 text-center">
+                                        <span id="emoji-attitude" class="text-2xl">😐</span>
+                                    </td>
+                                    <td class="px-4 py-4 text-center">
+                                        <span id="stat-rating-number" class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-gray-300 text-lg font-semibold text-gray-700">8</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="border border-gray-100 rounded-b-xl divide-y divide-gray-100">
-                        <div class="flex items-center justify-between p-4">
-                            <span class="text-gray-700">Op tijd komen op werk</span>
-                            <div class="flex items-center gap-3 w-64">
-                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
-                                    <div id="bar-ontime" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 92%"></div>
-                                </div>
-                                <span id="pct-ontime" class="text-sm font-medium text-gray-700 w-12 text-right">92%</span>
-                            </div>
+
+                    <!-- Complimenten sectie -->
+                    <div class="border border-gray-200 rounded-xl mb-6 overflow-hidden">
+                        <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
+                            <h4 class="font-semibold text-gray-900">Complimenten (<span id="complimentCount">0</span>)</h4>
+                            <button class="px-4 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">Toevoegen</button>
                         </div>
-                        <div class="flex items-center justify-between p-4 bg-gray-50">
-                            <span class="text-gray-700">Niet vroeg vertrekken van werk</span>
-                            <div class="flex items-center gap-3 w-64">
-                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
-                                    <div id="bar-stayfull" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 100%"></div>
-                                </div>
-                                <span id="pct-stayfull" class="text-sm font-medium text-gray-700 w-12 text-right">100%</span>
-                            </div>
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Dienst</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Compliment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complimentsTableBody">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Nog geen complimenten</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="px-4 py-2 border-t border-gray-100 flex justify-end items-center gap-2 text-sm text-gray-500">
+                            <span>- van 0</span>
+                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                         </div>
-                        <div class="flex items-center justify-between p-4">
-                            <span class="text-gray-700">Houding / Gedrag</span>
-                            <div class="flex items-center gap-3 w-64">
-                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
-                                    <div id="bar-attitude" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 95%"></div>
-                                </div>
-                                <span id="pct-attitude" class="text-sm font-medium text-gray-700 w-12 text-right">95%</span>
-                            </div>
+                    </div>
+
+                    <!-- Klachten sectie -->
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
+                        <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
+                            <h4 class="font-semibold text-gray-900">Klachten (<span id="complaintCount">0</span>)</h4>
+                            <button class="px-4 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">Toevoegen</button>
                         </div>
-                        <div class="flex items-center justify-between p-4 bg-gray-50">
-                            <span class="text-gray-700">Vaardigheden</span>
-                            <div class="flex items-center gap-3 w-64">
-                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
-                                    <div id="bar-skills" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 88%"></div>
-                                </div>
-                                <span id="pct-skills" class="text-sm font-medium text-gray-700 w-12 text-right">88%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between p-4">
-                            <span class="text-gray-700">Verzorging / Representatief</span>
-                            <div class="flex items-center gap-3 w-64">
-                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
-                                    <div id="bar-appearance" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 90%"></div>
-                                </div>
-                                <span id="pct-appearance" class="text-sm font-medium text-gray-700 w-12 text-right">90%</span>
-                            </div>
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Dienst</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Klacht</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complaintsTableBody">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Nog geen klachten</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="px-4 py-2 border-t border-gray-100 flex justify-end items-center gap-2 text-sm text-gray-500">
+                            <span>- van 0</span>
+                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button class="p-1 hover:bg-gray-100 rounded"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 </div>
@@ -1641,76 +1683,78 @@
         // =====================================
         
         // 10 test users, sorted alphabetically by last name
+        // stats: onTime, appearance, skills, attitude are 'good', 'neutral', or 'bad'
+        // avgRating is 1-10 cijfer, compliments and complaints are counts
         const allUsers = [
             { 
                 id: 1, name: 'Anna Bakker', avatar: 'AB', 
                 phone: '06-12345678', age: 28, hireDate: '15-03-2022',
                 rating: 4.5, points: 3250, role: 'Housekeeping', roleKey: 'housekeeping',
                 status: 'Actief', email: 'anna.bakker@example.com',
-                stats: { shifts: 42, onTime: 92, stayFull: 100, attitude: 95, skills: 88, appearance: 90 }
+                stats: { shifts: 42, onTime: 'good', appearance: 'good', skills: 'neutral', attitude: 'good', avgRating: 8, compliments: 3, complaints: 0 }
             },
             { 
                 id: 2, name: 'Dennis de Groot', avatar: 'DG', 
                 phone: '06-23456789', age: 35, hireDate: '01-06-2021',
                 rating: 4.8, points: 6500, role: 'Chef', roleKey: 'chef',
                 status: 'Actief', email: 'dennis.degroot@example.com',
-                stats: { shifts: 89, onTime: 98, stayFull: 100, attitude: 100, skills: 95, appearance: 95 }
+                stats: { shifts: 89, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 9, compliments: 7, complaints: 0 }
             },
             { 
                 id: 3, name: 'Emma van Dijk', avatar: 'ED', 
                 phone: '06-34567890', age: 24, hireDate: '10-01-2024',
                 rating: 4.2, points: 1850, role: 'Receptie', roleKey: 'receptie',
                 status: 'Actief', email: 'emma.vandijk@example.com',
-                stats: { shifts: 18, onTime: 85, stayFull: 95, attitude: 90, skills: 80, appearance: 92 }
+                stats: { shifts: 18, onTime: 'neutral', appearance: 'good', skills: 'neutral', attitude: 'good', avgRating: 7, compliments: 1, complaints: 0 }
             },
             { 
                 id: 4, name: 'Jan Hendriks', avatar: 'JH', 
                 phone: '06-45678901', age: 42, hireDate: '20-09-2019',
                 rating: 5.0, points: 12500, role: 'Chef', roleKey: 'chef',
                 status: 'Actief', email: 'jan.hendriks@example.com',
-                stats: { shifts: 156, onTime: 100, stayFull: 100, attitude: 100, skills: 100, appearance: 100 }
+                stats: { shifts: 156, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 10, compliments: 12, complaints: 0 }
             },
             { 
                 id: 5, name: 'Lisa Jansen', avatar: 'LJ', 
                 phone: '06-56789012', age: 31, hireDate: '05-11-2020',
                 rating: 4.0, points: 4200, role: 'Horecamedewerker', roleKey: 'horeca',
                 status: 'Actief', email: 'lisa.jansen@example.com',
-                stats: { shifts: 67, onTime: 88, stayFull: 92, attitude: 85, skills: 82, appearance: 88 }
+                stats: { shifts: 67, onTime: 'neutral', appearance: 'neutral', skills: 'neutral', attitude: 'neutral', avgRating: 7, compliments: 2, complaints: 1 }
             },
             { 
                 id: 6, name: 'Mark Mulder', avatar: 'MM', 
                 phone: '06-67890123', age: 29, hireDate: '12-07-2023',
                 rating: 3.8, points: 2100, role: 'Housekeeping', roleKey: 'housekeeping',
                 status: 'Actief', email: 'mark.mulder@example.com',
-                stats: { shifts: 28, onTime: 78, stayFull: 85, attitude: 80, skills: 75, appearance: 82 }
+                stats: { shifts: 28, onTime: 'bad', appearance: 'neutral', skills: 'neutral', attitude: 'neutral', avgRating: 6, compliments: 0, complaints: 2 }
             },
             { 
                 id: 7, name: 'Nina Smit', avatar: 'NS', 
                 phone: '06-78901234', age: 26, hireDate: '28-02-2022',
                 rating: 4.6, points: 5800, role: 'Receptie', roleKey: 'receptie',
                 status: 'Actief', email: 'nina.smit@example.com',
-                stats: { shifts: 58, onTime: 95, stayFull: 98, attitude: 96, skills: 90, appearance: 95 }
+                stats: { shifts: 58, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 9, compliments: 5, complaints: 0 }
             },
             { 
                 id: 8, name: 'Peter Visser', avatar: 'PV', 
                 phone: '06-89012345', age: 38, hireDate: '03-04-2018',
                 rating: 4.9, points: 8900, role: 'Chef', roleKey: 'chef',
                 status: 'Actief', email: 'peter.visser@example.com',
-                stats: { shifts: 124, onTime: 98, stayFull: 100, attitude: 98, skills: 97, appearance: 95 }
+                stats: { shifts: 124, onTime: 'good', appearance: 'good', skills: 'good', attitude: 'good', avgRating: 9, compliments: 8, complaints: 0 }
             },
             { 
                 id: 9, name: 'Sophie de Vries', avatar: 'SV', 
                 phone: '06-90123456', age: 33, hireDate: '17-08-2021',
                 rating: 4.3, points: 3750, role: 'Horecamedewerker', roleKey: 'horeca',
                 status: 'Inactief', email: 'sophie.devries@example.com',
-                stats: { shifts: 45, onTime: 90, stayFull: 88, attitude: 92, skills: 85, appearance: 90 }
+                stats: { shifts: 45, onTime: 'good', appearance: 'neutral', skills: 'good', attitude: 'good', avgRating: 8, compliments: 2, complaints: 0 }
             },
             { 
                 id: 10, name: 'Thomas Willems', avatar: 'TW', 
                 phone: '06-01234567', age: 27, hireDate: '22-05-2023',
                 rating: 4.1, points: 2850, role: 'Housekeeping', roleKey: 'housekeeping',
                 status: 'Actief', email: 'thomas.willems@example.com',
-                stats: { shifts: 32, onTime: 85, stayFull: 92, attitude: 88, skills: 80, appearance: 85 }
+                stats: { shifts: 32, onTime: 'neutral', appearance: 'neutral', skills: 'neutral', attitude: 'good', avgRating: 7, compliments: 1, complaints: 1 }
             }
         ];
 
@@ -2003,21 +2047,27 @@
             
             // Stats tab
             const stats = user.stats;
-            const expYears = Math.floor((new Date() - parseDate(user.hireDate)) / (1000*60*60*24*365.25));
             document.getElementById('statShifts').textContent = stats.shifts;
-            document.getElementById('statAvgRating').textContent = user.rating.toFixed(1);
-            document.getElementById('statExperience').textContent = expYears < 1 ? '<1' : expYears;
+            document.getElementById('statCompliments').textContent = stats.compliments;
+            document.getElementById('statComplaints').textContent = stats.complaints;
+            document.getElementById('statAvgRating').textContent = stats.avgRating.toFixed(1);
             
-            document.getElementById('bar-ontime').style.width = stats.onTime + '%';
-            document.getElementById('pct-ontime').textContent = stats.onTime + '%';
-            document.getElementById('bar-stayfull').style.width = stats.stayFull + '%';
-            document.getElementById('pct-stayfull').textContent = stats.stayFull + '%';
-            document.getElementById('bar-attitude').style.width = stats.attitude + '%';
-            document.getElementById('pct-attitude').textContent = stats.attitude + '%';
-            document.getElementById('bar-skills').style.width = stats.skills + '%';
-            document.getElementById('pct-skills').textContent = stats.skills + '%';
-            document.getElementById('bar-appearance').style.width = stats.appearance + '%';
-            document.getElementById('pct-appearance').textContent = stats.appearance + '%';
+            // Helper function for emoji based on rating
+            const getEmoji = (val) => {
+                if (val === 'good') return '😊';
+                if (val === 'bad') return '😞';
+                return '😐';
+            };
+            
+            document.getElementById('emoji-ontime').textContent = getEmoji(stats.onTime);
+            document.getElementById('emoji-appearance').textContent = getEmoji(stats.appearance);
+            document.getElementById('emoji-skills').textContent = getEmoji(stats.skills);
+            document.getElementById('emoji-attitude').textContent = getEmoji(stats.attitude);
+            document.getElementById('stat-rating-number').textContent = stats.avgRating;
+            
+            // Update compliments/complaints counts in headers
+            document.getElementById('complimentCount').textContent = stats.compliments;
+            document.getElementById('complaintCount').textContent = stats.complaints;
             
             // Status toggle
             const isActive = user.status === 'Actief';
