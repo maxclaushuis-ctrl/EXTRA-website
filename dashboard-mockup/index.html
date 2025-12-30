@@ -93,6 +93,25 @@
         .resize-option:hover { background: #f3f4f6; }
         .resize-option:first-child { border-radius: 8px 8px 0 0; }
         .resize-option:last-child { border-radius: 0 0 8px 8px; }
+
+        /* Confirmation dialog */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .confirm-dialog {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -282,7 +301,7 @@
                     </div>
                 </div>
 
-                <!-- Stat Cards Row (Original from PDF) -->
+                <!-- Stat Cards Row -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
                     <!-- Total Users -->
                     <div class="stat-card rounded-xl p-5">
@@ -326,16 +345,16 @@
                         </div>
                     </div>
 
-                    <!-- User Growth % -->
+                    <!-- User Growth (CHANGED: now exact numbers) -->
                     <div class="stat-card rounded-xl p-5">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-sm text-gray-500 mb-1">Gebruikersgroei</p>
-                                <p class="text-3xl font-bold text-green-600">+12%</p>
-                                <p class="text-xs text-gray-400 mt-1">t.o.v. vorige periode</p>
+                                <p class="text-3xl font-bold text-green-600">+28</p>
+                                <p class="text-xs text-gray-400 mt-1">Nieuwe gebruikers deze periode</p>
                             </div>
                             <div class="icon-circle icon-green">
-                                <i data-lucide="arrow-up-right" class="w-6 h-6 text-green-500"></i>
+                                <i data-lucide="user-plus" class="w-6 h-6 text-green-500"></i>
                             </div>
                         </div>
                     </div>
@@ -344,7 +363,7 @@
                 <!-- Widgets Grid -->
                 <div id="widgetsContainer" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     
-                    <!-- Top Performers -->
+                    <!-- Top Performers (UPDATED: month/year + function filter) -->
                     <div id="topPerformers" class="widget-card rounded-xl widget-1x1" data-size="1x1">
                         <div class="p-4 border-b border-gray-100 flex items-center justify-between">
                             <div class="flex items-center gap-2">
@@ -352,9 +371,6 @@
                                 <h3 class="font-semibold text-gray-900">Top Presteerders</h3>
                             </div>
                             <div class="flex items-center gap-1 relative">
-                                <select class="text-xs border border-gray-200 rounded px-2 py-1 bg-white">
-                                    <option>Maandelijks</option>
-                                </select>
                                 <button class="drag-handle p-1 hover:bg-gray-100 rounded">
                                     <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400"></i>
                                 </button>
@@ -374,7 +390,31 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="p-4 max-h-80 overflow-y-auto">
+                        <!-- NEW: Month/Year + Function filters -->
+                        <div class="px-4 pt-3 pb-2 border-b border-gray-50 flex flex-wrap gap-2">
+                            <select id="performerMonth" class="text-xs border border-gray-200 rounded px-2 py-1.5 bg-white">
+                                <option value="jan-2025">Jan 2025</option>
+                                <option value="feb-2025">Feb 2025</option>
+                                <option value="mrt-2025">Mrt 2025</option>
+                                <option value="apr-2025">Apr 2025</option>
+                                <option value="mei-2025">Mei 2025</option>
+                                <option value="jun-2025">Jun 2025</option>
+                                <option value="jul-2025">Jul 2025</option>
+                                <option value="aug-2025">Aug 2025</option>
+                                <option value="sep-2025">Sep 2025</option>
+                                <option value="okt-2025">Okt 2025</option>
+                                <option value="nov-2025">Nov 2025</option>
+                                <option value="dec-2025" selected>Dec 2025</option>
+                            </select>
+                            <select id="performerFunction" class="text-xs border border-gray-200 rounded px-2 py-1.5 bg-white">
+                                <option value="all" selected>Alle functies</option>
+                                <option value="housekeeping">Housekeeping</option>
+                                <option value="chef">Chef</option>
+                                <option value="horeca">Horecamedewerker</option>
+                                <option value="receptie">Receptie</option>
+                            </select>
+                        </div>
+                        <div class="p-4 max-h-72 overflow-y-auto">
                             <p class="text-xs text-gray-400 mb-3">Top 10 op basis van verdiende punten</p>
                             <div id="performersList" class="space-y-2"></div>
                         </div>
@@ -424,13 +464,13 @@
                         </div>
                     </div>
 
-                    <!-- To-Do / Action List -->
+                    <!-- To-Do / Action List (UPDATED: now includes challenge approvals with double confirmation) -->
                     <div id="todoList" class="widget-card rounded-xl widget-1x1" data-size="1x1">
                         <div class="p-4 border-b border-gray-100 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="clipboard-check" class="w-5 h-5 text-blue-500"></i>
                                 <h3 class="font-semibold text-gray-900">Te doen</h3>
-                                <span class="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full" id="todoCount">3</span>
+                                <span class="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full" id="todoCount">5</span>
                             </div>
                             <div class="flex items-center gap-1 relative">
                                 <button class="drag-handle p-1 hover:bg-gray-100 rounded">
@@ -452,20 +492,28 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="p-4 max-h-80 overflow-y-auto">
-                            <p class="text-xs text-gray-400 mb-3">Beloningen die handmatige actie vereisen</p>
+                        <div class="p-4 max-h-96 overflow-y-auto">
+                            <p class="text-xs text-gray-400 mb-3">Beloningen en challenges die handmatige actie vereisen</p>
                             <div id="todoItems" class="space-y-3"></div>
                         </div>
                     </div>
 
-                    <!-- Most Redeemed Rewards - 2 columns wide -->
+                    <!-- Most Redeemed Rewards (UPDATED: category filter) - 2 columns wide -->
                     <div id="topRewards" class="widget-card rounded-xl widget-2x1" data-size="2x1">
                         <div class="p-4 border-b border-gray-100 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="gift" class="w-5 h-5 text-pink-500"></i>
                                 <h3 class="font-semibold text-gray-900">Meest Ingewisselde Beloningen</h3>
                             </div>
-                            <div class="flex items-center gap-1 relative">
+                            <div class="flex items-center gap-2 relative">
+                                <!-- NEW: Category filter -->
+                                <select id="rewardCategory" class="text-xs border border-gray-200 rounded px-2 py-1.5 bg-white">
+                                    <option value="all" selected>Alle categorieën</option>
+                                    <option value="cadeaubonnen">Cadeaubonnen</option>
+                                    <option value="uitjes">Uitjes & Activiteiten</option>
+                                    <option value="abonnementen">Abonnementen</option>
+                                    <option value="vouchers">Vouchers</option>
+                                </select>
                                 <button class="drag-handle p-1 hover:bg-gray-100 rounded">
                                     <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400"></i>
                                 </button>
@@ -492,6 +540,7 @@
                                     <tr class="text-left text-xs text-gray-500 uppercase tracking-wider">
                                         <th class="pb-3 font-medium">#</th>
                                         <th class="pb-3 font-medium">Beloning</th>
+                                        <th class="pb-3 font-medium">Categorie</th>
                                         <th class="pb-3 text-right font-medium">Inwisselingen</th>
                                         <th class="pb-3 text-right font-medium">Totaal punten</th>
                                     </tr>
@@ -552,6 +601,36 @@
         </main>
     </div>
 
+    <!-- Confirmation Dialog (for double approval) -->
+    <div id="confirmDialog" class="confirm-overlay" style="display: none;">
+        <div class="confirm-dialog">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-orange-500"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900" id="confirmTitle">Actie bevestigen</h3>
+                    <p class="text-sm text-gray-500" id="confirmSubtitle">Weet je zeker dat je dit wilt doen?</p>
+                </div>
+            </div>
+            <div id="confirmDetails" class="p-3 bg-gray-50 rounded-lg mb-4 text-sm">
+                <!-- Dynamic content -->
+            </div>
+            <p class="text-sm text-orange-600 mb-4 flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                <span>Deze actie kan niet ongedaan worden gemaakt.</span>
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmDialog()" class="flex-1 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Annuleren
+                </button>
+                <button onclick="executeConfirmedAction()" id="confirmButton" class="flex-1 py-2.5 px-4 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+                    Ja, bevestig
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -577,24 +656,71 @@
             { name: 'Eva de Jong', role: 'Receptie', lastActive: '31 dagen', avatar: 'EJ' }
         ];
 
+        // UPDATED: Todo items now include different types (rewards AND challenges)
         const todoItems = [
-            { user: 'Emma de Vries', reward: 'Wellness Dagje', date: '2 dagen geleden', status: 'pending' },
-            { user: 'Jan Bakker', reward: 'Bol.com Cadeaubon €50', date: '3 dagen geleden', status: 'pending' },
-            { user: 'Sophie Jansen', reward: 'Bioscoop Tickets', date: '5 dagen geleden', status: 'pending' }
+            { 
+                id: 1,
+                type: 'reward', 
+                user: 'Emma de Vries', 
+                title: 'Wellness Dagje', 
+                description: 'Beloning verzilverd - bestelling plaatsen',
+                date: '2 dagen geleden',
+                points: 500
+            },
+            { 
+                id: 2,
+                type: 'reward', 
+                user: 'Jan Bakker', 
+                title: 'Bol.com Cadeaubon €50', 
+                description: 'Beloning verzilverd - code versturen',
+                date: '3 dagen geleden',
+                points: 1000
+            },
+            { 
+                id: 3,
+                type: 'challenge', 
+                user: 'Sophie Jansen', 
+                title: 'Google Review geschreven', 
+                description: 'Medewerker claimt challenge te hebben voltooid',
+                date: '1 dag geleden',
+                points: 100
+            },
+            { 
+                id: 4,
+                type: 'challenge', 
+                user: 'Thomas van Dijk', 
+                title: 'Vriend aangedragen', 
+                description: 'Referral ingediend - verificatie vereist',
+                date: '4 uur geleden',
+                points: 250
+            },
+            { 
+                id: 5,
+                type: 'challenge', 
+                user: 'Lisa Mulder', 
+                title: 'Social Media Story gedeeld', 
+                description: 'Screenshot ingediend ter beoordeling',
+                date: '6 uur geleden',
+                points: 75
+            }
         ];
 
+        // UPDATED: Rewards now have categories
         const topRewards = [
-            { name: 'Bol.com Cadeaubon €25', redemptions: 45, points: 11250 },
-            { name: 'Bioscoop Tickets (2x)', redemptions: 32, points: 6400 },
-            { name: 'Wellness Dagje', redemptions: 18, points: 9000 },
-            { name: 'Restaurant Voucher €30', redemptions: 15, points: 4500 },
-            { name: 'Spotify Premium (3 mnd)', redemptions: 12, points: 2400 }
+            { name: 'Bol.com Cadeaubon €25', category: 'Cadeaubonnen', redemptions: 45, points: 11250 },
+            { name: 'Bioscoop Tickets (2x)', category: 'Uitjes & Activiteiten', redemptions: 32, points: 6400 },
+            { name: 'Wellness Dagje', category: 'Uitjes & Activiteiten', redemptions: 18, points: 9000 },
+            { name: 'Restaurant Voucher €30', category: 'Vouchers', redemptions: 15, points: 4500 },
+            { name: 'Spotify Premium (3 mnd)', category: 'Abonnementen', redemptions: 12, points: 2400 }
         ];
 
         const recentActivities = [
             { user: 'Test User One', action: 'Voltooid', detail: 'Completed step "Complete 10 Shifts" in challenge "Complete 10 Shifts"', time: '8 days ago', type: 'challenge' },
             { user: 'Test User Two', action: 'Voltooid', detail: 'Completed step "Complete 10 Shifts" in challenge "Complete 10 Shifts"', time: '8 days ago', type: 'challenge' }
         ];
+
+        // Current pending action for confirmation
+        let pendingAction = null;
 
         // Render functions
         function renderPerformers() {
@@ -626,33 +752,78 @@
             `).join('');
         }
 
+        // UPDATED: Render todo items with different types and approve/reject buttons
         function renderTodoItems() {
             const container = document.getElementById('todoItems');
-            container.innerHTML = todoItems.map(t => `
-                <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-900">${t.reward}</span>
-                        <span class="text-xs text-gray-400">${t.date}</span>
+            
+            const typeStyles = {
+                reward: { 
+                    icon: 'gift', 
+                    bg: 'bg-pink-50', 
+                    iconBg: 'bg-pink-100', 
+                    iconColor: 'text-pink-500',
+                    label: 'Beloning',
+                    labelBg: 'bg-pink-100 text-pink-700'
+                },
+                challenge: { 
+                    icon: 'target', 
+                    bg: 'bg-purple-50', 
+                    iconBg: 'bg-purple-100', 
+                    iconColor: 'text-purple-500',
+                    label: 'Challenge',
+                    labelBg: 'bg-purple-100 text-purple-700'
+                }
+            };
+
+            container.innerHTML = todoItems.map(t => {
+                const style = typeStyles[t.type];
+                return `
+                <div class="p-3 ${style.bg} rounded-lg border border-gray-100" data-id="${t.id}">
+                    <div class="flex items-start gap-3 mb-2">
+                        <div class="w-8 h-8 ${style.iconBg} rounded-full flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="${style.icon}" class="w-4 h-4 ${style.iconColor}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm font-medium text-gray-900">${t.title}</span>
+                                <span class="text-xs px-1.5 py-0.5 rounded ${style.labelBg}">${style.label}</span>
+                            </div>
+                            <p class="text-xs text-gray-500">${t.description}</p>
+                            <p class="text-xs text-gray-400 mt-1">Door: ${t.user} • ${t.date} • ${t.points} punten</p>
+                        </div>
                     </div>
-                    <p class="text-xs text-gray-500 mb-3">Aangevraagd door: ${t.user}</p>
-                    <div class="flex gap-2">
-                        <button onclick="completeTodo(this)" class="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-1">
-                            <i data-lucide="check" class="w-3 h-3"></i>
-                            Markeer als afgerond
-                        </button>
+                    <div class="flex gap-2 mt-3">
+                        ${t.type === 'challenge' ? `
+                            <button onclick="showConfirmDialog('reject', ${t.id}, '${t.title}', '${t.user}')" class="flex-1 py-1.5 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50 flex items-center justify-center gap-1">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                                Afwijzen
+                            </button>
+                            <button onclick="showConfirmDialog('approve', ${t.id}, '${t.title}', '${t.user}')" class="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-1">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                                Goedkeuren
+                            </button>
+                        ` : `
+                            <button onclick="showConfirmDialog('complete', ${t.id}, '${t.title}', '${t.user}')" class="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-1">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                                Markeer als afgerond
+                            </button>
+                        `}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+            
             document.getElementById('todoCount').textContent = todoItems.length;
             lucide.createIcons();
         }
 
+        // UPDATED: Rewards table with category column
         function renderRewardsTable() {
             const container = document.getElementById('rewardsTable');
             container.innerHTML = topRewards.map((r, i) => `
                 <tr class="border-t border-gray-100">
                     <td class="py-3 text-gray-400">${i + 1}</td>
                     <td class="py-3 font-medium text-gray-900">${r.name}</td>
+                    <td class="py-3 text-gray-500 text-xs">${r.category}</td>
                     <td class="py-3 text-right text-gray-600">${r.redemptions}x</td>
                     <td class="py-3 text-right font-medium text-purple-600">${r.points.toLocaleString()}</td>
                 </tr>
@@ -679,6 +850,80 @@
             lucide.createIcons();
         }
 
+        // Confirmation dialog functions (DOUBLE APPROVAL)
+        function showConfirmDialog(action, id, title, user) {
+            pendingAction = { action, id, title, user };
+            
+            const dialog = document.getElementById('confirmDialog');
+            const titleEl = document.getElementById('confirmTitle');
+            const subtitleEl = document.getElementById('confirmSubtitle');
+            const detailsEl = document.getElementById('confirmDetails');
+            const confirmBtn = document.getElementById('confirmButton');
+            
+            if (action === 'approve') {
+                titleEl.textContent = 'Challenge goedkeuren';
+                subtitleEl.textContent = 'Controleer de gegevens voordat je goedkeurt';
+                detailsEl.innerHTML = `
+                    <p class="font-medium text-gray-900 mb-1">${title}</p>
+                    <p class="text-gray-600">Ingediend door: ${user}</p>
+                    <p class="text-green-600 mt-2">✓ Punten worden toegekend na bevestiging</p>
+                `;
+                confirmBtn.textContent = 'Ja, goedkeuren';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700';
+            } else if (action === 'reject') {
+                titleEl.textContent = 'Challenge afwijzen';
+                subtitleEl.textContent = 'De medewerker ontvangt geen punten';
+                detailsEl.innerHTML = `
+                    <p class="font-medium text-gray-900 mb-1">${title}</p>
+                    <p class="text-gray-600">Ingediend door: ${user}</p>
+                    <p class="text-red-600 mt-2">✗ Medewerker wordt geïnformeerd over afwijzing</p>
+                `;
+                confirmBtn.textContent = 'Ja, afwijzen';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700';
+            } else if (action === 'complete') {
+                titleEl.textContent = 'Beloning als afgerond markeren';
+                subtitleEl.textContent = 'Bevestig dat de bestelling is verwerkt';
+                detailsEl.innerHTML = `
+                    <p class="font-medium text-gray-900 mb-1">${title}</p>
+                    <p class="text-gray-600">Aangevraagd door: ${user}</p>
+                    <p class="text-blue-600 mt-2">📦 Markeer alleen als de bestelling daadwerkelijk is verwerkt</p>
+                `;
+                confirmBtn.textContent = 'Ja, afgerond';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700';
+            }
+            
+            dialog.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').style.display = 'none';
+            pendingAction = null;
+        }
+
+        function executeConfirmedAction() {
+            if (!pendingAction) return;
+            
+            const { action, id, title } = pendingAction;
+            const card = document.querySelector(`[data-id="${id}"]`);
+            
+            if (card) {
+                card.style.opacity = '0.5';
+                card.style.pointerEvents = 'none';
+                
+                // Find the item in todoItems and remove it
+                const index = todoItems.findIndex(t => t.id === id);
+                if (index > -1) {
+                    setTimeout(() => {
+                        todoItems.splice(index, 1);
+                        renderTodoItems();
+                    }, 500);
+                }
+            }
+            
+            closeConfirmDialog();
+        }
+
         // Widget resize functionality
         function toggleResizeMenu(button) {
             document.querySelectorAll('.resize-menu').forEach(menu => {
@@ -698,7 +943,7 @@
             lucide.createIcons();
         }
 
-        // Close resize menus when clicking outside
+        // Close menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.resize-menu') && !e.target.closest('[onclick*="toggleResizeMenu"]')) {
                 document.querySelectorAll('.resize-menu').forEach(menu => menu.classList.remove('show'));
@@ -717,19 +962,6 @@
 
         function toggleWidget(widgetId) {
             document.getElementById(widgetId).classList.toggle('widget-hidden');
-        }
-
-        function completeTodo(button) {
-            const card = button.closest('.p-3');
-            card.style.opacity = '0.5';
-            button.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Verwerkt!';
-            button.disabled = true;
-            lucide.createIcons();
-            setTimeout(() => {
-                card.remove();
-                const count = document.querySelectorAll('#todoItems .p-3').length;
-                document.getElementById('todoCount').textContent = count;
-            }, 1000);
         }
 
         function updateInactiveUsers() {
