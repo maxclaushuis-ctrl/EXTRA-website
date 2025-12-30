@@ -134,13 +134,13 @@
                 <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3 px-3">Beheer</p>
                 <ul class="space-y-1">
                     <li>
-                        <a href="#" class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+                        <a href="#" onclick="showPage('dashboard'); return false;" id="nav-dashboard" class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
                             <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                             Dashboard
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <a href="#" onclick="showPage('users'); return false;" id="nav-users" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
                             <i data-lucide="users" class="w-5 h-5"></i>
                             Gebruikers
                         </a>
@@ -215,7 +215,7 @@
             </header>
 
             <!-- Main Dashboard Content -->
-            <div class="p-8">
+            <div id="page-dashboard" class="p-8">
                 <!-- Page Title -->
                 <div class="mb-6">
                     <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -601,6 +601,162 @@
 
                 <!-- Footer -->
                 <footer class="text-center py-6 border-t border-gray-200">
+                    <p class="text-sm text-gray-400">&copy; 2024 EXTRAATJE. Gemaakt met ❤️ voor geweldige teams</p>
+                    <div class="flex justify-center gap-6 mt-2">
+                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Privacybeleid</a>
+                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Algemene Voorwaarden</a>
+                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Ondersteuning</a>
+                    </div>
+                </footer>
+            </div>
+
+            <!-- Users Page Content -->
+            <div id="page-users" class="p-8 hidden">
+                <!-- Page Title -->
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Gebruikersbeheer</h1>
+                    <p class="text-gray-500">Beheer medewerkeraccounts, rollen en punten</p>
+                </div>
+
+                <!-- Search and Controls -->
+                <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6 shadow-sm">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex-1 min-w-64">
+                            <div class="relative">
+                                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                <input type="text" id="userSearch" placeholder="Zoek op naam of e-mail..." 
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    oninput="filterUsers()">
+                            </div>
+                        </div>
+                        <select id="userRoleFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterUsers()">
+                            <option value="all">Alle functies</option>
+                            <option value="housekeeping">Housekeeping</option>
+                            <option value="chef">Chef</option>
+                            <option value="horeca">Horecamedewerker</option>
+                            <option value="receptie">Receptie</option>
+                        </select>
+                        <button onclick="toggleColumnSettings()" class="flex items-center gap-2 px-3 py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50">
+                            <i data-lucide="columns" class="w-4 h-4"></i>
+                            Kolommen kiezen
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            CSV Importeren
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            CSV Exporteren
+                        </button>
+                        <button class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Gebruiker Toevoegen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Column Settings Panel -->
+                <div id="columnSettings" class="hidden mb-6 p-4 bg-purple-50 rounded-xl border border-purple-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-purple-900 flex items-center gap-2">
+                            <i data-lucide="columns" class="w-5 h-5"></i>
+                            Kolommen kiezen
+                        </h3>
+                        <button onclick="toggleColumnSettings()" class="text-purple-600 hover:text-purple-800">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-purple-700 mb-4">Selecteer welke kolommen je in het overzicht wilt tonen.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('name')" id="col-name" class="rounded text-purple-600">
+                            <span class="text-sm">Naam</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('phone')" id="col-phone" class="rounded text-purple-600">
+                            <span class="text-sm">Telefoonnummer</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('age')" id="col-age" class="rounded text-purple-600">
+                            <span class="text-sm">Leeftijd</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('hireDate')" id="col-hireDate" class="rounded text-purple-600">
+                            <span class="text-sm">Datum in dienst</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('rating')" id="col-rating" class="rounded text-purple-600">
+                            <span class="text-sm">Gem. beoordeling</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('points')" id="col-points" class="rounded text-purple-600">
+                            <span class="text-sm">Totaal punten</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('role')" id="col-role" class="rounded text-purple-600">
+                            <span class="text-sm">Functie</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
+                            <input type="checkbox" checked onchange="toggleColumn('status')" id="col-status" class="rounded text-purple-600">
+                            <span class="text-sm">Status</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                    <div class="stat-card rounded-xl p-5">
+                        <p class="text-sm text-gray-500 mb-1">Totaal Gebruikers</p>
+                        <p class="text-3xl font-bold text-gray-900" id="totalUsersCount">10</p>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <p class="text-sm text-gray-500 mb-1">Actieve Gebruikers</p>
+                        <p class="text-3xl font-bold text-green-600" id="activeUsersCount">9</p>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <p class="text-sm text-gray-500 mb-1">Totaal Punten</p>
+                        <p class="text-3xl font-bold text-purple-600" id="totalPointsSum">42,850</p>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-100">
+                                <tr class="text-left text-xs text-gray-500 uppercase tracking-wider">
+                                    <th class="px-4 py-3 font-medium col-name">Naam</th>
+                                    <th class="px-4 py-3 font-medium col-phone">Telefoonnummer</th>
+                                    <th class="px-4 py-3 font-medium col-age">Leeftijd</th>
+                                    <th class="px-4 py-3 font-medium col-hireDate">Datum in dienst</th>
+                                    <th class="px-4 py-3 font-medium col-rating">Gem. beoordeling</th>
+                                    <th class="px-4 py-3 font-medium col-points">Totaal punten</th>
+                                    <th class="px-4 py-3 font-medium col-role">Functie</th>
+                                    <th class="px-4 py-3 font-medium col-status">Status</th>
+                                    <th class="px-4 py-3 font-medium">Acties</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="text-sm divide-y divide-gray-100">
+                                <!-- Generated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+                        <p class="text-sm text-gray-500" id="usersResultCount">Toont 1 tot 10 van 10 resultaten</p>
+                        <div class="flex items-center gap-2">
+                            <button class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500">
+                                &lt; Vorige
+                            </button>
+                            <span class="px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg font-medium">1</span>
+                            <button class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500">
+                                Volgende &gt;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="text-center py-6 border-t border-gray-200 mt-8">
                     <p class="text-sm text-gray-400">&copy; 2024 EXTRAATJE. Gemaakt met ❤️ voor geweldige teams</p>
                     <div class="flex justify-center gap-6 mt-2">
                         <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Privacybeleid</a>
@@ -1105,6 +1261,226 @@
                 handle: '.drag-handle',
                 ghostClass: 'sortable-ghost'
             });
+        }
+
+        // =====================================
+        // USERS PAGE DATA AND FUNCTIONS
+        // =====================================
+        
+        // 10 test users, sorted alphabetically by last name
+        const allUsers = [
+            { 
+                id: 1, name: 'Anna Bakker', avatar: 'AB', 
+                phone: '06-12345678', age: 28, hireDate: '15-03-2022',
+                rating: 4.5, points: 3250, role: 'Housekeeping', roleKey: 'housekeeping',
+                status: 'Actief', email: 'anna.bakker@example.com'
+            },
+            { 
+                id: 2, name: 'Dennis de Groot', avatar: 'DG', 
+                phone: '06-23456789', age: 35, hireDate: '01-06-2021',
+                rating: 4.8, points: 6500, role: 'Chef', roleKey: 'chef',
+                status: 'Actief', email: 'dennis.degroot@example.com'
+            },
+            { 
+                id: 3, name: 'Emma van Dijk', avatar: 'ED', 
+                phone: '06-34567890', age: 24, hireDate: '10-01-2024',
+                rating: 4.2, points: 1850, role: 'Receptie', roleKey: 'receptie',
+                status: 'Actief', email: 'emma.vandijk@example.com'
+            },
+            { 
+                id: 4, name: 'Jan Hendriks', avatar: 'JH', 
+                phone: '06-45678901', age: 42, hireDate: '20-09-2019',
+                rating: 5.0, points: 12500, role: 'Chef', roleKey: 'chef',
+                status: 'Actief', email: 'jan.hendriks@example.com'
+            },
+            { 
+                id: 5, name: 'Lisa Jansen', avatar: 'LJ', 
+                phone: '06-56789012', age: 31, hireDate: '05-11-2020',
+                rating: 4.0, points: 4200, role: 'Horecamedewerker', roleKey: 'horeca',
+                status: 'Actief', email: 'lisa.jansen@example.com'
+            },
+            { 
+                id: 6, name: 'Mark Mulder', avatar: 'MM', 
+                phone: '06-67890123', age: 29, hireDate: '12-07-2023',
+                rating: 3.8, points: 2100, role: 'Housekeeping', roleKey: 'housekeeping',
+                status: 'Actief', email: 'mark.mulder@example.com'
+            },
+            { 
+                id: 7, name: 'Nina Smit', avatar: 'NS', 
+                phone: '06-78901234', age: 26, hireDate: '28-02-2022',
+                rating: 4.6, points: 5800, role: 'Receptie', roleKey: 'receptie',
+                status: 'Actief', email: 'nina.smit@example.com'
+            },
+            { 
+                id: 8, name: 'Peter Visser', avatar: 'PV', 
+                phone: '06-89012345', age: 38, hireDate: '03-04-2018',
+                rating: 4.9, points: 8900, role: 'Chef', roleKey: 'chef',
+                status: 'Actief', email: 'peter.visser@example.com'
+            },
+            { 
+                id: 9, name: 'Sophie de Vries', avatar: 'SV', 
+                phone: '06-90123456', age: 33, hireDate: '17-08-2021',
+                rating: 4.3, points: 3750, role: 'Horecamedewerker', roleKey: 'horeca',
+                status: 'Inactief', email: 'sophie.devries@example.com'
+            },
+            { 
+                id: 10, name: 'Thomas Willems', avatar: 'TW', 
+                phone: '06-01234567', age: 27, hireDate: '22-05-2023',
+                rating: 4.1, points: 2850, role: 'Housekeeping', roleKey: 'housekeeping',
+                status: 'Actief', email: 'thomas.willems@example.com'
+            }
+        ];
+
+        // Badge based on points
+        function getBadge(points) {
+            if (points >= 10000) return '🏅'; // Legend
+            if (points >= 6000) return '🥇';  // Gold
+            if (points >= 4000) return '🥈';  // Silver
+            if (points >= 2000) return '🥉';  // Bronze
+            return '';
+        }
+
+        // Star rating display
+        function renderStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalf = rating % 1 >= 0.5;
+            let stars = '';
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    stars += '<i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400 inline-block"></i>';
+                } else if (i === fullStars && hasHalf) {
+                    stars += '<i data-lucide="star-half" class="w-4 h-4 text-yellow-400 fill-yellow-400 inline-block"></i>';
+                } else {
+                    stars += '<i data-lucide="star" class="w-4 h-4 text-gray-300 inline-block"></i>';
+                }
+            }
+            return `<span class="inline-flex items-center gap-0.5">${stars} <span class="text-gray-500 ml-1">${rating.toFixed(1)}</span></span>`;
+        }
+
+        // Page navigation
+        function showPage(page) {
+            // Hide all pages
+            document.getElementById('page-dashboard').classList.add('hidden');
+            document.getElementById('page-users').classList.add('hidden');
+            
+            // Remove active state from all nav items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+                item.classList.add('text-gray-500');
+            });
+            
+            // Show selected page and set active nav
+            if (page === 'dashboard') {
+                document.getElementById('page-dashboard').classList.remove('hidden');
+                document.getElementById('nav-dashboard').classList.add('active');
+                document.getElementById('nav-dashboard').classList.remove('text-gray-500');
+            } else if (page === 'users') {
+                document.getElementById('page-users').classList.remove('hidden');
+                document.getElementById('nav-users').classList.add('active');
+                document.getElementById('nav-users').classList.remove('text-gray-500');
+                renderUsersTable();
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Column visibility
+        const columnVisibility = {
+            name: true, phone: true, age: true, hireDate: true,
+            rating: true, points: true, role: true, status: true
+        };
+
+        function toggleColumnSettings() {
+            document.getElementById('columnSettings').classList.toggle('hidden');
+            lucide.createIcons();
+        }
+
+        function toggleColumn(column) {
+            columnVisibility[column] = !columnVisibility[column];
+            renderUsersTable();
+        }
+
+        // Filter users
+        function filterUsers() {
+            renderUsersTable();
+        }
+
+        // Render users table
+        function renderUsersTable() {
+            const search = document.getElementById('userSearch').value.toLowerCase();
+            const roleFilter = document.getElementById('userRoleFilter').value;
+            
+            let filtered = allUsers.filter(u => {
+                const matchesSearch = u.name.toLowerCase().includes(search) || 
+                                     u.email.toLowerCase().includes(search);
+                const matchesRole = roleFilter === 'all' || u.roleKey === roleFilter;
+                return matchesSearch && matchesRole;
+            });
+            
+            const container = document.getElementById('usersTableBody');
+            
+            container.innerHTML = filtered.map(u => {
+                const badge = getBadge(u.points);
+                const statusClass = u.status === 'Actief' ? 'text-green-600' : 'text-gray-400';
+                
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 col-name ${columnVisibility.name ? '' : 'hidden'}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">${u.avatar}</div>
+                            <div>
+                                <span class="font-medium text-gray-900">${u.name}</span>
+                                ${badge ? `<span class="ml-1">${badge}</span>` : ''}
+                                <p class="text-xs text-gray-400">${u.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600 col-phone ${columnVisibility.phone ? '' : 'hidden'}">${u.phone}</td>
+                    <td class="px-4 py-3 text-gray-600 col-age ${columnVisibility.age ? '' : 'hidden'}">${u.age} jaar</td>
+                    <td class="px-4 py-3 text-gray-600 col-hireDate ${columnVisibility.hireDate ? '' : 'hidden'}">${u.hireDate}</td>
+                    <td class="px-4 py-3 col-rating ${columnVisibility.rating ? '' : 'hidden'}">${renderStars(u.rating)}</td>
+                    <td class="px-4 py-3 col-points ${columnVisibility.points ? '' : 'hidden'}">
+                        <span class="flex items-center gap-1">
+                            <i data-lucide="award" class="w-4 h-4 text-purple-500"></i>
+                            <span class="font-medium text-purple-600">${u.points.toLocaleString()}</span>
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 col-role ${columnVisibility.role ? '' : 'hidden'}">
+                        <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">${u.role}</span>
+                    </td>
+                    <td class="px-4 py-3 col-status ${columnVisibility.status ? '' : 'hidden'}">
+                        <span class="${statusClass} font-medium">${u.status}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <button class="p-1.5 hover:bg-gray-100 rounded">
+                            <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+            
+            // Update column header visibility
+            document.querySelectorAll('th.col-name').forEach(el => el.classList.toggle('hidden', !columnVisibility.name));
+            document.querySelectorAll('th.col-phone').forEach(el => el.classList.toggle('hidden', !columnVisibility.phone));
+            document.querySelectorAll('th.col-age').forEach(el => el.classList.toggle('hidden', !columnVisibility.age));
+            document.querySelectorAll('th.col-hireDate').forEach(el => el.classList.toggle('hidden', !columnVisibility.hireDate));
+            document.querySelectorAll('th.col-rating').forEach(el => el.classList.toggle('hidden', !columnVisibility.rating));
+            document.querySelectorAll('th.col-points').forEach(el => el.classList.toggle('hidden', !columnVisibility.points));
+            document.querySelectorAll('th.col-role').forEach(el => el.classList.toggle('hidden', !columnVisibility.role));
+            document.querySelectorAll('th.col-status').forEach(el => el.classList.toggle('hidden', !columnVisibility.status));
+            
+            // Update result count
+            document.getElementById('usersResultCount').textContent = 
+                `Toont 1 tot ${filtered.length} van ${filtered.length} resultaten`;
+            
+            // Update stats
+            const totalPoints = filtered.reduce((sum, u) => sum + u.points, 0);
+            const activeCount = filtered.filter(u => u.status === 'Actief').length;
+            document.getElementById('totalUsersCount').textContent = filtered.length;
+            document.getElementById('activeUsersCount').textContent = activeCount;
+            document.getElementById('totalPointsSum').textContent = totalPoints.toLocaleString();
+            
+            lucide.createIcons();
         }
 
         // Initialize on load
