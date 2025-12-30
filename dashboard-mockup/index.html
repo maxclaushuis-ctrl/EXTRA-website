@@ -775,6 +775,372 @@
         </main>
     </div>
 
+    <!-- User Preview Modal (click on name) -->
+    <div id="userPreviewModal" class="confirm-overlay" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div id="previewAvatar" class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-lg font-semibold text-purple-600"></div>
+                        <div>
+                            <h2 id="previewName" class="text-xl font-bold text-gray-900"></h2>
+                            <p id="previewRole" class="text-sm text-gray-500"></p>
+                        </div>
+                    </div>
+                    <button onclick="closeUserPreview()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">E-mail</p>
+                        <p id="previewEmail" class="text-sm font-medium text-gray-900"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">Telefoon</p>
+                        <p id="previewPhone" class="text-sm font-medium text-gray-900"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">Leeftijd</p>
+                        <p id="previewAge" class="text-sm font-medium text-gray-900"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">Ervaring</p>
+                        <p id="previewExperience" class="text-sm font-medium text-gray-900"></p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
+                    <div>
+                        <p class="text-sm text-purple-600">Totaal punten</p>
+                        <p id="previewPoints" class="text-2xl font-bold text-purple-700"></p>
+                    </div>
+                    <div id="previewBadge" class="text-3xl"></div>
+                </div>
+                <button onclick="closeUserPreview(); openUserModal(currentPreviewUserId, 'profile');" class="w-full mt-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center justify-center gap-2">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                    Details bewerken
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Detail Modal (full profile) -->
+    <div id="userDetailModal" class="confirm-overlay" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div id="modalAvatar" class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-lg font-semibold text-purple-600"></div>
+                        <div>
+                            <h2 id="modalName" class="text-xl font-bold text-gray-900"></h2>
+                            <p class="text-sm text-gray-500">Details en activiteiten van deze medewerker bekijken en bewerken</p>
+                        </div>
+                    </div>
+                    <button onclick="closeUserModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="border-b border-gray-100">
+                <nav class="flex gap-1 px-6">
+                    <button onclick="switchModalTab('profile')" id="tab-profile" class="modal-tab px-4 py-3 text-sm font-medium border-b-2 border-purple-600 text-purple-600 flex items-center gap-2">
+                        <i data-lucide="user" class="w-4 h-4"></i> Profiel
+                    </button>
+                    <button onclick="switchModalTab('points')" id="tab-points" class="modal-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-4 h-4"></i> Punten & Beloningen
+                    </button>
+                    <button onclick="switchModalTab('challenges')" id="tab-challenges" class="modal-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                        <i data-lucide="target" class="w-4 h-4"></i> Uitdagingen
+                    </button>
+                    <button onclick="switchModalTab('activity')" id="tab-activity" class="modal-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4"></i> Activiteit
+                    </button>
+                    <button onclick="switchModalTab('stats')" id="tab-stats" class="modal-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Statistieken
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Profile Tab -->
+                <div id="content-profile" class="modal-content">
+                    <div class="mb-6">
+                        <h3 class="font-medium text-gray-900 mb-3">Profielfoto</h3>
+                        <div class="flex items-center gap-4">
+                            <div id="modalProfilePhoto" class="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center">
+                                <i data-lucide="user" class="w-10 h-10 text-gray-400"></i>
+                            </div>
+                            <div>
+                                <button class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
+                                    <i data-lucide="upload" class="w-4 h-4"></i> Afbeelding Uploaden
+                                </button>
+                                <p class="text-xs text-gray-400 mt-1">Aanbevolen: 500x500px, PNG of JPG</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Voornaam *</label>
+                            <input type="text" id="editFirstName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Achternaam *</label>
+                            <input type="text" id="editLastName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
+                            <input type="email" id="editEmail" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
+                            <input type="tel" id="editPhone" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Geboortedatum</label>
+                            <input type="text" id="editBirthDate" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="DD-MM-YYYY">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
+                            <select id="editRole" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                                <option value="employee">Gebruiker</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type Medewerker</label>
+                            <select id="editEmployeeType" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                                <option value="chef">Chef</option>
+                                <option value="housekeeping">Housekeeping</option>
+                                <option value="horeca">Horecamedewerker</option>
+                                <option value="receptie">Receptie</option>
+                                <option value="algemeen">Algemeen</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <div class="flex items-center gap-3 mt-2">
+                                <button id="statusToggle" onclick="toggleUserStatus()" class="w-12 h-6 bg-purple-600 rounded-full relative">
+                                    <span class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full transition-all"></span>
+                                </button>
+                                <span id="statusLabel" class="text-sm text-gray-700">Actief</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                        <button onclick="closeUserModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Annuleren</button>
+                        <button class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Gebruiker Bijwerken</button>
+                    </div>
+                </div>
+
+                <!-- Points Tab -->
+                <div id="content-points" class="modal-content hidden">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-4">Punten overzicht</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 border border-gray-100 rounded-lg">
+                                    <span class="text-gray-600">Huidige punten</span>
+                                    <span id="modalCurrentPoints" class="text-xl font-bold text-purple-600">0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 border border-gray-100 rounded-lg">
+                                    <span class="text-gray-600">Totaal verdiend</span>
+                                    <span id="modalTotalEarned" class="font-semibold text-gray-900">0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 border border-gray-100 rounded-lg">
+                                    <span class="text-gray-600">Totaal verzilverd</span>
+                                    <span id="modalTotalRedeemed" class="font-semibold text-gray-900">0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 border border-gray-100 rounded-lg">
+                                    <span class="text-gray-600">Verzilverde beloningen</span>
+                                    <span id="modalRewardCount" class="font-semibold text-gray-900">0</span>
+                                </div>
+                            </div>
+                            <button class="w-full mt-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center justify-center gap-2">
+                                <i data-lucide="award" class="w-4 h-4"></i> Punten toekennen
+                            </button>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-4">Recente beloningen</h3>
+                            <div id="modalRecentRewards" class="bg-gray-50 rounded-xl p-6 text-center text-gray-500 text-sm">
+                                Nog geen beloningen verzilverd
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Challenges Tab -->
+                <div id="content-challenges" class="modal-content hidden">
+                    <div id="modalChallenges" class="space-y-4">
+                        <!-- Challenge item example -->
+                        <div class="border border-gray-100 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Complete 10 Shifts</h4>
+                                    <p class="text-sm text-gray-500">Complete 10 Shifts</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded">
+                                        <i data-lucide="refresh-cw" class="w-4 h-4 text-gray-400"></i>
+                                    </button>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1">
+                                        <i data-lucide="check-circle" class="w-3 h-3"></i> Voltooid
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 mb-2">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Stap 1 van 1: 10 diensten</span>
+                                    <span class="text-green-600 font-medium">20 punten</span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mb-2">
+                                    <span>Huidige Voortgang: 10/10</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-400">Voltooid op 22 Dec 2025</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Tab -->
+                <div id="content-activity" class="modal-content hidden">
+                    <h3 class="font-semibold text-gray-900 mb-2">Recente activiteiten</h3>
+                    <p class="text-sm text-gray-500 mb-4">Punten transacties en verzilveringen</p>
+                    <div id="modalActivities" class="space-y-3">
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">Completed step "Complete 10 Shifts" in challenge "Complete 10 Shifts"</p>
+                                <p class="text-xs text-gray-500">22 Dec 2025 om 14:22</p>
+                                <span class="inline-block mt-1 px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">challenge complete</span>
+                            </div>
+                            <span class="text-green-600 font-semibold">+20 pnt</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Tab -->
+                <div id="content-stats" class="modal-content hidden">
+                    <div class="mb-6">
+                        <h3 class="font-semibold text-gray-900 mb-1">Werkstatistieken</h3>
+                        <p class="text-sm text-gray-500">Overzicht van diensten en beoordelingen</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-purple-50 rounded-xl p-4 text-center">
+                            <p id="statShifts" class="text-3xl font-bold text-purple-600">42</p>
+                            <p class="text-sm text-gray-600">Diensten</p>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-4 text-center">
+                            <p id="statAvgRating" class="text-3xl font-bold text-green-600">4.5</p>
+                            <p class="text-sm text-gray-600">Gem. beoordeling</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-4 text-center">
+                            <p id="statExperience" class="text-3xl font-bold text-blue-600">2</p>
+                            <p class="text-sm text-gray-600">Jaar ervaring</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-purple-100 text-purple-800 font-medium px-4 py-2 rounded-t-xl">
+                        Beoordelingscriteria
+                    </div>
+                    <div class="border border-gray-100 rounded-b-xl divide-y divide-gray-100">
+                        <div class="flex items-center justify-between p-4">
+                            <span class="text-gray-700">Op tijd komen op werk</span>
+                            <div class="flex items-center gap-3 w-64">
+                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                    <div id="bar-ontime" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 92%"></div>
+                                </div>
+                                <span id="pct-ontime" class="text-sm font-medium text-gray-700 w-12 text-right">92%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-gray-50">
+                            <span class="text-gray-700">Niet vroeg vertrekken van werk</span>
+                            <div class="flex items-center gap-3 w-64">
+                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                    <div id="bar-stayfull" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 100%"></div>
+                                </div>
+                                <span id="pct-stayfull" class="text-sm font-medium text-gray-700 w-12 text-right">100%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4">
+                            <span class="text-gray-700">Houding / Gedrag</span>
+                            <div class="flex items-center gap-3 w-64">
+                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                    <div id="bar-attitude" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 95%"></div>
+                                </div>
+                                <span id="pct-attitude" class="text-sm font-medium text-gray-700 w-12 text-right">95%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-gray-50">
+                            <span class="text-gray-700">Vaardigheden</span>
+                            <div class="flex items-center gap-3 w-64">
+                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                    <div id="bar-skills" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 88%"></div>
+                                </div>
+                                <span id="pct-skills" class="text-sm font-medium text-gray-700 w-12 text-right">88%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4">
+                            <span class="text-gray-700">Verzorging / Representatief</span>
+                            <div class="flex items-center gap-3 w-64">
+                                <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                    <div id="bar-appearance" class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600" style="width: 90%"></div>
+                                </div>
+                                <span id="pct-appearance" class="text-sm font-medium text-gray-700 w-12 text-right">90%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Points Assignment Modal -->
+    <div id="pointsModal" class="confirm-overlay" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-gray-900">Punten Toekennen</h2>
+                    <button onclick="closePointsModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">Punten toekennen aan <strong id="pointsUserName"></strong></p>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Aantal punten *</label>
+                    <input type="number" id="pointsAmount" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Bijv. 100">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reden (optioneel)</label>
+                    <textarea id="pointsReason" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" rows="2" placeholder="Bijv. Bonus voor goede prestaties"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closePointsModal()" class="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Annuleren</button>
+                    <button class="flex-1 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">Toekennen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirmation Dialog (for double approval) -->
     <div id="confirmDialog" class="confirm-overlay" style="display: none;">
         <div class="confirm-dialog">
@@ -1280,63 +1646,77 @@
                 id: 1, name: 'Anna Bakker', avatar: 'AB', 
                 phone: '06-12345678', age: 28, hireDate: '15-03-2022',
                 rating: 4.5, points: 3250, role: 'Housekeeping', roleKey: 'housekeeping',
-                status: 'Actief', email: 'anna.bakker@example.com'
+                status: 'Actief', email: 'anna.bakker@example.com',
+                stats: { shifts: 42, onTime: 92, stayFull: 100, attitude: 95, skills: 88, appearance: 90 }
             },
             { 
                 id: 2, name: 'Dennis de Groot', avatar: 'DG', 
                 phone: '06-23456789', age: 35, hireDate: '01-06-2021',
                 rating: 4.8, points: 6500, role: 'Chef', roleKey: 'chef',
-                status: 'Actief', email: 'dennis.degroot@example.com'
+                status: 'Actief', email: 'dennis.degroot@example.com',
+                stats: { shifts: 89, onTime: 98, stayFull: 100, attitude: 100, skills: 95, appearance: 95 }
             },
             { 
                 id: 3, name: 'Emma van Dijk', avatar: 'ED', 
                 phone: '06-34567890', age: 24, hireDate: '10-01-2024',
                 rating: 4.2, points: 1850, role: 'Receptie', roleKey: 'receptie',
-                status: 'Actief', email: 'emma.vandijk@example.com'
+                status: 'Actief', email: 'emma.vandijk@example.com',
+                stats: { shifts: 18, onTime: 85, stayFull: 95, attitude: 90, skills: 80, appearance: 92 }
             },
             { 
                 id: 4, name: 'Jan Hendriks', avatar: 'JH', 
                 phone: '06-45678901', age: 42, hireDate: '20-09-2019',
                 rating: 5.0, points: 12500, role: 'Chef', roleKey: 'chef',
-                status: 'Actief', email: 'jan.hendriks@example.com'
+                status: 'Actief', email: 'jan.hendriks@example.com',
+                stats: { shifts: 156, onTime: 100, stayFull: 100, attitude: 100, skills: 100, appearance: 100 }
             },
             { 
                 id: 5, name: 'Lisa Jansen', avatar: 'LJ', 
                 phone: '06-56789012', age: 31, hireDate: '05-11-2020',
                 rating: 4.0, points: 4200, role: 'Horecamedewerker', roleKey: 'horeca',
-                status: 'Actief', email: 'lisa.jansen@example.com'
+                status: 'Actief', email: 'lisa.jansen@example.com',
+                stats: { shifts: 67, onTime: 88, stayFull: 92, attitude: 85, skills: 82, appearance: 88 }
             },
             { 
                 id: 6, name: 'Mark Mulder', avatar: 'MM', 
                 phone: '06-67890123', age: 29, hireDate: '12-07-2023',
                 rating: 3.8, points: 2100, role: 'Housekeeping', roleKey: 'housekeeping',
-                status: 'Actief', email: 'mark.mulder@example.com'
+                status: 'Actief', email: 'mark.mulder@example.com',
+                stats: { shifts: 28, onTime: 78, stayFull: 85, attitude: 80, skills: 75, appearance: 82 }
             },
             { 
                 id: 7, name: 'Nina Smit', avatar: 'NS', 
                 phone: '06-78901234', age: 26, hireDate: '28-02-2022',
                 rating: 4.6, points: 5800, role: 'Receptie', roleKey: 'receptie',
-                status: 'Actief', email: 'nina.smit@example.com'
+                status: 'Actief', email: 'nina.smit@example.com',
+                stats: { shifts: 58, onTime: 95, stayFull: 98, attitude: 96, skills: 90, appearance: 95 }
             },
             { 
                 id: 8, name: 'Peter Visser', avatar: 'PV', 
                 phone: '06-89012345', age: 38, hireDate: '03-04-2018',
                 rating: 4.9, points: 8900, role: 'Chef', roleKey: 'chef',
-                status: 'Actief', email: 'peter.visser@example.com'
+                status: 'Actief', email: 'peter.visser@example.com',
+                stats: { shifts: 124, onTime: 98, stayFull: 100, attitude: 98, skills: 97, appearance: 95 }
             },
             { 
                 id: 9, name: 'Sophie de Vries', avatar: 'SV', 
                 phone: '06-90123456', age: 33, hireDate: '17-08-2021',
                 rating: 4.3, points: 3750, role: 'Horecamedewerker', roleKey: 'horeca',
-                status: 'Inactief', email: 'sophie.devries@example.com'
+                status: 'Inactief', email: 'sophie.devries@example.com',
+                stats: { shifts: 45, onTime: 90, stayFull: 88, attitude: 92, skills: 85, appearance: 90 }
             },
             { 
                 id: 10, name: 'Thomas Willems', avatar: 'TW', 
                 phone: '06-01234567', age: 27, hireDate: '22-05-2023',
                 rating: 4.1, points: 2850, role: 'Housekeeping', roleKey: 'housekeeping',
-                status: 'Actief', email: 'thomas.willems@example.com'
+                status: 'Actief', email: 'thomas.willems@example.com',
+                stats: { shifts: 32, onTime: 85, stayFull: 92, attitude: 88, skills: 80, appearance: 85 }
             }
         ];
+
+        let currentPreviewUserId = null;
+        let currentModalUserId = null;
+        let openDropdownId = null;
 
         // Badge based on points
         function getBadge(points) {
@@ -1481,7 +1861,7 @@
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">${u.avatar}</div>
                             <div>
-                                <span class="font-medium text-gray-900">${u.name}</span>
+                                <button onclick="openUserPreview(${u.id})" class="font-medium text-gray-900 hover:text-purple-600 hover:underline text-left">${u.name}</button>
                                 ${badge ? `<span class="ml-1">${badge}</span>` : ''}
                                 ${statusDot}
                                 <p class="text-xs text-gray-400">${u.email}</p>
@@ -1501,10 +1881,27 @@
                     <td class="px-4 py-3 col-role ${columnVisibility.role ? '' : 'hidden'}">
                         <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">${u.role}</span>
                     </td>
-                    <td class="px-4 py-3">
-                        <button class="p-1.5 hover:bg-gray-100 rounded">
+                    <td class="px-4 py-3 relative">
+                        <button onclick="toggleUserDropdown(${u.id}, event)" class="p-1.5 hover:bg-gray-100 rounded">
                             <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
                         </button>
+                        <div id="dropdown-${u.id}" class="user-dropdown hidden absolute right-4 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-48">
+                            <div class="px-3 py-2 border-b border-gray-100">
+                                <p class="text-xs font-semibold text-gray-900">Acties</p>
+                            </div>
+                            <button onclick="openUserModal(${u.id}, 'profile')" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                <i data-lucide="edit" class="w-4 h-4 text-gray-400"></i>
+                                Details Bewerken
+                            </button>
+                            <button onclick="openPointsModal(${u.id})" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                <i data-lucide="award" class="w-4 h-4 text-gray-400"></i>
+                                Punten Toekennen
+                            </button>
+                            <button onclick="confirmDeleteUser(${u.id})" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                Gebruiker Verwijderen
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `}).join('');
@@ -1529,6 +1926,187 @@
             document.getElementById('activeUsersCount').textContent = activeCount;
             document.getElementById('totalPointsSum').textContent = totalPoints.toLocaleString();
             
+            lucide.createIcons();
+        }
+
+        // =====================================
+        // USER MODALS AND DROPDOWN FUNCTIONS
+        // =====================================
+
+        // Toggle action dropdown
+        function toggleUserDropdown(userId, event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(`dropdown-${userId}`);
+            
+            // Close other dropdowns
+            document.querySelectorAll('.user-dropdown').forEach(d => {
+                if (d.id !== `dropdown-${userId}`) d.classList.add('hidden');
+            });
+            
+            dropdown.classList.toggle('hidden');
+            openDropdownId = dropdown.classList.contains('hidden') ? null : userId;
+        }
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.user-dropdown').forEach(d => d.classList.add('hidden'));
+            openDropdownId = null;
+        });
+
+        // Open user preview (click on name)
+        function openUserPreview(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            currentPreviewUserId = userId;
+            document.getElementById('previewAvatar').textContent = user.avatar;
+            document.getElementById('previewName').textContent = user.name;
+            document.getElementById('previewRole').textContent = user.role;
+            document.getElementById('previewEmail').textContent = user.email;
+            document.getElementById('previewPhone').textContent = user.phone;
+            document.getElementById('previewAge').textContent = user.age + ' jaar';
+            document.getElementById('previewExperience').textContent = getExperience(user.hireDate);
+            document.getElementById('previewPoints').textContent = user.points.toLocaleString();
+            document.getElementById('previewBadge').textContent = getBadge(user.points);
+            
+            document.getElementById('userPreviewModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeUserPreview() {
+            document.getElementById('userPreviewModal').style.display = 'none';
+        }
+
+        // Open user detail modal
+        function openUserModal(userId, tab = 'profile') {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            currentModalUserId = userId;
+            const nameParts = user.name.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' ');
+            
+            document.getElementById('modalAvatar').textContent = user.avatar;
+            document.getElementById('modalName').textContent = user.name;
+            document.getElementById('editFirstName').value = firstName;
+            document.getElementById('editLastName').value = lastName;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editPhone').value = user.phone;
+            document.getElementById('editEmployeeType').value = user.roleKey;
+            
+            // Points tab
+            document.getElementById('modalCurrentPoints').textContent = user.points.toLocaleString();
+            document.getElementById('modalTotalEarned').textContent = user.points.toLocaleString();
+            document.getElementById('modalTotalRedeemed').textContent = '0';
+            document.getElementById('modalRewardCount').textContent = '0';
+            
+            // Stats tab
+            const stats = user.stats;
+            const expYears = Math.floor((new Date() - parseDate(user.hireDate)) / (1000*60*60*24*365.25));
+            document.getElementById('statShifts').textContent = stats.shifts;
+            document.getElementById('statAvgRating').textContent = user.rating.toFixed(1);
+            document.getElementById('statExperience').textContent = expYears < 1 ? '<1' : expYears;
+            
+            document.getElementById('bar-ontime').style.width = stats.onTime + '%';
+            document.getElementById('pct-ontime').textContent = stats.onTime + '%';
+            document.getElementById('bar-stayfull').style.width = stats.stayFull + '%';
+            document.getElementById('pct-stayfull').textContent = stats.stayFull + '%';
+            document.getElementById('bar-attitude').style.width = stats.attitude + '%';
+            document.getElementById('pct-attitude').textContent = stats.attitude + '%';
+            document.getElementById('bar-skills').style.width = stats.skills + '%';
+            document.getElementById('pct-skills').textContent = stats.skills + '%';
+            document.getElementById('bar-appearance').style.width = stats.appearance + '%';
+            document.getElementById('pct-appearance').textContent = stats.appearance + '%';
+            
+            // Status toggle
+            const isActive = user.status === 'Actief';
+            const toggle = document.getElementById('statusToggle');
+            const label = document.getElementById('statusLabel');
+            toggle.className = isActive 
+                ? 'w-12 h-6 bg-purple-600 rounded-full relative' 
+                : 'w-12 h-6 bg-gray-300 rounded-full relative';
+            toggle.innerHTML = isActive
+                ? '<span class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></span>'
+                : '<span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></span>';
+            label.textContent = user.status;
+            
+            document.getElementById('userDetailModal').style.display = 'flex';
+            switchModalTab(tab);
+            lucide.createIcons();
+        }
+
+        function closeUserModal() {
+            document.getElementById('userDetailModal').style.display = 'none';
+        }
+
+        function switchModalTab(tabName) {
+            // Reset all tabs
+            document.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.classList.remove('border-purple-600', 'text-purple-600');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.querySelectorAll('.modal-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Activate selected tab
+            document.getElementById(`tab-${tabName}`).classList.add('border-purple-600', 'text-purple-600');
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-gray-500');
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            lucide.createIcons();
+        }
+
+        function toggleUserStatus() {
+            const toggle = document.getElementById('statusToggle');
+            const label = document.getElementById('statusLabel');
+            const isActive = label.textContent === 'Actief';
+            
+            if (isActive) {
+                toggle.className = 'w-12 h-6 bg-gray-300 rounded-full relative';
+                toggle.innerHTML = '<span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></span>';
+                label.textContent = 'Inactief';
+            } else {
+                toggle.className = 'w-12 h-6 bg-purple-600 rounded-full relative';
+                toggle.innerHTML = '<span class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></span>';
+                label.textContent = 'Actief';
+            }
+        }
+
+        // Points modal
+        function openPointsModal(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            document.getElementById('pointsUserName').textContent = user.name;
+            document.getElementById('pointsAmount').value = '';
+            document.getElementById('pointsReason').value = '';
+            document.getElementById('pointsModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closePointsModal() {
+            document.getElementById('pointsModal').style.display = 'none';
+        }
+
+        // Delete user confirmation
+        function confirmDeleteUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            document.getElementById('confirmTitle').textContent = 'Gebruiker Verwijderen';
+            document.getElementById('confirmSubtitle').textContent = 'Weet je zeker dat je deze gebruiker wilt verwijderen?';
+            document.getElementById('confirmDetails').innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-600">${user.avatar}</div>
+                    <div>
+                        <p class="font-medium text-gray-900">${user.name}</p>
+                        <p class="text-xs text-gray-500">${user.email}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('confirmButton').className = 'flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700';
+            document.getElementById('confirmButton').textContent = 'Ja, verwijderen';
+            document.getElementById('confirmDialog').style.display = 'flex';
             lucide.createIcons();
         }
 
