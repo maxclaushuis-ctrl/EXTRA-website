@@ -58,8 +58,6 @@
         .icon-blue { background: #e0f2fe; }
         .icon-green { background: #d1fae5; }
         .icon-pink { background: #fce7f3; }
-        .icon-orange { background: #ffedd5; }
-        .icon-red { background: #fee2e2; }
         .sortable-ghost { opacity: 0.4; }
         .drag-handle { cursor: grab; }
         .drag-handle:active { cursor: grabbing; }
@@ -95,15 +93,6 @@
         .resize-option:hover { background: #f3f4f6; }
         .resize-option:first-child { border-radius: 8px 8px 0 0; }
         .resize-option:last-child { border-radius: 0 0 8px 8px; }
-        
-        /* Alert styles */
-        .alert-badge {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -194,7 +183,7 @@
                     <div class="flex items-center gap-3">
                         <button class="relative p-2.5 rounded-full bg-gray-50 hover:bg-gray-100">
                             <i data-lucide="bell" class="w-5 h-5 text-gray-500"></i>
-                            <span class="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center alert-badge">3</span>
+                            <span class="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">2</span>
                         </button>
                         <button class="p-2.5 rounded-full bg-purple-50 hover:bg-purple-100">
                             <i data-lucide="message-circle" class="w-5 h-5 text-purple-500"></i>
@@ -212,44 +201,6 @@
                 <div class="mb-6">
                     <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
                     <p class="text-gray-500">Overzicht van uw beloningsplatform voor medewerkers</p>
-                </div>
-
-                <!-- Alerts Section (NEW) -->
-                <div id="alertsSection" class="mb-6 space-y-3">
-                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-500"></i>
-                            </div>
-                            <div>
-                                <p class="font-medium text-orange-800">15 medewerkers zijn al 60+ dagen inactief</p>
-                                <p class="text-sm text-orange-600">Overweeg een re-engagement campagne te starten</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button class="px-3 py-1.5 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Bekijk lijst</button>
-                            <button onclick="this.closest('.bg-orange-50').remove()" class="p-1.5 text-orange-400 hover:text-orange-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
-                            </div>
-                            <div>
-                                <p class="font-medium text-blue-800">Budget bijna op: 87% van maandbudget gebruikt</p>
-                                <p class="text-sm text-blue-600">€4,350 van €5,000 toegewezen deze maand</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">Budget aanpassen</button>
-                            <button onclick="this.closest('.bg-blue-50').remove()" class="p-1.5 text-blue-400 hover:text-blue-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Global Filters -->
@@ -321,14 +272,6 @@
                             <span class="text-sm">Te doen</span>
                         </label>
                         <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
-                            <input type="checkbox" checked onchange="toggleWidget('budgetWidget')" class="rounded text-purple-600">
-                            <span class="text-sm">Budget & ROI</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
-                            <input type="checkbox" checked onchange="toggleWidget('challengeFunnel')" class="rounded text-purple-600">
-                            <span class="text-sm">Challenge Funnel</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
                             <input type="checkbox" checked onchange="toggleWidget('topRewards')" class="rounded text-purple-600">
                             <span class="text-sm">Populaire Beloningen</span>
                         </label>
@@ -339,7 +282,7 @@
                     </div>
                 </div>
 
-                <!-- Stat Cards Row -->
+                <!-- Stat Cards Row (Original from PDF) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
                     <!-- Total Users -->
                     <div class="stat-card rounded-xl p-5">
@@ -361,10 +304,7 @@
                             <div>
                                 <p class="text-sm text-gray-500 mb-1">Actieve Gebruikers</p>
                                 <p class="text-3xl font-bold text-gray-900">189</p>
-                                <p class="text-xs text-green-500 mt-1 flex items-center gap-1">
-                                    <i data-lucide="arrow-up" class="w-3 h-3"></i>
-                                    76% activiteitsgraad
-                                </p>
+                                <p class="text-xs text-gray-400 mt-1">Minimaal 1 actie deze periode</p>
                             </div>
                             <div class="icon-circle icon-green">
                                 <i data-lucide="user-check" class="w-6 h-6 text-green-500"></i>
@@ -372,30 +312,30 @@
                         </div>
                     </div>
 
-                    <!-- Redemption Rate (NEW) -->
+                    <!-- Total Points Issued -->
                     <div class="stat-card rounded-xl p-5">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm text-gray-500 mb-1">Inwisselingsgraad</p>
-                                <p class="text-3xl font-bold text-gray-900">68%</p>
-                                <p class="text-xs text-gray-400 mt-1">Van verdiende punten</p>
+                                <p class="text-sm text-gray-500 mb-1">Uitgegeven Punten</p>
+                                <p class="text-3xl font-bold text-gray-900">12,450</p>
+                                <p class="text-xs text-gray-400 mt-1">In geselecteerde periode</p>
                             </div>
-                            <div class="icon-circle icon-blue">
-                                <i data-lucide="repeat" class="w-6 h-6 text-blue-500"></i>
+                            <div class="icon-circle icon-purple">
+                                <i data-lucide="trending-up" class="w-6 h-6 text-purple-500"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Point Liability (NEW) -->
+                    <!-- User Growth % -->
                     <div class="stat-card rounded-xl p-5">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm text-gray-500 mb-1">Openstaande Punten</p>
-                                <p class="text-3xl font-bold text-gray-900">€2,450</p>
-                                <p class="text-xs text-orange-500 mt-1">49.000 punten uitstaand</p>
+                                <p class="text-sm text-gray-500 mb-1">Gebruikersgroei</p>
+                                <p class="text-3xl font-bold text-green-600">+12%</p>
+                                <p class="text-xs text-gray-400 mt-1">t.o.v. vorige periode</p>
                             </div>
-                            <div class="icon-circle icon-orange">
-                                <i data-lucide="coins" class="w-6 h-6 text-orange-500"></i>
+                            <div class="icon-circle icon-green">
+                                <i data-lucide="arrow-up-right" class="w-6 h-6 text-green-500"></i>
                             </div>
                         </div>
                     </div>
@@ -404,127 +344,17 @@
                 <!-- Widgets Grid -->
                 <div id="widgetsContainer" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     
-                    <!-- Budget & ROI Widget (NEW) -->
-                    <div id="budgetWidget" class="widget-card rounded-xl widget-1x1" data-size="1x1">
-                        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="wallet" class="w-5 h-5 text-green-500"></i>
-                                <h3 class="font-semibold text-gray-900">Budget & ROI</h3>
-                            </div>
-                            <div class="flex items-center gap-1 relative">
-                                <button class="drag-handle p-1 hover:bg-gray-100 rounded">
-                                    <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                                <button onclick="toggleResizeMenu(this)" class="p-1 hover:bg-gray-100 rounded">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                                <div class="resize-menu">
-                                    <div class="resize-option" onclick="resizeWidget('budgetWidget', '1x1')">
-                                        <i data-lucide="square" class="w-4 h-4 text-gray-400"></i> Klein (1x1)
-                                    </div>
-                                    <div class="resize-option" onclick="resizeWidget('budgetWidget', '2x1')">
-                                        <i data-lucide="rectangle-horizontal" class="w-4 h-4 text-gray-400"></i> Breed (2x1)
-                                    </div>
-                                    <div class="resize-option" onclick="resizeWidget('budgetWidget', '3x1')">
-                                        <i data-lucide="maximize-2" class="w-4 h-4 text-gray-400"></i> Volledig (3x1)
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="mb-4">
-                                <div class="flex justify-between text-sm mb-2">
-                                    <span class="text-gray-500">Maandbudget gebruikt</span>
-                                    <span class="font-medium text-gray-900">€4,350 / €5,000</span>
-                                </div>
-                                <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gradient-to-r from-green-400 to-orange-400 rounded-full" style="width: 87%"></div>
-                                </div>
-                                <p class="text-xs text-orange-500 mt-1">87% - bijna op</p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-xs text-gray-500">Kosten/actieve user</p>
-                                    <p class="text-lg font-semibold text-gray-900">€23</p>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-xs text-gray-500">First-time redeemers</p>
-                                    <p class="text-lg font-semibold text-green-600">+12</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Challenge Funnel (NEW) -->
-                    <div id="challengeFunnel" class="widget-card rounded-xl widget-1x1" data-size="1x1">
-                        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="filter" class="w-5 h-5 text-purple-500"></i>
-                                <h3 class="font-semibold text-gray-900">Challenge Funnel</h3>
-                            </div>
-                            <div class="flex items-center gap-1 relative">
-                                <button class="drag-handle p-1 hover:bg-gray-100 rounded">
-                                    <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                                <button onclick="toggleResizeMenu(this)" class="p-1 hover:bg-gray-100 rounded">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                                <div class="resize-menu">
-                                    <div class="resize-option" onclick="resizeWidget('challengeFunnel', '1x1')">
-                                        <i data-lucide="square" class="w-4 h-4 text-gray-400"></i> Klein (1x1)
-                                    </div>
-                                    <div class="resize-option" onclick="resizeWidget('challengeFunnel', '2x1')">
-                                        <i data-lucide="rectangle-horizontal" class="w-4 h-4 text-gray-400"></i> Breed (2x1)
-                                    </div>
-                                    <div class="resize-option" onclick="resizeWidget('challengeFunnel', '3x1')">
-                                        <i data-lucide="maximize-2" class="w-4 h-4 text-gray-400"></i> Volledig (3x1)
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <p class="text-xs text-gray-400 mb-3">Voltooiingspercentage per challenge</p>
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="text-gray-700">Diensten draaien</span>
-                                        <span class="text-gray-500">78%</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-100 rounded-full">
-                                        <div class="h-full bg-purple-500 rounded-full" style="width: 78%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="text-gray-700">Last-minute inzet</span>
-                                        <span class="text-gray-500">45%</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-100 rounded-full">
-                                        <div class="h-full bg-purple-500 rounded-full" style="width: 45%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="text-gray-700">Vrienden aandragen</span>
-                                        <span class="text-orange-500">23%</span>
-                                    </div>
-                                    <div class="h-2 bg-gray-100 rounded-full">
-                                        <div class="h-full bg-orange-400 rounded-full" style="width: 23%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-3">⚠️ "Vrienden aandragen" heeft laag voltooiingspercentage</p>
-                        </div>
-                    </div>
-
                     <!-- Top Performers -->
                     <div id="topPerformers" class="widget-card rounded-xl widget-1x1" data-size="1x1">
                         <div class="p-4 border-b border-gray-100 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="text-xl">🏆</span>
-                                <h3 class="font-semibold text-gray-900">Top 10 Presteerders</h3>
+                                <h3 class="font-semibold text-gray-900">Top Presteerders</h3>
                             </div>
                             <div class="flex items-center gap-1 relative">
+                                <select class="text-xs border border-gray-200 rounded px-2 py-1 bg-white">
+                                    <option>Maandelijks</option>
+                                </select>
                                 <button class="drag-handle p-1 hover:bg-gray-100 rounded">
                                     <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400"></i>
                                 </button>
@@ -545,6 +375,7 @@
                             </div>
                         </div>
                         <div class="p-4 max-h-80 overflow-y-auto">
+                            <p class="text-xs text-gray-400 mb-3">Top 10 op basis van verdiende punten</p>
                             <div id="performersList" class="space-y-2"></div>
                         </div>
                     </div>
@@ -562,6 +393,7 @@
                                     <option value="14">14 dagen</option>
                                     <option value="30" selected>30 dagen</option>
                                     <option value="60">60 dagen</option>
+                                    <option value="90">90 dagen</option>
                                 </select>
                                 <button class="drag-handle p-1 hover:bg-gray-100 rounded">
                                     <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400"></i>
@@ -583,10 +415,11 @@
                             </div>
                         </div>
                         <div class="p-4 max-h-80 overflow-y-auto">
+                            <p class="text-xs text-gray-400 mb-3">Geen login of punten activiteit</p>
                             <div id="inactiveUsersList" class="space-y-2"></div>
                             <button class="mt-4 w-full py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 flex items-center justify-center gap-2">
-                                <i data-lucide="mail" class="w-4 h-4"></i>
-                                Start re-engagement campagne
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                Exporteer lijst
                             </button>
                         </div>
                     </div>
@@ -653,6 +486,7 @@
                             </div>
                         </div>
                         <div class="p-4">
+                            <p class="text-xs text-gray-400 mb-3">Top 5 in geselecteerde periode</p>
                             <table class="w-full">
                                 <thead>
                                     <tr class="text-left text-xs text-gray-500 uppercase tracking-wider">
@@ -660,7 +494,6 @@
                                         <th class="pb-3 font-medium">Beloning</th>
                                         <th class="pb-3 text-right font-medium">Inwisselingen</th>
                                         <th class="pb-3 text-right font-medium">Totaal punten</th>
-                                        <th class="pb-3 text-right font-medium">Voorraad</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rewardsTable" class="text-sm"></tbody>
@@ -700,6 +533,7 @@
                             </div>
                         </div>
                         <div class="p-4 max-h-80 overflow-y-auto">
+                            <p class="text-xs text-gray-400 mb-3">Laatste platformactiviteiten</p>
                             <div id="activityFeed" class="space-y-4"></div>
                         </div>
                     </div>
@@ -708,6 +542,11 @@
                 <!-- Footer -->
                 <footer class="text-center py-6 border-t border-gray-200">
                     <p class="text-sm text-gray-400">&copy; 2024 EXTRAATJE. Gemaakt met ❤️ voor geweldige teams</p>
+                    <div class="flex justify-center gap-6 mt-2">
+                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Privacybeleid</a>
+                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Algemene Voorwaarden</a>
+                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600">Ondersteuning</a>
+                    </div>
                 </footer>
             </div>
         </main>
@@ -739,23 +578,22 @@
         ];
 
         const todoItems = [
-            { user: 'Emma de Vries', reward: 'Wellness Dagje', date: '2 dagen geleden', priority: 'high' },
-            { user: 'Jan Bakker', reward: 'Bol.com Cadeaubon €50', date: '3 dagen geleden', priority: 'medium' },
-            { user: 'Sophie Jansen', reward: 'Bioscoop Tickets', date: '5 dagen geleden', priority: 'low' }
+            { user: 'Emma de Vries', reward: 'Wellness Dagje', date: '2 dagen geleden', status: 'pending' },
+            { user: 'Jan Bakker', reward: 'Bol.com Cadeaubon €50', date: '3 dagen geleden', status: 'pending' },
+            { user: 'Sophie Jansen', reward: 'Bioscoop Tickets', date: '5 dagen geleden', status: 'pending' }
         ];
 
         const topRewards = [
-            { name: 'Bol.com Cadeaubon €25', redemptions: 45, points: 11250, stock: 23 },
-            { name: 'Bioscoop Tickets (2x)', redemptions: 32, points: 6400, stock: 15 },
-            { name: 'Wellness Dagje', redemptions: 18, points: 9000, stock: 5 },
-            { name: 'Restaurant Voucher €30', redemptions: 15, points: 4500, stock: 12 },
-            { name: 'Spotify Premium (3 mnd)', redemptions: 12, points: 2400, stock: '∞' }
+            { name: 'Bol.com Cadeaubon €25', redemptions: 45, points: 11250 },
+            { name: 'Bioscoop Tickets (2x)', redemptions: 32, points: 6400 },
+            { name: 'Wellness Dagje', redemptions: 18, points: 9000 },
+            { name: 'Restaurant Voucher €30', redemptions: 15, points: 4500 },
+            { name: 'Spotify Premium (3 mnd)', redemptions: 12, points: 2400 }
         ];
 
         const recentActivities = [
-            { user: 'Test User One', action: 'Voltooid', detail: 'Challenge "Complete 10 Shifts" afgerond', time: '2 uur geleden', type: 'challenge' },
-            { user: 'Emma de Vries', action: 'Ingewisseld', detail: 'Wellness Dagje (500 punten)', time: '5 uur geleden', type: 'reward' },
-            { user: 'Jan Bakker', action: 'Verdiend', detail: '+150 punten voor last-minute dienst', time: '1 dag geleden', type: 'points' }
+            { user: 'Test User One', action: 'Voltooid', detail: 'Completed step "Complete 10 Shifts" in challenge "Complete 10 Shifts"', time: '8 days ago', type: 'challenge' },
+            { user: 'Test User Two', action: 'Voltooid', detail: 'Completed step "Complete 10 Shifts" in challenge "Complete 10 Shifts"', time: '8 days ago', type: 'challenge' }
         ];
 
         // Render functions
@@ -790,22 +628,19 @@
 
         function renderTodoItems() {
             const container = document.getElementById('todoItems');
-            const priorityColors = {
-                high: 'border-l-red-500',
-                medium: 'border-l-yellow-500',
-                low: 'border-l-green-500'
-            };
             container.innerHTML = todoItems.map(t => `
-                <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 border-l-4 ${priorityColors[t.priority]}">
+                <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-900">${t.reward}</span>
                         <span class="text-xs text-gray-400">${t.date}</span>
                     </div>
                     <p class="text-xs text-gray-500 mb-3">Aangevraagd door: ${t.user}</p>
-                    <button onclick="completeTodo(this)" class="w-full py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-1">
-                        <i data-lucide="check" class="w-3 h-3"></i>
-                        Markeer als afgerond
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="completeTodo(this)" class="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-1">
+                            <i data-lucide="check" class="w-3 h-3"></i>
+                            Markeer als afgerond
+                        </button>
+                    </div>
                 </div>
             `).join('');
             document.getElementById('todoCount').textContent = todoItems.length;
@@ -820,34 +655,23 @@
                     <td class="py-3 font-medium text-gray-900">${r.name}</td>
                     <td class="py-3 text-right text-gray-600">${r.redemptions}x</td>
                     <td class="py-3 text-right font-medium text-purple-600">${r.points.toLocaleString()}</td>
-                    <td class="py-3 text-right ${typeof r.stock === 'number' && r.stock < 10 ? 'text-orange-500 font-medium' : 'text-gray-500'}">${r.stock}</td>
                 </tr>
             `).join('');
         }
 
         function renderActivityFeed() {
             const container = document.getElementById('activityFeed');
-            const typeIcons = {
-                challenge: 'target',
-                reward: 'gift',
-                points: 'coins'
-            };
-            const typeColors = {
-                challenge: 'bg-purple-100 text-purple-600',
-                reward: 'bg-pink-100 text-pink-600',
-                points: 'bg-green-100 text-green-600'
-            };
             container.innerHTML = recentActivities.map(a => `
                 <div class="flex gap-3">
-                    <div class="w-8 h-8 ${typeColors[a.type]} rounded-full flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="${typeIcons[a.type]}" class="w-4 h-4"></i>
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="target" class="w-4 h-4 text-purple-600"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm">
                             <span class="font-medium text-gray-900">${a.user}</span>
                             <span class="text-gray-500">${a.action}</span>
                         </p>
-                        <p class="text-xs text-gray-500">${a.detail}</p>
+                        <p class="text-xs text-gray-400 truncate">${a.detail}</p>
                         <p class="text-xs text-gray-400 mt-1">${a.time}</p>
                     </div>
                 </div>
@@ -857,7 +681,6 @@
 
         // Widget resize functionality
         function toggleResizeMenu(button) {
-            // Close all other menus first
             document.querySelectorAll('.resize-menu').forEach(menu => {
                 if (menu !== button.nextElementSibling) {
                     menu.classList.remove('show');
@@ -871,7 +694,6 @@
             widget.classList.remove('widget-1x1', 'widget-2x1', 'widget-3x1');
             widget.classList.add(`widget-${size}`);
             widget.dataset.size = size;
-            // Close menu
             document.querySelectorAll('.resize-menu').forEach(menu => menu.classList.remove('show'));
             lucide.createIcons();
         }
