@@ -618,6 +618,22 @@
                     <p class="text-gray-500">Beheer medewerkeraccounts, rollen en punten</p>
                 </div>
 
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                    <div class="stat-card rounded-xl p-5">
+                        <p class="text-sm text-gray-500 mb-1">Totaal Gebruikers</p>
+                        <p class="text-3xl font-bold text-gray-900" id="totalUsersCount">10</p>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <p class="text-sm text-gray-500 mb-1">Actieve Gebruikers</p>
+                        <p class="text-3xl font-bold text-green-600" id="activeUsersCount">9</p>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <p class="text-sm text-gray-500 mb-1">Totaal Punten</p>
+                        <p class="text-3xl font-bold text-purple-600" id="totalPointsSum">42,850</p>
+                    </div>
+                </div>
+
                 <!-- Search and Controls -->
                 <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6 shadow-sm">
                     <div class="flex flex-wrap items-center gap-4">
@@ -645,8 +661,8 @@
                             <option value="rating-asc">Laagste score eerst</option>
                             <option value="age-asc">Jongste eerst</option>
                             <option value="age-desc">Oudste eerst</option>
-                            <option value="hireDate-asc">Langst in dienst</option>
-                            <option value="hireDate-desc">Kortst in dienst</option>
+                            <option value="hireDate-asc">Meeste ervaring</option>
+                            <option value="hireDate-desc">Minste ervaring</option>
                         </select>
                         <button onclick="toggleColumnSettings()" class="flex items-center gap-2 px-3 py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50">
                             <i data-lucide="columns" class="w-4 h-4"></i>
@@ -693,8 +709,8 @@
                             <span class="text-sm">Leeftijd</span>
                         </label>
                         <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
-                            <input type="checkbox" checked onchange="toggleColumn('hireDate')" id="col-hireDate" class="rounded text-purple-600">
-                            <span class="text-sm">Datum in dienst</span>
+                            <input type="checkbox" checked onchange="toggleColumn('experience')" id="col-experience" class="rounded text-purple-600">
+                            <span class="text-sm">Ervaring</span>
                         </label>
                         <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
                             <input type="checkbox" checked onchange="toggleColumn('rating')" id="col-rating" class="rounded text-purple-600">
@@ -708,26 +724,6 @@
                             <input type="checkbox" checked onchange="toggleColumn('role')" id="col-role" class="rounded text-purple-600">
                             <span class="text-sm">Functie</span>
                         </label>
-                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-50">
-                            <input type="checkbox" checked onchange="toggleColumn('status')" id="col-status" class="rounded text-purple-600">
-                            <span class="text-sm">Status</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-                    <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">Totaal Gebruikers</p>
-                        <p class="text-3xl font-bold text-gray-900" id="totalUsersCount">10</p>
-                    </div>
-                    <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">Actieve Gebruikers</p>
-                        <p class="text-3xl font-bold text-green-600" id="activeUsersCount">9</p>
-                    </div>
-                    <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">Totaal Punten</p>
-                        <p class="text-3xl font-bold text-purple-600" id="totalPointsSum">42,850</p>
                     </div>
                 </div>
 
@@ -740,11 +736,10 @@
                                     <th class="px-4 py-3 font-medium col-name">Naam</th>
                                     <th class="px-4 py-3 font-medium col-phone">Telefoonnummer</th>
                                     <th class="px-4 py-3 font-medium col-age">Leeftijd</th>
-                                    <th class="px-4 py-3 font-medium col-hireDate">Datum in dienst</th>
+                                    <th class="px-4 py-3 font-medium col-experience">Ervaring</th>
                                     <th class="px-4 py-3 font-medium col-rating">Gem. beoordeling</th>
                                     <th class="px-4 py-3 font-medium col-points">Totaal punten</th>
                                     <th class="px-4 py-3 font-medium col-role">Functie</th>
-                                    <th class="px-4 py-3 font-medium col-status">Status</th>
                                     <th class="px-4 py-3 font-medium">Acties</th>
                                 </tr>
                             </thead>
@@ -1398,9 +1393,18 @@
 
         // Column visibility
         const columnVisibility = {
-            name: true, phone: true, age: true, hireDate: true,
-            rating: true, points: true, role: true, status: true
+            name: true, phone: true, age: true, experience: true,
+            rating: true, points: true, role: true
         };
+
+        // Calculate experience in years from hire date
+        function getExperience(dateStr) {
+            const hireDate = parseDate(dateStr);
+            const now = new Date();
+            const years = (now - hireDate) / (1000 * 60 * 60 * 24 * 365.25);
+            if (years < 1) return '<1 jaar';
+            return Math.floor(years) + ' jaar';
+        }
 
         function toggleColumnSettings() {
             document.getElementById('columnSettings').classList.toggle('hidden');
@@ -1466,7 +1470,10 @@
             
             container.innerHTML = filtered.map(u => {
                 const badge = getBadge(u.points);
-                const statusClass = u.status === 'Actief' ? 'text-green-600' : 'text-gray-400';
+                const statusDot = u.status === 'Actief' 
+                    ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-2" title="Actief"></span>'
+                    : '<span class="inline-block w-2 h-2 bg-red-500 rounded-full ml-2" title="Inactief"></span>';
+                const experience = getExperience(u.hireDate);
                 
                 return `
                 <tr class="hover:bg-gray-50">
@@ -1476,13 +1483,14 @@
                             <div>
                                 <span class="font-medium text-gray-900">${u.name}</span>
                                 ${badge ? `<span class="ml-1">${badge}</span>` : ''}
+                                ${statusDot}
                                 <p class="text-xs text-gray-400">${u.email}</p>
                             </div>
                         </div>
                     </td>
                     <td class="px-4 py-3 text-gray-600 col-phone ${columnVisibility.phone ? '' : 'hidden'}">${u.phone}</td>
                     <td class="px-4 py-3 text-gray-600 col-age ${columnVisibility.age ? '' : 'hidden'}">${u.age} jaar</td>
-                    <td class="px-4 py-3 text-gray-600 col-hireDate ${columnVisibility.hireDate ? '' : 'hidden'}">${u.hireDate}</td>
+                    <td class="px-4 py-3 text-gray-600 col-experience ${columnVisibility.experience ? '' : 'hidden'}">${experience}</td>
                     <td class="px-4 py-3 col-rating ${columnVisibility.rating ? '' : 'hidden'}">${renderStars(u.rating)}</td>
                     <td class="px-4 py-3 col-points ${columnVisibility.points ? '' : 'hidden'}">
                         <span class="flex items-center gap-1">
@@ -1492,9 +1500,6 @@
                     </td>
                     <td class="px-4 py-3 col-role ${columnVisibility.role ? '' : 'hidden'}">
                         <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">${u.role}</span>
-                    </td>
-                    <td class="px-4 py-3 col-status ${columnVisibility.status ? '' : 'hidden'}">
-                        <span class="${statusClass} font-medium">${u.status}</span>
                     </td>
                     <td class="px-4 py-3">
                         <button class="p-1.5 hover:bg-gray-100 rounded">
@@ -1508,11 +1513,10 @@
             document.querySelectorAll('th.col-name').forEach(el => el.classList.toggle('hidden', !columnVisibility.name));
             document.querySelectorAll('th.col-phone').forEach(el => el.classList.toggle('hidden', !columnVisibility.phone));
             document.querySelectorAll('th.col-age').forEach(el => el.classList.toggle('hidden', !columnVisibility.age));
-            document.querySelectorAll('th.col-hireDate').forEach(el => el.classList.toggle('hidden', !columnVisibility.hireDate));
+            document.querySelectorAll('th.col-experience').forEach(el => el.classList.toggle('hidden', !columnVisibility.experience));
             document.querySelectorAll('th.col-rating').forEach(el => el.classList.toggle('hidden', !columnVisibility.rating));
             document.querySelectorAll('th.col-points').forEach(el => el.classList.toggle('hidden', !columnVisibility.points));
             document.querySelectorAll('th.col-role').forEach(el => el.classList.toggle('hidden', !columnVisibility.role));
-            document.querySelectorAll('th.col-status').forEach(el => el.classList.toggle('hidden', !columnVisibility.status));
             
             // Update result count
             document.getElementById('usersResultCount').textContent = 
