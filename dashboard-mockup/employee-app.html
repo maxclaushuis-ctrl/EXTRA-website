@@ -6,10 +6,10 @@
     <title>EXTRA - Employee App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        body { background: #111827; }
+        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #0f0f14; }
         
         .phone-frame {
             max-width: 390px;
@@ -20,276 +20,369 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        .nav-item.active { color: #8B5CF6; }
+        .nav-item.active { color: #a855f7; }
+        .nav-item.active .nav-dot { opacity: 1; }
+        
+        .points-glow {
+            text-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+        }
+        
+        .card-hover:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #7c3aed, #a855f7);
+        }
+        
+        .shine {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 2s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
     </style>
 </head>
 <body class="text-white">
-    <div class="phone-frame pb-24">
-        <!-- Header -->
-        <div class="bg-gray-900 px-5 pt-12 pb-6">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <p class="text-gray-400 text-sm">Welkom terug</p>
-                    <h1 class="text-xl font-bold">Jan Jansen</h1>
+    <div class="phone-frame pb-20">
+        <!-- Header with Logo -->
+        <div class="px-5 pt-10 pb-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
+                        <span class="font-extrabold text-lg">E</span>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">EXTRA</span>
                 </div>
-                <div class="w-11 h-11 rounded-full bg-purple-600 flex items-center justify-center font-semibold">
-                    JJ
+                <!-- Profile -->
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">Hoi Jan 👋</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-sm font-semibold">
+                        JJ
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Points Card -->
-            <div class="bg-gray-800 rounded-2xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-gray-400 text-sm">Jouw punten</p>
-                        <p class="text-4xl font-bold">1,250</p>
+        <!-- Points Hero - Focal Point -->
+        <div class="px-5 pb-5">
+            <div class="bg-gradient-to-br from-[#1a1a24] to-[#12121a] rounded-2xl p-5 border border-purple-900/30 relative overflow-hidden">
+                <div class="absolute inset-0 shine"></div>
+                <div class="relative">
+                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Jouw punten</p>
+                    <div class="flex items-baseline gap-2 mb-4">
+                        <span class="text-5xl font-extrabold points-glow">1,250</span>
+                        <span class="text-purple-400 text-sm">punten</span>
                     </div>
-                    <div class="w-14 h-14 rounded-xl bg-purple-600 flex items-center justify-center">
-                        <i data-lucide="gem" class="w-7 h-7"></i>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-sm text-gray-400 mb-2">
-                        <span>Volgende milestone</span>
-                        <span>1,500</span>
-                    </div>
-                    <div class="h-2 bg-gray-700 rounded-full">
-                        <div class="h-2 bg-purple-600 rounded-full" style="width: 83%"></div>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                                <div class="h-full progress-bar rounded-full" style="width: 83%"></div>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-400 whitespace-nowrap">250 tot <span class="text-purple-400">1,500</span></span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Tab Contents -->
-        <div id="rewards-tab" class="tab-content active p-5">
-            <h2 class="text-lg font-semibold mb-4">Beloningen</h2>
+        <div id="rewards-tab" class="tab-content active px-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold">Beloningen</h2>
+                <span class="text-xs text-gray-500">4 beschikbaar</span>
+            </div>
             
             <div class="space-y-3">
-                <div class="bg-gray-800 rounded-xl p-4 flex gap-4" onclick="openModal('reward1')">
-                    <div class="w-16 h-16 rounded-lg bg-purple-600/20 flex items-center justify-center text-2xl flex-shrink-0">🎁</div>
+                <!-- Available Reward - Highlighted -->
+                <div class="bg-[#1a1a24] rounded-xl p-4 flex gap-4 card-hover cursor-pointer border border-purple-600/20" onclick="openModal('reward1')">
+                    <div class="w-14 h-14 rounded-xl bg-purple-600/20 flex items-center justify-center text-2xl flex-shrink-0">🎁</div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-medium">Premium Shift Kit</h3>
-                        <p class="text-sm text-gray-400 truncate">Hoogwaardige werkset</p>
-                        <div class="flex items-center justify-between mt-2">
-                            <span class="text-purple-400 text-sm font-medium">150 punten</span>
-                            <span class="text-green-400 text-xs">Beschikbaar</span>
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-medium text-sm">Premium Shift Kit</h3>
+                            <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">Claim nu</span>
                         </div>
+                        <p class="text-xs text-gray-500 mt-0.5">Hoogwaardige werkset</p>
+                        <p class="text-purple-400 text-sm font-semibold mt-2">150 punten</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-4 flex gap-4 opacity-50">
-                    <div class="w-16 h-16 rounded-lg bg-blue-600/20 flex items-center justify-center text-2xl flex-shrink-0">🏝️</div>
+                <!-- Locked Reward -->
+                <div class="bg-[#1a1a24] rounded-xl p-4 flex gap-4 opacity-50">
+                    <div class="w-14 h-14 rounded-xl bg-gray-700/30 flex items-center justify-center text-2xl flex-shrink-0">🏝️</div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-medium">Extra Vrije Dag</h3>
-                        <p class="text-sm text-gray-400 truncate">Betaalde vrije dag</p>
-                        <div class="flex items-center justify-between mt-2">
-                            <span class="text-gray-400 text-sm font-medium">2,000 punten</span>
-                            <span class="text-gray-500 text-xs">Nog 750 nodig</span>
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-medium text-sm">Extra Vrije Dag</h3>
+                            <span class="bg-gray-700/50 text-gray-400 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">750 nodig</span>
                         </div>
+                        <p class="text-xs text-gray-500 mt-0.5">Betaalde vrije dag</p>
+                        <p class="text-gray-500 text-sm font-semibold mt-2">2,000 punten</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-4 flex gap-4" onclick="openModal('reward2')">
-                    <div class="w-16 h-16 rounded-lg bg-amber-600/20 flex items-center justify-center text-2xl flex-shrink-0">☕</div>
+                <div class="bg-[#1a1a24] rounded-xl p-4 flex gap-4 card-hover cursor-pointer" onclick="openModal('reward2')">
+                    <div class="w-14 h-14 rounded-xl bg-amber-600/20 flex items-center justify-center text-2xl flex-shrink-0">☕</div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-medium">Koffie Voucher</h3>
-                        <p class="text-sm text-gray-400 truncate">€10 tegoed</p>
-                        <div class="flex items-center justify-between mt-2">
-                            <span class="text-purple-400 text-sm font-medium">100 punten</span>
-                            <span class="text-green-400 text-xs">Beschikbaar</span>
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-medium text-sm">Koffie Voucher</h3>
+                            <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">Claim nu</span>
                         </div>
+                        <p class="text-xs text-gray-500 mt-0.5">€10 tegoed bij Starbucks</p>
+                        <p class="text-purple-400 text-sm font-semibold mt-2">100 punten</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-4 flex gap-4" onclick="openModal('reward3')">
-                    <div class="w-16 h-16 rounded-lg bg-green-600/20 flex items-center justify-center text-2xl flex-shrink-0">🎧</div>
+                <div class="bg-[#1a1a24] rounded-xl p-4 flex gap-4 card-hover cursor-pointer" onclick="openModal('reward3')">
+                    <div class="w-14 h-14 rounded-xl bg-green-600/20 flex items-center justify-center text-2xl flex-shrink-0">🎧</div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-medium">Spotify Premium</h3>
-                        <p class="text-sm text-gray-400 truncate">1 maand gratis</p>
-                        <div class="flex items-center justify-between mt-2">
-                            <span class="text-purple-400 text-sm font-medium">200 punten</span>
-                            <span class="text-green-400 text-xs">Beschikbaar</span>
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-medium text-sm">Spotify Premium</h3>
+                            <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">Claim nu</span>
                         </div>
+                        <p class="text-xs text-gray-500 mt-0.5">1 maand gratis muziek</p>
+                        <p class="text-purple-400 text-sm font-semibold mt-2">200 punten</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Deals Tab -->
-        <div id="deals-tab" class="tab-content p-5">
-            <h2 class="text-lg font-semibold mb-4">Deals</h2>
+        <div id="deals-tab" class="tab-content px-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold">Exclusieve Deals</h2>
+                <span class="text-xs text-gray-500">2 actief</span>
+            </div>
             
             <div class="space-y-3">
-                <div class="bg-gray-800 rounded-xl overflow-hidden">
-                    <div class="h-28 bg-gradient-to-r from-blue-900 to-purple-900 flex items-center justify-center relative">
-                        <span class="text-5xl">🎬</span>
-                        <span class="absolute top-3 right-3 bg-red-500 text-xs font-bold px-2 py-1 rounded">-50%</span>
+                <div class="bg-[#1a1a24] rounded-xl overflow-hidden card-hover cursor-pointer">
+                    <div class="h-24 bg-gradient-to-r from-blue-900/60 to-purple-900/60 flex items-center justify-between px-5 relative">
+                        <div>
+                            <p class="text-xs text-blue-300 mb-1">Partner deal</p>
+                            <h3 class="font-semibold">Pathé Bioscoop</h3>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-3xl font-bold">50%</span>
+                            <p class="text-[10px] text-gray-300">korting</p>
+                        </div>
                     </div>
                     <div class="p-4">
-                        <h3 class="font-medium">Pathé Bioscoop</h3>
-                        <p class="text-sm text-gray-400">50% korting op filmtickets</p>
-                        <button class="mt-3 w-full py-2 bg-purple-600 rounded-lg text-sm font-medium">Bekijk code</button>
+                        <p class="text-xs text-gray-400 mb-3">Geldig op alle filmtickets t/m 31 dec</p>
+                        <button class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors">
+                            <span class="flex items-center justify-center gap-2">
+                                <i data-lucide="ticket" class="w-4 h-4"></i>
+                                Bekijk code
+                            </span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl overflow-hidden">
-                    <div class="h-28 bg-gradient-to-r from-green-900 to-teal-900 flex items-center justify-center relative">
-                        <span class="text-5xl">🍔</span>
-                        <span class="absolute top-3 right-3 bg-red-500 text-xs font-bold px-2 py-1 rounded">-30%</span>
+                <div class="bg-[#1a1a24] rounded-xl overflow-hidden card-hover cursor-pointer">
+                    <div class="h-24 bg-gradient-to-r from-orange-900/60 to-red-900/60 flex items-center justify-between px-5 relative">
+                        <div>
+                            <p class="text-xs text-orange-300 mb-1">Partner deal</p>
+                            <h3 class="font-semibold">Thuisbezorgd</h3>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-3xl font-bold">€7,50</span>
+                            <p class="text-[10px] text-gray-300">korting</p>
+                        </div>
                     </div>
                     <div class="p-4">
-                        <h3 class="font-medium">Thuisbezorgd</h3>
-                        <p class="text-sm text-gray-400">30% korting eerste bestelling</p>
-                        <button class="mt-3 w-full py-2 bg-purple-600 rounded-lg text-sm font-medium">Bekijk code</button>
+                        <p class="text-xs text-gray-400 mb-3">Min. besteding €15, geldig t/m 15 jan</p>
+                        <button class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors">
+                            <span class="flex items-center justify-center gap-2">
+                                <i data-lucide="ticket" class="w-4 h-4"></i>
+                                Bekijk code
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Challenges Tab -->
-        <div id="challenges-tab" class="tab-content p-5">
-            <h2 class="text-lg font-semibold mb-4">Uitdagingen</h2>
+        <div id="challenges-tab" class="tab-content px-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold">Uitdagingen</h2>
+                <span class="text-xs text-gray-500">2 actief</span>
+            </div>
             
             <div class="space-y-3">
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center text-xl">🏃</div>
+                <!-- Active Challenge - Progress Focus -->
+                <div class="bg-[#1a1a24] rounded-xl p-4 border border-purple-600/20">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-11 h-11 rounded-xl bg-purple-600/20 flex items-center justify-center text-xl flex-shrink-0">🏃</div>
                         <div class="flex-1">
-                            <h3 class="font-medium">Diensten Kampioen</h3>
-                            <p class="text-xs text-gray-400">Werk 10 diensten</p>
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-medium text-sm">Diensten Kampioen</h3>
+                                <span class="text-purple-400 text-xs font-semibold">+500 pts</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">Werk 10 diensten deze maand</p>
                         </div>
-                        <span class="text-purple-400 text-sm font-medium">+500</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="flex-1 h-2 bg-gray-700 rounded-full">
-                            <div class="h-2 bg-purple-600 rounded-full" style="width: 70%"></div>
+                        <div class="flex-1 h-2.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full progress-bar rounded-full transition-all" style="width: 70%"></div>
                         </div>
-                        <span class="text-sm text-gray-400">7/10</span>
+                        <span class="text-sm font-semibold text-white">7<span class="text-gray-500">/10</span></span>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-lg bg-amber-600/20 flex items-center justify-center text-xl">⭐</div>
+                <div class="bg-[#1a1a24] rounded-xl p-4">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-11 h-11 rounded-xl bg-amber-600/20 flex items-center justify-center text-xl flex-shrink-0">⭐</div>
                         <div class="flex-1">
-                            <h3 class="font-medium">Review Held</h3>
-                            <p class="text-xs text-gray-400">Krijg 5 positieve reviews</p>
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-medium text-sm">Review Held</h3>
+                                <span class="text-purple-400 text-xs font-semibold">+300 pts</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">Krijg 5 positieve reviews</p>
                         </div>
-                        <span class="text-purple-400 text-sm font-medium">+300</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="flex-1 h-2 bg-gray-700 rounded-full">
-                            <div class="h-2 bg-amber-500 rounded-full" style="width: 60%"></div>
+                        <div class="flex-1 h-2.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-500 rounded-full" style="width: 60%"></div>
                         </div>
-                        <span class="text-sm text-gray-400">3/5</span>
+                        <span class="text-sm font-semibold text-white">3<span class="text-gray-500">/5</span></span>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-4 border border-green-600/30">
+                <!-- Completed -->
+                <div class="bg-[#1a1a24] rounded-xl p-4 border border-green-600/30">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-green-600/20 flex items-center justify-center text-xl">✅</div>
+                        <div class="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center text-xl flex-shrink-0">✓</div>
                         <div class="flex-1">
-                            <h3 class="font-medium text-green-400">Vroege Vogel</h3>
-                            <p class="text-xs text-gray-400">5x op tijd aanwezig</p>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-medium text-sm text-green-400">Vroege Vogel</h3>
+                                <span class="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">Voltooid</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">5x op tijd aanwezig</p>
                         </div>
-                        <span class="text-green-400 text-sm font-medium">Voltooid</span>
+                        <span class="text-green-400 text-xs font-semibold">+200 pts</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Leaderboard Tab -->
-        <div id="leaderboard-tab" class="tab-content p-5">
-            <h2 class="text-lg font-semibold mb-4">Ranglijst</h2>
+        <div id="leaderboard-tab" class="tab-content px-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold">Ranglijst</h2>
+                <span class="text-xs text-gray-500">December 2024</span>
+            </div>
 
-            <!-- Top 3 -->
-            <div class="flex items-end justify-center gap-3 mb-6 pt-4">
-                <div class="text-center">
-                    <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold mx-auto mb-1">SV</div>
-                    <p class="text-xs font-medium">Sophie</p>
-                    <p class="text-xs text-gray-500">890</p>
-                    <div class="text-xl mt-1">🥈</div>
+            <!-- Top 3 Podium -->
+            <div class="flex items-end justify-center gap-2 mb-5 pt-6">
+                <!-- 2nd Place -->
+                <div class="text-center flex-1">
+                    <div class="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center font-bold mx-auto mb-2 ring-2 ring-gray-500">SV</div>
+                    <p class="text-xs font-medium truncate">Sophie</p>
+                    <p class="text-xs text-gray-500">890 pts</p>
+                    <div class="h-16 bg-gray-700/50 rounded-t-lg mt-2 flex items-center justify-center">
+                        <span class="text-xl">🥈</span>
+                    </div>
                 </div>
-                <div class="text-center -mt-4">
-                    <div class="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center font-bold mx-auto mb-1 ring-2 ring-purple-400">JJ</div>
-                    <p class="text-xs font-medium text-purple-400">Jij</p>
-                    <p class="text-xs text-gray-500">1,250</p>
-                    <div class="text-2xl mt-1">🥇</div>
+                <!-- 1st Place -->
+                <div class="text-center flex-1">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center font-bold mx-auto mb-2 ring-3 ring-purple-400 shadow-lg shadow-purple-500/30">JJ</div>
+                    <p class="text-xs font-medium text-purple-400 truncate">Jij 🎉</p>
+                    <p class="text-xs text-gray-500">1,250 pts</p>
+                    <div class="h-24 bg-purple-600/30 rounded-t-lg mt-2 flex items-center justify-center border-t-2 border-purple-500">
+                        <span class="text-2xl">🥇</span>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold mx-auto mb-1">PV</div>
-                    <p class="text-xs font-medium">Peter</p>
-                    <p class="text-xs text-gray-500">720</p>
-                    <div class="text-xl mt-1">🥉</div>
+                <!-- 3rd Place -->
+                <div class="text-center flex-1">
+                    <div class="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center font-bold mx-auto mb-2 ring-2 ring-amber-700">PV</div>
+                    <p class="text-xs font-medium truncate">Peter</p>
+                    <p class="text-xs text-gray-500">720 pts</p>
+                    <div class="h-12 bg-amber-900/30 rounded-t-lg mt-2 flex items-center justify-center">
+                        <span class="text-lg">🥉</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Rest -->
-            <div class="bg-gray-800 rounded-xl divide-y divide-gray-700">
+            <!-- Rest of leaderboard -->
+            <div class="bg-[#1a1a24] rounded-xl divide-y divide-gray-800">
                 <div class="flex items-center gap-3 p-3">
-                    <span class="w-6 text-center text-gray-500 text-sm">4</span>
-                    <div class="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center text-xs font-bold">AB</div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium">Anna Bakker</p>
+                    <span class="w-5 text-center text-gray-500 text-xs">4</span>
+                    <div class="w-9 h-9 rounded-full bg-purple-800 flex items-center justify-center text-xs font-bold">AB</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">Anna Bakker</p>
                     </div>
-                    <span class="text-purple-400 text-sm">650</span>
+                    <span class="text-purple-400 text-sm font-medium">650</span>
                 </div>
                 <div class="flex items-center gap-3 p-3">
-                    <span class="w-6 text-center text-gray-500 text-sm">5</span>
-                    <div class="w-9 h-9 rounded-full bg-blue-700 flex items-center justify-center text-xs font-bold">DG</div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium">Dennis de Groot</p>
+                    <span class="w-5 text-center text-gray-500 text-xs">5</span>
+                    <div class="w-9 h-9 rounded-full bg-blue-800 flex items-center justify-center text-xs font-bold">DG</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">Dennis de Groot</p>
                     </div>
-                    <span class="text-purple-400 text-sm">580</span>
+                    <span class="text-purple-400 text-sm font-medium">580</span>
                 </div>
                 <div class="flex items-center gap-3 p-3">
-                    <span class="w-6 text-center text-gray-500 text-sm">6</span>
-                    <div class="w-9 h-9 rounded-full bg-pink-700 flex items-center justify-center text-xs font-bold">ED</div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium">Emma van Dijk</p>
+                    <span class="w-5 text-center text-gray-500 text-xs">6</span>
+                    <div class="w-9 h-9 rounded-full bg-pink-800 flex items-center justify-center text-xs font-bold">ED</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">Emma van Dijk</p>
                     </div>
-                    <span class="text-purple-400 text-sm">490</span>
+                    <span class="text-purple-400 text-sm font-medium">490</span>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Navigation -->
-        <div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800">
+        <!-- Bottom Navigation - Clean & Clear -->
+        <div class="fixed bottom-0 left-0 right-0 bg-[#0f0f14] border-t border-gray-800/50">
             <div class="max-w-[390px] mx-auto flex">
-                <button onclick="switchTab('rewards')" class="nav-item active flex-1 flex flex-col items-center gap-1 py-4">
+                <button onclick="switchTab('rewards')" class="nav-item active flex-1 flex flex-col items-center gap-1 py-3 relative">
                     <i data-lucide="gift" class="w-5 h-5"></i>
-                    <span class="text-[10px]">Rewards</span>
+                    <span class="text-[10px] font-medium">Rewards</span>
+                    <div class="nav-dot absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500 opacity-0"></div>
                 </button>
-                <button onclick="switchTab('deals')" class="nav-item flex-1 flex flex-col items-center gap-1 py-4 text-gray-500">
+                <button onclick="switchTab('deals')" class="nav-item flex-1 flex flex-col items-center gap-1 py-3 text-gray-500 relative">
                     <i data-lucide="percent" class="w-5 h-5"></i>
-                    <span class="text-[10px]">Deals</span>
+                    <span class="text-[10px] font-medium">Deals</span>
+                    <div class="nav-dot absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500 opacity-0"></div>
                 </button>
-                <button onclick="switchTab('challenges')" class="nav-item flex-1 flex flex-col items-center gap-1 py-4 text-gray-500">
+                <button onclick="switchTab('challenges')" class="nav-item flex-1 flex flex-col items-center gap-1 py-3 text-gray-500 relative">
                     <i data-lucide="trophy" class="w-5 h-5"></i>
-                    <span class="text-[10px]">Challenges</span>
+                    <span class="text-[10px] font-medium">Challenges</span>
+                    <div class="nav-dot absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500 opacity-0"></div>
                 </button>
-                <button onclick="switchTab('leaderboard')" class="nav-item flex-1 flex flex-col items-center gap-1 py-4 text-gray-500">
+                <button onclick="switchTab('leaderboard')" class="nav-item flex-1 flex flex-col items-center gap-1 py-3 text-gray-500 relative">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span class="text-[10px]">Ranglijst</span>
+                    <span class="text-[10px] font-medium">Ranglijst</span>
+                    <div class="nav-dot absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500 opacity-0"></div>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Modal -->
-    <div id="rewardModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-5">
-        <div class="bg-gray-800 rounded-2xl w-full max-w-sm">
-            <div class="h-40 bg-purple-900/50 rounded-t-2xl flex items-center justify-center relative">
-                <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+    <div id="rewardModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-5">
+        <div class="bg-[#1a1a24] rounded-2xl w-full max-w-sm border border-gray-800">
+            <div class="h-36 bg-gradient-to-br from-purple-900/40 to-purple-600/20 rounded-t-2xl flex items-center justify-center relative">
+                <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-800/80 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
                 <span id="modalEmoji" class="text-6xl">🎁</span>
             </div>
             <div class="p-5">
                 <h2 id="modalTitle" class="text-lg font-bold mb-1">Premium Shift Kit</h2>
-                <p id="modalPoints" class="text-purple-400 text-sm font-medium mb-3">150 punten</p>
-                <p id="modalDesc" class="text-gray-400 text-sm mb-5">Een hoogwaardige werkset met premium items.</p>
-                <button class="w-full py-3 bg-purple-600 rounded-xl font-medium">Claim beloning</button>
+                <p id="modalPoints" class="text-purple-400 font-semibold mb-3">150 punten</p>
+                <p id="modalDesc" class="text-gray-400 text-sm mb-5 leading-relaxed">Een hoogwaardige werkset met premium items voor tijdens je diensten.</p>
+                <button class="w-full py-3.5 bg-purple-600 hover:bg-purple-700 rounded-xl font-semibold transition-colors">
+                    Claim beloning
+                </button>
+                <p class="text-center text-xs text-gray-500 mt-3">Je hebt genoeg punten voor deze beloning</p>
             </div>
         </div>
     </div>
