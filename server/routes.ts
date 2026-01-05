@@ -3742,7 +3742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Employee app mockup route (mobiele app design)
+  // Employee app mockup route (mobiele app design - simpele versie)
   app.get("/employee-app", async (req: Request, res: Response) => {
     const fs = await import('fs');
     const path = await import('path');
@@ -3754,6 +3754,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.send(html);
     } catch (error) {
       res.status(404).send('Employee app niet gevonden');
+    }
+  });
+
+  // Employee app V1 - drukke versie met animaties
+  app.get("/employee-app-v1", async (req: Request, res: Response) => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const appPath = path.join(process.cwd(), 'dashboard-mockup', 'employee-app-v1.html');
+    
+    try {
+      const html = fs.readFileSync(appPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      res.status(404).send('Employee app V1 niet gevonden');
     }
   });
 
