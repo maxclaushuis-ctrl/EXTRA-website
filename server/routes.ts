@@ -3742,6 +3742,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Employee app mockup route (mobiele app design)
+  app.get("/employee-app", async (req: Request, res: Response) => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const appPath = path.join(process.cwd(), 'dashboard-mockup', 'employee-app.html');
+    
+    try {
+      const html = fs.readFileSync(appPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      res.status(404).send('Employee app niet gevonden');
+    }
+  });
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }
