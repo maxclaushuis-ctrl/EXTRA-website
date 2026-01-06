@@ -102,27 +102,50 @@
             </div>
         </div>
 
-        <!-- Points Hero Card - Simplified: Total Points + Current Badge -->
+        <!-- Points Hero Card - Large with Badge emphasis -->
         <div class="px-5 pb-4">
             <div class="gradient-border">
-                <div class="gradient-border-inner p-5 relative overflow-hidden">
+                <div class="gradient-border-inner p-6 relative overflow-hidden">
                     <div class="absolute inset-0 shimmer"></div>
                     <div class="relative">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-purple-300 text-xs uppercase tracking-widest mb-1">Totale punten</p>
-                                <div class="flex items-baseline gap-2">
-                                    <span class="text-5xl font-extrabold glow-text">3,450</span>
-                                    <span class="text-purple-400 text-sm font-medium">pts</span>
-                                </div>
+                        <!-- Points and Badge Row -->
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-purple-300 text-xs uppercase tracking-widest">Jouw Punten</p>
+                            <div class="flex items-center gap-1 text-xs text-purple-400">
+                                <i data-lucide="trending-up" class="w-3 h-3"></i>
+                                +125 deze week
                             </div>
-                            <!-- Current Badge -->
+                        </div>
+                        
+                        <!-- Large Points Display with Badge -->
+                        <div class="flex items-center justify-center gap-4 mb-5">
                             <div class="text-center">
-                                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-amber-600/30 flex items-center justify-center border border-yellow-500/30">
-                                    <span class="text-4xl">🥇</span>
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-6xl font-extrabold glow-text">3,450</span>
+                                    <span class="text-purple-400 text-lg font-medium">pts</span>
                                 </div>
-                                <p class="text-[10px] text-purple-400 mt-1">Gold</p>
                             </div>
+                            <!-- Current Badge - Prominent -->
+                            <div class="text-center">
+                                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-amber-600/40 flex items-center justify-center border-2 border-yellow-500/50 pulse-glow">
+                                    <span class="text-5xl">🥇</span>
+                                </div>
+                                <p class="text-xs text-yellow-400 font-medium mt-2">Gold Status</p>
+                            </div>
+                        </div>
+
+                        <!-- Next badge progress -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-purple-300">Volgende badge: 💎 Diamond</span>
+                                <span class="text-purple-400 font-medium">5,000 pts</span>
+                            </div>
+                            <div class="h-3 bg-purple-900/50 rounded-full overflow-hidden">
+                                <div class="h-full progress-gradient rounded-full relative" style="width: 69%">
+                                    <div class="absolute inset-0 shimmer"></div>
+                                </div>
+                            </div>
+                            <p class="text-center text-[10px] text-purple-400">Nog 1,550 punten voor Diamond! 💎</p>
                         </div>
                     </div>
                 </div>
