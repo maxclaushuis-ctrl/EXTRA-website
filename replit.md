@@ -1,249 +1,44 @@
 # EXTRAATJE - Test Environment
 
 ## Overview
+This project is the EXTRAATJE test environment, a complete replica of the EXTRA Rewards platform. Its primary purpose is to provide a safe space for testing and development without impacting the production system. It includes all core functionalities of the main system, such as challenges with progress bars, leaderboards, and a comprehensive reward system. The vision is to enable robust feature development and integration, eventually leading to production deployment with features like automated point allocation based on external planning systems.
 
-This is the EXTRAATJE test environment - a complete copy of the EXTRA Rewards platform for safe testing and development. This environment allows testing changes without affecting the main production system. All functionality is identical to the main system including the challenges with progress bars, leaderboard, and reward systems.
+## User Preferences
+Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
+### Core Design
+The application utilizes a monorepo structure, organizing code into `client/` for the React frontend, `server/` for the Express backend, and `shared/` for common TypeScript schemas.
+
 ### Tech Stack
-- **Frontend**: React with TypeScript, Vite build system
-- **UI Components**: Radix UI with shadcn/ui design system, Tailwind CSS
-- **Backend**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Session Management**: Express-session with connect-pg-simple
-- **Email Service**: SendGrid (with mock mode for development)
-- **Real-time**: WebSocket for live notifications
-- **Deployment**: Configured for Replit autoscale
+-   **Frontend**: React with TypeScript, Vite
+-   **UI**: Radix UI, shadcn/ui, Tailwind CSS
+-   **Backend**: Express.js with TypeScript
+-   **Database**: PostgreSQL with Drizzle ORM
+-   **Session Management**: Express-session with connect-pg-simple
+-   **Real-time**: WebSockets
 
-### Architecture Pattern
-The application follows a monorepo structure with clear separation between client, server, and shared components:
-- `client/` - React frontend application
-- `server/` - Express backend API
-- `shared/` - Common TypeScript schemas and types
+### Key Features
+-   **User Management**: Employee roles (admin/employee), TWV (Work Permit) tracking, points.
+-   **Rewards System**: Physical rewards, partner discounts (QR-code or discount code based), and a comprehensive point transaction audit trail.
+-   **Challenges**: Configurable challenges including one-time and progressive types with step-by-step progression and visual progress bars.
+-   **Leaderboard**: Real-time monthly leaderboard with position badges for top performers.
+-   **Authentication & Authorization**: Session-based with role-based access control and WebSocket authentication.
+-   **Marketing & Communications**: Email template system, campaign management, and automation triggers (e.g., birthdays).
+-   **Candidate Management**: Comprehensive pre-onboarding system for candidates, including skills assessment, availability, and GDPR compliance features.
 
-## Key Components
+### UI/UX
+-   Modern UI built with shadcn/ui.
+-   Mobile-optimized layouts for dashboards and leaderboards.
+-   Visual progress bars for challenges and celebration animations for milestones.
 
-### Database Schema (Drizzle)
-- **Users**: Employee management with roles (admin/employee), TWV tracking, points system
-- **Rewards**: Physical rewards that can be redeemed with points, with optional extraDescription field for detailed information
-- **Discounts**: Partner discounts with dual redemption methods (QR-code or discount code), including QR code PNG storage
-- **Point Transactions**: Complete audit trail of all point movements
-- **Redemptions**: Tracking of reward claims and fulfillment
-- **Rules**: Configurable point-earning rules
-- **Email Templates & Campaigns**: Marketing automation system
-- **Shift Planning**: Complete workforce planning with clients, locations, shifts, and assignments
-
-### Authentication & Authorization
-- Session-based authentication using express-session
-- Role-based access control (admin/employee)
-- WebSocket authentication for real-time features
-- Cookie-based session persistence
-
-### Points System
-- Configurable point-earning rules (fixed, multiplication, custom)
-- Automatic birthday bonuses (100 points default)
-- Point-to-Euro conversion (20 points = €1)
-- Transaction history and audit trails
-
-### TWV (Work Permit) Management
-- Comprehensive tracking of work permit statuses
-- Automated status updates and notifications
-- Integration with external planning systems via API IDs
-
-### Marketing & Communications
-- Email template system with variable substitution
-- Campaign management with scheduling
-- Automation triggers (birthday, new account, point thresholds)
-- SendGrid integration with fallback mock service
-
-## Data Flow
-
-### User Journey
-1. **Registration/Login**: Session-based authentication with role assignment
-2. **Points Earning**: Automated point allocation based on configurable rules
-3. **Rewards**: Browse and redeem physical rewards or discounts
-4. **Planning**: View and accept shift assignments (if applicable)
-5. **Tracking**: Complete history of points, redemptions, and activities
-
-### Admin Workflow
-1. **User Management**: Create/update employees, manage TWV status
-2. **Reward Configuration**: Add/edit rewards and discount partnerships
-3. **Rule Management**: Configure point-earning rules and thresholds
-4. **Analytics**: View comprehensive statistics and reports
-5. **Marketing**: Create campaigns and automated communications
+### Deployment
+Configured for Replit autoscale deployment, utilizing Vite for frontend builds and `tsx` for development. Environment variables are used for configuration (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`).
 
 ## External Dependencies
-
-### Required Services
-- **PostgreSQL Database**: Primary data storage
-- **SendGrid API**: Email delivery (optional, falls back to mock)
-- **External Planning API**: Integration via user.apiId field
-
-### Optional Integrations
-- **Google Analytics**: A/B testing and user behavior tracking
-- **Canvas Confetti**: Celebration animations for milestones
-
-## Deployment Strategy
-
-### Development
-- Vite dev server with HMR for frontend
-- tsx for TypeScript execution in development
-- Session persistence across server restarts
-- Mock services for external dependencies
-
-### Production
-- Static asset building with Vite
-- ESM bundle compilation with esbuild
-- PostgreSQL connection via DATABASE_URL
-- Autoscale deployment on Replit
-
-### Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string (required)
-- `SENDGRID_API_KEY`: Email service API key (optional)
-- `NODE_ENV`: Environment mode (development/production)
-
-## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
-## Production Deployment Planning
-
-**Current Status**: Test environment fully functional with complete rewards system
-**Next Phase**: Production deployment with Planworks API integration
-**Target**: Automatic point allocation based on real planning system data
-
-## Nieuw TWV Management System
-
-**17 Juli 2025**: Volledig losstaand TWV Management System ontwikkeld
-- Complete nieuwe applicatie structuur in `/twv-system/` directory
-- Eigen PostgreSQL database schema voor TWV workflow
-- React + TypeScript frontend met moderne UI (shadcn/ui)
-- Express.js backend met volledige API
-- Authenticatie systeem met rol-gebaseerde toegang (Admin/HR/Viewer)
-- Dashboard met real-time statistieken
-- Demo accounts: admin@twv.nl/admin123, hr@twv.nl/hr123
-- Volledig gescheiden van EXTRAATJE rewards platform
-- Eigen port (3000) en database configuratie
-- Klaar voor verdere ontwikkeling via Upwork outsourcing
-
-## Recent Changes
-
-- **November 10, 2025**: Implemented QR-code redemption system and enhanced reward detail display
-  - Added dual redemption system for discounts: traditional discount codes AND QR-code based redemption
-  - Implemented server-side QR-code generation using qrcode library with automatic PNG generation
-  - QR-codes stored as data URLs in database for instant display without external dependencies
-  - Admin interface: redemption type selector (code/QR) with conditional form fields and QR-code preview with download
-  - Smart QR regeneration: only generates new QR when switching from code to QR type (not on every edit)
-  - Employee deals view: conditional display showing "Bekijk QR-code" button for QR-type deals and "Code kopiëren" for code-type deals
-  - QR-code dialog displays scannable QR image, readable discount code, and deal description
-  - Enhanced rewards with extraDescription field for detailed product/service information
-  - Clickable reward cards with hover effects and info icon indicator for extended descriptions
-  - Reward detail pop-up shows full information including extra description, points cost, and redemption option
-  - Admin rewards form includes both short description (for card view) and extended description (for detail view)
-  - All new features fully tested with proper error handling and responsive mobile design
-  - Database schema updated: discounts table now includes redemptionType, qrCode, qrMetadata fields; rewards table includes extraDescription field
-
-- **July 27, 2025**: System ready for online deployment
-  - All functionality tested and working: rewards system, challenges, leaderboard
-  - Database populated with 6 test employees and realistic transaction data
-  - Planworks integration system implemented with both automated and manual challenge management
-  - Admin panel fully functional with user management and challenge progress tracking
-  - System configured for production deployment with proper environment variables
-  - Ready for live deployment via Replit's deployment system
-
-- **July 17, 2025**: Upwork Development Briefing Created
-  - Comprehensive 5,000+ word briefing document created for external development
-  - Professional job title: "Complete Employee Rewards Platform - Integration & Production Deployment"
-  - Detailed technical specifications for Planworks API integration
-  - Complete testing, deployment, and quality assurance requirements
-  - Phase-by-phase development timeline with clear deliverables
-  - Budget breakdown (€3,000-€5,000) and success criteria defined
-  - Multiple title options and posting strategy document created
-  - Ready for immediate posting to Upwork for expert-level developer recruitment
-
-- **July 17, 2025**: Complete technical removal of all TWV functionality from EXTRAATJE
-  - Removed all TWV-related database columns and enum types from PostgreSQL schema
-  - Eliminated TWV components, routes, and API endpoints from frontend and backend
-  - Cleaned all TWV references from storage layer and test data
-  - Removed TWV HTML landing page route and seed functions
-  - System now completely clean and focused purely on rewards functionality
-  - Database schema updated to remove all TWV fields (needs_twv, twv_status, etc.)
-  - EXTRAATJE is now fully restored to original clean rewards-only state
-
-- **June 26, 2025**: Simplified system to focus purely on rewards functionality
-  - Removed all planning system integration and TWV management features
-  - Cleaned up navigation to show only reward-related sections
-  - Added "Challenges" and "Kortingsacties" tabs to admin dashboard with full CRUD functionality
-  - System now purely focused on employee rewards, challenges, discounts, and leaderboard
-  - Removed unnecessary complexity for streamlined reward system experience
-
-- **June 26, 2025**: Created EXTRAATJE test environment as complete system copy
-  - Independent testing environment created from main EXTRA system
-  - All functionality preserved: rewards, leaderboard, challenges with progress bars
-  - Safe environment for testing changes without affecting main system
-  - Port configuration may need adjustment to avoid conflicts
-
-- **June 27, 2025**: Enhanced Challenges system with two distinct challenge types and admin management
-  - Implemented "eenmalig" (one-time) challenges for single completion tasks (e.g., "write a review")
-  - Implemented "doorlopend" (progressive) challenges with step-by-step progression system
-  - Added challenge type selection in admin interface with clear distinction
-  - Progressive challenges support multiple steps with individual target values and point rewards
-  - One-time challenges automatically expire/complete when finished
-  - Enhanced database schema with challenge type field and step completion tracking
-  - Updated API to handle both challenge types with proper validation
-  - Admin interface allows dynamic step creation for progressive challenges
-  - Added UserChallengeProgress component for manual challenge management from user profiles
-  - Admins can now manually complete one-time challenges and increment progress on progressive challenges
-  - Automatic point awarding when challenges/steps are completed manually
-  - Real-time progress tracking with visual progress bars and step completion indicators
-
-- **June 27, 2025**: Synchronized leaderboard with actual employee points system
-  - Implemented proper leaderboard API routes (/api/leaderboard, /api/leaderboard/previous-winner)
-  - Leaderboard now calculates monthly points from actual earned point transactions
-  - Fixed admin challenges route (/api/admin/challenges) for proper challenge visibility
-  - Updated mobile leaderboard to display correct monthly points for current user
-  - System now shows authentic monthly point achievements instead of separate tracking
-  - Previous month winner functionality based on real transaction history
-
-- **July 2, 2025**: Implemented simple position badges for leaderboard top 3
-  - Added position badges (🥇🥈🥉) for rankings 1, 2, and 3 in leaderboard
-  - Badges appear directly next to employee names in ranglijst
-  - Maintained original leaderboard layout and design
-  - Fixed leaderboard API to display user data with ranking system
-  - System now shows 4 active employees with proper ranking and monthly points
-  - Position badges only appear for top 3 positions as requested
-
-- **June 26, 2025**: Created complete system backup for testing purposes
-  - Full backup created at `/home/runner/extra-rewards-backup/`
-  - Compressed backup: `extra-rewards-backup-YYYYMMDD_HHMM.tar.gz`
-  - Backup includes all functionality: rewards, leaderboard, challenges with progress bars
-  - Complete restore instructions provided in `RESTORE_INSTRUCTIONS.md`
-  - System ready for deployment with backup safety net for testing
-
-- **June 25, 2025**: Enhanced Challenges system with progressive steps and visual progress tracking
-  - Implemented fourth tab "Challenges" in employee dashboard with mobile-optimized layout
-  - Created complete database schema for challenges, steps, and user progress tracking
-  - Built admin panel for creating/managing challenges with step-by-step progression
-  - Added 4 default challenge categories with specific progressive targets:
-    - "Diensten draaien": Steps at 10, 25, 50, 100 services (250-1500 points)
-    - "Last-minute inzet": Steps at 5, 10, 20 shifts (300-1200 points)
-    - "Vrienden aandragen": Steps at 3, 5, 10 referrals (400-1000 points)
-    - "Deel een story": Steps at 1, 5, 10 stories (150-600 points)
-  - Added visual progress bars showing completion percentage for each challenge step
-  - Challenges now display specific numbered targets (e.g. "Draai 10 diensten") instead of generic descriptions
-  - Each step shows points reward and current progress (e.g. "7/10")
-  - Challenge progress persists indefinitely (unlike monthly leaderboard resets)
-  - Real-time progress tracking with visual progress bars and completion animations
-
-- **June 24, 2025**: Implemented realtime leaderboard functionality
-  - Added monthly points tracking system with database schema
-  - Created leaderboard API endpoints (/api/leaderboard, /api/leaderboard/previous-winner)
-  - Built mobile-optimized leaderboard component with realtime WebSocket updates
-  - Integrated leaderboard as third tab in employee dashboard ("Ranglijst")
-  - Added automatic monthly points tracking for all earned point transactions
-  - Displays top 10 employees with rankings, previous month winner, and live updates
-
-## Changelog
-
-- June 24, 2025. Initial setup and leaderboard implementation
+-   **PostgreSQL Database**: Main data store.
+-   **SendGrid API**: Email delivery service (with mock mode for development).
+-   **External Planning API**: Integration for workforce planning via `user.apiId` field.
+-   **Google Analytics**: (Optional) For A/B testing and user behavior.
+-   **Canvas Confetti**: (Optional) For celebration animations.

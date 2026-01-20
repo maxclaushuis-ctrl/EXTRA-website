@@ -31,7 +31,14 @@ import {
   type Shift, type InsertShift,
   type Assignment, type InsertAssignment,
   type StaffPool, type InsertStaffPool,
-  type PoolMember, type InsertPoolMember
+  type PoolMember, type InsertPoolMember,
+  // Sollicitanten types
+  type Candidate, type InsertCandidate,
+  type CandidateFunctionProfile, type InsertCandidateFunctionProfile,
+  type SalaryScale, type InsertSalaryScale,
+  type CandidateAuditLog, type InsertCandidateAuditLog,
+  type CandidateImport, type InsertCandidateImport,
+  type CandidateWithDetails
 } from "@shared/schema";
 import { createHash } from "crypto";
 
@@ -279,6 +286,43 @@ export interface IStorage {
   createMarketingCampaignClick(click: InsertMarketingCampaignClick): Promise<MarketingCampaignClick>;
   getMarketingCampaignClicks(campaignId: number): Promise<MarketingCampaignClick[]>;
   getMarketingCampaignClicksByRecipient(recipientId: number): Promise<MarketingCampaignClick[]>;
+
+  // ==========================================
+  // SOLLICITANTEN (Candidates) methods
+  // ==========================================
+  
+  // Candidate CRUD
+  createCandidate(candidate: InsertCandidate): Promise<Candidate>;
+  getCandidates(filters?: {
+    functionType?: string;
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ candidates: Candidate[]; total: number }>;
+  getCandidate(id: number): Promise<CandidateWithDetails | undefined>;
+  updateCandidate(id: number, candidateData: Partial<InsertCandidate>): Promise<Candidate | undefined>;
+  deleteCandidate(id: number): Promise<boolean>;
+  updateCandidateStatus(id: number, status: string, changedByUserId?: number): Promise<Candidate | undefined>;
+  anonymizeCandidate(id: number, changedByUserId?: number): Promise<boolean>;
+  
+  // Salary Scale methods
+  createSalaryScale(scale: InsertSalaryScale): Promise<SalaryScale>;
+  getSalaryScales(functionType?: string): Promise<SalaryScale[]>;
+  getSalaryScale(id: number): Promise<SalaryScale | undefined>;
+  getSalaryScaleByAge(age: number, functionType?: string): Promise<SalaryScale | undefined>;
+  updateSalaryScale(id: number, scaleData: Partial<InsertSalaryScale>): Promise<SalaryScale | undefined>;
+  deleteSalaryScale(id: number): Promise<boolean>;
+  
+  // Candidate Audit Log methods
+  createCandidateAuditLog(log: InsertCandidateAuditLog): Promise<CandidateAuditLog>;
+  getCandidateAuditLogs(candidateId: number): Promise<CandidateAuditLog[]>;
+  
+  // Candidate Import methods
+  createCandidateImport(importData: InsertCandidateImport): Promise<CandidateImport>;
+  getCandidateImport(id: number): Promise<CandidateImport | undefined>;
+  updateCandidateImport(id: number, importData: Partial<InsertCandidateImport>): Promise<CandidateImport | undefined>;
+  getCandidateImports(): Promise<CandidateImport[]>;
 }
 
 // In-memory storage implementation
@@ -2772,6 +2816,309 @@ export class MemStorage implements IStorage {
 
   async getMarketingCampaignClicksByRecipient(recipientId: number): Promise<MarketingCampaignClick[]> {
     return Array.from(this.marketingCampaignClicks.values()).filter(c => c.recipientId === recipientId);
+  }
+
+  // ==========================================
+  // SOLLICITANTEN (Candidates) methods
+  // ==========================================
+  
+  private candidatesMap: Map<number, Candidate> = new Map();
+  private salaryScalesMap: Map<number, SalaryScale> = new Map();
+  private candidateAuditLogsMap: Map<number, CandidateAuditLog> = new Map();
+  private candidateImportsMap: Map<number, CandidateImport> = new Map();
+  private candidateIdCounter = 1;
+  private salaryScaleIdCounter = 1;
+  private candidateAuditLogIdCounter = 1;
+  private candidateImportIdCounter = 1;
+
+  async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
+    const id = this.candidateIdCounter++;
+    const now = new Date();
+    const newCandidate: Candidate = {
+      ...candidate,
+      id,
+      status: candidate.status || 'in_behandeling',
+      needsTwv: candidate.needsTwv ?? false,
+      salaryScaleApplied: candidate.salaryScaleApplied ?? false,
+      canCarryThreePlates: candidate.canCarryThreePlates ?? false,
+      isBarista: candidate.isBarista ?? false,
+      canMakeCocktails: candidate.canMakeCocktails ?? false,
+      canDoWashing: candidate.canDoWashing ?? false,
+      isPromoter: candidate.isPromoter ?? false,
+      isAssistantChef: candidate.isAssistantChef ?? false,
+      hasDriversLicense: candidate.hasDriversLicense ?? false,
+      hasOvChipkaart: candidate.hasOvChipkaart ?? false,
+      createdAt: now,
+      updatedAt: now,
+      anonymizedAt: null,
+      email: candidate.email ?? null,
+      phone: candidate.phone ?? null,
+      birthDate: candidate.birthDate ?? null,
+      nationality: candidate.nationality ?? null,
+      city: candidate.city ?? null,
+      language: candidate.language ?? null,
+      interviewDate: candidate.interviewDate ?? null,
+      interviewTime: candidate.interviewTime ?? null,
+      interviewLocation: candidate.interviewLocation ?? 'Kantoor EXTRA',
+      photoUrl: candidate.photoUrl ?? null,
+      desiredSalary: candidate.desiredSalary ?? null,
+      salaryScaleId: candidate.salaryScaleId ?? null,
+      softSkillsScore: candidate.softSkillsScore ?? null,
+      barScore: candidate.barScore ?? null,
+      serviceScore: candidate.serviceScore ?? null,
+      dinerScore: candidate.dinerScore ?? null,
+      overallImpressionScore: candidate.overallImpressionScore ?? null,
+      communicationScore: candidate.communicationScore ?? null,
+      serviceSkills: candidate.serviceSkills ?? null,
+      barSkills: candidate.barSkills ?? null,
+      dinerSkills: candidate.dinerSkills ?? null,
+      isOnlyJob: candidate.isOnlyJob ?? null,
+      availability: candidate.availability ?? null,
+      preferredWorkdays: candidate.preferredWorkdays ?? null,
+      partOfDayPreference: candidate.partOfDayPreference ?? null,
+      horecaExperience: candidate.horecaExperience ?? null,
+      previousExperience: candidate.previousExperience ?? null,
+      assessmentResult: candidate.assessmentResult ?? null,
+      experienceLevel: candidate.experienceLevel ?? null,
+      appearance: candidate.appearance ?? null,
+      attitude: candidate.attitude ?? null,
+      sourceChannel: candidate.sourceChannel ?? null,
+      notes: candidate.notes ?? null,
+      workClothing: candidate.workClothing ?? null,
+      createdByUserId: candidate.createdByUserId ?? null,
+      retentionUntil: candidate.retentionUntil ?? null,
+    };
+    this.candidatesMap.set(id, newCandidate);
+    return newCandidate;
+  }
+
+  async getCandidates(filters?: {
+    functionType?: string;
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ candidates: Candidate[]; total: number }> {
+    let candidates = Array.from(this.candidatesMap.values());
+    
+    if (filters?.functionType) {
+      candidates = candidates.filter(c => c.functionType === filters.functionType);
+    }
+    if (filters?.status) {
+      candidates = candidates.filter(c => c.status === filters.status);
+    }
+    if (filters?.search) {
+      const search = filters.search.toLowerCase();
+      candidates = candidates.filter(c => 
+        c.firstName.toLowerCase().includes(search) ||
+        c.lastName.toLowerCase().includes(search) ||
+        c.email?.toLowerCase().includes(search) ||
+        c.phone?.includes(search)
+      );
+    }
+    
+    const total = candidates.length;
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 25;
+    const start = (page - 1) * limit;
+    candidates = candidates.slice(start, start + limit);
+    
+    return { candidates, total };
+  }
+
+  async getCandidate(id: number): Promise<CandidateWithDetails | undefined> {
+    const candidate = this.candidatesMap.get(id);
+    if (!candidate) return undefined;
+    
+    const createdBy = candidate.createdByUserId 
+      ? this.users.get(candidate.createdByUserId) 
+      : undefined;
+    const salaryScale = candidate.salaryScaleId 
+      ? this.salaryScalesMap.get(candidate.salaryScaleId) 
+      : undefined;
+    
+    return { ...candidate, createdBy, salaryScale };
+  }
+
+  async updateCandidate(id: number, candidateData: Partial<InsertCandidate>): Promise<Candidate | undefined> {
+    const candidate = this.candidatesMap.get(id);
+    if (!candidate) return undefined;
+    
+    const updated = { ...candidate, ...candidateData, updatedAt: new Date() };
+    this.candidatesMap.set(id, updated);
+    return updated;
+  }
+
+  async deleteCandidate(id: number): Promise<boolean> {
+    return this.candidatesMap.delete(id);
+  }
+
+  async updateCandidateStatus(id: number, status: string, changedByUserId?: number): Promise<Candidate | undefined> {
+    const candidate = this.candidatesMap.get(id);
+    if (!candidate) return undefined;
+    
+    const oldStatus = candidate.status;
+    const updated = { 
+      ...candidate, 
+      status: status as Candidate['status'], 
+      updatedAt: new Date() 
+    };
+    this.candidatesMap.set(id, updated);
+    
+    // Log the status change
+    await this.createCandidateAuditLog({
+      candidateId: id,
+      action: 'status_changed',
+      changedByUserId: changedByUserId ?? null,
+      changeData: { fieldName: 'status', oldValue: oldStatus, newValue: status },
+      ipAddress: null
+    });
+    
+    return updated;
+  }
+
+  async anonymizeCandidate(id: number, changedByUserId?: number): Promise<boolean> {
+    const candidate = this.candidatesMap.get(id);
+    if (!candidate) return false;
+    
+    const anonymized: Candidate = {
+      ...candidate,
+      firstName: 'Geanonimiseerd',
+      lastName: 'Kandidaat',
+      email: null,
+      phone: null,
+      birthDate: null,
+      nationality: null,
+      city: null,
+      photoUrl: null,
+      notes: null,
+      anonymizedAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.candidatesMap.set(id, anonymized);
+    
+    await this.createCandidateAuditLog({
+      candidateId: id,
+      action: 'anonymized',
+      changedByUserId: changedByUserId ?? null,
+      changeData: { description: 'Kandidaat geanonimiseerd conform AVG' },
+      ipAddress: null
+    });
+    
+    return true;
+  }
+
+  async createSalaryScale(scale: InsertSalaryScale): Promise<SalaryScale> {
+    const id = this.salaryScaleIdCounter++;
+    const now = new Date();
+    const newScale: SalaryScale = {
+      ...scale,
+      id,
+      functionType: scale.functionType ?? null,
+      ageMax: scale.ageMax ?? null,
+      currency: scale.currency ?? 'EUR',
+      isActive: scale.isActive ?? true,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.salaryScalesMap.set(id, newScale);
+    return newScale;
+  }
+
+  async getSalaryScales(functionType?: string): Promise<SalaryScale[]> {
+    let scales = Array.from(this.salaryScalesMap.values());
+    if (functionType) {
+      scales = scales.filter(s => s.functionType === functionType || s.functionType === null);
+    }
+    return scales.filter(s => s.isActive);
+  }
+
+  async getSalaryScale(id: number): Promise<SalaryScale | undefined> {
+    return this.salaryScalesMap.get(id);
+  }
+
+  async getSalaryScaleByAge(age: number, functionType?: string): Promise<SalaryScale | undefined> {
+    const scales = await this.getSalaryScales(functionType);
+    return scales.find(s => 
+      s.ageMin <= age && (s.ageMax === null || s.ageMax >= age)
+    );
+  }
+
+  async updateSalaryScale(id: number, scaleData: Partial<InsertSalaryScale>): Promise<SalaryScale | undefined> {
+    const scale = this.salaryScalesMap.get(id);
+    if (!scale) return undefined;
+    
+    const updated = { ...scale, ...scaleData, updatedAt: new Date() };
+    this.salaryScalesMap.set(id, updated);
+    return updated;
+  }
+
+  async deleteSalaryScale(id: number): Promise<boolean> {
+    return this.salaryScalesMap.delete(id);
+  }
+
+  async createCandidateAuditLog(log: InsertCandidateAuditLog): Promise<CandidateAuditLog> {
+    const id = this.candidateAuditLogIdCounter++;
+    const newLog: CandidateAuditLog = {
+      ...log,
+      id,
+      candidateId: log.candidateId ?? null,
+      changedByUserId: log.changedByUserId ?? null,
+      changeData: log.changeData ?? null,
+      ipAddress: log.ipAddress ?? null,
+      createdAt: new Date()
+    };
+    this.candidateAuditLogsMap.set(id, newLog);
+    return newLog;
+  }
+
+  async getCandidateAuditLogs(candidateId: number): Promise<CandidateAuditLog[]> {
+    return Array.from(this.candidateAuditLogsMap.values())
+      .filter(log => log.candidateId === candidateId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createCandidateImport(importData: InsertCandidateImport): Promise<CandidateImport> {
+    const id = this.candidateImportIdCounter++;
+    const now = new Date();
+    const newImport: CandidateImport = {
+      ...importData,
+      id,
+      source: importData.source ?? 'google_sheets',
+      status: importData.status ?? 'pending',
+      totalRows: importData.totalRows ?? 0,
+      importedRows: importData.importedRows ?? 0,
+      skippedRows: importData.skippedRows ?? 0,
+      sheetId: importData.sheetId ?? null,
+      sheetTab: importData.sheetTab ?? null,
+      errorLog: importData.errorLog ?? null,
+      mappingConfig: importData.mappingConfig ?? null,
+      deduplicationStrategy: importData.deduplicationStrategy ?? 'skip',
+      createdByUserId: importData.createdByUserId ?? null,
+      startedAt: null,
+      completedAt: null,
+      createdAt: now
+    };
+    this.candidateImportsMap.set(id, newImport);
+    return newImport;
+  }
+
+  async getCandidateImport(id: number): Promise<CandidateImport | undefined> {
+    return this.candidateImportsMap.get(id);
+  }
+
+  async updateCandidateImport(id: number, importData: Partial<InsertCandidateImport>): Promise<CandidateImport | undefined> {
+    const existing = this.candidateImportsMap.get(id);
+    if (!existing) return undefined;
+    
+    const updated = { ...existing, ...importData };
+    this.candidateImportsMap.set(id, updated);
+    return updated;
+  }
+
+  async getCandidateImports(): Promise<CandidateImport[]> {
+    return Array.from(this.candidateImportsMap.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   private async initializeChallenges() {

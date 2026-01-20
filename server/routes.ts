@@ -20,9 +20,11 @@ import {
   insertMarketingCampaignSchema,
   insertMarketingCampaignRecipientSchema,
   insertMarketingCampaignClickSchema,
-
-  // Plansysteem schema imports
-
+  // Sollicitanten schema imports
+  insertCandidateSchema,
+  insertSalaryScaleSchema,
+  insertCandidateAuditLogSchema,
+  insertCandidateImportSchema,
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
@@ -3769,6 +3771,287 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.send(html);
     } catch (error) {
       res.status(404).send('Employee app V1 niet gevonden');
+    }
+  });
+
+  // ==========================================
+  // SOLLICITANTEN (Candidates) API Routes
+  // ==========================================
+
+  // Get all candidates with filters
+  app.get("/api/admin/candidates", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { functionType, status, search, page, limit } = req.query;
+      const result = await storage.getCandidates({
+        functionType: functionType as string | undefined,
+        status: status as string | undefined,
+        search: search as string | undefined,
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 25
+      });
+      return res.json(result);
+    } catch (error) {
+      console.error("Error fetching candidates:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van sollicitanten" });
+    }
+  });
+
+  // Get single candidate with details
+  app.get("/api/admin/candidates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const candidate = await storage.getCandidate(id);
+      if (!candidate) {
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+      return res.json(candidate);
+    } catch (error) {
+      console.error("Error fetching candidate:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de sollicitant" });
+    }
+  });
+
+  // Create new candidate
+  app.post("/api/admin/candidates", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCandidateSchema.parse({
+        ...req.body,
+        createdByUserId: req.session?.userId
+      });
+      const candidate = await storage.createCandidate(validatedData);
+      
+      // Log creation
+      await storage.createCandidateAuditLog({
+        candidateId: candidate.id,
+        action: 'created',
+        changedByUserId: req.session?.userId ?? null,
+        changeData: { description: 'Sollicitant aangemaakt' },
+        ipAddress: req.ip ?? null
+      });
+      
+      return res.status(201).json(candidate);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error creating candidate:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het aanmaken van de sollicitant" });
+    }
+  });
+
+  // Update candidate
+  app.patch("/api/admin/candidates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingCandidate = await storage.getCandidate(id);
+      if (!existingCandidate) {
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+      
+      const updatedCandidate = await storage.updateCandidate(id, req.body);
+      
+      // Log update
+      await storage.createCandidateAuditLog({
+        candidateId: id,
+        action: 'updated',
+        changedByUserId: req.session?.userId ?? null,
+        changeData: { updatedFields: Object.keys(req.body) },
+        ipAddress: req.ip ?? null
+      });
+      
+      return res.json(updatedCandidate);
+    } catch (error) {
+      console.error("Error updating candidate:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de sollicitant" });
+    }
+  });
+
+  // Update candidate status
+  app.patch("/api/admin/candidates/:id/status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!['in_behandeling', 'aangenomen', 'afgewezen'].includes(status)) {
+        return res.status(400).json({ message: "Ongeldige status" });
+      }
+      
+      const updatedCandidate = await storage.updateCandidateStatus(id, status, req.session?.userId);
+      if (!updatedCandidate) {
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+      
+      return res.json(updatedCandidate);
+    } catch (error) {
+      console.error("Error updating candidate status:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de status" });
+    }
+  });
+
+  // Delete candidate
+  app.delete("/api/admin/candidates/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteCandidate(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+      return res.json({ message: "Sollicitant verwijderd" });
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de sollicitant" });
+    }
+  });
+
+  // Anonymize candidate (GDPR)
+  app.post("/api/admin/candidates/:id/anonymize", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.anonymizeCandidate(id, req.session?.userId);
+      if (!success) {
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+      return res.json({ message: "Sollicitant geanonimiseerd conform AVG" });
+    } catch (error) {
+      console.error("Error anonymizing candidate:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het anonimiseren" });
+    }
+  });
+
+  // Get candidate audit logs
+  app.get("/api/admin/candidates/:id/audit-logs", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const logs = await storage.getCandidateAuditLogs(id);
+      return res.json(logs);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de audit logs" });
+    }
+  });
+
+  // ==========================================
+  // Salary Scales API Routes
+  // ==========================================
+
+  // Get all salary scales
+  app.get("/api/admin/salary-scales", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { functionType } = req.query;
+      const scales = await storage.getSalaryScales(functionType as string | undefined);
+      return res.json(scales);
+    } catch (error) {
+      console.error("Error fetching salary scales:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van salarisschalen" });
+    }
+  });
+
+  // Create salary scale
+  app.post("/api/admin/salary-scales", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertSalaryScaleSchema.parse(req.body);
+      const scale = await storage.createSalaryScale(validatedData);
+      return res.status(201).json(scale);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error creating salary scale:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het aanmaken van de salarisschaal" });
+    }
+  });
+
+  // Update salary scale
+  app.patch("/api/admin/salary-scales/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedScale = await storage.updateSalaryScale(id, req.body);
+      if (!updatedScale) {
+        return res.status(404).json({ message: "Salarisschaal niet gevonden" });
+      }
+      return res.json(updatedScale);
+    } catch (error) {
+      console.error("Error updating salary scale:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de salarisschaal" });
+    }
+  });
+
+  // Delete salary scale
+  app.delete("/api/admin/salary-scales/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteSalaryScale(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Salarisschaal niet gevonden" });
+      }
+      return res.json({ message: "Salarisschaal verwijderd" });
+    } catch (error) {
+      console.error("Error deleting salary scale:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de salarisschaal" });
+    }
+  });
+
+  // Get salary scale by age
+  app.get("/api/admin/salary-scales/by-age/:age", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const age = parseInt(req.params.age);
+      const { functionType } = req.query;
+      const scale = await storage.getSalaryScaleByAge(age, functionType as string | undefined);
+      if (!scale) {
+        return res.status(404).json({ message: "Geen salarisschaal gevonden voor deze leeftijd" });
+      }
+      return res.json(scale);
+    } catch (error) {
+      console.error("Error fetching salary scale by age:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de salarisschaal" });
+    }
+  });
+
+  // ==========================================
+  // Candidate Import API Routes
+  // ==========================================
+
+  // Get all imports
+  app.get("/api/admin/candidate-imports", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const imports = await storage.getCandidateImports();
+      return res.json(imports);
+    } catch (error) {
+      console.error("Error fetching candidate imports:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van imports" });
+    }
+  });
+
+  // Create import job
+  app.post("/api/admin/candidate-imports", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCandidateImportSchema.parse({
+        ...req.body,
+        createdByUserId: req.session?.userId
+      });
+      const importJob = await storage.createCandidateImport(validatedData);
+      return res.status(201).json(importJob);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error creating candidate import:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het starten van de import" });
+    }
+  });
+
+  // Get import status
+  app.get("/api/admin/candidate-imports/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const importJob = await storage.getCandidateImport(id);
+      if (!importJob) {
+        return res.status(404).json({ message: "Import niet gevonden" });
+      }
+      return res.json(importJob);
+    } catch (error) {
+      console.error("Error fetching candidate import:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van de import" });
     }
   });
 

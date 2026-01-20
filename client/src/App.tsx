@@ -14,6 +14,7 @@ import DiscountsPage from "@/pages/admin/Discounts";
 import ChallengesPage from "@/pages/AdminChallenges";
 import AdminChallengesSync from "@/pages/AdminChallengesSync";
 import RulesPage from "@/pages/admin/Rules";
+import CandidatesPage from "@/pages/admin/Candidates";
 
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
@@ -128,6 +129,9 @@ function Router() {
         </Route>
         <Route path="/admin/challenges/sync">
           {() => <ProtectedRoute component={AdminChallengesSync} adminOnly={true} />}
+        </Route>
+        <Route path="/admin/candidates">
+          {() => <ProtectedRoute component={CandidatesPage} adminOnly={true} />}
         </Route>
         <Route path="/admin/rules">
           {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}

@@ -22,7 +22,8 @@ import {
   Trophy,
   Home,
   Clock,
-  User
+  User,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -80,8 +81,14 @@ export function MainNav() {
             >
               Challenges
             </Link>
-
-
+            <Link
+              href="/admin/candidates"
+              className={`transition-colors hover:text-primary ${
+                location === "/admin/candidates" || location.startsWith("/admin/candidates/") ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
+            >
+              Sollicitanten
+            </Link>
 
             <Link
               href="/admin/settings"

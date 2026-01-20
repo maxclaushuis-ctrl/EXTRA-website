@@ -1,0 +1,108 @@
+Bouw binnen het bestaande EXTRAATJE beheerdersdashboard een nieuwe module: Sollicitanten (pre-onboarding database, los van puntensysteem).
+Doel
+Wij willen sollicitantendata die nu in Google Sheets staat (tabbladen per functie) migreren naar ons eigen systeem, in dezelfde stijl als het huidige EXTRAATJE admin dashboard. We moeten kunnen zoeken, filteren, statuses bijhouden (incl. “in behandeling”), gesprekdatum/tijd plannen, en na gesprek een foto uploaden. Daarnaast willen we eigen sollicitatieformulieren bouwen zodat nieuwe kandidaten direct in dit systeem landen (na MVP).
+Navigatie
+Voeg links onder Beheer een nieuw menu-item toe: Sollicitanten.
+Tabs (zoals Google Sheet)
+De Sollicitanten-pagina heeft tabs voor functies:
+Housekeeping
+Horecamedewerker
+Chef
+Front-office medewerker
+Elke tab toont een tabel met dezelfde kolommen als in het aangeleverde screenshot (zo veel mogelijk 1-op-1), maar dan in een nette UI.
+Status & pipeline
+We moeten per kandidaat altijd een status kunnen zien en aanpassen:
+In behandeling (default / actief)
+Aangenomen
+Afgewezen
+Status moet als badge zichtbaar zijn in de tabel en bovenaan de detailpagina.
+Gesprek plannen
+Per kandidaat moet je kunnen opslaan:
+Gesprek datum
+Gesprek tijd
+Optioneel: locatie (default “Kantoor EXTRA”)
+Dit moet zichtbaar zijn in de tabelkolommen (minimaal datum/tijd) én in detail.
+Foto upload (na gesprek)
+Na afloop van het gesprek maken we een foto. Dit moet in het kandidaatprofiel:
+Upload veld “Profielfoto sollicitant”
+Toon de foto op de detailpagina
+In tabel mag een klein thumbnail/icoon (MVP: icoon of kleine preview)
+Gebruik een veilige opslagmethode (bijv. object storage of server file storage, afhankelijk van stack). Sla in DB de bestands-URL + metadata op.
+Salaris: numeriek + leeftijdsschaal
+Salaris moet numeriek worden opgeslagen (€/uur).
+We werken met standaard schalen op basis van leeftijd.
+Voeg daarom ook velden toe:
+Leeftijd (of geboortedatum waaruit leeftijd berekend wordt)
+“Salarisschaal toegepast” (ja/nee)
+“Schaal-id / schaalregel” die is gebruikt
+MVP: schaal kan als configuratiebestand/DB tabel worden ingericht; UI toont voorgestelde uurloon op basis van leeftijd, maar admin kan overschrijven met handmatige waarde.
+“Wie” koppelen aan admin users
+Het veld Wie (wie heeft ingevuld) moet gekoppeld zijn aan ons admin user model:
+DB: created_by_user_id
+UI: toon naam (en eventueel initialen)
+Bij import: als onbekend, zet created_by_user_id = null en toon “Import”.
+Tabelkolommen: zoveel mogelijk 1-op-1 zoals screenshot
+Implementeer per tab de kolommen zoals in de screenshots (inclusief scores/skills en praktische velden). Belangrijk: het moet overzichtelijk blijven, dus:
+Gebruik horizontale scroll / sticky first columns (naam, status)
+Gebruik column picker (“Kolommen beheren”) zoals de dashboardstijl, zodat we kolommen kunnen tonen/verbergen per gebruiker (nice-to-have, maar graag).
+Default view = zoals screenshot.
+Detailpagina kandidaat
+Klik op een kandidaat opent een detailpagina met cards/secties:
+Basisgegevens (naam, telefoon, taal, woonplaats, geboorte/ leeftijd, nationaliteit, TWV)
+Status + gesprekdatum/tijd
+Skills/scores (functie-afhankelijk)
+Beschikbaarheid & voorkeuren
+Kleding / werkkleding (indien van toepassing)
+Ervaring (functie-afhankelijk)
+Salaris (numeriek) + schaalinfo
+Opmerkingen / bijzonderheden (met audit log: wie + wanneer)
+CRUD + API
+Endpoints (voorbeeld):
+GET /candidates?function_type=&q=&status=&filters...&page=&pageSize=
+POST /candidates
+GET /candidates/:id
+PATCH /candidates/:id
+POST /candidates/:id/photo (upload)
+POST /imports/google-sheets (import job starten)
+GET /imports/:id (status/resultaat)
+Import vanuit Google Sheets (bestaande data)
+We hebben bestaande data in Google Sheets met tabs per functie. Bouw een importfunctie:
+Admin kan Google Sheet ID/URL invoeren + tab kiezen of “import all”.
+Import moet de kolommen mappen naar onze velden.
+Log “import run”: starttijd, eindtijd, aantal geïmporteerd, errors per rij.
+Dedup: als telefoonnummer + naam matcht, update bestaande record (of maak een configurabele keuze: “skip / update / duplicate”).
+Formulieren (volgende stap, alvast voorbereid)
+Na MVP willen we eigen sollicitatieformulieren in dit systeem. Bouw het datamodel alvast flexibel:
+Candidate basisrecord
+CandidateFunctionProfile of JSON-schema per functie om vragen/antwoorden uitbreidbaar te maken
+Zorg dat nieuwe velden later toegevoegd kunnen worden zonder zware migrations
+AVG / privacy requirements
+We willen gegevens bewaren voor medewerkers die aangenomen zijn, maar wel AVG-proof werken.
+Implementeer:
+Retention policy kandidaten
+Als status = Afgewezen: automatische verwijdering/anonymisatie na X maanden (zet X als config, default bijv. 6 maanden).
+Aangenomen kandidaten
+Bij status = Aangenomen: record blijft bewaard (wordt onderdeel van “medewerker dossier” later).
+Audit & toestemming
+Log wie wijzigingen doet (admin user id, timestamp, field changes).
+Recht op verwijdering
+Admin actie “Verwijderen/anonimiseren” met waarschuwing + logging.
+Dataminimalisatie
+Alleen noodzakelijke velden verplicht; overige optioneel.
+UI kwaliteit
+Header “Sollicitanten” + korte uitleg “Database vóór onboarding”.
+Tabs direct onder header.
+Zoekbalk + filters boven tabel.
+Status badges.
+Empty state per tab met “+ Nieuwe sollicitant”.
+Paginatie (25/50/100) + debounce search.
+Responsive (desktop-first).
+Deliverables
+Sidebar menu item + route/pagina.
+DB schema + migrations (incl. users-koppeling, interview datetime, salary numeric, photo url, status).
+API endpoints + server logic + validatie.
+UI: list views per tab met kolommen zoals screenshot, filters, detailpagina, create/edit, foto upload.
+Import module vanuit Google Sheets incl. mapping + import log.
+AVG/retentie mechanismes (configurable) + admin acties + audit log.
+Belangrijk
+Dit staat los van puntensysteem. Later komt er een “Promoveer naar medewerker” flow, maar nu alleen status Aangenomen/Afgewezen/In behandeling.

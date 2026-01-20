@@ -826,3 +826,235 @@ export type UserBadge = typeof userBadges.$inferSelect;
 export type UserBadgeWithDetails = UserBadge & {
   badge: Badge;
 };
+
+// ==========================================
+// SOLLICITANTEN MODULE (Pre-onboarding)
+// ==========================================
+
+// Sollicitant status enum
+export const candidateStatusEnum = pgEnum('candidate_status', ['in_behandeling', 'aangenomen', 'afgewezen']);
+
+// Functie types voor sollicitanten
+export const candidateFunctionEnum = pgEnum('candidate_function', ['housekeeping', 'horecamedewerker', 'chef', 'frontoffice']);
+
+// Audit action types
+export const candidateAuditActionEnum = pgEnum('candidate_audit_action', ['created', 'updated', 'status_changed', 'imported', 'anonymized', 'deleted', 'photo_uploaded', 'interview_scheduled']);
+
+// Import status enum
+export const candidateImportStatusEnum = pgEnum('candidate_import_status', ['pending', 'processing', 'completed', 'failed']);
+
+// Sollicitanten (candidates) tabel - hoofdtabel voor alle sollicitanten
+export const candidates = pgTable("candidates", {
+  id: serial("id").primaryKey(),
+  
+  // Basis persoonsgegevens
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  birthDate: date("birth_date"),
+  nationality: text("nationality"),
+  city: text("city"),
+  language: text("language"), // Taal die ze spreken
+  
+  // Functie en status
+  functionType: candidateFunctionEnum("function_type").notNull(),
+  status: candidateStatusEnum("status").default('in_behandeling').notNull(),
+  
+  // TWV (Tewerkstellingsvergunning)
+  needsTwv: boolean("needs_twv").default(false),
+  
+  // Gesprek planning
+  interviewDate: date("interview_date"),
+  interviewTime: time("interview_time"),
+  interviewLocation: text("interview_location").default("Kantoor EXTRA"),
+  
+  // Foto
+  photoUrl: text("photo_url"),
+  
+  // Salaris
+  desiredSalary: integer("desired_salary"), // In eurocenten per uur
+  salaryScaleApplied: boolean("salary_scale_applied").default(false),
+  salaryScaleId: integer("salary_scale_id"),
+  
+  // Scores en beoordelingen (1-5 of percentage)
+  softSkillsScore: integer("soft_skills_score"), // percentage
+  barScore: integer("bar_score"), // percentage
+  serviceScore: integer("service_score"), // Bedieningscore percentage
+  dinerScore: integer("diner_score"), // percentage
+  overallImpressionScore: integer("overall_impression_score"), // 1-5
+  communicationScore: integer("communication_score"), // 1-5
+  
+  // Vaardigheden (1-5 schaal)
+  serviceSkills: integer("service_skills"), // Bediening vaardigheden
+  barSkills: integer("bar_skills"), // Bar vaardigheden
+  dinerSkills: integer("diner_skills"), // Diner vaardigheden
+  
+  // Specifieke skills (ja/nee)
+  canCarryThreePlates: boolean("can_carry_three_plates").default(false), // 3 borden lopen
+  isBarista: boolean("is_barista").default(false),
+  canMakeCocktails: boolean("can_make_cocktails").default(false), // Cocktailshaker
+  canDoWashing: boolean("can_do_washing").default(false), // Afwas
+  isPromoter: boolean("is_promoter").default(false), // Promotiemedewerker
+  isAssistantChef: boolean("is_assistant_chef").default(false), // Assistent chef
+  
+  // Praktische zaken
+  hasDriversLicense: boolean("has_drivers_license").default(false),
+  hasOvChipkaart: boolean("has_ov_chipkaart").default(false),
+  workClothing: text("work_clothing"), // Werkkleding beschrijving
+  
+  // Beschikbaarheid
+  availability: text("availability"), // Bijv. "Weekenden, 1x in de week"
+  preferredWorkdays: text("preferred_workdays"), // Bijv. "Vrijdag, Zaterdag, Zondag"
+  partOfDayPreference: text("part_of_day_preference"), // hint van de dag
+  
+  // Ervaring
+  horecaExperience: text("horeca_experience"), // Bijv. "6 - 12 maanden"
+  isOnlyJob: boolean("is_only_job"), // Enige bijbaan?
+  previousExperience: text("previous_experience"), // erkervaring
+  
+  // Beoordeling na gesprek
+  assessmentResult: text("assessment_result"), // Goede indruk, Topper, etc.
+  experienceLevel: text("experience_level"), // Beperkte ervaring, Veel ervaring
+  appearance: text("appearance"), // Nette kleding, verzorgd
+  attitude: text("attitude"), // Spontaan, Verlegen
+  
+  // Herkomst
+  sourceChannel: text("source_channel"), // Kanaal: Via ADE, Google, etc.
+  
+  // Opmerkingen
+  notes: text("notes"),
+  
+  // Wie heeft aangemaakt
+  createdByUserId: integer("created_by_user_id").references(() => users.id),
+  
+  // AVG/GDPR
+  retentionUntil: date("retention_until"), // Datum tot wanneer data bewaard mag worden
+  anonymizedAt: timestamp("anonymized_at"), // Wanneer geanonimiseerd
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Functie-specifieke profielen (voor extra velden per functie type)
+export const candidateFunctionProfiles = pgTable("candidate_function_profiles", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: 'cascade' }).notNull(),
+  functionType: candidateFunctionEnum("function_type").notNull(),
+  extraFields: json("extra_fields").$type<Record<string, any>>(), // Functie-specifieke velden
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Salarisschalen per leeftijd
+export const salaryScales = pgTable("salary_scales", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Bijv. "21 jaar en ouder"
+  functionType: candidateFunctionEnum("function_type"), // null = voor alle functies
+  ageMin: integer("age_min").notNull(),
+  ageMax: integer("age_max"), // null = geen maximum
+  hourlyRate: integer("hourly_rate").notNull(), // In eurocenten
+  currency: text("currency").default("EUR").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Audit log voor kandidaten (AVG compliance)
+export const candidateAuditLog = pgTable("candidate_audit_log", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: 'set null' }),
+  action: candidateAuditActionEnum("action").notNull(),
+  changedByUserId: integer("changed_by_user_id").references(() => users.id),
+  changeData: json("change_data").$type<{
+    fieldName?: string;
+    oldValue?: any;
+    newValue?: any;
+    description?: string;
+  }>(),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Import jobs voor Google Sheets
+export const candidateImports = pgTable("candidate_imports", {
+  id: serial("id").primaryKey(),
+  source: text("source").notNull().default("google_sheets"),
+  sheetId: text("sheet_id"),
+  sheetTab: text("sheet_tab"), // Welke tab geïmporteerd
+  status: candidateImportStatusEnum("status").default('pending').notNull(),
+  totalRows: integer("total_rows").default(0),
+  importedRows: integer("imported_rows").default(0),
+  skippedRows: integer("skipped_rows").default(0),
+  errorLog: json("error_log").$type<Array<{
+    row: number;
+    error: string;
+    data?: Record<string, any>;
+  }>>(),
+  mappingConfig: json("mapping_config").$type<Record<string, string>>(), // Kolom mappings
+  deduplicationStrategy: text("deduplication_strategy").default("skip"), // skip, update, duplicate
+  createdByUserId: integer("created_by_user_id").references(() => users.id),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Insert schemas voor sollicitanten
+export const insertCandidateSchema = createInsertSchema(candidates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  anonymizedAt: true,
+});
+
+export const insertCandidateFunctionProfileSchema = createInsertSchema(candidateFunctionProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSalaryScaleSchema = createInsertSchema(salaryScales).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCandidateAuditLogSchema = createInsertSchema(candidateAuditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCandidateImportSchema = createInsertSchema(candidateImports).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+// Type definities voor sollicitanten
+export type InsertCandidate = z.infer<typeof insertCandidateSchema>;
+export type Candidate = typeof candidates.$inferSelect;
+
+export type InsertCandidateFunctionProfile = z.infer<typeof insertCandidateFunctionProfileSchema>;
+export type CandidateFunctionProfile = typeof candidateFunctionProfiles.$inferSelect;
+
+export type InsertSalaryScale = z.infer<typeof insertSalaryScaleSchema>;
+export type SalaryScale = typeof salaryScales.$inferSelect;
+
+export type InsertCandidateAuditLog = z.infer<typeof insertCandidateAuditLogSchema>;
+export type CandidateAuditLog = typeof candidateAuditLog.$inferSelect;
+
+export type InsertCandidateImport = z.infer<typeof insertCandidateImportSchema>;
+export type CandidateImport = typeof candidateImports.$inferSelect;
+
+// Extended types met relaties
+export type CandidateWithDetails = Candidate & {
+  createdBy?: User;
+  functionProfiles?: CandidateFunctionProfile[];
+  salaryScale?: SalaryScale;
+};
+
+export type CandidateAuditLogWithUser = CandidateAuditLog & {
+  changedBy?: User;
+};
