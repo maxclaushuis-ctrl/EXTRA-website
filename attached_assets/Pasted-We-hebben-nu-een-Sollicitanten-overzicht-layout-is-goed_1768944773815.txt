@@ -1,0 +1,62 @@
+We hebben nu een Sollicitanten-overzicht (layout is goed), maar functioneel moet het slimmer: de vragen/velden verschillen per functie en de lijst moet daarom dynamische kolommen tonen afhankelijk van de gekozen functie, inclusief scores (met name voor Horecamedewerker).
+Doel
+Behoud één centrale module Sollicitanten voor de pipeline (status, interviewplanning, zoeken), maar maak de tabel context-aware:
+In “Alle functies” zie je een generieke masterlijst (pipeline view).
+Zodra een functie is geselecteerd (via dropdown “Alle functies” of via functietabs), wisselt de lijst naar een functie-specifieke view met de juiste kolommen en berekende scores.
+UX wijzigingen
+Master view (Alle functies)
+Blijf exact zoals nu qua opzet, maar voeg kolom Wie toe (gekoppeld aan admin users).
+Kolommen master: Naam (incl woonplaats), Functie, Contact, Status, Sollicitatie datum, Interview datum+tijd, Wie, Acties.
+Function views (per functie)
+Wanneer function_filter != ALL, wissel de tabelkolommen automatisch:
+Horecamedewerker view: toon extra scorekolommen direct in de lijst.
+Chef / Housekeeping / Front-office view: toon per functie de belangrijkste velden zoals in de Google Sheet-tabbladen (zoveel mogelijk 1-op-1).
+Voeg rechtsboven een subtiele indicator toe: “Weergave: Master” of “Weergave: Horecamedewerker” etc.
+Tabs boven de lijst
+Houd de status tabs: Alle / In behandeling / Aangenomen / Afgewezen.
+Deze tabs moeten altijd blijven werken, ook binnen een function view.
+Horecamedewerker scores (must-have)
+Voor kandidaten met functie = Horecamedewerker moeten deze velden opgeslagen en getoond kunnen worden:
+softskills_score (0–100)
+bar_score (0–100)
+bediening_score (0–100)
+diner_score (0–100)
+Daarnaast een berekend veld in de UI + API:
+overall_horeca_score (0–100) berekend met gewichten:
+softskills 30%
+bar 20%
+bediening 25%
+diner 25%
+Als 1 of meer subscores null/empty zijn: herverdeel de gewichten over de ingevulde subscores (geen penalty door missende data).
+Horecamedewerker tabelkolommen (minimaal)
+Naam | Contact | Status | Interview | Overall | Softskills | Bar | Bediening | Diner | Acties
+Datamodel aanpassing
+Zorg voor een generieke Candidate tabel met basisvelden (naam, contact, status, interview_datetime, function_type, created_by_user_id, etc.).
+Voeg functie-specifieke velden toe via:
+Ofwel aparte tabellen per functie (bijv. CandidateHorecaProfile)
+Of JSON profile per functie (maar dan wel met indexen/validatie voor scores)
+Voor Horecamedewerker moeten de scorevelden querybaar zijn (voor sorteren/filteren).
+Sorteren & filteren (update)
+In Horecamedewerker view moet je kunnen sorteren op:
+Overall score (desc)
+Bar / Bediening / Diner / Softskills
+Voeg optioneel filter toe: “Min. overall score” (slider of dropdown) in Horecamedewerker view.
+Interviewplanning & status (blijft)
+Interview datum/tijd blijft overal zichtbaar en bewerkbaar.
+Status blijft: In behandeling / Aangenomen / Afgewezen.
+Implementatie details
+Pas de API GET /candidates aan zodat hij:
+function_type filter ondersteunt
+indien function_type=Horecamedewerker: scorevelden + overall teruggeeft
+UI: maak een column configuration map:
+columnsByView = { master: [...], horeca: [...], chef: [...], housekeeping: [...], frontoffice: [...] }
+Houd styling consistent met bestaande dashboard (cards, table, badges).
+Definition of Done
+Master view toont niet alles door elkaar qua functievelden; alleen generieke pipeline data.
+Horecamedewerker view toont scores in de lijst + overall score + sortering.
+Detailpagina blijft alle velden tonen (incl foto upload en salaris numeriek).
+Geen regressie: zoeken, filters, status tabs blijven werken.
+Extra (nice-to-have)
+“Kolommen beheren” per view zodat admins zelf kolommen kunnen tonen/verbergen.
+In tabel bij scores een subtiele kleur/badge (geen schreeuwerige heatmap) op basis van ranges:
+0–49 laag, 50–74 oké, 75–100 sterk.
