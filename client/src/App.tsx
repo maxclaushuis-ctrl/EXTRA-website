@@ -15,6 +15,7 @@ import ChallengesPage from "@/pages/AdminChallenges";
 import AdminChallengesSync from "@/pages/AdminChallengesSync";
 import RulesPage from "@/pages/admin/Rules";
 import CandidatesPage from "@/pages/admin/Candidates";
+import SollicitatieFormulier from "@/pages/SollicitatieFormulier";
 
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
@@ -90,6 +91,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
+        <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
         
         {/* Gebruiker routes */}
         <Route path="/dashboard">

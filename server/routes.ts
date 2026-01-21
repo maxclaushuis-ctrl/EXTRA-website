@@ -4055,6 +4055,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==========================================
+  // Public Sollicitatie Form API (no auth required)
+  // ==========================================
+  
+  app.post("/api/sollicitatie", async (req: Request, res: Response) => {
+    try {
+      const data = req.body;
+      
+      // Map form data to candidate schema (matching existing column names)
+      const candidateData = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email || null,
+        phone: data.phone || null,
+        functionType: data.functionType,
+        status: 'in_behandeling' as const,
+        city: data.city || null,
+        birthDate: data.birthDate || null,
+        nationality: data.nationality || null,
+        needsTwv: data.needsWorkPermit === 'ja',
+        language: (data.languages || []).join(', '),
+        
+        // Experience
+        horecaExperience: data.horecaExperience || null,
+        previousExperience: (data.experienceTypes || []).join(', '),
+        isOnlyJob: !data.otherJob,
+        
+        // Skills (Horecamedewerker specific)
+        canCarryThreePlates: data.canCarry3Plates === 'ja',
+        isBarista: data.isBarista === 'ja',
+        canMakeCocktails: data.canShakeCocktails === 'ja',
+        serviceScore: data.serviceSkills ? data.serviceSkills * 20 : null,  // Convert 1-5 to 0-100
+        barScore: data.barSkills ? data.barSkills * 20 : null,
+        dinerScore: data.dinerSkills ? data.dinerSkills * 20 : null,
+        isAssistantChef: data.isAssistantChef === 'ja',
+        canDoWashing: data.canWashDishes === 'ja',
+        isPromoter: data.isPromoWorker === 'ja',
+        
+        // Practical
+        hasDriversLicense: data.hasDriversLicense === 'ja',
+        hasOvChipkaart: data.hasStudentOV === 'ja',
+        workClothing: (data.workClothing || []).join(', '),
+        
+        // Availability
+        availability: data.availableHours || null,
+        preferredWorkdays: (data.preferredDays || []).join(', '),
+        partOfDayPreference: (data.preferredTimes || []).join(', '),
+        
+        // Assessment
+        assessmentResult: data.assessmentRating || null,
+        experienceLevel: data.experienceLevel || null,
+        appearance: data.appearance || null,
+        attitude: data.attitude || null,
+        communicationScore: data.communicationSkills || null,
+        overallImpressionScore: data.overallImpression || null,
+        softSkillsScore: data.communicationSkills && data.overallImpression 
+          ? Math.round((data.communicationSkills * 20 + data.overallImpression * 20) / 2)
+          : null,
+        
+        // Source/channel
+        sourceChannel: data.channel || null,
+        
+        // Remarks
+        notes: data.remarks || null,
+      };
+
+      const candidate = await storage.createCandidate(candidateData as any);
+
+      return res.status(201).json({ 
+        message: "Sollicitatie succesvol opgeslagen",
+        candidateId: candidate.id 
+      });
+    } catch (error) {
+      console.error("Error saving sollicitatie:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het opslaan van de sollicitatie" });
+    }
+  });
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }
