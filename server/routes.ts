@@ -1,6 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { createHash } from "crypto";
 import { 
@@ -3900,6 +3903,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting candidate:", error);
       return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de sollicitant" });
+    }
+  });
+
+  // Configure multer for candidate photo uploads
+  const candidatePhotoStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'uploads', 'candidates');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const candidateId = req.params.id;
+      const ext = path.extname(file.originalname);
+      const filename = `candidate-${candidateId}-${Date.now()}${ext}`;
+      cb(null, filename);
+    }
+  });
+
+  const candidatePhotoUpload = multer({
+    storage: candidatePhotoStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Alleen JPEG, PNG en WebP afbeeldingen zijn toegestaan'));
+      }
+    }
+  });
+
+  // Upload candidate photo
+  app.post("/api/admin/candidates/:id/photo", adminMiddleware, candidatePhotoUpload.single('photo'), async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ message: "Geen foto geüpload" });
+      }
+
+      const candidate = await storage.getCandidate(id);
+      if (!candidate) {
+        fs.unlinkSync(file.path);
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+
+      // Delete old photo if exists
+      if (candidate.photoUrl) {
+        const oldPath = path.join(process.cwd(), candidate.photoUrl);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+
+      const photoUrl = `/uploads/candidates/${file.filename}`;
+      await storage.updateCandidate(id, { photoUrl });
+
+      return res.json({ 
+        message: "Foto succesvol geüpload",
+        photoUrl 
+      });
+    } catch (error) {
+      console.error("Error uploading candidate photo:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het uploaden van de foto" });
+    }
+  });
+
+  // Delete candidate photo
+  app.delete("/api/admin/candidates/:id/photo", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const candidate = await storage.getCandidate(id);
+      
+      if (!candidate) {
+        return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      }
+
+      if (candidate.photoUrl) {
+        const photoPath = path.join(process.cwd(), candidate.photoUrl);
+        if (fs.existsSync(photoPath)) {
+          fs.unlinkSync(photoPath);
+        }
+        await storage.updateCandidate(id, { photoUrl: null });
+      }
+
+      return res.json({ message: "Foto verwijderd" });
+    } catch (error) {
+      console.error("Error deleting candidate photo:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de foto" });
     }
   });
 

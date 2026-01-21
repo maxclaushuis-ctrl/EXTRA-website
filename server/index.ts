@@ -27,6 +27,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Serve uploaded files (candidate photos, etc.)
+app.use('/uploads', express.static('uploads'));
+
 // CORS headers toevoegen om cross-domain problemen te voorkomen
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*');

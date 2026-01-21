@@ -63,15 +63,18 @@ import {
   Star,
   Shield,
   FileText,
-  Upload
+  Upload,
+  Filter,
+  LayoutList,
+  ArrowUpDown
 } from "lucide-react";
 import type { Candidate } from "@shared/schema";
 
 const functionTypes = [
-  { value: "housekeeping", label: "Housekeeping" },
-  { value: "horecamedewerker", label: "Horecamedewerker" },
-  { value: "chef", label: "Chef" },
-  { value: "front_office", label: "Front-office" },
+  { value: "housekeeping", label: "Housekeeping", color: "green" },
+  { value: "horecamedewerker", label: "Horecamedewerker", color: "orange" },
+  { value: "chef", label: "Chef", color: "blue" },
+  { value: "front_office", label: "Front-office", color: "pink" },
 ];
 
 const statusOptions = [
@@ -96,15 +99,121 @@ function getFunctionLabel(type: string) {
   return func?.label || type;
 }
 
+function getScoreBadge(score: number | null | undefined) {
+  if (score === null || score === undefined) {
+    return <span className="text-gray-400">-</span>;
+  }
+  let colorClass = 'bg-red-100 text-red-700';
+  if (score >= 75) colorClass = 'bg-green-100 text-green-700';
+  else if (score >= 50) colorClass = 'bg-yellow-100 text-yellow-700';
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full ${colorClass} font-medium`}>
+      {score}
+    </span>
+  );
+}
+
+function calculateOverallScore(candidate: Candidate) {
+  const weights = { softskills: 0.30, bar: 0.20, bediening: 0.25, diner: 0.25 };
+  const scores = [
+    { value: candidate.softSkillsScore, weight: weights.softskills },
+    { value: candidate.barScore, weight: weights.bar },
+    { value: candidate.serviceScore, weight: weights.bediening },
+    { value: candidate.dinerScore, weight: weights.diner }
+  ].filter(s => s.value !== null && s.value !== undefined);
+  
+  if (scores.length === 0) return null;
+  
+  const totalWeight = scores.reduce((sum, s) => sum + s.weight, 0);
+  const weightedSum = scores.reduce((sum, s) => sum + ((s.value || 0) * s.weight), 0);
+  return Math.round(weightedSum / totalWeight);
+}
+
+function calculateAge(birthDate: string): number {
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+function SalaryScaleInfo({ birthDate, functionType, currentScaleId }: { 
+  birthDate: string; 
+  functionType: string;
+  currentScaleId?: number | null;
+}) {
+  const age = calculateAge(birthDate);
+  
+  const { data: scaleByAge, isLoading } = useQuery<{ id: number; name: string; hourlyRate: number }>({
+    queryKey: ['/api/admin/salary-scales/by-age', age, functionType],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (functionType) params.set('functionType', functionType);
+      const res = await fetch(`/api/admin/salary-scales/by-age/${age}?${params}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!birthDate
+  });
+
+  const formatCurrency = (cents: number) => {
+    return new Intl.NumberFormat('nl-NL', { 
+      style: 'currency', 
+      currency: 'EUR' 
+    }).format(cents / 100);
+  };
+
+  if (isLoading) {
+    return <span className="text-sm text-muted-foreground">Laden...</span>;
+  }
+
+  if (!scaleByAge) {
+    return (
+      <div className="text-sm">
+        <p className="text-muted-foreground">Leeftijd: {age} jaar</p>
+        <p className="text-orange-600">Geen salarisschaal beschikbaar voor deze leeftijd</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Leeftijd:</span>
+        <Badge variant="outline">{age} jaar</Badge>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Schaal:</span>
+        <span className="text-sm font-medium">{scaleByAge.name}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Uurloon:</span>
+        <span className="text-sm font-semibold text-green-600">
+          {formatCurrency(scaleByAge.hourlyRate)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function CandidatesPage() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [functionFilter, setFunctionFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("createdAt-desc");
+  const [minScore, setMinScore] = useState<number>(0);
   const [page, setPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
+  const [interviewCandidate, setInterviewCandidate] = useState<Candidate | null>(null);
 
   const { data, isLoading } = useQuery<{ candidates: Candidate[]; total: number }>({
     queryKey: ['/api/admin/candidates', { search, status: statusFilter, functionType: functionFilter, page }],
@@ -164,6 +273,45 @@ export default function CandidatesPage() {
     }
   });
 
+  const scheduleInterviewMutation = useMutation({
+    mutationFn: async (data: { id: number; interviewDate: string; interviewTime: string; interviewLocation: string }) => {
+      return apiRequest(`/api/admin/candidates/${data.id}`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({
+          interviewDate: data.interviewDate,
+          interviewTime: data.interviewTime,
+          interviewLocation: data.interviewLocation
+        })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+      setIsInterviewDialogOpen(false);
+      setInterviewCandidate(null);
+      toast({ title: "Interview gepland", description: "Het interview is succesvol ingepland." });
+    },
+    onError: () => {
+      toast({ title: "Fout", description: "Er is iets misgegaan.", variant: "destructive" });
+    }
+  });
+
+  const openInterviewDialog = (candidate: Candidate) => {
+    setInterviewCandidate(candidate);
+    setIsInterviewDialogOpen(true);
+  };
+
+  const handleScheduleInterview = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!interviewCandidate) return;
+    const formData = new FormData(e.currentTarget);
+    scheduleInterviewMutation.mutate({
+      id: interviewCandidate.id,
+      interviewDate: formData.get('interviewDate') as string,
+      interviewTime: formData.get('interviewTime') as string,
+      interviewLocation: formData.get('interviewLocation') as string || 'Kantoor EXTRA'
+    });
+  };
+
   const handleAddCandidate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -184,9 +332,328 @@ export default function CandidatesPage() {
     setIsDetailDialogOpen(true);
   };
 
-  const candidates = data?.candidates || [];
+  let candidates = data?.candidates || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 25);
+
+  // Apply score filter for horecamedewerker
+  if (functionFilter === 'horecamedewerker' && minScore > 0) {
+    candidates = candidates.filter(c => {
+      const overall = calculateOverallScore(c);
+      return overall !== null && overall >= minScore;
+    });
+  }
+
+  // Apply sorting for horecamedewerker
+  if (functionFilter === 'horecamedewerker') {
+    const [sortField, sortDir] = sortBy.split('-');
+    candidates = [...candidates].sort((a, b) => {
+      let valA: number, valB: number;
+      if (sortField === 'overall') {
+        valA = calculateOverallScore(a) ?? -1;
+        valB = calculateOverallScore(b) ?? -1;
+      } else if (sortField === 'softskills') {
+        valA = a.softSkillsScore ?? -1;
+        valB = b.softSkillsScore ?? -1;
+      } else if (sortField === 'bar') {
+        valA = a.barScore ?? -1;
+        valB = b.barScore ?? -1;
+      } else if (sortField === 'bediening') {
+        valA = a.serviceScore ?? -1;
+        valB = b.serviceScore ?? -1;
+      } else if (sortField === 'diner') {
+        valA = a.dinerScore ?? -1;
+        valB = b.dinerScore ?? -1;
+      } else {
+        return 0;
+      }
+      if (sortDir === 'desc') return valB - valA;
+      return valA - valB;
+    });
+  }
+
+  const getViewIndicator = () => {
+    if (!functionFilter) {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
+          <LayoutList className="w-4 h-4 text-purple-600" />
+          <span className="text-sm font-medium text-purple-700">Weergave: Master</span>
+        </div>
+      );
+    }
+    const func = functionTypes.find(f => f.value === functionFilter);
+    const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+      green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700' },
+      orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700' },
+      blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
+      pink: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700' },
+    };
+    const colors = colorMap[func?.color || 'purple'];
+    return (
+      <div className={`flex items-center gap-2 px-3 py-1.5 ${colors.bg} border ${colors.border} rounded-lg`}>
+        <Filter className={`w-4 h-4 ${colors.text}`} />
+        <span className={`text-sm font-medium ${colors.text}`}>Weergave: {func?.label}</span>
+      </div>
+    );
+  };
+
+  const renderTableHeaders = () => {
+    if (functionFilter === 'horecamedewerker') {
+      return (
+        <TableRow>
+          <TableHead>Naam</TableHead>
+          <TableHead>Contact</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Interview</TableHead>
+          <TableHead className="text-center">Overall</TableHead>
+          <TableHead className="text-center">Softskills</TableHead>
+          <TableHead className="text-center">Bar</TableHead>
+          <TableHead className="text-center">Bediening</TableHead>
+          <TableHead className="text-center">Diner</TableHead>
+          <TableHead className="text-right">Acties</TableHead>
+        </TableRow>
+      );
+    }
+    if (functionFilter === 'chef') {
+      return (
+        <TableRow>
+          <TableHead>Naam</TableHead>
+          <TableHead>Contact</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Ervaring</TableHead>
+          <TableHead>Interview</TableHead>
+          <TableHead className="text-right">Acties</TableHead>
+        </TableRow>
+      );
+    }
+    if (functionFilter === 'housekeeping') {
+      return (
+        <TableRow>
+          <TableHead>Naam</TableHead>
+          <TableHead>Contact</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Beschikbaarheid</TableHead>
+          <TableHead>Interview</TableHead>
+          <TableHead className="text-right">Acties</TableHead>
+        </TableRow>
+      );
+    }
+    if (functionFilter === 'front_office') {
+      return (
+        <TableRow>
+          <TableHead>Naam</TableHead>
+          <TableHead>Contact</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Talen</TableHead>
+          <TableHead>Interview</TableHead>
+          <TableHead className="text-right">Acties</TableHead>
+        </TableRow>
+      );
+    }
+    return (
+      <TableRow>
+        <TableHead>Naam</TableHead>
+        <TableHead>Functie</TableHead>
+        <TableHead>Contact</TableHead>
+        <TableHead>Status</TableHead>
+        <TableHead>Datum</TableHead>
+        <TableHead className="text-right">Acties</TableHead>
+      </TableRow>
+    );
+  };
+
+  const renderTableRow = (candidate: Candidate) => {
+    const initials = (candidate.firstName?.charAt(0) || '') + (candidate.lastName?.charAt(0) || '');
+    
+    const nameCell = (
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
+            {initials}
+          </div>
+          <div>
+            <div className="font-medium">{candidate.firstName} {candidate.lastName}</div>
+            {candidate.city && (
+              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {candidate.city}
+              </div>
+            )}
+          </div>
+        </div>
+      </TableCell>
+    );
+
+    const contactCell = (
+      <TableCell>
+        <div className="text-sm space-y-1">
+          {candidate.email && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Mail className="h-3 w-3" />
+              {candidate.email}
+            </div>
+          )}
+          {candidate.phone && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Phone className="h-3 w-3" />
+              {candidate.phone}
+            </div>
+          )}
+        </div>
+      </TableCell>
+    );
+
+    const statusCell = (
+      <TableCell>{getStatusBadge(candidate.status)}</TableCell>
+    );
+
+    const interviewCell = (
+      <TableCell>
+        {candidate.interviewDate ? (
+          <div className="text-sm">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 text-muted-foreground" />
+              {new Date(candidate.interviewDate).toLocaleDateString('nl-NL')}
+            </div>
+            {candidate.interviewTime && (
+              <div className="text-muted-foreground">{candidate.interviewTime}</div>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-sm">-</span>
+        )}
+      </TableCell>
+    );
+
+    const actionsCell = (
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => viewCandidate(candidate)}>
+              <Eye className="h-4 w-4 mr-2" />
+              Bekijken
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: candidate.id, status: 'aangenomen' })}>
+              <UserCheck className="h-4 w-4 mr-2" />
+              Aannemen
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: candidate.id, status: 'afgewezen' })}>
+              <UserX className="h-4 w-4 mr-2" />
+              Afwijzen
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openInterviewDialog(candidate)}>
+              <Calendar className="h-4 w-4 mr-2" />
+              Interview plannen
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => {
+                if (confirm('Weet je zeker dat je deze sollicitant wilt verwijderen?')) {
+                  deleteMutation.mutate(candidate.id);
+                }
+              }}
+              className="text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Verwijderen
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    );
+
+    if (functionFilter === 'horecamedewerker') {
+      const overall = calculateOverallScore(candidate);
+      return (
+        <TableRow key={candidate.id}>
+          {nameCell}
+          {contactCell}
+          {statusCell}
+          {interviewCell}
+          <TableCell className="text-center">{getScoreBadge(overall)}</TableCell>
+          <TableCell className="text-center">{getScoreBadge(candidate.softSkillsScore)}</TableCell>
+          <TableCell className="text-center">{getScoreBadge(candidate.barScore)}</TableCell>
+          <TableCell className="text-center">{getScoreBadge(candidate.serviceScore)}</TableCell>
+          <TableCell className="text-center">{getScoreBadge(candidate.dinerScore)}</TableCell>
+          {actionsCell}
+        </TableRow>
+      );
+    }
+
+    if (functionFilter === 'chef') {
+      return (
+        <TableRow key={candidate.id}>
+          {nameCell}
+          {contactCell}
+          {statusCell}
+          <TableCell>
+            <span className="text-sm text-muted-foreground">
+              {candidate.horecaExperience || '-'}
+            </span>
+          </TableCell>
+          {interviewCell}
+          {actionsCell}
+        </TableRow>
+      );
+    }
+
+    if (functionFilter === 'housekeeping') {
+      return (
+        <TableRow key={candidate.id}>
+          {nameCell}
+          {contactCell}
+          {statusCell}
+          <TableCell>
+            <span className="text-sm text-muted-foreground">
+              {candidate.availability || '-'}
+            </span>
+          </TableCell>
+          {interviewCell}
+          {actionsCell}
+        </TableRow>
+      );
+    }
+
+    if (functionFilter === 'front_office') {
+      return (
+        <TableRow key={candidate.id}>
+          {nameCell}
+          {contactCell}
+          {statusCell}
+          <TableCell>
+            <span className="text-sm text-muted-foreground">
+              {candidate.language || '-'}
+            </span>
+          </TableCell>
+          {interviewCell}
+          {actionsCell}
+        </TableRow>
+      );
+    }
+
+    return (
+      <TableRow key={candidate.id}>
+        {nameCell}
+        <TableCell>
+          <Badge variant="outline">
+            {getFunctionLabel(candidate.functionType)}
+          </Badge>
+        </TableCell>
+        {contactCell}
+        {statusCell}
+        <TableCell>
+          <div className="text-sm text-muted-foreground">
+            {new Date(candidate.createdAt).toLocaleDateString('nl-NL')}
+          </div>
+        </TableCell>
+        {actionsCell}
+      </TableRow>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,7 +664,8 @@ export default function CandidatesPage() {
             <h1 className="text-2xl font-bold">Sollicitanten</h1>
             <p className="text-muted-foreground">Beheer sollicitanten en hun status</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            {getViewIndicator()}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -307,6 +775,43 @@ export default function CandidatesPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {functionFilter === 'horecamedewerker' && (
+              <div className="flex gap-4 mt-4 pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm whitespace-nowrap">Min. score:</Label>
+                  <Select value={minScore.toString()} onValueChange={(v) => setMinScore(parseInt(v))}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Alle</SelectItem>
+                      <SelectItem value="50">50+</SelectItem>
+                      <SelectItem value="60">60+</SelectItem>
+                      <SelectItem value="70">70+</SelectItem>
+                      <SelectItem value="80">80+</SelectItem>
+                      <SelectItem value="90">90+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm whitespace-nowrap">Sorteren:</Label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="overall-desc">Overall (hoog-laag)</SelectItem>
+                      <SelectItem value="overall-asc">Overall (laag-hoog)</SelectItem>
+                      <SelectItem value="softskills-desc">Softskills (hoog-laag)</SelectItem>
+                      <SelectItem value="bar-desc">Bar (hoog-laag)</SelectItem>
+                      <SelectItem value="bediening-desc">Bediening (hoog-laag)</SelectItem>
+                      <SelectItem value="diner-desc">Diner (hoog-laag)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -339,98 +844,19 @@ export default function CandidatesPage() {
                 Geen sollicitanten gevonden
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Naam</TableHead>
-                    <TableHead>Functie</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Datum</TableHead>
-                    <TableHead className="text-right">Acties</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {candidates.map((candidate) => (
-                    <TableRow key={candidate.id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          {candidate.firstName} {candidate.lastName}
-                        </div>
-                        {candidate.city && (
-                          <div className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {candidate.city}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {getFunctionLabel(candidate.functionType)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm space-y-1">
-                          {candidate.email && (
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Mail className="h-3 w-3" />
-                              {candidate.email}
-                            </div>
-                          )}
-                          {candidate.phone && (
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Phone className="h-3 w-3" />
-                              {candidate.phone}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(candidate.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(candidate.createdAt).toLocaleDateString('nl-NL')}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => viewCandidate(candidate)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Bekijken
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: candidate.id, status: 'aangenomen' })}>
-                              <UserCheck className="h-4 w-4 mr-2" />
-                              Aannemen
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: candidate.id, status: 'afgewezen' })}>
-                              <UserX className="h-4 w-4 mr-2" />
-                              Afwijzen
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                if (confirm('Weet je zeker dat je deze sollicitant wilt verwijderen?')) {
-                                  deleteMutation.mutate(candidate.id);
-                                }
-                              }}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Verwijderen
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <>
+                <div className="px-4 py-2 text-sm text-muted-foreground border-b">
+                  Toont {candidates.length} van {total} sollicitanten
+                </div>
+                <Table>
+                  <TableHeader>
+                    {renderTableHeaders()}
+                  </TableHeader>
+                  <TableBody>
+                    {candidates.map((candidate) => renderTableRow(candidate))}
+                  </TableBody>
+                </Table>
+              </>
             )}
           </CardContent>
         </Card>
@@ -493,6 +919,12 @@ export default function CandidatesPage() {
                           {selectedCandidate.city}
                         </div>
                       )}
+                      {selectedCandidate.needsTwv && (
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-orange-500" />
+                          TWV nodig
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                   <Card>
@@ -526,6 +958,141 @@ export default function CandidatesPage() {
                   </Card>
                 </div>
 
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Salaris</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedCandidate.birthDate ? (
+                      <SalaryScaleInfo 
+                        birthDate={selectedCandidate.birthDate} 
+                        functionType={selectedCandidate.functionType}
+                        currentScaleId={selectedCandidate.salaryScaleId}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Geboortedatum nodig voor salarisschaal</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {selectedCandidate.functionType === 'horecamedewerker' && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Beoordelingsscores</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-5 gap-4">
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Overall</div>
+                          {getScoreBadge(calculateOverallScore(selectedCandidate))}
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Softskills</div>
+                          {getScoreBadge(selectedCandidate.softSkillsScore)}
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Bar</div>
+                          {getScoreBadge(selectedCandidate.barScore)}
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Bediening</div>
+                          {getScoreBadge(selectedCandidate.serviceScore)}
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Diner</div>
+                          {getScoreBadge(selectedCandidate.dinerScore)}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Foto</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4">
+                        {selectedCandidate.photoUrl ? (
+                          <img 
+                            src={selectedCandidate.photoUrl} 
+                            alt={`${selectedCandidate.firstName} ${selectedCandidate.lastName}`}
+                            className="w-24 h-24 rounded-lg object-cover border"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <span className="text-2xl font-medium text-gray-400">
+                              {selectedCandidate.firstName?.charAt(0)}{selectedCandidate.lastName?.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-2">
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file || !selectedCandidate) return;
+                                const formData = new FormData();
+                                formData.append('photo', file);
+                                try {
+                                  const res = await fetch(`/api/admin/candidates/${selectedCandidate.id}/photo`, {
+                                    method: 'POST',
+                                    body: formData,
+                                    credentials: 'include'
+                                  });
+                                  if (res.ok) {
+                                    queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+                                    const data = await res.json();
+                                    setSelectedCandidate({ ...selectedCandidate, photoUrl: data.photoUrl });
+                                    toast({ title: "Foto geüpload", description: "De foto is succesvol opgeslagen." });
+                                  } else {
+                                    toast({ title: "Fout", description: "Upload mislukt", variant: "destructive" });
+                                  }
+                                } catch {
+                                  toast({ title: "Fout", description: "Upload mislukt", variant: "destructive" });
+                                }
+                              }}
+                            />
+                            <Button variant="outline" size="sm" asChild>
+                              <span>
+                                <Upload className="h-4 w-4 mr-1" />
+                                Upload foto
+                              </span>
+                            </Button>
+                          </label>
+                          {selectedCandidate.photoUrl && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-destructive"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(`/api/admin/candidates/${selectedCandidate.id}/photo`, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
+                                  });
+                                  if (res.ok) {
+                                    queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+                                    setSelectedCandidate({ ...selectedCandidate, photoUrl: null });
+                                    toast({ title: "Foto verwijderd" });
+                                  }
+                                } catch {
+                                  toast({ title: "Fout", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Verwijderen
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                 {selectedCandidate.notes && (
                   <Card>
                     <CardHeader className="pb-2">
@@ -537,20 +1104,109 @@ export default function CandidatesPage() {
                   </Card>
                 )}
 
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
-                    Sluiten
-                  </Button>
+                <div className="flex justify-between">
                   <Button
-                    variant="default"
-                    onClick={() => updateStatusMutation.mutate({ id: selectedCandidate.id, status: 'aangenomen' })}
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={async () => {
+                      if (!confirm('Weet je zeker dat je deze kandidaat wilt anonimiseren?\n\nDit verwijdert alle persoonsgegevens permanent conform AVG/GDPR en kan niet ongedaan worden gemaakt.')) {
+                        return;
+                      }
+                      try {
+                        const res = await fetch(`/api/admin/candidates/${selectedCandidate.id}/anonymize`, {
+                          method: 'POST',
+                          credentials: 'include'
+                        });
+                        if (res.ok) {
+                          queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+                          setIsDetailDialogOpen(false);
+                          toast({ title: "Geanonimiseerd", description: "Kandidaat is geanonimiseerd conform AVG." });
+                        } else {
+                          toast({ title: "Fout", description: "Anonimisatie mislukt", variant: "destructive" });
+                        }
+                      } catch {
+                        toast({ title: "Fout", description: "Anonimisatie mislukt", variant: "destructive" });
+                      }
+                    }}
                   >
-                    <UserCheck className="h-4 w-4 mr-2" />
-                    Aannemen
+                    <Shield className="h-4 w-4 mr-1" />
+                    AVG Anonimiseren
                   </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
+                      Sluiten
+                    </Button>
+                    <Button
+                      variant="default"
+                      onClick={() => updateStatusMutation.mutate({ id: selectedCandidate.id, status: 'aangenomen' })}
+                    >
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      Aannemen
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isInterviewDialogOpen} onOpenChange={setIsInterviewDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Interview plannen</DialogTitle>
+              <DialogDescription>
+                Plan een interview voor {interviewCandidate?.firstName} {interviewCandidate?.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleScheduleInterview}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="interviewDate">Datum *</Label>
+                  <Input 
+                    id="interviewDate" 
+                    name="interviewDate" 
+                    type="date" 
+                    required 
+                    defaultValue={interviewCandidate?.interviewDate || ''}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="interviewTime">Tijd *</Label>
+                  <Input 
+                    id="interviewTime" 
+                    name="interviewTime" 
+                    type="time" 
+                    required 
+                    defaultValue={interviewCandidate?.interviewTime || '10:00'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="interviewLocation">Locatie</Label>
+                  <Select name="interviewLocation" defaultValue={interviewCandidate?.interviewLocation || 'Kantoor EXTRA'}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecteer locatie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Kantoor EXTRA">Kantoor EXTRA</SelectItem>
+                      <SelectItem value="Kantoor Amsterdam">Kantoor Amsterdam</SelectItem>
+                      <SelectItem value="Kantoor Rotterdam">Kantoor Rotterdam</SelectItem>
+                      <SelectItem value="Online (Teams)">Online (Teams)</SelectItem>
+                      <SelectItem value="Online (Zoom)">Online (Zoom)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsInterviewDialogOpen(false)}>
+                  Annuleren
+                </Button>
+                <Button type="submit" disabled={scheduleInterviewMutation.isPending}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {scheduleInterviewMutation.isPending ? "Opslaan..." : "Interview plannen"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
