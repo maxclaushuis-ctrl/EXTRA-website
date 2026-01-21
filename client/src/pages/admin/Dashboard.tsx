@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
   RefreshCw, Settings2, TrendingUp, Clock, CheckCircle2, 
-  FileDown, Bell, Star, Menu, MessageSquare
+  FileDown, Bell, Star, Menu, MessageSquare, UserPlus, Eye
 } from 'lucide-react';
 
 type User = {
@@ -50,8 +50,21 @@ type Redemption = {
   reward?: { name: string; pointsCost: number };
 };
 
+type Candidate = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  functionType: string;
+  status: string;
+  city?: string;
+  createdAt: string;
+};
+
 const sidebarItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin', active: true },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin', tab: 'dashboard' },
+  { icon: UserPlus, label: 'Sollicitanten', href: '/admin', tab: 'sollicitanten' },
   { icon: Users, label: 'Gebruikers', href: '/admin', tab: 'contacten' },
   { icon: Trophy, label: 'Uitdagingen', href: '/admin', tab: 'challenges' },
   { icon: Gift, label: 'Beloningen', href: '/admin', tab: 'beloningen' },
@@ -86,6 +99,7 @@ function daysSince(dateStr: string): number {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
 
@@ -113,6 +127,12 @@ export default function AdminDashboard() {
   const { data: rewards = [] } = useQuery<{ id: number; name: string; pointsCost: number; timesRedeemed?: number }[]>({
     queryKey: ['/api/rewards'],
   });
+
+  const { data: candidatesData, isLoading: candidatesLoading, isFetching: candidatesFetching } = useQuery<{ candidates: Candidate[]; total: number }>({
+    queryKey: ['/api/admin/candidates'],
+  });
+  const candidates = candidatesData?.candidates || [];
+  const showCandidatesLoading = candidatesLoading || (activeTab === 'sollicitanten' && candidatesFetching && !candidatesData);
 
   const updateRedemptionMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
@@ -173,18 +193,18 @@ export default function AdminDashboard() {
         
         <nav className="flex-1 px-2">
           {sidebarItems.map((item) => (
-            <Link key={item.label} href={item.href}>
-              <a
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
-                  item.active 
-                    ? 'bg-purple-100 text-purple-700 font-medium' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </a>
-            </Link>
+            <button
+              key={item.label}
+              onClick={() => setActiveTab(item.tab || 'dashboard')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
+                activeTab === item.tab 
+                  ? 'bg-purple-100 text-purple-700 font-medium' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </button>
           ))}
         </nav>
       </aside>
@@ -218,6 +238,101 @@ export default function AdminDashboard() {
         </header>
 
         <div className="p-6">
+          {activeTab === 'sollicitanten' ? (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold">Sollicitanten</h1>
+                  <p className="text-gray-500">Overzicht van alle sollicitaties</p>
+                </div>
+              </div>
+              
+              <Card>
+                <CardContent className="p-0">
+                  {showCandidatesLoading ? (
+                    <div className="p-6">
+                      <Skeleton className="h-10 w-full mb-4" />
+                      <Skeleton className="h-10 w-full mb-4" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : candidates.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <UserPlus className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">Geen sollicitanten</h3>
+                      <p className="text-gray-400">Er zijn nog geen sollicitaties binnengekomen.</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Deel het formulier: <span className="font-mono bg-gray-100 px-2 py-1 rounded">/sollicitatieformulier</span>
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Naam</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Functie</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acties</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {candidates.map((candidate) => (
+                            <tr key={candidate.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-9 w-9">
+                                    <AvatarFallback className="bg-purple-100 text-purple-600">
+                                      {getInitials(candidate.firstName, candidate.lastName)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-medium">{candidate.firstName} {candidate.lastName}</p>
+                                    {candidate.city && <p className="text-xs text-gray-400">{candidate.city}</p>}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <p className="text-sm">{candidate.email}</p>
+                                {candidate.phone && <p className="text-xs text-gray-400">{candidate.phone}</p>}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <Badge className={getFunctionBadgeColor(candidate.functionType)}>
+                                  {candidate.functionType}
+                                </Badge>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <Badge variant={
+                                  candidate.status === 'aangenomen' ? 'default' :
+                                  candidate.status === 'afgewezen' ? 'destructive' :
+                                  'secondary'
+                                }>
+                                  {candidate.status}
+                                </Badge>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {new Date(candidate.createdAt).toLocaleDateString('nl-NL')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <Link href={`/admin/candidates?id=${candidate.id}`}>
+                                  <Button variant="ghost" size="sm">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Bekijken
+                                  </Button>
+                                </Link>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <>
           {/* Dashboard Title & Filters */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -602,6 +717,8 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+            </>
+          )}
         </div>
       </main>
     </div>
