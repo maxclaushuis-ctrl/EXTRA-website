@@ -32,6 +32,7 @@ The application utilizes a monorepo structure, organizing code into `client/` fo
 -   Modern UI built with shadcn/ui.
 -   Mobile-optimized layouts for dashboards and leaderboards.
 -   Visual progress bars for challenges and celebration animations for milestones.
+-   **Admin Dashboard**: Redesigned with sidebar navigation, stats cards (Totaal Gebruikers, Actieve Gebruikers, Uitgegeven Punten, Gebruikersgroei), Top Presteerders widget, Inactieve Gebruikers panel, Te doen action items, and Recente Activiteit feed.
 
 ### Deployment
 Configured for Replit autoscale deployment, utilizing Vite for frontend builds and `tsx` for development. Environment variables are used for configuration (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`).
