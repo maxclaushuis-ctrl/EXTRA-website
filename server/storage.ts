@@ -33,6 +33,10 @@ import {
   type StaffPool, type InsertStaffPool,
   type PoolMember, type InsertPoolMember,
   // Sollicitanten types
+  candidates as candidatesTable,
+  salaryScales as salaryScalesTable,
+  candidateAuditLog as candidateAuditLogTable,
+  candidateImports as candidateImportsTable,
   type Candidate, type InsertCandidate,
   type CandidateFunctionProfile, type InsertCandidateFunctionProfile,
   type SalaryScale, type InsertSalaryScale,
@@ -41,6 +45,8 @@ import {
   type CandidateWithDetails
 } from "@shared/schema";
 import { createHash } from "crypto";
+import { db } from "./db";
+import { eq, ilike, or, desc, asc, sql, and, gte, lte } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -2832,63 +2838,10 @@ export class MemStorage implements IStorage {
   private candidateImportIdCounter = 1;
 
   async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
-    const id = this.candidateIdCounter++;
-    const now = new Date();
-    const newCandidate: Candidate = {
+    const [newCandidate] = await db.insert(candidatesTable).values({
       ...candidate,
-      id,
       status: candidate.status || 'in_behandeling',
-      needsTwv: candidate.needsTwv ?? false,
-      salaryScaleApplied: candidate.salaryScaleApplied ?? false,
-      canCarryThreePlates: candidate.canCarryThreePlates ?? false,
-      isBarista: candidate.isBarista ?? false,
-      canMakeCocktails: candidate.canMakeCocktails ?? false,
-      canDoWashing: candidate.canDoWashing ?? false,
-      isPromoter: candidate.isPromoter ?? false,
-      isAssistantChef: candidate.isAssistantChef ?? false,
-      hasDriversLicense: candidate.hasDriversLicense ?? false,
-      hasOvChipkaart: candidate.hasOvChipkaart ?? false,
-      createdAt: now,
-      updatedAt: now,
-      anonymizedAt: null,
-      email: candidate.email ?? null,
-      phone: candidate.phone ?? null,
-      birthDate: candidate.birthDate ?? null,
-      nationality: candidate.nationality ?? null,
-      city: candidate.city ?? null,
-      language: candidate.language ?? null,
-      interviewDate: candidate.interviewDate ?? null,
-      interviewTime: candidate.interviewTime ?? null,
-      interviewLocation: candidate.interviewLocation ?? 'Kantoor EXTRA',
-      photoUrl: candidate.photoUrl ?? null,
-      desiredSalary: candidate.desiredSalary ?? null,
-      salaryScaleId: candidate.salaryScaleId ?? null,
-      softSkillsScore: candidate.softSkillsScore ?? null,
-      barScore: candidate.barScore ?? null,
-      serviceScore: candidate.serviceScore ?? null,
-      dinerScore: candidate.dinerScore ?? null,
-      overallImpressionScore: candidate.overallImpressionScore ?? null,
-      communicationScore: candidate.communicationScore ?? null,
-      serviceSkills: candidate.serviceSkills ?? null,
-      barSkills: candidate.barSkills ?? null,
-      dinerSkills: candidate.dinerSkills ?? null,
-      isOnlyJob: candidate.isOnlyJob ?? null,
-      availability: candidate.availability ?? null,
-      preferredWorkdays: candidate.preferredWorkdays ?? null,
-      partOfDayPreference: candidate.partOfDayPreference ?? null,
-      horecaExperience: candidate.horecaExperience ?? null,
-      previousExperience: candidate.previousExperience ?? null,
-      assessmentResult: candidate.assessmentResult ?? null,
-      experienceLevel: candidate.experienceLevel ?? null,
-      appearance: candidate.appearance ?? null,
-      attitude: candidate.attitude ?? null,
-      sourceChannel: candidate.sourceChannel ?? null,
-      notes: candidate.notes ?? null,
-      workClothing: candidate.workClothing ?? null,
-      createdByUserId: candidate.createdByUserId ?? null,
-      retentionUntil: candidate.retentionUntil ?? null,
-    };
-    this.candidatesMap.set(id, newCandidate);
+    }).returning();
     return newCandidate;
   }
 
@@ -2899,73 +2852,104 @@ export class MemStorage implements IStorage {
     page?: number;
     limit?: number;
   }): Promise<{ candidates: Candidate[]; total: number }> {
-    let candidates = Array.from(this.candidatesMap.values());
+    const conditions: any[] = [];
     
     if (filters?.functionType) {
-      candidates = candidates.filter(c => c.functionType === filters.functionType);
+      conditions.push(eq(candidatesTable.functionType, filters.functionType as any));
     }
     if (filters?.status) {
-      candidates = candidates.filter(c => c.status === filters.status);
+      conditions.push(eq(candidatesTable.status, filters.status as any));
     }
     if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      candidates = candidates.filter(c => 
-        c.firstName.toLowerCase().includes(search) ||
-        c.lastName.toLowerCase().includes(search) ||
-        c.email?.toLowerCase().includes(search) ||
-        c.phone?.includes(search)
+      const searchPattern = `%${filters.search}%`;
+      conditions.push(
+        or(
+          ilike(candidatesTable.firstName, searchPattern),
+          ilike(candidatesTable.lastName, searchPattern),
+          ilike(candidatesTable.email, searchPattern),
+          ilike(candidatesTable.phone, searchPattern)
+        )
       );
     }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
     
-    const total = candidates.length;
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(candidatesTable)
+      .where(whereClause);
+    
+    const total = Number(countResult?.count || 0);
     const page = filters?.page || 1;
-    const limit = filters?.limit || 25;
-    const start = (page - 1) * limit;
-    candidates = candidates.slice(start, start + limit);
+    const limitVal = filters?.limit || 25;
+    const offset = (page - 1) * limitVal;
+
+    const candidates = await db
+      .select()
+      .from(candidatesTable)
+      .where(whereClause)
+      .orderBy(desc(candidatesTable.createdAt))
+      .limit(limitVal)
+      .offset(offset);
     
     return { candidates, total };
   }
 
   async getCandidate(id: number): Promise<CandidateWithDetails | undefined> {
-    const candidate = this.candidatesMap.get(id);
+    const [candidate] = await db
+      .select()
+      .from(candidatesTable)
+      .where(eq(candidatesTable.id, id));
+    
     if (!candidate) return undefined;
     
     const createdBy = candidate.createdByUserId 
       ? this.users.get(candidate.createdByUserId) 
       : undefined;
-    const salaryScale = candidate.salaryScaleId 
-      ? this.salaryScalesMap.get(candidate.salaryScaleId) 
-      : undefined;
+    
+    let salaryScale: SalaryScale | undefined;
+    if (candidate.salaryScaleId) {
+      [salaryScale] = await db
+        .select()
+        .from(salaryScalesTable)
+        .where(eq(salaryScalesTable.id, candidate.salaryScaleId));
+    }
     
     return { ...candidate, createdBy, salaryScale };
   }
 
   async updateCandidate(id: number, candidateData: Partial<InsertCandidate>): Promise<Candidate | undefined> {
-    const candidate = this.candidatesMap.get(id);
-    if (!candidate) return undefined;
-    
-    const updated = { ...candidate, ...candidateData, updatedAt: new Date() };
-    this.candidatesMap.set(id, updated);
+    const [updated] = await db
+      .update(candidatesTable)
+      .set({ ...candidateData, updatedAt: new Date() })
+      .where(eq(candidatesTable.id, id))
+      .returning();
     return updated;
   }
 
   async deleteCandidate(id: number): Promise<boolean> {
-    return this.candidatesMap.delete(id);
+    const result = await db
+      .delete(candidatesTable)
+      .where(eq(candidatesTable.id, id))
+      .returning();
+    return result.length > 0;
   }
 
   async updateCandidateStatus(id: number, status: string, changedByUserId?: number): Promise<Candidate | undefined> {
-    const candidate = this.candidatesMap.get(id);
+    const [candidate] = await db
+      .select()
+      .from(candidatesTable)
+      .where(eq(candidatesTable.id, id));
+    
     if (!candidate) return undefined;
     
     const oldStatus = candidate.status;
-    const updated = { 
-      ...candidate, 
-      status: status as Candidate['status'], 
-      updatedAt: new Date() 
-    };
-    this.candidatesMap.set(id, updated);
+    const [updated] = await db
+      .update(candidatesTable)
+      .set({ status: status as any, updatedAt: new Date() })
+      .where(eq(candidatesTable.id, id))
+      .returning();
     
-    // Log the status change
     await this.createCandidateAuditLog({
       candidateId: id,
       action: 'status_changed',
@@ -2978,24 +2962,29 @@ export class MemStorage implements IStorage {
   }
 
   async anonymizeCandidate(id: number, changedByUserId?: number): Promise<boolean> {
-    const candidate = this.candidatesMap.get(id);
+    const [candidate] = await db
+      .select()
+      .from(candidatesTable)
+      .where(eq(candidatesTable.id, id));
+    
     if (!candidate) return false;
     
-    const anonymized: Candidate = {
-      ...candidate,
-      firstName: 'Geanonimiseerd',
-      lastName: 'Kandidaat',
-      email: null,
-      phone: null,
-      birthDate: null,
-      nationality: null,
-      city: null,
-      photoUrl: null,
-      notes: null,
-      anonymizedAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.candidatesMap.set(id, anonymized);
+    await db
+      .update(candidatesTable)
+      .set({
+        firstName: 'Geanonimiseerd',
+        lastName: 'Kandidaat',
+        email: null,
+        phone: null,
+        birthDate: null,
+        nationality: null,
+        city: null,
+        photoUrl: null,
+        notes: null,
+        anonymizedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(candidatesTable.id, id));
     
     await this.createCandidateAuditLog({
       candidateId: id,
@@ -3009,116 +2998,97 @@ export class MemStorage implements IStorage {
   }
 
   async createSalaryScale(scale: InsertSalaryScale): Promise<SalaryScale> {
-    const id = this.salaryScaleIdCounter++;
-    const now = new Date();
-    const newScale: SalaryScale = {
-      ...scale,
-      id,
-      functionType: scale.functionType ?? null,
-      ageMax: scale.ageMax ?? null,
-      currency: scale.currency ?? 'EUR',
-      isActive: scale.isActive ?? true,
-      createdAt: now,
-      updatedAt: now
-    };
-    this.salaryScalesMap.set(id, newScale);
+    const [newScale] = await db.insert(salaryScalesTable).values(scale).returning();
     return newScale;
   }
 
   async getSalaryScales(functionType?: string): Promise<SalaryScale[]> {
-    let scales = Array.from(this.salaryScalesMap.values());
+    const conditions: any[] = [eq(salaryScalesTable.isActive, true)];
     if (functionType) {
-      scales = scales.filter(s => s.functionType === functionType || s.functionType === null);
+      conditions.push(
+        or(
+          eq(salaryScalesTable.functionType, functionType),
+          sql`${salaryScalesTable.functionType} IS NULL`
+        )
+      );
     }
-    return scales.filter(s => s.isActive);
+    return db.select().from(salaryScalesTable).where(and(...conditions));
   }
 
   async getSalaryScale(id: number): Promise<SalaryScale | undefined> {
-    return this.salaryScalesMap.get(id);
+    const [scale] = await db.select().from(salaryScalesTable).where(eq(salaryScalesTable.id, id));
+    return scale;
   }
 
   async getSalaryScaleByAge(age: number, functionType?: string): Promise<SalaryScale | undefined> {
-    const scales = await this.getSalaryScales(functionType);
-    return scales.find(s => 
-      s.ageMin <= age && (s.ageMax === null || s.ageMax >= age)
-    );
+    const conditions: any[] = [
+      eq(salaryScalesTable.isActive, true),
+      lte(salaryScalesTable.ageMin, age),
+      or(
+        sql`${salaryScalesTable.ageMax} IS NULL`,
+        gte(salaryScalesTable.ageMax, age)
+      )
+    ];
+    if (functionType) {
+      conditions.push(
+        or(
+          eq(salaryScalesTable.functionType, functionType),
+          sql`${salaryScalesTable.functionType} IS NULL`
+        )
+      );
+    }
+    const [scale] = await db.select().from(salaryScalesTable).where(and(...conditions)).limit(1);
+    return scale;
   }
 
   async updateSalaryScale(id: number, scaleData: Partial<InsertSalaryScale>): Promise<SalaryScale | undefined> {
-    const scale = this.salaryScalesMap.get(id);
-    if (!scale) return undefined;
-    
-    const updated = { ...scale, ...scaleData, updatedAt: new Date() };
-    this.salaryScalesMap.set(id, updated);
+    const [updated] = await db
+      .update(salaryScalesTable)
+      .set({ ...scaleData, updatedAt: new Date() })
+      .where(eq(salaryScalesTable.id, id))
+      .returning();
     return updated;
   }
 
   async deleteSalaryScale(id: number): Promise<boolean> {
-    return this.salaryScalesMap.delete(id);
+    const result = await db.delete(salaryScalesTable).where(eq(salaryScalesTable.id, id)).returning();
+    return result.length > 0;
   }
 
   async createCandidateAuditLog(log: InsertCandidateAuditLog): Promise<CandidateAuditLog> {
-    const id = this.candidateAuditLogIdCounter++;
-    const newLog: CandidateAuditLog = {
-      ...log,
-      id,
-      candidateId: log.candidateId ?? null,
-      changedByUserId: log.changedByUserId ?? null,
-      changeData: log.changeData ?? null,
-      ipAddress: log.ipAddress ?? null,
-      createdAt: new Date()
-    };
-    this.candidateAuditLogsMap.set(id, newLog);
+    const [newLog] = await db.insert(candidateAuditLogTable).values(log).returning();
     return newLog;
   }
 
   async getCandidateAuditLogs(candidateId: number): Promise<CandidateAuditLog[]> {
-    return Array.from(this.candidateAuditLogsMap.values())
-      .filter(log => log.candidateId === candidateId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return db
+      .select()
+      .from(candidateAuditLogTable)
+      .where(eq(candidateAuditLogTable.candidateId, candidateId))
+      .orderBy(desc(candidateAuditLogTable.createdAt));
   }
 
   async createCandidateImport(importData: InsertCandidateImport): Promise<CandidateImport> {
-    const id = this.candidateImportIdCounter++;
-    const now = new Date();
-    const newImport: CandidateImport = {
-      ...importData,
-      id,
-      source: importData.source ?? 'google_sheets',
-      status: importData.status ?? 'pending',
-      totalRows: importData.totalRows ?? 0,
-      importedRows: importData.importedRows ?? 0,
-      skippedRows: importData.skippedRows ?? 0,
-      sheetId: importData.sheetId ?? null,
-      sheetTab: importData.sheetTab ?? null,
-      errorLog: importData.errorLog ?? null,
-      mappingConfig: importData.mappingConfig ?? null,
-      deduplicationStrategy: importData.deduplicationStrategy ?? 'skip',
-      createdByUserId: importData.createdByUserId ?? null,
-      startedAt: null,
-      completedAt: null,
-      createdAt: now
-    };
-    this.candidateImportsMap.set(id, newImport);
+    const [newImport] = await db.insert(candidateImportsTable).values(importData).returning();
     return newImport;
   }
 
   async getCandidateImport(id: number): Promise<CandidateImport | undefined> {
-    return this.candidateImportsMap.get(id);
+    const [importRecord] = await db.select().from(candidateImportsTable).where(eq(candidateImportsTable.id, id));
+    return importRecord;
   }
 
   async updateCandidateImport(id: number, importData: Partial<InsertCandidateImport>): Promise<CandidateImport | undefined> {
-    const existing = this.candidateImportsMap.get(id);
-    if (!existing) return undefined;
-    
-    const updated = { ...existing, ...importData };
-    this.candidateImportsMap.set(id, updated);
+    const [updated] = await db
+      .update(candidateImportsTable)
+      .set(importData)
+      .where(eq(candidateImportsTable.id, id))
+      .returning();
     return updated;
   }
 
   async getCandidateImports(): Promise<CandidateImport[]> {
-    return Array.from(this.candidateImportsMap.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return db.select().from(candidateImportsTable).orderBy(desc(candidateImportsTable.createdAt));
   }
 
   private async initializeChallenges() {
