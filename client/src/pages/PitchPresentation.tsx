@@ -84,13 +84,13 @@ export default function PitchPresentation() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large 3D X element - bottom right */}
         <div 
-          className="absolute -right-40 -bottom-40"
+          className="absolute -right-32 -bottom-32"
           style={{ perspective: '1000px' }}
         >
           <svg 
             width="700" 
-            height="900" 
-            viewBox="0 0 100 130"
+            height="700" 
+            viewBox="0 0 100 100"
             className="opacity-[0.07]"
             style={{ 
               transform: 'rotateX(15deg) rotateY(-20deg) rotateZ(5deg)',
@@ -103,28 +103,26 @@ export default function PitchPresentation() {
                 <stop offset="100%" stopColor="#ffffff" stopOpacity="0.3" />
               </linearGradient>
             </defs>
-            {/* X shape - proportional like EXTRA pattern */}
-            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="url(#x-gradient-1)" />
-            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="url(#x-gradient-1)" />
+            {/* X shape - matching EXTRA brand */}
+            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="url(#x-gradient-1)" />
           </svg>
         </div>
 
         {/* Medium 3D X element - top left */}
         <div 
-          className="absolute -left-24 -top-32"
+          className="absolute -left-20 -top-20"
           style={{ perspective: '800px' }}
         >
           <svg 
             width="450" 
-            height="580" 
-            viewBox="0 0 100 130"
+            height="450" 
+            viewBox="0 0 100 100"
             className="opacity-[0.05]"
             style={{ 
               transform: 'rotateX(-10deg) rotateY(25deg) rotateZ(-8deg)',
             }}
           >
-            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="#ffffff" />
-            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="#ffffff" />
+            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="#ffffff" />
           </svg>
         </div>
 
@@ -135,15 +133,14 @@ export default function PitchPresentation() {
         >
           <svg 
             width="100" 
-            height="130" 
-            viewBox="0 0 100 130"
+            height="100" 
+            viewBox="0 0 100 100"
             className="opacity-[0.1]"
             style={{ 
               transform: 'rotateX(20deg) rotateY(-15deg) rotateZ(12deg)',
             }}
           >
-            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="#a855f7" />
-            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="#a855f7" />
+            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="#a855f7" />
           </svg>
         </div>
 
@@ -154,15 +151,14 @@ export default function PitchPresentation() {
         >
           <svg 
             width="60" 
-            height="78" 
-            viewBox="0 0 100 130"
+            height="60" 
+            viewBox="0 0 100 100"
             className="opacity-[0.06]"
             style={{ 
               transform: 'rotateX(-5deg) rotateY(10deg) rotateZ(-5deg)',
             }}
           >
-            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="#ffffff" />
-            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="#ffffff" />
+            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="#ffffff" />
           </svg>
         </div>
 
