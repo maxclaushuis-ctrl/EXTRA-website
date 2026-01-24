@@ -78,6 +78,59 @@ export default function PitchPresentation() {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-950/50 via-gray-950 to-gray-950" />
       
+      {/* 3D Diamond Pattern Background */}
+      <div 
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ perspective: '1000px' }}
+      >
+        <div 
+          className="absolute inset-0"
+          style={{ 
+            transform: 'rotateX(60deg) rotateZ(-15deg) scale(2.5)',
+            transformOrigin: 'center center',
+          }}
+        >
+          <svg 
+            className="w-full h-full opacity-[0.04]"
+            style={{ 
+              minWidth: '200%', 
+              minHeight: '200%',
+              marginLeft: '-50%',
+              marginTop: '-50%'
+            }}
+          >
+            <defs>
+              <pattern id="diamond-pattern" x="0" y="0" width="60" height="80" patternUnits="userSpaceOnUse">
+                <path 
+                  d="M30 5 L45 40 L30 75 L15 40 Z" 
+                  fill="url(#diamond-gradient)"
+                />
+                <path 
+                  d="M0 -35 L15 0 L0 35 L-15 0 Z" 
+                  fill="url(#diamond-gradient)"
+                  transform="translate(0, 40)"
+                />
+                <path 
+                  d="M60 -35 L75 0 L60 35 L45 0 Z" 
+                  fill="url(#diamond-gradient)"
+                  transform="translate(0, 40)"
+                />
+              </pattern>
+              <linearGradient id="diamond-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
+                <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#6b21a8" stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="100%" height="100%" fill="url(#diamond-pattern)" />
+          </svg>
+        </div>
+        {/* Gradient fade overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/50 to-gray-950" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-transparent to-gray-950/80" />
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-gray-950" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, transparent 30%, rgb(3, 7, 18) 100%)' }} />
+      </div>
+      
       <div className="absolute top-6 right-6 flex gap-2 z-50">
         {Array.from({ length: totalSlides }).map((_, i) => (
           <motion.div
