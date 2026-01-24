@@ -13,13 +13,13 @@ import beoordelingScreen from "@/assets/pitch/beoordeling-screen.png";
 import extraPattern from "@/assets/pitch/extra-pattern.jpg";
 
 const speakerNotes = [
-  "SLIDE 1 (35s): Start met de kern - onze filosofie. We geloven dat goed personeel de basis is van elk succesvol hotel of event. Daarom behandelen we onze mensen als partners, niet als nummers. Dagbetaling, transparantie, en zelfs social impact via de Voedselbank.",
-  "SLIDE 2 (40s): Dit is EXTRAATJE, onze medewerker-app. Elke medewerker bouwt status op, van Bronze naar Diamond. Ze verdienen punten door goed te presteren en kunnen die inwisselen voor echte beloningen. Dit zorgt voor loyaliteit en motivatie.",
-  "SLIDE 3 (30s): [KLIK VOOR NOTIFICATIES] Zo voelt het om met EXTRAATJE te werken. Real-time feedback, direct in je broekzak. Elke prestatie wordt gezien en beloond. Dat motiveert enorm.",
-  "SLIDE 4 (40s): Voor onze opdrachtgevers: volledige transparantie. We meten alles - ratings, punctualiteit, houding. Zo bouwen we per medewerker een betrouwbaarheidsprofiel. Kwaliteit die je kunt bewijzen.",
-  "SLIDE 5 (30s): Tijdens de intake beoordelen we elke kandidaat direct op hard- en softskills. Ervaring, houding, uiterlijke verzorging - alles krijgt een score. Zo weet je precies wat je kunt verwachten.",
-  "SLIDE 6 (30s): De toekomst: volledig geautomatiseerde planning. Op basis van beschikbaarheid, skills en betrouwbaarheid krijgen medewerkers automatisch diensten aangeboden. 10x sneller dan handmatig.",
-  "SLIDE 7 (35s): Alles begint bij een goede intake. Links ons sollicitatieformulier op iPad. Rechts onze toekomstvisie: AI-gestuurde planning op basis van alle data die we verzamelen."
+  "SLIDE 1 (30s): Introductie EXTRA - uitzendbureau voor horeca en events. Betrouwbaar personeel, dagbetaling, en social impact met de Voedselbank.",
+  "SLIDE 2 (35s): Het begint bij de sollicitatie. Op een iPad vullen kandidaten hun gegevens in - snel, efficiënt en direct digitaal.",
+  "SLIDE 3 (30s): Tijdens de intake beoordelen we direct op hard- en softskills. Ervaring, houding, verzorging - alles krijgt een score.",
+  "SLIDE 4 (35s): Alle data komt in ons dashboard. Per medewerker een volledig profiel met ratings, betrouwbaarheid en geschiedenis.",
+  "SLIDE 5 (40s): Om medewerkers te motiveren hebben we EXTRAATJE - onze belonings-app. Punten verdienen, status opbouwen, beloningen kiezen.",
+  "SLIDE 6 (30s): [KLIK VOOR NOTIFICATIES] Zo voelt het om met EXTRAATJE te werken. Real-time feedback, direct in je broekzak.",
+  "SLIDE 7 (30s): De toekomst: AI-planning. Automatisch matchen op basis van beschikbaarheid, skills en betrouwbaarheid."
 ];
 
 export default function PitchPresentation() {
@@ -31,7 +31,7 @@ export default function PitchPresentation() {
   const totalSlides = 7;
 
   const nextSlide = useCallback(() => {
-    if (currentSlide === 2 && clickCount < 3) {
+    if (currentSlide === 5 && clickCount < 3) {
       setClickCount(prev => prev + 1);
       setNotifications(prev => [...prev, clickCount]);
     } else if (currentSlide < totalSlides - 1) {
@@ -186,9 +186,10 @@ export default function PitchPresentation() {
       </div>
 
       <AnimatePresence mode="wait">
+        {/* SLIDE 0: Intro - Wie is EXTRA */}
         {currentSlide === 0 && (
           <motion.div
-            key="slide1"
+            key="slide1-intro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -216,10 +217,10 @@ export default function PitchPresentation() {
                 className="text-5xl md:text-7xl text-white mb-6 leading-tight"
                 style={{ fontFamily: 'Poppins', fontWeight: 800 }}
               >
-                "Wie goed is voor je personeel,
+                Betrouwbaar personeel voor
                 <br />
                 <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                  is goed voor ons."
+                  horeca en events.
                 </span>
               </motion.h1>
               
@@ -230,7 +231,7 @@ export default function PitchPresentation() {
                 className="text-xl md:text-2xl text-gray-400 mb-16"
                 style={{ fontFamily: 'Poppins', fontWeight: 400 }}
               >
-                Daarom bouwen we EXTRA: betrouwbaarheid op schaal voor hotels én events.
+                EXTRA is een uitzendbureau dat technologie inzet voor kwaliteit en transparantie.
               </motion.p>
 
               <div className="flex justify-center gap-6 flex-wrap">
@@ -259,9 +260,249 @@ export default function PitchPresentation() {
           </motion.div>
         )}
 
+        {/* SLIDE 1: Sollicitatie op iPad */}
         {currentSlide === 1 && (
           <motion.div
-            key="slide2"
+            key="slide2-sollicitatie"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-16 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="flex-shrink-0"
+              >
+                <div className="relative" style={{ perspective: '1200px' }}>
+                  <div className="absolute -inset-8 bg-gradient-to-br from-purple-500/30 via-purple-600/20 to-transparent rounded-[2rem] blur-2xl" />
+                  <div className="absolute -bottom-6 left-6 right-6 h-12 bg-black/50 rounded-[2rem] blur-xl" />
+                  <div 
+                    className="relative bg-gray-800 rounded-[1.5rem] p-3 border-2 border-gray-700 shadow-2xl"
+                    style={{ 
+                      boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)',
+                      transform: 'rotateY(-5deg)'
+                    }}
+                  >
+                    <div className="bg-black rounded-[1rem] p-1 overflow-hidden">
+                      <div className="flex items-center justify-center gap-2 py-1.5 bg-gray-900 rounded-t-lg">
+                        <div className="w-2 h-2 bg-gray-700 rounded-full" />
+                      </div>
+                      <img
+                        src={sollicitatieStart}
+                        alt="Sollicitatieformulier"
+                        className="w-80 h-auto"
+                      />
+                      <div className="h-1 bg-gray-900" />
+                    </div>
+                  </div>
+                  <p className="text-center text-gray-400 text-sm mt-8" style={{ fontFamily: 'Poppins' }}>iPad Sollicitatieformulier</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="flex-1 space-y-6"
+              >
+                <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Het begint bij de
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                    sollicitatie.
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Kandidaten vullen hun gegevens in op een iPad - snel, efficiënt en direct digitaal.
+                </p>
+
+                <div className="space-y-4 pt-4">
+                  {[
+                    { icon: Users, text: "Persoonsgegevens & beschikbaarheid", delay: 0.7 },
+                    { icon: Award, text: "Ervaring & vaardigheden", delay: 0.85 },
+                    { icon: Zap, text: "Direct in het systeem", delay: 1.0 },
+                  ].map((item) => (
+                    <motion.div
+                      key={item.text}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: item.delay, duration: 0.5 }}
+                      className="flex items-center gap-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl px-5 py-3"
+                    >
+                      <item.icon className="w-5 h-5 text-purple-400" />
+                      <span className="text-white font-medium">{item.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 2: Beoordeling */}
+        {currentSlide === 2 && (
+          <motion.div
+            key="slide3-beoordeling"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-16 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="flex-shrink-0"
+              >
+                <div className="relative">
+                  <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-purple-600/20 to-transparent rounded-[2rem] blur-2xl" />
+                  <div className="absolute -bottom-6 left-6 right-6 h-12 bg-black/50 rounded-[2rem] blur-xl" />
+                  <div className="relative bg-gray-800 rounded-[1.5rem] p-3 border-2 border-gray-700 shadow-2xl" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)' }}>
+                    <div className="bg-white rounded-[1rem] overflow-hidden">
+                      <img
+                        src={beoordelingScreen}
+                        alt="Beoordeling scherm"
+                        className="w-72 h-auto"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-center text-gray-400 text-sm mt-8" style={{ fontFamily: 'Poppins' }}>iPad Beoordelingsformulier</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="flex-1 space-y-6"
+              >
+                <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Direct beoordelen op
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                    hard- en softskills.
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Tijdens de intake geeft de recruiter scores aan elke kandidaat.
+                </p>
+
+                <div className="space-y-4 pt-4">
+                  {[
+                    { icon: Award, text: "Eerste indruk & houding", delay: 0.7 },
+                    { icon: Star, text: "Ervaring & vaardigheden", delay: 0.85 },
+                    { icon: Users, text: "Uiterlijke verzorging", delay: 1.0 },
+                  ].map((item) => (
+                    <motion.div
+                      key={item.text}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: item.delay, duration: 0.5 }}
+                      className="flex items-center gap-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl px-5 py-3"
+                    >
+                      <item.icon className="w-5 h-5 text-purple-400" />
+                      <span className="text-white font-medium">{item.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="pt-4"
+                >
+                  <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50 rounded-xl p-4">
+                    <p className="text-purple-300 text-center" style={{ fontFamily: 'Poppins' }}>
+                      Objectieve data voor betere matches
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 3: Dashboard */}
+        {currentSlide === 3 && (
+          <motion.div
+            key="slide4-dashboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-8"
+            >
+              <h2 className="text-4xl md:text-5xl text-white mb-3" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Alle data in <span className="text-purple-400">één dashboard.</span>
+              </h2>
+              <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                Per medewerker een volledig profiel met ratings en geschiedenis.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="relative max-w-5xl w-full"
+            >
+              <div className="absolute -inset-4 bg-gradient-to-b from-purple-500/10 to-transparent rounded-3xl blur-2xl" />
+              <div className="relative bg-gray-800/50 rounded-2xl p-3 border border-gray-700/50 shadow-2xl">
+                <div className="bg-gray-900 rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <span className="text-gray-500 text-xs ml-2">EXTRA Admin Dashboard</span>
+                  </div>
+                  <img
+                    src={adminDashboard}
+                    alt="Admin Dashboard"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="flex justify-center gap-4 mt-8 flex-wrap">
+              {[
+                { icon: Star, text: "Ratings na elke dienst" },
+                { icon: Clock, text: "Betrouwbaarheid & punctualiteit" },
+                { icon: Users, text: "Favorietenpoules" },
+              ].map((badge, i) => (
+                <motion.div
+                  key={badge.text}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + i * 0.1, duration: 0.4 }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl"
+                >
+                  <badge.icon className="w-4 h-4 text-purple-400" />
+                  <span className="text-gray-300 text-sm font-medium">{badge.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 4: EXTRAATJE App */}
+        {currentSlide === 4 && (
+          <motion.div
+            key="slide5-extraatje"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -275,25 +516,21 @@ export default function PitchPresentation() {
                 className="flex-1 space-y-6"
               >
                 <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                  EXTRAATJE:
+                  Medewerkers motiveren met
                   <br />
                   <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                    waardering die je elke dag voelt.
+                    EXTRAATJE.
                   </span>
                 </h2>
                 
-                <div className="flex gap-4 text-lg text-gray-300" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
-                  <span className="text-purple-400">Waardering</span>
-                  <span className="text-gray-600">•</span>
-                  <span className="text-purple-400">Structuur</span>
-                  <span className="text-gray-600">•</span>
-                  <span className="text-purple-400">Loyaliteit</span>
-                </div>
+                <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Onze belonings-app voor medewerkers. Punten verdienen, status opbouwen, beloningen kiezen.
+                </p>
 
                 <div className="space-y-4 pt-6">
                   {[
-                    { icon: Award, text: "Status (Gold → Diamond)", delay: 0.6 },
-                    { icon: Zap, text: "Challenges & progress", delay: 0.75 },
+                    { icon: Award, text: "Status opbouwen (Bronze → Diamond)", delay: 0.6 },
+                    { icon: Zap, text: "Challenges & uitdagingen", delay: 0.75 },
                     { icon: Star, text: "Beloningen & Ranglijst", delay: 0.9 },
                   ].map((item) => (
                     <motion.div
@@ -339,9 +576,10 @@ export default function PitchPresentation() {
           </motion.div>
         )}
 
-        {currentSlide === 2 && (
+        {/* SLIDE 5: Notifications */}
+        {currentSlide === 5 && (
           <motion.div
-            key="slide3"
+            key="slide6-notifications"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -431,164 +669,10 @@ export default function PitchPresentation() {
           </motion.div>
         )}
 
-        {currentSlide === 3 && (
+        {/* SLIDE 6: AI-planning (toekomst) */}
+        {currentSlide === 6 && (
           <motion.div
-            key="slide4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center p-8"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-center mb-8"
-            >
-              <h2 className="text-4xl md:text-5xl text-white mb-3" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                Wat je meet, kun je <span className="text-purple-400">verbeteren.</span>
-              </h2>
-              <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
-                We bouwen per medewerker een performance-profiel.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="relative max-w-5xl w-full"
-            >
-              <div className="absolute -inset-4 bg-gradient-to-b from-purple-500/10 to-transparent rounded-3xl blur-2xl" />
-              <div className="relative bg-gray-800/50 rounded-2xl p-3 border border-gray-700/50 shadow-2xl">
-                <div className="bg-gray-900 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                    </div>
-                    <span className="text-gray-500 text-xs ml-2">EXTRAATJE Admin Dashboard</span>
-                  </div>
-                  <img
-                    src={adminDashboard}
-                    alt="Admin Dashboard"
-                    className="w-full h-auto"
-                  />
-                </div>
-              </div>
-            </motion.div>
-
-            <div className="flex justify-center gap-4 mt-8 flex-wrap">
-              {[
-                { icon: Star, text: "Ratings na elke dienst" },
-                { icon: Clock, text: "Op tijd, kleding, houding" },
-                { icon: Users, text: "Favorietenpoules" },
-                { icon: Award, text: "NEN-4400-1" },
-              ].map((badge, i) => (
-                <motion.div
-                  key={badge.text}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.1, duration: 0.4 }}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl"
-                >
-                  <badge.icon className="w-4 h-4 text-purple-400" />
-                  <span className="text-gray-300 text-sm font-medium">{badge.text}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {currentSlide === 4 && (
-          <motion.div
-            key="slide5-beoordeling"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center p-8"
-          >
-            <div className="flex items-center gap-16 max-w-6xl w-full">
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="flex-shrink-0"
-              >
-                <div className="relative">
-                  <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-purple-600/20 to-transparent rounded-[2rem] blur-2xl" />
-                  <div className="absolute -bottom-6 left-6 right-6 h-12 bg-black/50 rounded-[2rem] blur-xl" />
-                  <div className="relative bg-gray-800 rounded-[1.5rem] p-3 border-2 border-gray-700 shadow-2xl" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)' }}>
-                    <div className="bg-white rounded-[1rem] overflow-hidden">
-                      <img
-                        src={beoordelingScreen}
-                        alt="Beoordeling scherm"
-                        className="w-72 h-auto"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-center text-gray-400 text-sm mt-8" style={{ fontFamily: 'Poppins' }}>iPad Beoordelingsformulier</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="flex-1 space-y-6"
-              >
-                <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                  Beoordeling op
-                  <br />
-                  <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                    hard- en softskills.
-                  </span>
-                </h2>
-                
-                <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
-                  Elke kandidaat krijgt direct een score tijdens de intake.
-                </p>
-
-                <div className="space-y-4 pt-4">
-                  {[
-                    { icon: Award, text: "Eerste indruk & houding", delay: 0.7 },
-                    { icon: Star, text: "Ervaring & vaardigheden", delay: 0.85 },
-                    { icon: Users, text: "Uiterlijke verzorging", delay: 1.0 },
-                  ].map((item) => (
-                    <motion.div
-                      key={item.text}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: item.delay, duration: 0.5 }}
-                      className="flex items-center gap-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl px-5 py-3"
-                    >
-                      <item.icon className="w-5 h-5 text-purple-400" />
-                      <span className="text-white font-medium">{item.text}</span>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 }}
-                  className="pt-4"
-                >
-                  <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50 rounded-xl p-4">
-                    <p className="text-purple-300 text-center" style={{ fontFamily: 'Poppins' }}>
-                      Objectieve data voor betere matches
-                    </p>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-
-        {currentSlide === 5 && (
-          <motion.div
-            key="slide6-ai-planning"
+            key="slide7-ai-planning"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -606,15 +690,15 @@ export default function PitchPresentation() {
               </div>
               
               <h2 className="text-4xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                AI-gestuurde planning.
+                De toekomst:
                 <br />
                 <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                  Volledig geautomatiseerd.
+                  AI-gestuurde planning.
                 </span>
               </h2>
               
               <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
-                Medewerkers ontvangen automatisch diensten op basis van beschikbaarheid en skills.
+                Medewerkers krijgen automatisch een appje met diensten, gebaseerd op beschikbaarheid en skills.
               </p>
             </motion.div>
 
@@ -648,141 +732,6 @@ export default function PitchPresentation() {
             >
               <p className="text-purple-400 text-lg font-medium" style={{ fontFamily: 'Poppins' }}>
                 10x sneller plannen dan handmatig
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {currentSlide === 6 && (
-          <motion.div
-            key="slide7"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center p-8"
-          >
-            <motion.h2
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-3xl md:text-4xl text-white text-center mb-10"
-              style={{ fontFamily: 'Poppins', fontWeight: 800 }}
-            >
-              Kwaliteit begint bij de intake.
-              <br />
-              <span className="text-purple-400">En eindigt bij AI-planning.</span>
-            </motion.h2>
-
-            <div className="flex items-center gap-12 max-w-6xl w-full">
-              <motion.div
-                initial={{ opacity: 0, x: -50, rotateX: 10 }}
-                animate={{ opacity: 1, x: 0, rotateX: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="flex-1 flex justify-center"
-              >
-                <div className="relative" style={{ perspective: '1200px' }}>
-                  <div 
-                    className="absolute -inset-8 bg-gradient-to-br from-purple-500/30 via-purple-600/20 to-transparent rounded-[2rem] blur-2xl"
-                    style={{ transform: 'rotateX(50deg) rotateZ(-5deg) translateZ(-20px)' }}
-                  />
-                  <div 
-                    className="relative"
-                    style={{ 
-                      transform: 'rotateX(25deg) rotateZ(-3deg)',
-                      transformStyle: 'preserve-3d'
-                    }}
-                  >
-                    <div 
-                      className="absolute -bottom-8 left-4 right-4 h-16 bg-black/40 rounded-[2rem] blur-2xl"
-                      style={{ transform: 'translateZ(-30px)' }}
-                    />
-                    <div className="relative bg-gray-800 rounded-[1.5rem] p-3 border-2 border-gray-700 shadow-2xl" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)' }}>
-                      <div className="bg-black rounded-[1rem] p-1 overflow-hidden">
-                        <div className="flex items-center justify-center gap-2 py-1.5 bg-gray-900 rounded-t-lg">
-                          <div className="w-2 h-2 bg-gray-700 rounded-full" />
-                        </div>
-                        <img
-                          src={sollicitatieStart}
-                          alt="Sollicitatieformulier"
-                          className="w-80 h-auto"
-                        />
-                        <div className="h-1 bg-gray-900" />
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-center text-gray-400 text-sm mt-10" style={{ fontFamily: 'Poppins' }}>iPad Sollicitatieformulier</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="flex items-center"
-              >
-                <ChevronRight className="w-8 h-8 text-purple-500" />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="flex-1"
-              >
-                <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-purple-600/20 rounded-xl flex items-center justify-center">
-                      <Brain className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <span className="text-white font-semibold">AI Match Engine</span>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    {["Scores", "Ratings", "Betrouwbaarheid", "Ervaring"].map((input, i) => (
-                      <motion.div
-                        key={input}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.8 + i * 0.1 }}
-                        className="flex items-center gap-3 bg-gray-800/50 rounded-lg px-4 py-2 border border-gray-700/50"
-                      >
-                        <Sparkles className="w-4 h-4 text-purple-400" />
-                        <span className="text-gray-300 text-sm">{input}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.2 }}
-                    className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50 rounded-xl p-4"
-                  >
-                    <p className="text-white font-semibold text-center">
-                      Automatische planning op kwaliteit
-                    </p>
-                  </motion.div>
-
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.4 }}
-                    className="text-purple-400 text-sm text-center mt-4 font-medium"
-                  >
-                    10x sneller plannen dan handmatig
-                  </motion.p>
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.6, duration: 0.6 }}
-              className="mt-12 text-center"
-            >
-              <p className="text-3xl md:text-4xl bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                "Goed voor je mensen. Sterk voor je klant."
               </p>
             </motion.div>
           </motion.div>
