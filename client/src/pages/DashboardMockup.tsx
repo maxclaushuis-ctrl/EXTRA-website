@@ -139,11 +139,12 @@ export default function DashboardMockup() {
 
   const filteredCandidates = allCandidates.filter(c => {
     const matchesStatus = candidateStatusFilter === 'alle' || c.status === candidateStatusFilter;
+    const searchTerm = candidateSearch.toLowerCase();
     const matchesSearch = candidateSearch === '' || 
-      c.firstName.toLowerCase().includes(candidateSearch.toLowerCase()) ||
-      c.lastName.toLowerCase().includes(candidateSearch.toLowerCase()) ||
-      c.email.toLowerCase().includes(candidateSearch.toLowerCase()) ||
-      (c.phone && c.phone.includes(candidateSearch));
+      (c.firstName && c.firstName.toLowerCase().includes(searchTerm)) ||
+      (c.lastName && c.lastName.toLowerCase().includes(searchTerm)) ||
+      (c.email && c.email.toLowerCase().includes(searchTerm)) ||
+      (c.phone && c.phone.toLowerCase().includes(searchTerm));
     return matchesStatus && matchesSearch;
   });
 
