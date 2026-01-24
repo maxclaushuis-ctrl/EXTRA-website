@@ -230,15 +230,11 @@ export default function PitchPresentation() {
                   >
                     <div className="absolute -inset-1 bg-gradient-to-b from-purple-500/30 to-transparent rounded-[2rem] blur-xl" />
                     <div className="relative bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl border border-gray-800">
-                      <div className="relative overflow-hidden rounded-[1.5rem]">
-                        <img
-                          src={img}
-                          alt="App screenshot"
-                          className="w-52 h-auto"
-                        />
-                        <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-[#1a1625] via-[#1a1625] to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1a1625] via-[#1a1625] to-transparent" />
-                      </div>
+                      <img
+                        src={img}
+                        alt="App screenshot"
+                        className="w-44 h-auto rounded-[1.5rem]"
+                      />
                     </div>
                   </motion.div>
                 ))}
@@ -274,15 +270,11 @@ export default function PitchPresentation() {
               >
                 <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-transparent rounded-[3rem] blur-2xl" />
                 <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800" style={{ transform: 'perspective(1000px) rotateY(5deg)' }}>
-                  <div className="relative overflow-hidden rounded-[2rem]">
-                    <img
-                      src={appChallenges}
-                      alt="App challenges"
-                      className="w-64 md:w-72 h-auto"
-                    />
-                    <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-[#1a1625] via-[#1a1625] to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1a1625] via-[#1a1625] to-transparent" />
-                  </div>
+                  <img
+                    src={appChallenges}
+                    alt="App challenges"
+                    className="w-64 md:w-72 h-auto rounded-[2rem]"
+                  />
                 </div>
               </motion.div>
 
