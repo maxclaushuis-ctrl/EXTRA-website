@@ -12,6 +12,7 @@ import extraLogoWit from "@/assets/pitch/extra-logo-wit.png";
 import beoordelingScreen from "@/assets/pitch/beoordeling-screen.png";
 import extraPattern from "@/assets/pitch/extra-pattern.jpg";
 import annaBakkerProfiel from "@/assets/pitch/anna-bakker-profiel.png";
+import extraXShape from "@/assets/pitch/extra-x-shape.png";
 
 const speakerNotes = [
   "SLIDE 1 (30s): Introductie EXTRA - uitzendbureau voor horeca en events. Betrouwbaar personeel, dagbetaling, en social impact met de Voedselbank.",
@@ -80,50 +81,38 @@ export default function PitchPresentation() {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-950/50 via-gray-950 to-gray-950" />
       
-      {/* Creative 3D X Background Art */}
+      {/* Creative 3D X Background Art - Using actual brand X image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large 3D X element - bottom right */}
         <div 
-          className="absolute -right-32 -bottom-32"
+          className="absolute -right-40 -bottom-40"
           style={{ perspective: '1000px' }}
         >
-          <svg 
-            width="700" 
-            height="700" 
-            viewBox="0 0 100 100"
-            className="opacity-[0.07]"
+          <img 
+            src={extraXShape}
+            alt=""
+            className="w-[700px] h-[700px] opacity-[0.08]"
             style={{ 
               transform: 'rotateX(15deg) rotateY(-20deg) rotateZ(5deg)',
+              filter: 'invert(1) brightness(2)',
             }}
-          >
-            <defs>
-              <linearGradient id="x-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-                <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.3" />
-              </linearGradient>
-            </defs>
-            {/* X shape - matching EXTRA brand */}
-            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="url(#x-gradient-1)" />
-          </svg>
+          />
         </div>
 
         {/* Medium 3D X element - top left */}
         <div 
-          className="absolute -left-20 -top-20"
+          className="absolute -left-28 -top-28"
           style={{ perspective: '800px' }}
         >
-          <svg 
-            width="450" 
-            height="450" 
-            viewBox="0 0 100 100"
-            className="opacity-[0.05]"
+          <img 
+            src={extraXShape}
+            alt=""
+            className="w-[450px] h-[450px] opacity-[0.05]"
             style={{ 
               transform: 'rotateX(-10deg) rotateY(25deg) rotateZ(-8deg)',
+              filter: 'invert(1) brightness(2)',
             }}
-          >
-            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="#ffffff" />
-          </svg>
+          />
         </div>
 
         {/* Small floating X element */}
@@ -131,17 +120,15 @@ export default function PitchPresentation() {
           className="absolute right-1/4 top-1/4"
           style={{ perspective: '600px' }}
         >
-          <svg 
-            width="100" 
-            height="100" 
-            viewBox="0 0 100 100"
-            className="opacity-[0.1]"
+          <img 
+            src={extraXShape}
+            alt=""
+            className="w-[120px] h-[120px] opacity-[0.12]"
             style={{ 
               transform: 'rotateX(20deg) rotateY(-15deg) rotateZ(12deg)',
+              filter: 'invert(1) brightness(1.5) sepia(1) saturate(5) hue-rotate(240deg)',
             }}
-          >
-            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="#a855f7" />
-          </svg>
+          />
         </div>
 
         {/* Extra small X - center left */}
@@ -149,17 +136,15 @@ export default function PitchPresentation() {
           className="absolute left-1/3 bottom-1/3"
           style={{ perspective: '500px' }}
         >
-          <svg 
-            width="60" 
-            height="60" 
-            viewBox="0 0 100 100"
-            className="opacity-[0.06]"
+          <img 
+            src={extraXShape}
+            alt=""
+            className="w-[70px] h-[70px] opacity-[0.06]"
             style={{ 
               transform: 'rotateX(-5deg) rotateY(10deg) rotateZ(-5deg)',
+              filter: 'invert(1) brightness(2)',
             }}
-          >
-            <path d="M0,0 L22,0 L50,35 L78,0 L100,0 L100,22 L65,50 L100,78 L100,100 L78,100 L50,65 L22,100 L0,100 L0,78 L35,50 L0,22 Z" fill="#ffffff" />
-          </svg>
+          />
         </div>
 
         {/* Diamond pattern strip - subtle, only partial coverage */}
