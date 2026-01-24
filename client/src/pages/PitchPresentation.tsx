@@ -8,6 +8,7 @@ import appRewards from "@/assets/pitch/app-rewards.png";
 import appRanking from "@/assets/pitch/app-ranking.png";
 import adminDashboard from "@/assets/pitch/admin-dashboard.png";
 import sollicitatieStart from "@/assets/pitch/sollicitatie-start.png";
+import extraLogoWit from "@/assets/pitch/extra-logo-wit.png";
 
 const speakerNotes = [
   "SLIDE 1 (35s): Start met de kern - onze filosofie. We geloven dat goed personeel de basis is van elk succesvol hotel of event. Daarom behandelen we onze mensen als partners, niet als nummers. Dagbetaling, transparantie, en zelfs social impact via de Voedselbank.",
@@ -109,16 +110,15 @@ export default function PitchPresentation() {
                 transition={{ delay: 0.1 }}
                 className="inline-block mb-8"
               >
-                <span className="text-5xl font-black bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-                  EXTRA
-                </span>
+                <img src={extraLogoWit} alt="EXTRA" className="h-16 md:h-20" />
               </motion.div>
               
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+                className="text-5xl md:text-7xl text-white mb-6 leading-tight"
+                style={{ fontFamily: 'Poppins', fontWeight: 800 }}
               >
                 "Wie goed is voor je personeel,
                 <br />
@@ -132,6 +132,7 @@ export default function PitchPresentation() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.8 }}
                 className="text-xl md:text-2xl text-gray-400 mb-16"
+                style={{ fontFamily: 'Poppins', fontWeight: 400 }}
               >
                 Daarom bouwen we EXTRA: betrouwbaarheid op schaal voor hotels én events.
               </motion.p>
@@ -177,7 +178,7 @@ export default function PitchPresentation() {
                 transition={{ delay: 0.2, duration: 0.6 }}
                 className="flex-1 space-y-6"
               >
-                <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
                   EXTRAATJE:
                   <br />
                   <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
@@ -185,7 +186,7 @@ export default function PitchPresentation() {
                   </span>
                 </h2>
                 
-                <div className="flex gap-4 text-lg text-gray-300">
+                <div className="flex gap-4 text-lg text-gray-300" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
                   <span className="text-purple-400">Waardering</span>
                   <span className="text-gray-600">•</span>
                   <span className="text-purple-400">Structuur</span>
@@ -254,7 +255,8 @@ export default function PitchPresentation() {
               initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="absolute top-20 left-1/2 -translate-x-1/2 text-4xl md:text-5xl font-bold text-white z-20"
+              className="absolute top-20 left-1/2 -translate-x-1/2 text-4xl md:text-5xl text-white z-20"
+              style={{ fontFamily: 'Poppins', fontWeight: 800 }}
             >
               Motivatie, <span className="text-purple-400">realtime.</span>
             </motion.h2>
@@ -325,10 +327,10 @@ export default function PitchPresentation() {
               transition={{ delay: 0.2 }}
               className="text-center mb-8"
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-3">
+              <h2 className="text-4xl md:text-5xl text-white mb-3" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
                 Wat je meet, kun je <span className="text-purple-400">verbeteren.</span>
               </h2>
-              <p className="text-xl text-gray-400">
+              <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
                 We bouwen per medewerker een performance-profiel.
               </p>
             </motion.div>
@@ -393,7 +395,8 @@ export default function PitchPresentation() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-3xl md:text-4xl font-bold text-white text-center mb-10"
+              className="text-3xl md:text-4xl text-white text-center mb-10"
+              style={{ fontFamily: 'Poppins', fontWeight: 800 }}
             >
               Kwaliteit begint bij de intake.
               <br />
@@ -493,7 +496,7 @@ export default function PitchPresentation() {
               transition={{ delay: 1.6, duration: 0.6 }}
               className="mt-12 text-center"
             >
-              <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              <p className="text-3xl md:text-4xl bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
                 "Goed voor je mensen. Sterk voor je klant."
               </p>
             </motion.div>
