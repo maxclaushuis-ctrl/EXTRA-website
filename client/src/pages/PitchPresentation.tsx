@@ -218,7 +218,7 @@ export default function PitchPresentation() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="flex gap-3"
+                className="flex gap-4"
               >
                 {[appHome, appChallenges, appRanking].map((img, i) => (
                   <motion.div
@@ -228,14 +228,17 @@ export default function PitchPresentation() {
                     transition={{ delay: 0.5 + i * 0.15, duration: 0.5 }}
                     className="relative"
                   >
-                    <div className="absolute -inset-2 bg-gradient-to-b from-purple-500/30 to-transparent rounded-[2.5rem] blur-xl" />
-                    <div className="relative bg-gray-900 rounded-[2rem] p-1 shadow-2xl border border-gray-800 overflow-hidden" style={{ height: '420px' }}>
-                      <img
-                        src={img}
-                        alt="App screenshot"
-                        className="w-48 h-auto rounded-[1.5rem] object-cover object-top"
-                        style={{ marginBottom: '-60px' }}
-                      />
+                    <div className="absolute -inset-1 bg-gradient-to-b from-purple-500/30 to-transparent rounded-[2rem] blur-xl" />
+                    <div className="relative bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl border border-gray-800">
+                      <div className="relative overflow-hidden rounded-[1.5rem]">
+                        <img
+                          src={img}
+                          alt="App screenshot"
+                          className="w-52 h-auto"
+                        />
+                        <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-[#1a1625] via-[#1a1625] to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1a1625] via-[#1a1625] to-transparent" />
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -270,13 +273,16 @@ export default function PitchPresentation() {
                 className="relative"
               >
                 <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-transparent rounded-[3rem] blur-2xl" />
-                <div className="relative bg-gray-900 rounded-[2.5rem] p-1 shadow-2xl border border-gray-800 overflow-hidden" style={{ transform: 'perspective(1000px) rotateY(5deg)', height: '480px' }}>
-                  <img
-                    src={appChallenges}
-                    alt="App challenges"
-                    className="w-64 md:w-72 h-auto rounded-[2rem] object-cover object-top"
-                    style={{ marginBottom: '-60px' }}
-                  />
+                <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800" style={{ transform: 'perspective(1000px) rotateY(5deg)' }}>
+                  <div className="relative overflow-hidden rounded-[2rem]">
+                    <img
+                      src={appChallenges}
+                      alt="App challenges"
+                      className="w-64 md:w-72 h-auto"
+                    />
+                    <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-[#1a1625] via-[#1a1625] to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1a1625] via-[#1a1625] to-transparent" />
+                  </div>
                 </div>
               </motion.div>
 
