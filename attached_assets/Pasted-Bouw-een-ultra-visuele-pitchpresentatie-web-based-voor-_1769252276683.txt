@@ -1,0 +1,130 @@
+Bouw een ultra-visuele pitchpresentatie (web-based) voor EXTRA voor een JCI ondernemers award.
+De pitch duurt 3 minuten, dus: MAX 5 slides. Visueel > tekst. Animaties subtiel maar premium.
+Ik voeg zelf screenshots en logo’s toe (medewerker-app, admin dashboard, sollicitatieformulier, huisstijl). Gebruik placeholders.
+
+TECH STACK
+- Next.js + React + Tailwind
+- Framer Motion voor animaties
+- Fullscreen “slides” (16:9) met keyboard navigatie: ← → / spatie
+- Slide indicator (5 dots) rechtsboven
+- Presenter notes toggle met toets “N” (notes overlay rechts onderin)
+- Maak een /assets map met placeholder filenames; geen externe URL’s.
+
+LOOK & FEEL (moet matchen met EXTRAATJE app)
+- Dark + premium + paars/gradient + glow, rounded cards (2xl), soft shadows
+- Typografie: grote headlines, weinig tekst, veel witruimte
+- Gebruik de aangeleverde huisstijl als leidraad (verwijs naar bijlage)
+- Alles in het Nederlands, jong maar professioneel (EXTRA tone of voice)
+
+BELANGRIJKE BOODSCHAP (WHY)
+De kern is WHY, niet “wat”:
+“Wie goed is voor je personeel, is goed voor ons.”
+De rest (EXTRAATJE, data, AI) vloeit logisch hieruit voort.
+
+SLIDE STRUCTUUR (exact 5 slides)
+
+Slide 1 — WHY / opening
+- Headline (groot): “Wie goed is voor je personeel, is goed voor ons.”
+- Subline (klein): “Daarom bouwen we EXTRA: betrouwbaarheid op schaal voor hotels én events.”
+- Visueel: donkere gradient achtergrond + subtiele hospitality hero (placeholder)
+  /assets/hero-bg.jpg
+- Voeg onderin 3 mini-badges (klein, icon + tekst):
+  1) “Hotels + events”
+  2) “Dagbetaling” (klein icoon/label)
+  3) “1 dienst = 1 maaltijd” (social impact, super kort)
+- Animatie: headline fade-in, badges pop-in één voor één
+
+Slide 2 — EXTRAATJE (medewerker-app) (HERO)
+- Headline: “EXTRAATJE: waardering die je elke dag voelt.”
+- 3 keywords (regel van 3, kort): “Waardering • Structuur • Loyaliteit”
+- Visueel: 2–3 app screenshots in phone frames (of clean card frames)
+  /assets/app-home.png
+  /assets/app-challenges.png
+  /assets/app-rewards-or-ranking.png (kies 1)
+- Voeg 3 callout labels/hotspots met korte tekst:
+  1) “Status (Gold → Diamond)”
+  2) “Challenges & progress”
+  3) “Beloningen / Ranglijst”
+- Animatie: hotspots verschijnen in sequence (1 → 2 → 3)
+
+Slide 3 — WOW / pushmeldingen (interactie)
+- Headline: “Motivatie, realtime.”
+- Visueel: 1 groot app screenshot als achtergrond (bijv. challenges)
+  /assets/app-challenges.png
+- Overlays: 3 pushmeldingen (iOS-style) die timed binnenkomen (top-down),
+  in EXACT dezelfde huisstijl (paars/donker/rounded/glow, blur, shadow, premium).
+  Gebruik deze teksten:
+  1) “🚀 Challenge behaald: Vroege vogel (+200 pts)”
+  2) “🥇 Upgrade: Gold status — lekker bezig”
+  3) “🔥 5 dagen op rij gewerkt (+125 pts)”
+- Pushmeldingen verdwijnen subtiel (fade/slide) zodat het netjes blijft.
+- Geen geluid.
+
+Slide 4 — Admin dashboard (data = kwaliteit)
+- Headline: “Wat je meet, kun je verbeteren.”
+- Subline: “We bouwen per medewerker een performance-profiel.”
+- Visueel: admin dashboard screenshot groot in een ‘desktop/laptop frame’ (clean mock frame)
+  /assets/admin-dashboard.png
+- Onderin 4 mini-badges (kort, proofy):
+  1) “Ratings na elke dienst”
+  2) “Microprestaties: op tijd, kleding, houding”
+  3) “Favorietenpoules per opdrachtgever”
+  4) “NEN-4400-1” (alleen een klein logo/label, niet uitleggen)
+- Animatie: badges pop-in, dashboard slight zoom (subtiel)
+
+Slide 5 — Sollicitatie + toekomst (AI-planning)
+- Headline: “Kwaliteit begint bij de intake. En eindigt bij AI-planning.”
+- Layout: links iPad mockup LANDSCAPE (horizontaal) met sollicitatieformulier screenshot
+  /assets/sollicitatie-formulier.png
+  Maak een realistische iPad mockup (bezel, camera dot, shadow), landscape orientation.
+- Rechts: minimal AI “match engine” card (geen lange tekst):
+  Inputs (icons + 1 woord):
+   - “Scores”
+   - “Ratings”
+   - “Betrouwbaarheid”
+   - “Ervaring”
+  Output (bold):
+   - “Automatische planning op kwaliteit”
+  Kleine claim:
+   - “10x sneller plannen dan handmatig”
+- Voeg afsluitende slogan (groot onderaan, tweetable):
+  Kies 1 van deze 3 (maak ze typografisch sterk):
+  A) “Goed voor je mensen. Sterk voor je klant.”
+  B) “Mensen eerst. Kwaliteit altijd.”
+  C) “Personeel dat blijft. Service die klopt.”
+  (Gebruik A als default)
+- Animatie: inputs bewegen (subtiel) naar output (pijlen), iPad mock glanst heel licht
+
+SOCIAL IMPACT (geen extra slide)
+- Verwerk social impact uitsluitend als badge op slide 1:
+  “1 dienst = 1 maaltijd (Voedselbank Amsterdam)”
+- Houd het kort; geen lange tekst.
+
+CONTENT RULES
+- Max 8 woorden per bullet (liefst minder)
+- Geen paragrafen
+- Eén boodschap per slide
+- Tone: jong, speels, professioneel (EXTRA)
+- Geen “corporate” taal, geen lange claims zonder context
+
+ASSETS / PLACEHOLDERS (maak /assets folder)
+- hero-bg.jpg
+- app-home.png
+- app-challenges.png
+- app-rewards-or-ranking.png
+- admin-dashboard.png
+- sollicitatie-formulier.png
+- nen-logo.png (optioneel, klein in badge)
+- dagbetaling-icon.png (optioneel)
+- voedselbank-icon.png (optioneel)
+
+DOCUMENTATIE
+- Maak CONTENT.md met:
+  - Overzicht van slides
+  - Welke asset waar
+  - Speaker notes per slide (ultra kort) zodat totaal 3 minuten blijft
+  - Timing indicatie per slide (bijv. 35s / 40s / 30s / 40s / 35s)
+
+OUTPUT
+- Lever werkende code + instructies om assets te vervangen
+- Zorg dat het er “award-ready” uitziet: strak, premium, wow-moment bij pushmeldingen en iPad mockup.
