@@ -83,14 +83,14 @@ export default function PitchPresentation() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large 3D X element - bottom right */}
         <div 
-          className="absolute -right-32 -bottom-32"
+          className="absolute -right-40 -bottom-40"
           style={{ perspective: '1000px' }}
         >
           <svg 
-            width="800" 
-            height="800" 
-            viewBox="0 0 200 200"
-            className="opacity-[0.06]"
+            width="700" 
+            height="900" 
+            viewBox="0 0 100 130"
+            className="opacity-[0.07]"
             style={{ 
               transform: 'rotateX(15deg) rotateY(-20deg) rotateZ(5deg)',
             }}
@@ -102,57 +102,79 @@ export default function PitchPresentation() {
                 <stop offset="100%" stopColor="#ffffff" stopOpacity="0.3" />
               </linearGradient>
             </defs>
-            {/* X shape made of two crossing bars */}
-            <polygon points="20,0 50,0 110,85 170,0 200,0 200,30 130,100 200,170 200,200 170,200 100,115 30,200 0,200 0,170 70,100 0,30 0,0 30,0 100,85 20,0" fill="url(#x-gradient-1)" />
+            {/* X shape - proportional like EXTRA pattern */}
+            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="url(#x-gradient-1)" />
+            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="url(#x-gradient-1)" />
           </svg>
         </div>
 
         {/* Medium 3D X element - top left */}
         <div 
-          className="absolute -left-20 -top-20"
+          className="absolute -left-24 -top-32"
           style={{ perspective: '800px' }}
         >
           <svg 
-            width="500" 
-            height="500" 
-            viewBox="0 0 200 200"
-            className="opacity-[0.04]"
+            width="450" 
+            height="580" 
+            viewBox="0 0 100 130"
+            className="opacity-[0.05]"
             style={{ 
               transform: 'rotateX(-10deg) rotateY(25deg) rotateZ(-8deg)',
             }}
           >
-            <polygon points="20,0 50,0 110,85 170,0 200,0 200,30 130,100 200,170 200,200 170,200 100,115 30,200 0,200 0,170 70,100 0,30 0,0 30,0 100,85 20,0" fill="#ffffff" />
+            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="#ffffff" />
+            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="#ffffff" />
           </svg>
         </div>
 
-        {/* Small floating X elements */}
+        {/* Small floating X element */}
         <div 
           className="absolute right-1/4 top-1/4"
           style={{ perspective: '600px' }}
         >
           <svg 
-            width="120" 
-            height="120" 
-            viewBox="0 0 200 200"
-            className="opacity-[0.08]"
+            width="100" 
+            height="130" 
+            viewBox="0 0 100 130"
+            className="opacity-[0.1]"
             style={{ 
               transform: 'rotateX(20deg) rotateY(-15deg) rotateZ(12deg)',
             }}
           >
-            <polygon points="20,0 50,0 110,85 170,0 200,0 200,30 130,100 200,170 200,200 170,200 100,115 30,200 0,200 0,170 70,100 0,30 0,0 30,0 100,85 20,0" fill="#a855f7" />
+            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="#a855f7" />
+            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="#a855f7" />
+          </svg>
+        </div>
+
+        {/* Extra small X - center left */}
+        <div 
+          className="absolute left-1/3 bottom-1/3"
+          style={{ perspective: '500px' }}
+        >
+          <svg 
+            width="60" 
+            height="78" 
+            viewBox="0 0 100 130"
+            className="opacity-[0.06]"
+            style={{ 
+              transform: 'rotateX(-5deg) rotateY(10deg) rotateZ(-5deg)',
+            }}
+          >
+            <path d="M10,0 L25,0 L50,40 L75,0 L90,0 L58,52 L50,65 L42,52 Z" fill="#ffffff" />
+            <path d="M10,130 L25,130 L50,90 L75,130 L90,130 L58,78 L50,65 L42,78 Z" fill="#ffffff" />
           </svg>
         </div>
 
         {/* Diamond pattern strip - subtle, only partial coverage */}
         <div 
-          className="absolute bottom-0 left-0 right-0 h-64 overflow-hidden"
+          className="absolute bottom-0 left-0 right-0 h-48 overflow-hidden"
           style={{ perspective: '1000px' }}
         >
           <div 
-            className="w-full h-full opacity-[0.03]"
+            className="w-full h-full opacity-[0.025]"
             style={{ 
               backgroundImage: `url(${extraPattern})`,
-              backgroundSize: '300px',
+              backgroundSize: '250px',
               backgroundRepeat: 'repeat-x',
               backgroundPosition: 'bottom',
               transform: 'rotateX(70deg) translateY(50%)',
