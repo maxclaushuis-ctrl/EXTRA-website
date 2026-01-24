@@ -9,13 +9,16 @@ import appRanking from "@/assets/pitch/app-ranking.png";
 import adminDashboard from "@/assets/pitch/admin-dashboard.png";
 import sollicitatieStart from "@/assets/pitch/sollicitatie-start.png";
 import extraLogoWit from "@/assets/pitch/extra-logo-wit.png";
+import beoordelingScreen from "@/assets/pitch/beoordeling-screen.png";
 
 const speakerNotes = [
   "SLIDE 1 (35s): Start met de kern - onze filosofie. We geloven dat goed personeel de basis is van elk succesvol hotel of event. Daarom behandelen we onze mensen als partners, niet als nummers. Dagbetaling, transparantie, en zelfs social impact via de Voedselbank.",
   "SLIDE 2 (40s): Dit is EXTRAATJE, onze medewerker-app. Elke medewerker bouwt status op, van Bronze naar Diamond. Ze verdienen punten door goed te presteren en kunnen die inwisselen voor echte beloningen. Dit zorgt voor loyaliteit en motivatie.",
   "SLIDE 3 (30s): [KLIK VOOR NOTIFICATIES] Zo voelt het om met EXTRAATJE te werken. Real-time feedback, direct in je broekzak. Elke prestatie wordt gezien en beloond. Dat motiveert enorm.",
   "SLIDE 4 (40s): Voor onze opdrachtgevers: volledige transparantie. We meten alles - ratings, punctualiteit, houding. Zo bouwen we per medewerker een betrouwbaarheidsprofiel. Kwaliteit die je kunt bewijzen.",
-  "SLIDE 5 (35s): Alles begint bij een goede intake. Links ons sollicitatieformulier op iPad. Rechts onze toekomstvisie: AI-gestuurde planning op basis van alle data die we verzamelen. 10x sneller, en altijd de beste match."
+  "SLIDE 5 (30s): Tijdens de intake beoordelen we elke kandidaat direct op hard- en softskills. Ervaring, houding, uiterlijke verzorging - alles krijgt een score. Zo weet je precies wat je kunt verwachten.",
+  "SLIDE 6 (30s): De toekomst: volledig geautomatiseerde planning. Op basis van beschikbaarheid, skills en betrouwbaarheid krijgen medewerkers automatisch diensten aangeboden. 10x sneller dan handmatig.",
+  "SLIDE 7 (35s): Alles begint bij een goede intake. Links ons sollicitatieformulier op iPad. Rechts onze toekomstvisie: AI-gestuurde planning op basis van alle data die we verzamelen."
 ];
 
 export default function PitchPresentation() {
@@ -24,7 +27,7 @@ export default function PitchPresentation() {
   const [clickCount, setClickCount] = useState(0);
   const [notifications, setNotifications] = useState<number[]>([]);
   
-  const totalSlides = 5;
+  const totalSlides = 7;
 
   const nextSlide = useCallback(() => {
     if (currentSlide === 2 && clickCount < 3) {
@@ -407,7 +410,159 @@ export default function PitchPresentation() {
 
         {currentSlide === 4 && (
           <motion.div
-            key="slide5"
+            key="slide5-beoordeling"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-16 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="flex-shrink-0"
+              >
+                <div className="relative">
+                  <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-purple-600/20 to-transparent rounded-[2rem] blur-2xl" />
+                  <div className="absolute -bottom-6 left-6 right-6 h-12 bg-black/50 rounded-[2rem] blur-xl" />
+                  <div className="relative bg-gray-800 rounded-[1.5rem] p-3 border-2 border-gray-700 shadow-2xl" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)' }}>
+                    <div className="bg-white rounded-[1rem] overflow-hidden">
+                      <img
+                        src={beoordelingScreen}
+                        alt="Beoordeling scherm"
+                        className="w-72 h-auto"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-center text-gray-400 text-sm mt-8" style={{ fontFamily: 'Poppins' }}>iPad Beoordelingsformulier</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="flex-1 space-y-6"
+              >
+                <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Beoordeling op
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                    hard- en softskills.
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Elke kandidaat krijgt direct een score tijdens de intake.
+                </p>
+
+                <div className="space-y-4 pt-4">
+                  {[
+                    { icon: Award, text: "Eerste indruk & houding", delay: 0.7 },
+                    { icon: Star, text: "Ervaring & vaardigheden", delay: 0.85 },
+                    { icon: Users, text: "Uiterlijke verzorging", delay: 1.0 },
+                  ].map((item) => (
+                    <motion.div
+                      key={item.text}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: item.delay, duration: 0.5 }}
+                      className="flex items-center gap-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl px-5 py-3"
+                    >
+                      <item.icon className="w-5 h-5 text-purple-400" />
+                      <span className="text-white font-medium">{item.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="pt-4"
+                >
+                  <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50 rounded-xl p-4">
+                    <p className="text-purple-300 text-center" style={{ fontFamily: 'Poppins' }}>
+                      Objectieve data voor betere matches
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {currentSlide === 5 && (
+          <motion.div
+            key="slide6-ai-planning"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-12 max-w-4xl"
+            >
+              <div className="inline-flex items-center gap-2 bg-purple-600/20 border border-purple-500/50 rounded-full px-4 py-2 mb-6">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-purple-300 text-sm font-medium">Coming Soon</span>
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                AI-gestuurde planning.
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                  Volledig geautomatiseerd.
+                </span>
+              </h2>
+              
+              <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                Medewerkers ontvangen automatisch diensten op basis van beschikbaarheid en skills.
+              </p>
+            </motion.div>
+
+            <div className="flex gap-6 max-w-4xl w-full">
+              {[
+                { icon: Clock, title: "Beschikbaarheid", desc: "Real-time beschikbaarheid via de app" },
+                { icon: Award, title: "Skills & scores", desc: "Match op basis van beoordelingen" },
+                { icon: Zap, title: "Instant notificatie", desc: "Direct een appje met de dienst" },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.15, duration: 0.5 }}
+                  className="flex-1 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-6"
+                >
+                  <div className="w-12 h-12 bg-purple-600/20 rounded-xl flex items-center justify-center mb-4">
+                    <item.icon className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <h3 className="text-white font-semibold text-lg mb-2" style={{ fontFamily: 'Poppins' }}>{item.title}</h3>
+                  <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0 }}
+              className="mt-10 text-center"
+            >
+              <p className="text-purple-400 text-lg font-medium" style={{ fontFamily: 'Poppins' }}>
+                10x sneller plannen dan handmatig
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {currentSlide === 6 && (
+          <motion.div
+            key="slide7"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
