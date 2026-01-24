@@ -79,36 +79,96 @@ export default function PitchPresentation() {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-950/50 via-gray-950 to-gray-950" />
       
-      {/* 3D Diamond Pattern Background */}
-      <div 
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-        style={{ perspective: '1200px' }}
-      >
+      {/* Creative 3D X Background Art */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Large 3D X element - bottom right */}
         <div 
-          className="absolute inset-0"
-          style={{ 
-            transform: 'rotateX(65deg) rotateZ(-10deg) scale(3)',
-            transformOrigin: 'center center',
-          }}
+          className="absolute -right-32 -bottom-32"
+          style={{ perspective: '1000px' }}
+        >
+          <svg 
+            width="800" 
+            height="800" 
+            viewBox="0 0 200 200"
+            className="opacity-[0.06]"
+            style={{ 
+              transform: 'rotateX(15deg) rotateY(-20deg) rotateZ(5deg)',
+            }}
+          >
+            <defs>
+              <linearGradient id="x-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+            {/* X shape made of two crossing bars */}
+            <polygon points="20,0 50,0 110,85 170,0 200,0 200,30 130,100 200,170 200,200 170,200 100,115 30,200 0,200 0,170 70,100 0,30 0,0 30,0 100,85 20,0" fill="url(#x-gradient-1)" />
+          </svg>
+        </div>
+
+        {/* Medium 3D X element - top left */}
+        <div 
+          className="absolute -left-20 -top-20"
+          style={{ perspective: '800px' }}
+        >
+          <svg 
+            width="500" 
+            height="500" 
+            viewBox="0 0 200 200"
+            className="opacity-[0.04]"
+            style={{ 
+              transform: 'rotateX(-10deg) rotateY(25deg) rotateZ(-8deg)',
+            }}
+          >
+            <polygon points="20,0 50,0 110,85 170,0 200,0 200,30 130,100 200,170 200,200 170,200 100,115 30,200 0,200 0,170 70,100 0,30 0,0 30,0 100,85 20,0" fill="#ffffff" />
+          </svg>
+        </div>
+
+        {/* Small floating X elements */}
+        <div 
+          className="absolute right-1/4 top-1/4"
+          style={{ perspective: '600px' }}
+        >
+          <svg 
+            width="120" 
+            height="120" 
+            viewBox="0 0 200 200"
+            className="opacity-[0.08]"
+            style={{ 
+              transform: 'rotateX(20deg) rotateY(-15deg) rotateZ(12deg)',
+            }}
+          >
+            <polygon points="20,0 50,0 110,85 170,0 200,0 200,30 130,100 200,170 200,200 170,200 100,115 30,200 0,200 0,170 70,100 0,30 0,0 30,0 100,85 20,0" fill="#a855f7" />
+          </svg>
+        </div>
+
+        {/* Diamond pattern strip - subtle, only partial coverage */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-64 overflow-hidden"
+          style={{ perspective: '1000px' }}
         >
           <div 
-            className="w-full h-full opacity-[0.08]"
+            className="w-full h-full opacity-[0.03]"
             style={{ 
               backgroundImage: `url(${extraPattern})`,
-              backgroundSize: '400px',
-              backgroundRepeat: 'repeat',
-              minWidth: '300%', 
-              minHeight: '300%',
-              marginLeft: '-100%',
-              marginTop: '-100%',
-              filter: 'invert(1) brightness(0.5)',
+              backgroundSize: '300px',
+              backgroundRepeat: 'repeat-x',
+              backgroundPosition: 'bottom',
+              transform: 'rotateX(70deg) translateY(50%)',
+              transformOrigin: 'bottom center',
+              filter: 'invert(1)',
             }}
           />
         </div>
-        {/* Gradient fade overlay - subtle to let pattern show */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/40 via-transparent to-gray-950/40" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgb(3, 7, 18, 0.9) 100%)' }} />
+
+        {/* Ambient glow behind content */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full opacity-20"
+          style={{ 
+            background: 'radial-gradient(ellipse at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
+          }}
+        />
       </div>
       
       <div className="absolute top-6 right-6 flex gap-2 z-50">
