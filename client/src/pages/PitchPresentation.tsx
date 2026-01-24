@@ -10,6 +10,7 @@ import adminDashboard from "@/assets/pitch/admin-dashboard.png";
 import sollicitatieStart from "@/assets/pitch/sollicitatie-start.png";
 import extraLogoWit from "@/assets/pitch/extra-logo-wit.png";
 import beoordelingScreen from "@/assets/pitch/beoordeling-screen.png";
+import extraPattern from "@/assets/pitch/extra-pattern.jpg";
 
 const speakerNotes = [
   "SLIDE 1 (35s): Start met de kern - onze filosofie. We geloven dat goed personeel de basis is van elk succesvol hotel of event. Daarom behandelen we onze mensen als partners, niet als nummers. Dagbetaling, transparantie, en zelfs social impact via de Voedselbank.",
@@ -81,54 +82,33 @@ export default function PitchPresentation() {
       {/* 3D Diamond Pattern Background */}
       <div 
         className="absolute inset-0 overflow-hidden pointer-events-none"
-        style={{ perspective: '1000px' }}
+        style={{ perspective: '1200px' }}
       >
         <div 
           className="absolute inset-0"
           style={{ 
-            transform: 'rotateX(60deg) rotateZ(-15deg) scale(2.5)',
+            transform: 'rotateX(65deg) rotateZ(-10deg) scale(3)',
             transformOrigin: 'center center',
           }}
         >
-          <svg 
-            className="w-full h-full opacity-[0.12]"
+          <div 
+            className="w-full h-full opacity-[0.08]"
             style={{ 
-              minWidth: '200%', 
-              minHeight: '200%',
-              marginLeft: '-50%',
-              marginTop: '-50%'
+              backgroundImage: `url(${extraPattern})`,
+              backgroundSize: '400px',
+              backgroundRepeat: 'repeat',
+              minWidth: '300%', 
+              minHeight: '300%',
+              marginLeft: '-100%',
+              marginTop: '-100%',
+              filter: 'invert(1) brightness(0.5)',
             }}
-          >
-            <defs>
-              <pattern id="diamond-pattern" x="0" y="0" width="60" height="80" patternUnits="userSpaceOnUse">
-                <path 
-                  d="M30 5 L45 40 L30 75 L15 40 Z" 
-                  fill="url(#diamond-gradient)"
-                />
-                <path 
-                  d="M0 -35 L15 0 L0 35 L-15 0 Z" 
-                  fill="url(#diamond-gradient)"
-                  transform="translate(0, 40)"
-                />
-                <path 
-                  d="M60 -35 L75 0 L60 35 L45 0 Z" 
-                  fill="url(#diamond-gradient)"
-                  transform="translate(0, 40)"
-                />
-              </pattern>
-              <linearGradient id="diamond-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
-                <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#6b21a8" stopOpacity="0.6" />
-              </linearGradient>
-            </defs>
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#diamond-pattern)" />
-          </svg>
+          />
         </div>
         {/* Gradient fade overlay - subtle to let pattern show */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/50 via-transparent to-gray-950/50" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgb(3, 7, 18, 0.8) 100%)' }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/40 via-transparent to-gray-950/40" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgb(3, 7, 18, 0.9) 100%)' }} />
       </div>
       
       <div className="absolute top-6 right-6 flex gap-2 z-50">
