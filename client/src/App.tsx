@@ -5,23 +5,10 @@ import { useState, useEffect } from "react";
 // Pagina's
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
-import Login from "@/pages/auth/Login";
 import Dashboard from "@/pages/dashboard";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import EmployeesPage from "@/pages/admin/Employees";
-import RewardsPage from "@/pages/admin/Rewards";
-import DiscountsPage from "@/pages/admin/Discounts";
-import ChallengesPage from "@/pages/AdminChallenges";
-import AdminChallengesSync from "@/pages/AdminChallengesSync";
-import RulesPage from "@/pages/admin/Rules";
-import CandidatesPage from "@/pages/admin/Candidates";
 import SollicitatieFormulier from "@/pages/SollicitatieFormulier";
 import DashboardMockup from "@/pages/DashboardMockup";
 import PitchPresentation from "@/pages/PitchPresentation";
-
-import AnalyticsPage from "@/pages/admin/Analytics";
-import SettingsPage from "@/pages/admin/Settings";
-import WerkruimtePage from "@/pages/admin/Werkruimte";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -44,7 +31,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate("/login");
+      navigate("/");
     } else if (!isLoading && adminOnly && user?.role !== "admin") {
       navigate("/dashboard");
     }
@@ -92,7 +79,6 @@ function Router() {
       
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/login" component={Login} />
         <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
         <Route path="/pitch" component={PitchPresentation} />
         <Route path="/dashboard-mockup">
@@ -118,45 +104,6 @@ function Router() {
         <Route path="/leaderboard">
           {() => <ProtectedRoute component={LeaderboardPage} />}
         </Route>
-        
-        {/* Admin routes */}
-        <Route path="/admin">
-          {() => <ProtectedRoute component={AdminDashboard} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/employees">
-          {() => <ProtectedRoute component={EmployeesPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/rewards">
-          {() => <ProtectedRoute component={RewardsPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/discounts">
-          {() => <ProtectedRoute component={DiscountsPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/challenges">
-          {() => <ProtectedRoute component={ChallengesPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/challenges/sync">
-          {() => <ProtectedRoute component={AdminChallengesSync} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/candidates">
-          {() => <ProtectedRoute component={CandidatesPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/rules">
-          {() => <ProtectedRoute component={RulesPage} adminOnly={true} />}
-        </Route>
-
-        <Route path="/admin/analytics">
-          {() => <ProtectedRoute component={AnalyticsPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/settings">
-          {() => <ProtectedRoute component={SettingsPage} adminOnly={true} />}
-        </Route>
-        <Route path="/admin/werkruimte">
-          {() => <ProtectedRoute component={WerkruimtePage} adminOnly={true} />}
-        </Route>
-
-
-
         
         <Route component={NotFound} />
       </Switch>
