@@ -17,6 +17,7 @@ import RulesPage from "@/pages/admin/Rules";
 import CandidatesPage from "@/pages/admin/Candidates";
 import SollicitatieFormulier from "@/pages/SollicitatieFormulier";
 import DashboardMockup from "@/pages/DashboardMockup";
+import PitchPresentation from "@/pages/PitchPresentation";
 
 import AnalyticsPage from "@/pages/admin/Analytics";
 import SettingsPage from "@/pages/admin/Settings";
@@ -93,6 +94,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
+        <Route path="/pitch" component={PitchPresentation} />
         <Route path="/dashboard-mockup">
           {() => <ProtectedRoute component={DashboardMockup} adminOnly={true} />}
         </Route>
