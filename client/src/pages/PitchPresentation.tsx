@@ -11,6 +11,7 @@ import sollicitatieStart from "@/assets/pitch/sollicitatie-start.png";
 import extraLogoWit from "@/assets/pitch/extra-logo-wit.png";
 import beoordelingScreen from "@/assets/pitch/beoordeling-screen.png";
 import extraPattern from "@/assets/pitch/extra-pattern.jpg";
+import annaBakkerProfiel from "@/assets/pitch/anna-bakker-profiel.png";
 
 const speakerNotes = [
   "SLIDE 1 (30s): Introductie EXTRA - uitzendbureau voor horeca en events. Betrouwbaar personeel, dagbetaling, en social impact met de Voedselbank.",
@@ -464,7 +465,7 @@ export default function PitchPresentation() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-center mb-8"
+              className="text-center mb-6"
             >
               <h2 className="text-4xl md:text-5xl text-white mb-3" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
                 Alle data in <span className="text-purple-400">één dashboard.</span>
@@ -474,33 +475,66 @@ export default function PitchPresentation() {
               </p>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="relative max-w-5xl w-full"
-            >
-              <div className="absolute -inset-4 bg-gradient-to-b from-purple-500/10 to-transparent rounded-3xl blur-2xl" />
-              <div className="relative bg-gray-800/50 rounded-2xl p-3 border border-gray-700/50 shadow-2xl">
-                <div className="bg-gray-900 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
+            <div className="flex items-center gap-6 max-w-6xl w-full">
+              {/* Main Dashboard Screenshot */}
+              <motion.div
+                initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="relative flex-1"
+              >
+                <div className="absolute -inset-4 bg-gradient-to-b from-purple-500/10 to-transparent rounded-3xl blur-2xl" />
+                <div className="relative bg-gray-800/50 rounded-2xl p-2 border border-gray-700/50 shadow-2xl">
+                  <div className="bg-gray-900 rounded-xl overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700">
+                      <div className="flex gap-1">
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                      </div>
+                      <span className="text-gray-500 text-xs ml-2">EXTRA Dashboard</span>
                     </div>
-                    <span className="text-gray-500 text-xs ml-2">EXTRA Admin Dashboard</span>
+                    <img
+                      src={adminDashboard}
+                      alt="Admin Dashboard"
+                      className="w-full h-auto"
+                    />
                   </div>
+                </div>
+              </motion.div>
+
+              {/* Arrow indicator */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7, type: "spring" }}
+                className="flex-shrink-0"
+              >
+                <ChevronRight className="w-8 h-8 text-purple-500" />
+              </motion.div>
+
+              {/* Anna Bakker Profile Popup */}
+              <motion.div
+                initial={{ opacity: 0, x: 30, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+                className="relative flex-shrink-0"
+              >
+                <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/20 to-pink-500/10 rounded-3xl blur-2xl" />
+                <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-purple-500/30" style={{ maxWidth: '340px' }}>
                   <img
-                    src={adminDashboard}
-                    alt="Admin Dashboard"
+                    src={annaBakkerProfiel}
+                    alt="Anna Bakker Profiel"
                     className="w-full h-auto"
                   />
                 </div>
-              </div>
-            </motion.div>
+                <p className="text-center text-gray-400 text-sm mt-3" style={{ fontFamily: 'Poppins' }}>
+                  Ingezoomd: medewerker profiel
+                </p>
+              </motion.div>
+            </div>
 
-            <div className="flex justify-center gap-4 mt-8 flex-wrap">
+            <div className="flex justify-center gap-4 mt-6 flex-wrap">
               {[
                 { icon: Star, text: "Ratings na elke dienst" },
                 { icon: Clock, text: "Betrouwbaarheid & punctualiteit" },
@@ -510,7 +544,7 @@ export default function PitchPresentation() {
                   key={badge.text}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.1, duration: 0.4 }}
+                  transition={{ delay: 0.9 + i * 0.1, duration: 0.4 }}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl"
                 >
                   <badge.icon className="w-4 h-4 text-purple-400" />
