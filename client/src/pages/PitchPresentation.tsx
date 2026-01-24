@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Hotel, Banknote, Heart, Star, Zap, Award, Clock, Users, Sparkles, ChevronRight, Brain } from "lucide-react";
+import { Hotel, Banknote, Heart, Star, Zap, Award, Clock, Users, Sparkles, ChevronRight, Brain, Play, Maximize } from "lucide-react";
 
 import appHome from "@/assets/pitch/app-home.png";
 import appChallenges from "@/assets/pitch/app-challenges.png";
@@ -29,8 +29,30 @@ export default function PitchPresentation() {
   const [showNotes, setShowNotes] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [notifications, setNotifications] = useState<number[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showStartScreen, setShowStartScreen] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const totalSlides = 7;
+
+  const startPresentation = useCallback(async () => {
+    try {
+      if (containerRef.current && document.fullscreenEnabled) {
+        await containerRef.current.requestFullscreen();
+      }
+    } catch (err) {
+      console.log('Fullscreen not available');
+    }
+    setShowStartScreen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const nextSlide = useCallback(() => {
     if (currentSlide === 5 && clickCount < 3) {
@@ -76,10 +98,79 @@ export default function PitchPresentation() {
 
   return (
     <div 
+      ref={containerRef}
       className="fixed inset-0 bg-gray-950 overflow-hidden cursor-pointer select-none"
-      onClick={nextSlide}
+      onClick={showStartScreen ? undefined : nextSlide}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-950/50 via-gray-950 to-gray-950" />
+
+      {/* Start Screen Overlay */}
+      <AnimatePresence>
+        {showStartScreen && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-gray-950"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-950/50 via-gray-950 to-gray-950" />
+            
+            <motion.img
+              src={extraLogoWit}
+              alt="EXTRA"
+              className="h-20 mb-12 relative z-10"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            />
+            
+            <motion.h1
+              className="text-4xl md:text-5xl text-white mb-4 text-center relative z-10"
+              style={{ fontFamily: 'Poppins', fontWeight: 800 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              JCI Ondernemers Award
+            </motion.h1>
+            
+            <motion.p
+              className="text-xl text-gray-400 mb-12 relative z-10"
+              style={{ fontFamily: 'Poppins' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              Pitch Presentatie
+            </motion.p>
+            
+            <motion.button
+              onClick={startPresentation}
+              className="relative z-10 flex items-center gap-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white px-8 py-4 rounded-2xl text-xl font-semibold shadow-2xl shadow-purple-500/30 transition-all hover:scale-105"
+              style={{ fontFamily: 'Poppins' }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, type: "spring" }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Play className="w-6 h-6" />
+              Start Presentatie
+              <Maximize className="w-5 h-5 ml-1 opacity-60" />
+            </motion.button>
+            
+            <motion.p
+              className="text-gray-500 text-sm mt-6 relative z-10"
+              style={{ fontFamily: 'Poppins' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              Opent in volledig scherm
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Creative 3D X Background Art - Using actual brand X image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
