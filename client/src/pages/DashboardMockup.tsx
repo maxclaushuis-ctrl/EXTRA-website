@@ -107,13 +107,94 @@ function daysSince(dateStr: string): number {
 }
 
 export default function DashboardMockup() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, login, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('alle');
   const [candidateSearch, setCandidateSearch] = useState('');
+  const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
+  const [loginPassword, setLoginPassword] = useState('admin123');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError('');
+    try {
+      await login(loginEmail, loginPassword);
+      // Invalidate all queries to refetch with new auth
+      queryClient.invalidateQueries();
+    } catch (error: any) {
+      setLoginError(error.message || 'Inloggen mislukt');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
+          <div className="text-center mb-6">
+            <div className="bg-purple-600 text-white font-bold text-2xl px-4 py-2 rounded inline-block mb-4">
+              EXTRA
+            </div>
+            <h1 className="text-xl font-bold text-gray-900">Beheerdersdashboard</h1>
+            <p className="text-gray-500 mt-1">Log in om toegang te krijgen</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-mailadres</label>
+              <Input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="admin@extra.nl"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Wachtwoord</label>
+              <Input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            {loginError && (
+              <p className="text-red-500 text-sm">{loginError}</p>
+            )}
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? 'Bezig met inloggen...' : 'Inloggen'}
+            </Button>
+          </form>
+          <p className="text-center text-xs text-gray-400 mt-6">
+            Standaard: admin@extra.nl / admin123
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
     totalPointsAwarded?: number;
@@ -122,18 +203,23 @@ export default function DashboardMockup() {
     changes?: { pointsChange?: string; redemptionsChange?: string; activeUsersChange?: string };
   }>({
     queryKey: ['/api/stats'],
+    enabled: isAuthenticated,
   });
 
   const { data: allUsers = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['/api/users'],
+    enabled: isAuthenticated,
   });
 
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ['/api/transactions'],
+    enabled: isAuthenticated,
   });
 
   const { data: candidatesData, isLoading: candidatesLoading } = useQuery<{ candidates: Candidate[]; total: number }>({
     queryKey: ['/api/admin/candidates'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 0,
   });
   const allCandidates = candidatesData?.candidates || [];
 
