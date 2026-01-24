@@ -249,67 +249,89 @@ export default function PitchPresentation() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center p-8"
           >
             <motion.h2
               initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="absolute top-20 left-1/2 -translate-x-1/2 text-4xl md:text-5xl text-white z-20"
+              className="absolute top-16 left-1/2 -translate-x-1/2 text-4xl md:text-5xl text-white z-20"
               style={{ fontFamily: 'Poppins', fontWeight: 800 }}
             >
               Motivatie, <span className="text-purple-400">realtime.</span>
             </motion.h2>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="relative"
-            >
-              <div className="absolute -inset-4 bg-gradient-to-b from-purple-500/20 to-transparent rounded-[3rem] blur-2xl" />
-              <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800">
-                <img
-                  src={appChallenges}
-                  alt="App challenges"
-                  className="w-72 md:w-80 h-auto rounded-[2rem]"
-                />
-              </div>
-            </motion.div>
+            <div className="flex items-center gap-8 md:gap-16 max-w-5xl">
+              <motion.div
+                initial={{ opacity: 0, x: -30, rotate: -3 }}
+                animate={{ opacity: 1, x: 0, rotate: -3 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="relative"
+              >
+                <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-transparent rounded-[3rem] blur-2xl" />
+                <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800" style={{ transform: 'perspective(1000px) rotateY(5deg)' }}>
+                  <img
+                    src={appChallenges}
+                    alt="App challenges"
+                    className="w-64 md:w-72 h-auto rounded-[2rem]"
+                  />
+                </div>
+              </motion.div>
 
-            <div className="absolute top-32 right-8 md:right-16 space-y-3 z-30 w-80">
-              <AnimatePresence>
-                {notifications.map((idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: 100, scale: 0.8 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    className="bg-gray-900/95 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-4 shadow-2xl shadow-purple-500/20"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{notificationData[idx].emoji}</span>
-                      <div>
-                        <p className="text-white font-semibold">{notificationData[idx].title}</p>
-                        <p className="text-gray-400 text-sm">{notificationData[idx].subtitle}</p>
+              <div className="flex flex-col gap-4 w-80">
+                <AnimatePresence>
+                  {notifications.map((idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: 80, y: -20, rotate: 3 }}
+                      animate={{ opacity: 1, x: 0, y: 0, rotate: idx === 1 ? -1 : idx === 2 ? 2 : 0 }}
+                      exit={{ opacity: 0, x: 50, scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      className="relative"
+                    >
+                      <div className="absolute inset-0 bg-purple-500/20 rounded-2xl blur-xl" />
+                      <div className="relative bg-gray-900/95 backdrop-blur-xl border border-purple-500/40 rounded-2xl p-4 shadow-2xl">
+                        <div className="flex items-center gap-4">
+                          <motion.span 
+                            className="text-3xl"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", delay: 0.1, stiffness: 400 }}
+                          >
+                            {notificationData[idx].emoji}
+                          </motion.span>
+                          <div>
+                            <p className="text-white font-bold text-lg" style={{ fontFamily: 'Poppins' }}>{notificationData[idx].title}</p>
+                            <p className="text-purple-300 text-sm" style={{ fontFamily: 'Poppins' }}>{notificationData[idx].subtitle}</p>
+                          </div>
+                        </div>
                       </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                
+                {clickCount < 3 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="text-center mt-4"
+                  >
+                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>
+                      Klik om meldingen te tonen
+                    </p>
+                    <div className="flex justify-center gap-2 mt-2">
+                      {[0, 1, 2].map((i) => (
+                        <div 
+                          key={i} 
+                          className={`w-2 h-2 rounded-full transition-all ${i < clickCount ? 'bg-purple-500' : 'bg-gray-600'}`} 
+                        />
+                      ))}
                     </div>
                   </motion.div>
-                ))}
-              </AnimatePresence>
+                )}
+              </div>
             </div>
-
-            {clickCount < 3 && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                className="absolute bottom-20 text-gray-500 text-sm"
-              >
-                Klik om meldingen te tonen ({3 - clickCount} over)
-              </motion.p>
-            )}
           </motion.div>
         )}
 
@@ -405,27 +427,42 @@ export default function PitchPresentation() {
 
             <div className="flex items-center gap-12 max-w-6xl w-full">
               <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: -50, rotateX: 10 }}
+                animate={{ opacity: 1, x: 0, rotateX: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="flex-1"
+                className="flex-1 flex justify-center"
               >
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-transparent rounded-3xl blur-xl" />
-                  <div className="relative bg-gray-800 rounded-2xl p-4 border border-gray-700 shadow-2xl">
-                    <div className="bg-gray-900 rounded-xl p-2">
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <div className="w-16 h-1 bg-gray-700 rounded-full" />
-                        <div className="w-2 h-2 bg-gray-700 rounded-full" />
+                <div className="relative" style={{ perspective: '1200px' }}>
+                  <div 
+                    className="absolute -inset-8 bg-gradient-to-br from-purple-500/30 via-purple-600/20 to-transparent rounded-[2rem] blur-2xl"
+                    style={{ transform: 'rotateX(50deg) rotateZ(-5deg) translateZ(-20px)' }}
+                  />
+                  <div 
+                    className="relative"
+                    style={{ 
+                      transform: 'rotateX(25deg) rotateZ(-3deg)',
+                      transformStyle: 'preserve-3d'
+                    }}
+                  >
+                    <div 
+                      className="absolute -bottom-8 left-4 right-4 h-16 bg-black/40 rounded-[2rem] blur-2xl"
+                      style={{ transform: 'translateZ(-30px)' }}
+                    />
+                    <div className="relative bg-gray-800 rounded-[1.5rem] p-3 border-2 border-gray-700 shadow-2xl" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)' }}>
+                      <div className="bg-black rounded-[1rem] p-1 overflow-hidden">
+                        <div className="flex items-center justify-center gap-2 py-1.5 bg-gray-900 rounded-t-lg">
+                          <div className="w-2 h-2 bg-gray-700 rounded-full" />
+                        </div>
+                        <img
+                          src={sollicitatieStart}
+                          alt="Sollicitatieformulier"
+                          className="w-80 h-auto"
+                        />
+                        <div className="h-1 bg-gray-900" />
                       </div>
-                      <img
-                        src={sollicitatieStart}
-                        alt="Sollicitatieformulier"
-                        className="w-full h-auto rounded-lg"
-                      />
                     </div>
                   </div>
-                  <p className="text-center text-gray-500 text-sm mt-3">iPad Sollicitatieformulier</p>
+                  <p className="text-center text-gray-400 text-sm mt-10" style={{ fontFamily: 'Poppins' }}>iPad Sollicitatieformulier</p>
                 </div>
               </motion.div>
 
