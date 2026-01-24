@@ -91,7 +91,7 @@ export default function PitchPresentation() {
           }}
         >
           <svg 
-            className="w-full h-full opacity-[0.04]"
+            className="w-full h-full opacity-[0.12]"
             style={{ 
               minWidth: '200%', 
               minHeight: '200%',
@@ -125,10 +125,10 @@ export default function PitchPresentation() {
             <rect x="0" y="0" width="100%" height="100%" fill="url(#diamond-pattern)" />
           </svg>
         </div>
-        {/* Gradient fade overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/50 to-gray-950" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-transparent to-gray-950/80" />
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-gray-950" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, transparent 30%, rgb(3, 7, 18) 100%)' }} />
+        {/* Gradient fade overlay - subtle to let pattern show */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/50 via-transparent to-gray-950/50" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgb(3, 7, 18, 0.8) 100%)' }} />
       </div>
       
       <div className="absolute top-6 right-6 flex gap-2 z-50">
