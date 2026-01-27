@@ -10,6 +10,9 @@ import {
 import extraLogoWit from "@/assets/pitch/extra-logo-wit.png";
 import extraXShape from "@/assets/pitch/extra-x-shape.png";
 import extraPattern from "@/assets/pitch/extra-pattern.jpg";
+import kcServiceLogo from "@/assets/pitch/kc-service-logo.png";
+import extraLogoBlauw from "@/assets/pitch/extra-logo-blauw.png";
+import starterVanHetJaar from "@/assets/pitch/starter-van-het-jaar.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
@@ -17,8 +20,9 @@ const speakerNotes = [
   "SLIDE 3 - KWALITEIT (8 min): Toon sollicitatieformulier, leg uit hoe we softskills en hardskills meten. Vraag: waar zouden jullie op letten bij het aannemen van personeel?",
   "SLIDE 4 - EXTRAATJE (10 min): Toon app screenshots, leg microprestaties en loyaliteitssysteem uit. Demo de pushnotificaties door te klikken.",
   "SLIDE 5 - AI TOEKOMST (8 min): Data → AI → perfecte match. Vraag: vertrouw jij AI meer dan een planner? Discussie over automatisering.",
-  "SLIDE 6 - ONDERNEMEN (10 min): Deel je ondernemerservaring. Lessen, groei, uitdagingen. Vraag: wat denken jullie dat voor mij het moeilijkst is?",
-  "SLIDE 7 - Q&A (10 min): Open vragen, afsluiting met slogan. Bedank studenten voor hun tijd en interesse."
+  "SLIDE 6 - MIJN REIS (8 min): Loop door de tijdlijn: 2018 KC Service start, 2020 Corona + compagnon uitkopen, 2022 EXTRA geboren, juni 2022 Runner-up Starter van het Jaar. Persoonlijk verhaal delen.",
+  "SLIDE 7 - ONDERNEMEN (8 min): Deel ondernemerslessen. Alles kan als je er voor gaat. Stip op de horizon. Vraag: wat denken jullie dat voor mij het moeilijkst is?",
+  "SLIDE 8 - Q&A (10 min): Open vragen, afsluiting met slogan. Bedank studenten voor hun tijd en interesse."
 ];
 
 export default function BusinessPresentation() {
@@ -31,7 +35,7 @@ export default function BusinessPresentation() {
   const [interactionStep, setInteractionStep] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const totalSlides = 7;
+  const totalSlides = 8;
 
   const startPresentation = useCallback(async () => {
     try {
@@ -801,10 +805,135 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 5: Ondernemen in de Praktijk */}
+        {/* SLIDE 5: Mijn Reis - Tijdlijn */}
         {currentSlide === 5 && (
           <motion.div
-            key="slide6-ondernemen"
+            key="slide6-tijdlijn"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-8"
+            >
+              <h2 className="text-4xl md:text-5xl text-white leading-tight mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Mijn <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">reis</span>
+              </h2>
+              <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins' }}>
+                Van idee naar ondernemer
+              </p>
+            </motion.div>
+
+            {/* KC Service Logo above timeline */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mb-6"
+            >
+              <img 
+                src={kcServiceLogo} 
+                alt="KC Service" 
+                className="h-16 object-contain"
+                style={{ filter: 'brightness(1.2)' }}
+              />
+            </motion.div>
+
+            {/* Timeline */}
+            <div className="relative w-full max-w-5xl">
+              {/* Timeline line */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.4, duration: 1 }}
+                className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-purple-600/50 via-purple-500 to-cyan-500/50 rounded-full origin-left"
+                style={{ transform: 'translateY(-50%)' }}
+              />
+
+              <div className="flex justify-between items-center relative">
+                {/* 2018 - KC Service Start */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-6 h-6 bg-purple-600 rounded-full border-4 border-gray-900 shadow-lg shadow-purple-500/50 mb-4 z-10" />
+                  <div className="bg-gray-800/80 border border-purple-500/30 rounded-xl p-4 text-center max-w-[160px]">
+                    <p className="text-purple-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>2018</p>
+                    <p className="text-white font-semibold" style={{ fontFamily: 'Poppins' }}>KC Service</p>
+                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>De start</p>
+                  </div>
+                </motion.div>
+
+                {/* 2020 - Corona & Compagnon */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-6 h-6 bg-red-500 rounded-full border-4 border-gray-900 shadow-lg shadow-red-500/50 mb-4 z-10" />
+                  <div className="bg-gray-800/80 border border-red-500/30 rounded-xl p-4 text-center max-w-[180px]">
+                    <p className="text-red-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>2020</p>
+                    <p className="text-white font-semibold" style={{ fontFamily: 'Poppins' }}>Corona & Reset</p>
+                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>Compagnon uitkopen</p>
+                  </div>
+                </motion.div>
+
+                {/* Feb 2022 - EXTRA Geboren */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-6 h-6 bg-cyan-500 rounded-full border-4 border-gray-900 shadow-lg shadow-cyan-500/50 mb-4 z-10" />
+                  <div className="bg-gray-800/80 border border-cyan-500/30 rounded-xl p-4 text-center max-w-[160px]">
+                    <p className="text-cyan-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>Feb 2022</p>
+                    <img src={extraLogoBlauw} alt="EXTRA" className="h-8 mx-auto mb-1" />
+                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>EXTRA geboren</p>
+                  </div>
+                </motion.div>
+
+                {/* Juni 2022 - Starter van het Jaar */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-6 h-6 bg-yellow-500 rounded-full border-4 border-gray-900 shadow-lg shadow-yellow-500/50 mb-4 z-10" />
+                  <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border border-yellow-500/50 rounded-xl p-4 text-center max-w-[180px]">
+                    <p className="text-yellow-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>Jun 2022</p>
+                    <img src={starterVanHetJaar} alt="Starter van het Jaar" className="h-12 mx-auto mb-1" />
+                    <p className="text-gray-300 text-sm font-medium" style={{ fontFamily: 'Poppins' }}>Runner-up</p>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5 }}
+              className="mt-10 text-center"
+            >
+              <p className="text-purple-400 text-lg" style={{ fontFamily: 'Poppins' }}>
+                4 jaar van groeien, vallen en opstaan
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 6: Ondernemen in de Praktijk */}
+        {currentSlide === 6 && (
+          <motion.div
+            key="slide7-ondernemen"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -863,8 +992,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 6: Q&A + Slogan */}
-        {currentSlide === 6 && (
+        {/* SLIDE 7: Q&A + Slogan */}
+        {currentSlide === 7 && (
           <motion.div
             key="slide7-qa"
             initial={{ opacity: 0 }}
