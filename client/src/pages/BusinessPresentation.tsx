@@ -661,12 +661,12 @@ export default function BusinessPresentation() {
                 className="flex-shrink-0"
               >
                 <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/20 via-cyan-500/10 to-transparent rounded-2xl blur-xl" />
-                  <div className="relative bg-gray-800/80 rounded-xl border border-gray-700/50 p-2 shadow-2xl">
+                  <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/20 via-cyan-500/10 to-transparent rounded-2xl blur-xl" />
+                  <div className="relative bg-gray-800/80 rounded-xl border border-gray-700/50 p-3 shadow-2xl">
                     <img 
                       src={scoringDashboard} 
                       alt="Medewerker Scoring Dashboard" 
-                      className="w-[500px] rounded-lg"
+                      className="w-[650px] rounded-lg"
                     />
                   </div>
                   <p className="text-center text-gray-500 text-sm mt-4" style={{ fontFamily: 'Poppins' }}>
