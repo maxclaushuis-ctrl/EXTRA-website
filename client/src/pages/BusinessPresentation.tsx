@@ -20,6 +20,7 @@ import fcUtrechtLogo from "@/assets/pitch/fc-utrecht-logo.png";
 import hetePeperLogo from "@/assets/pitch/hete-peper-logo.png";
 import amrathLogo from "@/assets/pitch/amrath-logo.png";
 import marriottLogo from "@/assets/pitch/marriott-logo.png";
+import sollicitatieformulier from "@/assets/pitch/sollicitatieformulier.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
@@ -510,16 +511,13 @@ export default function BusinessPresentation() {
                       <div className="flex items-center justify-center gap-2 py-1.5 bg-gray-900 rounded-t-lg">
                         <div className="w-2 h-2 bg-gray-700 rounded-full" />
                       </div>
-                      {/* Placeholder for sollicitatieformulier screenshot */}
-                      <div className="w-[400px] h-[280px] bg-gradient-to-br from-purple-900/40 to-gray-900 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-20 h-20 bg-purple-600/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <Calendar className="w-10 h-10 text-purple-400" />
-                          </div>
-                          <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>
-                            [Sollicitatieformulier Screenshot]
-                          </p>
-                        </div>
+                      {/* Sollicitatieformulier screenshot in iPad frame */}
+                      <div className="w-[320px] h-[420px] overflow-hidden bg-white rounded-b-lg">
+                        <img 
+                          src={sollicitatieformulier} 
+                          alt="Sollicitatieformulier Beoordeling" 
+                          className="w-full h-full object-cover object-top"
+                        />
                       </div>
                       <div className="h-1 bg-gray-900" />
                     </div>
