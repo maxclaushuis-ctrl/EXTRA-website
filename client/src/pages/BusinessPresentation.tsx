@@ -14,6 +14,12 @@ import kcServiceLogo from "@/assets/pitch/kc-service-logo.png";
 import extraLogoBlauw from "@/assets/pitch/extra-logo-blauw.png";
 import starterVanHetJaar from "@/assets/pitch/starter-van-het-jaar.png";
 import abnAmroLogo from "@/assets/pitch/abn-amro-logo.png";
+import fundaLogo from "@/assets/pitch/funda-logo.png";
+import nhHotelsLogo from "@/assets/pitch/nh-hotels-logo.png";
+import fcUtrechtLogo from "@/assets/pitch/fc-utrecht-logo.png";
+import hetePeperLogo from "@/assets/pitch/hete-peper-logo.png";
+import amrathLogo from "@/assets/pitch/amrath-logo.png";
+import marriottLogo from "@/assets/pitch/marriott-logo.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
@@ -433,17 +439,24 @@ export default function BusinessPresentation() {
                 transition={{ delay: 0.8 }}
                 className="text-center"
               >
-                <p className="text-gray-400 mb-4" style={{ fontFamily: 'Poppins' }}>Onze klanten kennen jullie:</p>
-                <div className="flex justify-center gap-6 flex-wrap">
-                  {["Marriott", "Hilton", "Festivals", "Musea", "Congressen"].map((client, i) => (
+                <p className="text-gray-400 mb-6" style={{ fontFamily: 'Poppins' }}>Onze opdrachtgevers:</p>
+                <div className="flex justify-center items-center gap-8 flex-wrap">
+                  {[
+                    { src: marriottLogo, alt: "Marriott", height: "h-12" },
+                    { src: amrathLogo, alt: "Grand Hotel Amrâth", height: "h-16" },
+                    { src: nhHotelsLogo, alt: "NH Hotels", height: "h-10" },
+                    { src: fcUtrechtLogo, alt: "FC Utrecht", height: "h-14" },
+                    { src: hetePeperLogo, alt: "Hete Peper", height: "h-8" },
+                    { src: fundaLogo, alt: "Funda", height: "h-12" },
+                  ].map((client, i) => (
                     <motion.div
-                      key={client}
+                      key={client.alt}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.9 + i * 0.1 }}
-                      className="bg-gray-800/50 border border-gray-700/50 rounded-xl px-5 py-2"
+                      className="bg-white/95 rounded-xl px-4 py-3 flex items-center justify-center"
                     >
-                      <span className="text-white font-medium">{client}</span>
+                      <img src={client.src} alt={client.alt} className={`${client.height} object-contain`} />
                     </motion.div>
                   ))}
                 </div>
