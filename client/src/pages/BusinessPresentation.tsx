@@ -21,16 +21,18 @@ import hetePeperLogo from "@/assets/pitch/hete-peper-logo.png";
 import amrathLogo from "@/assets/pitch/amrath-logo.png";
 import marriottLogo from "@/assets/pitch/marriott-logo.png";
 import sollicitatieformulier from "@/assets/pitch/sollicitatieformulier.png";
+import scoringDashboard from "@/assets/pitch/scoring-dashboard.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
   "SLIDE 2 - MIJN REIS (8 min): Loop chronologisch door de tijdlijn: 2018 KC Service, 2020 Corona, 2022 EXTRA, Starter vd Jaar, 2023 Dagbetaling/Payday ABN, 2025 EXTRAATJE, 2026 AI Planner.",
   "SLIDE 3 - WAT IS EXTRA (8 min): Leg uit wat we doen: hotels, events, 800+ mensen, dagbetaling. Vraag: wat vinden jullie belangrijk in een werkgever? Schrijf antwoorden op.",
   "SLIDE 4 - KWALITEIT (8 min): Toon sollicitatieformulier, leg uit hoe we softskills en hardskills meten. Vraag: waar zouden jullie op letten bij het aannemen van personeel?",
-  "SLIDE 5 - EXTRAATJE (10 min): Toon app screenshots, leg microprestaties en loyaliteitssysteem uit. Demo de pushnotificaties door te klikken.",
-  "SLIDE 6 - AI TOEKOMST (8 min): Data → AI → perfecte match. Vraag: vertrouw jij AI meer dan een planner? Discussie over automatisering.",
-  "SLIDE 7 - ONDERNEMEN (8 min): Deel ondernemerslessen. Alles kan als je er voor gaat. Stip op de horizon. Vraag: wat denken jullie dat voor mij het moeilijkst is?",
-  "SLIDE 8 - Q&A (10 min): Open vragen, afsluiting met slogan. Bedank studenten voor hun tijd en interesse."
+  "SLIDE 5 - SCORING (5 min): Elke medewerker krijgt een score na aanname. Planners zien wie geschikt is, wie training nodig heeft, en met wie we stoppen. Scores op hard- en softskills.",
+  "SLIDE 6 - EXTRAATJE (10 min): Toon app screenshots, leg microprestaties en loyaliteitssysteem uit. Demo de pushnotificaties door te klikken.",
+  "SLIDE 7 - AI TOEKOMST (8 min): Data → AI → perfecte match. Vraag: vertrouw jij AI meer dan een planner? Discussie over automatisering.",
+  "SLIDE 8 - ONDERNEMEN (8 min): Deel ondernemerslessen. Alles kan als je er voor gaat. Stip op de horizon. Vraag: wat denken jullie dat voor mij het moeilijkst is?",
+  "SLIDE 9 - Q&A (10 min): Open vragen, afsluiting met slogan. Bedank studenten voor hun tijd en interesse."
 ];
 
 export default function BusinessPresentation() {
@@ -43,7 +45,7 @@ export default function BusinessPresentation() {
   const [interactionStep, setInteractionStep] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const totalSlides = 8;
+  const totalSlides = 9;
 
   const startPresentation = useCallback(async () => {
     try {
@@ -67,7 +69,7 @@ export default function BusinessPresentation() {
   const nextSlide = useCallback(() => {
     if (currentSlide === 0 && interactionStep < 3) {
       setInteractionStep(prev => prev + 1);
-    } else if (currentSlide === 4 && clickCount < 3) {
+    } else if (currentSlide === 5 && clickCount < 3) {
       setClickCount(prev => prev + 1);
       setNotifications(prev => [...prev, clickCount]);
     } else if (currentSlide < totalSlides - 1) {
@@ -583,10 +585,103 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 4: EXTRAATJE - App met Notificaties */}
+        {/* SLIDE 4: Scoring Dashboard */}
         {currentSlide === 4 && (
           <motion.div
-            key="slide4-extraatje"
+            key="slide5-scoring"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-12 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="flex-1"
+              >
+                <h2 className="text-3xl md:text-4xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Data-gedreven
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                    personeelsbeheer.
+                  </span>
+                </h2>
+                
+                <p className="text-lg text-gray-400 mb-6" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Na aanname krijgt elke medewerker een score op basis van hun prestaties.
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    { color: "bg-green-500", text: "Geschikt voor inzet", emoji: "✅", desc: "Hoge scores, direct inzetbaar" },
+                    { color: "bg-yellow-500", text: "Training nodig", emoji: "📚", desc: "Potentie, maar extra begeleiding" },
+                    { color: "bg-red-500", text: "Niet verder mee", emoji: "❌", desc: "Past niet bij de standaard" },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item.text}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + i * 0.15, duration: 0.5 }}
+                      className="flex items-center gap-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl px-5 py-3"
+                    >
+                      <div className={`w-4 h-4 ${item.color} rounded-full`} />
+                      <div className="flex-1">
+                        <span className="text-white font-medium">{item.text}</span>
+                        <p className="text-gray-500 text-sm">{item.desc}</p>
+                      </div>
+                      <span className="text-xl">{item.emoji}</span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                  className="mt-6 flex flex-wrap gap-3"
+                >
+                  {["Softskills", "Barscore", "Bedieningscore", "Dinerscore", "Taal"].map((skill, i) => (
+                    <span 
+                      key={skill}
+                      className="bg-purple-600/20 border border-purple-500/40 text-purple-300 rounded-full px-4 py-1 text-sm"
+                      style={{ fontFamily: 'Poppins' }}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="flex-shrink-0"
+              >
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/20 via-cyan-500/10 to-transparent rounded-2xl blur-xl" />
+                  <div className="relative bg-gray-800/80 rounded-xl border border-gray-700/50 p-2 shadow-2xl">
+                    <img 
+                      src={scoringDashboard} 
+                      alt="Medewerker Scoring Dashboard" 
+                      className="w-[500px] rounded-lg"
+                    />
+                  </div>
+                  <p className="text-center text-gray-500 text-sm mt-4" style={{ fontFamily: 'Poppins' }}>
+                    Live scoring dashboard
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 5: EXTRAATJE - App met Notificaties */}
+        {currentSlide === 5 && (
+          <motion.div
+            key="slide6-extraatje"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -721,8 +816,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 5: AI Toekomst */}
-        {currentSlide === 5 && (
+        {/* SLIDE 6: AI Toekomst */}
+        {currentSlide === 6 && (
           <motion.div
             key="slide5-ai"
             initial={{ opacity: 0 }}
@@ -971,8 +1066,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 6: Ondernemen in de Praktijk */}
-        {currentSlide === 6 && (
+        {/* SLIDE 7: Ondernemen in de Praktijk */}
+        {currentSlide === 7 && (
           <motion.div
             key="slide7-ondernemen"
             initial={{ opacity: 0 }}
@@ -1033,8 +1128,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 7: Q&A + Slogan */}
-        {currentSlide === 7 && (
+        {/* SLIDE 8: Q&A + Slogan */}
+        {currentSlide === 8 && (
           <motion.div
             key="slide7-qa"
             initial={{ opacity: 0 }}
