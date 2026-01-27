@@ -13,14 +13,15 @@ import extraPattern from "@/assets/pitch/extra-pattern.jpg";
 import kcServiceLogo from "@/assets/pitch/kc-service-logo.png";
 import extraLogoBlauw from "@/assets/pitch/extra-logo-blauw.png";
 import starterVanHetJaar from "@/assets/pitch/starter-van-het-jaar.png";
+import abnAmroLogo from "@/assets/pitch/abn-amro-logo.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
-  "SLIDE 2 - WAT IS EXTRA (8 min): Leg uit wat we doen: hotels, events, 800+ mensen, dagbetaling. Vraag: wat vinden jullie belangrijk in een werkgever? Schrijf antwoorden op.",
-  "SLIDE 3 - KWALITEIT (8 min): Toon sollicitatieformulier, leg uit hoe we softskills en hardskills meten. Vraag: waar zouden jullie op letten bij het aannemen van personeel?",
-  "SLIDE 4 - EXTRAATJE (10 min): Toon app screenshots, leg microprestaties en loyaliteitssysteem uit. Demo de pushnotificaties door te klikken.",
-  "SLIDE 5 - AI TOEKOMST (8 min): Data → AI → perfecte match. Vraag: vertrouw jij AI meer dan een planner? Discussie over automatisering.",
-  "SLIDE 6 - MIJN REIS (8 min): Loop door de tijdlijn: 2018 KC Service start, 2020 Corona + compagnon uitkopen, 2022 EXTRA geboren, juni 2022 Runner-up Starter van het Jaar. Persoonlijk verhaal delen.",
+  "SLIDE 2 - MIJN REIS (8 min): Loop chronologisch door de tijdlijn: 2018 KC Service, 2020 Corona, 2022 EXTRA, Starter vd Jaar, 2023 Dagbetaling/Payday ABN, 2025 EXTRAATJE, 2026 AI Planner.",
+  "SLIDE 3 - WAT IS EXTRA (8 min): Leg uit wat we doen: hotels, events, 800+ mensen, dagbetaling. Vraag: wat vinden jullie belangrijk in een werkgever? Schrijf antwoorden op.",
+  "SLIDE 4 - KWALITEIT (8 min): Toon sollicitatieformulier, leg uit hoe we softskills en hardskills meten. Vraag: waar zouden jullie op letten bij het aannemen van personeel?",
+  "SLIDE 5 - EXTRAATJE (10 min): Toon app screenshots, leg microprestaties en loyaliteitssysteem uit. Demo de pushnotificaties door te klikken.",
+  "SLIDE 6 - AI TOEKOMST (8 min): Data → AI → perfecte match. Vraag: vertrouw jij AI meer dan een planner? Discussie over automatisering.",
   "SLIDE 7 - ONDERNEMEN (8 min): Deel ondernemerslessen. Alles kan als je er voor gaat. Stip op de horizon. Vraag: wat denken jullie dat voor mij het moeilijkst is?",
   "SLIDE 8 - Q&A (10 min): Open vragen, afsluiting met slogan. Bedank studenten voor hun tijd en interesse."
 ];
@@ -59,7 +60,7 @@ export default function BusinessPresentation() {
   const nextSlide = useCallback(() => {
     if (currentSlide === 0 && interactionStep < 3) {
       setInteractionStep(prev => prev + 1);
-    } else if (currentSlide === 3 && clickCount < 3) {
+    } else if (currentSlide === 4 && clickCount < 3) {
       setClickCount(prev => prev + 1);
       setNotifications(prev => [...prev, clickCount]);
     } else if (currentSlide < totalSlides - 1) {
@@ -379,8 +380,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 1: Wat is EXTRA */}
-        {currentSlide === 1 && (
+        {/* SLIDE 2: Wat is EXTRA */}
+        {currentSlide === 2 && (
           <motion.div
             key="slide2-watisextra"
             initial={{ opacity: 0 }}
@@ -465,8 +466,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 2: Kwaliteit - Intake */}
-        {currentSlide === 2 && (
+        {/* SLIDE 3: Kwaliteit - Intake */}
+        {currentSlide === 3 && (
           <motion.div
             key="slide3-kwaliteit"
             initial={{ opacity: 0 }}
@@ -571,8 +572,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 3: EXTRAATJE - App met Notificaties */}
-        {currentSlide === 3 && (
+        {/* SLIDE 4: EXTRAATJE - App met Notificaties */}
+        {currentSlide === 4 && (
           <motion.div
             key="slide4-extraatje"
             initial={{ opacity: 0 }}
@@ -709,8 +710,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 4: AI Toekomst */}
-        {currentSlide === 4 && (
+        {/* SLIDE 5: AI Toekomst */}
+        {currentSlide === 5 && (
           <motion.div
             key="slide5-ai"
             initial={{ opacity: 0 }}
@@ -805,113 +806,142 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 5: Mijn Reis - Tijdlijn */}
-        {currentSlide === 5 && (
+        {/* SLIDE 1: Mijn Reis - Tijdlijn (7 milestones) */}
+        {currentSlide === 1 && (
           <motion.div
-            key="slide6-tijdlijn"
+            key="slide2-tijdlijn"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+            className="absolute inset-0 flex flex-col items-center justify-center p-6"
           >
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-center mb-8"
+              className="text-center mb-6"
             >
-              <h2 className="text-4xl md:text-5xl text-white leading-tight mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+              <h2 className="text-3xl md:text-4xl text-white leading-tight mb-2" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
                 Mijn <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">reis</span>
               </h2>
-              <p className="text-xl text-gray-400" style={{ fontFamily: 'Poppins' }}>
+              <p className="text-lg text-gray-400" style={{ fontFamily: 'Poppins' }}>
                 Van idee naar ondernemer
               </p>
             </motion.div>
 
-            {/* KC Service Logo above timeline */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="mb-6"
-            >
-              <img 
-                src={kcServiceLogo} 
-                alt="KC Service" 
-                className="h-16 object-contain"
-                style={{ filter: 'brightness(1.2)' }}
-              />
-            </motion.div>
-
-            {/* Timeline */}
-            <div className="relative w-full max-w-5xl">
+            {/* Timeline with 7 milestones */}
+            <div className="relative w-full max-w-6xl px-4">
               {/* Timeline line */}
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ delay: 0.4, duration: 1 }}
-                className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-purple-600/50 via-purple-500 to-cyan-500/50 rounded-full origin-left"
-                style={{ transform: 'translateY(-50%)' }}
+                transition={{ delay: 0.3, duration: 1.2 }}
+                className="absolute top-[24px] left-0 right-0 h-1 bg-gradient-to-r from-purple-600/50 via-cyan-500 to-green-500/50 rounded-full origin-left"
               />
 
-              <div className="flex justify-between items-center relative">
-                {/* 2018 - KC Service Start */}
+              <div className="flex justify-between items-start relative">
+                {/* 2018 - KC Service */}
                 <motion.div
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex flex-col items-center flex-1"
+                >
+                  <div className="w-5 h-5 bg-purple-600 rounded-full border-3 border-gray-900 shadow-lg shadow-purple-500/50 mb-3 z-10" />
+                  <div className="bg-gray-800/80 border border-purple-500/30 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-purple-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>2018</p>
+                    <img src={kcServiceLogo} alt="KC Service" className="h-8 mx-auto mb-1" style={{ filter: 'brightness(1.2)' }} />
+                    <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>De start</p>
+                  </div>
+                </motion.div>
+
+                {/* 2020 - Corona */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex flex-col items-center flex-1"
+                >
+                  <div className="w-5 h-5 bg-red-500 rounded-full border-3 border-gray-900 shadow-lg shadow-red-500/50 mb-3 z-10" />
+                  <div className="bg-gray-800/80 border border-red-500/30 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-red-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>2020</p>
+                    <p className="text-white font-semibold text-sm" style={{ fontFamily: 'Poppins' }}>Corona</p>
+                    <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Reset</p>
+                  </div>
+                </motion.div>
+
+                {/* Feb 2022 - EXTRA */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center flex-1"
                 >
-                  <div className="w-6 h-6 bg-purple-600 rounded-full border-4 border-gray-900 shadow-lg shadow-purple-500/50 mb-4 z-10" />
-                  <div className="bg-gray-800/80 border border-purple-500/30 rounded-xl p-4 text-center max-w-[160px]">
-                    <p className="text-purple-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>2018</p>
-                    <p className="text-white font-semibold" style={{ fontFamily: 'Poppins' }}>KC Service</p>
-                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>De start</p>
+                  <div className="w-5 h-5 bg-cyan-500 rounded-full border-3 border-gray-900 shadow-lg shadow-cyan-500/50 mb-3 z-10" />
+                  <div className="bg-gray-800/80 border border-cyan-500/30 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-cyan-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>Feb '22</p>
+                    <img src={extraLogoBlauw} alt="EXTRA" className="h-6 mx-auto mb-1" />
+                    <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Geboren</p>
                   </div>
                 </motion.div>
 
-                {/* 2020 - Corona & Compagnon */}
+                {/* Jun 2022 - Starter vd Jaar */}
                 <motion.div
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="flex flex-col items-center flex-1"
+                >
+                  <div className="w-5 h-5 bg-yellow-500 rounded-full border-3 border-gray-900 shadow-lg shadow-yellow-500/50 mb-3 z-10" />
+                  <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border border-yellow-500/50 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-yellow-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>Jun '22</p>
+                    <img src={starterVanHetJaar} alt="Starter vd Jaar" className="h-8 mx-auto mb-1" />
+                    <p className="text-gray-300 text-xs" style={{ fontFamily: 'Poppins' }}>Runner-up</p>
+                  </div>
+                </motion.div>
+
+                {/* Feb 2023 - Dagbetaling / Payday */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center flex-1"
                 >
-                  <div className="w-6 h-6 bg-red-500 rounded-full border-4 border-gray-900 shadow-lg shadow-red-500/50 mb-4 z-10" />
-                  <div className="bg-gray-800/80 border border-red-500/30 rounded-xl p-4 text-center max-w-[180px]">
-                    <p className="text-red-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>2020</p>
-                    <p className="text-white font-semibold" style={{ fontFamily: 'Poppins' }}>Corona & Reset</p>
-                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>Compagnon uitkopen</p>
+                  <div className="w-5 h-5 bg-emerald-500 rounded-full border-3 border-gray-900 shadow-lg shadow-emerald-500/50 mb-3 z-10" />
+                  <div className="bg-gray-800/80 border border-emerald-500/30 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-emerald-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>Feb '23</p>
+                    <img src={abnAmroLogo} alt="ABN Amro" className="h-6 mx-auto mb-1" />
+                    <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Payday</p>
                   </div>
                 </motion.div>
 
-                {/* Feb 2022 - EXTRA Geboren */}
+                {/* 2025 - EXTRAATJE */}
                 <motion.div
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="flex flex-col items-center flex-1"
+                >
+                  <div className="w-5 h-5 bg-pink-500 rounded-full border-3 border-gray-900 shadow-lg shadow-pink-500/50 mb-3 z-10" />
+                  <div className="bg-gray-800/80 border border-pink-500/30 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-pink-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>2025</p>
+                    <Gift className="w-6 h-6 text-pink-400 mx-auto mb-1" />
+                    <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>EXTRAATJE</p>
+                  </div>
+                </motion.div>
+
+                {/* 2026 - AI Planner */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center flex-1"
                 >
-                  <div className="w-6 h-6 bg-cyan-500 rounded-full border-4 border-gray-900 shadow-lg shadow-cyan-500/50 mb-4 z-10" />
-                  <div className="bg-gray-800/80 border border-cyan-500/30 rounded-xl p-4 text-center max-w-[160px]">
-                    <p className="text-cyan-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>Feb 2022</p>
-                    <img src={extraLogoBlauw} alt="EXTRA" className="h-8 mx-auto mb-1" />
-                    <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>EXTRA geboren</p>
-                  </div>
-                </motion.div>
-
-                {/* Juni 2022 - Starter van het Jaar */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 }}
-                  className="flex flex-col items-center"
-                >
-                  <div className="w-6 h-6 bg-yellow-500 rounded-full border-4 border-gray-900 shadow-lg shadow-yellow-500/50 mb-4 z-10" />
-                  <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border border-yellow-500/50 rounded-xl p-4 text-center max-w-[180px]">
-                    <p className="text-yellow-400 font-bold text-2xl mb-1" style={{ fontFamily: 'Poppins' }}>Jun 2022</p>
-                    <img src={starterVanHetJaar} alt="Starter van het Jaar" className="h-12 mx-auto mb-1" />
-                    <p className="text-gray-300 text-sm font-medium" style={{ fontFamily: 'Poppins' }}>Runner-up</p>
+                  <div className="w-5 h-5 bg-blue-500 rounded-full border-3 border-gray-900 shadow-lg shadow-blue-500/50 mb-3 z-10" />
+                  <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/10 border border-blue-500/50 rounded-lg p-2 text-center w-[100px]">
+                    <p className="text-blue-400 font-bold text-lg mb-1" style={{ fontFamily: 'Poppins' }}>2026</p>
+                    <Brain className="w-6 h-6 text-blue-400 mx-auto mb-1" />
+                    <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>AI Planner</p>
                   </div>
                 </motion.div>
               </div>
@@ -920,11 +950,11 @@ export default function BusinessPresentation() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5 }}
-              className="mt-10 text-center"
+              transition={{ delay: 1.3 }}
+              className="mt-8 text-center"
             >
               <p className="text-purple-400 text-lg" style={{ fontFamily: 'Poppins' }}>
-                4 jaar van groeien, vallen en opstaan
+                8 jaar van groeien, vallen en opstaan
               </p>
             </motion.div>
           </motion.div>
