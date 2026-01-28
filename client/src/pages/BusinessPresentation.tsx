@@ -22,6 +22,10 @@ import amrathLogo from "@/assets/pitch/amrath-logo.png";
 import marriottLogo from "@/assets/pitch/marriott-logo.png";
 import sollicitatieformulier from "@/assets/pitch/sollicitatieformulier.png";
 import scoringDashboard from "@/assets/pitch/scoring-dashboard.png";
+import extraatjeApp from "@/assets/pitch/extraatje-app.png";
+import extraatjeDeals from "@/assets/pitch/extraatje-deals.png";
+import extraatjeChallenges from "@/assets/pitch/extraatje-challenges.png";
+import extraatjeLeaderboard from "@/assets/pitch/extraatje-leaderboard.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
@@ -45,7 +49,7 @@ export default function BusinessPresentation() {
   const [interactionStep, setInteractionStep] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const totalSlides = 9;
+  const totalSlides = 13;
 
   const startPresentation = useCallback(async () => {
     try {
@@ -734,7 +738,7 @@ export default function BusinessPresentation() {
               </motion.div>
 
               <div className="flex items-center gap-6">
-                {/* Phone mockup placeholder */}
+                {/* Phone mockup with real app screenshot */}
                 <motion.div
                   initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -743,17 +747,11 @@ export default function BusinessPresentation() {
                 >
                   <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-transparent rounded-[3rem] blur-2xl" />
                   <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800">
-                    {/* Placeholder for app screenshot */}
-                    <div className="w-56 h-[420px] bg-gradient-to-br from-purple-900/40 to-gray-900 rounded-[2rem] flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-purple-600/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                          <Sparkles className="w-8 h-8 text-purple-400" />
-                        </div>
-                        <p className="text-gray-400 text-xs px-4" style={{ fontFamily: 'Poppins' }}>
-                          [App Screenshot]
-                        </p>
-                      </div>
-                    </div>
+                    <img 
+                      src={extraatjeApp} 
+                      alt="EXTRAATJE App" 
+                      className="w-56 rounded-[2rem] object-cover"
+                    />
                   </div>
                 </motion.div>
 
@@ -816,8 +814,382 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 6: AI Toekomst */}
+        {/* SLIDE 6: Kortingsacties */}
         {currentSlide === 6 && (
+          <motion.div
+            key="slide6-deals"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-16 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex-1"
+              >
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600/30 to-emerald-600/20 border border-green-500/50 rounded-full px-4 py-2 mb-6">
+                  <span className="text-lg">%</span>
+                  <span className="text-green-300 text-sm font-medium">Exclusieve Deals</span>
+                </div>
+
+                <h2 className="text-4xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Punten inwisselen
+                  <br />
+                  <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                    voor korting.
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Onze medewerkers krijgen exclusieve kortingen bij onze partners.
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    { brand: "TrainMore", discount: "30%", desc: "Fitness abonnement", color: "from-red-600 to-red-800", emoji: "💪" },
+                    { brand: "Check", discount: "30 min", desc: "Gratis rijles", color: "from-orange-500 to-orange-700", emoji: "🚗" },
+                    { brand: "GIG", discount: "25%", desc: "Telefoon abonnement", color: "from-purple-600 to-purple-800", emoji: "📱" },
+                  ].map((deal, i) => (
+                    <motion.div
+                      key={deal.brand}
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + i * 0.15 }}
+                      className={`relative overflow-hidden bg-gradient-to-r ${deal.color} rounded-2xl p-5`}
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="flex items-center justify-between relative z-10">
+                        <div>
+                          <p className="text-white/70 text-sm uppercase tracking-wide">{deal.desc}</p>
+                          <p className="text-white text-2xl font-bold" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>{deal.brand}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white text-3xl font-bold" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>{deal.discount}</p>
+                          <p className="text-white/70 text-sm">korting</p>
+                        </div>
+                        <span className="text-4xl ml-4">{deal.emoji}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative"
+              >
+                <div className="absolute -inset-6 bg-gradient-to-br from-green-500/30 via-emerald-500/20 to-transparent rounded-[3rem] blur-2xl" />
+                <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800">
+                  <img 
+                    src={extraatjeDeals} 
+                    alt="EXTRAATJE Deals" 
+                    className="w-56 rounded-[2rem] object-cover"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 7: Challenges */}
+        {currentSlide === 7 && (
+          <motion.div
+            key="slide7-challenges"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-16 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex-1"
+              >
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600/30 to-orange-600/20 border border-yellow-500/50 rounded-full px-4 py-2 mb-6">
+                  <Trophy className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-300 text-sm font-medium">Gamification</span>
+                </div>
+
+                <h2 className="text-4xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Challenges maken
+                  <br />
+                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                    werk leuk.
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Medewerkers behalen doelen en verdienen extra punten.
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    { title: "Diensten Kampioen", desc: "Werk 10 diensten deze maand", points: "+500 pts", progress: 80, emoji: "🏆" },
+                    { title: "Review Held", desc: "Krijg 5 positieve reviews", points: "+300 pts", progress: 60, emoji: "⭐" },
+                    { title: "Vroege Vogel", desc: "5x op tijd aanwezig", points: "+200 pts", progress: 100, emoji: "🐦", completed: true },
+                  ].map((challenge, i) => (
+                    <motion.div
+                      key={challenge.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + i * 0.15 }}
+                      className={`bg-gray-800/60 border ${challenge.completed ? 'border-green-500/50' : 'border-gray-700/50'} rounded-2xl p-5`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl">{challenge.emoji}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-white font-bold" style={{ fontFamily: 'Poppins' }}>{challenge.title}</p>
+                            <span className={`text-sm font-bold ${challenge.completed ? 'text-green-400' : 'text-yellow-400'}`}>{challenge.points}</span>
+                          </div>
+                          <p className="text-gray-400 text-sm mb-2">{challenge.desc}</p>
+                          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${challenge.progress}%` }}
+                              transition={{ delay: 0.8 + i * 0.15, duration: 0.8 }}
+                              className={`h-full rounded-full ${challenge.completed ? 'bg-green-500' : 'bg-gradient-to-r from-yellow-400 to-orange-500'}`}
+                            />
+                          </div>
+                        </div>
+                        {challenge.completed && (
+                          <CheckCircle2 className="w-6 h-6 text-green-500" />
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative"
+              >
+                <div className="absolute -inset-6 bg-gradient-to-br from-yellow-500/30 via-orange-500/20 to-transparent rounded-[3rem] blur-2xl" />
+                <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800">
+                  <img 
+                    src={extraatjeChallenges} 
+                    alt="EXTRAATJE Challenges" 
+                    className="w-56 rounded-[2rem] object-cover"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 8: Leaderboard */}
+        {currentSlide === 8 && (
+          <motion.div
+            key="slide8-leaderboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="flex items-center gap-16 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex-1"
+              >
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600/30 to-pink-600/20 border border-purple-500/50 rounded-full px-4 py-2 mb-6">
+                  <Trophy className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-300 text-sm font-medium">Ranglijst</span>
+                </div>
+
+                <h2 className="text-4xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Competitie
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+                    stimuleert prestatie.
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
+                  Maandelijkse ranglijst met de beste presteerders.
+                </p>
+
+                <div className="flex items-end justify-center gap-4 mb-8">
+                  {[
+                    { place: 2, name: "Sophie", pts: "420 pts", color: "bg-gray-400", height: "h-28" },
+                    { place: 1, name: "Jij! 🎉", pts: "485 pts", color: "bg-gradient-to-b from-yellow-400 to-yellow-600", height: "h-36" },
+                    { place: 3, name: "Peter", pts: "380 pts", color: "bg-orange-700", height: "h-24" },
+                  ].map((person, i) => (
+                    <motion.div
+                      key={person.place}
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + i * 0.15 }}
+                      className="text-center"
+                    >
+                      <div className="w-14 h-14 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-2 text-white font-bold text-lg border-2 border-purple-400">
+                        {person.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <p className="text-white text-sm font-medium mb-1">{person.name}</p>
+                      <p className="text-purple-400 text-xs mb-2">{person.pts}</p>
+                      <div className={`w-20 ${person.height} ${person.color} rounded-t-xl flex items-start justify-center pt-2`}>
+                        <span className="text-white text-2xl font-bold">{person.place}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                  className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🏅</span>
+                    <div>
+                      <p className="text-white font-medium">Top 3 krijgt extra beloning!</p>
+                      <p className="text-gray-400 text-sm">Elke maand nieuwe kansen</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative"
+              >
+                <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-transparent rounded-[3rem] blur-2xl" />
+                <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-800">
+                  <img 
+                    src={extraatjeLeaderboard} 
+                    alt="EXTRAATJE Leaderboard" 
+                    className="w-56 rounded-[2rem] object-cover"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 9: Admin Dashboard */}
+        {currentSlide === 9 && (
+          <motion.div
+            key="slide9-admin"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-center mb-10"
+              >
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-600/30 to-blue-600/20 border border-cyan-500/50 rounded-full px-4 py-2 mb-4">
+                  <Brain className="w-4 h-4 text-cyan-400" />
+                  <span className="text-cyan-300 text-sm font-medium">Admin Dashboard</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Alle data op
+                  <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent ml-3">
+                    één plek.
+                  </span>
+                </h2>
+              </motion.div>
+
+              <div className="grid grid-cols-4 gap-4 mb-8">
+                {[
+                  { label: "Totaal Gebruikers", value: "847", icon: Users, color: "text-purple-400", trend: "+12%" },
+                  { label: "Actieve Medewerkers", value: "623", icon: CheckCircle2, color: "text-green-400", trend: "+8%" },
+                  { label: "Uitgegeven Punten", value: "125K", icon: Sparkles, color: "text-yellow-400", trend: "+23%" },
+                  { label: "Challenges Voltooid", value: "2,451", icon: Trophy, color: "text-orange-400", trend: "+45%" },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + i * 0.1 }}
+                    className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-5"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                      <span className="text-green-400 text-sm font-medium">{stat.trend}</span>
+                    </div>
+                    <p className="text-3xl text-white font-bold mb-1" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>{stat.value}</p>
+                    <p className="text-gray-400 text-sm">{stat.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="col-span-2 bg-gray-800/60 border border-gray-700/50 rounded-2xl p-5"
+                >
+                  <h3 className="text-white font-bold mb-4" style={{ fontFamily: 'Poppins' }}>Top Presteerders</h3>
+                  <div className="space-y-3">
+                    {[
+                      { name: "Jan Jansen", points: "3,450 pts", badge: "🥇", status: "Gold" },
+                      { name: "Sophie de Vries", points: "2,890 pts", badge: "🥈", status: "Silver" },
+                      { name: "Peter van Dam", points: "2,340 pts", badge: "🥉", status: "Bronze" },
+                    ].map((user, i) => (
+                      <div key={user.name} className="flex items-center justify-between bg-gray-900/50 rounded-xl px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{user.badge}</span>
+                          <div>
+                            <p className="text-white font-medium">{user.name}</p>
+                            <p className="text-gray-500 text-sm">{user.status} Status</p>
+                          </div>
+                        </div>
+                        <span className="text-purple-400 font-bold">{user.points}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-5"
+                >
+                  <h3 className="text-white font-bold mb-4" style={{ fontFamily: 'Poppins' }}>Recente Activiteit</h3>
+                  <div className="space-y-3">
+                    {[
+                      { action: "Challenge voltooid", user: "Emma", time: "2 min", emoji: "🏆" },
+                      { action: "Punten uitgegeven", user: "Lucas", time: "5 min", emoji: "💰" },
+                      { action: "Nieuwe badge", user: "Sophie", time: "12 min", emoji: "⭐" },
+                    ].map((activity, i) => (
+                      <div key={i} className="flex items-center gap-3 text-sm">
+                        <span className="text-lg">{activity.emoji}</span>
+                        <div className="flex-1">
+                          <p className="text-gray-300">{activity.action}</p>
+                          <p className="text-gray-500 text-xs">{activity.user} • {activity.time} geleden</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 10: AI Toekomst */}
+        {currentSlide === 10 && (
           <motion.div
             key="slide5-ai"
             initial={{ opacity: 0 }}
@@ -1066,8 +1438,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 7: Ondernemen in de Praktijk */}
-        {currentSlide === 7 && (
+        {/* SLIDE 11: Ondernemen in de Praktijk */}
+        {currentSlide === 11 && (
           <motion.div
             key="slide7-ondernemen"
             initial={{ opacity: 0 }}
@@ -1128,8 +1500,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 8: Q&A + Slogan */}
-        {currentSlide === 8 && (
+        {/* SLIDE 12: Q&A + Slogan */}
+        {currentSlide === 12 && (
           <motion.div
             key="slide7-qa"
             initial={{ opacity: 0 }}
