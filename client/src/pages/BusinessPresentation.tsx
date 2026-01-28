@@ -395,8 +395,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 2: Wat is EXTRA */}
-        {currentSlide === 2 && (
+        {/* SLIDE 1: Wat is EXTRA */}
+        {currentSlide === 1 && (
           <motion.div
             key="slide2-watisextra"
             initial={{ opacity: 0 }}
@@ -1358,8 +1358,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 1: Mijn Reis - Tijdlijn (7 milestones) */}
-        {currentSlide === 1 && (
+        {/* SLIDE 2: Mijn Reis - Tijdlijn (7 milestones) */}
+        {currentSlide === 2 && (
           <motion.div
             key="slide2-tijdlijn"
             initial={{ opacity: 0 }}
@@ -1503,11 +1503,30 @@ export default function BusinessPresentation() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3 }}
-              className="mt-8 text-center"
+              className="mt-6 text-center"
             >
-              <p className="text-purple-400 text-lg" style={{ fontFamily: 'Poppins' }}>
+              <p className="text-purple-400 text-lg mb-6" style={{ fontFamily: 'Poppins' }}>
                 8 jaar van groeien, vallen en opstaan
               </p>
+              
+              <div className="flex justify-center gap-4 flex-wrap max-w-4xl mx-auto">
+                {[
+                  { text: "Hobbels die je niet verwacht", emoji: "🪨" },
+                  { text: "Flexibel inspelen op het moment", emoji: "🔄" },
+                  { text: "Blijf leren, in elk stadium", emoji: "📚" },
+                ].map((lesson, i) => (
+                  <motion.div
+                    key={lesson.text}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.5 + i * 0.15 }}
+                    className="bg-gray-800/60 border border-purple-500/30 rounded-xl px-4 py-2 flex items-center gap-2"
+                  >
+                    <span className="text-lg">{lesson.emoji}</span>
+                    <span className="text-gray-300 text-sm" style={{ fontFamily: 'Poppins' }}>{lesson.text}</span>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )}
