@@ -372,7 +372,7 @@ export default function BusinessPresentation() {
                     className="text-4xl md:text-6xl text-white leading-tight"
                     style={{ fontFamily: 'Poppins', fontWeight: 800 }}
                   >
-                    "Wie goed is voor je personeel,
+                    "Wie goed is voor zijn personeel,
                     <br />
                     <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
                       is goed voor ons."
@@ -853,7 +853,7 @@ export default function BusinessPresentation() {
                   {[
                     { brand: "TrainMore", discount: "30%", desc: "Fitness abonnement", color: "from-red-600 to-red-800", emoji: "💪" },
                     { brand: "Check", discount: "30 min", desc: "Gratis rijles", color: "from-orange-500 to-orange-700", emoji: "🚗" },
-                    { brand: "GIG", discount: "25%", desc: "Telefoon abonnement", color: "from-purple-600 to-purple-800", emoji: "📱" },
+                    { brand: "GIG", discount: "25%", desc: "Hard seltzer", color: "from-purple-600 to-purple-800", emoji: "🍹" },
                   ].map((deal, i) => (
                     <motion.div
                       key={deal.brand}
