@@ -26,6 +26,8 @@ import extraatjeApp from "@/assets/pitch/extraatje-app.png";
 import extraatjeDeals from "@/assets/pitch/extraatje-deals.png";
 import extraatjeChallenges from "@/assets/pitch/extraatje-challenges.png";
 import extraatjeLeaderboard from "@/assets/pitch/extraatje-leaderboard.png";
+import adminDashboardUsers from "@/assets/pitch/admin-dashboard-users.png";
+import adminBeoordelingen from "@/assets/pitch/admin-beoordelingen.png";
 
 const speakerNotes = [
   "SLIDE 1 - OPENING (5 min): Start interactief met handopsteken. Wie heeft bijbaantje? Wie werkt voor zichzelf? Wie heeft via uitzendbureau gewerkt? Dit creëert betrokkenheid en toont relevantie.",
@@ -49,7 +51,7 @@ export default function BusinessPresentation() {
   const [interactionStep, setInteractionStep] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const totalSlides = 13;
+  const totalSlides = 14;
 
   const startPresentation = useCallback(async () => {
     try {
@@ -836,15 +838,15 @@ export default function BusinessPresentation() {
                 </div>
 
                 <h2 className="text-4xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                  Punten inwisselen
+                  Standaard
                   <br />
                   <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-                    voor korting.
+                    personeelskorting.
                   </span>
                 </h2>
                 
                 <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins', fontWeight: 400 }}>
-                  Onze medewerkers krijgen exclusieve kortingen bij onze partners.
+                  Al onze medewerkers krijgen automatisch exclusieve kortingen.
                 </p>
 
                 <div className="space-y-4">
@@ -1188,8 +1190,80 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 10: AI Toekomst */}
+        {/* SLIDE 10: Dashboard Screenshots */}
         {currentSlide === 10 && (
+          <motion.div
+            key="slide10-dashboard-screens"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-8"
+            >
+              <h2 className="text-3xl md:text-4xl text-white leading-tight" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Compleet
+                <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent ml-2">
+                  inzicht.
+                </span>
+              </h2>
+              <p className="text-gray-400 mt-2" style={{ fontFamily: 'Poppins' }}>
+                Van overzicht tot individuele beoordelingen
+              </p>
+            </motion.div>
+
+            <div className="flex gap-8 max-w-6xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex-1"
+              >
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/20 via-cyan-500/10 to-transparent rounded-2xl blur-xl" />
+                  <div className="relative bg-gray-800/80 rounded-xl border border-gray-700/50 p-2 shadow-2xl">
+                    <img 
+                      src={adminDashboardUsers} 
+                      alt="Admin Dashboard Gebruikers" 
+                      className="w-full rounded-lg"
+                    />
+                  </div>
+                  <p className="text-center text-gray-500 text-sm mt-3" style={{ fontFamily: 'Poppins' }}>
+                    Gebruikersbeheer met punten & functies
+                  </p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+                className="w-80"
+              >
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-green-500/20 via-emerald-500/10 to-transparent rounded-2xl blur-xl" />
+                  <div className="relative bg-gray-800/80 rounded-xl border border-gray-700/50 p-2 shadow-2xl">
+                    <img 
+                      src={adminBeoordelingen} 
+                      alt="Medewerker Beoordelingen" 
+                      className="w-full rounded-lg"
+                    />
+                  </div>
+                  <p className="text-center text-gray-500 text-sm mt-3" style={{ fontFamily: 'Poppins' }}>
+                    Individuele prestaties & reviews
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 11: AI Toekomst */}
+        {currentSlide === 11 && (
           <motion.div
             key="slide5-ai"
             initial={{ opacity: 0 }}
@@ -1438,8 +1512,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 11: Ondernemen in de Praktijk */}
-        {currentSlide === 11 && (
+        {/* SLIDE 12: Ondernemen in de Praktijk */}
+        {currentSlide === 12 && (
           <motion.div
             key="slide7-ondernemen"
             initial={{ opacity: 0 }}
@@ -1500,8 +1574,8 @@ export default function BusinessPresentation() {
           </motion.div>
         )}
 
-        {/* SLIDE 12: Q&A + Slogan */}
-        {currentSlide === 12 && (
+        {/* SLIDE 13: Q&A + Slogan */}
+        {currentSlide === 13 && (
           <motion.div
             key="slide7-qa"
             initial={{ opacity: 0 }}
