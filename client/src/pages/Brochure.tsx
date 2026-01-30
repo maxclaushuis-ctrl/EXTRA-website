@@ -190,8 +190,76 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 1: Kwaliteit */}
+        {/* SLIDE 1: Onze Diensten */}
         {currentSlide === 1 && (
+          <motion.div
+            key="slide-diensten"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-12"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-12"
+            >
+              <div className="inline-flex items-center gap-2 bg-cyan-600/20 border border-cyan-500/40 rounded-full px-4 py-2 mb-6">
+                <Users className="w-5 h-5 text-cyan-400" />
+                <span className="text-cyan-300 text-sm" style={{ fontFamily: 'Poppins' }}>Wat wij leveren</span>
+              </div>
+              <h2 className="text-4xl md:text-6xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Onze <span className="text-cyan-400">diensten</span>
+              </h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
+                Gespecialiseerd personeel voor alle afdelingen van uw hotel
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl">
+              {[
+                {
+                  emoji: "🛏️",
+                  title: "Housekeeping",
+                  desc: "Kamermeisjes en huishoudelijk personeel voor een vlekkeloze gastbeleving",
+                  color: "from-blue-600 to-blue-800"
+                },
+                {
+                  emoji: "👨‍🍳",
+                  title: "Keuken",
+                  desc: "Van afwas tot sous-chef. Ervaren krachten die uw keuken draaiende houden",
+                  color: "from-orange-600 to-orange-800"
+                },
+                {
+                  emoji: "🍽️",
+                  title: "Banqueting",
+                  desc: "Professionele bediening voor events, congressen en feesten",
+                  color: "from-purple-600 to-purple-800"
+                }
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 text-center"
+                >
+                  <div className="text-6xl mb-6">{item.emoji}</div>
+                  <h3 className="text-2xl text-white font-bold mb-3" style={{ fontFamily: 'Poppins' }}>
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-400" style={{ fontFamily: 'Poppins' }}>
+                    {item.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 2: Kwaliteit */}
+        {currentSlide === 2 && (
           <motion.div
             key="slide-kwaliteit"
             initial={{ opacity: 0 }}
@@ -249,74 +317,6 @@ export default function Brochure() {
                     <item.icon className="w-7 h-7 text-white" />
                   </div>
                   <h3 className="text-xl text-white font-bold mb-3" style={{ fontFamily: 'Poppins' }}>
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-400" style={{ fontFamily: 'Poppins' }}>
-                    {item.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* SLIDE 2: Onze Diensten */}
-        {currentSlide === 2 && (
-          <motion.div
-            key="slide-diensten"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center p-12"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-center mb-12"
-            >
-              <div className="inline-flex items-center gap-2 bg-cyan-600/20 border border-cyan-500/40 rounded-full px-4 py-2 mb-6">
-                <Users className="w-5 h-5 text-cyan-400" />
-                <span className="text-cyan-300 text-sm" style={{ fontFamily: 'Poppins' }}>Wat wij leveren</span>
-              </div>
-              <h2 className="text-4xl md:text-6xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                Onze <span className="text-cyan-400">diensten</span>
-              </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
-                Gespecialiseerd personeel voor alle afdelingen van uw hotel
-              </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl">
-              {[
-                {
-                  emoji: "🛏️",
-                  title: "Housekeeping",
-                  desc: "Kamermeisjes en huishoudelijk personeel voor een vlekkeloze gastbeleving",
-                  color: "from-blue-600 to-blue-800"
-                },
-                {
-                  emoji: "👨‍🍳",
-                  title: "Keukenpersoneel",
-                  desc: "Van afwas tot sous-chef. Ervaren krachten die uw keuken draaiende houden",
-                  color: "from-orange-600 to-orange-800"
-                },
-                {
-                  emoji: "🍽️",
-                  title: "Banquetingmedewerkers",
-                  desc: "Professionele bediening voor events, congressen en feesten",
-                  color: "from-purple-600 to-purple-800"
-                }
-              ].map((item, i) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 text-center"
-                >
-                  <div className="text-6xl mb-6">{item.emoji}</div>
-                  <h3 className="text-2xl text-white font-bold mb-3" style={{ fontFamily: 'Poppins' }}>
                     {item.title}
                   </h3>
                   <p className="text-gray-400" style={{ fontFamily: 'Poppins' }}>
