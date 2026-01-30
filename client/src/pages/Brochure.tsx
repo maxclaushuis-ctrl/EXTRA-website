@@ -36,7 +36,7 @@ import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
 
 export default function Brochure() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 10;
+  const totalSlides = 11;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -260,8 +260,107 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 2: EXTRAATJE Puntensysteem */}
+        {/* SLIDE 2: Kwalificatieproces */}
         {currentSlide === 2 && (
+          <motion.div
+            key="slide-kwalificatie"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-8"
+            >
+              <div className="inline-flex items-center gap-2 bg-purple-600/20 border border-purple-500/40 rounded-full px-4 py-2 mb-6">
+                <UserCheck className="w-5 h-5 text-purple-400" />
+                <span className="text-purple-300 text-sm" style={{ fontFamily: 'Poppins' }}>Selectieproces</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Ons <span className="text-purple-400">kwalificatieproces</span>
+              </h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
+                Elke kandidaat wordt beoordeeld op soft- en hardskills tijdens het intake gesprek
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="relative"
+              >
+                <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl blur-lg" />
+                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+                      <UserCheck className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>iPad Intake</h4>
+                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Sollicitatie beoordeling</p>
+                    </div>
+                  </div>
+                  <img 
+                    src={intakeBeoordeling} 
+                    alt="Intake Beoordeling" 
+                    className="w-full rounded-lg border border-gray-700"
+                  />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative"
+              >
+                <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-2xl blur-lg" />
+                <div className="relative bg-gray-800/80 border border-cyan-500/30 rounded-2xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-cyan-600/20 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Scoring Dashboard</h4>
+                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Overzicht scores per medewerker</p>
+                    </div>
+                  </div>
+                  <img 
+                    src={scoringDashboardNew} 
+                    alt="Scoring Dashboard" 
+                    className="w-full rounded-lg border border-gray-700"
+                  />
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-wrap justify-center gap-4 mt-8"
+            >
+              {[
+                { label: "Softskills", desc: "Houding & communicatie" },
+                { label: "Hardskills", desc: "Ervaring & kennis" },
+                { label: "Beoordeling", desc: "Topper / Goede indruk / Middelmatig" },
+              ].map((stat) => (
+                <div key={stat.label} className="flex items-center gap-2 bg-gray-800/60 border border-purple-500/20 rounded-full px-4 py-2">
+                  <span className="text-purple-400 font-semibold text-sm" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
+                  <span className="text-gray-500 text-xs">({stat.desc})</span>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 3: EXTRAATJE Puntensysteem */}
+        {currentSlide === 3 && (
           <motion.div
             key="slide-extraatje"
             initial={{ opacity: 0 }}
@@ -331,38 +430,22 @@ export default function Brochure() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="relative flex flex-col gap-4"
+                className="relative flex justify-center gap-4"
               >
-                <div className="relative bg-gray-800/80 border border-pink-500/30 rounded-2xl p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-pink-600/20 rounded-lg flex items-center justify-center">
-                      <UserCheck className="w-5 h-5 text-pink-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>iPad Intake</h4>
-                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Sollicitatie beoordeling</p>
-                    </div>
-                  </div>
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-3xl blur-xl" />
                   <img 
-                    src={intakeBeoordeling} 
-                    alt="Intake Beoordeling" 
-                    className="w-full rounded-lg border border-gray-700"
+                    src={extraatjeApp} 
+                    alt="EXTRAATJE App" 
+                    className="relative w-[200px] rounded-2xl shadow-2xl border border-pink-500/30"
                   />
                 </div>
-                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-                      <BarChart3 className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Scoring Dashboard</h4>
-                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Overzicht per medewerker</p>
-                    </div>
-                  </div>
+                <div className="relative mt-8">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl" />
                   <img 
-                    src={scoringDashboardNew} 
-                    alt="Scoring Dashboard" 
-                    className="w-full rounded-lg border border-gray-700"
+                    src={extraatjeChallenges} 
+                    alt="Challenges" 
+                    className="relative w-[200px] rounded-2xl shadow-2xl border border-purple-500/30"
                   />
                 </div>
               </motion.div>
@@ -370,8 +453,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 3: Beoordelingen na dienst */}
-        {currentSlide === 3 && (
+        {/* SLIDE 4: Beoordelingen na dienst */}
+        {currentSlide === 4 && (
           <motion.div
             key="slide-scoring"
             initial={{ opacity: 0 }}
@@ -444,8 +527,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 4: Onze Diensten */}
-        {currentSlide === 4 && (
+        {/* SLIDE 5: Onze Diensten */}
+        {currentSlide === 5 && (
           <motion.div
             key="slide-diensten"
             initial={{ opacity: 0 }}
@@ -512,8 +595,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 5: Dezelfde medewerkers */}
-        {currentSlide === 5 && (
+        {/* SLIDE 6: Dezelfde medewerkers */}
+        {currentSlide === 6 && (
           <motion.div
             key="slide-continuiteit"
             initial={{ opacity: 0 }}
@@ -599,8 +682,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 6: Wet- en regelgeving */}
-        {currentSlide === 6 && (
+        {/* SLIDE 7: Wet- en regelgeving */}
+        {currentSlide === 7 && (
           <motion.div
             key="slide-compliance"
             initial={{ opacity: 0 }}
@@ -687,8 +770,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 7: Persoonlijk Contact */}
-        {currentSlide === 7 && (
+        {/* SLIDE 8: Persoonlijk Contact */}
+        {currentSlide === 8 && (
           <motion.div
             key="slide-contact"
             initial={{ opacity: 0 }}
@@ -779,8 +862,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 8: Opdrachtgevers */}
-        {currentSlide === 8 && (
+        {/* SLIDE 9: Opdrachtgevers */}
+        {currentSlide === 9 && (
           <motion.div
             key="slide-clients"
             initial={{ opacity: 0 }}
@@ -839,8 +922,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 9: CTA */}
-        {currentSlide === 9 && (
+        {/* SLIDE 10: CTA */}
+        {currentSlide === 10 && (
           <motion.div
             key="slide-cta"
             initial={{ opacity: 0 }}
