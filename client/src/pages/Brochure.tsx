@@ -32,7 +32,7 @@ import extraatjeApp from "../assets/pitch/extraatje-app.png";
 import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
 import scoringDashboardNew from "../assets/pitch/scoring-dashboard-new.png";
 import intakeBeoordeling from "../assets/pitch/intake-beoordeling.png";
-import adminBeoordelingen from "../assets/pitch/admin-beoordelingen.png";
+import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
 
 export default function Brochure() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -416,8 +416,8 @@ export default function Brochure() {
                     </div>
                   </div>
                   <img 
-                    src={adminBeoordelingen} 
-                    alt="Beoordelingen" 
+                    src={adminGebruikers} 
+                    alt="Gebruikersbeheer met beoordelingen" 
                     className="w-full rounded-lg border border-gray-700"
                   />
                 </div>
@@ -428,17 +428,16 @@ export default function Brochure() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="flex flex-wrap justify-center gap-4 mt-8"
+              className="flex flex-wrap justify-center gap-6 mt-8"
             >
               {[
-                { color: "bg-green-500", label: "Uitstekend", range: "8-10" },
-                { color: "bg-yellow-500", label: "Voldoende", range: "6-7" },
-                { color: "bg-red-500", label: "Onvoldoende", range: "<6" },
-              ].map((score) => (
-                <div key={score.label} className="flex items-center gap-2 bg-gray-800/60 rounded-full px-4 py-2">
-                  <div className={`w-3 h-3 ${score.color} rounded-full`} />
-                  <span className="text-gray-300 text-sm" style={{ fontFamily: 'Poppins' }}>{score.label}</span>
-                  <span className="text-gray-500 text-xs">({score.range})</span>
+                { label: "Gem. Beoordeling", desc: "Per medewerker" },
+                { label: "Totaal Punten", desc: "Verdiende punten" },
+                { label: "Ervaring", desc: "Jaren in dienst" },
+              ].map((stat) => (
+                <div key={stat.label} className="flex items-center gap-2 bg-gray-800/60 border border-orange-500/20 rounded-full px-4 py-2">
+                  <span className="text-orange-400 font-semibold text-sm" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
+                  <span className="text-gray-500 text-xs">({stat.desc})</span>
                 </div>
               ))}
             </motion.div>
