@@ -34,7 +34,7 @@ import scoringDashboardNew from "../assets/pitch/scoring-dashboard-new.png";
 import intakeBeoordeling from "../assets/pitch/intake-beoordeling.png";
 import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
 import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
-import ipadMockup from "../assets/pitch/ipad-mockup.png";
+import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
 
 export default function Brochure() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -391,42 +391,12 @@ export default function Brochure() {
                 transition={{ delay: 0.3 }}
                 className="relative flex justify-center"
               >
-                {/* iPad mockup with intake form */}
-                <div className="relative" style={{ width: '480px' }}>
-                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl" />
-                  
-                  {/* Container for iPad mockup */}
-                  <div className="relative">
-                    {/* Intake form inside the screen area */}
-                    <div 
-                      className="absolute overflow-hidden rounded-[12px]"
-                      style={{ 
-                        top: '5.5%', 
-                        left: '3.5%', 
-                        right: '3.5%', 
-                        bottom: '5.5%',
-                      }}
-                    >
-                      <img 
-                        src={intakeBeoordeling} 
-                        alt="Intake Formulier" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    
-                    {/* iPad frame overlay */}
-                    <img 
-                      src={ipadMockup} 
-                      alt="iPad mockup" 
-                      className="relative w-full drop-shadow-2xl"
-                      style={{ filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.5))' }}
-                    />
-                  </div>
-                  
-                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-center">
-                    <span className="text-gray-500 text-sm" style={{ fontFamily: 'Poppins' }}>iPad 11"</span>
-                  </div>
-                </div>
+                <img 
+                  src={ipadIntakeComplete} 
+                  alt="iPad met kwalificatieformulier" 
+                  className="w-full max-w-lg"
+                  style={{ filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.4))' }}
+                />
               </motion.div>
             </div>
           </motion.div>
