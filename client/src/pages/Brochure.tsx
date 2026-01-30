@@ -33,6 +33,7 @@ import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
 import scoringDashboardNew from "../assets/pitch/scoring-dashboard-new.png";
 import intakeBeoordeling from "../assets/pitch/intake-beoordeling.png";
 import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
+import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
 
 export default function Brochure() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -217,7 +218,7 @@ export default function Brochure() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl">
+            <div className="grid md:grid-cols-4 gap-6 max-w-6xl">
               {[
                 {
                   emoji: "🛏️",
@@ -236,6 +237,12 @@ export default function Brochure() {
                   title: "Banqueting",
                   desc: "Professionele bediening voor events, congressen en feesten",
                   color: "from-purple-600 to-purple-800"
+                },
+                {
+                  emoji: "🛎️",
+                  title: "Front-office",
+                  desc: "Receptie en gastenservice voor een warm welkom",
+                  color: "from-green-600 to-green-800"
                 }
               ].map((item, i) => (
                 <motion.div
@@ -530,7 +537,7 @@ export default function Brochure() {
               </p>
             </motion.div>
 
-            <div className="max-w-4xl w-full">
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -541,16 +548,41 @@ export default function Brochure() {
                 <div className="relative bg-gray-800/80 border border-orange-500/30 rounded-2xl p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-orange-600/20 rounded-lg flex items-center justify-center">
-                      <Star className="w-5 h-5 text-orange-400" />
+                      <Users className="w-5 h-5 text-orange-400" />
                     </div>
                     <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Beoordelingen na dienst</h4>
-                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Feedback van opdrachtgevers</p>
+                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Overzicht medewerkers</h4>
+                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Beheer en scores</p>
                     </div>
                   </div>
                   <img 
                     src={adminGebruikers} 
                     alt="Gebruikersbeheer met beoordelingen" 
+                    className="w-full rounded-lg border border-gray-700"
+                  />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative"
+              >
+                <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/10 to-orange-500/10 rounded-2xl blur-lg" />
+                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+                      <Star className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Statistieken per medewerker</h4>
+                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Diensten, no-shows, beoordelingen</p>
+                    </div>
+                  </div>
+                  <img 
+                    src={beoordelingenStatistieken} 
+                    alt="Medewerker statistieken" 
                     className="w-full rounded-lg border border-gray-700"
                   />
                 </div>
@@ -564,13 +596,13 @@ export default function Brochure() {
               className="flex flex-wrap justify-center gap-6 mt-8"
             >
               {[
-                { label: "Gem. Beoordeling", desc: "Per medewerker" },
-                { label: "Totaal Punten", desc: "Verdiende punten" },
-                { label: "Ervaring", desc: "Jaren in dienst" },
+                { value: "835", label: "Totaal gebruikers" },
+                { value: "745", label: "Actieve gebruikers" },
+                { value: "100%", label: "Inzicht in prestaties" },
               ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-2 bg-gray-800/60 border border-orange-500/20 rounded-full px-4 py-2">
-                  <span className="text-orange-400 font-semibold text-sm" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
-                  <span className="text-gray-500 text-xs">({stat.desc})</span>
+                <div key={stat.label} className="flex items-center gap-3 bg-gray-800/60 border border-orange-500/20 rounded-full px-5 py-2">
+                  <span className="text-orange-400 font-bold text-lg" style={{ fontFamily: 'Poppins' }}>{stat.value}</span>
+                  <span className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
                 </div>
               ))}
             </motion.div>
