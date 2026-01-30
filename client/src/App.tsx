@@ -10,6 +10,7 @@ import SollicitatieFormulier from "@/pages/SollicitatieFormulier";
 import DashboardMockup from "@/pages/DashboardMockup";
 import PitchPresentation from "@/pages/PitchPresentation";
 import BusinessPresentation from "@/pages/BusinessPresentation";
+import Brochure from "@/pages/Brochure";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -83,6 +84,7 @@ function Router() {
         <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
         <Route path="/pitch" component={PitchPresentation} />
         <Route path="/presentatie" component={BusinessPresentation} />
+        <Route path="/brochure" component={Brochure} />
         <Route path="/dashboard-mockup">
           {() => <ProtectedRoute component={DashboardMockup} adminOnly={true} />}
         </Route>
