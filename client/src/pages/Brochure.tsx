@@ -13,7 +13,12 @@ import {
   Award,
   Building2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Gift,
+  TrendingUp,
+  Target,
+  Trophy,
+  BarChart3
 } from "lucide-react";
 
 import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
@@ -24,9 +29,14 @@ import marriottLogo from "../assets/pitch/marriott-logo.png";
 import amrathLogo from "../assets/pitch/amrath-logo.png";
 import hetePeperLogo from "../assets/pitch/hete-peper-logo.png";
 
+import extraatjeApp from "../assets/pitch/extraatje-app.png";
+import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
+import scoringDashboard from "../assets/pitch/scoring-dashboard.png";
+import adminBeoordelingen from "../assets/pitch/admin-beoordelingen.png";
+
 export default function Brochure() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 7;
+  const totalSlides = 9;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -251,8 +261,202 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 2: Dezelfde medewerkers */}
+        {/* SLIDE 2: EXTRAATJE Puntensysteem */}
         {currentSlide === 2 && (
+          <motion.div
+            key="slide-extraatje"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="inline-flex items-center gap-2 bg-pink-600/20 border border-pink-500/40 rounded-full px-4 py-2 mb-6">
+                  <Gift className="w-5 h-5 text-pink-400" />
+                  <span className="text-pink-300 text-sm" style={{ fontFamily: 'Poppins' }}>EXTRAATJE</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  <span className="text-pink-400">Loyale</span> medewerkers door punten
+                </h2>
+                <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins' }}>
+                  Ons unieke beloningssysteem motiveert medewerkers om zich extra in te zetten. Alles is meetbaar.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {[
+                    { icon: Target, value: "Challenges", desc: "Doelen behalen" },
+                    { icon: Trophy, value: "Punten", desc: "Verzamelen" },
+                    { icon: Gift, value: "Rewards", desc: "Inwisselen" },
+                    { icon: TrendingUp, value: "Leaderboard", desc: "Competitie" },
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={stat.value}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + i * 0.1 }}
+                      className="bg-gray-800/60 border border-pink-500/20 rounded-xl p-4"
+                    >
+                      <stat.icon className="w-6 h-6 text-pink-400 mb-2" />
+                      <p className="text-white font-bold" style={{ fontFamily: 'Poppins' }}>{stat.value}</p>
+                      <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>{stat.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    "Medewerkers verdienen punten per dienst",
+                    "Bonuspunten voor extra inzet",
+                    "Inwisselbaar voor rewards & kortingen"
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 + i * 0.1 }}
+                      className="flex items-center gap-3"
+                    >
+                      <CheckCircle2 className="w-5 h-5 text-pink-400 flex-shrink-0" />
+                      <span className="text-gray-300 text-sm" style={{ fontFamily: 'Poppins' }}>{item}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="relative flex justify-center gap-4"
+              >
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-3xl blur-xl" />
+                  <img 
+                    src={extraatjeApp} 
+                    alt="EXTRAATJE App" 
+                    className="relative w-[200px] rounded-2xl shadow-2xl border border-pink-500/30"
+                  />
+                </div>
+                <div className="relative mt-8">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl" />
+                  <img 
+                    src={extraatjeChallenges} 
+                    alt="Challenges" 
+                    className="relative w-[200px] rounded-2xl shadow-2xl border border-purple-500/30"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 3: Scoring & Beoordelingen */}
+        {currentSlide === 3 && (
+          <motion.div
+            key="slide-scoring"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-8"
+            >
+              <div className="inline-flex items-center gap-2 bg-orange-600/20 border border-orange-500/40 rounded-full px-4 py-2 mb-6">
+                <BarChart3 className="w-5 h-5 text-orange-400" />
+                <span className="text-orange-300 text-sm" style={{ fontFamily: 'Poppins' }}>Volledig inzicht</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Elke dienst <span className="text-orange-400">beoordeeld</span>
+              </h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
+                Realtime inzicht in prestaties. Objectieve scores na elke dienst.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="relative"
+              >
+                <div className="absolute -inset-2 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-2xl blur-lg" />
+                <div className="relative bg-gray-800/80 border border-orange-500/30 rounded-2xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-orange-600/20 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Scoring Dashboard</h4>
+                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Overzicht per medewerker</p>
+                    </div>
+                  </div>
+                  <img 
+                    src={scoringDashboard} 
+                    alt="Scoring Dashboard" 
+                    className="w-full rounded-lg border border-gray-700"
+                  />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative"
+              >
+                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-500/10 to-green-500/10 rounded-2xl blur-lg" />
+                <div className="relative bg-gray-800/80 border border-yellow-500/30 rounded-2xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-yellow-600/20 rounded-lg flex items-center justify-center">
+                      <Star className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Beoordelingen</h4>
+                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Feedback na elke dienst</p>
+                    </div>
+                  </div>
+                  <img 
+                    src={adminBeoordelingen} 
+                    alt="Beoordelingen" 
+                    className="w-full rounded-lg border border-gray-700"
+                  />
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-wrap justify-center gap-4 mt-8"
+            >
+              {[
+                { color: "bg-green-500", label: "Uitstekend", range: "8-10" },
+                { color: "bg-yellow-500", label: "Voldoende", range: "6-7" },
+                { color: "bg-red-500", label: "Onvoldoende", range: "<6" },
+              ].map((score) => (
+                <div key={score.label} className="flex items-center gap-2 bg-gray-800/60 rounded-full px-4 py-2">
+                  <div className={`w-3 h-3 ${score.color} rounded-full`} />
+                  <span className="text-gray-300 text-sm" style={{ fontFamily: 'Poppins' }}>{score.label}</span>
+                  <span className="text-gray-500 text-xs">({score.range})</span>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 4: Dezelfde medewerkers */}
+        {currentSlide === 4 && (
           <motion.div
             key="slide-continuiteit"
             initial={{ opacity: 0 }}
@@ -338,8 +542,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 3: Wet- en regelgeving */}
-        {currentSlide === 3 && (
+        {/* SLIDE 5: Wet- en regelgeving */}
+        {currentSlide === 5 && (
           <motion.div
             key="slide-compliance"
             initial={{ opacity: 0 }}
@@ -426,8 +630,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 4: Persoonlijk Contact */}
-        {currentSlide === 4 && (
+        {/* SLIDE 6: Persoonlijk Contact */}
+        {currentSlide === 6 && (
           <motion.div
             key="slide-contact"
             initial={{ opacity: 0 }}
@@ -518,8 +722,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 5: Opdrachtgevers */}
-        {currentSlide === 5 && (
+        {/* SLIDE 7: Opdrachtgevers */}
+        {currentSlide === 7 && (
           <motion.div
             key="slide-clients"
             initial={{ opacity: 0 }}
@@ -581,8 +785,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 6: CTA */}
-        {currentSlide === 6 && (
+        {/* SLIDE 8: CTA */}
+        {currentSlide === 8 && (
           <motion.div
             key="slide-cta"
             initial={{ opacity: 0 }}
