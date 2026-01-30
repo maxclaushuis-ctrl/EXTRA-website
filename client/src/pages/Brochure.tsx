@@ -260,107 +260,157 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 2: Kwalificatieproces */}
+        {/* SLIDE 2: Onze Diensten */}
         {currentSlide === 2 && (
           <motion.div
-            key="slide-kwalificatie"
+            key="slide-diensten"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center p-8"
+            className="absolute inset-0 flex flex-col items-center justify-center p-12"
           >
             <motion.div
               initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-center mb-8"
+              className="text-center mb-12"
             >
-              <div className="inline-flex items-center gap-2 bg-purple-600/20 border border-purple-500/40 rounded-full px-4 py-2 mb-6">
-                <UserCheck className="w-5 h-5 text-purple-400" />
-                <span className="text-purple-300 text-sm" style={{ fontFamily: 'Poppins' }}>Selectieproces</span>
+              <div className="inline-flex items-center gap-2 bg-cyan-600/20 border border-cyan-500/40 rounded-full px-4 py-2 mb-6">
+                <Users className="w-5 h-5 text-cyan-400" />
+                <span className="text-cyan-300 text-sm" style={{ fontFamily: 'Poppins' }}>Wat wij leveren</span>
               </div>
-              <h2 className="text-4xl md:text-5xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                Ons <span className="text-purple-400">kwalificatieproces</span>
+              <h2 className="text-4xl md:text-6xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                Onze <span className="text-cyan-400">diensten</span>
               </h2>
               <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
-                Elke kandidaat wordt beoordeeld op soft- en hardskills tijdens het intake gesprek
+                Gespecialiseerd personeel voor alle afdelingen van uw hotel
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="relative"
-              >
-                <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl blur-lg" />
-                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-                      <UserCheck className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>iPad Intake</h4>
-                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Sollicitatie beoordeling</p>
-                    </div>
-                  </div>
-                  <img 
-                    src={intakeBeoordeling} 
-                    alt="Intake Beoordeling" 
-                    className="w-full rounded-lg border border-gray-700"
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="relative"
-              >
-                <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-2xl blur-lg" />
-                <div className="relative bg-gray-800/80 border border-cyan-500/30 rounded-2xl p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-cyan-600/20 rounded-lg flex items-center justify-center">
-                      <BarChart3 className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Scoring Dashboard</h4>
-                      <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Overzicht scores per medewerker</p>
-                    </div>
-                  </div>
-                  <img 
-                    src={scoringDashboardNew} 
-                    alt="Scoring Dashboard" 
-                    className="w-full rounded-lg border border-gray-700"
-                  />
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-wrap justify-center gap-4 mt-8"
-            >
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl">
               {[
-                { label: "Softskills", desc: "Houding & communicatie" },
-                { label: "Hardskills", desc: "Ervaring & kennis" },
-                { label: "Beoordeling", desc: "Topper / Goede indruk / Middelmatig" },
-              ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-2 bg-gray-800/60 border border-purple-500/20 rounded-full px-4 py-2">
-                  <span className="text-purple-400 font-semibold text-sm" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
-                  <span className="text-gray-500 text-xs">({stat.desc})</span>
-                </div>
+                {
+                  emoji: "🛏️",
+                  title: "Housekeeping",
+                  desc: "Kamermeisjes en huishoudelijk personeel voor een vlekkeloze gastbeleving",
+                  color: "from-blue-600 to-blue-800"
+                },
+                {
+                  emoji: "👨‍🍳",
+                  title: "Keukenpersoneel",
+                  desc: "Van afwas tot sous-chef. Ervaren krachten die uw keuken draaiende houden",
+                  color: "from-orange-600 to-orange-800"
+                },
+                {
+                  emoji: "🍽️",
+                  title: "Banquetingmedewerkers",
+                  desc: "Professionele bediening voor events, congressen en feesten",
+                  color: "from-purple-600 to-purple-800"
+                }
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 text-center"
+                >
+                  <div className="text-6xl mb-6">{item.emoji}</div>
+                  <h3 className="text-2xl text-white font-bold mb-3" style={{ fontFamily: 'Poppins' }}>
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-400" style={{ fontFamily: 'Poppins' }}>
+                    {item.desc}
+                  </p>
+                </motion.div>
               ))}
-            </motion.div>
+            </div>
           </motion.div>
         )}
 
-        {/* SLIDE 3: EXTRAATJE Puntensysteem */}
+        {/* SLIDE 3: Kwalificatieproces */}
         {currentSlide === 3 && (
+          <motion.div
+            key="slide-kwalificatie"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="inline-flex items-center gap-2 bg-purple-600/20 border border-purple-500/40 rounded-full px-4 py-2 mb-6">
+                  <UserCheck className="w-5 h-5 text-purple-400" />
+                  <span className="text-purple-300 text-sm" style={{ fontFamily: 'Poppins' }}>Selectieproces</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl mb-6" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
+                  Ons <span className="text-purple-400">kwalificatieproces</span>
+                </h2>
+                <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins' }}>
+                  Elke kandidaat wordt beoordeeld op soft- en hardskills tijdens het intake gesprek
+                </p>
+
+                <div className="space-y-4 mb-6">
+                  {[
+                    { label: "Softskills", desc: "Houding & communicatie", icon: "💬" },
+                    { label: "Hardskills", desc: "Ervaring & kennis", icon: "🎯" },
+                    { label: "Beoordeling", desc: "Topper / Goede indruk / Middelmatig", icon: "⭐" },
+                  ].map((stat, i) => (
+                    <motion.div 
+                      key={stat.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + i * 0.1 }}
+                      className="flex items-center gap-4 bg-gray-800/60 border border-purple-500/20 rounded-xl px-5 py-3"
+                    >
+                      <span className="text-2xl">{stat.icon}</span>
+                      <div>
+                        <span className="text-purple-400 font-bold text-base" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
+                        <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>{stat.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="relative flex justify-center"
+              >
+                {/* iPad 11" mockup frame */}
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-[3rem] blur-xl" />
+                  <div className="relative bg-gray-900 rounded-[2.5rem] p-3 border-[3px] border-gray-700 shadow-2xl">
+                    {/* iPad bezel */}
+                    <div className="absolute top-6 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-700 rounded-full" />
+                    {/* Screen */}
+                    <div className="bg-gray-800 rounded-[2rem] overflow-hidden" style={{ width: '400px', aspectRatio: '4/3' }}>
+                      <img 
+                        src={intakeBeoordeling} 
+                        alt="iPad Intake Formulier" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Home button */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-gray-600" />
+                  </div>
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-center">
+                    <span className="text-gray-500 text-sm" style={{ fontFamily: 'Poppins' }}>iPad 11"</span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SLIDE 4: EXTRAATJE Puntensysteem */}
+        {currentSlide === 4 && (
           <motion.div
             key="slide-extraatje"
             initial={{ opacity: 0 }}
@@ -453,8 +503,8 @@ export default function Brochure() {
           </motion.div>
         )}
 
-        {/* SLIDE 4: Beoordelingen na dienst */}
-        {currentSlide === 4 && (
+        {/* SLIDE 5: Beoordelingen na dienst */}
+        {currentSlide === 5 && (
           <motion.div
             key="slide-scoring"
             initial={{ opacity: 0 }}
@@ -524,74 +574,6 @@ export default function Brochure() {
                 </div>
               ))}
             </motion.div>
-          </motion.div>
-        )}
-
-        {/* SLIDE 5: Onze Diensten */}
-        {currentSlide === 5 && (
-          <motion.div
-            key="slide-diensten"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center p-12"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-center mb-12"
-            >
-              <div className="inline-flex items-center gap-2 bg-cyan-600/20 border border-cyan-500/40 rounded-full px-4 py-2 mb-6">
-                <Users className="w-5 h-5 text-cyan-400" />
-                <span className="text-cyan-300 text-sm" style={{ fontFamily: 'Poppins' }}>Wat wij leveren</span>
-              </div>
-              <h2 className="text-4xl md:text-6xl mb-4" style={{ fontFamily: 'Poppins', fontWeight: 800 }}>
-                Onze <span className="text-cyan-400">diensten</span>
-              </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
-                Gespecialiseerd personeel voor alle afdelingen van uw hotel
-              </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl">
-              {[
-                {
-                  emoji: "🛏️",
-                  title: "Housekeeping",
-                  desc: "Kamermeisjes en huishoudelijk personeel voor een vlekkeloze gastbeleving",
-                  color: "from-blue-600 to-blue-800"
-                },
-                {
-                  emoji: "👨‍🍳",
-                  title: "Keukenpersoneel",
-                  desc: "Van afwas tot sous-chef. Ervaren krachten die uw keuken draaiende houden",
-                  color: "from-orange-600 to-orange-800"
-                },
-                {
-                  emoji: "🍽️",
-                  title: "Banquetingmedewerkers",
-                  desc: "Professionele bediening voor events, congressen en feesten",
-                  color: "from-purple-600 to-purple-800"
-                }
-              ].map((item, i) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 text-center"
-                >
-                  <div className="text-6xl mb-6">{item.emoji}</div>
-                  <h3 className="text-2xl text-white font-bold mb-3" style={{ fontFamily: 'Poppins' }}>
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-400" style={{ fontFamily: 'Poppins' }}>
-                    {item.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
           </motion.div>
         )}
 
