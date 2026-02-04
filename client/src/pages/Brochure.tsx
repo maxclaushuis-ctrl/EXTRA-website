@@ -526,54 +526,60 @@ export default function Brochure() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full items-stretch">
+            <div className="flex flex-col md:flex-row gap-8 max-w-6xl w-full items-start justify-center">
+              {/* Linker kolom - kleiner */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="relative h-full"
+                className="relative w-full md:w-[38%]"
               >
-                <div className="absolute -inset-2 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-2xl blur-lg" />
-                <div className="relative bg-gray-800/80 border border-orange-500/30 rounded-2xl p-4 h-full flex flex-col">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-orange-600/20 rounded-lg flex items-center justify-center">
-                      <Users className="w-5 h-5 text-orange-400" />
+                <div className="absolute -inset-3 bg-gradient-to-br from-orange-500/20 to-yellow-500/10 rounded-3xl blur-xl" />
+                <div className="relative bg-gradient-to-br from-gray-800/90 to-gray-900/90 border border-orange-500/40 rounded-2xl p-5 shadow-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Users className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Overzicht medewerkers</h4>
+                      <h4 className="text-white font-bold text-base" style={{ fontFamily: 'Poppins' }}>Overzicht medewerkers</h4>
                       <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Beheer en scores</p>
                     </div>
                   </div>
-                  <img 
-                    src={adminGebruikers} 
-                    alt="Gebruikersbeheer met beoordelingen" 
-                    className="w-full rounded-lg border border-gray-700 object-contain"
-                  />
+                  <div className="rounded-xl overflow-hidden border border-gray-700/50 shadow-inner">
+                    <img 
+                      src={adminGebruikers} 
+                      alt="Gebruikersbeheer met beoordelingen" 
+                      className="w-full object-contain"
+                    />
+                  </div>
                 </div>
               </motion.div>
 
+              {/* Rechter kolom - groter */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="relative h-full"
+                className="relative w-full md:w-[58%]"
               >
-                <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/10 to-orange-500/10 rounded-2xl blur-lg" />
-                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4 h-full flex flex-col">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-                      <Star className="w-5 h-5 text-purple-400" />
+                <div className="absolute -inset-3 bg-gradient-to-br from-purple-500/20 to-orange-500/10 rounded-3xl blur-xl" />
+                <div className="relative bg-gradient-to-br from-gray-800/90 to-gray-900/90 border border-purple-500/40 rounded-2xl p-5 shadow-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Star className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Poppins' }}>Statistieken per medewerker</h4>
+                      <h4 className="text-white font-bold text-base" style={{ fontFamily: 'Poppins' }}>Statistieken per medewerker</h4>
                       <p className="text-gray-400 text-xs" style={{ fontFamily: 'Poppins' }}>Diensten, no-shows, beoordelingen</p>
                     </div>
                   </div>
-                  <img 
-                    src={beoordelingenStatistieken} 
-                    alt="Medewerker statistieken" 
-                    className="w-full rounded-lg border border-gray-700 object-contain"
-                  />
+                  <div className="rounded-xl overflow-hidden border border-gray-700/50 shadow-inner">
+                    <img 
+                      src={beoordelingenStatistieken} 
+                      alt="Medewerker statistieken" 
+                      className="w-full object-contain"
+                    />
+                  </div>
                 </div>
               </motion.div>
             </div>
