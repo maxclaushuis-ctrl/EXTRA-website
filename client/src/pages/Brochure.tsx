@@ -224,25 +224,25 @@ export default function Brochure() {
                 {
                   emoji: "🛏️",
                   title: "Housekeeping",
-                  desc: "Kamermeisjes en huishoudelijk personeel voor een vlekkeloze gastbeleving",
+                  desc: "Ons housekeeping team zorgt voor een strakke, vlekkeloze gastbeleving. Altijd netjes, snel en met EXTRA oog voor detail.",
                   color: "from-blue-600 to-blue-800"
                 },
                 {
                   emoji: "👨‍🍳",
                   title: "Keuken",
-                  desc: "Van afwas tot sous-chef. Ervaren krachten die uw keuken draaiende houden",
+                  desc: "Van afwas tot sous-chef: ervaren krachten die jullie keuken soepel laten draaien. Flexibel inzetbaar en met een EXTRA dosis energie tijdens piekmomenten.",
                   color: "from-orange-600 to-orange-800"
                 },
                 {
                   emoji: "🍽️",
                   title: "Banqueting",
-                  desc: "Professionele bediening voor events, congressen en feesten",
+                  desc: "Professionele bediening voor events, congressen en feesten. Gastvrij, representatief en gewend aan het tempo van grote hoteloperaties, met een EXTRA glimlach erbij.",
                   color: "from-purple-600 to-purple-800"
                 },
                 {
                   emoji: "🛎️",
                   title: "Front-office",
-                  desc: "Receptie en gastenservice voor een warm welkom",
+                  desc: "Receptie en guest service voor een warm welkom. Onze mensen combineren hospitality met snelheid, zodat elke gast EXTRA goed wordt geholpen.",
                   color: "from-green-600 to-green-800"
                 }
               ].map((item, i) => (
