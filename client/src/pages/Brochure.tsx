@@ -526,15 +526,15 @@ export default function Brochure() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full">
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl w-full items-stretch">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="relative"
+                className="relative h-full"
               >
                 <div className="absolute -inset-2 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-2xl blur-lg" />
-                <div className="relative bg-gray-800/80 border border-orange-500/30 rounded-2xl p-4">
+                <div className="relative bg-gray-800/80 border border-orange-500/30 rounded-2xl p-4 h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-orange-600/20 rounded-lg flex items-center justify-center">
                       <Users className="w-5 h-5 text-orange-400" />
@@ -547,7 +547,7 @@ export default function Brochure() {
                   <img 
                     src={adminGebruikers} 
                     alt="Gebruikersbeheer met beoordelingen" 
-                    className="w-full rounded-lg border border-gray-700"
+                    className="w-full rounded-lg border border-gray-700 flex-1 object-cover"
                   />
                 </div>
               </motion.div>
@@ -556,10 +556,10 @@ export default function Brochure() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="relative"
+                className="relative h-full"
               >
                 <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/10 to-orange-500/10 rounded-2xl blur-lg" />
-                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4">
+                <div className="relative bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4 h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
                       <Star className="w-5 h-5 text-purple-400" />
@@ -572,7 +572,7 @@ export default function Brochure() {
                   <img 
                     src={beoordelingenStatistieken} 
                     alt="Medewerker statistieken" 
-                    className="w-full rounded-lg border border-gray-700"
+                    className="w-full rounded-lg border border-gray-700 flex-1 object-cover"
                   />
                 </div>
               </motion.div>
