@@ -577,24 +577,6 @@ export default function Brochure() {
                 </div>
               </motion.div>
             </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-wrap justify-center gap-6 mt-8"
-            >
-              {[
-                { value: "835", label: "Totaal gebruikers" },
-                { value: "745", label: "Actieve gebruikers" },
-                { value: "100%", label: "Inzicht in prestaties" },
-              ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3 bg-gray-800/60 border border-orange-500/20 rounded-full px-5 py-2">
-                  <span className="text-orange-400 font-bold text-lg" style={{ fontFamily: 'Poppins' }}>{stat.value}</span>
-                  <span className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>{stat.label}</span>
-                </div>
-              ))}
-            </motion.div>
           </motion.div>
         )}
 
