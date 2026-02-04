@@ -156,7 +156,7 @@ export default function Brochure() {
               className="text-4xl md:text-6xl lg:text-7xl mb-6 leading-tight text-center max-w-5xl"
               style={{ fontFamily: 'Poppins', fontWeight: 800 }}
             >
-              Geef uw hotel dat{" "}
+              Geef je hotel dat{" "}
               <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
                 EXTRA
               </span>tje
@@ -169,7 +169,7 @@ export default function Brochure() {
               className="text-xl md:text-2xl text-gray-400 mb-12 text-center"
               style={{ fontFamily: 'Poppins' }}
             >
-              Uw partner in kwalitatieve hotelmedewerkers
+              Je partner in kwalitatieve hotelmedewerkers
             </motion.p>
 
             <motion.div
@@ -218,7 +218,7 @@ export default function Brochure() {
                 Onze <span className="text-cyan-400">diensten</span>
               </h2>
               <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
-                Gespecialiseerd personeel voor alle afdelingen van uw hotel
+                Gespecialiseerd personeel voor alle afdelingen van je hotel
               </p>
             </motion.div>
 
@@ -292,7 +292,7 @@ export default function Brochure() {
                 <span className="text-purple-400">Kwaliteit</span> staat voorop
               </h2>
               <p className="text-xl text-gray-400 max-w-3xl mx-auto" style={{ fontFamily: 'Poppins' }}>
-                Wij selecteren, trainen en behouden de beste mensen voor uw hotel
+                Wij selecteren, trainen en behouden de beste mensen voor je hotel
               </p>
             </motion.div>
 
@@ -621,13 +621,13 @@ export default function Brochure() {
                   Dezelfde <span className="text-cyan-400">gezichten</span>, steeds weer
                 </h2>
                 <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins' }}>
-                  Geen eindeloos inwerken. Wij zorgen dat u zoveel mogelijk dezelfde medewerkers ziet die uw zaak al kennen.
+                  Geen eindeloos inwerken. Wij zorgen dat je zoveel mogelijk dezelfde medewerkers ziet die je hotel al kennen.
                 </p>
                 
                 <div className="space-y-4">
                   {[
-                    "Vaste pool voor uw locatie",
-                    "Medewerkers kennen uw werkwijze",
+                    "Stel je eigen favorietenpoule samen",
+                    "Medewerkers kennen je werkwijze",
                     "Geen tijd kwijt aan inwerken",
                     "Hogere productiviteit vanaf dag één"
                   ].map((item, i) => (
@@ -657,7 +657,7 @@ export default function Brochure() {
                       <Users className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-white font-bold text-lg" style={{ fontFamily: 'Poppins' }}>Uw vaste team</h4>
+                      <h4 className="text-white font-bold text-lg" style={{ fontFamily: 'Poppins' }}>Je vaste team</h4>
                       <p className="text-gray-400 text-sm" style={{ fontFamily: 'Poppins' }}>Gematchte medewerkers</p>
                     </div>
                   </div>
@@ -741,13 +741,13 @@ export default function Brochure() {
                 {
                   icon: Award,
                   title: "Verzekeringen",
-                  desc: "Volledig verzekerd. U loopt geen enkel risico",
+                  desc: "Volledig verzekerd. Je loopt geen enkel risico",
                   highlight: false
                 },
                 {
                   icon: Clock,
                   title: "Zorgeloos",
-                  desc: "Wij handelen alle administratie voor u af",
+                  desc: "Wij handelen alle administratie voor je af",
                   highlight: false
                 }
               ].map((item, i) => (
@@ -801,7 +801,7 @@ export default function Brochure() {
 
                   <div className="space-y-4">
                     {[
-                      { icon: Phone, title: "Telefonisch", desc: "Bel direct met uw vaste contactpersoon" },
+                      { icon: Phone, title: "Telefonisch", desc: "Bel direct met je vaste contactpersoon" },
                       { icon: MessageCircle, title: "WhatsApp", desc: "Antwoord binnen een uur" },
                       { icon: Clock, title: "7 dagen per week", desc: "Ook in het weekend bereikbaar" },
                     ].map((item, i) => (
@@ -838,12 +838,12 @@ export default function Brochure() {
                   <span className="text-pink-400">Korte lijntjes</span>, snelle actie
                 </h2>
                 <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins' }}>
-                  Geen wachtrijen of keuzemenu's. Bij EXTRA heeft u een vaste contactpersoon die uw zaak kent.
+                  Geen wachtrijen of keuzemenu's. Bij EXTRA heb je een vaste contactpersoon die je hotel kent.
                 </p>
                 
                 <div className="space-y-4">
                   {[
-                    "Vaste accountmanager voor uw locatie",
+                    "Vaste accountmanager voor je locatie",
                     "Direct contact, geen omwegen",
                     "Proactieve communicatie",
                     "Snelle oplossingen bij problemen"
@@ -966,7 +966,7 @@ export default function Brochure() {
                 className="text-xl text-gray-400 mb-10"
                 style={{ fontFamily: 'Poppins' }}
               >
-                Ontdek hoe EXTRA uw personeelszorgen wegneemt
+                Ontdek hoe EXTRA je personeelszorgen wegneemt
               </motion.p>
               
               <motion.div
