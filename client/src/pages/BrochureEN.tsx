@@ -156,10 +156,10 @@ export default function BrochureEN() {
               className="text-4xl md:text-6xl lg:text-7xl mb-6 leading-tight text-center max-w-5xl"
               style={{ fontFamily: 'Poppins', fontWeight: 800 }}
             >
-              Give your hotel that{" "}
+              Delivering the{" "}
               <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
                 EXTRA
-              </span>{" "}edge
+              </span>{" "}standard your guests expect
             </motion.h1>
             
             <motion.p
