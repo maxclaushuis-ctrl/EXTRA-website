@@ -35,6 +35,9 @@ import intakeBeoordeling from "../assets/pitch/intake-beoordeling.png";
 import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
 import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
 import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
+import logoRadisson from "../assets/pitch/logo-radisson.png";
+import logoHilton from "../assets/pitch/logo-hilton.png";
 
 export default function Brochure() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -894,25 +897,25 @@ export default function Brochure() {
                 { name: "NH Hotels", logo: nhLogo, hasLogo: true },
                 { name: "Marriott", logo: marriottLogo, hasLogo: true },
                 { name: "Grand Hotel Amrath", logo: amrathLogo, hasLogo: true },
-                { name: "Pulitzer", hasLogo: false },
-                { name: "Radisson Blu", hasLogo: false },
-                { name: "Mercure", hasLogo: false },
+                { name: "Pulitzer Amsterdam", logo: logoPulitzer, hasLogo: true },
+                { name: "Radisson Blu", logo: logoRadisson, hasLogo: true },
+                { name: "Hilton Hotels", logo: logoHilton, hasLogo: true },
               ].map((client, i) => (
                 <motion.div
                   key={client.name}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 + i * 0.05 }}
-                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-yellow-500/20 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[120px]"
+                  className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center min-h-[120px] shadow-lg hover:shadow-xl transition-shadow"
                 >
                   {client.hasLogo && client.logo ? (
                     <img 
                       src={client.logo} 
                       alt={client.name} 
-                      className="h-12 max-w-full object-contain filter brightness-110"
+                      className="h-14 max-w-full object-contain"
                     />
                   ) : (
-                    <span className="text-white font-semibold text-center" style={{ fontFamily: 'Poppins' }}>
+                    <span className="text-gray-800 font-semibold text-center" style={{ fontFamily: 'Poppins' }}>
                       {client.name}
                     </span>
                   )}
