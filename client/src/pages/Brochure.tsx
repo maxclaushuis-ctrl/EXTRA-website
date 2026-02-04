@@ -974,20 +974,20 @@ export default function Brochure() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <a 
-                  href="tel:+31851306767"
+                  href="tel:+31851305915"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold rounded-full px-8 py-4 transition-all"
                   style={{ fontFamily: 'Poppins' }}
                 >
                   <Phone className="w-5 h-5" />
-                  085 130 67 67
+                  085 130 59 15
                 </a>
                 <a 
-                  href="mailto:info@extra-works.nl"
+                  href="mailto:eveline@doehetextra.nl"
                   className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-purple-500/30 text-white font-semibold rounded-full px-8 py-4 transition-all"
                   style={{ fontFamily: 'Poppins' }}
                 >
                   <MessageCircle className="w-5 h-5" />
-                  info@extra-works.nl
+                  eveline@doehetextra.nl
                 </a>
               </motion.div>
 
@@ -998,7 +998,7 @@ export default function Brochure() {
                 className="mt-10 flex items-center justify-center gap-2 text-gray-500"
               >
                 <BadgeCheck className="w-4 h-4" />
-                <span className="text-sm" style={{ fontFamily: 'Poppins' }}>NEN-4400-1 Gecertificeerd • Utrecht, Nederland</span>
+                <span className="text-sm" style={{ fontFamily: 'Poppins' }}>NEN-4400-1 Gecertificeerd</span>
               </motion.div>
             </motion.div>
           </motion.div>
