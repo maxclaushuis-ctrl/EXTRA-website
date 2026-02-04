@@ -547,7 +547,7 @@ export default function Brochure() {
                   <img 
                     src={adminGebruikers} 
                     alt="Gebruikersbeheer met beoordelingen" 
-                    className="w-full rounded-lg border border-gray-700 flex-1 object-cover"
+                    className="w-full rounded-lg border border-gray-700 object-contain"
                   />
                 </div>
               </motion.div>
@@ -572,7 +572,7 @@ export default function Brochure() {
                   <img 
                     src={beoordelingenStatistieken} 
                     alt="Medewerker statistieken" 
-                    className="w-full rounded-lg border border-gray-700 flex-1 object-cover"
+                    className="w-full rounded-lg border border-gray-700 object-contain"
                   />
                 </div>
               </motion.div>
