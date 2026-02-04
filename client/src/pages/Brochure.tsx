@@ -242,7 +242,7 @@ export default function Brochure() {
                 {
                   emoji: "🛎️",
                   title: "Front-office",
-                  desc: "Receptie en guest service voor een warm welkom. Onze mensen combineren hospitality met snelheid, zodat elke gast EXTRA goed wordt geholpen.",
+                  desc: "Receptie en guest service voor een warm welkom en een EXTRA soepele check-in ervaring.",
                   color: "from-green-600 to-green-800"
                 }
               ].map((item, i) => (
