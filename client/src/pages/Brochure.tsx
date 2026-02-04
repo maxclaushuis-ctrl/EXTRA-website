@@ -230,13 +230,13 @@ export default function Brochure() {
                 {
                   emoji: "👨‍🍳",
                   title: "Keuken",
-                  desc: "Van afwas tot sous-chef: ervaren krachten die jullie keuken soepel laten draaien. Flexibel inzetbaar en met een EXTRA dosis energie tijdens piekmomenten.",
+                  desc: "Van afwas tot sous-chef: ervaren krachten die jullie keuken draaiende houden, ook tijdens piekmomenten.",
                   color: "from-orange-600 to-orange-800"
                 },
                 {
                   emoji: "🍽️",
                   title: "Banqueting",
-                  desc: "Professionele bediening voor events, congressen en feesten. Gastvrij, representatief en gewend aan het tempo van grote hoteloperaties, met een EXTRA glimlach erbij.",
+                  desc: "Professionele bediening voor banqueting, conferenties, ontbijt- en lunchservices. Flexibel, representatief en altijd EXTRA gastgericht.",
                   color: "from-purple-600 to-purple-800"
                 },
                 {
