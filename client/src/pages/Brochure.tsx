@@ -789,7 +789,7 @@ export default function Brochure() {
 
                   <div className="space-y-4">
                     {[
-                      { icon: Phone, title: "Telefonisch", desc: "Bel direct met je vaste contactpersoon" },
+                      { icon: Phone, title: "Telefonisch", desc: "Bel direct met je vast contactpersoon" },
                       { icon: MessageCircle, title: "WhatsApp", desc: "Antwoord binnen een uur" },
                       { icon: Clock, title: "7 dagen per week", desc: "Ook in het weekend bereikbaar" },
                     ].map((item, i) => (
@@ -826,7 +826,7 @@ export default function Brochure() {
                   <span className="text-pink-400">Korte lijntjes</span>, snelle actie
                 </h2>
                 <p className="text-xl text-gray-400 mb-8" style={{ fontFamily: 'Poppins' }}>
-                  Geen wachtrijen of keuzemenu's. Bij EXTRA heb je een vaste contactpersoon die je hotel kent.
+                  Geen wachtrijen of keuzemenu's. Bij EXTRA heb je een vast contactpersoon die je hotel kent.
                 </p>
                 
                 <div className="space-y-4">
