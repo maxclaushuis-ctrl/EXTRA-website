@@ -394,7 +394,7 @@ export default function Brochure() {
                 <img 
                   src={ipadIntakeComplete} 
                   alt="iPad met kwalificatieformulier" 
-                  className="w-full max-w-lg"
+                  className="w-full max-w-xl"
                   style={{ filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.4))' }}
                 />
               </motion.div>
