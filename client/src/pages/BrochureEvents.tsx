@@ -25,18 +25,18 @@ import {
 import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
 import extraXShape from "../assets/pitch/extra-x-shape.png";
 
-import nhLogo from "../assets/pitch/nh-hotels-logo.png";
-import marriottLogo from "../assets/pitch/marriott-logo.png";
-import amrathLogo from "../assets/pitch/amrath-logo.png";
-
 import extraatjeApp from "../assets/pitch/extraatje-app.png";
 import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
 import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
 import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
 import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
-import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
-import logoRadisson from "../assets/pitch/logo-radisson.png";
-import logoHilton from "../assets/pitch/logo-hilton.png";
+
+import logoHartMuseum from "../assets/pitch/logo-hart-museum.png";
+import logoWih from "../assets/pitch/logo-wih.png";
+import logoFoodLineup from "../assets/pitch/logo-food-lineup.webp";
+import logoHetePeper from "../assets/pitch/logo-hete-peper.png";
+import logoScheepvaartMuseum from "../assets/pitch/logo-scheepvaart-museum.webp";
+import logoFcUtrecht from "../assets/pitch/logo-fc-utrecht.png";
 
 export default function BrochureEvents() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -875,12 +875,12 @@ export default function BrochureEvents() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl">
               {[
-                { name: "NH Hotels", logo: nhLogo, hasLogo: true },
-                { name: "Marriott", logo: marriottLogo, hasLogo: true },
-                { name: "Grand Hotel Amrath", logo: amrathLogo, hasLogo: true },
-                { name: "Pulitzer Amsterdam", logo: logoPulitzer, hasLogo: true },
-                { name: "Radisson Blu", logo: logoRadisson, hasLogo: true },
-                { name: "Hilton Hotels", logo: logoHilton, hasLogo: true },
+                { name: "H'ART Museum", logo: logoHartMuseum, size: "h-16" },
+                { name: "Wolff in 't Hart", logo: logoWih, size: "h-10" },
+                { name: "The Food Line-Up", logo: logoFoodLineup, size: "h-16" },
+                { name: "Hete Peper", logo: logoHetePeper, size: "h-10" },
+                { name: "Het Scheepvaartmuseum", logo: logoScheepvaartMuseum, size: "h-14" },
+                { name: "FC Utrecht", logo: logoFcUtrecht, size: "h-16" },
               ].map((client, i) => (
                 <motion.div
                   key={client.name}
@@ -889,17 +889,11 @@ export default function BrochureEvents() {
                   transition={{ delay: 0.3 + i * 0.05 }}
                   className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center min-h-[120px] shadow-lg hover:shadow-xl transition-shadow"
                 >
-                  {client.hasLogo && client.logo ? (
-                    <img 
-                      src={client.logo} 
-                      alt={client.name} 
-                      className="h-14 max-w-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-gray-800 font-semibold text-center" style={{ fontFamily: 'Poppins' }}>
-                      {client.name}
-                    </span>
-                  )}
+                  <img 
+                    src={client.logo} 
+                    alt={client.name} 
+                    className={`${client.size} max-w-full object-contain`}
+                  />
                 </motion.div>
               ))}
             </div>
