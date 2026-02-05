@@ -876,7 +876,7 @@ export default function BrochureEvents() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl">
               {[
                 { name: "H'ART Museum", logo: logoHartMuseum, size: "h-16" },
-                { name: "Wolff in 't Hart", logo: logoWih, size: "h-10" },
+                { name: "Wolff in 't Hart", logo: logoWih, size: "h-14" },
                 { name: "The Food Line-Up", logo: logoFoodLineup, size: "h-16" },
                 { name: "Hete Peper", logo: logoHetePeper, size: "h-10" },
                 { name: "Het Scheepvaartmuseum", logo: logoScheepvaartMuseum, size: "h-14" },
