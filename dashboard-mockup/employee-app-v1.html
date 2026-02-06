@@ -22,42 +22,16 @@
         
         .nav-item.active { color: #a855f7; }
         
-        .glow-text {
-            text-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(168, 85, 247, 0.3);
-        }
+        .glow-text { }
         
         .card-glow:hover {
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
             transform: translateY(-2px);
         }
         
-        .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: shimmer 2s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
-            50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.6); }
-        }
-        
-        .pulse-glow {
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
+        .shimmer { display: none; }
+        .float-animation { }
+        .pulse-glow { }
         
         .gradient-border {
             background: linear-gradient(135deg, #7c3aed, #a855f7, #7c3aed);
@@ -116,7 +90,7 @@
                         <!-- Points: the hero element -->
                         <div class="text-center mb-2">
                             <p class="text-purple-400 text-[11px] uppercase tracking-widest mb-1">Jouw punten</p>
-                            <span class="text-6xl font-extrabold text-white leading-none" style="text-shadow: 0 0 40px rgba(168,85,247,0.5);">12,600</span>
+                            <span class="text-6xl font-extrabold text-white leading-none">12,600</span>
                             <div class="flex items-center justify-center gap-1 mt-2 text-xs text-green-400">
                                 <i data-lucide="trending-up" class="w-3 h-3"></i>
                                 <span class="font-semibold">+125 pts deze week</span>
