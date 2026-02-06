@@ -113,52 +113,57 @@
                 <div class="gradient-border-inner p-6 relative overflow-hidden">
                     <div class="absolute inset-0 shimmer"></div>
                     <div class="relative">
-                        <div class="flex items-start justify-between mb-1">
-                            <!-- Points -->
-                            <div>
-                                <span class="text-5xl font-extrabold text-green-400" style="text-shadow: 0 0 30px rgba(74,222,128,0.4);">12,600</span>
-                                <div class="flex items-center gap-1 mt-1 text-xs text-purple-300">
-                                    <i data-lucide="trending-up" class="w-3 h-3"></i>
-                                    +125 pts deze week
-                                </div>
+                        <!-- Points: the hero element -->
+                        <div class="text-center mb-2">
+                            <p class="text-purple-400 text-[11px] uppercase tracking-widest mb-1">Jouw punten</p>
+                            <span class="text-6xl font-extrabold text-white leading-none" style="text-shadow: 0 0 40px rgba(168,85,247,0.5);">12,600</span>
+                            <div class="flex items-center justify-center gap-1 mt-2 text-xs text-green-400">
+                                <i data-lucide="trending-up" class="w-3 h-3"></i>
+                                <span class="font-semibold">+125 pts deze week</span>
                             </div>
-                            <!-- Status Badge -->
-                            <div class="text-center">
-                                <div class="w-[72px] h-[72px] rounded-2xl bg-gradient-to-br from-yellow-500/40 to-amber-600/50 flex items-center justify-center border-2 border-yellow-500/60">
-                                    <span class="text-4xl">🥇</span>
-                                </div>
-                                <p class="text-sm font-extrabold text-yellow-400 mt-1.5">GOLD</p>
-                                <p class="text-[10px] text-yellow-500/80 font-semibold uppercase tracking-wider">Status</p>
-                                <a href="#" class="text-[10px] text-cyan-400 underline mt-0.5 block">EXTRA kortingen</a>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="h-px bg-purple-700/40 my-4"></div>
+
+                        <!-- Status Badge row -->
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500/40 to-amber-600/50 flex items-center justify-center border border-yellow-500/50 flex-shrink-0">
+                                <span class="text-3xl">🥇</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-yellow-400 font-extrabold text-lg leading-tight">GOLD <span class="text-yellow-500/70 text-xs font-semibold uppercase tracking-wider">Status</span></p>
+                                <p class="text-purple-400 text-[11px] mt-0.5">Volgende: 💎 DIAMOND · <span class="text-purple-300 font-semibold">15,000 pts</span></p>
                             </div>
                         </div>
 
                         <!-- Next badge progress -->
-                        <div class="mt-5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-purple-300">Volgende status upgrade: <span class="font-bold">💎 DIAMOND</span></span>
-                                <span class="text-purple-200 font-bold">15,000 pts</span>
-                            </div>
-                            <div class="h-3.5 bg-purple-900/50 rounded-full overflow-hidden">
+                        <div class="space-y-1.5">
+                            <div class="h-3 bg-purple-900/50 rounded-full overflow-hidden">
                                 <div class="h-full progress-gradient rounded-full relative" style="width: 84%">
                                     <div class="absolute inset-0 shimmer"></div>
                                 </div>
                             </div>
-                            <p class="text-right text-[11px] text-purple-400">Nog te behalen: <span class="font-bold text-purple-300">2,400 pts</span></p>
+                            <p class="text-right text-[10px] text-purple-500">Nog <span class="text-purple-300 font-semibold">2,400 pts</span> te gaan</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Besteedbaar / Uitgegeven -->
-            <div class="grid grid-cols-2 gap-3 mb-5">
-                <div class="bg-[#1a1025] rounded-2xl p-5 border border-purple-800/30">
-                    <p class="text-xs text-purple-400 mb-1">Besteedbare punten:</p>
-                    <span class="text-3xl font-extrabold text-green-400">3,850</span>
+            <div class="grid grid-cols-5 gap-3 mb-5">
+                <div class="col-span-3 bg-gradient-to-br from-green-900/30 to-green-800/10 rounded-2xl p-5 border border-green-600/25">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i data-lucide="wallet" class="w-4 h-4 text-green-400"></i>
+                        <p class="text-xs text-green-300 font-medium">Besteedbaar</p>
+                    </div>
+                    <span class="text-4xl font-extrabold text-green-400">3,850</span>
+                    <p class="text-[10px] text-green-500/60 mt-1">punten beschikbaar</p>
                 </div>
-                <div class="bg-[#1a1025] rounded-2xl p-5 border border-purple-800/30">
-                    <p class="text-xs text-purple-400 mb-1">Uitgegeven punten:</p>
-                    <span class="text-3xl font-extrabold text-green-400">8,750</span>
+                <div class="col-span-2 bg-[#1a1025] rounded-2xl p-5 border border-purple-800/20 flex flex-col justify-center">
+                    <p class="text-[10px] text-purple-500 mb-1">Uitgegeven</p>
+                    <span class="text-xl font-bold text-purple-400/70">8,750</span>
+                    <p class="text-[10px] text-purple-600 mt-0.5">punten</p>
                 </div>
             </div>
 
