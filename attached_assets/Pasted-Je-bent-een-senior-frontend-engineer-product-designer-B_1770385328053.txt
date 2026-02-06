@@ -1,0 +1,121 @@
+Je bent een senior frontend engineer + product designer. Bouw alleen de VISUELE INDELING (mock data) voor het tabblad /sollicitanten in ons admin dashboard “EXTRAATJE”. Het hoeft nog niet te werken; focus op UI/UX, component structuur en datastructuur.
+
+DOEL
+Maak het sollicitatieproces visueel overzichtelijk door het op te splitsen in 2 fases:
+1) Aanmeldprocedure (intake)
+2) Sollicitatieprocedure (interview + beoordeling)
+
+Belangrijk: gebruik één centrale data-structuur “Candidate” (single source of truth). Toon dit in de UI als 2 views binnen dezelfde pagina. Gebruik mock data en toon hoe de data gestructureerd dient te worden.
+
+TECH STACK / OUTPUT
+- Maak een React + Tailwind (of Next.js) pagina/component: /sollicitanten
+- Gebruik statische mock data in code (geen backend)
+- Bouw componenten: KPI-cards, tabs, filters, table, detail drawer/modal
+- Gebruik dezelfde stijl als het bestaande dashboard: clean, veel wit, rounded cards, subtiele badges, paarse CTA-knoppen
+
+INDELING PAGINA (UI)
+A) Header
+- Titel: “Sollicitanten”
+- Subtitle: “Beheer sollicitanten en hun sollicitatieproces”
+- Rechts: knop “+ Nieuwe kandidaat” (paars)
+- Bovenin 4 KPI cards:
+  1. Totaal (count)
+  2. Aanmeldprocedure (count)
+  3. Sollicitatieprocedure (count)
+  4. Aangenomen / Afgewezen (count)
+
+B) Hoofdindeling: 2 grote fases (visueel als 2 kolommen of 2 grote tabs)
+Maak twee duidelijke secties met eigen statuschips:
+
+1) Fase 1: Aanmeldprocedure (Intake)
+- Statussen (minimaal):
+  - Nieuw (default bij binnenkomst)
+  - Incomplete (mist info / nog niet klaar)
+  - Afgewezen (auto of handmatig)
+  - Afspraak ingepland (gaat door naar fase 2)
+  - No-show (voor intake afspraak)
+- Toon in deze fase een tabel met kolommen:
+  - Naam + woonplaats
+  - Kanaal (WhatsApp / Indeed / Wix / Socials) als badge
+  - Compleetheid (%) als progress bar
+  - Flags (bijv. “TWV check”, “Engels no-go”, “Buitenland”) als kleine tags
+  - Status (badge)
+  - Laatste activiteit (datum)
+  - Acties (open detail, status wijzigen)
+
+2) Fase 2: Sollicitatieprocedure (Interview & Scoring)
+- Kandidaat komt hier pas in als status “Afspraak ingepland” in fase 1.
+- Statussen (minimaal):
+  - Uitgenodigd / Ingepland
+  - Reminder verstuurd
+  - Gesprek afgerond
+  - Afgewezen
+  - Aangenomen
+  - Wachtlijst
+  - No-show (voor sollicitatie op kantoor)
+- Tabelkolommen:
+  - Naam
+  - Functie (Chef / Horecamedewerker / Housekeeping / etc.) badge
+  - Interview (datum + tijd)
+  - Wie (interviewer)
+  - Score (0–100) + mini-indicator (laag/mid/hoog)
+  - Status (badge)
+  - Acties
+
+C) Filters (boven de tabellen)
+- Zoekveld: “Zoek op naam, e-mail of telefoon…”
+- Dropdowns:
+  - Fase (Aanmeldprocedure / Sollicitatieprocedure / Alle)
+  - Status (dynamisch per fase)
+  - Functie
+  - Kanaal
+  - Flags (multi-select)
+- Sorteer: “Meest recent”, “Hoogste score”, “Langst openstaand”
+
+D) Detail view (drawer of modal)
+Als je op een rij klikt: open een side drawer met:
+- Profiel: naam, contact, woonplaats, kanaal, status
+- Fase 1 sectie: intake-antwoorden (mock), completeness, flags, logs
+- Fase 2 sectie: interview details + scores per categorie (mock)
+- Knoppen: status wijzigen, afspraak verplaatsen (UI only), markeer no-show, aannemen, afwijzen
+- Auditlog (mock): status changes + timestamps
+
+DATASTRUCTUUR (BELANGRIJK)
+Definieer in code een mock array candidates met dit model (TypeScript interface graag):
+- id
+- createdAt, updatedAt, lastActivityAt
+- phase: "intake" | "interview"
+- status: string (afhankelijk van phase)
+- sourceChannel: "whatsapp" | "indeed" | "wix" | "socials"
+- person:
+  - firstName, lastName
+  - email, phone
+  - city
+  - languages: { nl: boolean, en: boolean, level?: string }
+- rolePreference: "chef" | "horecamedewerker" | "housekeeping" | "front-office" | etc.
+- intake:
+  - completeness: number (0-100)
+  - answers: key-value object
+  - flags: string[] (e.g. ["twv_review", "english_required", "abroad"])
+- interview:
+  - scheduledAt: datetime|null
+  - interviewer: string|null
+  - scores:
+    - overall: number (0-100)
+    - categories: { name: string; score: number }[]
+  - notes: string
+- auditLog: { at: datetime; actor: "system"|"admin"; action: string; from?: string; to?: string }[]
+
+LOGICA (UI ONLY, geen backend)
+- Kandidaten met phase "intake" renderen in fase 1 tabel
+- Kandidaten met phase "interview" renderen in fase 2 tabel
+- Status badges en kleuren subtiel (geen harde styling-eisen)
+- Zorg dat het ontwerp schaalbaar is naar 500+ kandidaten (dus filtering/zoek UI aanwezig)
+
+EXTRA WENSEN
+- Houd het clean en overzichtelijk, net als het screenshot
+- Maak ruimte voor latere uitbreiding: scoring per functie, extra filters, exports
+- Voeg boven de fase-secties een mini “pipeline” visual toe (bijv. stap-indicator: Intake → Interview → Besluit)
+
+OUTPUT
+Geef alleen de codebestanden die nodig zijn om de UI te renderen (bijv. page + components). Geen uitleg nodig.

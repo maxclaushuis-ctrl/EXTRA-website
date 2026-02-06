@@ -112,6 +112,12 @@
             width: 90%;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .completeness-bar { height: 6px; border-radius: 3px; background: #e5e7eb; overflow: hidden; }
+        .completeness-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+        .flag-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
+        .channel-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 10px; border-radius: 9999px; font-weight: 600; }
+        .score-ring { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -781,41 +787,86 @@
 
             <!-- Sollicitanten Page -->
             <div id="page-candidates" class="p-8 hidden">
-                <!-- Page Title with View Indicator -->
+                <!-- Header -->
                 <div class="mb-6 flex items-start justify-between">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Sollicitanten</h1>
                         <p class="text-gray-500">Beheer sollicitanten en hun sollicitatieproces</p>
                     </div>
-                    <div id="viewIndicator" class="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
-                        <i data-lucide="layout-list" class="w-4 h-4 text-purple-600"></i>
-                        <span class="text-sm font-medium text-purple-700">Weergave: Master</span>
-                    </div>
+                    <button onclick="openAddCandidateModal()" class="flex items-center gap-2 px-5 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        Nieuwe kandidaat
+                    </button>
                 </div>
 
-                <!-- Stats Cards -->
+                <!-- KPI Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
                     <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">Totaal Sollicitanten</p>
-                        <p class="text-3xl font-bold text-gray-900" id="totalCandidatesCount">24</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="icon-circle icon-purple"><i data-lucide="users" class="w-5 h-5 text-purple-600"></i></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-1">Totaal</p>
+                        <p class="text-3xl font-bold text-gray-900" id="kpi-total">16</p>
                     </div>
                     <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">In Behandeling</p>
-                        <p class="text-3xl font-bold text-yellow-600" id="pendingCandidatesCount">12</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="icon-circle icon-blue"><i data-lucide="clipboard-list" class="w-5 h-5 text-blue-600"></i></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-1">Aanmeldprocedure</p>
+                        <p class="text-3xl font-bold text-blue-600" id="kpi-intake">9</p>
                     </div>
                     <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">Aangenomen</p>
-                        <p class="text-3xl font-bold text-green-600" id="hiredCandidatesCount">8</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="icon-circle" style="background:#fef3c7"><i data-lucide="message-square" class="w-5 h-5 text-yellow-600"></i></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-1">Sollicitatieprocedure</p>
+                        <p class="text-3xl font-bold text-yellow-600" id="kpi-interview">7</p>
                     </div>
                     <div class="stat-card rounded-xl p-5">
-                        <p class="text-sm text-gray-500 mb-1">Afgewezen</p>
-                        <p class="text-3xl font-bold text-red-600" id="rejectedCandidatesCount">4</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="icon-circle icon-green"><i data-lucide="user-check" class="w-5 h-5 text-green-600"></i></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-1">Aangenomen / Afgewezen</p>
+                        <p class="text-3xl font-bold text-gray-900" id="kpi-result"><span class="text-green-600">3</span> / <span class="text-red-500">2</span></p>
                     </div>
                 </div>
 
-                <!-- Search and Controls -->
+                <!-- Pipeline Visual -->
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
+                    <div class="flex items-center gap-0">
+                        <div class="flex-1 text-center">
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl py-3 px-2 relative">
+                                <p class="text-xs font-semibold text-blue-700 uppercase tracking-wider">Intake</p>
+                                <p class="text-2xl font-bold text-blue-600 mt-1" id="pipe-intake">9</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-gray-300 px-1"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+                        <div class="flex-1 text-center">
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-xl py-3 px-2">
+                                <p class="text-xs font-semibold text-yellow-700 uppercase tracking-wider">Interview</p>
+                                <p class="text-2xl font-bold text-yellow-600 mt-1" id="pipe-interview">4</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-gray-300 px-1"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+                        <div class="flex-1 text-center">
+                            <div class="bg-green-50 border border-green-200 rounded-xl py-3 px-2">
+                                <p class="text-xs font-semibold text-green-700 uppercase tracking-wider">Aangenomen</p>
+                                <p class="text-2xl font-bold text-green-600 mt-1" id="pipe-hired">3</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-gray-300 px-1"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
+                        <div class="flex-1 text-center">
+                            <div class="bg-red-50 border border-red-200 rounded-xl py-3 px-2">
+                                <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Afgewezen</p>
+                                <p class="text-2xl font-bold text-red-500 mt-1" id="pipe-rejected">2</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters Bar -->
                 <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6 shadow-sm">
-                    <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex flex-wrap items-center gap-3">
                         <div class="flex-1 min-w-64">
                             <div class="relative">
                                 <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
@@ -824,93 +875,108 @@
                                     oninput="filterCandidates()">
                             </div>
                         </div>
+                        <select id="candidatePhaseFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
+                            <option value="all">Alle fases</option>
+                            <option value="intake">Aanmeldprocedure</option>
+                            <option value="interview">Sollicitatieprocedure</option>
+                        </select>
                         <select id="candidateStatusFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
                             <option value="all">Alle statussen</option>
-                            <option value="in_behandeling">In behandeling</option>
-                            <option value="aangenomen">Aangenomen</option>
-                            <option value="afgewezen">Afgewezen</option>
                         </select>
-                        <select id="candidateFunctionFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="onFunctionFilterChange()">
+                        <select id="candidateFunctionFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
                             <option value="all">Alle functies</option>
-                            <option value="housekeeping">Housekeeping</option>
-                            <option value="horecamedewerker">Horecamedewerker</option>
                             <option value="chef">Chef</option>
-                            <option value="front_office">Front-office</option>
+                            <option value="horecamedewerker">Horecamedewerker</option>
+                            <option value="housekeeping">Housekeeping</option>
+                            <option value="front-office">Front-office</option>
                         </select>
-                        <!-- Horeca-specific controls (hidden by default) -->
-                        <div id="horecaControls" class="hidden flex items-center gap-3">
-                            <select id="candidateSortBy" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
-                                <option value="overall-desc">Hoogste overall</option>
-                                <option value="overall-asc">Laagste overall</option>
-                                <option value="softskills-desc">Softskills ↓</option>
-                                <option value="bar-desc">Bar ↓</option>
-                                <option value="bediening-desc">Bediening ↓</option>
-                                <option value="diner-desc">Diner ↓</option>
-                            </select>
-                            <select id="minScoreFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
-                                <option value="0">Min. score: Alle</option>
-                                <option value="50">Min. score: 50+</option>
-                                <option value="60">Min. score: 60+</option>
-                                <option value="70">Min. score: 70+</option>
-                                <option value="80">Min. score: 80+</option>
-                            </select>
+                        <select id="candidateChannelFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
+                            <option value="all">Alle kanalen</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="indeed">Indeed</option>
+                            <option value="wix">Wix</option>
+                            <option value="socials">Socials</option>
+                        </select>
+                        <select id="candidateSortBy" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" onchange="filterCandidates()">
+                            <option value="recent">Meest recent</option>
+                            <option value="score">Hoogste score</option>
+                            <option value="oldest">Langst openstaand</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ========== FASE 1: AANMELDPROCEDURE ========== -->
+                <div id="phase-intake-section" class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center"><span class="text-sm font-bold text-blue-700">1</span></div>
+                        <h2 class="text-lg font-bold text-gray-900">Aanmeldprocedure <span class="text-sm font-normal text-gray-400">(Intake)</span></h2>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium" id="intake-count-badge">9 kandidaten</span>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 border-b border-gray-100">
+                                    <tr class="text-left text-xs text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 font-medium">Naam + Woonplaats</th>
+                                        <th class="px-4 py-3 font-medium">Kanaal</th>
+                                        <th class="px-4 py-3 font-medium">Compleetheid</th>
+                                        <th class="px-4 py-3 font-medium">Flags</th>
+                                        <th class="px-4 py-3 font-medium">Status</th>
+                                        <th class="px-4 py-3 font-medium">Laatste activiteit</th>
+                                        <th class="px-4 py-3 font-medium">Acties</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="intakeTableBody" class="text-sm divide-y divide-gray-100">
+                                </tbody>
+                            </table>
                         </div>
-                        <button onclick="openAddCandidateModal()" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                            Nieuwe Sollicitant
-                        </button>
                     </div>
                 </div>
 
-                <!-- Status Tabs -->
-                <div class="flex gap-2 mb-6">
-                    <button onclick="setCandidateStatusFilter('all')" id="tab-all" class="px-4 py-2 text-sm font-medium rounded-lg bg-purple-100 text-purple-700">
-                        Alle (<span id="tab-all-count">24</span>)
-                    </button>
-                    <button onclick="setCandidateStatusFilter('in_behandeling')" id="tab-pending" class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">
-                        <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
-                        In behandeling (<span id="tab-pending-count">12</span>)
-                    </button>
-                    <button onclick="setCandidateStatusFilter('aangenomen')" id="tab-hired" class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">
-                        <i data-lucide="user-check" class="w-4 h-4 inline mr-1"></i>
-                        Aangenomen (<span id="tab-hired-count">8</span>)
-                    </button>
-                    <button onclick="setCandidateStatusFilter('afgewezen')" id="tab-rejected" class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">
-                        <i data-lucide="user-x" class="w-4 h-4 inline mr-1"></i>
-                        Afgewezen (<span id="tab-rejected-count">4</span>)
-                    </button>
-                </div>
-
-                <!-- Candidates Table -->
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead id="candidatesTableHeader" class="bg-gray-50 border-b border-gray-100">
-                                <!-- Dynamic header generated by JS -->
-                            </thead>
-                            <tbody id="candidatesTableBody" class="text-sm divide-y divide-gray-100">
-                                <!-- Generated by JS -->
-                            </tbody>
-                        </table>
+                <!-- ========== FASE 2: SOLLICITATIEPROCEDURE ========== -->
+                <div id="phase-interview-section" class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center"><span class="text-sm font-bold text-yellow-700">2</span></div>
+                        <h2 class="text-lg font-bold text-gray-900">Sollicitatieprocedure <span class="text-sm font-normal text-gray-400">(Interview & Beoordeling)</span></h2>
+                        <span class="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full font-medium" id="interview-count-badge">7 kandidaten</span>
                     </div>
-                    <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                        <p class="text-sm text-gray-500" id="candidatesResultCount">Toont 1 tot 10 van 24 resultaten</p>
-                        <div class="flex items-center gap-2">
-                            <button class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500">
-                                &lt; Vorige
-                            </button>
-                            <span class="px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg font-medium">1</span>
-                            <button class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500">
-                                Volgende &gt;
-                            </button>
+                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 border-b border-gray-100">
+                                    <tr class="text-left text-xs text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 font-medium">Naam</th>
+                                        <th class="px-4 py-3 font-medium">Functie</th>
+                                        <th class="px-4 py-3 font-medium">Interview</th>
+                                        <th class="px-4 py-3 font-medium">Wie</th>
+                                        <th class="px-4 py-3 font-medium">Score</th>
+                                        <th class="px-4 py-3 font-medium">Status</th>
+                                        <th class="px-4 py-3 font-medium">Acties</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="interviewTableBody" class="text-sm divide-y divide-gray-100">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
                 <!-- Footer -->
-                <footer class="text-center py-6 border-t border-gray-200 mt-8">
-                    <p class="text-sm text-gray-400">&copy; 2024 EXTRAATJE. Gemaakt met ❤️ voor geweldige teams</p>
+                <footer class="text-center py-6 border-t border-gray-200 mt-4">
+                    <p class="text-sm text-gray-400">&copy; 2025 EXTRAATJE. Gemaakt met ❤️ voor geweldige teams</p>
                 </footer>
+            </div>
+
+            <!-- ==================== CANDIDATE DETAIL DRAWER ==================== -->
+            <div id="candidateDrawer" class="fixed inset-0 z-50" style="display:none">
+                <div class="absolute inset-0 bg-black/30" onclick="closeCandidateDrawer()"></div>
+                <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl overflow-y-auto" style="animation: slideIn .25s ease">
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                        <h2 id="drawer-title" class="text-lg font-bold text-gray-900"></h2>
+                        <button onclick="closeCandidateDrawer()" class="p-2 hover:bg-gray-100 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+                    </div>
+                    <div id="drawer-content" class="p-6"></div>
+                </div>
             </div>
         </main>
     </div>
@@ -2307,602 +2373,401 @@
         // ==========================================
         
         const allCandidates = [
-            { id: 1, firstName: 'Sophie', lastName: 'de Vries', email: 'sophie.devries@email.nl', phone: '06-12345678', functionType: 'horecamedewerker', status: 'in_behandeling', city: 'Amsterdam', applicationDate: '15-01-2026', interviewDate: '20-01-2026', interviewTime: '10:00', assignedTo: 'Jan Pietersen', softskillsScore: 85, barScore: 78, bedieningScore: 92, dinerScore: 88 },
-            { id: 2, firstName: 'Mohammed', lastName: 'El Amrani', email: 'm.elamrani@email.nl', phone: '06-87654321', functionType: 'chef', status: 'aangenomen', city: 'Rotterdam', applicationDate: '10-01-2026', interviewDate: '14-01-2026', interviewTime: '14:00', assignedTo: 'Lisa de Groot', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 3, firstName: 'Emma', lastName: 'Jansen', email: 'emma.jansen@email.nl', phone: '06-11223344', functionType: 'housekeeping', status: 'in_behandeling', city: 'Utrecht', applicationDate: '12-01-2026', interviewDate: null, interviewTime: null, assignedTo: 'Jan Pietersen', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 4, firstName: 'Lucas', lastName: 'van der Berg', email: 'lucas.vdberg@email.nl', phone: '06-55667788', functionType: 'front_office', status: 'afgewezen', city: 'Den Haag', applicationDate: '05-01-2026', interviewDate: '08-01-2026', interviewTime: '11:00', assignedTo: 'Karin Bakker', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 5, firstName: 'Fatima', lastName: 'Benali', email: 'f.benali@email.nl', phone: '06-99887766', functionType: 'horecamedewerker', status: 'aangenomen', city: 'Amsterdam', applicationDate: '08-01-2026', interviewDate: '12-01-2026', interviewTime: '15:00', assignedTo: 'Lisa de Groot', softskillsScore: 92, barScore: 88, bedieningScore: 95, dinerScore: 90 },
-            { id: 6, firstName: 'Thomas', lastName: 'Bakker', email: 't.bakker@email.nl', phone: '06-33445566', functionType: 'chef', status: 'in_behandeling', city: 'Haarlem', applicationDate: '16-01-2026', interviewDate: '22-01-2026', interviewTime: '09:00', assignedTo: 'Jan Pietersen', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 7, firstName: 'Lisa', lastName: 'Smit', email: 'lisa.smit@email.nl', phone: '06-22334455', functionType: 'housekeeping', status: 'aangenomen', city: 'Leiden', applicationDate: '03-01-2026', interviewDate: '06-01-2026', interviewTime: '10:30', assignedTo: 'Karin Bakker', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 8, firstName: 'David', lastName: 'Kowalski', email: 'd.kowalski@email.nl', phone: '06-44556677', functionType: 'horecamedewerker', status: 'afgewezen', city: 'Amsterdam', applicationDate: '02-01-2026', interviewDate: '04-01-2026', interviewTime: '14:30', assignedTo: 'Lisa de Groot', softskillsScore: 45, barScore: 38, bedieningScore: 42, dinerScore: 50 },
-            { id: 9, firstName: 'Anna', lastName: 'de Boer', email: 'anna.deboer@email.nl', phone: '06-66778899', functionType: 'front_office', status: 'in_behandeling', city: 'Amstelveen', applicationDate: '17-01-2026', interviewDate: null, interviewTime: null, assignedTo: null, softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 10, firstName: 'Max', lastName: 'Visser', email: 'max.visser@email.nl', phone: '06-88990011', functionType: 'chef', status: 'aangenomen', city: 'Rotterdam', applicationDate: '01-01-2026', interviewDate: '03-01-2026', interviewTime: '11:30', assignedTo: 'Jan Pietersen', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 11, firstName: 'Julia', lastName: 'Peters', email: 'julia.peters@email.nl', phone: '06-12344321', functionType: 'horecamedewerker', status: 'in_behandeling', city: 'Den Bosch', applicationDate: '18-01-2026', interviewDate: '23-01-2026', interviewTime: '10:00', assignedTo: 'Karin Bakker', softskillsScore: 72, barScore: null, bedieningScore: 68, dinerScore: null },
-            { id: 12, firstName: 'Omar', lastName: 'Hassan', email: 'omar.hassan@email.nl', phone: '06-43215678', functionType: 'housekeeping', status: 'afgewezen', city: 'Eindhoven', applicationDate: '04-01-2026', interviewDate: '07-01-2026', interviewTime: '13:00', assignedTo: 'Lisa de Groot', softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 13, firstName: 'Nina', lastName: 'van Dijk', email: 'nina.vandijk@email.nl', phone: '06-55443322', functionType: 'horecamedewerker', status: 'in_behandeling', city: 'Breda', applicationDate: '19-01-2026', interviewDate: null, interviewTime: null, assignedTo: null, softskillsScore: null, barScore: null, bedieningScore: null, dinerScore: null },
-            { id: 14, firstName: 'Peter', lastName: 'de Jong', email: 'peter.dejong@email.nl', phone: '06-11224455', functionType: 'horecamedewerker', status: 'aangenomen', city: 'Tilburg', applicationDate: '06-01-2026', interviewDate: '09-01-2026', interviewTime: '13:00', assignedTo: 'Jan Pietersen', softskillsScore: 78, barScore: 82, bedieningScore: 75, dinerScore: 80 },
+            { id:1, createdAt:'2026-01-05', updatedAt:'2026-01-28', lastActivityAt:'2026-01-28', phase:'intake', status:'nieuw', sourceChannel:'whatsapp',
+              person:{firstName:'Amir',lastName:'El Fassi',email:'amir.elfassi@email.nl',phone:'06-12345678',city:'Amsterdam',languages:{nl:true,en:false}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:45,answers:{beschikbaarheid:'Weekenden',ervaring:'1 jaar'},flags:['twv_review']},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-05T10:00',actor:'system',action:'Aangemeld via WhatsApp'}]
+            },
+            { id:2, createdAt:'2026-01-08', updatedAt:'2026-01-27', lastActivityAt:'2026-01-27', phase:'intake', status:'incompleet', sourceChannel:'indeed',
+              person:{firstName:'Sophie',lastName:'de Vries',email:'sophie.devries@email.nl',phone:'06-87654321',city:'Utrecht',languages:{nl:true,en:true,level:'B2'}},
+              rolePreference:'front-office',
+              intake:{completeness:72,answers:{beschikbaarheid:'Flexibel',ervaring:'3 jaar hotel'},flags:['english_required']},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-08T09:30',actor:'system',action:'Aangemeld via Indeed'},{at:'2026-01-15T11:00',actor:'admin',action:'Status gewijzigd','from':'nieuw','to':'incompleet'}]
+            },
+            { id:3, createdAt:'2026-01-10', updatedAt:'2026-01-26', lastActivityAt:'2026-01-26', phase:'intake', status:'nieuw', sourceChannel:'wix',
+              person:{firstName:'Mohammed',lastName:'Benali',email:'m.benali@email.nl',phone:'06-11223344',city:'Rotterdam',languages:{nl:true,en:false}},
+              rolePreference:'chef',
+              intake:{completeness:90,answers:{beschikbaarheid:'Ma-Vr',ervaring:'5 jaar'},flags:[]},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-10T14:00',actor:'system',action:'Aangemeld via Wix formulier'}]
+            },
+            { id:4, createdAt:'2026-01-11', updatedAt:'2026-01-25', lastActivityAt:'2026-01-25', phase:'intake', status:'afspraak_ingepland', sourceChannel:'whatsapp',
+              person:{firstName:'Emma',lastName:'Jansen',email:'emma.jansen@email.nl',phone:'06-55667788',city:'Den Haag',languages:{nl:true,en:true,level:'C1'}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:100,answers:{beschikbaarheid:'Avonden + weekenden',ervaring:'2 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-02-01T10:00',interviewer:'Jan Pietersen',scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-11T08:00',actor:'system',action:'Aangemeld via WhatsApp'},{at:'2026-01-20T14:00',actor:'admin',action:'Status gewijzigd','from':'nieuw','to':'afspraak_ingepland'}]
+            },
+            { id:5, createdAt:'2026-01-12', updatedAt:'2026-01-24', lastActivityAt:'2026-01-24', phase:'intake', status:'afgewezen', sourceChannel:'socials',
+              person:{firstName:'Lucas',lastName:'van der Berg',email:'lucas.vdberg@email.nl',phone:'06-99887766',city:'Haarlem',languages:{nl:false,en:true,level:'B1'}},
+              rolePreference:'housekeeping',
+              intake:{completeness:30,answers:{beschikbaarheid:'Onbekend'},flags:['abroad','twv_review','english_required']},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-12T16:00',actor:'system',action:'Aangemeld via Instagram'},{at:'2026-01-18T10:00',actor:'admin',action:'Status gewijzigd','from':'nieuw','to':'afgewezen'}]
+            },
+            { id:6, createdAt:'2026-01-13', updatedAt:'2026-01-23', lastActivityAt:'2026-01-23', phase:'intake', status:'no_show', sourceChannel:'indeed',
+              person:{firstName:'Priya',lastName:'Sharma',email:'priya.sharma@email.nl',phone:'06-33445566',city:'Leiden',languages:{nl:true,en:true,level:'B2'}},
+              rolePreference:'front-office',
+              intake:{completeness:85,answers:{beschikbaarheid:'Ma-Vr dagdienst',ervaring:'4 jaar'},flags:[]},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-13T12:00',actor:'system',action:'Aangemeld via Indeed'},{at:'2026-01-22T09:00',actor:'system',action:'No-show bij intake afspraak'}]
+            },
+            { id:7, createdAt:'2026-01-14', updatedAt:'2026-01-22', lastActivityAt:'2026-01-22', phase:'intake', status:'nieuw', sourceChannel:'whatsapp',
+              person:{firstName:'Thomas',lastName:'Bakker',email:'t.bakker@email.nl',phone:'06-22334455',city:'Amstelveen',languages:{nl:true,en:false}},
+              rolePreference:'chef',
+              intake:{completeness:60,answers:{beschikbaarheid:'Weekenden',ervaring:'2 jaar'},flags:['twv_review']},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-14T11:00',actor:'system',action:'Aangemeld via WhatsApp'}]
+            },
+            { id:8, createdAt:'2026-01-15', updatedAt:'2026-01-21', lastActivityAt:'2026-01-21', phase:'intake', status:'incompleet', sourceChannel:'wix',
+              person:{firstName:'Lisa',lastName:'Smit',email:'lisa.smit@email.nl',phone:'06-44556677',city:'Delft',languages:{nl:true,en:true,level:'B1'}},
+              rolePreference:'housekeeping',
+              intake:{completeness:55,answers:{beschikbaarheid:'Flexibel'},flags:[]},
+              interview:{scheduledAt:null,interviewer:null,scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-15T15:00',actor:'system',action:'Aangemeld via Wix formulier'}]
+            },
+            { id:9, createdAt:'2026-01-03', updatedAt:'2026-01-20', lastActivityAt:'2026-01-20', phase:'intake', status:'afspraak_ingepland', sourceChannel:'indeed',
+              person:{firstName:'David',lastName:'Kowalski',email:'d.kowalski@email.nl',phone:'06-66778899',city:'Amsterdam',languages:{nl:false,en:true,level:'A2'}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:100,answers:{beschikbaarheid:'Avonden',ervaring:'3 jaar'},flags:['abroad','english_required']},
+              interview:{scheduledAt:'2026-02-03T14:00',interviewer:'Lisa de Groot',scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-03T10:00',actor:'system',action:'Aangemeld via Indeed'},{at:'2026-01-18T16:00',actor:'admin',action:'Status gewijzigd','from':'nieuw','to':'afspraak_ingepland'}]
+            },
+            { id:10, createdAt:'2026-01-06', updatedAt:'2026-02-01', lastActivityAt:'2026-02-01', phase:'interview', status:'uitgenodigd', sourceChannel:'whatsapp',
+              person:{firstName:'Fatima',lastName:'El Amrani',email:'f.elamrani@email.nl',phone:'06-88990011',city:'Rotterdam',languages:{nl:true,en:true,level:'B2'}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:100,answers:{beschikbaarheid:'Flexibel',ervaring:'2 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-02-05T10:00',interviewer:'Jan Pietersen',scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-06T09:00',actor:'system',action:'Aangemeld via WhatsApp'},{at:'2026-01-25T10:00',actor:'admin',action:'Doorgestuurd naar sollicitatieprocedure'}]
+            },
+            { id:11, createdAt:'2026-01-04', updatedAt:'2026-02-02', lastActivityAt:'2026-02-02', phase:'interview', status:'reminder_verstuurd', sourceChannel:'indeed',
+              person:{firstName:'Anna',lastName:'de Boer',email:'anna.deboer@email.nl',phone:'06-12344321',city:'Den Haag',languages:{nl:true,en:false}},
+              rolePreference:'housekeeping',
+              intake:{completeness:100,answers:{beschikbaarheid:'Ma-Za',ervaring:'5 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-02-04T11:00',interviewer:'Karin Bakker',scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-04T13:00',actor:'system',action:'Aangemeld via Indeed'},{at:'2026-01-28T09:00',actor:'system',action:'Reminder verstuurd'}]
+            },
+            { id:12, createdAt:'2026-01-02', updatedAt:'2026-02-03', lastActivityAt:'2026-02-03', phase:'interview', status:'gesprek_afgerond', sourceChannel:'wix',
+              person:{firstName:'Max',lastName:'Visser',email:'max.visser@email.nl',phone:'06-43215678',city:'Haarlem',languages:{nl:true,en:true,level:'C1'}},
+              rolePreference:'front-office',
+              intake:{completeness:100,answers:{beschikbaarheid:'Flexibel',ervaring:'4 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-01-30T09:00',interviewer:'Jan Pietersen',scores:{overall:82,categories:[{name:'Communicatie',score:88},{name:'Ervaring',score:75},{name:'Presentatie',score:85},{name:'Motivatie',score:80}]},notes:'Zeer gemotiveerd, goede uitstraling.'},
+              auditLog:[{at:'2026-01-02T10:00',actor:'system',action:'Aangemeld via Wix'},{at:'2026-01-30T10:00',actor:'admin',action:'Gesprek afgerond'}]
+            },
+            { id:13, createdAt:'2026-01-01', updatedAt:'2026-02-04', lastActivityAt:'2026-02-04', phase:'interview', status:'aangenomen', sourceChannel:'socials',
+              person:{firstName:'Julia',lastName:'Peters',email:'julia.peters@email.nl',phone:'06-55443322',city:'Amsterdam',languages:{nl:true,en:true,level:'B2'}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:100,answers:{beschikbaarheid:'Avonden + weekenden',ervaring:'3 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-01-25T14:00',interviewer:'Lisa de Groot',scores:{overall:91,categories:[{name:'Communicatie',score:95},{name:'Ervaring',score:85},{name:'Presentatie',score:90},{name:'Motivatie',score:94}]},notes:'Topkandidaat. Direct aangenomen.'},
+              auditLog:[{at:'2026-01-01T11:00',actor:'system',action:'Aangemeld via LinkedIn'},{at:'2026-01-25T15:00',actor:'admin',action:'Gesprek afgerond'},{at:'2026-01-26T09:00',actor:'admin',action:'Status gewijzigd','from':'gesprek_afgerond','to':'aangenomen'}]
+            },
+            { id:14, createdAt:'2025-12-28', updatedAt:'2026-02-05', lastActivityAt:'2026-02-05', phase:'interview', status:'aangenomen', sourceChannel:'indeed',
+              person:{firstName:'Peter',lastName:'de Jong',email:'peter.dejong@email.nl',phone:'06-11224455',city:'Utrecht',languages:{nl:true,en:false}},
+              rolePreference:'chef',
+              intake:{completeness:100,answers:{beschikbaarheid:'Ma-Vr',ervaring:'8 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-01-20T10:00',interviewer:'Jan Pietersen',scores:{overall:88,categories:[{name:'Vaktechnisch',score:95},{name:'Leiderschap',score:82},{name:'Hygiene',score:90},{name:'Motivatie',score:85}]},notes:'Ervaren chef. Sterke keukenkennis.'},
+              auditLog:[{at:'2025-12-28T10:00',actor:'system',action:'Aangemeld via Indeed'},{at:'2026-01-20T12:00',actor:'admin',action:'Gesprek afgerond'},{at:'2026-01-21T09:00',actor:'admin',action:'Aangenomen'}]
+            },
+            { id:15, createdAt:'2025-12-30', updatedAt:'2026-02-01', lastActivityAt:'2026-02-01', phase:'interview', status:'afgewezen', sourceChannel:'whatsapp',
+              person:{firstName:'Omar',lastName:'Hassan',email:'omar.hassan@email.nl',phone:'06-77889900',city:'Eindhoven',languages:{nl:true,en:false}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:100,answers:{beschikbaarheid:'Weekenden',ervaring:'1 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-01-22T13:00',interviewer:'Karin Bakker',scores:{overall:42,categories:[{name:'Communicatie',score:45},{name:'Ervaring',score:30},{name:'Presentatie',score:50},{name:'Motivatie',score:43}]},notes:'Onvoldoende ervaring en motivatie.'},
+              auditLog:[{at:'2025-12-30T14:00',actor:'system',action:'Aangemeld via WhatsApp'},{at:'2026-01-22T14:00',actor:'admin',action:'Gesprek afgerond'},{at:'2026-01-23T10:00',actor:'admin',action:'Afgewezen'}]
+            },
+            { id:16, createdAt:'2026-01-07', updatedAt:'2026-02-06', lastActivityAt:'2026-02-06', phase:'interview', status:'no_show', sourceChannel:'indeed',
+              person:{firstName:'Nina',lastName:'van Dijk',email:'nina.vandijk@email.nl',phone:'06-99001122',city:'Breda',languages:{nl:true,en:true,level:'B1'}},
+              rolePreference:'housekeeping',
+              intake:{completeness:100,answers:{beschikbaarheid:'Flexibel',ervaring:'2 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-02-03T15:00',interviewer:'Lisa de Groot',scores:{overall:0,categories:[]},notes:''},
+              auditLog:[{at:'2026-01-07T11:00',actor:'system',action:'Aangemeld via Indeed'},{at:'2026-02-03T16:00',actor:'system',action:'No-show bij sollicitatiegesprek'}]
+            },
+            { id:17, createdAt:'2026-01-09', updatedAt:'2026-02-02', lastActivityAt:'2026-02-02', phase:'interview', status:'aangenomen', sourceChannel:'wix',
+              person:{firstName:'Sara',lastName:'Yilmaz',email:'sara.yilmaz@email.nl',phone:'06-33221100',city:'Amsterdam',languages:{nl:true,en:true,level:'B2'}},
+              rolePreference:'horecamedewerker',
+              intake:{completeness:100,answers:{beschikbaarheid:'Flexibel',ervaring:'4 jaar'},flags:[]},
+              interview:{scheduledAt:'2026-01-28T11:00',interviewer:'Jan Pietersen',scores:{overall:87,categories:[{name:'Communicatie',score:90},{name:'Ervaring',score:82},{name:'Presentatie',score:88},{name:'Motivatie',score:88}]},notes:'Uitstekend profiel. Direct inzetbaar.'},
+              auditLog:[{at:'2026-01-09T10:00',actor:'system',action:'Aangemeld via Wix formulier'},{at:'2026-01-28T12:00',actor:'admin',action:'Aangenomen'}]
+            },
         ];
 
-        const functionTypeLabels = {
-            'housekeeping': 'Housekeeping',
-            'horecamedewerker': 'Horecamedewerker',
-            'chef': 'Chef',
-            'front_office': 'Front-office'
+        const intakeStatuses = {
+            'nieuw': { label:'Nieuw', class:'bg-blue-100 text-blue-700' },
+            'incompleet': { label:'Incompleet', class:'bg-yellow-100 text-yellow-700' },
+            'afgewezen': { label:'Afgewezen', class:'bg-red-100 text-red-700' },
+            'afspraak_ingepland': { label:'Afspraak ingepland', class:'bg-green-100 text-green-700' },
+            'no_show': { label:'No-show', class:'bg-gray-200 text-gray-700' }
         };
-
-        const statusLabels = {
-            'in_behandeling': { label: 'In behandeling', class: 'bg-yellow-100 text-yellow-700' },
-            'aangenomen': { label: 'Aangenomen', class: 'bg-green-100 text-green-700' },
-            'afgewezen': { label: 'Afgewezen', class: 'bg-red-100 text-red-700' }
+        const interviewStatuses = {
+            'uitgenodigd': { label:'Uitgenodigd', class:'bg-blue-100 text-blue-700' },
+            'reminder_verstuurd': { label:'Reminder verstuurd', class:'bg-indigo-100 text-indigo-700' },
+            'gesprek_afgerond': { label:'Gesprek afgerond', class:'bg-purple-100 text-purple-700' },
+            'afgewezen': { label:'Afgewezen', class:'bg-red-100 text-red-700' },
+            'aangenomen': { label:'Aangenomen', class:'bg-green-100 text-green-700' },
+            'wachtlijst': { label:'Wachtlijst', class:'bg-orange-100 text-orange-700' },
+            'no_show': { label:'No-show', class:'bg-gray-200 text-gray-700' }
         };
-
-        // Calculate overall horeca score with weighted average (handles null values)
-        function calculateOverallHorecaScore(c) {
-            const weights = { softskills: 0.30, bar: 0.20, bediening: 0.25, diner: 0.25 };
-            const scores = [
-                { value: c.softskillsScore, weight: weights.softskills },
-                { value: c.barScore, weight: weights.bar },
-                { value: c.bedieningScore, weight: weights.bediening },
-                { value: c.dinerScore, weight: weights.diner }
-            ].filter(s => s.value !== null && s.value !== undefined);
-            
-            if (scores.length === 0) return null;
-            
-            const totalWeight = scores.reduce((sum, s) => sum + s.weight, 0);
-            const weightedSum = scores.reduce((sum, s) => sum + (s.value * s.weight), 0);
-            return Math.round(weightedSum / totalWeight);
-        }
-
-        // Get score badge with color coding
-        function getScoreBadge(score) {
-            if (score === null || score === undefined) return '<span class="text-gray-400">-</span>';
-            let colorClass = 'bg-red-100 text-red-700';
-            if (score >= 75) colorClass = 'bg-green-100 text-green-700';
-            else if (score >= 50) colorClass = 'bg-yellow-100 text-yellow-700';
-            return `<span class="text-xs px-2 py-0.5 rounded-full ${colorClass} font-medium">${score}</span>`;
-        }
+        const channelStyles = {
+            'whatsapp': { label:'WhatsApp', class:'bg-green-100 text-green-700', icon:'message-circle' },
+            'indeed': { label:'Indeed', class:'bg-blue-100 text-blue-700', icon:'briefcase' },
+            'wix': { label:'Wix', class:'bg-purple-100 text-purple-700', icon:'globe' },
+            'socials': { label:'Socials', class:'bg-pink-100 text-pink-700', icon:'instagram' }
+        };
+        const flagStyles = {
+            'twv_review': { label:'TWV check', class:'bg-orange-50 text-orange-600 border border-orange-200' },
+            'english_required': { label:'Engels vereist', class:'bg-blue-50 text-blue-600 border border-blue-200' },
+            'abroad': { label:'Buitenland', class:'bg-red-50 text-red-600 border border-red-200' }
+        };
+        const roleLabels = {'chef':'Chef','horecamedewerker':'Horecamedewerker','housekeeping':'Housekeeping','front-office':'Front-office'};
 
         function filterCandidates() {
-            renderCandidatesTable();
-            updateCandidateStats();
-        }
+            const search = (document.getElementById('candidateSearch')?.value || '').toLowerCase();
+            const phaseFilter = document.getElementById('candidatePhaseFilter')?.value || 'all';
+            const statusFilter = document.getElementById('candidateStatusFilter')?.value || 'all';
+            const functionFilter = document.getElementById('candidateFunctionFilter')?.value || 'all';
+            const channelFilter = document.getElementById('candidateChannelFilter')?.value || 'all';
+            const sortBy = document.getElementById('candidateSortBy')?.value || 'recent';
 
-        function onFunctionFilterChange() {
-            const functionFilter = document.getElementById('candidateFunctionFilter').value;
-            const horecaControls = document.getElementById('horecaControls');
-            
-            // Show/hide horeca-specific controls
-            if (functionFilter === 'horecamedewerker') {
-                horecaControls.classList.remove('hidden');
-                horecaControls.classList.add('flex');
-            } else {
-                horecaControls.classList.add('hidden');
-                horecaControls.classList.remove('flex');
-            }
-            
-            // Update view indicator
-            updateViewIndicator(functionFilter);
-            
-            // Render table with new columns
-            renderCandidatesTableHeader(functionFilter);
-            filterCandidates();
-        }
+            let filtered = allCandidates.filter(c => {
+                const name = (c.person.firstName + ' ' + c.person.lastName).toLowerCase();
+                const matchSearch = !search || name.includes(search) || c.person.email.toLowerCase().includes(search) || c.person.phone.includes(search);
+                const matchPhase = phaseFilter === 'all' || c.phase === phaseFilter;
+                const matchStatus = statusFilter === 'all' || c.status === statusFilter;
+                const matchFunc = functionFilter === 'all' || c.rolePreference === functionFilter;
+                const matchChannel = channelFilter === 'all' || c.sourceChannel === channelFilter;
+                return matchSearch && matchPhase && matchStatus && matchFunc && matchChannel;
+            });
 
-        function updateViewIndicator(functionFilter) {
-            const indicator = document.getElementById('viewIndicator');
-            let viewName = 'Master';
-            let iconName = 'layout-list';
-            let bgClass = 'bg-purple-50 border-purple-200';
-            let textClass = 'text-purple-600';
-            let labelClass = 'text-purple-700';
-            
-            if (functionFilter !== 'all') {
-                viewName = functionTypeLabels[functionFilter] || functionFilter;
-                iconName = 'filter';
-                if (functionFilter === 'horecamedewerker') {
-                    bgClass = 'bg-orange-50 border-orange-200';
-                    textClass = 'text-orange-600';
-                    labelClass = 'text-orange-700';
-                } else if (functionFilter === 'chef') {
-                    bgClass = 'bg-blue-50 border-blue-200';
-                    textClass = 'text-blue-600';
-                    labelClass = 'text-blue-700';
-                } else if (functionFilter === 'housekeeping') {
-                    bgClass = 'bg-green-50 border-green-200';
-                    textClass = 'text-green-600';
-                    labelClass = 'text-green-700';
-                } else if (functionFilter === 'front_office') {
-                    bgClass = 'bg-pink-50 border-pink-200';
-                    textClass = 'text-pink-600';
-                    labelClass = 'text-pink-700';
-                }
-            }
-            
-            indicator.className = `flex items-center gap-2 px-3 py-1.5 ${bgClass} border rounded-lg`;
-            indicator.innerHTML = `
-                <i data-lucide="${iconName}" class="w-4 h-4 ${textClass}"></i>
-                <span class="text-sm font-medium ${labelClass}">Weergave: ${viewName}</span>
-            `;
+            if (sortBy === 'score') filtered.sort((a,b) => (b.interview.scores.overall||0) - (a.interview.scores.overall||0));
+            else if (sortBy === 'oldest') filtered.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+            else filtered.sort((a,b) => new Date(b.lastActivityAt) - new Date(a.lastActivityAt));
+
+            const intakes = filtered.filter(c => c.phase === 'intake');
+            const interviews = filtered.filter(c => c.phase === 'interview');
+
+            document.getElementById('intakeTableBody').innerHTML = intakes.length ? intakes.map(renderIntakeRow).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Geen kandidaten gevonden</td></tr>';
+            document.getElementById('interviewTableBody').innerHTML = interviews.length ? interviews.map(renderInterviewRow).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Geen kandidaten gevonden</td></tr>';
+
+            document.getElementById('intake-count-badge').textContent = intakes.length + ' kandidaten';
+            document.getElementById('interview-count-badge').textContent = interviews.length + ' kandidaten';
+
+            const showIntake = phaseFilter === 'all' || phaseFilter === 'intake';
+            const showInterview = phaseFilter === 'all' || phaseFilter === 'interview';
+            document.getElementById('phase-intake-section').style.display = showIntake ? '' : 'none';
+            document.getElementById('phase-interview-section').style.display = showInterview ? '' : 'none';
+
+            updateStatusDropdown(phaseFilter);
+            updateKPIs();
             lucide.createIcons();
         }
 
-        function renderCandidatesTableHeader(functionFilter) {
-            const header = document.getElementById('candidatesTableHeader');
-            let columns = [];
-            
-            if (functionFilter === 'horecamedewerker') {
-                // Horecamedewerker view with scores
-                columns = [
-                    { label: 'Naam', width: '' },
-                    { label: 'Contact', width: '' },
-                    { label: 'Status', width: '' },
-                    { label: 'Interview', width: '' },
-                    { label: 'Overall', width: '', sortable: true },
-                    { label: 'Softskills', width: '', sortable: true },
-                    { label: 'Bar', width: '', sortable: true },
-                    { label: 'Bediening', width: '', sortable: true },
-                    { label: 'Diner', width: '', sortable: true },
-                    { label: 'Acties', width: '' }
-                ];
-            } else if (functionFilter === 'chef') {
-                columns = [
-                    { label: 'Naam', width: '' },
-                    { label: 'Contact', width: '' },
-                    { label: 'Status', width: '' },
-                    { label: 'Ervaring', width: '' },
-                    { label: 'Specialisatie', width: '' },
-                    { label: 'Interview', width: '' },
-                    { label: 'Wie', width: '' },
-                    { label: 'Acties', width: '' }
-                ];
-            } else if (functionFilter === 'housekeeping') {
-                columns = [
-                    { label: 'Naam', width: '' },
-                    { label: 'Contact', width: '' },
-                    { label: 'Status', width: '' },
-                    { label: 'Beschikbaarheid', width: '' },
-                    { label: 'Interview', width: '' },
-                    { label: 'Wie', width: '' },
-                    { label: 'Acties', width: '' }
-                ];
-            } else if (functionFilter === 'front_office') {
-                columns = [
-                    { label: 'Naam', width: '' },
-                    { label: 'Contact', width: '' },
-                    { label: 'Status', width: '' },
-                    { label: 'Talen', width: '' },
-                    { label: 'Interview', width: '' },
-                    { label: 'Wie', width: '' },
-                    { label: 'Acties', width: '' }
-                ];
-            } else {
-                // Master view (all functions)
-                columns = [
-                    { label: 'Naam', width: '' },
-                    { label: 'Functie', width: '' },
-                    { label: 'Contact', width: '' },
-                    { label: 'Status', width: '' },
-                    { label: 'Sollicitatiedatum', width: '' },
-                    { label: 'Interview', width: '' },
-                    { label: 'Wie', width: '' },
-                    { label: 'Acties', width: '' }
-                ];
+        function updateStatusDropdown(phase) {
+            const sel = document.getElementById('candidateStatusFilter');
+            const current = sel.value;
+            let opts = '<option value="all">Alle statussen</option>';
+            if (phase === 'all' || phase === 'intake') {
+                Object.entries(intakeStatuses).forEach(([k,v]) => { opts += `<option value="${k}">${v.label}</option>`; });
             }
-            
-            header.innerHTML = `
-                <tr class="text-left text-xs text-gray-500 uppercase tracking-wider">
-                    ${columns.map(col => `<th class="px-4 py-3 font-medium">${col.label}</th>`).join('')}
-                </tr>
-            `;
-        }
-
-        function setCandidateStatusFilter(status) {
-            document.getElementById('candidateStatusFilter').value = status;
-            // Update tab styles
-            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
-                if (tab.id.startsWith('tab-')) {
-                    const baseClass = 'px-4 py-2 text-sm font-medium rounded-lg';
-                    tab.className = `${baseClass} bg-gray-100 text-gray-600 hover:bg-gray-200`;
-                }
-            });
-            if (status === 'all') {
-                document.getElementById('tab-all').className = 'px-4 py-2 text-sm font-medium rounded-lg bg-purple-100 text-purple-700';
-            } else if (status === 'in_behandeling') {
-                document.getElementById('tab-pending').className = 'px-4 py-2 text-sm font-medium rounded-lg bg-yellow-100 text-yellow-700';
-            } else if (status === 'aangenomen') {
-                document.getElementById('tab-hired').className = 'px-4 py-2 text-sm font-medium rounded-lg bg-green-100 text-green-700';
-            } else if (status === 'afgewezen') {
-                document.getElementById('tab-rejected').className = 'px-4 py-2 text-sm font-medium rounded-lg bg-red-100 text-red-700';
-            }
-            filterCandidates();
-        }
-
-        function renderCandidatesTable() {
-            const search = document.getElementById('candidateSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('candidateStatusFilter').value;
-            const functionFilter = document.getElementById('candidateFunctionFilter').value;
-            
-            let filtered = allCandidates.filter(c => {
-                const matchesSearch = c.firstName.toLowerCase().includes(search) || 
-                                     c.lastName.toLowerCase().includes(search) ||
-                                     c.email.toLowerCase().includes(search) ||
-                                     c.phone.includes(search);
-                const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
-                const matchesFunction = functionFilter === 'all' || c.functionType === functionFilter;
-                return matchesSearch && matchesStatus && matchesFunction;
-            });
-            
-            // Apply min score filter for horeca
-            if (functionFilter === 'horecamedewerker') {
-                const minScore = parseInt(document.getElementById('minScoreFilter')?.value || '0');
-                if (minScore > 0) {
-                    filtered = filtered.filter(c => {
-                        const overall = calculateOverallHorecaScore(c);
-                        return overall !== null && overall >= minScore;
-                    });
-                }
-                
-                // Apply sorting for horeca
-                const sortBy = document.getElementById('candidateSortBy')?.value || 'overall-desc';
-                const [sortField, sortDir] = sortBy.split('-');
-                
-                filtered.sort((a, b) => {
-                    let valA, valB;
-                    if (sortField === 'overall') {
-                        valA = calculateOverallHorecaScore(a) ?? -1;
-                        valB = calculateOverallHorecaScore(b) ?? -1;
-                    } else if (sortField === 'softskills') {
-                        valA = a.softskillsScore ?? -1;
-                        valB = b.softskillsScore ?? -1;
-                    } else if (sortField === 'bar') {
-                        valA = a.barScore ?? -1;
-                        valB = b.barScore ?? -1;
-                    } else if (sortField === 'bediening') {
-                        valA = a.bedieningScore ?? -1;
-                        valB = b.bedieningScore ?? -1;
-                    } else if (sortField === 'diner') {
-                        valA = a.dinerScore ?? -1;
-                        valB = b.dinerScore ?? -1;
-                    }
-                    
-                    if (sortDir === 'desc') return valB - valA;
-                    return valA - valB;
+            if (phase === 'all' || phase === 'interview') {
+                Object.entries(interviewStatuses).forEach(([k,v]) => {
+                    if (!opts.includes(`value="${k}"`)) opts += `<option value="${k}">${v.label}</option>`;
                 });
             }
-            
-            const container = document.getElementById('candidatesTableBody');
-            
-            // Render based on view type
-            if (functionFilter === 'horecamedewerker') {
-                container.innerHTML = filtered.map(c => renderHorecaRow(c)).join('');
-            } else if (functionFilter === 'chef') {
-                container.innerHTML = filtered.map(c => renderChefRow(c)).join('');
-            } else if (functionFilter === 'housekeeping') {
-                container.innerHTML = filtered.map(c => renderHousekeepingRow(c)).join('');
-            } else if (functionFilter === 'front_office') {
-                container.innerHTML = filtered.map(c => renderFrontOfficeRow(c)).join('');
-            } else {
-                container.innerHTML = filtered.map(c => renderMasterRow(c)).join('');
-            }
-            
-            document.getElementById('candidatesResultCount').textContent = `Toont ${filtered.length} van ${allCandidates.length} sollicitanten`;
-            lucide.createIcons();
+            sel.innerHTML = opts;
+            if (sel.querySelector(`option[value="${current}"]`)) sel.value = current;
         }
 
-        function renderMasterRow(c) {
-            const statusInfo = statusLabels[c.status];
-            const functionLabel = functionTypeLabels[c.functionType];
-            const initials = c.firstName.charAt(0) + c.lastName.charAt(0);
-            
-            return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">${initials}</div>
-                        <div>
-                            <p class="font-medium text-gray-900">${c.firstName} ${c.lastName}</p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                ${c.city}
-                            </p>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">${functionLabel}</span>
-                </td>
-                <td class="px-4 py-3">
-                    <div class="text-sm space-y-0.5">
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-gray-400"></i> ${c.email}</p>
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i> ${c.phone}</p>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-1 rounded-full ${statusInfo.class}">${statusInfo.label}</span>
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">${c.applicationDate}</td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.interviewDate ? `
-                        <div class="text-gray-600">
-                            <p class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> ${c.interviewDate}</p>
-                            <p class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-gray-400"></i> ${c.interviewTime}</p>
-                        </div>
-                    ` : '<span class="text-gray-400">Niet gepland</span>'}
-                </td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.assignedTo ? `<span class="text-gray-700">${c.assignedTo}</span>` : '<span class="text-gray-400">-</span>'}
-                </td>
-                <td class="px-4 py-3">
-                    ${renderActionButtons(c)}
-                </td>
-            </tr>`;
+        function updateKPIs() {
+            const total = allCandidates.length;
+            const intakeCount = allCandidates.filter(c => c.phase === 'intake').length;
+            const interviewCount = allCandidates.filter(c => c.phase === 'interview').length;
+            const hired = allCandidates.filter(c => c.status === 'aangenomen').length;
+            const rejected = allCandidates.filter(c => c.status === 'afgewezen').length;
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-intake').textContent = intakeCount;
+            document.getElementById('kpi-interview').textContent = interviewCount;
+            document.getElementById('kpi-result').innerHTML = `<span class="text-green-600">${hired}</span> / <span class="text-red-500">${rejected}</span>`;
+            document.getElementById('pipe-intake').textContent = intakeCount;
+            document.getElementById('pipe-interview').textContent = interviewCount;
+            document.getElementById('pipe-hired').textContent = hired;
+            document.getElementById('pipe-rejected').textContent = rejected;
         }
 
-        function renderHorecaRow(c) {
-            const statusInfo = statusLabels[c.status];
-            const initials = c.firstName.charAt(0) + c.lastName.charAt(0);
-            const overall = calculateOverallHorecaScore(c);
-            
-            return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-xs font-medium text-orange-600">${initials}</div>
-                        <div>
-                            <p class="font-medium text-gray-900">${c.firstName} ${c.lastName}</p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                ${c.city}
-                            </p>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <div class="text-sm space-y-0.5">
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-gray-400"></i> ${c.email}</p>
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i> ${c.phone}</p>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-1 rounded-full ${statusInfo.class}">${statusInfo.label}</span>
-                </td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.interviewDate ? `
-                        <div class="text-gray-600">
-                            <p class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> ${c.interviewDate}</p>
-                            <p class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-gray-400"></i> ${c.interviewTime}</p>
-                        </div>
-                    ` : '<span class="text-gray-400">Niet gepland</span>'}
-                </td>
-                <td class="px-4 py-3 text-center">${getScoreBadge(overall)}</td>
-                <td class="px-4 py-3 text-center">${getScoreBadge(c.softskillsScore)}</td>
-                <td class="px-4 py-3 text-center">${getScoreBadge(c.barScore)}</td>
-                <td class="px-4 py-3 text-center">${getScoreBadge(c.bedieningScore)}</td>
-                <td class="px-4 py-3 text-center">${getScoreBadge(c.dinerScore)}</td>
-                <td class="px-4 py-3">
-                    ${renderActionButtons(c)}
-                </td>
-            </tr>`;
-        }
+        function formatDate(d) { if(!d) return '-'; const dt = new Date(d); return dt.toLocaleDateString('nl-NL',{day:'2-digit',month:'short',year:'numeric'}); }
+        function formatDateTime(d) { if(!d) return '-'; const dt = new Date(d); return dt.toLocaleDateString('nl-NL',{day:'2-digit',month:'short'}) + ' ' + dt.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}); }
 
-        function renderChefRow(c) {
-            const statusInfo = statusLabels[c.status];
-            const initials = c.firstName.charAt(0) + c.lastName.charAt(0);
-            
+        function renderIntakeRow(c) {
+            const st = intakeStatuses[c.status] || {label:c.status,class:'bg-gray-100 text-gray-700'};
+            const ch = channelStyles[c.sourceChannel] || {label:c.sourceChannel,class:'bg-gray-100 text-gray-600',icon:'circle'};
+            const initials = c.person.firstName.charAt(0) + c.person.lastName.charAt(0);
+            const pct = c.intake.completeness;
+            const fillColor = pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : '#ef4444';
             return `
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="openCandidateDrawer(${c.id})">
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">${initials}</div>
                         <div>
-                            <p class="font-medium text-gray-900">${c.firstName} ${c.lastName}</p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                ${c.city}
-                            </p>
+                            <p class="font-medium text-gray-900">${c.person.firstName} ${c.person.lastName}</p>
+                            <p class="text-xs text-gray-400"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> ${c.person.city}</p>
                         </div>
                     </div>
                 </td>
-                <td class="px-4 py-3">
-                    <div class="text-sm space-y-0.5">
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-gray-400"></i> ${c.email}</p>
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i> ${c.phone}</p>
+                <td class="px-4 py-3"><span class="channel-badge ${ch.class}"><i data-lucide="${ch.icon}" class="w-3 h-3"></i>${ch.label}</span></td>
+                <td class="px-4 py-3" style="min-width:120px">
+                    <div class="flex items-center gap-2">
+                        <div class="completeness-bar flex-1"><div class="completeness-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+                        <span class="text-xs font-medium text-gray-500">${pct}%</span>
                     </div>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-1 rounded-full ${statusInfo.class}">${statusInfo.label}</span>
+                    <div class="flex flex-wrap gap-1">${c.intake.flags.map(f => { const fs = flagStyles[f]||{label:f,class:'bg-gray-100 text-gray-600'}; return `<span class="flag-tag ${fs.class}">${fs.label}</span>`; }).join('') || '<span class="text-gray-300 text-xs">-</span>'}</div>
                 </td>
-                <td class="px-4 py-3 text-sm text-gray-600">2-5 jaar</td>
-                <td class="px-4 py-3 text-sm text-gray-600">Frans/Italiaans</td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.interviewDate ? `
-                        <div class="text-gray-600">
-                            <p class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> ${c.interviewDate}</p>
-                            <p class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-gray-400"></i> ${c.interviewTime}</p>
-                        </div>
-                    ` : '<span class="text-gray-400">Niet gepland</span>'}
-                </td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.assignedTo ? `<span class="text-gray-700">${c.assignedTo}</span>` : '<span class="text-gray-400">-</span>'}
-                </td>
+                <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full ${st.class} font-medium">${st.label}</span></td>
+                <td class="px-4 py-3 text-xs text-gray-500">${formatDate(c.lastActivityAt)}</td>
                 <td class="px-4 py-3">
-                    ${renderActionButtons(c)}
+                    <div class="flex items-center gap-1">
+                        <button onclick="event.stopPropagation();openCandidateDrawer(${c.id})" class="p-1.5 hover:bg-gray-100 rounded-lg" title="Details"><i data-lucide="eye" class="w-4 h-4 text-gray-400"></i></button>
+                        <button onclick="event.stopPropagation()" class="p-1.5 hover:bg-gray-100 rounded-lg" title="Status wijzigen"><i data-lucide="edit-3" class="w-4 h-4 text-gray-400"></i></button>
+                    </div>
                 </td>
             </tr>`;
         }
 
-        function renderHousekeepingRow(c) {
-            const statusInfo = statusLabels[c.status];
-            const initials = c.firstName.charAt(0) + c.lastName.charAt(0);
-            
+        function renderInterviewRow(c) {
+            const st = interviewStatuses[c.status] || {label:c.status,class:'bg-gray-100 text-gray-700'};
+            const initials = c.person.firstName.charAt(0) + c.person.lastName.charAt(0);
+            const score = c.interview.scores.overall;
+            let scoreColor = 'border-gray-200 text-gray-400 bg-gray-50';
+            if (score >= 75) scoreColor = 'border-green-300 text-green-700 bg-green-50';
+            else if (score >= 50) scoreColor = 'border-yellow-300 text-yellow-700 bg-yellow-50';
+            else if (score > 0) scoreColor = 'border-red-300 text-red-600 bg-red-50';
             return `
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="openCandidateDrawer(${c.id})">
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-xs font-medium text-green-600">${initials}</div>
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-xs font-medium text-yellow-700">${initials}</div>
                         <div>
-                            <p class="font-medium text-gray-900">${c.firstName} ${c.lastName}</p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                ${c.city}
-                            </p>
+                            <p class="font-medium text-gray-900">${c.person.firstName} ${c.person.lastName}</p>
+                            <p class="text-xs text-gray-400"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> ${c.person.city}</p>
                         </div>
                     </div>
                 </td>
+                <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 font-medium">${roleLabels[c.rolePreference]||c.rolePreference}</span></td>
+                <td class="px-4 py-3 text-xs text-gray-600">
+                    ${c.interview.scheduledAt ? `<p class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> ${formatDateTime(c.interview.scheduledAt)}</p>` : '<span class="text-gray-400">Niet gepland</span>'}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">${c.interview.interviewer || '<span class="text-gray-400">-</span>'}</td>
                 <td class="px-4 py-3">
-                    <div class="text-sm space-y-0.5">
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-gray-400"></i> ${c.email}</p>
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i> ${c.phone}</p>
+                    <div class="score-ring border-2 ${scoreColor}">${score > 0 ? score : '-'}</div>
+                </td>
+                <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full ${st.class} font-medium">${st.label}</span></td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-1">
+                        <button onclick="event.stopPropagation();openCandidateDrawer(${c.id})" class="p-1.5 hover:bg-gray-100 rounded-lg" title="Details"><i data-lucide="eye" class="w-4 h-4 text-gray-400"></i></button>
+                        <button onclick="event.stopPropagation()" class="p-1.5 hover:bg-gray-100 rounded-lg" title="Status wijzigen"><i data-lucide="edit-3" class="w-4 h-4 text-gray-400"></i></button>
                     </div>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-1 rounded-full ${statusInfo.class}">${statusInfo.label}</span>
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">Ma-Vr, flexibel</td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.interviewDate ? `
-                        <div class="text-gray-600">
-                            <p class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> ${c.interviewDate}</p>
-                            <p class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-gray-400"></i> ${c.interviewTime}</p>
-                        </div>
-                    ` : '<span class="text-gray-400">Niet gepland</span>'}
-                </td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.assignedTo ? `<span class="text-gray-700">${c.assignedTo}</span>` : '<span class="text-gray-400">-</span>'}
-                </td>
-                <td class="px-4 py-3">
-                    ${renderActionButtons(c)}
                 </td>
             </tr>`;
         }
 
-        function renderFrontOfficeRow(c) {
-            const statusInfo = statusLabels[c.status];
-            const initials = c.firstName.charAt(0) + c.lastName.charAt(0);
-            
-            return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-xs font-medium text-pink-600">${initials}</div>
-                        <div>
-                            <p class="font-medium text-gray-900">${c.firstName} ${c.lastName}</p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                ${c.city}
-                            </p>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <div class="text-sm space-y-0.5">
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-gray-400"></i> ${c.email}</p>
-                        <p class="text-gray-600 flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i> ${c.phone}</p>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-1 rounded-full ${statusInfo.class}">${statusInfo.label}</span>
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">NL, EN, DE</td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.interviewDate ? `
-                        <div class="text-gray-600">
-                            <p class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> ${c.interviewDate}</p>
-                            <p class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-gray-400"></i> ${c.interviewTime}</p>
-                        </div>
-                    ` : '<span class="text-gray-400">Niet gepland</span>'}
-                </td>
-                <td class="px-4 py-3 text-sm">
-                    ${c.assignedTo ? `<span class="text-gray-700">${c.assignedTo}</span>` : '<span class="text-gray-400">-</span>'}
-                </td>
-                <td class="px-4 py-3">
-                    ${renderActionButtons(c)}
-                </td>
-            </tr>`;
-        }
+        function openCandidateDrawer(id) {
+            const c = allCandidates.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('drawer-title').textContent = c.person.firstName + ' ' + c.person.lastName;
+            const st = c.phase === 'intake' ? (intakeStatuses[c.status]||{label:c.status,class:''}) : (interviewStatuses[c.status]||{label:c.status,class:''});
+            const ch = channelStyles[c.sourceChannel]||{label:c.sourceChannel,class:'',icon:'circle'};
+            let html = `
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">E-mail</p><p class="text-sm font-medium">${c.person.email}</p></div>
+                    <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Telefoon</p><p class="text-sm font-medium">${c.person.phone}</p></div>
+                    <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Woonplaats</p><p class="text-sm font-medium">${c.person.city}</p></div>
+                    <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Kanaal</p><p class="text-sm"><span class="channel-badge ${ch.class}"><i data-lucide="${ch.icon}" class="w-3 h-3"></i>${ch.label}</span></p></div>
+                    <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Status</p><p class="text-sm"><span class="text-xs px-2 py-1 rounded-full ${st.class} font-medium">${st.label}</span></p></div>
+                    <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Functie</p><p class="text-sm font-medium">${roleLabels[c.rolePreference]||c.rolePreference}</p></div>
+                </div>
 
-        function renderActionButtons(c) {
-            return `
-            <div class="flex items-center gap-1">
-                <button onclick="viewCandidateDetails(${c.id})" class="p-1.5 hover:bg-gray-100 rounded" title="Bekijken">
-                    <i data-lucide="eye" class="w-4 h-4 text-gray-400"></i>
-                </button>
-                ${c.status === 'in_behandeling' ? `
-                    <button onclick="updateCandidateStatus(${c.id}, 'aangenomen')" class="p-1.5 hover:bg-green-100 rounded" title="Aannemen">
-                        <i data-lucide="user-check" class="w-4 h-4 text-green-600"></i>
-                    </button>
-                    <button onclick="updateCandidateStatus(${c.id}, 'afgewezen')" class="p-1.5 hover:bg-red-100 rounded" title="Afwijzen">
-                        <i data-lucide="user-x" class="w-4 h-4 text-red-600"></i>
-                    </button>
-                ` : ''}
-                <button onclick="deleteCandidateConfirm(${c.id})" class="p-1.5 hover:bg-red-100 rounded" title="Verwijderen">
-                    <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i>
-                </button>
+                <div>
+                    <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="w-6 h-6 rounded bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">1</span> Aanmeldprocedure (Intake)</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-gray-500">Compleetheid:</span>
+                            <div class="completeness-bar flex-1"><div class="completeness-fill" style="width:${c.intake.completeness}%;background:${c.intake.completeness >= 80 ? '#22c55e' : c.intake.completeness >= 50 ? '#eab308' : '#ef4444'}"></div></div>
+                            <span class="text-sm font-semibold">${c.intake.completeness}%</span>
+                        </div>
+                        ${c.intake.flags.length ? `<div class="flex flex-wrap gap-1">${c.intake.flags.map(f => { const fs = flagStyles[f]||{label:f,class:''}; return `<span class="flag-tag ${fs.class}">${fs.label}</span>`; }).join('')}</div>` : ''}
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-500 mb-2">Intake-antwoorden</p>
+                            ${Object.entries(c.intake.answers).map(([k,v]) => `<p class="text-sm"><span class="text-gray-500 capitalize">${k}:</span> <span class="font-medium">${v}</span></p>`).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="w-6 h-6 rounded bg-yellow-100 flex items-center justify-center text-xs font-bold text-yellow-700">2</span> Sollicitatieprocedure (Interview)</h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Interview</p><p class="text-sm font-medium">${formatDateTime(c.interview.scheduledAt)}</p></div>
+                            <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">Interviewer</p><p class="text-sm font-medium">${c.interview.interviewer||'-'}</p></div>
+                        </div>
+                        ${c.interview.scores.overall > 0 ? `
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="score-ring border-2 ${c.interview.scores.overall >= 75 ? 'border-green-300 text-green-700 bg-green-50' : c.interview.scores.overall >= 50 ? 'border-yellow-300 text-yellow-700 bg-yellow-50' : 'border-red-300 text-red-600 bg-red-50'}" style="width:48px;height:48px;font-size:16px">${c.interview.scores.overall}</div>
+                                <div><p class="text-sm font-semibold">Overall Score</p><p class="text-xs text-gray-400">${c.interview.scores.overall >= 75 ? 'Goed' : c.interview.scores.overall >= 50 ? 'Voldoende' : 'Onvoldoende'}</p></div>
+                            </div>
+                            <div class="space-y-2">${c.interview.scores.categories.map(cat => `
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs text-gray-500 w-24">${cat.name}</span>
+                                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${cat.score}%;background:${cat.score >= 75 ? '#22c55e' : cat.score >= 50 ? '#eab308' : '#ef4444'}"></div></div>
+                                    <span class="text-xs font-semibold w-8 text-right">${cat.score}</span>
+                                </div>
+                            `).join('')}</div>
+                        </div>
+                        ` : '<p class="text-sm text-gray-400">Nog geen scores beschikbaar</p>'}
+                        ${c.interview.notes ? `<div class="bg-yellow-50 rounded-lg p-3 border border-yellow-100"><p class="text-xs text-yellow-600 mb-1">Notities</p><p class="text-sm text-gray-700">${c.interview.notes}</p></div>` : ''}
+                    </div>
+                </div>
+
+                <div class="flex gap-2 flex-wrap">
+                    <button class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 flex items-center gap-1"><i data-lucide="user-check" class="w-4 h-4"></i>Aannemen</button>
+                    <button class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 flex items-center gap-1"><i data-lucide="user-x" class="w-4 h-4"></i>Afwijzen</button>
+                    <button class="px-4 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i>No-show</button>
+                    <button class="px-4 py-2 border border-gray-200 text-sm rounded-lg hover:bg-gray-50 flex items-center gap-1"><i data-lucide="calendar" class="w-4 h-4"></i>Afspraak verplaatsen</button>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-gray-400"></i> Auditlog</h3>
+                    <div class="space-y-2">
+                        ${c.auditLog.slice().reverse().map(log => `
+                        <div class="flex items-start gap-3 text-sm">
+                            <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${log.actor === 'admin' ? 'bg-purple-500' : 'bg-gray-400'}"></div>
+                            <div>
+                                <p class="text-gray-700">${log.action}</p>
+                                <p class="text-xs text-gray-400">${formatDateTime(log.at)} &middot; ${log.actor === 'admin' ? 'Admin' : 'Systeem'}</p>
+                            </div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>`;
+            document.getElementById('drawer-content').innerHTML = html;
+            document.getElementById('candidateDrawer').style.display = '';
+            lucide.createIcons();
         }
 
-        function viewCandidateDetails(id) {
-            const candidate = allCandidates.find(c => c.id === id);
-            if (!candidate) return;
-            let details = `Details voor: ${candidate.firstName} ${candidate.lastName}\n\nFunctie: ${functionTypeLabels[candidate.functionType]}\nStatus: ${statusLabels[candidate.status].label}\nE-mail: ${candidate.email}\nTelefoon: ${candidate.phone}\nWoonplaats: ${candidate.city}`;
-            
-            if (candidate.functionType === 'horecamedewerker') {
-                const overall = calculateOverallHorecaScore(candidate);
-                details += `\n\n--- Horecamedewerker Scores ---\nOverall: ${overall ?? '-'}\nSoftskills: ${candidate.softskillsScore ?? '-'}\nBar: ${candidate.barScore ?? '-'}\nBediening: ${candidate.bedieningScore ?? '-'}\nDiner: ${candidate.dinerScore ?? '-'}`;
-            }
-            
-            alert(details);
+        function closeCandidateDrawer() {
+            document.getElementById('candidateDrawer').style.display = 'none';
         }
 
-        function updateCandidateStatus(id, newStatus) {
-            const candidate = allCandidates.find(c => c.id === id);
-            if (!candidate) return;
-            const statusLabel = statusLabels[newStatus].label;
-            if (confirm(`Weet je zeker dat je ${candidate.firstName} ${candidate.lastName} wilt markeren als "${statusLabel}"?`)) {
-                candidate.status = newStatus;
-                filterCandidates();
-            }
-        }
-
-        function deleteCandidateConfirm(id) {
-            const candidate = allCandidates.find(c => c.id === id);
-            if (!candidate) return;
-            if (confirm(`Weet je zeker dat je ${candidate.firstName} ${candidate.lastName} wilt verwijderen?`)) {
-                const index = allCandidates.findIndex(c => c.id === id);
-                if (index > -1) {
-                    allCandidates.splice(index, 1);
-                    filterCandidates();
-                }
-            }
-        }
-
-        function updateCandidateStats() {
-            const functionFilter = document.getElementById('candidateFunctionFilter').value;
-            let relevantCandidates = allCandidates;
-            
-            if (functionFilter !== 'all') {
-                relevantCandidates = allCandidates.filter(c => c.functionType === functionFilter);
-            }
-            
-            const total = relevantCandidates.length;
-            const pending = relevantCandidates.filter(c => c.status === 'in_behandeling').length;
-            const hired = relevantCandidates.filter(c => c.status === 'aangenomen').length;
-            const rejected = relevantCandidates.filter(c => c.status === 'afgewezen').length;
-            
-            document.getElementById('totalCandidatesCount').textContent = total;
-            document.getElementById('pendingCandidatesCount').textContent = pending;
-            document.getElementById('hiredCandidatesCount').textContent = hired;
-            document.getElementById('rejectedCandidatesCount').textContent = rejected;
-            
-            // Update tab counts
-            document.getElementById('tab-all-count').textContent = total;
-            document.getElementById('tab-pending-count').textContent = pending;
-            document.getElementById('tab-hired-count').textContent = hired;
-            document.getElementById('tab-rejected-count').textContent = rejected;
-        }
+        function renderCandidatesTable() { filterCandidates(); }
 
         function openAddCandidateModal() {
-            alert('Nieuwe sollicitant toevoegen - deze functionaliteit wordt nog ontwikkeld.');
+            alert('Nieuwe kandidaat toevoegen - deze functionaliteit wordt nog ontwikkeld.');
         }
 
         // Initialize on load
@@ -2914,10 +2779,7 @@
             renderActivityFeed();
             initSortable();
             
-            // Initialize candidates table
-            renderCandidatesTableHeader('all');
-            renderCandidatesTable();
-            updateCandidateStats();
+            filterCandidates();
         });
     </script>
 </body>
