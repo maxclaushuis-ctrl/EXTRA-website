@@ -409,16 +409,16 @@
                 <button onclick="filterChallenges('alle')" class="challenge-filter active flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 whitespace-nowrap flex-shrink-0">
                     <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Alle
                 </button>
-                <button onclick="filterChallenges('diensten')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">
+                <button onclick="filterChallenges('diensten')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-blue-900/20 text-blue-400/60 border border-blue-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-blue-900/20" data-cat-text="text-blue-400/60" data-cat-border="border-blue-800/20" data-cat-active-bg="bg-blue-600/30" data-cat-active-text="text-blue-300" data-cat-active-border="border-blue-500/30">
                     🏃 Diensten
                 </button>
-                <button onclick="filterChallenges('reviews')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">
+                <button onclick="filterChallenges('reviews')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-amber-900/20 text-amber-400/60 border border-amber-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-amber-900/20" data-cat-text="text-amber-400/60" data-cat-border="border-amber-800/20" data-cat-active-bg="bg-amber-600/30" data-cat-active-text="text-amber-300" data-cat-active-border="border-amber-500/30">
                     ⭐ Reviews
                 </button>
-                <button onclick="filterChallenges('aanwezigheid')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">
+                <button onclick="filterChallenges('aanwezigheid')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-900/20 text-emerald-400/60 border border-emerald-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-emerald-900/20" data-cat-text="text-emerald-400/60" data-cat-border="border-emerald-800/20" data-cat-active-bg="bg-emerald-600/30" data-cat-active-text="text-emerald-300" data-cat-active-border="border-emerald-500/30">
                     ⏰ Aanwezigheid
                 </button>
-                <button onclick="filterChallenges('team')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">
+                <button onclick="filterChallenges('team')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-rose-900/20 text-rose-400/60 border border-rose-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-rose-900/20" data-cat-text="text-rose-400/60" data-cat-border="border-rose-800/20" data-cat-active-bg="bg-rose-600/30" data-cat-active-text="text-rose-300" data-cat-active-border="border-rose-500/30">
                     🤝 Team
                 </button>
             </div>
@@ -704,11 +704,31 @@
 
         function filterChallenges(category) {
             document.querySelectorAll('.challenge-filter').forEach(btn => {
-                btn.classList.remove('active', 'bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
-                btn.classList.add('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+                btn.classList.remove('active');
+                var catBg = btn.getAttribute('data-cat-bg');
+                var catText = btn.getAttribute('data-cat-text');
+                var catBorder = btn.getAttribute('data-cat-border');
+                var catActiveBg = btn.getAttribute('data-cat-active-bg');
+                var catActiveText = btn.getAttribute('data-cat-active-text');
+                var catActiveBorder = btn.getAttribute('data-cat-active-border');
+                if (catActiveBg) {
+                    btn.classList.remove(catActiveBg, catActiveText, catActiveBorder);
+                    btn.classList.add(catBg, catText, catBorder);
+                } else {
+                    btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+                    btn.classList.add('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+                }
             });
-            event.currentTarget.classList.add('active', 'bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
-            event.currentTarget.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            var cur = event.currentTarget;
+            cur.classList.add('active');
+            var aBg = cur.getAttribute('data-cat-active-bg');
+            if (aBg) {
+                cur.classList.remove(cur.getAttribute('data-cat-bg'), cur.getAttribute('data-cat-text'), cur.getAttribute('data-cat-border'));
+                cur.classList.add(aBg, cur.getAttribute('data-cat-active-text'), cur.getAttribute('data-cat-active-border'));
+            } else {
+                cur.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+                cur.classList.add('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+            }
 
             var cards = document.querySelectorAll('.challenge-card');
             var activeCount = 0;
