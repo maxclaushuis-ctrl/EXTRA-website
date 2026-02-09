@@ -274,14 +274,14 @@
                 </div>
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-lg font-bold bg-gradient-to-r from-purple-200 to-purple-300 bg-clip-text text-transparent">Beloningen</h2>
-                    <div class="flex items-center gap-1.5">
+                    <button onclick="sortRewards()" class="flex items-center gap-1.5 cursor-pointer hover:opacity-80">
                         <span class="text-[10px] text-purple-500">Punten</span>
                         <i data-lucide="arrow-up-down" class="w-3 h-3 text-purple-500"></i>
-                    </div>
+                    </button>
                 </div>
                 
                 <div class="space-y-3" id="rewardsList">
-                    <div class="reward-card bg-gradient-to-r from-purple-900/40 to-purple-800/20 rounded-2xl p-4 border border-purple-600/30 card-glow transition-all cursor-pointer" data-reward-cat="entertainment" onclick="openModal('🎧', 'Apple AirPods', '800 punten', 'Draadloze Apple AirPods met oplaadcase. Perfect geluid voor onderweg of tijdens je pauze.')">
+                    <div class="reward-card bg-gradient-to-r from-purple-900/40 to-purple-800/20 rounded-2xl p-4 border border-purple-600/30 card-glow transition-all cursor-pointer" data-reward-cat="entertainment" data-points="800" onclick="openModal('🎧', 'Apple AirPods', '800 punten', 'Draadloze Apple AirPods met oplaadcase. Perfect geluid voor onderweg of tijdens je pauze.')">
                         <div class="flex gap-4">
                             <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-3xl float-animation">🎧</div>
                             <div class="flex-1">
@@ -298,7 +298,7 @@
                         </div>
                     </div>
 
-                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="entertainment" onclick="openModal('🎨', 'Museumjaarkaart', '600 punten', 'Een jaar lang gratis toegang tot meer dan 400 musea in heel Nederland.')">
+                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="entertainment" data-points="600" onclick="openModal('🎨', 'Museumjaarkaart', '600 punten', 'Een jaar lang gratis toegang tot meer dan 400 musea in heel Nederland.')">
                         <div class="flex gap-4">
                             <div class="w-14 h-14 rounded-xl bg-blue-900/30 flex items-center justify-center text-2xl">🎨</div>
                             <div class="flex-1">
@@ -312,7 +312,7 @@
                         </div>
                     </div>
 
-                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="sport" onclick="openModal('🎾', 'Padel Sessie', '200 punten', '1 uur padellen inclusief racket en ballen. Neem een collega mee!')">
+                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="sport" data-points="200" onclick="openModal('🎾', 'Padel Sessie', '200 punten', '1 uur padellen inclusief racket en ballen. Neem een collega mee!')">
                         <div class="flex gap-4">
                             <div class="w-14 h-14 rounded-xl bg-green-900/30 flex items-center justify-center text-2xl">🎾</div>
                             <div class="flex-1">
@@ -326,7 +326,7 @@
                         </div>
                     </div>
 
-                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="lifestyle" onclick="openModal('✨', 'Rituals Pakket', '350 punten', 'Luxe Rituals verzorgingspakket met bodycrème, douchegel en handzeep.')">
+                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="lifestyle" data-points="350" onclick="openModal('✨', 'Rituals Pakket', '350 punten', 'Luxe Rituals verzorgingspakket met bodycrème, douchegel en handzeep.')">
                         <div class="flex gap-4">
                             <div class="w-14 h-14 rounded-xl bg-amber-900/30 flex items-center justify-center text-2xl">✨</div>
                             <div class="flex-1">
@@ -352,14 +352,14 @@
                 </div>
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-lg font-bold bg-gradient-to-r from-purple-200 to-purple-300 bg-clip-text text-transparent">Kortingen</h2>
-                    <div class="flex items-center gap-1.5">
+                    <button onclick="sortDeals()" class="flex items-center gap-1.5 cursor-pointer hover:opacity-80">
                         <span class="text-[10px] text-purple-500">Korting</span>
                         <i data-lucide="arrow-up-down" class="w-3 h-3 text-purple-500"></i>
-                    </div>
+                    </button>
                 </div>
                 
                 <div class="space-y-4" id="dealsList">
-                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="sport">
+                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="sport" data-discount="30">
                         <div class="h-28 bg-gradient-to-r from-orange-900 via-red-900 to-orange-800 flex items-center justify-between px-5 relative overflow-hidden">
                             <div class="absolute inset-0 shimmer"></div>
                             <div class="relative">
@@ -380,7 +380,7 @@
                         </div>
                     </div>
 
-                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="food">
+                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="food" data-discount="10">
                         <div class="h-28 bg-gradient-to-r from-green-900 via-teal-900 to-green-800 flex items-center justify-between px-5 relative overflow-hidden">
                             <div class="absolute inset-0 shimmer"></div>
                             <div class="relative">
@@ -401,7 +401,7 @@
                         </div>
                     </div>
 
-                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="fashion">
+                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="fashion" data-discount="25">
                         <div class="h-28 bg-gradient-to-r from-red-900 via-pink-900 to-red-800 flex items-center justify-between px-5 relative overflow-hidden">
                             <div class="absolute inset-0 shimmer"></div>
                             <div class="relative">
@@ -884,6 +884,32 @@
                     card.style.display = 'none';
                 }
             });
+        }
+
+        var rewardSortAsc = false;
+        function sortRewards() {
+            rewardSortAsc = !rewardSortAsc;
+            var list = document.getElementById('rewardsList');
+            var cards = Array.from(list.querySelectorAll('.reward-card'));
+            cards.sort(function(a, b) {
+                var aVal = parseInt(a.getAttribute('data-points'));
+                var bVal = parseInt(b.getAttribute('data-points'));
+                return rewardSortAsc ? aVal - bVal : bVal - aVal;
+            });
+            cards.forEach(function(card) { list.appendChild(card); });
+        }
+
+        var dealSortAsc = false;
+        function sortDeals() {
+            dealSortAsc = !dealSortAsc;
+            var list = document.getElementById('dealsList');
+            var cards = Array.from(list.querySelectorAll('.deal-card'));
+            cards.sort(function(a, b) {
+                var aVal = parseInt(a.getAttribute('data-discount'));
+                var bVal = parseInt(b.getAttribute('data-discount'));
+                return dealSortAsc ? aVal - bVal : bVal - aVal;
+            });
+            cards.forEach(function(card) { list.appendChild(card); });
         }
 
         function filterDeals(category) {
