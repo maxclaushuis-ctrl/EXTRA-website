@@ -50,8 +50,8 @@
 
         .sub-tab { color: #9ca3af; cursor: pointer; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: all 0.2s; }
         .sub-tab.active { background: rgba(168, 85, 247, 0.25); color: #c084fc; font-weight: 700; }
-        .points-tab { color: #9ca3af; cursor: pointer; transition: all 0.2s; }
-        .points-tab.active { background: rgba(168, 85, 247, 0.25); color: #c084fc; font-weight: 700; }
+        .ranking-tab { color: #9ca3af; cursor: pointer; transition: all 0.2s; }
+        .ranking-tab.active { background: rgba(168, 85, 247, 0.25); color: #c084fc; font-weight: 700; }
 
         .sub-content { display: none; }
         .sub-content.active { display: block; }
@@ -84,64 +84,55 @@
 
         <!-- ==================== DASHBOARD TAB ==================== -->
         <div id="dashboard-tab" class="tab-content active px-5">
-            <!-- Points Banner -->
+            <!-- Points Hero Card -->
             <div class="gradient-border mb-4">
-                <div class="gradient-border-inner p-4 relative overflow-hidden">
+                <div class="gradient-border-inner p-6 relative overflow-hidden">
                     <div class="absolute inset-0 shimmer"></div>
-                    <div class="relative flex items-center">
-                        <div class="flex-1 min-w-0 pr-3">
-                            <p class="text-[10px] text-purple-500 mb-0.5">Totaal:</p>
-                            <span class="text-2xl font-extrabold text-purple-300 leading-none">12,600</span><span class="text-xs text-purple-400 font-bold ml-0.5">pts</span>
+                    <div class="relative">
+                        <div class="text-center mb-2">
+                            <p class="text-purple-400 text-[11px] uppercase tracking-widest mb-1">Jouw punten</p>
+                            <span class="text-6xl font-extrabold text-purple-300 leading-none">12,600</span>
+                            <div class="flex items-center justify-center gap-1 mt-2 text-xs text-green-400">
+                                <i data-lucide="trending-up" class="w-3 h-3"></i>
+                                <span class="font-semibold">+125 pts deze maand</span>
+                            </div>
                         </div>
-                        <div class="border-l border-purple-700/30 px-3">
-                            <p class="text-[10px] text-purple-500 mb-0.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-2.5 h-2.5 text-green-400"></i> Deze maand:</p>
-                            <span class="text-lg font-extrabold text-green-400 leading-none">+125</span><span class="text-[9px] text-green-500/70 font-bold ml-0.5">pts</span>
+                        <div class="h-px bg-purple-700/40 my-4"></div>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500/40 to-amber-600/50 flex items-center justify-center border border-yellow-500/50 flex-shrink-0">
+                                <span class="text-3xl">🥇</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-yellow-400 font-extrabold text-lg leading-tight">GOLD <span class="text-yellow-500/70 text-xs font-semibold uppercase tracking-wider">Status</span></p>
+                                <p class="text-purple-400 text-[11px] mt-0.5">Volgende: 💎 DIAMOND · <span class="text-purple-300 font-semibold">15,000 pts</span></p>
+                            </div>
                         </div>
-                        <div class="border-l border-purple-700/30 pl-3">
-                            <p class="text-green-400 text-sm font-bold leading-none">+3,850<span class="text-[9px] font-medium ml-0.5">pts</span></p>
-                            <p class="text-red-400/80 text-sm font-bold leading-none mt-1.5">-8,750<span class="text-[9px] font-medium ml-0.5">pts</span></p>
+                        <div class="space-y-1.5">
+                            <div class="h-3 bg-purple-900/50 rounded-full overflow-hidden">
+                                <div class="h-full progress-gradient rounded-full relative" style="width: 84%">
+                                    <div class="absolute inset-0 shimmer"></div>
+                                </div>
+                            </div>
+                            <p class="text-right text-[10px] text-purple-500">Nog <span class="text-purple-300 font-semibold">2,400 pts</span> te gaan</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Punten Tabs -->
-            <div class="flex gap-2 mb-4 bg-gray-900/60 rounded-xl p-1">
-                <button onclick="switchPointsTab('maand')" class="points-tab active flex-1 text-center text-xs font-medium py-2 rounded-lg">Deze maand</button>
-                <button onclick="switchPointsTab('totaal')" class="points-tab flex-1 text-center text-xs font-medium py-2 rounded-lg">Totaal punten</button>
-            </div>
-
-            <!-- Punten Content: Deze maand (default) -->
-            <div id="points-maand" class="points-content active mb-5">
-                <div class="grid grid-cols-5 gap-3">
-                    <div class="col-span-3 bg-gradient-to-br from-green-900/30 to-green-800/10 rounded-2xl p-4 border border-green-600/25">
-                        <div class="flex items-center gap-2 mb-1">
-                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-green-400"></i>
-                            <p class="text-[10px] text-green-300 font-medium">Verdiend deze maand</p>
-                        </div>
-                        <span class="text-3xl font-extrabold text-green-400">+125</span><span class="text-xs text-green-500/60 ml-1">pts</span>
+            <!-- Besteedbaar / Uitgegeven -->
+            <div class="grid grid-cols-5 gap-3 mb-5">
+                <div class="col-span-3 bg-gradient-to-br from-green-900/30 to-green-800/10 rounded-2xl p-5 border border-green-600/25">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i data-lucide="wallet" class="w-4 h-4 text-green-400"></i>
+                        <p class="text-xs text-green-300 font-medium">Besteedbaar</p>
                     </div>
-                    <div class="col-span-2 bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 flex flex-col justify-center">
-                        <p class="text-[10px] text-purple-500 mb-1">Uitgegeven</p>
-                        <span class="text-xl font-bold text-red-400/70">-50</span><span class="text-[9px] text-purple-600 ml-0.5">pts</span>
-                    </div>
+                    <span class="text-4xl font-extrabold text-green-400">3,850</span>
+                    <p class="text-[10px] text-green-500/60 mt-1">punten beschikbaar</p>
                 </div>
-            </div>
-
-            <!-- Punten Content: Totaal -->
-            <div id="points-totaal" class="points-content mb-5" style="display:none;">
-                <div class="grid grid-cols-5 gap-3">
-                    <div class="col-span-3 bg-gradient-to-br from-green-900/30 to-green-800/10 rounded-2xl p-4 border border-green-600/25">
-                        <div class="flex items-center gap-2 mb-1">
-                            <i data-lucide="wallet" class="w-3.5 h-3.5 text-green-400"></i>
-                            <p class="text-[10px] text-green-300 font-medium">Besteedbaar</p>
-                        </div>
-                        <span class="text-3xl font-extrabold text-green-400">3,850</span><span class="text-xs text-green-500/60 ml-1">pts</span>
-                    </div>
-                    <div class="col-span-2 bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 flex flex-col justify-center">
-                        <p class="text-[10px] text-purple-500 mb-1">Uitgegeven</p>
-                        <span class="text-xl font-bold text-red-400/70">8,750</span><span class="text-[9px] text-purple-600 ml-0.5">pts</span>
-                    </div>
+                <div class="col-span-2 bg-[#1a1025] rounded-2xl p-5 border border-purple-800/20 flex flex-col justify-center">
+                    <p class="text-[10px] text-purple-500 mb-1">Uitgegeven</p>
+                    <span class="text-xl font-bold text-purple-400/70">8,750</span>
+                    <p class="text-[10px] text-purple-600 mt-0.5">punten</p>
                 </div>
             </div>
 
@@ -599,28 +590,56 @@
 
         <!-- ==================== LEADERBOARD TAB ==================== -->
         <div id="leaderboard-tab" class="tab-content px-5">
-            <div class="mb-4">
-                <h2 class="text-lg font-bold bg-gradient-to-r from-purple-200 to-purple-300 bg-clip-text text-transparent">Ranglijst</h2>
-                <p class="text-xs text-purple-400 mt-1">Januari 2026 – Punten van deze maand</p>
-            </div>
-
-            <div class="bg-gradient-to-r from-purple-900/50 to-purple-700/30 rounded-xl p-4 mb-4 border border-purple-500/30">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="text-3xl">🏆</span>
-                        <div>
-                            <p class="text-sm font-medium">Jouw score deze maand</p>
-                            <p class="text-xs text-purple-400">Positie #1</p>
+            <!-- Points Banner -->
+            <div class="gradient-border mb-4">
+                <div class="gradient-border-inner p-4 relative overflow-hidden">
+                    <div class="absolute inset-0 shimmer"></div>
+                    <div class="relative flex items-center">
+                        <div class="flex-1 min-w-0 pr-3">
+                            <p class="text-[10px] text-purple-500 mb-0.5">Totaal:</p>
+                            <span class="text-2xl font-extrabold text-purple-300 leading-none">12,600</span><span class="text-xs text-purple-400 font-bold ml-0.5">pts</span>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-3xl font-bold text-green-400">485</p>
-                        <p class="text-[10px] text-purple-400">punten</p>
+                        <div class="border-l border-purple-700/30 px-3">
+                            <p class="text-[10px] text-purple-500 mb-0.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-2.5 h-2.5 text-green-400"></i> Deze maand:</p>
+                            <span class="text-lg font-extrabold text-green-400 leading-none">+125</span><span class="text-[9px] text-green-500/70 font-bold ml-0.5">pts</span>
+                        </div>
+                        <div class="border-l border-purple-700/30 pl-3">
+                            <p class="text-green-400 text-sm font-bold leading-none">+3,850<span class="text-[9px] font-medium ml-0.5">pts</span></p>
+                            <p class="text-red-400/80 text-sm font-bold leading-none mt-1.5">-8,750<span class="text-[9px] font-medium ml-0.5">pts</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-end justify-center gap-3 mb-6 pt-4">
+            <!-- Ranglijst Tabs -->
+            <div class="flex gap-2 mb-4 bg-gray-900/60 rounded-xl p-1">
+                <button onclick="switchRankingTab('maand')" class="ranking-tab active flex-1 text-center text-xs font-medium py-2 rounded-lg">Deze maand</button>
+                <button onclick="switchRankingTab('totaal')" class="ranking-tab flex-1 text-center text-xs font-medium py-2 rounded-lg">Totaal punten</button>
+            </div>
+
+            <!-- Ranking: Deze maand (default) -->
+            <div id="ranking-maand" class="ranking-content">
+                <div class="mb-3">
+                    <p class="text-xs text-purple-400">Februari 2026 – Punten van deze maand</p>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-900/50 to-purple-700/30 rounded-xl p-4 mb-4 border border-purple-500/30">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🏆</span>
+                            <div>
+                                <p class="text-sm font-medium">Jouw score deze maand</p>
+                                <p class="text-xs text-purple-400">Positie #1</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-green-400">485</p>
+                            <p class="text-[10px] text-purple-400">punten</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-end justify-center gap-3 mb-6 pt-4">
                 <div class="text-center flex-1">
                     <div class="w-14 h-14 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center font-bold mx-auto mb-2 ring-2 ring-gray-400">SV</div>
                     <p class="text-xs font-medium">Sophie</p>
@@ -674,7 +693,85 @@
                 </div>
             </div>
 
-            <p class="text-center text-[10px] text-purple-400/60 mt-4">Ranglijst wordt maandelijks gereset. Je punten blijven altijd van jou!</p>
+                <p class="text-center text-[10px] text-purple-400/60 mt-4">Ranglijst wordt maandelijks gereset. Je punten blijven altijd van jou!</p>
+            </div>
+
+            <!-- Ranking: Totaal punten -->
+            <div id="ranking-totaal" class="ranking-content" style="display:none;">
+                <div class="mb-3">
+                    <p class="text-xs text-purple-400">Totaal – Alle punten ooit verdiend</p>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-900/50 to-purple-700/30 rounded-xl p-4 mb-4 border border-purple-500/30">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🏆</span>
+                            <div>
+                                <p class="text-sm font-medium">Jouw totaalscore</p>
+                                <p class="text-xs text-purple-400">Positie #2</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-purple-300">12,600</p>
+                            <p class="text-[10px] text-purple-400">punten</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-end justify-center gap-3 mb-6 pt-4">
+                    <div class="text-center flex-1">
+                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center font-bold mx-auto mb-2 ring-2 ring-gray-400">JJ</div>
+                        <p class="text-xs font-bold text-purple-300">Jij!</p>
+                        <p class="text-xs text-purple-400">12,600 pts</p>
+                        <div class="h-20 bg-gradient-to-t from-gray-600 to-gray-500 rounded-t-lg mt-2 flex items-center justify-center">
+                            <span class="text-xl">🥈</span>
+                        </div>
+                    </div>
+                    <div class="text-center flex-1">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center font-bold mx-auto mb-2 ring-2 ring-yellow-400">DG</div>
+                        <p class="text-sm font-bold">Dennis</p>
+                        <p class="text-xs text-green-400 font-medium">14,200 pts</p>
+                        <div class="h-28 bg-gradient-to-t from-purple-700 to-purple-500 rounded-t-lg mt-2 flex items-center justify-center border-t-4 border-yellow-400">
+                            <span class="text-3xl">🥇</span>
+                        </div>
+                    </div>
+                    <div class="text-center flex-1">
+                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center font-bold mx-auto mb-2 ring-2 ring-amber-500">SV</div>
+                        <p class="text-xs font-medium">Sophie</p>
+                        <p class="text-xs text-purple-400">11,800 pts</p>
+                        <div class="h-16 bg-gradient-to-t from-amber-800 to-amber-700 rounded-t-lg mt-2 flex items-center justify-center">
+                            <span class="text-xl">🥉</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-[#1a1025] rounded-2xl divide-y divide-purple-900/30 border border-purple-800/20">
+                    <div class="flex items-center gap-3 p-4">
+                        <span class="w-6 text-center text-purple-400 font-bold">4</span>
+                        <div class="w-10 h-10 rounded-full bg-purple-800 flex items-center justify-center text-xs font-bold">AB</div>
+                        <div class="flex-1">
+                            <p class="font-medium">Anna Bakker</p>
+                        </div>
+                        <span class="text-purple-300 font-semibold">9,450 pts</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-4">
+                        <span class="w-6 text-center text-purple-400 font-bold">5</span>
+                        <div class="w-10 h-10 rounded-full bg-pink-800 flex items-center justify-center text-xs font-bold">PV</div>
+                        <div class="flex-1">
+                            <p class="font-medium">Peter Visser</p>
+                        </div>
+                        <span class="text-purple-300 font-semibold">8,900 pts</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-4">
+                        <span class="w-6 text-center text-purple-400 font-bold">6</span>
+                        <div class="w-10 h-10 rounded-full bg-pink-800 flex items-center justify-center text-xs font-bold">ED</div>
+                        <div class="flex-1">
+                            <p class="font-medium">Emma van Dijk</p>
+                        </div>
+                        <span class="text-purple-300 font-semibold">7,200 pts</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Bottom Navigation -->
@@ -890,11 +987,11 @@
             });
         }
 
-        function switchPointsTab(tab) {
-            document.querySelectorAll('.points-tab').forEach(function(t) { t.classList.remove('active'); });
+        function switchRankingTab(tab) {
+            document.querySelectorAll('.ranking-tab').forEach(function(t) { t.classList.remove('active'); });
             event.currentTarget.classList.add('active');
-            document.getElementById('points-maand').style.display = tab === 'maand' ? '' : 'none';
-            document.getElementById('points-totaal').style.display = tab === 'totaal' ? '' : 'none';
+            document.getElementById('ranking-maand').style.display = tab === 'maand' ? '' : 'none';
+            document.getElementById('ranking-totaal').style.display = tab === 'totaal' ? '' : 'none';
             lucide.createIcons();
         }
 
