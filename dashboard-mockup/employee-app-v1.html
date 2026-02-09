@@ -443,12 +443,13 @@
             </div>
 
             <!-- Filter Button + Dropdown -->
-            <div class="relative mb-4" id="filterContainer">
+            <div class="relative mb-4 flex items-center justify-between" id="filterContainer">
                 <button onclick="toggleFilterDropdown()" class="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/30">
                     <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
                     <span id="filterLabel">Alle challenges</span>
                     <i data-lucide="chevron-down" class="w-3.5 h-3.5 ml-1"></i>
                 </button>
+                <span class="text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded-full" id="challengeCount">4 actief</span>
                 <div id="filterDropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-purple-700/40 rounded-2xl p-3 z-50 shadow-xl shadow-black/40">
                     <p class="text-[10px] text-purple-500 font-semibold uppercase tracking-wider mb-2 px-1">Status</p>
                     <div class="flex gap-2 mb-3">
@@ -466,10 +467,6 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="text-sm font-bold text-purple-300">Actieve challenges</h2>
-                <span class="text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded-full" id="challengeCount">4 actief</span>
-            </div>
             
             <div class="space-y-3" id="challengesList">
                 <div class="challenge-card bg-gradient-to-r from-blue-900/30 to-blue-800/15 rounded-2xl p-4 border border-blue-500/25" data-category="diensten" data-status="actief">
