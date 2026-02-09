@@ -841,7 +841,7 @@
             var catNames = { 'alle': 'Alle', 'diensten': 'Diensten', 'reviews': 'Reviews', 'aanwezigheid': 'Aanwezigheid', 'team': 'Team' };
             var statusLabel = currentStatus === 'actief' ? 'Actief' : 'Voltooid';
             var catLabel = catNames[currentCategory] || 'Alle';
-            var filterText = currentCategory === 'alle' ? statusLabel + 'e challenges' : statusLabel + ' · ' + catLabel;
+            var filterText = currentCategory === 'alle' ? (currentStatus === 'actief' ? 'Actieve challenges' : 'Voltooide challenges') : statusLabel + ' · ' + catLabel;
             document.getElementById('filterLabel').textContent = filterText;
 
             var countLabel = visibleCount + (currentStatus === 'actief' ? ' actief' : ' voltooid');
