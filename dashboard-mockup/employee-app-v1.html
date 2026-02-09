@@ -92,7 +92,7 @@
                         <div class="text-center mb-2">
                             <p class="text-purple-400 text-[11px] uppercase tracking-widest mb-1">Jouw punten</p>
                             <span class="text-6xl font-extrabold text-purple-300 leading-none">12,600</span>
-                            <div class="flex items-center justify-center gap-1 mt-2 text-xs text-purple-400">
+                            <div class="flex items-center justify-center gap-1 mt-2 text-xs text-cyan-400">
                                 <i data-lucide="trending-up" class="w-3 h-3"></i>
                                 <span class="font-semibold">+125 pts deze maand</span>
                             </div>
@@ -142,9 +142,9 @@
                     <span class="text-xl">🔥</span>
                     <p class="text-sm text-purple-300">Je hebt <span class="font-bold text-orange-400">5 dagen op rij</span> gewerkt!</p>
                 </div>
-                <div class="bg-gradient-to-r from-green-900/40 to-teal-900/20 rounded-xl px-4 py-3 border border-green-600/20 flex items-center gap-3">
+                <div class="bg-gradient-to-r from-blue-900/40 to-blue-800/20 rounded-xl px-4 py-3 border border-blue-600/20 flex items-center gap-3">
                     <span class="text-xl">📆</span>
-                    <p class="text-sm text-purple-300">Je hebt deze maand <span class="font-bold text-green-400">8</span> dienst(en) gewerkt</p>
+                    <p class="text-sm text-purple-300">Je hebt deze maand <span class="font-bold text-blue-300">8</span> dienst(en) gewerkt</p>
                 </div>
                 <div class="bg-gradient-to-r from-purple-900/40 to-pink-900/20 rounded-xl px-4 py-3 border border-purple-600/20 flex items-center gap-3">
                     <span class="text-xl">🏆</span>
@@ -194,31 +194,40 @@
                 </div>
                 <div class="space-y-2">
                     <div class="bg-gradient-to-r from-purple-900/30 to-purple-800/15 rounded-xl px-4 py-3 border border-purple-600/20 flex items-center gap-3 cursor-pointer" onclick="switchTab('rewards'); setTimeout(() => switchSubTab('deals'), 100)">
-                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-extrabold text-purple-300">30%</span>
+                        <div class="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <img src="/attached_assets/images-5_1770658086727.png" alt="TrainMore" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-semibold text-purple-300">TrainMore</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-semibold text-purple-300">TrainMore</h3>
+                                <span class="text-xs font-bold text-green-400">30%</span>
+                            </div>
                             <p class="text-[10px] text-purple-500">Fitness lidmaatschap</p>
                         </div>
                         <i data-lucide="chevron-right" class="w-4 h-4 text-purple-600 flex-shrink-0"></i>
                     </div>
                     <div class="bg-gradient-to-r from-purple-900/30 to-purple-800/15 rounded-xl px-4 py-3 border border-purple-600/20 flex items-center gap-3 cursor-pointer" onclick="switchTab('rewards'); setTimeout(() => switchSubTab('deals'), 100)">
-                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-extrabold text-purple-300">25%</span>
+                        <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 overflow-hidden p-1">
+                            <img src="/attached_assets/Hennes-logo_1770658086727.jpg" alt="H&M" class="w-full h-full object-contain">
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-semibold text-purple-300">H&M</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-semibold text-purple-300">H&M</h3>
+                                <span class="text-xs font-bold text-green-400">25%</span>
+                            </div>
                             <p class="text-[10px] text-purple-500">Fashion korting</p>
                         </div>
                         <i data-lucide="chevron-right" class="w-4 h-4 text-purple-600 flex-shrink-0"></i>
                     </div>
                     <div class="bg-gradient-to-r from-purple-900/30 to-purple-800/15 rounded-xl px-4 py-3 border border-purple-600/20 flex items-center gap-3 cursor-pointer" onclick="switchTab('rewards'); setTimeout(() => switchSubTab('deals'), 100)">
-                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-extrabold text-purple-300">10%</span>
+                        <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 overflow-hidden p-1">
+                            <img src="/attached_assets/1-desktop_1770658086727.jpg" alt="Starbucks" class="w-full h-full object-contain">
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-semibold text-purple-300">Starbucks</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-semibold text-purple-300">Starbucks</h3>
+                                <span class="text-xs font-bold text-green-400">10%</span>
+                            </div>
                             <p class="text-[10px] text-purple-500">Korting op drankjes</p>
                         </div>
                         <i data-lucide="chevron-right" class="w-4 h-4 text-purple-600 flex-shrink-0"></i>
@@ -236,7 +245,7 @@
                     <div class="relative flex items-center">
                         <div class="flex-1 min-w-0 pr-3">
                             <span class="text-2xl font-extrabold text-green-400 leading-none">+3,850</span><span class="text-xs text-green-500/70 font-bold ml-0.5">pts</span>
-                            <div class="flex items-center gap-1 mt-1 text-[10px] text-purple-400/70">
+                            <div class="flex items-center gap-1 mt-1 text-[10px] text-cyan-400/70">
                                 <i data-lucide="trending-up" class="w-3 h-3"></i>
                                 <span>+125 pts deze maand</span>
                             </div>
@@ -430,7 +439,7 @@
                         <div class="flex items-center">
                             <div class="flex-1 min-w-0 pr-3">
                                 <span class="text-2xl font-extrabold text-purple-300 leading-none">12,600</span><span class="text-xs text-purple-400 font-bold ml-0.5">pts</span>
-                                <div class="flex items-center gap-1 mt-1 text-[10px] text-purple-400/70">
+                                <div class="flex items-center gap-1 mt-1 text-[10px] text-cyan-400/70">
                                     <i data-lucide="trending-up" class="w-3 h-3"></i>
                                     <span>+125 pts deze maand</span>
                                 </div>
@@ -600,8 +609,8 @@
                             <span class="text-2xl font-extrabold text-purple-300 leading-none">12,600</span><span class="text-xs text-purple-400 font-bold ml-0.5">pts</span>
                         </div>
                         <div class="border-l border-purple-700/30 px-3">
-                            <p class="text-[10px] text-purple-500 mb-0.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-2.5 h-2.5 text-purple-400"></i> Deze maand:</p>
-                            <span class="text-lg font-extrabold text-purple-300 leading-none">+125</span><span class="text-[9px] text-purple-400/70 font-bold ml-0.5">pts</span>
+                            <p class="text-[10px] text-purple-500 mb-0.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-2.5 h-2.5 text-cyan-400"></i> Deze maand:</p>
+                            <span class="text-lg font-extrabold text-cyan-400 leading-none">+125</span><span class="text-[9px] text-cyan-400/70 font-bold ml-0.5">pts</span>
                         </div>
                         <div class="border-l border-purple-700/30 pl-3">
                             <p class="text-green-400 text-sm font-bold leading-none">+3,850<span class="text-[9px] font-medium ml-0.5">pts</span></p>
