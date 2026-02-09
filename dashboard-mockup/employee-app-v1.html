@@ -266,13 +266,22 @@
 
             <!-- SUB: Beloningen -->
             <div id="sub-beloningen" class="sub-content active">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
+                    <button onclick="filterRewards('alle')" class="reward-filter active text-xs font-medium px-3 py-1.5 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 whitespace-nowrap flex-shrink-0">Alle</button>
+                    <button onclick="filterRewards('entertainment')" class="reward-filter text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">Entertainment</button>
+                    <button onclick="filterRewards('sport')" class="reward-filter text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">Sport</button>
+                    <button onclick="filterRewards('lifestyle')" class="reward-filter text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">Lifestyle</button>
+                </div>
+                <div class="flex items-center justify-between mb-3">
                     <h2 class="text-lg font-bold bg-gradient-to-r from-purple-200 to-purple-300 bg-clip-text text-transparent">Beloningen</h2>
-                    <span class="text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded-full">4 beschikbaar</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] text-purple-500">Punten</span>
+                        <i data-lucide="arrow-up-down" class="w-3 h-3 text-purple-500"></i>
+                    </div>
                 </div>
                 
-                <div class="space-y-3">
-                    <div class="bg-gradient-to-r from-purple-900/40 to-purple-800/20 rounded-2xl p-4 border border-purple-600/30 card-glow transition-all cursor-pointer" onclick="openModal('🎧', 'Apple AirPods', '800 punten', 'Draadloze Apple AirPods met oplaadcase. Perfect geluid voor onderweg of tijdens je pauze.')">
+                <div class="space-y-3" id="rewardsList">
+                    <div class="reward-card bg-gradient-to-r from-purple-900/40 to-purple-800/20 rounded-2xl p-4 border border-purple-600/30 card-glow transition-all cursor-pointer" data-reward-cat="entertainment" onclick="openModal('🎧', 'Apple AirPods', '800 punten', 'Draadloze Apple AirPods met oplaadcase. Perfect geluid voor onderweg of tijdens je pauze.')">
                         <div class="flex gap-4">
                             <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-3xl float-animation">🎧</div>
                             <div class="flex-1">
@@ -289,7 +298,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" onclick="openModal('🎨', 'Museumjaarkaart', '600 punten', 'Een jaar lang gratis toegang tot meer dan 400 musea in heel Nederland.')">
+                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="entertainment" onclick="openModal('🎨', 'Museumjaarkaart', '600 punten', 'Een jaar lang gratis toegang tot meer dan 400 musea in heel Nederland.')">
                         <div class="flex gap-4">
                             <div class="w-14 h-14 rounded-xl bg-blue-900/30 flex items-center justify-center text-2xl">🎨</div>
                             <div class="flex-1">
@@ -303,7 +312,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" onclick="openModal('🎾', 'Padel Sessie', '200 punten', '1 uur padellen inclusief racket en ballen. Neem een collega mee!')">
+                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="sport" onclick="openModal('🎾', 'Padel Sessie', '200 punten', '1 uur padellen inclusief racket en ballen. Neem een collega mee!')">
                         <div class="flex gap-4">
                             <div class="w-14 h-14 rounded-xl bg-green-900/30 flex items-center justify-center text-2xl">🎾</div>
                             <div class="flex-1">
@@ -317,7 +326,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" onclick="openModal('✨', 'Rituals Pakket', '350 punten', 'Luxe Rituals verzorgingspakket met bodycrème, douchegel en handzeep.')">
+                    <div class="reward-card bg-[#1a1025] rounded-2xl p-4 border border-purple-800/20 card-glow transition-all cursor-pointer" data-reward-cat="lifestyle" onclick="openModal('✨', 'Rituals Pakket', '350 punten', 'Luxe Rituals verzorgingspakket met bodycrème, douchegel en handzeep.')">
                         <div class="flex gap-4">
                             <div class="w-14 h-14 rounded-xl bg-amber-900/30 flex items-center justify-center text-2xl">✨</div>
                             <div class="flex-1">
@@ -333,15 +342,24 @@
                 </div>
             </div>
 
-            <!-- SUB: Deals -->
+            <!-- SUB: Kortingen -->
             <div id="sub-deals" class="sub-content">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-bold bg-gradient-to-r from-purple-200 to-purple-300 bg-clip-text text-transparent">Exclusieve Deals</h2>
-                    <span class="text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded-full">3 actief</span>
+                <div class="flex items-center gap-2 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
+                    <button onclick="filterDeals('alle')" class="deal-filter active text-xs font-medium px-3 py-1.5 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 whitespace-nowrap flex-shrink-0">Alle</button>
+                    <button onclick="filterDeals('sport')" class="deal-filter text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">Sport</button>
+                    <button onclick="filterDeals('food')" class="deal-filter text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">Eten & Drinken</button>
+                    <button onclick="filterDeals('fashion')" class="deal-filter text-xs font-medium px-3 py-1.5 rounded-full bg-purple-900/20 text-purple-400/60 border border-purple-800/20 whitespace-nowrap flex-shrink-0">Fashion</button>
+                </div>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-bold bg-gradient-to-r from-purple-200 to-purple-300 bg-clip-text text-transparent">Kortingen</h2>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] text-purple-500">Korting</span>
+                        <i data-lucide="arrow-up-down" class="w-3 h-3 text-purple-500"></i>
+                    </div>
                 </div>
                 
-                <div class="space-y-4">
-                    <div class="rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all">
+                <div class="space-y-4" id="dealsList">
+                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="sport">
                         <div class="h-28 bg-gradient-to-r from-orange-900 via-red-900 to-orange-800 flex items-center justify-between px-5 relative overflow-hidden">
                             <div class="absolute inset-0 shimmer"></div>
                             <div class="relative">
@@ -362,7 +380,7 @@
                         </div>
                     </div>
 
-                    <div class="rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all">
+                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="food">
                         <div class="h-28 bg-gradient-to-r from-green-900 via-teal-900 to-green-800 flex items-center justify-between px-5 relative overflow-hidden">
                             <div class="absolute inset-0 shimmer"></div>
                             <div class="relative">
@@ -383,7 +401,7 @@
                         </div>
                     </div>
 
-                    <div class="rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all">
+                    <div class="deal-card rounded-2xl overflow-hidden border border-purple-800/30 card-glow transition-all" data-deal-cat="fashion">
                         <div class="h-28 bg-gradient-to-r from-red-900 via-pink-900 to-red-800 flex items-center justify-between px-5 relative overflow-hidden">
                             <div class="absolute inset-0 shimmer"></div>
                             <div class="relative">
@@ -849,6 +867,40 @@
 
             document.getElementById('filterDropdown').classList.add('hidden');
             lucide.createIcons();
+        }
+
+        function filterRewards(category) {
+            document.querySelectorAll('.reward-filter').forEach(function(btn) {
+                btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+                btn.classList.add('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            });
+            var cur = event.currentTarget;
+            cur.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            cur.classList.add('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+            document.querySelectorAll('.reward-card').forEach(function(card) {
+                if (category === 'alle' || card.getAttribute('data-reward-cat') === category) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function filterDeals(category) {
+            document.querySelectorAll('.deal-filter').forEach(function(btn) {
+                btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+                btn.classList.add('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            });
+            var cur = event.currentTarget;
+            cur.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            cur.classList.add('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+            document.querySelectorAll('.deal-card').forEach(function(card) {
+                if (category === 'alle' || card.getAttribute('data-deal-cat') === category) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
     </script>
 </body>
