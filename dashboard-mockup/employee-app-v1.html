@@ -451,23 +451,28 @@
                 </div>
             </div>
 
-            <!-- Category Filter -->
-            <div class="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1" id="challengeFilters">
-                <button onclick="filterChallenges('alle')" class="challenge-filter active flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 whitespace-nowrap flex-shrink-0">
-                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Alle
+            <!-- Filter Button + Dropdown -->
+            <div class="relative mb-4" id="filterContainer">
+                <button onclick="toggleFilterDropdown()" class="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/30">
+                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                    <span id="filterLabel">Alle challenges</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 ml-1"></i>
                 </button>
-                <button onclick="filterChallenges('diensten')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-blue-900/20 text-blue-400/60 border border-blue-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-blue-900/20" data-cat-text="text-blue-400/60" data-cat-border="border-blue-800/20" data-cat-active-bg="bg-blue-600/30" data-cat-active-text="text-blue-300" data-cat-active-border="border-blue-500/30">
-                    🏃 Diensten
-                </button>
-                <button onclick="filterChallenges('reviews')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-amber-900/20 text-amber-400/60 border border-amber-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-amber-900/20" data-cat-text="text-amber-400/60" data-cat-border="border-amber-800/20" data-cat-active-bg="bg-amber-600/30" data-cat-active-text="text-amber-300" data-cat-active-border="border-amber-500/30">
-                    ⭐ Reviews
-                </button>
-                <button onclick="filterChallenges('aanwezigheid')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-900/20 text-emerald-400/60 border border-emerald-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-emerald-900/20" data-cat-text="text-emerald-400/60" data-cat-border="border-emerald-800/20" data-cat-active-bg="bg-emerald-600/30" data-cat-active-text="text-emerald-300" data-cat-active-border="border-emerald-500/30">
-                    ⏰ Aanwezigheid
-                </button>
-                <button onclick="filterChallenges('team')" class="challenge-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-rose-900/20 text-rose-400/60 border border-rose-800/20 whitespace-nowrap flex-shrink-0" data-cat-bg="bg-rose-900/20" data-cat-text="text-rose-400/60" data-cat-border="border-rose-800/20" data-cat-active-bg="bg-rose-600/30" data-cat-active-text="text-rose-300" data-cat-active-border="border-rose-500/30">
-                    🤝 Team
-                </button>
+                <div id="filterDropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-purple-700/40 rounded-2xl p-3 z-50 shadow-xl shadow-black/40">
+                    <p class="text-[10px] text-purple-500 font-semibold uppercase tracking-wider mb-2 px-1">Status</p>
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="setStatusFilter('actief')" class="status-filter active flex-1 text-center text-xs font-medium py-2 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/30">Actief</button>
+                        <button onclick="setStatusFilter('voltooid')" class="status-filter flex-1 text-center text-xs font-medium py-2 rounded-xl bg-purple-900/20 text-purple-400/60 border border-purple-800/20">Voltooid</button>
+                    </div>
+                    <p class="text-[10px] text-purple-500 font-semibold uppercase tracking-wider mb-2 px-1">Categorie</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setCategoryFilter('alle')" class="cat-filter active text-xs font-medium py-2 px-3 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/30 text-center">Alle</button>
+                        <button onclick="setCategoryFilter('diensten')" class="cat-filter text-xs font-medium py-2 px-3 rounded-xl bg-blue-900/20 text-blue-400/60 border border-blue-800/20 text-center" data-orig="bg-blue-900/20 text-blue-400/60 border-blue-800/20">🏃 Diensten</button>
+                        <button onclick="setCategoryFilter('reviews')" class="cat-filter text-xs font-medium py-2 px-3 rounded-xl bg-amber-900/20 text-amber-400/60 border border-amber-800/20 text-center" data-orig="bg-amber-900/20 text-amber-400/60 border-amber-800/20">⭐ Reviews</button>
+                        <button onclick="setCategoryFilter('aanwezigheid')" class="cat-filter text-xs font-medium py-2 px-3 rounded-xl bg-emerald-900/20 text-emerald-400/60 border border-emerald-800/20 text-center" data-orig="bg-emerald-900/20 text-emerald-400/60 border-emerald-800/20">⏰ Aanwezigheid</button>
+                        <button onclick="setCategoryFilter('team')" class="cat-filter text-xs font-medium py-2 px-3 rounded-xl bg-rose-900/20 text-rose-400/60 border border-rose-800/20 text-center col-span-2" data-orig="bg-rose-900/20 text-rose-400/60 border-rose-800/20">🤝 Team</button>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center justify-between mb-3">
@@ -476,7 +481,7 @@
             </div>
             
             <div class="space-y-3" id="challengesList">
-                <div class="challenge-card bg-gradient-to-r from-blue-900/30 to-blue-800/15 rounded-2xl p-4 border border-blue-500/25" data-category="diensten">
+                <div class="challenge-card bg-gradient-to-r from-blue-900/30 to-blue-800/15 rounded-2xl p-4 border border-blue-500/25" data-category="diensten" data-status="actief">
                     <div class="flex items-start gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl bg-blue-600/25 flex items-center justify-center text-2xl">🏃</div>
                         <div class="flex-1">
@@ -498,7 +503,7 @@
                     </div>
                 </div>
 
-                <div class="challenge-card bg-gradient-to-r from-amber-900/25 to-amber-800/10 rounded-2xl p-4 border border-amber-500/25" data-category="reviews">
+                <div class="challenge-card bg-gradient-to-r from-amber-900/25 to-amber-800/10 rounded-2xl p-4 border border-amber-500/25" data-category="reviews" data-status="actief">
                     <div class="flex items-start gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl bg-amber-600/25 flex items-center justify-center text-2xl">⭐</div>
                         <div class="flex-1">
@@ -517,7 +522,7 @@
                     </div>
                 </div>
 
-                <div class="challenge-card bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-2xl p-4 border border-green-600/30" data-category="aanwezigheid">
+                <div class="challenge-card bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-2xl p-4 border border-green-600/30" data-category="aanwezigheid" data-status="voltooid">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-xl bg-green-600/20 flex items-center justify-center text-2xl">🎉</div>
                         <div class="flex-1">
@@ -530,7 +535,7 @@
                     </div>
                 </div>
 
-                <div class="challenge-card bg-gradient-to-r from-rose-900/25 to-rose-800/10 rounded-2xl p-4 border border-rose-500/25" data-category="team">
+                <div class="challenge-card bg-gradient-to-r from-rose-900/25 to-rose-800/10 rounded-2xl p-4 border border-rose-500/25" data-category="team" data-status="actief">
                     <div class="flex items-start gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl bg-rose-600/25 flex items-center justify-center text-2xl">🤝</div>
                         <div class="flex-1">
@@ -549,7 +554,7 @@
                     </div>
                 </div>
 
-                <div class="challenge-card bg-gradient-to-r from-blue-900/25 to-blue-800/10 rounded-2xl p-4 border border-blue-500/20" data-category="diensten">
+                <div class="challenge-card bg-gradient-to-r from-blue-900/25 to-blue-800/10 rounded-2xl p-4 border border-blue-500/20" data-category="diensten" data-status="actief">
                     <div class="flex items-start gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-2xl">📅</div>
                         <div class="flex-1">
@@ -706,6 +711,18 @@
     <script>
         lucide.createIcons();
 
+        (function() {
+            var cards = document.querySelectorAll('.challenge-card');
+            cards.forEach(function(card) {
+                if (card.getAttribute('data-status') !== 'actief') {
+                    card.style.display = 'none';
+                }
+            });
+            var activeCount = 0;
+            cards.forEach(function(card) { if (card.getAttribute('data-status') === 'actief') activeCount++; });
+            document.getElementById('challengeCount').textContent = activeCount + ' actief';
+        })();
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabName + '-tab').classList.add('active');
@@ -747,52 +764,91 @@
             if (e.target === this) closeModal();
         });
 
-        function filterChallenges(category) {
-            document.querySelectorAll('.challenge-filter').forEach(btn => {
-                btn.classList.remove('active');
-                var catBg = btn.getAttribute('data-cat-bg');
-                var catText = btn.getAttribute('data-cat-text');
-                var catBorder = btn.getAttribute('data-cat-border');
-                var catActiveBg = btn.getAttribute('data-cat-active-bg');
-                var catActiveText = btn.getAttribute('data-cat-active-text');
-                var catActiveBorder = btn.getAttribute('data-cat-active-border');
-                if (catActiveBg) {
-                    btn.classList.remove(catActiveBg, catActiveText, catActiveBorder);
-                    btn.classList.add(catBg, catText, catBorder);
+        var currentStatus = 'actief';
+        var currentCategory = 'alle';
+
+        function toggleFilterDropdown() {
+            var dd = document.getElementById('filterDropdown');
+            dd.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            var container = document.getElementById('filterContainer');
+            if (container && !container.contains(e.target)) {
+                document.getElementById('filterDropdown').classList.add('hidden');
+            }
+        });
+
+        function setStatusFilter(status) {
+            currentStatus = status;
+            document.querySelectorAll('.status-filter').forEach(function(btn) {
+                btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+                btn.classList.add('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            });
+            var cur = event.currentTarget;
+            cur.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
+            cur.classList.add('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
+            applyFilters();
+        }
+
+        function setCategoryFilter(category) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-filter').forEach(function(btn) {
+                btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30',
+                    'bg-blue-600/30', 'text-blue-300', 'border-blue-500/30',
+                    'bg-amber-600/30', 'text-amber-300', 'border-amber-500/30',
+                    'bg-emerald-600/30', 'text-emerald-300', 'border-emerald-500/30',
+                    'bg-rose-600/30', 'text-rose-300', 'border-rose-500/30');
+                var origClasses = btn.getAttribute('data-orig');
+                if (origClasses) {
+                    origClasses.split(' ').forEach(function(c) { btn.classList.add(c); });
                 } else {
-                    btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
                     btn.classList.add('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
                 }
             });
             var cur = event.currentTarget;
-            cur.classList.add('active');
-            var aBg = cur.getAttribute('data-cat-active-bg');
-            if (aBg) {
-                cur.classList.remove(cur.getAttribute('data-cat-bg'), cur.getAttribute('data-cat-text'), cur.getAttribute('data-cat-border'));
-                cur.classList.add(aBg, cur.getAttribute('data-cat-active-text'), cur.getAttribute('data-cat-active-border'));
-            } else {
-                cur.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20');
-                cur.classList.add('bg-purple-600/30', 'text-purple-300', 'border-purple-500/30');
-            }
+            var colorMap = {
+                'diensten': ['bg-blue-600/30', 'text-blue-300', 'border-blue-500/30'],
+                'reviews': ['bg-amber-600/30', 'text-amber-300', 'border-amber-500/30'],
+                'aanwezigheid': ['bg-emerald-600/30', 'text-emerald-300', 'border-emerald-500/30'],
+                'team': ['bg-rose-600/30', 'text-rose-300', 'border-rose-500/30'],
+                'alle': ['bg-purple-600/30', 'text-purple-300', 'border-purple-500/30']
+            };
+            var colors = colorMap[category] || colorMap['alle'];
+            cur.classList.remove('bg-purple-900/20', 'text-purple-400/60', 'border-purple-800/20',
+                'bg-blue-900/20', 'text-blue-400/60', 'border-blue-800/20',
+                'bg-amber-900/20', 'text-amber-400/60', 'border-amber-800/20',
+                'bg-emerald-900/20', 'text-emerald-400/60', 'border-emerald-800/20',
+                'bg-rose-900/20', 'text-rose-400/60', 'border-rose-800/20');
+            colors.forEach(function(c) { cur.classList.add(c); });
+            applyFilters();
+        }
 
+        function applyFilters() {
             var cards = document.querySelectorAll('.challenge-card');
-            var activeCount = 0;
+            var visibleCount = 0;
             cards.forEach(function(card) {
-                if (category === 'alle' || card.getAttribute('data-category') === category) {
+                var matchStatus = card.getAttribute('data-status') === currentStatus;
+                var matchCat = currentCategory === 'alle' || card.getAttribute('data-category') === currentCategory;
+                if (matchStatus && matchCat) {
                     card.style.display = '';
-                    if (!card.querySelector('.text-green-400')) activeCount++;
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
-            var completedInView = 0;
-            cards.forEach(function(card) {
-                if (card.style.display !== 'none' && card.querySelector('.text-green-300')) completedInView++;
-            });
-            var visibleCount = 0;
-            cards.forEach(function(card) { if (card.style.display !== 'none') visibleCount++; });
-            var label = category === 'alle' ? (activeCount + ' actief') : (visibleCount + ' weergegeven');
-            document.getElementById('challengeCount').textContent = label;
+
+            var catNames = { 'alle': 'Alle', 'diensten': 'Diensten', 'reviews': 'Reviews', 'aanwezigheid': 'Aanwezigheid', 'team': 'Team' };
+            var statusLabel = currentStatus === 'actief' ? 'Actief' : 'Voltooid';
+            var catLabel = catNames[currentCategory] || 'Alle';
+            var filterText = currentCategory === 'alle' ? statusLabel + 'e challenges' : statusLabel + ' · ' + catLabel;
+            document.getElementById('filterLabel').textContent = filterText;
+
+            var countLabel = visibleCount + (currentStatus === 'actief' ? ' actief' : ' voltooid');
+            document.getElementById('challengeCount').textContent = countLabel;
+
+            document.getElementById('filterDropdown').classList.add('hidden');
+            lucide.createIcons();
         }
     </script>
 </body>
