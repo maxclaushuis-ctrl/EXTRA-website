@@ -8,6 +8,10 @@ import appScreenshot2 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.1
 import appScreenshot3 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.21_1770913110868.png";
 import appScreenshot4 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.36_1770913110868.png";
 import appScreenshot5 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.44_1770913110868.png";
+import screenDashboard from "@assets/IMG_8803_1770915286475.png";
+import screenRewards from "@assets/IMG_8805_1770915286475.png";
+import screenChallenges from "@assets/IMG_8807_1770915286475.png";
+import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -334,58 +338,60 @@ export default function LandingPage() {
             </div>
           </RevealSection>
 
-          {/* How points work */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
-            <RevealSection>
-              <div className="space-y-6">
-                <h3 className="text-3xl font-bold text-white mb-8">Zo werkt het</h3>
-                {[
-                  { step: "1", title: "Werk shifts & behaal challenges", desc: "Verdien automatisch punten voor elke dienst die je werkt. Extra punten voor challenges zoals 'Werk 10 diensten' of '5 positieve reviews'.", icon: "🏃" },
-                  { step: "2", title: "Klim in status", desc: "Van Bronze (0 pts) naar Silver, Gold en Diamond (15.000 pts). Hogere status = exclusieve voordelen en rewards.", icon: "💎" },
-                  { step: "3", title: "Claim je beloningen", desc: "Wissel punten in voor Apple AirPods, museumjaarkaarten, TrainMore korting, Starbucks en nog veel meer.", icon: "🎁" },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-5 group">
-                    <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-white/20 transition-colors">
-                      {item.icon}
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">{item.title}</h4>
-                      <p className="text-purple-200/80 leading-relaxed">{item.desc}</p>
-                    </div>
+          {/* How points work - steps */}
+          <RevealSection>
+            <div className="grid sm:grid-cols-3 gap-6 mb-20">
+              {[
+                { step: "1", title: "Werk shifts & behaal challenges", desc: "Verdien automatisch punten voor elke dienst en extra voor challenges.", icon: "🏃" },
+                { step: "2", title: "Klim in status", desc: "Van Bronze naar Silver, Gold en Diamond. Hogere status = betere rewards.", icon: "💎" },
+                { step: "3", title: "Claim je beloningen", desc: "Wissel punten in voor AirPods, TrainMore, Starbucks en meer.", icon: "🎁" },
+              ].map((item, i) => (
+                <div key={i} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 text-center hover:bg-white/10 transition-colors">
+                  <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl mx-auto mb-4">
+                    {item.icon}
                   </div>
-                ))}
-              </div>
-            </RevealSection>
+                  <div className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">Stap {item.step}</div>
+                  <h4 className="text-lg font-bold text-white mb-2">{item.title}</h4>
+                  <p className="text-purple-200/70 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </RevealSection>
 
-            <RevealSection delay={200}>
-              <div className="relative">
-                {/* Phone mockup with app screenshot */}
-                <div className="relative mx-auto w-[280px] lg:w-[300px]">
-                  <div className="rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[6px] border-gray-800 bg-gray-900">
-                    <img src={appScreenshot3} alt="EXTRA Rewards App" className="w-full" />
-                  </div>
-                </div>
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 bg-gradient-to-br from-green-400 to-emerald-500 text-white rounded-2xl px-5 py-3 shadow-lg shadow-green-500/30 animate-bounce" style={{ animationDuration: "3s" }}>
-                  <p className="text-sm font-bold">+50 pts</p>
-                  <p className="text-[10px] opacity-80">Dienst voltooid!</p>
-                </div>
-                <div className="absolute bottom-20 -left-8 bg-white rounded-2xl px-4 py-3 shadow-xl shadow-purple-500/20 border border-purple-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🔥</span>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900">5 dagen streak!</p>
-                      <p className="text-[10px] text-gray-400">Ga zo door</p>
+          {/* App screenshots in iPhone mockups */}
+          <RevealSection>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">Bekijk de app</h3>
+            <p className="text-purple-200/70 text-center mb-12 max-w-xl mx-auto">Alles in één app: punten bijhouden, beloningen claimen, challenges volgen en je positie op de ranglijst bekijken.</p>
+          </RevealSection>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8 max-w-5xl mx-auto">
+            {[
+              { img: screenDashboard, label: "Dashboard", desc: "Jouw punten overzicht", delay: 0 },
+              { img: screenRewards, label: "Rewards", desc: "Claim beloningen", delay: 150 },
+              { img: screenChallenges, label: "Challenges", desc: "Behaal doelen", delay: 300 },
+              { img: screenRanglijst, label: "Ranglijst", desc: "Wie staat bovenaan?", delay: 450 },
+            ].map((screen, i) => (
+              <RevealSection key={i} delay={screen.delay}>
+                <div className="group">
+                  <div className="relative mx-auto">
+                    <div className="relative rounded-[1.8rem] sm:rounded-[2.2rem] overflow-hidden shadow-2xl shadow-black/40 border-[4px] sm:border-[5px] border-gray-700 bg-gray-900 group-hover:border-purple-500/50 transition-colors duration-500 group-hover:shadow-purple-500/20">
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[14px] sm:h-[18px] bg-gray-900 rounded-b-xl z-10" />
+                      <img src={screen.img} alt={screen.label} className="w-full" />
                     </div>
+                    <div className="absolute -inset-2 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-[2.5rem] blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </div>
+                  <div className="text-center mt-4">
+                    <h4 className="text-white font-bold text-sm sm:text-base">{screen.label}</h4>
+                    <p className="text-purple-300/60 text-xs sm:text-sm mt-0.5">{screen.desc}</p>
                   </div>
                 </div>
-              </div>
-            </RevealSection>
+              </RevealSection>
+            ))}
           </div>
 
           {/* Status levels */}
           <RevealSection>
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8 lg:p-12">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8 lg:p-12 mt-20">
               <h3 className="text-2xl font-bold text-white mb-8 text-center">Status niveaus</h3>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                 {[
@@ -399,38 +405,6 @@ export default function LandingPage() {
                     <h4 className={`text-lg font-black ${level.textColor}`}>{level.name}</h4>
                     <p className={`text-sm ${level.textColor} opacity-70 mt-1`}>Vanaf {level.pts} pts</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          </RevealSection>
-
-          {/* Push notification showcase */}
-          <RevealSection delay={100}>
-            <div className="mt-16">
-              <h3 className="text-2xl font-bold text-white mb-8 text-center">Real-time notificaties</h3>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                {[
-                  { emoji: "🎉", title: "Challenge behaald!", body: "Je hebt 'Diensten Kampioen' voltooid. +500 punten verdiend!", time: "Nu" },
-                  { emoji: "💎", title: "Status upgrade!", body: "Gefeliciteerd! Je bent gepromoveerd naar Diamond status.", time: "2 min" },
-                  { emoji: "🎁", title: "Nieuwe beloning!", body: "Apple AirPods Pro zijn nu beschikbaar in de reward shop.", time: "1 uur" },
-                  { emoji: "🔥", title: "Streak!", body: "5 dagen op rij gewerkt! Je bent on fire.", time: "3 uur" },
-                  { emoji: "📊", title: "Ranglijst update", body: "Je staat nu op #1 in de maandelijkse ranglijst!", time: "5 uur" },
-                  { emoji: "⭐", title: "Nieuwe review", body: "Je opdrachtgever heeft een 5-sterren review achtergelaten.", time: "1 dag" },
-                ].map((notif, i) => (
-                  <RevealSection key={i} delay={i * 100}>
-                    <div className="bg-white rounded-2xl p-4 shadow-lg shadow-purple-900/20 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-default">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-xl flex-shrink-0">{notif.emoji}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-0.5">
-                            <h4 className="text-sm font-bold text-gray-900 truncate">{notif.title}</h4>
-                            <span className="text-[10px] text-gray-400 flex-shrink-0">{notif.time}</span>
-                          </div>
-                          <p className="text-xs text-gray-500 leading-relaxed">{notif.body}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </RevealSection>
                 ))}
               </div>
             </div>
