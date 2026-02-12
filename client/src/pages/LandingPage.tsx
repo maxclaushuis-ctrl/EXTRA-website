@@ -80,6 +80,19 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   );
 }
 
+function XShape({ className = "", size = 80, rotate = 0, opacity = 0.06 }: { className?: string; size?: number; rotate?: number; opacity?: number }) {
+  return (
+    <div
+      className={`absolute pointer-events-none select-none ${className}`}
+      style={{ width: size, height: size, transform: `rotate(${rotate}deg)`, opacity }}
+    >
+      <svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <path d="M18.3 0L50 31.7L81.7 0L100 18.3L68.3 50L100 81.7L81.7 100L50 68.3L18.3 100L0 81.7L31.7 50L0 18.3Z" />
+      </svg>
+    </div>
+  );
+}
+
 function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
   const { ref, isVisible } = useScrollReveal();
@@ -174,10 +187,9 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <div className="absolute inset-0 opacity-[0.07]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30Z' fill='none' stroke='white' stroke-width='1'/%3E%3C/svg%3E")`,
-          backgroundSize: "60px 60px"
-        }} />
+        <XShape className="text-white top-[12%] left-[5%]" size={140} rotate={15} opacity={0.04} />
+        <XShape className="text-white top-[60%] right-[8%]" size={90} rotate={-20} opacity={0.05} />
+        <XShape className="text-white bottom-[25%] left-[15%]" size={50} rotate={35} opacity={0.03} />
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent z-10" />
 
         <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 w-full pt-32 pb-20">
@@ -263,8 +275,10 @@ export default function LandingPage() {
       </section>
 
       {/* About / Why EXTRA */}
-      <section id="about" className="py-24 lg:py-32">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <section id="about" className="py-24 lg:py-32 relative overflow-hidden">
+        <XShape className="text-purple-500 top-[10%] right-[3%]" size={110} rotate={22} opacity={0.04} />
+        <XShape className="text-purple-500 bottom-[8%] left-[2%]" size={60} rotate={-30} opacity={0.03} />
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center max-w-3xl mx-auto mb-16">
               <span className="inline-block text-purple-600 font-bold text-sm uppercase tracking-widest mb-4">Waarom EXTRA?</span>
@@ -304,10 +318,8 @@ export default function LandingPage() {
       {/* Rewards System Showcase */}
       <section id="rewards" className="relative py-24 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <div className="absolute inset-0 opacity-[0.05]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='2' fill='white'/%3E%3C/svg%3E")`,
-          backgroundSize: "40px 40px"
-        }} />
+        <XShape className="text-white top-[8%] right-[6%]" size={120} rotate={-12} opacity={0.04} />
+        <XShape className="text-white bottom-[15%] left-[4%]" size={70} rotate={25} opacity={0.035} />
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
           <RevealSection>
             <div className="text-center mb-16">
@@ -601,10 +613,8 @@ export default function LandingPage() {
       {/* CTA / Contact */}
       <section id="contact" className="relative py-24 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <div className="absolute inset-0 opacity-[0.07]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30Z' fill='none' stroke='white' stroke-width='1'/%3E%3C/svg%3E")`,
-          backgroundSize: "60px 60px"
-        }} />
+        <XShape className="text-white top-[15%] left-[8%]" size={100} rotate={-18} opacity={0.045} />
+        <XShape className="text-white bottom-[20%] right-[10%]" size={60} rotate={30} opacity={0.035} />
         <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <RevealSection>
             <span className="text-5xl mb-6 block">🚀</span>
