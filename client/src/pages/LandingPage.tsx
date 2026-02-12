@@ -120,9 +120,17 @@ function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suf
   return <span ref={ref}>{count.toLocaleString("nl-NL")}{suffix}</span>;
 }
 
+const appScreens = [
+  { key: "dashboard", img: screenDashboard, label: "Dashboard", desc: "Bekijk je totale punten, status en maandelijkse voortgang in één overzicht.", emoji: "📊" },
+  { key: "rewards", img: screenRewards, label: "Rewards", desc: "Wissel je punten in voor toffe beloningen zoals AirPods, museumjaarkaarten en meer.", emoji: "🎁" },
+  { key: "challenges", img: screenChallenges, label: "Challenges", desc: "Behaal uitdagingen zoals 'Diensten Kampioen' en verdien extra punten met elke mijlpaal.", emoji: "🏆" },
+  { key: "ranglijst", img: screenRanglijst, label: "Ranglijst", desc: "Bekijk je positie op de maandelijkse ranglijst en versla je collega's.", emoji: "📈" },
+];
+
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeScreen, setActiveScreen] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -358,36 +366,80 @@ export default function LandingPage() {
             </div>
           </RevealSection>
 
-          {/* App screenshots in iPhone mockups */}
+          {/* Interactive app showcase */}
           <RevealSection>
             <h3 className="text-2xl font-bold text-white mb-4 text-center">Bekijk de app</h3>
-            <p className="text-purple-200/70 text-center mb-12 max-w-xl mx-auto">Alles in één app: punten bijhouden, beloningen claimen, challenges volgen en je positie op de ranglijst bekijken.</p>
+            <p className="text-purple-200/70 text-center mb-12 max-w-xl mx-auto">Klik op een onderdeel om te zien hoe de app werkt.</p>
           </RevealSection>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8 max-w-5xl mx-auto">
-            {[
-              { img: screenDashboard, label: "Dashboard", desc: "Jouw punten overzicht", delay: 0 },
-              { img: screenRewards, label: "Rewards", desc: "Claim beloningen", delay: 150 },
-              { img: screenChallenges, label: "Challenges", desc: "Behaal doelen", delay: 300 },
-              { img: screenRanglijst, label: "Ranglijst", desc: "Wie staat bovenaan?", delay: 450 },
-            ].map((screen, i) => (
-              <RevealSection key={i} delay={screen.delay}>
-                <div className="group">
-                  <div className="relative mx-auto">
-                    <div className="relative rounded-[1.8rem] sm:rounded-[2.2rem] overflow-hidden shadow-2xl shadow-black/40 border-[4px] sm:border-[5px] border-gray-700 bg-gray-900 group-hover:border-purple-500/50 transition-colors duration-500 group-hover:shadow-purple-500/20">
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[14px] sm:h-[18px] bg-gray-900 rounded-b-xl z-10" />
-                      <img src={screen.img} alt={screen.label} className="w-full" />
+          <RevealSection delay={100}>
+            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-8 lg:gap-14 max-w-4xl mx-auto">
+              {/* Navigation buttons - left side */}
+              <div className="flex lg:flex-col gap-3 lg:gap-4 lg:justify-center order-2 lg:order-1 flex-wrap justify-center">
+                {appScreens.map((screen, i) => (
+                  <button
+                    key={screen.key}
+                    onClick={() => setActiveScreen(i)}
+                    className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl text-left transition-all duration-300 min-w-[160px] ${
+                      activeScreen === i
+                        ? "bg-white/15 border-2 border-purple-400/60 shadow-lg shadow-purple-500/20 scale-105"
+                        : "bg-white/5 border-2 border-transparent hover:bg-white/10 hover:border-white/20"
+                    }`}
+                  >
+                    <span className="text-2xl">{screen.emoji}</span>
+                    <div>
+                      <span className={`font-bold text-sm block ${activeScreen === i ? "text-white" : "text-purple-200/80"}`}>{screen.label}</span>
+                      {activeScreen === i && (
+                        <span className="text-[10px] text-purple-300/60 font-medium">Actief</span>
+                      )}
                     </div>
-                    <div className="absolute -inset-2 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-[2.5rem] blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Phone mockup - center */}
+              <div className="relative order-1 lg:order-2 flex-shrink-0">
+                <div className="relative w-[260px] sm:w-[280px]">
+                  <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[5px] border-gray-700 bg-gray-900">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-gray-900 rounded-b-xl z-20" />
+                    <div className="relative">
+                      {appScreens.map((screen, i) => (
+                        <img
+                          key={screen.key}
+                          src={screen.img}
+                          alt={screen.label}
+                          className={`w-full transition-opacity duration-500 ${
+                            activeScreen === i ? "opacity-100 relative" : "opacity-0 absolute inset-0"
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-center mt-4">
-                    <h4 className="text-white font-bold text-sm sm:text-base">{screen.label}</h4>
-                    <p className="text-purple-300/60 text-xs sm:text-sm mt-0.5">{screen.desc}</p>
-                  </div>
+                  <div className="absolute -inset-3 bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-[3rem] blur-2xl -z-10" />
                 </div>
-              </RevealSection>
-            ))}
-          </div>
+              </div>
+
+              {/* Description - right side */}
+              <div className="flex flex-col justify-center order-3 max-w-xs text-center lg:text-left">
+                <div className="transition-all duration-300">
+                  <span className="text-4xl block mb-4">{appScreens[activeScreen].emoji}</span>
+                  <h4 className="text-xl font-bold text-white mb-3">{appScreens[activeScreen].label}</h4>
+                  <p className="text-purple-200/70 leading-relaxed">{appScreens[activeScreen].desc}</p>
+                </div>
+                <div className="flex gap-2 mt-6 justify-center lg:justify-start">
+                  {appScreens.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveScreen(i)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                        activeScreen === i ? "bg-purple-400 w-8" : "bg-white/20 hover:bg-white/40"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </RevealSection>
 
           {/* Status levels */}
           <RevealSection>
