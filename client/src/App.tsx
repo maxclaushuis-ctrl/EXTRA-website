@@ -13,6 +13,7 @@ import BusinessPresentation from "@/pages/BusinessPresentation";
 import Brochure from "@/pages/Brochure";
 import BrochureEN from "@/pages/BrochureEN";
 import BrochureEvents from "@/pages/BrochureEvents";
+import LandingPage from "@/pages/LandingPage";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -89,6 +90,7 @@ function Router() {
         <Route path="/brochure" component={Brochure} />
         <Route path="/brochures" component={BrochureEN} />
         <Route path="/events" component={BrochureEvents} />
+        <Route path="/landing" component={LandingPage} />
         <Route path="/dashboard-mockup">
           {() => <ProtectedRoute component={DashboardMockup} adminOnly={true} />}
         </Route>
