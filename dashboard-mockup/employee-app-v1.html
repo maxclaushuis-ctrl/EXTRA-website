@@ -57,6 +57,178 @@
 
         .sub-content { display: none; }
         .sub-content.active { display: block; }
+
+        .theme-toggle { cursor: pointer; transition: transform 0.3s; }
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        body.light-mode { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f5f3ff 100%); color: #1e1b4b; }
+        .light-mode .text-purple-300 { color: #4c1d95; }
+        .light-mode .text-purple-400 { color: #6d28d9; }
+        .light-mode .text-purple-500 { color: #7c3aed; }
+        .light-mode .text-purple-400\/50 { color: rgba(109, 40, 217, 0.5); }
+        .light-mode .text-purple-400\/60 { color: rgba(109, 40, 217, 0.6); }
+        .light-mode .text-purple-400\/70 { color: rgba(109, 40, 217, 0.7); }
+        .light-mode .text-purple-500\/60 { color: rgba(124, 58, 237, 0.6); }
+        .light-mode .text-purple-500\/70 { color: rgba(124, 58, 237, 0.7); }
+
+        .light-mode .gradient-border { background: linear-gradient(135deg, #7c3aed, #a855f7, #7c3aed); }
+        .light-mode .gradient-border-inner { background: #ffffff; }
+
+        .light-mode .bg-\[\#1a1025\] { background-color: #f8f7ff !important; }
+        .light-mode .bg-\[\#0f0a1a\]\/95 { background-color: rgba(255,255,255,0.97) !important; }
+
+        .light-mode .phone-frame { background: transparent; }
+
+        .light-mode .nav-item.active { color: #7c3aed; }
+        .light-mode .nav-item { color: rgba(109, 40, 217, 0.4); }
+
+        .light-mode [class*="bg-purple-900"] { background-color: rgba(124, 58, 237, 0.08) !important; }
+        .light-mode [class*="bg-purple-800"] { background-color: rgba(124, 58, 237, 0.06) !important; }
+        .light-mode [class*="bg-gray-900"] { background-color: rgba(124, 58, 237, 0.05) !important; }
+
+        .light-mode [class*="border-purple-900"],
+        .light-mode [class*="border-purple-800"],
+        .light-mode [class*="border-purple-700"],
+        .light-mode [class*="border-purple-600"] { border-color: rgba(124, 58, 237, 0.15) !important; }
+        .light-mode [class*="border-purple-500"] { border-color: rgba(124, 58, 237, 0.2) !important; }
+
+        .light-mode .bg-gradient-to-br.from-purple-500.to-purple-700,
+        .light-mode .bg-gradient-to-br.from-purple-500.via-purple-600.to-purple-800 { background: linear-gradient(to bottom right, #7c3aed, #6d28d9) !important; }
+
+        .light-mode .reward-card,
+        .light-mode .deal-card,
+        .light-mode .challenge-card {
+            background: #ffffff !important;
+            border-color: rgba(124, 58, 237, 0.15) !important;
+            box-shadow: 0 1px 3px rgba(124, 58, 237, 0.08);
+        }
+        .light-mode .card-glow:hover {
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.15);
+        }
+
+        .light-mode .reward-card h3,
+        .light-mode .deal-card h3,
+        .light-mode .challenge-card h3 { color: #1e1b4b !important; }
+        .light-mode .reward-card .font-semibold,
+        .light-mode .deal-card .font-semibold,
+        .light-mode .challenge-card .font-medium { color: #1e1b4b !important; }
+
+        .light-mode .bg-gradient-to-r.from-purple-600.to-purple-500 { background: linear-gradient(to right, #7c3aed, #8b5cf6) !important; color: white !important; }
+        .light-mode .bg-purple-600 { background-color: #7c3aed !important; color: white !important; }
+
+        .light-mode [class*="from-blue-900"] { background-color: rgba(59, 130, 246, 0.08) !important; }
+        .light-mode [class*="from-amber-900"] { background-color: rgba(245, 158, 11, 0.08) !important; }
+        .light-mode [class*="from-green-900"],
+        .light-mode [class*="from-emerald-900"] { background-color: rgba(16, 185, 129, 0.08) !important; }
+        .light-mode [class*="from-rose-900"] { background-color: rgba(244, 63, 94, 0.08) !important; }
+        .light-mode [class*="from-orange-900"] { background-color: rgba(249, 115, 22, 0.08) !important; }
+        .light-mode [class*="from-yellow-900"] { background-color: rgba(234, 179, 8, 0.08) !important; }
+
+        .light-mode [class*="border-blue-500"],
+        .light-mode [class*="border-blue-600"] { border-color: rgba(59, 130, 246, 0.2) !important; }
+        .light-mode [class*="border-amber-500"] { border-color: rgba(245, 158, 11, 0.2) !important; }
+        .light-mode [class*="border-green-500"],
+        .light-mode [class*="border-emerald-500"] { border-color: rgba(16, 185, 129, 0.2) !important; }
+        .light-mode [class*="border-rose-500"] { border-color: rgba(244, 63, 94, 0.2) !important; }
+        .light-mode [class*="border-orange-600"] { border-color: rgba(249, 115, 22, 0.2) !important; }
+        .light-mode [class*="border-yellow-500"] { border-color: rgba(234, 179, 8, 0.2) !important; }
+
+        .light-mode .text-blue-300 { color: #2563eb; }
+        .light-mode .text-blue-400\/70 { color: rgba(37, 99, 235, 0.7); }
+        .light-mode .text-amber-300 { color: #d97706; }
+        .light-mode .text-amber-400\/70 { color: rgba(217, 119, 6, 0.7); }
+        .light-mode .text-green-400 { color: #059669; }
+        .light-mode .text-green-500\/60, .light-mode .text-green-500\/70 { color: rgba(5, 150, 105, 0.7); }
+        .light-mode .text-rose-300 { color: #e11d48; }
+        .light-mode .text-rose-400\/70 { color: rgba(225, 29, 72, 0.7); }
+        .light-mode .text-red-400\/80 { color: rgba(220, 38, 38, 0.8); }
+        .light-mode .text-red-400\/50 { color: rgba(220, 38, 38, 0.5); }
+        .light-mode .text-cyan-400 { color: #0891b2; }
+        .light-mode .text-yellow-400 { color: #ca8a04; }
+        .light-mode .text-yellow-400\/80 { color: rgba(202, 138, 4, 0.8); }
+        .light-mode .text-orange-400 { color: #ea580c; }
+
+        .light-mode .font-medium,
+        .light-mode .font-semibold,
+        .light-mode .font-bold,
+        .light-mode .font-extrabold { color: inherit; }
+
+        .light-mode .bg-gradient-to-r.from-purple-400.to-purple-200 { background: linear-gradient(to right, #7c3aed, #4c1d95); -webkit-background-clip: text; }
+
+        .light-mode .divide-purple-900\/30 > :not(:last-child) { border-color: rgba(124, 58, 237, 0.1) !important; }
+
+        .light-mode .bg-gradient-to-t.from-purple-700.to-purple-500 { background: linear-gradient(to top, #7c3aed, #8b5cf6) !important; }
+        .light-mode .bg-gradient-to-t.from-gray-600.to-gray-500 { background: linear-gradient(to top, #9ca3af, #d1d5db) !important; }
+        .light-mode .bg-gradient-to-t.from-amber-800.to-amber-700 { background: linear-gradient(to top, #b45309, #d97706) !important; }
+
+        .light-mode .bg-purple-800 { background-color: rgba(124, 58, 237, 0.15) !important; }
+        .light-mode .bg-pink-800 { background-color: rgba(236, 72, 153, 0.15) !important; }
+        .light-mode .bg-blue-800 { background-color: rgba(59, 130, 246, 0.15) !important; }
+        .light-mode .bg-teal-800 { background-color: rgba(20, 184, 166, 0.15) !important; }
+
+        .light-mode .bg-gradient-to-br.from-gray-700.to-gray-800 { background: linear-gradient(to bottom right, #e5e7eb, #d1d5db) !important; }
+        .light-mode .bg-blue-900\/30 { background-color: rgba(59, 130, 246, 0.1) !important; }
+        .light-mode .bg-green-900\/30 { background-color: rgba(16, 185, 129, 0.1) !important; }
+        .light-mode .bg-amber-900\/30 { background-color: rgba(245, 158, 11, 0.1) !important; }
+        .light-mode .bg-rose-600\/25 { background-color: rgba(244, 63, 94, 0.1) !important; }
+        .light-mode .bg-blue-600\/25, .light-mode .bg-blue-600\/20 { background-color: rgba(59, 130, 246, 0.1) !important; }
+        .light-mode .bg-emerald-600\/25 { background-color: rgba(16, 185, 129, 0.1) !important; }
+        .light-mode .bg-amber-600\/25 { background-color: rgba(245, 158, 11, 0.1) !important; }
+
+        .light-mode [class*="from-yellow-500"] { background-color: rgba(234, 179, 8, 0.12) !important; }
+
+        .light-mode .progress-gradient { background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc); }
+
+        .light-mode #rewardModal > div:first-child { background: rgba(0,0,0,0.5) !important; }
+        .light-mode #rewardModal .gradient-border-inner { background: #ffffff; }
+        .light-mode #rewardModal .bg-gradient-to-br { background: linear-gradient(to bottom right, rgba(124,58,237,0.1), rgba(124,58,237,0.05)) !important; }
+
+        .light-mode .bg-gradient-to-br.from-yellow-900\/30,
+        .light-mode .bg-gradient-to-br.from-purple-900\/50 {
+            background: linear-gradient(to bottom right, rgba(124,58,237,0.08), rgba(124,58,237,0.04)) !important;
+        }
+
+        .light-mode .ring-yellow-400\/60 { --tw-ring-color: rgba(202, 138, 4, 0.6); }
+        .light-mode .ring-purple-400\/60 { --tw-ring-color: rgba(124, 58, 237, 0.6); }
+        .light-mode .ring-purple-400\/50 { --tw-ring-color: rgba(124, 58, 237, 0.5); }
+
+        .light-mode .bg-gradient-to-r.from-blue-600.to-blue-400 { background: linear-gradient(to right, #3b82f6, #60a5fa) !important; }
+        .light-mode .bg-gradient-to-r.from-amber-600.to-amber-400 { background: linear-gradient(to right, #d97706, #fbbf24) !important; }
+        .light-mode .bg-gradient-to-r.from-emerald-600.to-emerald-400 { background: linear-gradient(to right, #059669, #34d399) !important; }
+        .light-mode .bg-gradient-to-r.from-rose-600.to-rose-400 { background: linear-gradient(to right, #e11d48, #fb7185) !important; }
+
+        .light-mode .h-px.bg-purple-700\/40,
+        .light-mode .h-px.bg-purple-700\/30 { background-color: rgba(124, 58, 237, 0.1) !important; }
+
+        .light-mode .border-t.border-purple-900\/30 { border-color: rgba(124, 58, 237, 0.1) !important; }
+
+        .light-mode .bg-green-500 { background-color: #10b981 !important; }
+        .light-mode .border-\[2px\].border-\[\#1a0f2e\],
+        .light-mode .border-2.border-\[\#1a0f2e\] { border-color: #f5f3ff !important; }
+
+        .light-mode .text-white { color: #1e1b4b; }
+        .light-mode .bg-gradient-to-br.from-purple-500.to-purple-700 .text-white,
+        .light-mode .bg-purple-600 .text-white,
+        .light-mode button.bg-purple-600,
+        .light-mode .bg-gradient-to-r.from-purple-600.to-purple-500 { color: white !important; }
+        .light-mode .bg-gradient-to-br.from-purple-500.to-purple-700 { color: white !important; }
+        .light-mode .bg-gradient-to-br.from-purple-500.via-purple-600.to-purple-800 { color: white !important; }
+
+        .light-mode .bg-gradient-to-t.from-purple-700.to-purple-500 span,
+        .light-mode .bg-gradient-to-t.from-gray-600.to-gray-500 span,
+        .light-mode .bg-gradient-to-t.from-amber-800.to-amber-700 span { color: white !important; filter: none; }
+
+        .light-mode .sub-tab { color: #6b7280; }
+        .light-mode .sub-tab.active { color: #7c3aed; }
+        .light-mode .sub-tab.active::after { background: #7c3aed; }
+        .light-mode .ranking-tab { color: #6b7280; }
+        .light-mode .ranking-tab.active { color: #7c3aed; }
+        .light-mode .ranking-tab.active::after { background: #7c3aed; }
+
+        .light-mode .bg-gradient-to-r.from-purple-900\/30.to-purple-800\/15,
+        .light-mode .bg-gradient-to-br.from-purple-900\/30.to-purple-800\/15 {
+            background: rgba(124, 58, 237, 0.06) !important;
+        }
     </style>
 </head>
 <body class="text-purple-300">
@@ -74,6 +246,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    <button onclick="toggleTheme()" class="theme-toggle w-9 h-9 rounded-full bg-purple-900/30 border border-purple-700/30 flex items-center justify-center" title="Wissel thema">
+                        <span id="themeIcon" class="text-lg">☀️</span>
+                    </button>
                     <div class="relative">
                         <div class="w-11 h-11 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-sm font-bold ring-2 ring-purple-400/50">
                             JJ
@@ -812,6 +987,34 @@
 
     <script>
         lucide.createIcons();
+
+        function toggleTheme() {
+            var body = document.body;
+            var icon = document.getElementById('themeIcon');
+            var toggleBtn = document.querySelector('.theme-toggle');
+            body.classList.toggle('light-mode');
+            var isLight = body.classList.contains('light-mode');
+            icon.textContent = isLight ? '🌙' : '☀️';
+            if (isLight) {
+                toggleBtn.style.background = 'rgba(124, 58, 237, 0.1)';
+                toggleBtn.style.borderColor = 'rgba(124, 58, 237, 0.2)';
+            } else {
+                toggleBtn.style.background = '';
+                toggleBtn.style.borderColor = '';
+            }
+            localStorage.setItem('extraTheme', isLight ? 'light' : 'dark');
+        }
+
+        (function() {
+            var saved = localStorage.getItem('extraTheme');
+            if (saved === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeIcon').textContent = '🌙';
+                var toggleBtn = document.querySelector('.theme-toggle');
+                toggleBtn.style.background = 'rgba(124, 58, 237, 0.1)';
+                toggleBtn.style.borderColor = 'rgba(124, 58, 237, 0.2)';
+            }
+        })();
 
         (function() {
             var cards = document.querySelectorAll('.challenge-card');
