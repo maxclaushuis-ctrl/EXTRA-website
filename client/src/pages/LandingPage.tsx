@@ -211,7 +211,7 @@ export default function LandingPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 <span className="text-white/90 text-sm font-medium">800+ medewerkers actief</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-6 uppercase" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
                 Horecapersoneel nodig?{" "}
                 <span className="relative inline-block">
                   <span className="relative z-10">EXTRA</span>
@@ -224,11 +224,11 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={() => scrollTo("employers")} className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
-                  Ik zoek personeel
+                  Ik zoek extra personeel
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button onClick={() => scrollTo("workers")} className="group border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
-                  Ik zoek werk
+                  Ik zoek extra werk
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
