@@ -145,7 +145,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
@@ -211,17 +211,16 @@ export default function LandingPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 <span className="text-white/90 text-sm font-medium">800+ medewerkers actief</span>
               </div>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6">
-                Jouw <span className="relative inline-block">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-6 uppercase" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+                Horecapersoneel nodig?{" "}
+                <span className="relative inline-block">
                   <span className="relative z-10">EXTRA</span>
-                  <span className="absolute bottom-1 left-0 right-0 h-3 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80" />
+                  <span className="absolute bottom-0.5 left-0 right-0 h-3 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80" />
                 </span>
-                <br />voor horeca,
-                <br />hotels &amp;
-                <br />events
+                {" "}regelt het!
               </h1>
               <p className="text-lg text-purple-200 max-w-lg mb-10 leading-relaxed">
-                Het uitzendbureau dat verder gaat. Direct uitbetaald, flexibele shifts en een uniek beloningssysteem waar je echt iets aan hebt.
+                Flexibel en representatief personeel voor hotels, events en cateraars. Snel geregeld.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={() => scrollTo("employers")} className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
