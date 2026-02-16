@@ -447,7 +447,7 @@ export default function LandingPage() {
                     { src: logoAppel, alt: "Appèl" },
                   ].map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300">
-                      <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain" />
+                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" />
                     </div>
                   ))}
                 </div>
