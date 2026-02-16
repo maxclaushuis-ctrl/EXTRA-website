@@ -165,55 +165,54 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 1. HERO                                      */}
       {/* ============================================ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-[100svh] flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <XShape className="text-white top-[12%] left-[5%]" size={180} rotate={15} opacity={0.03} />
-        <XShape className="text-white top-[55%] right-[6%]" size={120} rotate={-20} opacity={0.04} />
+        <XShape className="text-white top-[12%] left-[5%] hidden sm:block" size={180} rotate={15} opacity={0.03} />
+        <XShape className="text-white top-[55%] right-[6%] hidden sm:block" size={120} rotate={-20} opacity={0.04} />
         <XShape className="text-white bottom-[20%] left-[12%]" size={60} rotate={35} opacity={0.025} />
-        <Blob className="w-[600px] h-[600px] top-[-10%] right-[-10%]" color="pink" />
-        <Blob className="w-[400px] h-[400px] bottom-[5%] left-[-5%]" color="indigo" />
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white to-transparent z-10" />
+        <Blob className="w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] top-[-10%] right-[-20%] sm:right-[-10%]" color="pink" />
+        <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] bottom-[5%] left-[-15%] sm:left-[-5%]" color="indigo" />
 
-        <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 w-full pt-32 pb-24">
+        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-32 sm:pb-24">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2.5 mb-10 border border-white/20">
-                <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-white/90 text-sm font-semibold">800+ medewerkers actief</span>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 mb-6 sm:mb-10 border border-white/20">
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-white/90 text-xs sm:text-sm font-semibold">800+ medewerkers actief</span>
               </div>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.05] mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
                 Horecapersoneel nodig?{" "}
                 <span className="relative inline-block">
                   <span className="relative z-10">EXTRA</span>
-                  <span className="absolute bottom-1 left-0 right-0 h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
                 </span>
                 {" "}regelt het!
               </h1>
-              <p className="text-xl sm:text-2xl text-purple-200 max-w-lg mb-10 leading-relaxed font-medium">
+              <p className="text-lg sm:text-xl md:text-2xl text-purple-200 max-w-lg mb-8 sm:mb-10 leading-relaxed font-medium">
                 Flexibel en representatief personeel voor hotels, events en cateraars. Snel geregeld.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-5 sm:gap-8 mb-12">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 mb-8 sm:mb-12">
                 {[
                   { icon: Check, text: "Iedereen in loondienst" },
                   { icon: Star, text: "Geselecteerd personeel" },
                   { icon: CreditCard, text: "Dagbetaling mogelijk" },
                 ].map((usp, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-                      <usp.icon className="w-4.5 h-4.5 text-green-400" />
+                  <div key={i} className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+                      <usp.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" />
                     </div>
-                    <span className="text-white/85 text-base font-medium">{usp.text}</span>
+                    <span className="text-white/85 text-sm sm:text-base font-medium">{usp.text}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="flex flex-row gap-4 flex-wrap">
-                <button onClick={() => scrollTo("audience")} className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button onClick={() => scrollTo("audience")} className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
                   Ik zoek extra personeel
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button onClick={() => scrollTo("audience")} className="group border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+                <button onClick={() => scrollTo("audience")} className="group border-2 border-white/30 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
                   Ik zoek extra werk
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
@@ -234,9 +233,9 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="relative z-20 -mt-20 pb-12">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="bg-white rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-6 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10">
+      <section className="relative z-20 -mt-14 sm:-mt-20 pb-8 sm:pb-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-5 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
             {[
               { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-500" },
               { value: 150, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
@@ -244,11 +243,11 @@ export default function LandingPage() {
               { value: 98, suffix: "%", label: "Tevredenheidsscore", icon: TrendingUp, color: "text-green-500" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-3`} />
-                <p className="text-4xl lg:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
+                <p className="text-2xl sm:text-4xl lg:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   <CountUp target={stat.value} suffix={stat.suffix} />
                 </p>
-                <p className="text-sm text-gray-400 mt-2 font-semibold">{stat.label}</p>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1 sm:mt-2 font-semibold">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -258,64 +257,64 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 2. AUDIENCE SPLIT                           */}
       {/* ============================================ */}
-      <section id="audience" className="py-20 lg:py-28 relative overflow-hidden">
-        <Blob className="w-[500px] h-[500px] top-[-10%] left-[-10%]" color="purple" />
-        <div className="max-w-5xl mx-auto px-6 relative z-10">
+      <section id="audience" className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
+        <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-10%] left-[-10%]" color="purple" />
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
           <RevealSection>
-            <div className="text-center mb-14">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Wat zoek jij?
               </h2>
-              <p className="text-xl text-gray-500 mt-4 max-w-xl mx-auto">Kies wat het best bij je past</p>
+              <p className="text-lg sm:text-xl text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">Kies wat het best bij je past</p>
             </div>
           </RevealSection>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
             <RevealSection>
-              <a href="#final-cta" onClick={(e) => { e.preventDefault(); scrollTo("final-cta"); }} className="group block relative bg-gradient-to-br from-purple-50 to-white rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-[100%] opacity-60" />
+              <a href="#final-cta" onClick={(e) => { e.preventDefault(); scrollTo("final-cta"); }} className="group block relative bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+                <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-[100%] opacity-60" />
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/20">
-                    <Briefcase className="w-10 h-10 text-white" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/20">
+                    <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
-                  <h3 className="text-3xl font-black text-gray-900 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek personeel</h3>
-                  <ul className="space-y-4 mb-10">
+                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek personeel</h3>
+                  <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
                     {["Snel inzetbaar horecapersoneel", "Strenge selectie & beoordeling", "Flexibel op- en afschalen"].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3 text-gray-600">
-                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3.5 h-3.5 text-purple-700" />
+                      <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-700" />
                         </div>
-                        <span className="text-base font-medium">{item}</span>
+                        <span className="text-sm sm:text-base font-medium">{item}</span>
                       </li>
                     ))}
                   </ul>
-                  <span className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold text-base px-7 py-3.5 rounded-full group-hover:bg-purple-700 group-hover:gap-4 transition-all shadow-lg shadow-purple-500/20">
-                    Plan een kennismaking <ArrowRight className="w-5 h-5" />
+                  <span className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-purple-700 group-hover:gap-4 transition-all shadow-lg shadow-purple-500/20">
+                    Plan een kennismaking <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
                 </div>
               </a>
             </RevealSection>
 
             <RevealSection delay={150}>
-              <a href="/sollicitatieformulier" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
+              <a href="/sollicitatieformulier" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+                <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
-                    <UserCheck className="w-10 h-10 text-white" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
+                    <UserCheck className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
-                  <h3 className="text-3xl font-black text-gray-900 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek werk</h3>
-                  <ul className="space-y-4 mb-10">
+                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek werk</h3>
+                  <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
                     {["Direct uitbetaald via app", "Kies je eigen diensten", "Verdien punten & beloningen"].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3 text-gray-600">
-                        <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3.5 h-3.5 text-indigo-700" />
+                      <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-700" />
                         </div>
-                        <span className="text-base font-medium">{item}</span>
+                        <span className="text-sm sm:text-base font-medium">{item}</span>
                       </li>
                     ))}
                   </ul>
-                  <span className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold text-base px-7 py-3.5 rounded-full group-hover:bg-indigo-700 group-hover:gap-4 transition-all shadow-lg shadow-indigo-500/20">
-                    Meld je aan <ArrowRight className="w-5 h-5" />
+                  <span className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-indigo-700 group-hover:gap-4 transition-all shadow-lg shadow-indigo-500/20">
+                    Meld je aan <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
                 </div>
               </a>
@@ -327,23 +326,23 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 3. LOGO MARQUEE                             */}
       {/* ============================================ */}
-      <section className="py-14 border-y border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <section className="py-10 sm:py-14 border-y border-gray-100 bg-gray-50/50">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
-            <p className="text-center text-base font-bold text-gray-400 uppercase tracking-widest mb-10">Vertrouwd door teams in de horeca</p>
+            <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
           </RevealSection>
           <div className="relative overflow-hidden group">
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-gray-50/90 to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-gray-50/90 to-transparent z-10" />
+            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-gray-50/90 to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-gray-50/90 to-transparent z-10" />
             <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
               {[...Array(2)].map((_, setIdx) => (
-                <div key={setIdx} className="flex items-center gap-16 px-8 flex-shrink-0">
+                <div key={setIdx} className="flex items-center gap-8 sm:gap-16 px-4 sm:px-8 flex-shrink-0">
                   {["Hotel Okura", "RAI Amsterdam", "Kurhaus", "Marriott Hotels", "NH Collection", "Postillion Hotels", "Van der Valk", "Hilton", "Hyatt Regency", "Fletcher Hotels"].map((name) => (
-                    <div key={`${setIdx}-${name}`} className="flex items-center gap-3 flex-shrink-0 opacity-25 hover:opacity-50 transition-opacity duration-300">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-200/60 flex items-center justify-center">
-                        <span className="text-gray-400 font-black text-sm">{name.slice(0, 2).toUpperCase()}</span>
+                    <div key={`${setIdx}-${name}`} className="flex items-center gap-2 sm:gap-3 flex-shrink-0 opacity-25 hover:opacity-50 transition-opacity duration-300">
+                      <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-200/60 flex items-center justify-center">
+                        <span className="text-gray-400 font-black text-xs sm:text-sm">{name.slice(0, 2).toUpperCase()}</span>
                       </div>
-                      <span className="text-gray-400 font-bold text-base whitespace-nowrap">{name}</span>
+                      <span className="text-gray-400 font-bold text-sm sm:text-base whitespace-nowrap">{name}</span>
                     </div>
                   ))}
                 </div>
@@ -365,29 +364,29 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 4. HOE HET WERKT                            */}
       {/* ============================================ */}
-      <section id="how-it-works" className="py-28 lg:py-36 relative overflow-hidden">
-        <XShape className="text-purple-500 top-[8%] right-[3%]" size={140} rotate={22} opacity={0.03} />
+      <section id="how-it-works" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
+        <XShape className="text-purple-500 top-[8%] right-[3%] hidden sm:block" size={140} rotate={22} opacity={0.03} />
         <XShape className="text-purple-500 bottom-[10%] left-[2%]" size={80} rotate={-30} opacity={0.025} />
-        <Blob className="w-[400px] h-[400px] top-[20%] right-[-5%]" color="pink" />
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 relative z-10">
+        <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] top-[20%] right-[-15%] sm:right-[-5%]" color="pink" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
-            <div className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-sm uppercase tracking-widest mb-5 bg-purple-50 px-5 py-2 rounded-full">
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-50 px-4 sm:px-5 py-2 rounded-full">
                 <Zap className="w-4 h-4" /> Simpel & snel
               </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Hoe het werkt
               </h2>
             </div>
           </RevealSection>
 
           <RevealSection delay={100}>
-            <div className="flex justify-center gap-3 mb-14">
+            <div className="flex justify-center gap-2 sm:gap-3 mb-10 sm:mb-14">
               {(["werkgever", "medewerker"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setHowItWorksTab(tab)}
-                  className={`px-8 py-4 rounded-full text-base font-bold transition-all duration-300 ${
+                  className={`px-5 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold transition-all duration-300 ${
                     howItWorksTab === tab
                       ? "bg-purple-600 text-white shadow-xl shadow-purple-500/25 scale-105"
                       : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
@@ -400,7 +399,7 @@ export default function LandingPage() {
           </RevealSection>
 
           <RevealSection delay={200}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
               {(howItWorksTab === "werkgever" ? [
                 { icon: Phone, step: "1", title: "Neem contact op", desc: "Bel of mail ons met je personeelsbehoefte.", color: "from-purple-500 to-purple-700" },
                 { icon: UserCheck, step: "2", title: "Wij selecteren", desc: "Geschikt en getraind personeel uit onze pool.", color: "from-indigo-500 to-purple-600" },
@@ -414,13 +413,13 @@ export default function LandingPage() {
               ]).map((item, i) => (
                 <div key={`${howItWorksTab}-${i}`} className="relative group">
                   {i < 3 && <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-3rem)] h-0.5 bg-gradient-to-r from-purple-200 to-transparent z-0" />}
-                  <div className="relative bg-white rounded-[1.5rem] p-8 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                      <item.icon className="w-8 h-8 text-white" />
+                  <div className="relative bg-white rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-8 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                      <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
-                    <div className="text-xs font-black text-purple-400 uppercase tracking-widest mb-3">Stap {item.step}</div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h4>
-                    <p className="text-base text-gray-500 leading-relaxed">{item.desc}</p>
+                    <div className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
+                    <h4 className="text-base sm:text-xl font-bold text-gray-900 mb-1.5 sm:mb-2">{item.title}</h4>
+                    <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -432,21 +431,21 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 5. WAAROM EXTRA (Differentiators)           */}
       {/* ============================================ */}
-      <section id="differentiators" className="py-28 lg:py-36 bg-gradient-to-b from-purple-50/80 to-white relative overflow-hidden">
-        <XShape className="text-purple-400 top-[5%] left-[4%]" size={100} rotate={-15} opacity={0.04} />
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 relative z-10">
+      <section id="differentiators" className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/80 to-white relative overflow-hidden">
+        <XShape className="text-purple-400 top-[5%] left-[4%] hidden sm:block" size={100} rotate={-15} opacity={0.04} />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
-            <div className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-5 py-2 rounded-full">
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
                 <Sparkles className="w-4 h-4" /> Ons verschil
               </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Waarom EXTRA
               </h2>
             </div>
           </RevealSection>
 
-          <div className="grid sm:grid-cols-2 gap-8">
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
             {[
               { icon: Shield, title: "Iedereen in loondienst", desc: "Geen ZZP-constructies. Wij regelen loon, belasting en verzekeringen.", emoji: "🛡️", bg: "from-purple-50 to-white" },
               { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Elk teamlid doorloopt een selectieprocedure en wordt beoordeeld na elke opdracht.", emoji: "⭐", bg: "from-yellow-50 to-white" },
@@ -454,14 +453,14 @@ export default function LandingPage() {
               { icon: Gift, title: "Gemotiveerd door EXTRAATje", desc: "Ons beloningssysteem zorgt voor betrokken medewerkers die graag terugkomen.", emoji: "🎁", bg: "from-pink-50 to-white" },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 100}>
-                <div className={`group bg-gradient-to-br ${item.bg} rounded-[1.5rem] p-9 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 hover:-translate-y-1 transition-all duration-300 h-full`}>
-                  <div className="flex items-start gap-5">
-                    <div className="text-4xl flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                <div className={`group bg-gradient-to-br ${item.bg} rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 hover:-translate-y-1 transition-all duration-300 h-full`}>
+                  <div className="flex items-start gap-4 sm:gap-5">
+                    <div className="text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                       {item.emoji}
                     </div>
                     <div>
-                      <h3 className="text-xl font-black text-gray-900 mb-3">{item.title}</h3>
-                      <p className="text-base text-gray-500 leading-relaxed">{item.desc}</p>
+                      <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-2 sm:mb-3">{item.title}</h3>
+                      <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 </div>
@@ -474,25 +473,25 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 6. EXTRAATje / REWARDS                      */}
       {/* ============================================ */}
-      <section id="rewards" className="relative py-28 lg:py-36 overflow-hidden">
+      <section id="rewards" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <XShape className="text-white top-[8%] right-[6%]" size={160} rotate={-12} opacity={0.035} />
+        <XShape className="text-white top-[8%] right-[6%] hidden sm:block" size={160} rotate={-12} opacity={0.035} />
         <XShape className="text-white bottom-[12%] left-[4%]" size={90} rotate={25} opacity={0.03} />
-        <Blob className="w-[500px] h-[500px] top-[-5%] left-[-10%] opacity-20" color="pink" />
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-5%] left-[-15%] sm:left-[-10%] opacity-20" color="pink" />
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
-            <div className="text-center mb-20">
-              <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-sm uppercase tracking-widest mb-5 bg-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10">
+            <div className="text-center mb-12 sm:mb-20">
+              <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
                 <Gift className="w-4 h-4" /> EXTRAATje
               </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Werken wordt{" "}
                 <span className="relative inline-block">
                   <span className="relative z-10">beloond</span>
-                  <span className="absolute bottom-1 left-0 right-0 h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
                 </span>
               </h2>
-              <p className="text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
                 Medewerkers verdienen automatisch punten voor elke gewerkte shift en behaalde challenge.
                 Die punten wisselen ze in voor echte beloningen — van AirPods tot sportabonnementen.
               </p>
@@ -500,46 +499,46 @@ export default function LandingPage() {
           </RevealSection>
 
           <RevealSection delay={100}>
-            <div className="grid sm:grid-cols-3 gap-6 mb-20 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-20 max-w-4xl mx-auto">
               {[
                 { step: "1", title: "Werk & verdien punten", desc: "Elke shift levert punten op. Extra inzet? Extra punten.", icon: "🏃" },
                 { step: "2", title: "Klim in status", desc: "Van Bronze naar Diamond. Hogere status = betere beloningen.", icon: "💎" },
                 { step: "3", title: "Claim je rewards", desc: "AirPods, TrainMore, Starbucks en meer. Jij kiest.", icon: "🎁" },
               ].map((item, i) => (
-                <div key={i} className="bg-white/8 backdrop-blur-sm rounded-2xl border border-white/10 p-8 text-center hover:bg-white/12 transition-all duration-300 hover:-translate-y-1">
-                  <div className="text-5xl mb-5">{item.icon}</div>
-                  <div className="text-xs font-black text-purple-400 uppercase tracking-widest mb-3">Stap {item.step}</div>
-                  <h4 className="text-xl font-bold text-white mb-3">{item.title}</h4>
-                  <p className="text-purple-200/70 text-base leading-relaxed">{item.desc}</p>
+                <div key={i} className="bg-white/8 backdrop-blur-sm rounded-2xl border border-white/10 p-6 sm:p-8 text-center hover:bg-white/12 transition-all duration-300 hover:-translate-y-1">
+                  <div className="text-4xl sm:text-5xl mb-4 sm:mb-5">{item.icon}</div>
+                  <div className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
+                  <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{item.title}</h4>
+                  <p className="text-purple-200/70 text-sm sm:text-base leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
           </RevealSection>
 
           <RevealSection delay={200}>
-            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-10 lg:gap-16 max-w-5xl mx-auto">
-              <div className="flex lg:flex-col gap-3 lg:gap-4 lg:justify-center order-2 lg:order-1 flex-wrap justify-center">
+            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-8 sm:gap-10 lg:gap-16 max-w-5xl mx-auto">
+              <div className="flex lg:flex-col gap-2 sm:gap-3 lg:gap-4 lg:justify-center order-2 lg:order-1 flex-wrap justify-center">
                 {appScreens.map((screen, i) => (
                   <button
                     key={screen.key}
                     onClick={() => setActiveScreen(i)}
-                    className={`flex items-center gap-3 px-6 py-4 rounded-2xl text-left transition-all duration-300 min-w-[170px] ${
+                    className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-left transition-all duration-300 min-w-[140px] sm:min-w-[170px] ${
                       activeScreen === i
                         ? "bg-white/15 border-2 border-purple-400/60 shadow-lg shadow-purple-500/20 scale-105"
                         : "bg-white/5 border-2 border-transparent hover:bg-white/10 hover:border-white/20"
                     }`}
                   >
-                    <span className="text-3xl">{screen.emoji}</span>
+                    <span className="text-2xl sm:text-3xl">{screen.emoji}</span>
                     <div>
-                      <span className={`font-bold text-base block ${activeScreen === i ? "text-white" : "text-purple-200/80"}`}>{screen.label}</span>
-                      {activeScreen === i && <span className="text-xs text-purple-300/60 font-medium">Actief</span>}
+                      <span className={`font-bold text-sm sm:text-base block ${activeScreen === i ? "text-white" : "text-purple-200/80"}`}>{screen.label}</span>
+                      {activeScreen === i && <span className="text-[10px] sm:text-xs text-purple-300/60 font-medium">Actief</span>}
                     </div>
                   </button>
                 ))}
               </div>
 
               <div className="relative order-1 lg:order-2 flex-shrink-0">
-                <div className="relative w-[280px] sm:w-[300px]">
+                <div className="relative w-[240px] sm:w-[300px]">
                   <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[5px] border-gray-700 bg-gray-900">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-gray-900 rounded-b-xl z-20" />
                     <div className="relative">
@@ -554,11 +553,11 @@ export default function LandingPage() {
 
               <div className="flex flex-col justify-center order-3 max-w-sm text-center lg:text-left">
                 <div className="transition-all duration-300">
-                  <span className="text-5xl block mb-5">{appScreens[activeScreen].emoji}</span>
-                  <h4 className="text-2xl font-black text-white mb-4">{appScreens[activeScreen].label}</h4>
-                  <p className="text-lg text-purple-200/70 leading-relaxed">{appScreens[activeScreen].desc}</p>
+                  <span className="text-4xl sm:text-5xl block mb-3 sm:mb-5">{appScreens[activeScreen].emoji}</span>
+                  <h4 className="text-xl sm:text-2xl font-black text-white mb-3 sm:mb-4">{appScreens[activeScreen].label}</h4>
+                  <p className="text-base sm:text-lg text-purple-200/70 leading-relaxed">{appScreens[activeScreen].desc}</p>
                 </div>
-                <div className="flex gap-2.5 mt-8 justify-center lg:justify-start">
+                <div className="flex gap-2.5 mt-6 sm:mt-8 justify-center lg:justify-start">
                   {appScreens.map((_, i) => (
                     <button key={i} onClick={() => setActiveScreen(i)} className={`h-2.5 rounded-full transition-all duration-300 ${activeScreen === i ? "bg-purple-400 w-10" : "bg-white/20 w-2.5 hover:bg-white/40"}`} />
                   ))}
@@ -581,31 +580,31 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 7. KWALITEIT & ZEKERHEID (Trust Block)      */}
       {/* ============================================ */}
-      <section id="trust" className="py-28 lg:py-36 relative overflow-hidden">
-        <Blob className="w-[300px] h-[300px] bottom-[10%] right-[-5%]" color="purple" />
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 relative z-10">
+      <section id="trust" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
+        <Blob className="w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] bottom-[10%] right-[-10%] sm:right-[-5%]" color="purple" />
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
-            <div className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-sm uppercase tracking-widest mb-5 bg-purple-50 px-5 py-2 rounded-full">
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-50 px-4 sm:px-5 py-2 rounded-full">
                 <Shield className="w-4 h-4" /> Betrouwbaar
               </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Waar u op kunt rekenen
               </h2>
             </div>
           </RevealSection>
 
           <RevealSection delay={100}>
-            <div className="grid sm:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-3 gap-4 sm:gap-8">
               {[
                 { icon: "🛡️", title: "Volledig in loondienst", desc: "Alle medewerkers werken via ons in loondienst. Wij regelen loon, belasting en verzekeringen.", bg: "from-purple-50 to-purple-100/30" },
                 { icon: "⭐", title: "Strenge selectie", desc: "Ieder teamlid doorloopt een selectieproces en wordt na iedere opdracht beoordeeld.", bg: "from-yellow-50 to-orange-50/30" },
                 { icon: "🤝", title: "Heldere afspraken", desc: "Duidelijke communicatie, vaste contactpersoon en transparante werkwijze.", bg: "from-green-50 to-emerald-50/30" },
               ].map((item, i) => (
-                <div key={i} className={`text-center bg-gradient-to-b ${item.bg} rounded-[2rem] p-10 border-2 border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
-                  <div className="text-5xl mb-6">{item.icon}</div>
-                  <h4 className="text-xl font-black text-gray-900 mb-3">{item.title}</h4>
-                  <p className="text-base text-gray-500 leading-relaxed">{item.desc}</p>
+                <div key={i} className={`text-center bg-gradient-to-b ${item.bg} rounded-2xl sm:rounded-[2rem] p-7 sm:p-10 border-2 border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
+                  <div className="text-4xl sm:text-5xl mb-4 sm:mb-6">{item.icon}</div>
+                  <h4 className="text-lg sm:text-xl font-black text-gray-900 mb-2 sm:mb-3">{item.title}</h4>
+                  <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -616,26 +615,26 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 8. TESTIMONIALS                             */}
       {/* ============================================ */}
-      <section className="py-28 lg:py-36 bg-gradient-to-b from-purple-50/60 to-white relative overflow-hidden">
-        <XShape className="text-purple-400 top-[15%] right-[5%]" size={100} rotate={20} opacity={0.03} />
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <section className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/60 to-white relative overflow-hidden">
+        <XShape className="text-purple-400 top-[15%] right-[5%] hidden sm:block" size={100} rotate={20} opacity={0.03} />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-14">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 mb-10 sm:mb-14">
               <div>
-                <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-sm uppercase tracking-widest mb-4 bg-purple-100/50 px-5 py-2 rounded-full">
+                <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
                   <Heart className="w-4 h-4" /> Ervaringen
                 </span>
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Wat anderen zeggen
                 </h2>
               </div>
-              <button onClick={() => scrollTo("final-cta")} className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-base px-8 py-4 rounded-full transition-all hover:shadow-lg hover:shadow-purple-500/25 hover:-translate-y-0.5 flex-shrink-0">
+              <button onClick={() => scrollTo("final-cta")} className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 rounded-full transition-all hover:shadow-lg hover:shadow-purple-500/25 hover:-translate-y-0.5 flex-shrink-0">
                 Start vandaag
               </button>
             </div>
           </RevealSection>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-8">
             {[
               {
                 quote: "EXTRA levert keer op keer betrouwbaar en goed getraind personeel. De communicatie is snel en helder.",
@@ -657,20 +656,20 @@ export default function LandingPage() {
               },
             ].map((testimonial, i) => (
               <RevealSection key={i} delay={i * 120}>
-                <div className="bg-white rounded-[1.5rem] p-9 border-2 border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
-                  <div className="flex gap-1 mb-5">
+                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border-2 border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
+                  <div className="flex gap-1 mb-4 sm:mb-5">
                     {[...Array(5)].map((_, j) => (
-                      <Star key={j} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                      <Star key={j} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-lg text-gray-600 leading-relaxed mb-8 flex-1">"{testimonial.quote}"</p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                      <span className="text-white font-bold text-base">{testimonial.name.split(" ").map(n => n[0]).join("")}</span>
+                  <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 flex-1">"{testimonial.quote}"</p>
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                      <span className="text-white font-bold text-sm sm:text-base">{testimonial.name.split(" ").map(n => n[0]).join("")}</span>
                     </div>
                     <div>
-                      <p className="text-base font-bold text-gray-900">{testimonial.name}</p>
-                      <p className="text-sm text-gray-400 font-medium">{testimonial.role}</p>
+                      <p className="text-sm sm:text-base font-bold text-gray-900">{testimonial.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-400 font-medium">{testimonial.role}</p>
                     </div>
                   </div>
                 </div>
@@ -683,31 +682,31 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 9. FINAL CTA                                */}
       {/* ============================================ */}
-      <section id="final-cta" className="relative py-28 lg:py-36 overflow-hidden">
+      <section id="final-cta" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <XShape className="text-white top-[10%] left-[6%]" size={130} rotate={-18} opacity={0.04} />
+        <XShape className="text-white top-[10%] left-[6%] hidden sm:block" size={130} rotate={-18} opacity={0.04} />
         <XShape className="text-white bottom-[15%] right-[8%]" size={80} rotate={30} opacity={0.035} />
-        <Blob className="w-[500px] h-[500px] top-[-10%] right-[-10%] opacity-10" color="pink" />
-        <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-8 text-center">
+        <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-10%] right-[-15%] sm:right-[-10%] opacity-10" color="pink" />
+        <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
           <RevealSection>
-            <div className="text-6xl mb-8">🚀</div>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <div className="text-5xl sm:text-6xl mb-5 sm:mb-8">🚀</div>
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 sm:mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Klaar om samen{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">te werken?</span>
-                <span className="absolute bottom-1 left-0 right-0 h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
               </span>
             </h2>
-            <p className="text-xl text-purple-200 mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
               Of je nu personeel zoekt of een flexibele bijbaan wilt met echte voordelen —
               bij EXTRA ben je aan het juiste adres.
             </p>
-            <div className="flex flex-col sm:flex-row gap-5 justify-center">
-              <a href="mailto:info@doehetextra.nl" className="group bg-white text-purple-900 font-bold px-10 py-5 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center">
+              <a href="mailto:info@doehetextra.nl" className="group bg-white text-purple-900 font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
                 Plan een kennismaking
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="/sollicitatieformulier" className="group border-2 border-white/30 text-white font-bold px-10 py-5 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-3">
+              <a href="/sollicitatieformulier" className="group border-2 border-white/30 text-white font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
                 Meld je aan
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
@@ -717,39 +716,39 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-950 text-gray-400 py-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-12 mb-14">
-            <div>
-              <div className="flex items-center gap-2.5 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-black text-lg">E</span>
+      <footer className="bg-gray-950 text-gray-400 py-14 sm:py-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-14">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
+                  <span className="text-white font-black text-base sm:text-lg">E</span>
                 </div>
-                <span className="font-black text-2xl text-white tracking-tight">EXTRA</span>
+                <span className="font-black text-xl sm:text-2xl text-white tracking-tight">EXTRA</span>
               </div>
-              <p className="text-base leading-relaxed">
+              <p className="text-sm sm:text-base leading-relaxed">
                 Uitzendbureau voor horeca, hotels en evenementen. Met ons unieke EXTRAATje beloningssysteem.
               </p>
             </div>
             <div>
-              <h4 className="text-white font-bold text-lg mb-5">Werkgevers</h4>
-              <ul className="space-y-3 text-base">
+              <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Werkgevers</h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
                 <li><button onClick={() => scrollTo("final-cta")} className="hover:text-purple-400 transition-colors">Personeel aanvragen</button></li>
                 <li><button onClick={() => scrollTo("how-it-works")} className="hover:text-purple-400 transition-colors">Hoe het werkt</button></li>
                 <li><button onClick={() => scrollTo("trust")} className="hover:text-purple-400 transition-colors">Kwaliteit</button></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold text-lg mb-5">Werkzoekenden</h4>
-              <ul className="space-y-3 text-base">
+              <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Werkzoekenden</h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
                 <li><a href="/sollicitatieformulier" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
                 <li><button onClick={() => scrollTo("rewards")} className="hover:text-purple-400 transition-colors">EXTRAATje Rewards</button></li>
                 <li><button onClick={() => scrollTo("differentiators")} className="hover:text-purple-400 transition-colors">Voordelen</button></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold text-lg mb-5">Contact</h4>
-              <ul className="space-y-3 text-base">
+              <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Contact</h4>
+              <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
                 <li>info@doehetextra.nl</li>
                 <li>Amsterdam, Nederland</li>
                 <li className="pt-2">
