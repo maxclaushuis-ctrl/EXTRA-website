@@ -174,8 +174,7 @@ export default function LandingPage() {
             className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
             loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/95 via-purple-900/80 to-purple-900/30 lg:to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-purple-900/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
         </div>
         <XShape className="text-white top-[12%] left-[5%] hidden sm:block" size={180} rotate={15} opacity={0.04} />
         <XShape className="text-white bottom-[20%] left-[12%]" size={60} rotate={35} opacity={0.03} />
