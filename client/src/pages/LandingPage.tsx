@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import appScreenshot3 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.21_1770913110868.png";
 import heroBgImage from "@assets/hero-background.png";
+import xPatroon from "@assets/X_patroon_1771260543289.png";
 import screenDashboard from "@assets/IMG_8803_1770915286475.png";
 import screenRewards from "@assets/IMG_8805_1770915286475.png";
 import screenChallenges from "@assets/IMG_8807_1770915286475.png";
@@ -70,9 +71,7 @@ function Blob({ className = "", color = "purple" }: { className?: string; color?
 function XShape({ className = "", size = 80, rotate = 0, opacity = 0.06 }: { className?: string; size?: number; rotate?: number; opacity?: number }) {
   return (
     <div className={`absolute pointer-events-none select-none ${className}`} style={{ width: size, height: size, transform: `rotate(${rotate}deg)`, opacity }}>
-      <svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        <path d="M18.3 0L50 31.7L81.7 0L100 18.3L68.3 50L100 81.7L81.7 100L50 68.3L18.3 100L0 81.7L31.7 50L0 18.3Z" />
-      </svg>
+      <img src={xPatroon} alt="" className="w-full h-full object-contain" draggable={false} />
     </div>
   );
 }
