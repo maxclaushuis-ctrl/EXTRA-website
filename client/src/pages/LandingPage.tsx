@@ -172,7 +172,20 @@ export default function LandingPage() {
             src={heroBgImage}
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
+            style={{ filter: "contrast(1.03) saturate(1.02)" }}
             loading="eager"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(90deg,
+                rgba(88,22,164,0.92) 0%,
+                rgba(88,22,164,0.88) 40%,
+                rgba(88,22,164,0.70) 65%,
+                rgba(88,22,164,0.35) 82%,
+                rgba(88,22,164,0.10) 100%
+              )`
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
         </div>

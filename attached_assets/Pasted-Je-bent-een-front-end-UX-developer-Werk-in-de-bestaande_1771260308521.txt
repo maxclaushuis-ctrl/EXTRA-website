@@ -1,0 +1,41 @@
+Je bent een front-end/UX developer. Werk in de bestaande stijl en codebase en pas alleen de HERO/HEADER sectie aan.
+
+DOEL
+1) De drie personen in de hero-afbeelding moeten zichtbaar scherper worden (gezicht/ogen/handen), vergelijkbaar met de “scherpe” referentie.
+2) De paarse overlay/gradient moet verder doorlopen naar rechts zodat alle kop/tekst/USP’s altijd goed leesbaar zijn, ook op grote schermen.
+
+AANPAK
+- Gebruik GEEN nieuwe layout. Alleen: beeldbewerking via CSS + overlay tuning.
+- Bewaar compositie: tekst links, personen rechts.
+- Zorg dat de afbeelding niet “kapot gesharpt” oogt (geen halo’s). Subtiel maar duidelijk.
+
+TECHNISCHE INSTRUCTIES
+A) Image scherpte
+- Pas scherpte toe op de hero-afbeelding via CSS filters of via een extra ‘sharp’ asset.
+- Voorkeur: gebruik een aparte sharpened asset (hero-people-sharp.webp) als die bestaat; zo niet, gebruik CSS: 
+  - filter: contrast(1.03) saturate(1.02);
+  - voeg een lichte sharpening toe met CSS (bijv. drop-shadow truc) of gebruik <img> in plaats van background zodat we betere rendering krijgen.
+- Zorg voor retina: zet srcset (1920 en 2560).
+
+B) Paarse overlay verder naar rechts
+- Pas de hero overlay gradient aan:
+  - Start links donker (voor contrast)
+  - Laat de overlay tot ~70–80% van de breedte aanwezig zijn voordat hij echt transparant wordt.
+  - Houd rechts nog een lichte paarse “mist” zodat het beeld consistent blijft.
+- Gebruik ::before overlay op de hero container met linear-gradient. Voorbeeld (pas aan naar bestaande kleuren):
+  linear-gradient(90deg,
+    rgba(88,22,164,0.92) 0%,
+    rgba(88,22,164,0.88) 40%,
+    rgba(88,22,164,0.70) 65%,
+    rgba(88,22,164,0.35) 82%,
+    rgba(88,22,164,0.10) 100%
+  )
+
+C) Responsiveness
+- Desktop: background-position: center right; (personen blijven rechts)
+- Mobile: maak overlay iets sterker (tekst readability) en zet personen iets lager of center-right.
+- Check contrast van H1, subkop en USP’s: minimaal WCAG AA (visueel).
+
+OUTPUT
+- Update alleen de hero component/style.
+- Lever de exacte code wijzigingen (CSS + component) en vertel waar de assets moeten staan.
