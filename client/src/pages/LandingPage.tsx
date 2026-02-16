@@ -264,8 +264,8 @@ export default function LandingPage() {
       {/* 2. AUDIENCE SPLIT                           */}
       {/* ============================================ */}
       <section id="audience" className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
-        <XShape className="text-purple-200 top-[6%] right-[8%] hidden sm:block" size={120} rotate={12} opacity={0.15} />
-        <XShape className="text-purple-200 bottom-[8%] left-[3%]" size={70} rotate={-25} opacity={0.1} />
+        <XShape className="text-purple-300 top-[4%] right-[5%] hidden sm:block" size={200} rotate={12} opacity={0.18} />
+        <XShape className="text-purple-200 bottom-[-40px] left-[8%]" size={120} rotate={-25} opacity={0.22} />
         <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-10%] left-[-10%]" color="purple" />
         <div className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
           <RevealSection>
@@ -335,7 +335,7 @@ export default function LandingPage() {
       {/* 3. LOGO MARQUEE                             */}
       {/* ============================================ */}
       <section className="py-10 sm:py-14 border-y border-gray-100 bg-gray-50/50 relative overflow-hidden">
-        <XShape className="text-purple-200 top-[15%] left-[6%] hidden lg:block" size={50} rotate={40} opacity={0.12} />
+        <XShape className="text-purple-300 top-[-20px] right-[12%] hidden sm:block" size={90} rotate={40} opacity={0.2} />
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
             <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
@@ -374,9 +374,9 @@ export default function LandingPage() {
       {/* 4. HOE HET WERKT                            */}
       {/* ============================================ */}
       <section id="how-it-works" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
-        <XShape className="text-purple-300 top-[5%] left-[7%] hidden sm:block" size={100} rotate={-10} opacity={0.12} />
-        <XShape className="text-purple-200 bottom-[12%] right-[4%]" size={150} rotate={18} opacity={0.08} />
-        <XShape className="text-purple-200 top-[45%] right-[2%] hidden lg:block" size={55} rotate={-35} opacity={0.1} />
+        <XShape className="text-purple-300 top-[-50px] right-[15%] hidden sm:block" size={160} rotate={-10} opacity={0.2} />
+        <XShape className="text-purple-200 bottom-[-30px] left-[60%]" size={110} rotate={30} opacity={0.18} />
+        <XShape className="text-purple-200 top-[40%] left-[2%] hidden lg:block" size={80} rotate={-35} opacity={0.15} />
         <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] top-[20%] right-[-15%] sm:right-[-5%]" color="pink" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
@@ -442,9 +442,9 @@ export default function LandingPage() {
       {/* 5. WAAROM EXTRA (Differentiators)           */}
       {/* ============================================ */}
       <section id="differentiators" className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/80 to-white relative overflow-hidden">
-        <XShape className="text-purple-300 bottom-[6%] right-[6%] hidden sm:block" size={110} rotate={28} opacity={0.1} />
-        <XShape className="text-purple-200 top-[12%] left-[2%]" size={65} rotate={-20} opacity={0.12} />
-        <XShape className="text-purple-200 top-[50%] right-[1%] hidden lg:block" size={45} rotate={50} opacity={0.08} />
+        <XShape className="text-purple-300 top-[-60px] left-[20%] hidden sm:block" size={180} rotate={28} opacity={0.15} />
+        <XShape className="text-purple-200 bottom-[8%] right-[3%]" size={140} rotate={-18} opacity={0.2} />
+        <XShape className="text-purple-200 top-[55%] left-[1%] hidden lg:block" size={70} rotate={50} opacity={0.15} />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
@@ -593,9 +593,9 @@ export default function LandingPage() {
       {/* 7. KWALITEIT & ZEKERHEID (Trust Block)      */}
       {/* ============================================ */}
       <section id="trust" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
-        <XShape className="text-purple-200 top-[10%] right-[3%] hidden sm:block" size={90} rotate={-8} opacity={0.12} />
-        <XShape className="text-purple-300 bottom-[15%] left-[5%] hidden sm:block" size={130} rotate={35} opacity={0.08} />
-        <XShape className="text-purple-200 top-[60%] left-[85%] hidden lg:block" size={40} rotate={-45} opacity={0.1} />
+        <XShape className="text-purple-300 top-[-45px] left-[70%] hidden sm:block" size={140} rotate={-8} opacity={0.18} />
+        <XShape className="text-purple-200 bottom-[-35px] right-[10%]" size={120} rotate={35} opacity={0.2} />
+        <XShape className="text-purple-200 top-[35%] left-[1%] hidden lg:block" size={90} rotate={-45} opacity={0.15} />
         <Blob className="w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] bottom-[10%] right-[-10%] sm:right-[-5%]" color="purple" />
         <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
@@ -631,9 +631,9 @@ export default function LandingPage() {
       {/* 8. TESTIMONIALS                             */}
       {/* ============================================ */}
       <section className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/60 to-white relative overflow-hidden">
-        <XShape className="text-purple-200 top-[20%] left-[4%] hidden sm:block" size={85} rotate={15} opacity={0.12} />
-        <XShape className="text-purple-300 bottom-[10%] right-[7%]" size={105} rotate={-22} opacity={0.08} />
-        <XShape className="text-purple-200 top-[70%] left-[50%] hidden lg:block" size={35} rotate={42} opacity={0.1} />
+        <XShape className="text-purple-300 top-[-40px] right-[25%] hidden sm:block" size={150} rotate={15} opacity={0.18} />
+        <XShape className="text-purple-200 bottom-[-50px] left-[5%]" size={170} rotate={-22} opacity={0.15} />
+        <XShape className="text-purple-200 top-[50%] right-[2%] hidden lg:block" size={65} rotate={42} opacity={0.18} />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 mb-10 sm:mb-14">
