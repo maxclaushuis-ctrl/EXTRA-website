@@ -12,6 +12,15 @@ import screenDashboard from "@assets/IMG_8803_1770915286475.png";
 import screenRewards from "@assets/IMG_8805_1770915286475.png";
 import screenChallenges from "@assets/IMG_8807_1770915286475.png";
 import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
+import logoAmrath from "@assets/Logo_amrath_1771267205959.png";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
+import logoFunda from "@assets/Logo_funda_1771267205959.png";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.png";
+import logoHilton from "@assets/Logo_Hilton_1771267205959.png";
+import logoMarriott from "@assets/Logo_Marriott_1771267205959.png";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.png";
+import logoAppel from "@assets/Logo-Appel_1771267205959.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -322,7 +331,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="relative z-20 -mt-10 sm:-mt-16 pb-0 sm:pb-0">
+      <section className="relative z-20 -mt-16 sm:-mt-24 pb-0 sm:pb-0">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-5 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
             {[
@@ -425,13 +434,20 @@ export default function LandingPage() {
             <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-gray-50/90 to-transparent z-10" />
             <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
               {[...Array(2)].map((_, setIdx) => (
-                <div key={setIdx} className="flex items-center gap-8 sm:gap-16 px-4 sm:px-8 flex-shrink-0">
-                  {["Hotel Okura", "RAI Amsterdam", "Kurhaus", "Marriott Hotels", "NH Collection", "Postillion Hotels", "Van der Valk", "Hilton", "Hyatt Regency", "Fletcher Hotels"].map((name) => (
-                    <div key={`${setIdx}-${name}`} className="flex items-center gap-2 sm:gap-3 flex-shrink-0 opacity-25 hover:opacity-50 transition-opacity duration-300">
-                      <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-200/60 flex items-center justify-center">
-                        <span className="text-gray-400 font-black text-xs sm:text-sm">{name.slice(0, 2).toUpperCase()}</span>
-                      </div>
-                      <span className="text-gray-400 font-bold text-sm sm:text-base whitespace-nowrap">{name}</span>
+                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                  {[
+                    { src: logoAmrath, alt: "Amrâth Hotels" },
+                    { src: logoFcUtrecht, alt: "FC Utrecht" },
+                    { src: logoFunda, alt: "Funda" },
+                    { src: logoHartMuseum, alt: "H'art Museum" },
+                    { src: logoHetePeper, alt: "Hete Peper" },
+                    { src: logoHilton, alt: "Hilton" },
+                    { src: logoMarriott, alt: "Marriott" },
+                    { src: logoSelectCatering, alt: "Select Catering" },
+                    { src: logoAppel, alt: "Appèl" },
+                  ].map((logo) => (
+                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300">
+                      <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain" />
                     </div>
                   ))}
                 </div>
