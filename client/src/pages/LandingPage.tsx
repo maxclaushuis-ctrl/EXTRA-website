@@ -68,20 +68,95 @@ function Blob({ className = "", color = "purple" }: { className?: string; color?
   );
 }
 
-function XShape({ className = "", size = 80, rotate = 0, opacity = 0.06, color }: { className?: string; size?: number; rotate?: number; opacity?: number; color?: string }) {
-  const style: React.CSSProperties = {
-    width: size,
-    height: size,
-    transform: `rotate(${rotate}deg)`,
-    opacity,
+type XVariant = "soft-grey" | "purple-glow" | "outline";
+
+interface XConfig {
+  x: string;
+  y: number;
+  size: number;
+  rotate: number;
+  opacity: number;
+  variant: XVariant;
+}
+
+const xPatternConfig: XConfig[] = [
+  { x: "8%",  y: 120,  size: 220, rotate: 12,  opacity: 0.06, variant: "purple-glow" },
+  { x: "85%", y: 380,  size: 160, rotate: -18, opacity: 0.04, variant: "soft-grey" },
+  { x: "3%",  y: 750,  size: 280, rotate: 25,  opacity: 0.05, variant: "outline" },
+  { x: "72%", y: 950,  size: 180, rotate: -30, opacity: 0.08, variant: "purple-glow" },
+  { x: "45%", y: 1300, size: 120, rotate: 40,  opacity: 0.04, variant: "soft-grey" },
+  { x: "90%", y: 1550, size: 300, rotate: -10, opacity: 0.05, variant: "purple-glow" },
+  { x: "5%",  y: 1900, size: 200, rotate: 35,  opacity: 0.07, variant: "outline" },
+  { x: "60%", y: 2200, size: 150, rotate: -22, opacity: 0.06, variant: "soft-grey" },
+  { x: "20%", y: 2600, size: 260, rotate: 15,  opacity: 0.05, variant: "purple-glow" },
+  { x: "80%", y: 2900, size: 180, rotate: -40, opacity: 0.08, variant: "outline" },
+  { x: "40%", y: 3300, size: 140, rotate: 28,  opacity: 0.04, variant: "soft-grey" },
+  { x: "10%", y: 3600, size: 320, rotate: -15, opacity: 0.06, variant: "purple-glow" },
+  { x: "70%", y: 3950, size: 200, rotate: 22,  opacity: 0.07, variant: "outline" },
+  { x: "50%", y: 4300, size: 170, rotate: -35, opacity: 0.05, variant: "purple-glow" },
+  { x: "15%", y: 4650, size: 240, rotate: 18,  opacity: 0.06, variant: "soft-grey" },
+  { x: "88%", y: 5000, size: 190, rotate: -28, opacity: 0.07, variant: "purple-glow" },
+];
+
+function BackgroundPatternLayer() {
+  const maskBase: React.CSSProperties = {
+    WebkitMaskImage: `url(${xPatroon})`,
+    maskImage: `url(${xPatroon})`,
+    WebkitMaskSize: "contain",
+    maskSize: "contain",
+    WebkitMaskRepeat: "no-repeat",
+    maskRepeat: "no-repeat",
+    WebkitMaskPosition: "center",
+    maskPosition: "center",
   };
-  if (color) {
-    style.filter = `brightness(0) saturate(100%)`;
-  }
+
   return (
-    <div className={`absolute pointer-events-none select-none ${className}`} style={style}>
-      <img src={xPatroon} alt="" className="w-full h-full object-contain" draggable={false} style={color ? { filter: `drop-shadow(0 0 0 ${color})`, WebkitFilter: `drop-shadow(0 0 0 ${color})` } : undefined} />
-      {color && <div className="absolute inset-0" style={{ backgroundColor: color, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center' }} />}
+    <div className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 1, overflow: "visible" }}>
+      {xPatternConfig.map((item, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: item.x,
+            top: item.y,
+            width: item.size,
+            height: item.size,
+            transform: `rotate(${item.rotate}deg)`,
+            opacity: item.opacity,
+          }}
+        >
+          {item.variant === "soft-grey" && (
+            <div className="absolute inset-0" style={{
+              ...maskBase,
+              backgroundColor: "rgba(180,175,200,0.85)",
+            }} />
+          )}
+          {item.variant === "purple-glow" && (
+            <div className="absolute inset-0" style={{
+              ...maskBase,
+              backgroundColor: "rgba(139,92,246,0.95)",
+              filter: "drop-shadow(0 0 20px rgba(139,92,246,0.3))",
+            }} />
+          )}
+          {item.variant === "outline" && (
+            <div className="absolute inset-0" style={{
+              ...maskBase,
+              backgroundColor: "transparent",
+              boxShadow: "none",
+            }}>
+              <img
+                src={xPatroon}
+                alt=""
+                className="w-full h-full object-contain"
+                style={{
+                  opacity: 0.6,
+                  filter: "brightness(0) saturate(100%) invert(32%) sepia(60%) saturate(3000%) hue-rotate(250deg) brightness(95%)",
+                }}
+              />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -128,8 +203,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+    <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      <BackgroundPatternLayer />
 
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
@@ -198,9 +274,6 @@ export default function LandingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
         </div>
-        <XShape className="text-white top-[12%] left-[5%] hidden sm:block" size={180} rotate={15} opacity={0.04} />
-        <XShape className="text-white bottom-[20%] left-[12%]" size={60} rotate={35} opacity={0.03} />
-
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-32 sm:pb-28">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 mb-6 sm:mb-10 border border-white/20">
@@ -274,9 +347,6 @@ export default function LandingPage() {
       {/* 2. AUDIENCE SPLIT                           */}
       {/* ============================================ */}
       <section id="audience" className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
-        <XShape className="top-[-80px] right-[3%] hidden sm:block" size={280} rotate={15} opacity={0.08} color="#7c3aed" />
-        <XShape className="bottom-[-60px] left-[5%]" size={180} rotate={-20} opacity={0.12} color="#a78bfa" />
-        <XShape className="top-[30%] right-[-40px] hidden lg:block" size={120} rotate={45} opacity={0.06} color="#c4b5fd" />
         <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-10%] left-[-10%]" color="purple" />
         <div className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
           <RevealSection>
@@ -346,7 +416,6 @@ export default function LandingPage() {
       {/* 3. LOGO MARQUEE                             */}
       {/* ============================================ */}
       <section className="py-10 sm:py-14 border-y border-gray-100 bg-gray-50/50 relative overflow-hidden">
-        <XShape className="top-[-30px] left-[80%] hidden sm:block" size={100} rotate={-15} opacity={0.1} color="#8b5cf6" />
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
             <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
@@ -385,9 +454,6 @@ export default function LandingPage() {
       {/* 4. HOE HET WERKT                            */}
       {/* ============================================ */}
       <section id="how-it-works" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
-        <XShape className="top-[-100px] left-[10%] hidden sm:block" size={320} rotate={22} opacity={0.05} color="#7c3aed" />
-        <XShape className="bottom-[-70px] right-[8%]" size={200} rotate={-12} opacity={0.1} color="#8b5cf6" />
-        <XShape className="top-[50%] left-[-30px] hidden lg:block" size={100} rotate={-40} opacity={0.08} color="#a78bfa" />
         <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] top-[20%] right-[-15%] sm:right-[-5%]" color="pink" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
@@ -453,9 +519,6 @@ export default function LandingPage() {
       {/* 5. WAAROM EXTRA (Differentiators)           */}
       {/* ============================================ */}
       <section id="differentiators" className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/80 to-white relative overflow-hidden">
-        <XShape className="top-[-90px] right-[5%] hidden sm:block" size={350} rotate={-8} opacity={0.04} color="#6d28d9" />
-        <XShape className="bottom-[-50px] left-[15%]" size={160} rotate={32} opacity={0.1} color="#a78bfa" />
-        <XShape className="top-[20%] left-[-50px] hidden lg:block" size={130} rotate={-25} opacity={0.07} color="#8b5cf6" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
@@ -498,8 +561,6 @@ export default function LandingPage() {
       {/* ============================================ */}
       <section id="rewards" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <XShape className="text-white top-[8%] right-[6%] hidden sm:block" size={160} rotate={-12} opacity={0.035} />
-        <XShape className="text-white bottom-[12%] left-[4%]" size={90} rotate={25} opacity={0.03} />
         <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-5%] left-[-15%] sm:left-[-10%] opacity-20" color="pink" />
         <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
@@ -604,9 +665,6 @@ export default function LandingPage() {
       {/* 7. KWALITEIT & ZEKERHEID (Trust Block)      */}
       {/* ============================================ */}
       <section id="trust" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
-        <XShape className="top-[-80px] right-[15%] hidden sm:block" size={240} rotate={18} opacity={0.06} color="#7c3aed" />
-        <XShape className="bottom-[-60px] left-[60%]" size={150} rotate={-30} opacity={0.1} color="#c4b5fd" />
-        <XShape className="top-[25%] right-[-40px] hidden lg:block" size={110} rotate={55} opacity={0.08} color="#8b5cf6" />
         <Blob className="w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] bottom-[10%] right-[-10%] sm:right-[-5%]" color="purple" />
         <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
@@ -642,9 +700,6 @@ export default function LandingPage() {
       {/* 8. TESTIMONIALS                             */}
       {/* ============================================ */}
       <section className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/60 to-white relative overflow-hidden">
-        <XShape className="top-[-70px] left-[2%] hidden sm:block" size={260} rotate={-15} opacity={0.06} color="#6d28d9" />
-        <XShape className="bottom-[-80px] right-[20%]" size={220} rotate={25} opacity={0.08} color="#7c3aed" />
-        <XShape className="top-[40%] right-[-30px] hidden lg:block" size={90} rotate={-50} opacity={0.1} color="#a78bfa" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 mb-10 sm:mb-14">
@@ -712,8 +767,6 @@ export default function LandingPage() {
       {/* ============================================ */}
       <section id="final-cta" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />
-        <XShape className="text-white top-[10%] left-[6%] hidden sm:block" size={130} rotate={-18} opacity={0.04} />
-        <XShape className="text-white bottom-[15%] right-[8%]" size={80} rotate={30} opacity={0.035} />
         <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-10%] right-[-15%] sm:right-[-10%] opacity-10" color="pink" />
         <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
           <RevealSection>

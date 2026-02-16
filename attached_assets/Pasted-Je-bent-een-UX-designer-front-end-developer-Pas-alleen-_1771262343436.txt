@@ -1,0 +1,58 @@
+Je bent een UX designer + front-end developer. Pas alleen de achtergrond-“X”-decoratie aan. Houd alle content, spacing en componenten verder hetzelfde.
+
+DOEL
+- Maak de achtergrond speelser en dynamischer door te variëren met de “X”-decoraties:
+  - sommige X’en licht grijs (low contrast)
+  - sommige X’en met een subtiele paarse glow (hoofdkleur)
+  - enkele X’en iets zichtbaarder dan andere (depth/laagjes)
+- Laat X’en netjes doorlopen over secties (geen harde afkap bij section boundaries).
+- Fix de bug: op sommige plekken lopen nu twee X’en onbedoeld in elkaar/over elkaar (zoals in de bijlage). Dit mag niet.
+
+BELANGRIJKE UX-REGELS
+- De X’en zijn decoratief: ze mogen NOOIT de leesbaarheid van tekst/knoppen verminderen.
+- Houd alle X’en op lage zichtbaarheid: 3%–12% opacity afhankelijk van de variant.
+- Gebruik blur/glow subtiel: geen neon, geen harde randen.
+
+IMPLEMENTATIE (AANPAK)
+1) Maak één globale “BackgroundPatternLayer” die achter ALLE secties zit (bijv. onder <main> of in de page wrapper).
+   - Niet per sectie renderen.
+   - Gebruik position: fixed of absolute met volledige page height.
+   - Zorg dat de layer niet mee “knipt” met secties:
+     - overflow: visible
+     - pointer-events: none
+     - z-index onder content maar boven de pure background.
+
+2) Plaats X’en als losse absolute elementen (divs of svg’s) vanuit een centrale config-array, zodat je overlap kunt controleren.
+   - Elke X krijgt: x, y, size, rotation, opacity, variant.
+   - Voeg collision/overlap preventie toe:
+     - check bounding boxes: geen overlap > 12% van oppervlakte
+     - als overlap: verplaats random (±40px) of verlaag opacity van de achterste X.
+
+3) Variaties in kleur/gloed (3 varianten)
+   Variant A: “soft grey”
+   - fill/stroke: rgba(255,255,255,0.10) of rgba(255,255,255,0.08)
+   - geen glow
+
+   Variant B: “purple glow”
+   - fill/stroke: rgba(180,120,255,0.10) of rgba(160,90,255,0.12)
+   - glow via box-shadow of filter: drop-shadow(0 0 18px rgba(160,90,255,0.20))
+
+   Variant C: “outline only”
+   - alleen stroke, bijna transparant
+   - eventueel heel lichte blur
+
+4) Doorlopende X’en over secties
+   - Zet de pattern layer op de page wrapper, niet binnen sections.
+   - Gebruik een mask/gradient zodat X’en onderin soms wegvallen, maar NIET door een section cut.
+   - Als je per se masks gebruikt: doe dat op de globale layer, niet per sectie.
+
+ACCEPTATIECRITERIA
+- Geen X wordt “afgekapt” door section containers.
+- Geen onbedoelde overlap tussen twee X’en zoals in de bijlage.
+- Minimaal 12–18 X’en over de hele homepage (afhankelijk van hoogte), met natuurlijke spreiding.
+- Tekst/CTA’s blijven altijd perfect leesbaar.
+
+OUTPUT
+- Pas de code aan (component + styles).
+- Zet de X-config in één bestand (bijv. backgroundPatternConfig.ts).
+- Laat in een korte opsomming zien welke varianten je hebt gemaakt en hoe overlap wordt voorkomen.
