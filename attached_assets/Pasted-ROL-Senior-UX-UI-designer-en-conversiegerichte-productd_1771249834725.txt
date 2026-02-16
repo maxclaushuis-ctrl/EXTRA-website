@@ -1,0 +1,169 @@
+ROL: Senior UX/UI designer en conversiegerichte productdesigner.
+
+CONTEXT
+Je werkt binnen het bestaande Replit-project van EXTRA (horeca uitzendbureau).
+De homepage heeft al een sterk en modern design. Herontwerp de visuele stijl NIET.
+Werk verder binnen de bestaande huisstijl (kleuren, typografie, spacing, componenten en animatiestijl).
+
+Focus ligt op:
+- Indeling
+- Hiërarchie
+- UX-logica
+- Conversieoptimalisatie
+
+Doel: Een homepage die in 5 seconden duidelijk maakt wat EXTRA doet en bezoekers snel naar de juiste actie leidt.
+
+Primaire doelgroep: Werkgevers (hotels, events, cateraars).
+Secundaire doelgroep: Werkzoekenden.
+
+Houd het premium, modern en overzichtelijk. Geen visuele drukte.
+
+--------------------------------------------------
+
+HERO-SECTIE (bestaande tekst behouden)
+
+H1 (exact zo laten staan):
+“Horecapersoneel nodig? EXTRA regelt het!”
+
+Subkop (exact zo laten staan):
+“Flexibel en representatief personeel voor hotels, events en cateraars. Snel geregeld.”
+
+Direct onder de subkop moet een horizontale rij komen met 3 mini-USP’s (icoon + korte tekst).
+
+Gebruik EXACT deze drie USP’s:
+
+✔ Iedereen in loondienst  
+⭐ Geselecteerd & beoordeeld personeel  
+💰 Dagbetaling mogelijk  
+
+Richtlijnen:
+- Maximaal 4–5 woorden per USP.
+- Visueel subtiel maar duidelijk scanbaar.
+- Gebruik bestaande icon-stijl.
+- Op desktop horizontaal naast elkaar.
+- Op mobiel onder elkaar met voldoende spacing.
+
+--------------------------------------------------
+
+HOMEPAGE STRUCTUUR (in deze volgorde implementeren)
+
+1. Hero (bestaand) + mini-USP’s toevoegen
+
+2. Doelgroep-splitsing (2 duidelijke kaarten naast elkaar)
+
+Linker kaart:
+Titel: “Ik zoek personeel”
+- 3 korte bullets (max 6 woorden)
+- 1 duidelijke CTA-knop
+
+Rechter kaart:
+Titel: “Ik zoek werk”
+- 3 korte bullets (max 6 woorden)
+- 1 duidelijke CTA-knop
+
+Beide kaarten volledig klikbaar maken.
+Gebruik bestaande button-styling.
+
+--------------------------------------------------
+
+3. Logo-sectie (social proof)
+
+- Voeg een horizontale rij met logo’s toe.
+- Voor nu mogen dit placeholder/random logo’s zijn.
+- Implementeer een subtiele horizontale scroll (marquee-effect).
+- Lage contrastwaarde.
+- Langzame animatie.
+- Pauzeer animatie bij hover (indien mogelijk).
+
+Boven de logo’s een korte titel:
+“Vertrouwd door teams in de horeca”
+
+--------------------------------------------------
+
+4. Hoe het werkt
+
+Maak twee kolommen of tabs:
+- Voor werkgevers
+- Voor medewerkers
+
+Per doelgroep:
+4 stappen met icoon + korte uitleg (1 zin per stap).
+
+Houd het visueel simpel en overzichtelijk.
+
+--------------------------------------------------
+
+5. Waarom EXTRA
+
+Maximaal 4 onderscheidende punten.
+Per punt:
+- Icoon
+- Titel
+- 1 korte zin
+
+Concreet en zakelijk. Geen marketingtaal.
+
+--------------------------------------------------
+
+6. EXTRAATje / puntensysteem
+
+- Bestaande visuals en schermen behouden.
+- Uitlegtekst verbeteren zodat duidelijk wordt:
+  - Hoe punten worden verdiend
+  - Wat medewerkers ermee kunnen
+  - Waarom dit zorgt voor betrouwbaarheid en kwaliteit
+
+Voeg 1 CTA toe:
+“Ontdek EXTRAATje”
+
+--------------------------------------------------
+
+7. Kwaliteit & zekerheid (voor werkgevers)
+
+3 korte bullets:
+- Werken volledig in loondienst
+- Strenge selectie & beoordeling
+- Heldere afspraken & communicatie
+
+Visueel rustig en professioneel.
+
+--------------------------------------------------
+
+8. Testimonials
+
+Voeg 3 testimonial-kaarten toe:
+- 2 werkgevers
+- 1 medewerker
+
+Max 2 zinnen per testimonial.
+Gebruik placeholder namen.
+
+--------------------------------------------------
+
+9. Final CTA-blok
+
+Eindig met een duidelijk conversieblok:
+
+Titel:
+“Klaar om samen te werken?”
+
+Twee knoppen:
+- Plan een kennismaking
+- Meld je aan
+
+--------------------------------------------------
+
+UX-RICHTLIJNEN
+
+- Beperk tekstlengte.
+- Houd voldoende witruimte.
+- Geen zware animaties.
+- Zorg voor optimale leesbaarheid.
+- Responsief (mobiel eerst denken).
+- Gebruik component-namen in code zoals:
+  Hero, AudienceSplit, LogoMarquee, HowItWorks, Differentiators, RewardsSection, TrustBlock, Testimonials, FinalCTA.
+
+START MET:
+1. Analyse van huidige homepage-structuur.
+2. Implementatie van bovenstaande secties in juiste volgorde.
+3. Hergebruik bestaande design tokens en componenten.
