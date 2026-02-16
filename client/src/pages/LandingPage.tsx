@@ -6,6 +6,7 @@ import {
   Award, Handshake, Phone, Sparkles, Heart, Zap
 } from "lucide-react";
 import appScreenshot3 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.21_1770913110868.png";
+import heroTeamPhoto from "@assets/extra-hero-team.png";
 import screenDashboard from "@assets/IMG_8803_1770915286475.png";
 import screenRewards from "@assets/IMG_8805_1770915286475.png";
 import screenChallenges from "@assets/IMG_8807_1770915286475.png";
@@ -173,8 +174,8 @@ export default function LandingPage() {
         <Blob className="w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] top-[-10%] right-[-20%] sm:right-[-10%]" color="pink" />
         <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] bottom-[5%] left-[-15%] sm:left-[-5%]" color="indigo" />
 
-        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-32 sm:pb-24">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-20 sm:pb-24">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-end">
             <div>
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 mb-6 sm:mb-10 border border-white/20">
                 <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-400 rounded-full animate-pulse" />
@@ -218,15 +219,14 @@ export default function LandingPage() {
                 </button>
               </div>
             </div>
-            <div className="relative hidden lg:block">
-              <div className="relative mx-auto w-[340px]">
-                <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/40 border-[6px] border-gray-800">
-                  <img src={appScreenshot3} alt="EXTRA App" className="w-full" />
-                </div>
-                <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-[3.5rem] blur-3xl -z-10" />
-              </div>
-              <FloatingNotification text="+50 punten verdiend" emoji="⭐" className="top-6 -left-20 z-30 max-w-[250px]" delay={1500} />
-              <FloatingNotification text="Je bent nu Gold status!" emoji="🥇" className="bottom-20 -right-16 z-30 max-w-[260px]" delay={3000} />
+            <div className="relative flex items-end justify-center mt-8 lg:mt-0">
+              <img
+                src={heroTeamPhoto}
+                alt="EXTRA horecateam - chef, bediening en housekeeping"
+                className="relative z-10 w-full max-h-[380px] sm:max-h-[420px] lg:max-h-[560px] object-contain object-bottom drop-shadow-2xl"
+                loading="eager"
+              />
+              <div className="absolute -inset-8 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-[3rem] blur-3xl -z-10" />
             </div>
           </div>
         </div>

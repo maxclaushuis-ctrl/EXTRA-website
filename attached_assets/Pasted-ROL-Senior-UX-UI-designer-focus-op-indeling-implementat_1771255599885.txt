@@ -1,0 +1,47 @@
+ROL: Senior UX/UI designer (focus op indeling + implementatie in bestaande stijl).
+
+CONTEXT
+We werken in het bestaande Replit-project van EXTRA. De homepage/hero staat al en heeft een goede look & feel.
+We willen GEEN redesign van het design system. Alleen de hero-visual rechts (die nu omcirkeld is) vervangen door een foto van 3 professionals (chef, bediening, housekeeping).
+
+DOEL
+Vervang in de hero-sectie het huidige “rewards/schermen”-visual rechts door een nieuwe hero-afbeelding (foto).
+De foto moet rechts staan, volledig zichtbaar, en scherp blijven op alle schermformaten. Links blijft ruimte voor de tekst.
+
+NIEUWE HERO AFBEELDING
+Gebruik deze afbeelding als hero-visual (plaats in public/assets en importeer in de Hero component):
+/assets/extra-hero-team.png
+
+LAYOUT RICHTLIJNEN (DESKTOP)
+- Hero blijft 2 kolommen:
+  - Links: tekstblok (headline, subkop, USP’s, CTA’s)
+  - Rechts: afbeelding met 3 personen
+- Afbeelding rechts:
+  - Max hoogte: 520–560px in hero
+  - Object-fit: contain (zodat niemand afvalt)
+  - Anchor: bottom-right
+  - Voeg optioneel een heel subtiele drop-shadow toe (zoals de rest van de site) zodat het loskomt van de achtergrond.
+
+LAYOUT RICHTLIJNEN (MOBIEL)
+- Stack: eerst tekst, daaronder foto.
+- Foto:
+  - width: 100%
+  - max-height: 380–420px
+  - object-fit: contain
+  - Zorg dat gezichten goed zichtbaar blijven (niet croppen).
+
+TECHNISCHE IMPLEMENTATIE
+- Voeg de foto toe in public/assets als: extra-hero-team.png
+- Update de Hero component:
+  - Vervang het huidige right-side component (mockups/cards) door een <img> of <Image>.
+  - Gebruik responsive classes / CSS zodat de foto altijd scherp is:
+    - Gebruik srcset (2x) of lever PNG op 2x resolutie.
+    - Geen CSS blur of filters op de foto.
+- Performance:
+  - Gebruik lazy-loading onder de fold, maar NIET voor hero-afbeelding.
+  - Optimaliseer bestandsgrootte (liefst WebP + fallback PNG).
+
+AFWERKING
+- De achtergrond (paars + patroon) blijft zoals nu.
+- De foto mag een subtiele paarse overlay krijgen via CSS (bijv. mix-blend-mode/opacity) maar alleen als dat nodig is voor consistentie.
+- Zorg dat de foto niet concurreert met de headline: rechts visueel, links tekst.
