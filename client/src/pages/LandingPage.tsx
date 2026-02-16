@@ -272,7 +272,7 @@ export default function LandingPage() {
               )`
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-32 sm:pb-28">
           <div className="max-w-2xl">
@@ -322,7 +322,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="relative z-20 -mt-14 sm:-mt-20 pb-8 sm:pb-12">
+      <section className="relative z-20 -mt-10 sm:-mt-16 pb-0 sm:pb-0">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-5 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
             {[
@@ -346,7 +346,7 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* 2. AUDIENCE SPLIT                           */}
       {/* ============================================ */}
-      <section id="audience" className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
+      <section id="audience" className="pt-10 sm:pt-14 pb-16 sm:pb-20 lg:pb-28 relative overflow-hidden">
         <Blob className="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] top-[-10%] left-[-10%]" color="purple" />
         <div className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
           <RevealSection>
@@ -366,7 +366,7 @@ export default function LandingPage() {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/20">
                     <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek personeel</h3>
+                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra personeel</h3>
                   <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
                     {["Snel inzetbaar horecapersoneel", "Strenge selectie & beoordeling", "Flexibel op- en afschalen"].map((item, i) => (
                       <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
@@ -378,7 +378,7 @@ export default function LandingPage() {
                     ))}
                   </ul>
                   <span className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-purple-700 group-hover:gap-4 transition-all shadow-lg shadow-purple-500/20">
-                    Plan een kennismaking <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Ik zoek extra personeel <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
                 </div>
               </a>
@@ -391,9 +391,9 @@ export default function LandingPage() {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
                     <UserCheck className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek werk</h3>
+                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra werk</h3>
                   <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
-                    {["Direct uitbetaald via app", "Kies je eigen diensten", "Verdien punten & beloningen"].map((item, i) => (
+                    {["Direct uitbetaald via app", "Kies jouw eigen diensten", "Verdien punten & beloningen"].map((item, i) => (
                       <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
                         <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
                           <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-700" />
@@ -403,7 +403,7 @@ export default function LandingPage() {
                     ))}
                   </ul>
                   <span className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-indigo-700 group-hover:gap-4 transition-all shadow-lg shadow-indigo-500/20">
-                    Meld je aan <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Ik zoek extra werk <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
                 </div>
               </a>
@@ -534,7 +534,7 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
             {[
               { icon: Shield, title: "Iedereen in loondienst", desc: "Geen ZZP-constructies. Wij regelen loon, belasting en verzekeringen.", emoji: "🛡️", bg: "from-purple-50 to-white" },
-              { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Elk teamlid doorloopt een selectieprocedure en wordt beoordeeld na elke opdracht.", emoji: "⭐", bg: "from-yellow-50 to-white" },
+              { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Elk teamlid doorloopt een selectieprocedure en wordt na elke opdracht beoordeeld.", emoji: "⭐", bg: "from-yellow-50 to-white" },
               { icon: Clock, title: "Snel & flexibel inzetbaar", desc: "Last-minute personeel nodig? Wij schakelen snel en leveren ook op korte termijn.", emoji: "⚡", bg: "from-blue-50 to-white" },
               { icon: Gift, title: "Gemotiveerd door EXTRAATje", desc: "Ons beloningssysteem zorgt voor betrokken medewerkers die graag terugkomen.", emoji: "🎁", bg: "from-pink-50 to-white" },
             ].map((item, i) => (
@@ -673,7 +673,7 @@ export default function LandingPage() {
                 <Shield className="w-4 h-4" /> Betrouwbaar
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waar u op kunt rekenen
+                Waar je op kunt rekenen
               </h2>
             </div>
           </RevealSection>
@@ -784,11 +784,11 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center">
               <a href="mailto:info@doehetextra.nl" className="group bg-white text-purple-900 font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
-                Plan een kennismaking
+                Ik zoek extra personeel
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <a href="/sollicitatieformulier" className="group border-2 border-white/30 text-white font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
-                Meld je aan
+                Ik zoek extra werk
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>

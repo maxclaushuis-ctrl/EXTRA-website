@@ -1,0 +1,94 @@
+Je bent een UX designer + front-end developer. Werk in dezelfde designstijl en pas alleen de overgang tussen de HERO en de tweede sectie (“de flow / hoe het werkt”) én de tone of voice aan.
+
+BELANGRIJK:
+Bekijk alles vanuit UX en consistentie. De website moet jong, dynamisch maar professioneel blijven.
+
+-----------------------------------
+1. PROBLEEM: OVERLOOP HERO → FLOW
+-----------------------------------
+
+De huidige overgang van paars naar wit heeft een lelijke fade/overloop waardoor er een witte “tussenband” ontstaat. Dit oogt rommelig en niet premium.
+
+DOEL:
+- Plaats de flow-sectie volledig naar boven zodat deze direct onder het paarse hero-gedeelte begint.
+- Zorg dat de hero visueel doorloopt tot aan de flow zonder een rommelige fade.
+- De overgang moet strak, modern en logisch aanvoelen.
+
+WAT JE MOET DOEN:
+
+1) Verplaats de flow-sectie omhoog:
+   - Verlaag margin-top of gebruik negatieve margin-top
+   - Desktop: ongeveer -60px tot -120px (visueel tunen)
+   - Mobiel: kleinere overlap (-24px tot -40px)
+
+2) Verwijder of corrigeer de huidige bottom-gradient van de hero:
+   - Geen witte fade meer onderaan
+   - Laat het paars volledig doorlopen
+   - Eventueel subtiele interne fade binnen het paars, maar niet naar wit
+
+3) Maak de overgang premium:
+   Optie A (voorkeur):
+   - Flow als witte kaart met border-radius 24px–32px
+   - Subtiele shadow
+   - Lichte overlap in het paars
+   - Moderne SaaS-uitstraling
+
+ACCEPTATIE:
+- Geen witte tussenband meer
+- Hero en flow sluiten logisch op elkaar aan
+- Premium uitstraling
+
+-----------------------------------
+2. CONSISTENTE TONE OF VOICE
+-----------------------------------
+
+Controleer de volledige homepage op inconsistent taalgebruik.
+
+BELANGRIJK:
+Gebruik overal:
+- "je"
+- "jij"
+- "jouw"
+
+Gebruik nergens:
+- "U"
+- "Uw"
+
+Pas alle teksten aan zodat de tone of voice overal jong, direct en consistent is.
+
+-----------------------------------
+3. CTA’S IN TWEEDE SECTIE
+-----------------------------------
+
+In de tweede sectie moeten dezelfde CTA’s terugkomen als in de hero.
+
+Voeg toe of pas aan naar exact:
+
+- "Ik zoek extra werk"
+- "Ik zoek extra personeel"
+
+Gebruik dezelfde stijl als de hero-knoppen:
+- afgerond
+- duidelijke hover
+- consistente spacing
+- zelfde kleurgebruik
+
+-----------------------------------
+4. UX CHECK
+-----------------------------------
+
+Controleer:
+- Spacing tussen secties
+- Consistente padding links/rechts
+- Leesbaarheid op desktop en mobiel
+- Contrast van tekst op paars
+- Geen layout shift
+
+-----------------------------------
+OUTPUT
+-----------------------------------
+
+- Lever de exacte CSS/JSX wijzigingen
+- Benoem welke margins zijn aangepast
+- Geef aan waar de gradient is aangepast
+- Laat zien welke teksten zijn gewijzigd naar je/jij/jouw
