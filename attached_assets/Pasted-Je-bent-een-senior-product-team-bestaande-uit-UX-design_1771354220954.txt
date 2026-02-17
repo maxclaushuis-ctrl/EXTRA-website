@@ -1,0 +1,292 @@
+Je bent een senior product team bestaande uit:
+- UX designer
+- Conversiepsycholoog / neuromarketeer
+- Visual designer
+- SEO specialist
+- Front-end engineer
+
+Je optimaliseert de HOMEPAGINA van EXTRA (horeca uitzendbureau).
+
+DOEL:
+Bezoekers moeten binnen 5 seconden begrijpen:
+1) Wat doen jullie?
+2) Is dit relevant voor mij?
+3) Kan ik jullie vertrouwen?
+4) Wat moet ik nu doen?
+
+De homepage moet:
+- Minder “witjes” en minder template-achtig zijn
+- Meer energie en karakter hebben
+- Het X-patroon zichtbaar gebruiken als herkenbaar brand element
+- Overtuigen van boven naar beneden (psychologisch opgebouwd)
+
+Gebruik neuromarketing principes:
+- Aandacht → Interesse → Vertrouwen → Zekerheid → Actie
+- Gebruik visuele hiërarchie om het oog te sturen
+- Beperk cognitieve load
+- Werk met contrast, richting en focuspunten
+
+---
+
+# 👁 VISUELE AANDACHTSSTURING (ZEER BELANGRIJK)
+
+Het oog moet deze route volgen:
+
+1) H1
+2) Primary CTA
+3) Trust bullets
+4) Stats
+5) Sectoren
+6) Hoe het werkt
+7) Waarom extra (wetgeving zekerheid)
+8) Testimonials
+9) Final CTA
+
+Bouw de layout zó dat deze flow automatisch gebeurt.
+
+Gebruik:
+- Donker-licht contrast om focus te sturen
+- Grotere font sizes bovenin, kleiner naar beneden
+- Buttons met visuele zwaarte (primary duidelijk dominant)
+- Richtinggevende elementen (subtiele diagonale lijnen/X-pattern)
+
+---
+
+# 🎨 VISUAL STYLE (MEER CATCHY, MINDER WIT)
+
+- Vermijd grote witte vlakken.
+- Gebruik section-based kleurblokken:
+  - Hero: diep paars gradient
+  - Stats: semi-transparant overlay
+  - Sectoren: donker paars
+  - Hoe het werkt: warm off-white
+  - Waarom extra: lila gradient
+  - Extraatje: diep paars
+  - Testimonials: warm licht
+  - Final CTA: donker paars
+
+- Gebruik het X-patroon:
+  - Grote zachte X’s in achtergronden (low opacity)
+  - Subtiele X-dividers tussen secties
+  - Hover effect met lichte X-glow
+  - Mini X-accent bij actieve navigatie
+
+- Voeg subtiele grain/noise overlay toe om vlakheid te breken.
+
+---
+
+# 🏆 HERO (DE BELANGRIJKSTE 40% VAN DE PAGINA)
+
+Psychologisch doel:
+- Probleem herkennen
+- Oplossing tonen
+- Direct actie mogelijk maken
+
+Achtergrond:
+Diepe paarse gradient met langzaam bewegende X’s.
+
+Rechterzijde:
+Hospitality team afbeelding (donker gemaakt zodat tekst wint).
+
+Linkerzijde (glass card):
+
+H1 (enige H1):
+“Horecapersoneel nodig? extra regelt het.”
+
+Subtekst:
+“Flexibel en representatief personeel voor hotels, catering, events en restaurants. Snel geregeld.”
+
+Trust bullets (met iconen):
+- Iedereen in loondienst
+- Geselecteerd & beoordeeld
+- Dagbetaling mogelijk
+
+Primary CTA (visueel dominant, glow + lift on hover):
+“Ik zoek extra personeel” → /werkgevers
+
+Secondary CTA:
+“Ik zoek extra werk” → /werkzoekenden
+
+Micro trust badge boven CTA:
+“800+ medewerkers actief”
+
+---
+
+# 📊 STATS STRIP (SOCIAL PROOF)
+
+Zorg dat deze direct onder hero zichtbaar is.
+
+Counters met animatie:
+- 800+ actieve medewerkers
+- 60+ tevreden opdrachtgevers
+- 100k+ punten verdiend
+- 4,8/5 sterrenscore
+
+Onderregel:
+“Actief in hotels, catering, events en restaurants.”
+
+Doel:
+Social proof → verlaagt twijfel.
+
+---
+
+# 🏢 SECTOREN (CONCRETISEERT DIENSTVERLENING)
+
+H2:
+“Extra personeel per sector”
+
+Psychologisch doel:
+Bezoeker moet zichzelf herkennen.
+
+4 cards (donker paars achtergrond, levendig):
+
+Hotels:
+Housekeeping, Banqueting, Front office, Keuken
+
+Catering:
+Chefs, Horecamedewerkers, Host/hostessen
+
+Events:
+Chefs, Horecamedewerkers, Host/hostessen
+
+Restaurants:
+Runners, Bar, Bediening, Chefs, Afwas
+
+Gebruik chips i.p.v. simpele bullets.
+Hover: lichte tilt + glow + underline animatie.
+
+---
+
+# 🔄 HOE EXTRA WERKT (STRUCTUUR GEEFT RUST)
+
+H2:
+“Hoe extra werkt”
+
+Toggle:
+Voor werkgevers / Voor medewerkers
+
+Werkgevers:
+1 Neem contact op
+2 Wij selecteren
+3 Planning & inzet
+4 Evaluatie
+
+Medewerkers:
+1 Meld je aan
+2 Kom op gesprek
+3 Kies je diensten
+4 Werk & verdien
+5 Claim rewards
+
+Doel:
+Complexiteit verlagen → vertrouwen verhogen.
+
+---
+
+# ⚖ WAAROM EXTRA (WETGEVING & ZEKERHEID)
+
+H2:
+“Waarom extra”
+
+Focus op 2026 realiteit:
+- Iedereen in loondienst (geen zzp-constructies)
+- Geselecteerd & beoordeeld
+- Snel & flexibel inzetbaar
+- Heldere afspraken
+
+Gebruik korte copy (max 2 zinnen per card).
+Voeg subtiele “wetgeving-proof” badge toe.
+
+Doel:
+Twijfel wegnemen.
+
+---
+
+# 🎁 EXTRAATJE (EMOTIONELE TRIGGER)
+
+H2:
+“Werken wordt beloond”
+
+3 stappen visueel:
+Werk → Punten → Rewards
+
+Extra blok:
+“Wat jij als opdrachtgever merkt”
+- Meer opkomst
+- Minder last-minute uitval
+- Stabielere poule
+
+Doel:
+Rationeel + emotioneel voordeel combineren.
+
+---
+
+# ⭐ TESTIMONIALS (SOCIAAL BEWIJS)
+
+H2:
+“Wat anderen zeggen”
+
+Toggle:
+Werkgevers / Medewerkers
+
+Gebruik echte namen (dummy toegestaan).
+5-sterren visueel sterk.
+
+---
+
+# ❓ FAQ (SEO + BEZWAREN WEGNEMEN)
+
+Accordion met 4 vragen:
+1 Werken jullie met zzp?
+2 Welke functies leveren jullie?
+3 Hoe snel kunnen jullie leveren?
+4 Hoe werkt extraatje?
+
+Compacte antwoorden.
+
+---
+
+# 🚀 FINAL CTA (CONVERSIE MOMENT)
+
+H2:
+“Klaar om samen te werken?”
+
+Subtekst:
+“Of je nu extra personeel zoekt of extra werk: we regelen het snel en duidelijk.”
+
+Primary CTA:
+“Vraag extra personeel aan”
+
+Secondary CTA:
+“Ik zoek extra werk”
+
+Donker paars met animated X-divider erboven (signature moment).
+
+---
+
+# ⚙ TECHNISCH
+
+- Next.js + Tailwind
+- Framer Motion subtiel
+- JSON-LD structured data
+- Exact 1 H1
+- Goede heading-structuur
+- Data-driven content (data/home.ts)
+- Mobile-first responsive
+
+---
+
+# BELANGRIJK
+
+De homepage moet:
+- Minder wit zijn
+- Meer diepte hebben
+- Meer contrast hebben
+- Het X-patroon sterker tonen
+- De bezoeker visueel sturen
+- Psychologisch overtuigen van boven naar beneden
+- Premium en onderscheidend voelen
+- Niet schreeuwerig of rommelig worden
+
+Bouw geen standaard template.
+Bouw een merkervaring.
