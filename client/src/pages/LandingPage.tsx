@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Users, Trophy, Gift, Star, ChevronDown,
+  Users, Trophy, Gift, Star, ChevronDown, ChevronUp,
   TrendingUp, Shield, Clock,
   ArrowRight, Check, Menu, X, Briefcase, UserCheck, CreditCard,
-  Award, Handshake, Phone, Sparkles, Heart, Zap
+  Award, Handshake, Phone, Sparkles, Heart, Zap,
+  Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle
 } from "lucide-react";
 import appScreenshot3 from "@assets/Scherm\u00ADafbeelding_2026-02-12_om_17.16.21_1770913110868.png";
 import heroBgImage from "@assets/hero-background.png";
@@ -173,6 +174,7 @@ function BackgroundPatternLayer() {
 function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
   const { ref, isVisible } = useScrollReveal();
+  const hasDecimal = target % 1 !== 0;
   useEffect(() => {
     if (!isVisible) return;
     let start = 0;
@@ -180,11 +182,11 @@ function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suf
     const timer = setInterval(() => {
       start += increment;
       if (start >= target) { setCount(target); clearInterval(timer); }
-      else { setCount(Math.floor(start)); }
+      else { setCount(hasDecimal ? Math.round(start * 10) / 10 : Math.floor(start)); }
     }, 16);
     return () => clearInterval(timer);
-  }, [isVisible, target, duration]);
-  return <span ref={ref}>{count.toLocaleString("nl-NL")}{suffix}</span>;
+  }, [isVisible, target, duration, hasDecimal]);
+  return <span ref={ref}>{hasDecimal ? count.toFixed(1).replace('.', ',') : count.toLocaleString("nl-NL")}{suffix}</span>;
 }
 
 const appScreens = [
@@ -199,6 +201,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [activeScreen, setActiveScreen] = useState(0);
   const [howItWorksTab, setHowItWorksTab] = useState<"werkgever" | "medewerker">("werkgever");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -229,7 +232,7 @@ export default function LandingPage() {
             <div className="hidden lg:flex items-center gap-8">
               {[
                 ["Hoe het werkt", "how-it-works"],
-                ["Waarom EXTRA", "differentiators"],
+                ["Waarom extra", "differentiators"],
                 ["EXTRAATje", "rewards"],
                 ["Werkgevers", "trust"],
               ].map(([label, id]) => (
@@ -249,7 +252,7 @@ export default function LandingPage() {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-t border-gray-100 shadow-xl">
             <div className="px-6 py-4 space-y-3">
-              {[["Hoe het werkt","how-it-works"],["Waarom EXTRA","differentiators"],["EXTRAATje","rewards"],["Werkgevers","trust"],["Contact","final-cta"]].map(([label,id]) => (
+              {[["Hoe het werkt","how-it-works"],["Waarom extra","differentiators"],["EXTRAATje","rewards"],["Werkgevers","trust"],["Contact","final-cta"]].map(([label,id]) => (
                 <button key={id} onClick={() => scrollTo(id)} className="block w-full text-left text-gray-700 font-semibold py-2 hover:text-purple-600">{label}</button>
               ))}
             </div>
@@ -326,6 +329,14 @@ export default function LandingPage() {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
+            <div className="flex gap-6 mt-4 sm:mt-5">
+              <button onClick={() => scrollTo("sectors")} className="text-purple-200/80 hover:text-white text-sm sm:text-base font-medium underline underline-offset-4 decoration-purple-400/40 hover:decoration-white/60 transition-all">
+                Bekijk sectoren
+              </button>
+              <button onClick={() => scrollTo("how-it-works")} className="text-purple-200/80 hover:text-white text-sm sm:text-base font-medium underline underline-offset-4 decoration-purple-400/40 hover:decoration-white/60 transition-all">
+                Hoe het werkt
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -336,9 +347,9 @@ export default function LandingPage() {
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-5 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
             {[
               { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-500" },
-              { value: 150, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
-              { value: 50000, suffix: "+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
-              { value: 98, suffix: "%", label: "Tevredenheidsscore", icon: TrendingUp, color: "text-green-500" },
+              { value: 60, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
+              { value: 100, suffix: "k+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
+              { value: 4.8, suffix: "/5", label: "Sterrenscore", icon: Star, color: "text-yellow-500" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
@@ -467,7 +478,55 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================ */}
-      {/* 4. HOE HET WERKT                            */}
+      {/* 4. SECTOREN                                  */}
+      {/* ============================================ */}
+      <section id="sectors" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
+        <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] top-[10%] left-[-15%] sm:left-[-5%]" color="purple" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-50 px-4 sm:px-5 py-2 rounded-full">
+                <Briefcase className="w-4 h-4" /> Onze sectoren
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Extra personeel per sector
+              </h2>
+            </div>
+          </RevealSection>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[
+              { icon: Building2, title: "Hotels", color: "from-purple-500 to-purple-700", bullets: ["Housekeeping", "Banqueting", "Front office", "Keuken (afwas & chefs)"] },
+              { icon: UtensilsCrossed, title: "Catering", color: "from-indigo-500 to-purple-600", bullets: ["Chefs", "Horecamedewerkers", "Host/hostessen"] },
+              { icon: PartyPopper, title: "Events", color: "from-pink-500 to-purple-600", bullets: ["Chefs", "Horecamedewerkers", "Host/hostessen"] },
+              { icon: Wine, title: "Restaurants", color: "from-blue-500 to-indigo-600", bullets: ["Runners", "Bar", "Bediening", "Chefs", "Afwas"] },
+            ].map((sector, i) => (
+              <RevealSection key={i} delay={i * 100}>
+                <div className="group bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${sector.color} flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                    <sector.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-3 sm:mb-4">{sector.title}</h3>
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {sector.bullets.map((bullet, j) => (
+                      <li key={j} className="flex items-center gap-2 text-gray-500 text-sm sm:text-base">
+                        <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="inline-flex items-center gap-1.5 text-purple-600 font-bold text-sm group-hover:gap-3 transition-all">
+                    Bekijk functies <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* 5. HOE HET WERKT                            */}
       {/* ============================================ */}
       <section id="how-it-works" className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
         <Blob className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] top-[20%] right-[-15%] sm:right-[-5%]" color="pink" />
@@ -478,7 +537,7 @@ export default function LandingPage() {
                 <Zap className="w-4 h-4" /> Simpel & snel
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Hoe het werkt
+                Hoe extra werkt
               </h2>
             </div>
           </RevealSection>
@@ -502,20 +561,24 @@ export default function LandingPage() {
           </RevealSection>
 
           <RevealSection delay={200}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-              {(howItWorksTab === "werkgever" ? [
-                { icon: Phone, step: "1", title: "Neem contact op", desc: "Bel of mail ons met je personeelsbehoefte.", color: "from-purple-500 to-purple-700" },
-                { icon: UserCheck, step: "2", title: "Wij selecteren", desc: "Geschikt en getraind personeel uit onze pool.", color: "from-indigo-500 to-purple-600" },
-                { icon: Clock, step: "3", title: "Planning & inzet", desc: "Personeel staat klaar op afgesproken tijden.", color: "from-blue-500 to-indigo-600" },
-                { icon: TrendingUp, step: "4", title: "Evaluatie", desc: "Beoordeel en bouw aan een vast team.", color: "from-emerald-500 to-teal-600" },
+            {(() => {
+              const steps = howItWorksTab === "werkgever" ? [
+                { icon: Phone, step: "1", title: "Neem contact op", desc: "Bel of stuur je aanvraag. Wij schakelen snel.", color: "from-purple-500 to-purple-700" },
+                { icon: UserCheck, step: "2", title: "Wij selecteren", desc: "Passend en beoordeeld personeel uit onze pool.", color: "from-indigo-500 to-purple-600" },
+                { icon: Clock, step: "3", title: "Planning & inzet", desc: "Op tijd geregeld. Ook last-minute als het moet.", color: "from-blue-500 to-indigo-600" },
+                { icon: TrendingUp, step: "4", title: "Evaluatie", desc: "Beoordeel en bouw een vaste poule op.", color: "from-emerald-500 to-teal-600" },
               ] : [
-                { icon: UserCheck, step: "1", title: "Meld je aan", desc: "Schrijf je in via het online formulier.", color: "from-purple-500 to-purple-700" },
-                { icon: Briefcase, step: "2", title: "Kies je diensten", desc: "Bekijk beschikbare shifts in de app.", color: "from-indigo-500 to-purple-600" },
-                { icon: CreditCard, step: "3", title: "Werk & verdien", desc: "Direct uitbetaald, plus punten verdiend.", color: "from-blue-500 to-indigo-600" },
-                { icon: Gift, step: "4", title: "Claim rewards", desc: "Wissel punten in voor toffe beloningen.", color: "from-emerald-500 to-teal-600" },
-              ]).map((item, i) => (
+                { icon: UserCheck, step: "1", title: "Meld je aan", desc: "Schrijf je in via het formulier.", color: "from-purple-500 to-purple-700" },
+                { icon: MessageCircle, step: "2", title: "Kom op gesprek", desc: "We maken kennis en checken wat bij je past.", color: "from-violet-500 to-purple-600" },
+                { icon: Briefcase, step: "3", title: "Kies je diensten", desc: "Bekijk en claim shifts in de app.", color: "from-indigo-500 to-purple-600" },
+                { icon: CreditCard, step: "4", title: "Werk & verdien", desc: "Direct uitbetaald, plus punten.", color: "from-blue-500 to-indigo-600" },
+                { icon: Gift, step: "5", title: "Claim rewards", desc: "Wissel punten in voor echte beloningen.", color: "from-emerald-500 to-teal-600" },
+              ];
+              return (
+            <div className={`grid grid-cols-2 ${howItWorksTab === "werkgever" ? "lg:grid-cols-4" : "lg:grid-cols-5"} gap-4 sm:gap-6`}>
+              {steps.map((item, i) => (
                 <div key={`${howItWorksTab}-${i}`} className="relative group">
-                  {i < 3 && <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-3rem)] h-0.5 bg-gradient-to-r from-purple-200 to-transparent z-0" />}
+                  {i < steps.length - 1 && <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-3rem)] h-0.5 bg-gradient-to-r from-purple-200 to-transparent z-0" />}
                   <div className="relative bg-white rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-8 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
                       <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
@@ -527,12 +590,14 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
+              );
+            })()}
           </RevealSection>
         </div>
       </section>
 
       {/* ============================================ */}
-      {/* 5. WAAROM EXTRA (Differentiators)           */}
+      {/* 6. WAAROM EXTRA (Differentiators)           */}
       {/* ============================================ */}
       <section id="differentiators" className="py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-purple-50/80 to-white relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
@@ -542,17 +607,17 @@ export default function LandingPage() {
                 <Sparkles className="w-4 h-4" /> Ons verschil
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom EXTRA
+                Waarom extra
               </h2>
             </div>
           </RevealSection>
 
           <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
             {[
-              { icon: Shield, title: "Iedereen in loondienst", desc: "Geen ZZP-constructies. Wij regelen loon, belasting en verzekeringen.", emoji: "🛡️", bg: "from-purple-50 to-white" },
-              { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Elk teamlid doorloopt een selectieprocedure en wordt na elke opdracht beoordeeld.", emoji: "⭐", bg: "from-yellow-50 to-white" },
-              { icon: Clock, title: "Snel & flexibel inzetbaar", desc: "Last-minute personeel nodig? Wij schakelen snel en leveren ook op korte termijn.", emoji: "⚡", bg: "from-blue-50 to-white" },
-              { icon: Gift, title: "Gemotiveerd door EXTRAATje", desc: "Ons beloningssysteem zorgt voor betrokken medewerkers die graag terugkomen.", emoji: "🎁", bg: "from-pink-50 to-white" },
+              { icon: Shield, title: "Iedereen in loondienst", desc: "Geen zzp-constructies. Duidelijke afspraken.", emoji: "🛡️", bg: "from-purple-50 to-white" },
+              { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Na elke opdracht feedback. Kwaliteit blijft omhoog.", emoji: "⭐", bg: "from-yellow-50 to-white" },
+              { icon: Clock, title: "Snel & flexibel inzetbaar", desc: "Opschalen bij piekdrukte. Of een snelle fix last-minute.", emoji: "⚡", bg: "from-blue-50 to-white" },
+              { icon: Handshake, title: "Heldere communicatie", desc: "Je weet waar je aan toe bent. Korte lijnen.", emoji: "🤝", bg: "from-green-50 to-white" },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 100}>
                 <div className={`group bg-gradient-to-br ${item.bg} rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border-2 border-gray-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 hover:-translate-y-1 transition-all duration-300 h-full`}>
@@ -667,7 +732,24 @@ export default function LandingPage() {
           </RevealSection>
 
           <RevealSection delay={300}>
-            <div className="text-center mt-20">
+            <div className="max-w-2xl mx-auto mt-12 sm:mt-16 bg-white/8 backdrop-blur-sm rounded-2xl border border-white/15 p-6 sm:p-8">
+              <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-purple-300" />
+                Voor opdrachtgevers
+              </h4>
+              <ul className="space-y-2.5">
+                {["Meer opkomst, minder last-minute uitval", "Mensen komen graag terug → stabielere poule"].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-purple-200/80 text-sm sm:text-base">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </RevealSection>
+
+          <RevealSection delay={400}>
+            <div className="text-center mt-10 sm:mt-14">
               <button onClick={() => scrollTo("audience")} className="group bg-white text-purple-900 font-bold px-10 py-5 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-3">
                 Ontdek EXTRAATje
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -779,7 +861,53 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================ */}
-      {/* 9. FINAL CTA                                */}
+      {/* 9. FAQ                                       */}
+      {/* ============================================ */}
+      <section className="py-20 sm:py-28 lg:py-36 relative overflow-hidden">
+        <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-50 px-4 sm:px-5 py-2 rounded-full">
+                <MessageCircle className="w-4 h-4" /> Veelgestelde vragen
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Veelgestelde vragen
+              </h2>
+            </div>
+          </RevealSection>
+
+          <div className="space-y-3 sm:space-y-4">
+            {[
+              { q: "Werken jullie met zzp?", a: "Nee, iedereen werkt via ons in loondienst. Wij regelen loon, belasting en verzekeringen." },
+              { q: "Welke functies leveren jullie?", a: "Hotels, catering, events en restaurants — housekeeping, front office, chefs, bediening, host/hostess, afwas en meer." },
+              { q: "Hoe snel kunnen jullie leveren?", a: "Afhankelijk van locatie en moment. Vaak snel schakelen, soms dezelfde week." },
+              { q: "Hoe werkt EXTRAATje?", a: "Je verdient punten per gewerkte shift en wisselt die in voor echte beloningen zoals AirPods, sportabonnementen en meer." },
+            ].map((faq, i) => (
+              <RevealSection key={i} delay={i * 80}>
+                <div className="bg-white rounded-2xl border-2 border-gray-100 hover:border-purple-200 transition-all duration-300 overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between p-5 sm:p-7 text-left"
+                  >
+                    <span className="text-base sm:text-lg font-bold text-gray-900 pr-4">{faq.q}</span>
+                    {openFaq === i ? (
+                      <ChevronUp className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    )}
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-5 sm:pb-7" : "max-h-0"}`}>
+                    <p className="px-5 sm:px-7 text-sm sm:text-base text-gray-500 leading-relaxed">{faq.a}</p>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* 10. FINAL CTA                               */}
       {/* ============================================ */}
       <section id="final-cta" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900" />

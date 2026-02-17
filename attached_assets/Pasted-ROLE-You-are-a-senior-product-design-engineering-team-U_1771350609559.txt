@@ -1,0 +1,216 @@
+ROLE
+You are a senior product design + engineering team (UX, UI, SEO, performance) building the optimized HOMEPAGE for EXTRA (Dutch hospitality staffing agency). You must improve conversion, clarity, and credibility for two audiences: (1) employers seeking staff and (2) job seekers seeking work. Build a visually striking but highly readable page, with subtle motion and excellent performance.
+
+LANGUAGE & TONE (EXTRA)
+- Language: Dutch.
+- Voice: jong, direct, professioneel, licht speels. Korte zinnen. Geen wollige claims.
+- Always use “je/jij/jouw” (never “u”).
+- Use “EXTRA” naturally in headings/CTA’s where it strengthens the brand (no forced repetition).
+- Headings style: only the first word starts with a capital letter, rest lowercase (e.g., “Extra personeel per sector”).
+
+TECH STACK
+- Next.js (App Router) + TypeScript + Tailwind CSS.
+- Use component-based architecture with clean folder structure.
+- Use next/image for all images, optimize sizes, lazy-load below fold.
+- Add Framer Motion for subtle animations; respect prefers-reduced-motion.
+- Accessibility: semantic HTML, keyboard navigation, focus states, skip-to-content.
+- Performance: aim for fast LCP; avoid heavy JS; keep animations lightweight.
+
+SEO REQUIREMENTS (2026-proof)
+- Exactly ONE H1 on the page.
+- Clear H2/H3 hierarchy per section.
+- Meta title (≤60 chars) + meta description (155–160 chars).
+- OpenGraph/Twitter tags.
+- JSON-LD: Organization + WebSite + FAQPage (4 FAQs at bottom).
+- Image alt texts (descriptive, no keyword stuffing).
+- Internal links to key pages: /werkgevers, /werkzoekenden, sector pages, /extraatje, /cases, /kennisbank, /contact.
+
+DESIGN SYSTEM (VISUAL)
+- Style: premium, modern, bold. “EXTRA” can be visually loud, but content stays clean.
+- Background: signature purple gradient + subtle “X” shapes with low opacity + soft noise texture.
+- Layout: consistent max-width container; strong vertical rhythm; less empty whitespace than current.
+- Buttons: consistent system (primary = high contrast, secondary = outlined).
+- Cards: soft shadow, rounded corners, subtle border. Glass effect only where it improves readability.
+- Motion: gentle scroll reveal, hover micro-interactions, counters on in-view. No distracting movement.
+
+NAVIGATION (STICKY)
+- Left: EXTRA logo.
+- Right (desktop): Hoe het werkt, Waarom extra, Extraatje, Werkgevers, Werkzoekenden + primary button “Contact”.
+- Sticky navbar with backdrop blur and subtle shadow after scroll.
+- On mobile: hamburger menu + persistent “Contact” or primary CTA.
+
+HOMEPAGE CONTENT & STRUCTURE (BUILD IN THIS EXACT ORDER)
+
+1) HERO (split)
+Goal: immediate clarity + two primary journeys + trust signals.
+
+- Background: purple gradient with subtle “X” shapes (parallax very subtle).
+- Right side: hospitality team image (slightly darkened/blurred so text wins).
+- Left side: glass card (for readability) containing:
+
+H1 (only H1 on page):
+“Horecapersoneel nodig? extra regelt het.”
+
+Subcopy (max 2 lines):
+“Flexibel en representatief personeel voor hotels, catering, events en restaurants. Snel geregeld.”
+
+Trust bullets (3, with icons):
+- “Iedereen in loondienst”
+- “Geselecteerd & beoordeeld”
+- “Dagbetaling mogelijk”
+
+Primary CTA (filled):
+“Ik zoek extra personeel” → /werkgevers
+
+Secondary CTA (outlined):
+“Ik zoek extra werk” → /werkzoekenden
+
+Small proof chip near top of hero:
+“800+ medewerkers actief” (with green dot indicator)
+
+2) STATS STRIP (compact, not oversized)
+Goal: credibility without interrupting flow.
+- Same container width as hero.
+- Animated counters when in view:
+
+- “800+” label: “actieve medewerkers”
+- “60+” label: “tevreden opdrachtgevers”
+- “100k+” label: “punten verdiend”
+- “4,8/5” label: “sterrenscore”
+
+Add one short context line under the strip:
+“Actief in hotels, catering, events en restaurants.”
+
+3) TRUST LOGOS (marquee)
+Goal: proof fast.
+- Title (H2): “Vertrouwd door teams in de horeca”
+- Slow auto-scrolling logo marquee, hover pauses.
+- Keep it compact (reduce whitespace).
+- Use grayscale logos with hover to full color (optional, subtle).
+
+4) SPLIT DECISION SECTION (no duplication)
+Goal: remove confusion, tighten the funnel.
+- H2: “Wat zoek je?”
+- Two equal cards:
+
+Left card (Employers):
+Title: “Ik zoek extra personeel”
+Bullets:
+- “Snel opschalen”
+- “Strakke selectie & beoordeling”
+- “Heldere communicatie”
+Primary CTA: “Vraag extra personeel aan” → /werkgevers
+
+Right card (Job seekers):
+Title: “Ik zoek extra werk”
+Bullets:
+- “Kies je eigen diensten”
+- “Direct uitbetaald via app”
+- “Verdien punten met extraatje”
+Primary CTA: “Bekijk diensten” → /werkzoekenden
+
+5) SECTOR SECTION (SEO + service clarity)
+Goal: show your actual dienstverlening and rank for intent.
+- H2: “Extra personeel per sector”
+- 4 sector cards with H3 titles + function bullets + CTA:
+
+Hotels → /werkgevers/hotels
+Bullets: “Housekeeping”, “Banqueting”, “Front office”, “Keuken (afwas & chefs)”
+
+Catering → /werkgevers/catering
+Bullets: “Chefs”, “Horecamedewerkers”, “Host/hostessen”
+
+Events → /werkgevers/events
+Bullets: “Chefs”, “Horecamedewerkers”, “Host/hostessen”
+
+Restaurants → /werkgevers/restaurants
+Bullets: “Runners”, “Bar”, “Bediening”, “Chefs”, “Afwas”
+
+Each card CTA: “Bekijk functies” (arrow icon)
+
+6) HOW IT WORKS (interactive toggle)
+Goal: answer “hoe werkt het” for both groups; keep it visual.
+- H2: “Hoe extra werkt”
+- Toggle tabs: “Voor werkgevers” / “Voor medewerkers”
+- Use step cards in a horizontal flow (responsive stacks on mobile).
+
+Employers steps (4):
+1. “Neem contact op” – “Bel of stuur je aanvraag. Wij schakelen snel.”
+2. “Wij selecteren” – “Passend en beoordeeld personeel uit onze pool.”
+3. “Planning & inzet” – “Op tijd geregeld. Ook last-minute als het moet.”
+4. “Evaluatie” – “Beoordeel en bouw een vaste poule op.”
+
+Job seeker steps (5) IMPORTANT: include intake conversation:
+1. “Meld je aan” – “Schrijf je in via het formulier.”
+2. “Kom op gesprek” – “We maken kennis en checken wat bij je past.”
+3. “Kies je diensten” – “Bekijk en claim shifts in de app.”
+4. “Werk & verdien” – “Direct uitbetaald, plus punten.”
+5. “Claim rewards” – “Wissel punten in voor echte beloningen.”
+
+Make each step card clickable to deeper pages:
+- Employers: /werkgevers/hoe-het-werkt
+- Job seekers: /werkzoekenden/hoe-het-werkt
+
+7) WHY EXTRA (combined, no duplicate sections)
+Goal: address 2026 market anxieties (wetgeving/loondienst) with proof.
+- H2: “Waarom extra”
+- 4 feature cards (short copy, max 2 sentences each):
+1. “Iedereen in loondienst” – “Geen zzp-constructies. Duidelijke afspraken.”
+2. “Geselecteerd & beoordeeld” – “Na elke opdracht feedback. Kwaliteit blijft omhoog.”
+3. “Snel & flexibel inzetbaar” – “Opschalen bij piekdrukte. Of een snelle fix last-minute.”
+4. “Heldere communicatie” – “Je weet waar je aan toe bent. Korte lijnen.”
+
+8) EXTRAATJE (reward system) — include employer benefit
+Goal: make this a differentiator AND explain “what’s in it for employers”.
+- H2: “Werken wordt beloond”
+- Short intro (2 lines max).
+- 3 step mini-cards:
+1) “Werk & verdien punten”
+2) “Klim in status”
+3) “Claim je rewards”
+- Add a small “Voor opdrachtgevers” callout with bullets:
+- “Meer opkomst, minder last-minute uitval”
+- “Mensen komen graag terug → stabielere poule”
+CTA button: “Ontdek extraatje” → /extraatje
+
+9) TESTIMONIALS (toggle)
+Goal: social proof that matches the visitor.
+- H2: “Wat anderen zeggen”
+- Toggle: “Werkgevers” / “Medewerkers”
+- 3 testimonial cards per tab with 5-star visuals.
+- Add small CTA top-right: “Start vandaag” → /contact
+- Keep copy compact.
+
+10) FINAL CTA + FOOTER
+- Big CTA section (purple background, strong):
+Title (H2): “Klaar om samen te werken?”
+Subcopy: “Of je nu extra personeel zoekt of extra werk: we regelen het snel en duidelijk.”
+Buttons:
+Primary: “Vraag extra personeel aan” → /werkgevers
+Secondary: “Ik zoek extra werk” → /werkzoekenden
+
+Footer columns:
+- Werkgevers: Personeel aanvragen, Sectoren, Hoe het werkt, Waarom extra, Cases
+- Werkzoekenden: Vacatures, Solliciteren, Hoe het werkt, Extraatje, FAQ
+- Contact: email, locatie, socials
+Add NEN/certificering references only if available; keep it minimal.
+
+FAQ SECTION (for SEO, minimal text)
+Place just above final CTA OR above footer.
+Accordion with 4 items (and include in FAQPage JSON-LD):
+1) “Werken jullie met zzp?” → “Nee, iedereen werkt via ons in loondienst.”
+2) “Welke functies leveren jullie?” → “Hotels, catering, events en restaurants (housekeeping, front office, chefs, bediening, host/hostess, afwas, etc.).”
+3) “Hoe snel kunnen jullie leveren?” → “Afhankelijk van locatie en moment. Vaak snel schakelen, soms dezelfde week.”
+4) “Hoe werkt extraatje?” → “Je verdient punten per shift en wisselt die in voor beloningen.”
+
+CONTENT CONSTRAINTS
+- No section should contain paragraphs longer than 3 lines.
+- Prefer bullets, cards, and short lines.
+- Keep the homepage clean and scannable.
+
+DELIVERABLES
+- Implement route: app/page.tsx (homepage) and create reusable components under components/.
+- Provide a single data file (e.g., data/home.ts) for copy, stats, testimonials, and sector lists.
+- Ensure everything is responsive and looks premium on desktop + mobile.
+- Provide placeholder images and dummy testimonials; structure must be correct.
+- Output must match the existing EXTRA visual identity (purple, modern, bold) but improve readability and conversion.
