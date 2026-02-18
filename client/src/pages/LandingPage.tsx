@@ -68,35 +68,170 @@ function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suf
   return <span ref={ref}>{hasDecimal ? count.toFixed(1).replace('.', ',') : count.toLocaleString("nl-NL")}{suffix}</span>;
 }
 
-function XPatternBg({ className = "", count = 3, opacity = 0.06 }: { className?: string; count?: number; opacity?: number }) {
-  const positions = [
-    { left: "5%", top: "10%", size: 200, rotate: 15 },
-    { left: "80%", top: "20%", size: 160, rotate: -25 },
-    { left: "50%", top: "60%", size: 240, rotate: 35 },
-    { left: "15%", top: "75%", size: 180, rotate: -10 },
-    { left: "90%", top: "80%", size: 140, rotate: 45 },
-    { left: "35%", top: "30%", size: 120, rotate: -30 },
-  ];
+type XTheme = "dark" | "light" | "lila";
+
+interface XElement {
+  left: string;
+  top: string;
+  size: number;
+  rotate: number;
+  type: "glow" | "soft" | "outline" | "solid";
+  opacity: number;
+  blur?: number;
+  scale?: number;
+}
+
+const xLayouts: Record<string, XElement[]> = {
+  hero: [
+    { left: "-3%", top: "15%", size: 320, rotate: 12, type: "glow", opacity: 0.07, blur: 8 },
+    { left: "78%", top: "8%", size: 180, rotate: -20, type: "outline", opacity: 0.1 },
+    { left: "88%", top: "65%", size: 260, rotate: 35, type: "soft", opacity: 0.05, blur: 12 },
+    { left: "40%", top: "80%", size: 140, rotate: -15, type: "outline", opacity: 0.06 },
+  ],
+  sectorsDark: [
+    { left: "-5%", top: "5%", size: 350, rotate: 18, type: "glow", opacity: 0.08, blur: 15 },
+    { left: "75%", top: "15%", size: 200, rotate: -30, type: "outline", opacity: 0.12 },
+    { left: "50%", top: "55%", size: 280, rotate: 40, type: "soft", opacity: 0.04, blur: 20 },
+    { left: "85%", top: "70%", size: 160, rotate: -12, type: "solid", opacity: 0.06 },
+    { left: "20%", top: "80%", size: 120, rotate: 25, type: "outline", opacity: 0.08 },
+  ],
+  lightSection: [
+    { left: "2%", top: "8%", size: 220, rotate: -18, type: "soft", opacity: 0.04, blur: 6 },
+    { left: "82%", top: "25%", size: 180, rotate: 22, type: "outline", opacity: 0.06 },
+    { left: "60%", top: "70%", size: 260, rotate: -35, type: "soft", opacity: 0.03, blur: 10 },
+  ],
+  lilaSection: [
+    { left: "-2%", top: "12%", size: 280, rotate: 15, type: "soft", opacity: 0.06, blur: 8 },
+    { left: "70%", top: "5%", size: 160, rotate: -28, type: "outline", opacity: 0.08 },
+    { left: "85%", top: "55%", size: 240, rotate: 32, type: "glow", opacity: 0.05, blur: 12 },
+    { left: "25%", top: "75%", size: 130, rotate: -20, type: "outline", opacity: 0.07 },
+  ],
+  deepPurple: [
+    { left: "-4%", top: "8%", size: 300, rotate: 20, type: "glow", opacity: 0.07, blur: 12 },
+    { left: "80%", top: "12%", size: 220, rotate: -22, type: "outline", opacity: 0.1 },
+    { left: "45%", top: "45%", size: 180, rotate: 38, type: "soft", opacity: 0.04, blur: 15 },
+    { left: "15%", top: "70%", size: 260, rotate: -15, type: "glow", opacity: 0.06, blur: 8 },
+    { left: "90%", top: "75%", size: 140, rotate: 28, type: "outline", opacity: 0.08 },
+  ],
+  faq: [
+    { left: "5%", top: "20%", size: 200, rotate: -12, type: "soft", opacity: 0.035, blur: 6 },
+    { left: "85%", top: "60%", size: 160, rotate: 20, type: "outline", opacity: 0.05 },
+  ],
+};
+
+function XPatternBg({ layout = "lightSection", theme = "light", className = "" }: { layout?: keyof typeof xLayouts; theme?: XTheme; className?: string }) {
+  const elements = xLayouts[layout] || xLayouts.lightSection;
+
+  const maskBase: React.CSSProperties = {
+    WebkitMaskImage: `url(${xPatroon})`,
+    maskImage: `url(${xPatroon})`,
+    WebkitMaskSize: "contain",
+    maskSize: "contain",
+    WebkitMaskRepeat: "no-repeat",
+    maskRepeat: "no-repeat",
+    WebkitMaskPosition: "center",
+    maskPosition: "center",
+  };
+
+  const getColor = (type: string, t: XTheme) => {
+    if (t === "dark") {
+      return type === "outline" ? "rgba(255,255,255,0.6)" :
+             type === "glow" ? "rgba(168,85,247,0.8)" :
+             "rgba(255,255,255,0.3)";
+    }
+    if (t === "lila") {
+      return type === "outline" ? "rgba(139,92,246,0.5)" :
+             type === "glow" ? "rgba(139,92,246,0.6)" :
+             "rgba(139,92,246,0.4)";
+    }
+    return type === "outline" ? "rgba(139,92,246,0.4)" :
+           type === "glow" ? "rgba(139,92,246,0.5)" :
+           "rgba(139,92,246,0.3)";
+  };
+
   return (
     <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}>
-      {positions.slice(0, count).map((pos, i) => (
-        <div
-          key={i}
-          className="absolute"
-          style={{
-            left: pos.left, top: pos.top,
-            width: pos.size, height: pos.size,
-            transform: `rotate(${pos.rotate}deg)`,
-            opacity,
-            WebkitMaskImage: `url(${xPatroon})`,
-            maskImage: `url(${xPatroon})`,
-            WebkitMaskSize: "contain", maskSize: "contain",
-            WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-            WebkitMaskPosition: "center", maskPosition: "center",
-            backgroundColor: "rgba(139,92,246,0.9)",
-          }}
-        />
-      ))}
+      {elements.map((el, i) => {
+        const color = getColor(el.type, theme);
+        return (
+          <div key={i} className="absolute" style={{ left: el.left, top: el.top }}>
+            {el.type === "glow" && (
+              <>
+                <div
+                  className="absolute"
+                  style={{
+                    width: el.size * 1.4,
+                    height: el.size * 1.4,
+                    left: -(el.size * 0.2),
+                    top: -(el.size * 0.2),
+                    transform: `rotate(${el.rotate}deg)`,
+                    opacity: el.opacity * 0.5,
+                    ...maskBase,
+                    backgroundColor: color,
+                    filter: `blur(${(el.blur || 8) + 10}px)`,
+                  }}
+                />
+                <div
+                  className="absolute"
+                  style={{
+                    width: el.size,
+                    height: el.size,
+                    transform: `rotate(${el.rotate}deg)`,
+                    opacity: el.opacity,
+                    ...maskBase,
+                    backgroundColor: color,
+                    filter: `blur(${el.blur || 0}px)`,
+                  }}
+                />
+              </>
+            )}
+            {el.type === "soft" && (
+              <div
+                className="absolute"
+                style={{
+                  width: el.size,
+                  height: el.size,
+                  transform: `rotate(${el.rotate}deg)`,
+                  opacity: el.opacity,
+                  ...maskBase,
+                  backgroundColor: color,
+                  filter: `blur(${el.blur || 6}px)`,
+                }}
+              />
+            )}
+            {el.type === "outline" && (
+              <div className="absolute" style={{ width: el.size, height: el.size, transform: `rotate(${el.rotate}deg)` }}>
+                <div
+                  className="absolute inset-0"
+                  style={{ ...maskBase, backgroundColor: color, opacity: el.opacity }}
+                />
+                <div
+                  className="absolute"
+                  style={{
+                    ...maskBase,
+                    backgroundColor: theme === "dark" ? "rgba(0,0,0,0.9)" : theme === "lila" ? "rgba(237,233,254,0.85)" : "rgba(255,255,255,0.85)",
+                    opacity: el.opacity * 0.8,
+                    left: "8%", top: "8%", width: "84%", height: "84%",
+                  }}
+                />
+              </div>
+            )}
+            {el.type === "solid" && (
+              <div
+                className="absolute"
+                style={{
+                  width: el.size,
+                  height: el.size,
+                  transform: `rotate(${el.rotate}deg)`,
+                  opacity: el.opacity,
+                  ...maskBase,
+                  backgroundColor: color,
+                }}
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -251,6 +386,7 @@ export default function LandingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
+        <XPatternBg layout="hero" theme="dark" className="z-10" />
 
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
           <div className="max-w-2xl">
@@ -398,7 +534,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       <section id="sectors" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-        <XPatternBg count={5} opacity={0.06} />
+        <XPatternBg layout="sectorsDark" theme="dark" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
@@ -445,7 +581,7 @@ export default function LandingPage() {
       {/* 4. HOE EXTRA WERKT — WARM OFF-WHITE             */}
       {/* ════════════════════════════════════════════════ */}
       <section id="how-it-works" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
-        <XPatternBg count={3} opacity={0.03} />
+        <XPatternBg layout="lightSection" theme="light" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
@@ -517,7 +653,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       <section id="differentiators" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
-        <XPatternBg count={4} opacity={0.04} />
+        <XPatternBg layout="lilaSection" theme="lila" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
@@ -572,7 +708,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       <section id="rewards" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-        <XPatternBg count={5} opacity={0.05} />
+        <XPatternBg layout="deepPurple" theme="dark" />
         <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
             <div className="text-center mb-12 sm:mb-20">
@@ -684,7 +820,7 @@ export default function LandingPage() {
       {/* 7. TESTIMONIALS — WARM LIGHT                    */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
-        <XPatternBg count={3} opacity={0.03} />
+        <XPatternBg layout="lightSection" theme="light" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
@@ -790,7 +926,7 @@ export default function LandingPage() {
       {/* 9. FAQ — NEUTRAL                                */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-gray-50">
-        <XPatternBg count={2} opacity={0.03} />
+        <XPatternBg layout="faq" theme="light" />
         <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
@@ -841,7 +977,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       <section id="final-cta" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-        <XPatternBg count={4} opacity={0.06} />
+        <XPatternBg layout="deepPurple" theme="dark" />
         <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
           <RevealSection>
             <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 sm:mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
