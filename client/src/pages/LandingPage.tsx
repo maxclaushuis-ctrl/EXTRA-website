@@ -303,93 +303,93 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 2. WAT ZOEK JIJ? + USP STATS                    */}
+      {/* 2. USP's STATS BAR (overlapping hero bottom)     */}
       {/* ════════════════════════════════════════════════ */}
-      <section id="audience" className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900 via-purple-800/80 to-white" style={{ height: "70%" }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" style={{ top: "50%" }} />
-
-        <div className="relative z-10 -mt-16 sm:-mt-24">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-5 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
-              {[
-                { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-500" },
-                { value: 60, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
-                { value: 100, suffix: "k+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
-                { value: 4.8, suffix: "/5", label: "Sterrenscore", icon: Star, color: "text-yellow-500" },
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
-                  <p className="text-2xl sm:text-4xl lg:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    <CountUp target={stat.value} suffix={stat.suffix} />
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1 sm:mt-2 font-semibold">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="max-w-5xl mx-auto px-5 sm:px-6 pb-16 sm:pb-20 lg:pb-28">
-            <RevealSection>
-              <div className="text-center mb-10 sm:mb-14">
-                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Wat zoek jij?
-                </h2>
-                <p className="text-lg sm:text-xl text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">Kies wat het best bij je past</p>
+      <div className="relative z-30 -mt-16 sm:-mt-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-900/15 p-6 sm:p-8 lg:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
+            {[
+              { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-600" },
+              { value: 150, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
+              { value: 50, suffix: ".000+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
+              { value: 98, suffix: "%", label: "Tevredenheidsscore", icon: TrendingUp, color: "text-green-500" },
+            ].map((stat, i) => (
+              <div key={i} className="text-center">
+                <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
+                <p className="text-2xl sm:text-4xl lg:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  <CountUp target={stat.value} suffix={stat.suffix} />
+                </p>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1 sm:mt-2 font-semibold">{stat.label}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════ */}
+      {/* 3. WAT ZOEK JIJ?                                */}
+      {/* ════════════════════════════════════════════════ */}
+      <section id="audience" className="relative bg-white py-16 sm:py-20 lg:py-28 overflow-hidden">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Wat zoek jij?
+              </h2>
+              <p className="text-lg sm:text-xl text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">Kies wat het best bij je past</p>
+            </div>
+          </RevealSection>
+
+          <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
+            <RevealSection>
+              <a href="#final-cta" onClick={(e) => { e.preventDefault(); scrollTo("final-cta"); }} className="group block relative bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+                <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-[100%] opacity-60" />
+                <div className="relative">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/20">
+                    <Briefcase className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra personeel</h3>
+                  <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
+                    {["Snel inzetbaar horecapersoneel", "Strenge selectie & beoordeling", "Flexibel op- en afschalen"].map((item, i) => (
+                      <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-700" />
+                        </div>
+                        <span className="text-sm sm:text-base font-medium">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-purple-700 group-hover:gap-4 transition-all shadow-lg shadow-purple-500/20">
+                    Ik zoek extra personeel <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </span>
+                </div>
+              </a>
             </RevealSection>
 
-            <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
-              <RevealSection>
-                <a href="#final-cta" onClick={(e) => { e.preventDefault(); scrollTo("final-cta"); }} className="group block relative bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
-                  <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-[100%] opacity-60" />
-                  <div className="relative">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/20">
-                      <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra personeel</h3>
-                    <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
-                      {["Snel inzetbaar horecapersoneel", "Strenge selectie & beoordeling", "Flexibel op- en afschalen"].map((item, i) => (
-                        <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-700" />
-                          </div>
-                          <span className="text-sm sm:text-base font-medium">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <span className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-purple-700 group-hover:gap-4 transition-all shadow-lg shadow-purple-500/20">
-                      Ik zoek extra personeel <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </span>
+            <RevealSection delay={150}>
+              <a href="/sollicitatieformulier" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+                <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
+                <div className="relative">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
+                    <UserCheck className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                   </div>
-                </a>
-              </RevealSection>
-
-              <RevealSection delay={150}>
-                <a href="/sollicitatieformulier" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
-                  <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
-                  <div className="relative">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
-                      <UserCheck className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra werk</h3>
-                    <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
-                      {["Direct uitbetaald via app", "Kies jouw eigen diensten", "Verdien punten & beloningen"].map((item, i) => (
-                        <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-700" />
-                          </div>
-                          <span className="text-sm sm:text-base font-medium">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <span className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-indigo-700 group-hover:gap-4 transition-all shadow-lg shadow-indigo-500/20">
-                      Ik zoek extra werk <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </span>
-                  </div>
-                </a>
-              </RevealSection>
-            </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra werk</h3>
+                  <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
+                    {["Direct uitbetaald via app", "Kies jouw eigen diensten", "Verdien punten & beloningen"].map((item, i) => (
+                      <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-700" />
+                        </div>
+                        <span className="text-sm sm:text-base font-medium">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-indigo-700 group-hover:gap-4 transition-all shadow-lg shadow-indigo-500/20">
+                    Ik zoek extra werk <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </span>
+                </div>
+              </a>
+            </RevealSection>
           </div>
         </div>
       </section>
