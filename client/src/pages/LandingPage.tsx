@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import heroBgImage from "@assets/hero-background.png";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import screenDashboard from "@assets/IMG_8803_1770915286475.png";
 import screenRewards from "@assets/IMG_8805_1770915286475.png";
 import screenChallenges from "@assets/IMG_8807_1770915286475.png";
@@ -189,11 +190,8 @@ export default function LandingPage() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
-                <span className="text-white font-black text-lg">E</span>
-              </div>
-              <span className={`font-black text-2xl tracking-tight transition-colors ${scrolled ? "text-gray-900" : "text-white"}`}>EXTRA</span>
+            <div className="flex items-center">
+              <img src={extraLogoWit} alt="EXTRA" className={`h-7 sm:h-8 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
             </div>
             <div className="hidden lg:flex items-center gap-8">
               {[
@@ -228,7 +226,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 1. HERO — THE MOST IMPORTANT 40%                */}
+      {/* 1. HERO                                          */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
@@ -236,91 +234,83 @@ export default function LandingPage() {
             src={heroBgImage}
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
-            style={{ filter: "brightness(0.6) contrast(1.1) saturate(1.05)" }}
+            style={{ filter: "contrast(1.03) saturate(1.02)" }}
             loading="eager"
           />
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(105deg,
-                rgba(55,10,110,0.95) 0%,
-                rgba(70,15,130,0.92) 35%,
-                rgba(88,22,164,0.78) 55%,
-                rgba(88,22,164,0.45) 75%,
-                rgba(88,22,164,0.15) 100%
+              background: `linear-gradient(90deg,
+                rgba(88,22,164,0.92) 0%,
+                rgba(88,22,164,0.88) 40%,
+                rgba(88,22,164,0.70) 65%,
+                rgba(88,22,164,0.35) 82%,
+                rgba(88,22,164,0.10) 100%
               )`
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-950/60 via-transparent to-purple-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
 
-        <XPatternBg count={4} opacity={0.08} className="z-10" />
-
-        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-32 sm:pb-28">
+        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
           <div className="max-w-2xl">
-            <div className="bg-white/[0.07] backdrop-blur-xl rounded-3xl sm:rounded-[2rem] border border-white/[0.12] p-7 sm:p-10 lg:p-12 shadow-2xl shadow-black/20">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 sm:mb-8 border border-white/15">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-white/90 text-xs sm:text-sm font-semibold">800+ medewerkers actief</span>
-              </div>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 mb-6 sm:mb-10 border border-white/20">
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-white/90 text-xs sm:text-sm font-semibold">800+ medewerkers actief</span>
+            </div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.08] mb-5 sm:mb-7" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-                Horecapersoneel nodig?{" "}
-                <span className="relative inline-block">
-                  <span className="relative z-10">extra</span>
-                  <span className="absolute bottom-0 sm:bottom-0.5 left-0 right-0 h-2 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
-                </span>
-                {" "}regelt het.
-              </h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              Horecapersoneel nodig?{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">EXTRA</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+              </span>
+              {" "}regelt het!
+            </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-purple-100/85 max-w-md mb-7 sm:mb-8 leading-relaxed font-medium">
-                Flexibel en representatief personeel voor hotels, catering, events en restaurants. Snel geregeld.
-              </p>
+            <p className="text-lg sm:text-xl md:text-2xl text-purple-100/90 max-w-lg mb-8 sm:mb-10 leading-relaxed font-medium">
+              Flexibel en representatief personeel voor hotels, events en cateraars. Snel geregeld.
+            </p>
 
-              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-6 mb-7 sm:mb-8">
-                {[
-                  { icon: Check, text: "Iedereen in loondienst" },
-                  { icon: Star, text: "Geselecteerd & beoordeeld" },
-                  { icon: CreditCard, text: "Dagbetaling mogelijk" },
-                ].map((usp, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
-                      <usp.icon className="w-3 h-3 text-green-400" />
-                    </div>
-                    <span className="text-white/85 text-sm font-medium">{usp.text}</span>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 mb-8 sm:mb-12">
+              {[
+                { icon: Check, text: "Iedereen in loondienst" },
+                { icon: Star, text: "Geselecteerd personeel" },
+                { icon: CreditCard, text: "Dagbetaling mogelijk" },
+              ].map((usp, i) => (
+                <div key={i} className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+                    <usp.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" />
                   </div>
-                ))}
-              </div>
+                  <span className="text-white/90 text-sm sm:text-base font-medium">{usp.text}</span>
+                </div>
+              ))}
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <button
-                  onClick={() => scrollTo("final-cta")}
-                  className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg shadow-xl shadow-purple-500/20 hover:shadow-2xl hover:shadow-white/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
-                  style={{ boxShadow: "0 0 30px rgba(168,85,247,0.3), 0 8px 32px rgba(0,0,0,0.2)" }}
-                >
-                  Ik zoek extra personeel
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <a
-                  href="/sollicitatieformulier"
-                  className="group border-2 border-white/25 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
-                  Ik zoek extra werk
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
-              </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-16 sm:mb-20">
+              <button onClick={() => scrollTo("final-cta")} className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+                Ik zoek extra personeel
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <a href="/sollicitatieformulier" className="group border-2 border-white/30 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+                Ik zoek extra werk
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 2. STATS STRIP — SOCIAL PROOF                   */}
+      {/* 2. WAT ZOEK JIJ? + USP STATS                    */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="relative z-20 -mt-16 sm:-mt-20 pb-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-500/15 border border-purple-100/50 p-5 sm:p-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
+      <section id="audience" className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900 via-purple-800/80 to-white" style={{ height: "70%" }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" style={{ top: "50%" }} />
+
+        <div className="relative z-10 -mt-16 sm:-mt-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100/50 p-5 sm:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
               {[
                 { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-500" },
                 { value: 60, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
@@ -336,9 +326,69 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <p className="text-center text-xs sm:text-sm text-gray-400 mt-5 sm:mt-6 font-medium">
-              Actief in hotels, catering, events en restaurants.
-            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto px-5 sm:px-6 pb-16 sm:pb-20 lg:pb-28">
+            <RevealSection>
+              <div className="text-center mb-10 sm:mb-14">
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Wat zoek jij?
+                </h2>
+                <p className="text-lg sm:text-xl text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">Kies wat het best bij je past</p>
+              </div>
+            </RevealSection>
+
+            <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
+              <RevealSection>
+                <a href="#final-cta" onClick={(e) => { e.preventDefault(); scrollTo("final-cta"); }} className="group block relative bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+                  <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-[100%] opacity-60" />
+                  <div className="relative">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/20">
+                      <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra personeel</h3>
+                    <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
+                      {["Snel inzetbaar horecapersoneel", "Strenge selectie & beoordeling", "Flexibel op- en afschalen"].map((item, i) => (
+                        <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-700" />
+                          </div>
+                          <span className="text-sm sm:text-base font-medium">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-purple-700 group-hover:gap-4 transition-all shadow-lg shadow-purple-500/20">
+                      Ik zoek extra personeel <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </span>
+                  </div>
+                </a>
+              </RevealSection>
+
+              <RevealSection delay={150}>
+                <a href="/sollicitatieformulier" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+                  <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
+                  <div className="relative">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
+                      <UserCheck className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4 sm:mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>Ik zoek extra werk</h3>
+                    <ul className="space-y-3 sm:space-y-4 mb-7 sm:mb-10">
+                      {["Direct uitbetaald via app", "Kies jouw eigen diensten", "Verdien punten & beloningen"].map((item, i) => (
+                        <li key={i} className="flex items-center gap-2.5 sm:gap-3 text-gray-600">
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-700" />
+                          </div>
+                          <span className="text-sm sm:text-base font-medium">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full group-hover:bg-indigo-700 group-hover:gap-4 transition-all shadow-lg shadow-indigo-500/20">
+                      Ik zoek extra werk <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </span>
+                  </div>
+                </a>
+              </RevealSection>
+            </div>
           </div>
         </div>
       </section>
@@ -346,7 +396,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       {/* 3. SECTOREN — DARK PURPLE                       */}
       {/* ════════════════════════════════════════════════ */}
-      <section id="sectors" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden mt-12 sm:mt-16">
+      <section id="sectors" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
         <XPatternBg count={5} opacity={0.06} />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
@@ -827,11 +877,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-14">
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-black text-base sm:text-lg">E</span>
-                </div>
-                <span className="font-black text-xl sm:text-2xl text-white tracking-tight">EXTRA</span>
+              <div className="flex items-center mb-4 sm:mb-5">
+                <img src={extraLogoWit} alt="EXTRA" className="h-6 sm:h-7 w-auto" />
               </div>
               <p className="text-sm sm:text-base leading-relaxed">
                 Uitzendbureau voor horeca, hotels en evenementen. Met ons unieke EXTRAATje beloningssysteem.
