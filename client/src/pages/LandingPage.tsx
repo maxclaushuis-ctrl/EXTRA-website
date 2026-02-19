@@ -330,7 +330,8 @@ export default function LandingPage() {
       {/* 3. WAT ZOEK JIJ?                                */}
       {/* ════════════════════════════════════════════════ */}
       <section id="audience" className="relative bg-white py-16 sm:py-20 lg:py-28 overflow-hidden">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6">
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -395,7 +396,52 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 3. SECTOREN — DARK PURPLE                       */}
+      {/* LOGO MARQUEE                                    */}
+      {/* ════════════════════════════════════════════════ */}
+      <section id="trust" className="py-10 sm:py-14 bg-white border-b border-gray-100 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
+          </RevealSection>
+          <div className="relative overflow-hidden group">
+            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
+            <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                  {[
+                    { src: logoAmrath, alt: "Amrâth Hotels" },
+                    { src: logoFcUtrecht, alt: "FC Utrecht" },
+                    { src: logoFunda, alt: "Funda" },
+                    { src: logoHartMuseum, alt: "H'art Museum" },
+                    { src: logoHetePeper, alt: "Hete Peper" },
+                    { src: logoHilton, alt: "Hilton" },
+                    { src: logoMarriott, alt: "Marriott" },
+                    { src: logoSelectCatering, alt: "Select Catering" },
+                    { src: logoAppel, alt: "Appèl" },
+                  ].map((logo) => (
+                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee {
+            animation: marquee 40s linear infinite;
+          }
+        `}</style>
+      </section>
+
+      {/* ════════════════════════════════════════════════ */}
+      {/* SECTOREN — DARK PURPLE                          */}
       {/* ════════════════════════════════════════════════ */}
       <section id="sectors" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
@@ -514,62 +560,7 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 5. WAAROM EXTRA — LILA GRADIENT                 */}
-      {/* ════════════════════════════════════════════════ */}
-      <section id="differentiators" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
-        <XPatternBg count={4} opacity={0.1} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-10 sm:mb-16">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/70 px-4 sm:px-5 py-2 rounded-full">
-                <Shield className="w-4 h-4" /> Wetgeving-proof
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom extra
-              </h2>
-              <p className="text-base sm:text-lg text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">
-                Klaar voor de nieuwe arbeidswetgeving van 2026. Zekerheid voor jou en je personeel.
-              </p>
-            </div>
-          </RevealSection>
-
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-            {[
-              { icon: Shield, title: "Iedereen in loondienst", desc: "Geen zzp-constructies. Duidelijke afspraken.", emoji: "🛡️" },
-              { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Na elke opdracht feedback. Kwaliteit blijft omhoog.", emoji: "⭐" },
-              { icon: Clock, title: "Snel & flexibel inzetbaar", desc: "Opschalen bij piekdrukte. Of een snelle fix last-minute.", emoji: "⚡" },
-              { icon: Handshake, title: "Heldere afspraken", desc: "Je weet waar je aan toe bent. Korte lijnen.", emoji: "🤝" },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="group bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">
-                  <div className="flex items-start gap-4 sm:gap-5">
-                    <div className="text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                      {item.emoji}
-                    </div>
-                    <div>
-                      <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-2 sm:mb-3">{item.title}</h3>
-                      <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-
-          <RevealSection delay={400}>
-            <div className="text-center mt-8 sm:mt-12">
-              <span className="inline-flex items-center gap-2 bg-green-100 text-green-800 font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full border border-green-200">
-                <Shield className="w-4 h-4" />
-                Volledig compliant met arbeidswetgeving 2026
-              </span>
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════ */}
-      {/* 6. EXTRAATJE / REWARDS — DEEP PURPLE            */}
+      {/* 5. EXTRAATJE / REWARDS — DEEP PURPLE            */}
       {/* ════════════════════════════════════════════════ */}
       <section id="rewards" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
@@ -682,6 +673,61 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════ */}
+      {/* 6. WAAROM EXTRA — LILA GRADIENT                 */}
+      {/* ════════════════════════════════════════════════ */}
+      <section id="differentiators" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
+        <XPatternBg count={4} opacity={0.1} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/70 px-4 sm:px-5 py-2 rounded-full">
+                <Shield className="w-4 h-4" /> Wetgeving-proof
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Waarom extra
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">
+                Klaar voor de nieuwe arbeidswetgeving van 2026. Zekerheid voor jou en je personeel.
+              </p>
+            </div>
+          </RevealSection>
+
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+            {[
+              { icon: Shield, title: "Iedereen in loondienst", desc: "Geen zzp-constructies. Duidelijke afspraken.", emoji: "🛡️" },
+              { icon: Award, title: "Geselecteerd & beoordeeld", desc: "Na elke opdracht feedback. Kwaliteit blijft omhoog.", emoji: "⭐" },
+              { icon: Clock, title: "Snel & flexibel inzetbaar", desc: "Opschalen bij piekdrukte. Of een snelle fix last-minute.", emoji: "⚡" },
+              { icon: Handshake, title: "Heldere afspraken", desc: "Je weet waar je aan toe bent. Korte lijnen.", emoji: "🤝" },
+            ].map((item, i) => (
+              <RevealSection key={i} delay={i * 100}>
+                <div className="group bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">
+                  <div className="flex items-start gap-4 sm:gap-5">
+                    <div className="text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      {item.emoji}
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-2 sm:mb-3">{item.title}</h3>
+                      <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+
+          <RevealSection delay={400}>
+            <div className="text-center mt-8 sm:mt-12">
+              <span className="inline-flex items-center gap-2 bg-green-100 text-green-800 font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full border border-green-200">
+                <Shield className="w-4 h-4" />
+                Volledig compliant met arbeidswetgeving 2026
+              </span>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════ */}
       {/* 7. TESTIMONIALS — WARM LIGHT                    */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
@@ -743,51 +789,6 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 8. LOGO MARQUEE                                 */}
-      {/* ════════════════════════════════════════════════ */}
-      <section id="trust" className="py-10 sm:py-14 bg-white border-y border-gray-100 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection>
-            <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
-          </RevealSection>
-          <div className="relative overflow-hidden group">
-            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
-            <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
-              {[...Array(2)].map((_, setIdx) => (
-                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
-                  {[
-                    { src: logoAmrath, alt: "Amrâth Hotels" },
-                    { src: logoFcUtrecht, alt: "FC Utrecht" },
-                    { src: logoFunda, alt: "Funda" },
-                    { src: logoHartMuseum, alt: "H'art Museum" },
-                    { src: logoHetePeper, alt: "Hete Peper" },
-                    { src: logoHilton, alt: "Hilton" },
-                    { src: logoMarriott, alt: "Marriott" },
-                    { src: logoSelectCatering, alt: "Select Catering" },
-                    { src: logoAppel, alt: "Appèl" },
-                  ].map((logo) => (
-                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity duration-300">
-                      <img src={logo.src} alt={logo.alt} className="h-14 sm:h-18 lg:h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300" />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <style>{`
-          @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee {
-            animation: marquee 40s linear infinite;
-          }
-        `}</style>
-      </section>
-
-      {/* ════════════════════════════════════════════════ */}
       {/* 9. FAQ — NEUTRAL                                */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-gray-50">
@@ -833,9 +834,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ── ANIMATED X-DIVIDER ── */}
-      <XDivider className="bg-gradient-to-b from-gray-50 to-purple-950" />
 
       {/* ════════════════════════════════════════════════ */}
       {/* 10. FINAL CTA — DARK PURPLE                    */}
