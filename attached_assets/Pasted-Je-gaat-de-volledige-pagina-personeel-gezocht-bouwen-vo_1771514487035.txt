@@ -1,0 +1,127 @@
+Je gaat de volledige pagina /personeel-gezocht bouwen voor EXTRA.  
+Gebruik de huidige website-styling, kleuren, iconen, knoppen, fonts en layout als basis.  
+De pagina moet aansluiten op de huidige homepage en navigatie.
+
+⚠️ Belangrijk:
+- De header en footer blijven EXACT zoals op de huidige website.
+- De huisstijl (paars, gradients, icon-stijl, X-patronen op de achtergrond) moet identiek blijven.
+- Gebruik dezelfde hoverstates, ronde hoeken en schaduwen.
+- De pagina moet volledig responsive zijn.
+
+────────────────────────────────
+📌 PAGINASTRUCTUUR
+────────────────────────────────
+
+1. HERO-SECTIE
+- Zelfde structuur, breedte en stijl als de homepage-hero.
+- Titel: “Op zoek naar extra horecapersoneel? EXTRA regelt het — snel, betrouwbaar en volledig in loondienst.”
+- Subtekst: "Van hotels tot restaurants, events en cateraars: wij leveren representatieve medewerkers die écht bij jouw locatie passen — zorgvuldig geselecteerd, hoog beoordeeld en gemotiveerd door ons EXTRAA’tje beloningssysteem."
+- CTA primair: “Ik zoek extra personeel”
+- CTA secundair: “Direct contact”
+- Badge: “800+ medewerkers actief”
+- Badge: “60+ tevreden opdrachtgevers”
+- Achtergrond met paarse gradient + lichte X-patronen.
+
+2. USP-SECTIE (Waarom EXTRA)
+- 4 kaarten naast elkaar (zoals op homepage):
+  1) “Iedereen in loondienst (wetgevingproof)”  
+     Sub: “NEN-4400-1 gecertificeerd en volledig volgens wetgeving 2026.”
+  2) “We kennen al onze medewerkers persoonlijk”  
+     Sub: “Iedere medewerker komt eerst bij ons op gesprek op kantoor.”
+  3) “Selectie op soft skills én hard skills”  
+     Sub: Highlights van skills + beoordelingsproces.
+  4) “EXTRAA’tje beloningssysteem”  
+     Sub: “Hogere motivatie, minder no-shows, vaste teams.”
+
+3. LOGO-SECTIE OPDRACHTGEVERS
+- Zelfde style als huidige homepage logoslider.
+- Titels: “Vertrouwd door toonaangevende hotels, restaurants en eventlocaties”
+- Logo’s van: Marriott, Hilton, Scheepvaartmuseum, Select Catering, Appèl, Maison van den Boer, Venues Amsterdam.
+
+4. BRANCHES-SECTIE (4 kaarten)
+Titel: “Waar heb je extra personeel voor nodig?”
+Kaarten:
+- Hotels → link: /personeel-gezocht/hotels
+- Eventlocaties → link: /personeel-gezocht/evenementenlocaties
+- Cateraars → link: /personeel-gezocht/cateraars
+- Restaurants → link: /personeel-gezocht/restaurants
+Zelfde kaartstijl als “Wat zoek jij?” op homepage.
+
+5. WERKWIJZE-SECTIE (“Hoe EXTRA werkt”)
+4 stappen in horizontale lijn:
+  - Stap 1: “Vertel waar je personeel voor zoekt”
+  - Stap 2: “Wij selecteren de juiste mensen (ervaring, skills, beoordelingen, favorietenpoule, tags zoals Topper / Ervaren / Chef / Snelle medewerker)”
+  - Stap 3: “Onze planner zet een team voor je klaar”
+  - Stap 4: “Continu evalueren & vaste poule opbouwen”
+Zelfde iconenstijl als homepage.
+
+6. EXTRAA'TJE-SECTIE (Beloningssysteem)
+- Paarse achtergrond zoals op homepage EXTRAA’tje-sectie.
+- Titel: “Betere motivatie = beter personeel op jouw locatie”
+- 3 stappen (werk & verdien punten, klim in status, claim rewards).
+- Voeg screenshot toe van het Rewards dashboard:
+  → Gebruik het bestaande ontwerpvoorbeeld (jij hebt dit eerder aangeleverd).
+- Onder de screenshot bullets voor klantenvoordelen:
+  - hogere motivatie
+  - minder uitval
+  - meer continuïteit
+  - medewerkers die graag terugkomen
+
+7. DATA & MATCHING-SECTIE (favorietenpoules, tags, beoordelingen)
+Titel: “We weten precies wie we uitzenden — geen verrassingen.”
+4 highlight-blokken:
+  - Tags (Topper, Chef ervaren, Bar expert, Representatief, etc.)
+  - Favorietenpoule (vaste teams voor elke locatie)
+  - Beoordelingen (ster-score per dienst)
+  - Hard & soft skill-profielen (uitgesplitst)
+Gebruik lichte achtergrond (wit), iconen en 4 tegels.
+
+8. KLANTCASES-SECTIE
+Titel: “Hoe andere opdrachtgevers EXTRA ervaren”
+3 kaarten:
+  - Marriott (Housekeeping + banqueting poule)
+  - Scheepvaartmuseum (grote events 30–60 medewerkers)
+  - Maison van den Boer (chefs + bediening)
+Elke kaart:
+- Quote
+- Naam opdrachtgever
+- Locatie / functie
+- Korte resultatenbullet
+
+9. FAQ-SECTIE
+5 veelgestelde vragen in accordion style:
+- Hoe snel kunnen jullie leveren?
+- Werken jullie alleen met loondienst?
+- Hoe werkt de selectie?
+- Kan ik vaste medewerkers aanvragen?
+- Hoe zit het met no-shows?
+
+10. EINDE-CTA
+Titel: “Klaar om extra personeel in te zetten?”
+CTA: “Personeel aanvragen”
+Secundair: “Plan een gesprek op kantoor”
+Gebruik dezelfde paarse gradientfooterstijl als homepage en zorg dat deze perfect aansluit op bestaande design.
+
+────────────────────────────────
+📌 INTERNE LINKS (verplicht opnemen)
+────────────────────────────────
+- Link naar sectorpagina’s (hotels, restaurants, cateraars, events)
+- Link naar contactpagina
+- Link naar klantcasespagina
+- Link naar “Over EXTRA”
+- Link terug naar homepage
+
+────────────────────────────────
+📌 SEO vereisten
+────────────────────────────────
+- 1 H1: “Op zoek naar extra horecapersoneel? EXTRA regelt het.”
+- Per sectie logische H2’s
+- Alt-teksten bij logo’s
+- Compressie van afbeeldingen
+- Correcte meta title & description (zie tekst hieronder)
+- Structured data: FAQPage
+
+────────────────────────────────
+Resultaat:
+De pagina moet visueel identiek aansluiten op de homepage, maar inhoudelijk volledig gericht zijn op opdrachtgevers.  
+Pixel perfect, responsive, geen afwijkingen van huidige stijl.
