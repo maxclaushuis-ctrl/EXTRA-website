@@ -205,6 +205,10 @@ export default function LandingPage() {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-purple-500 group-hover:w-full transition-all duration-300" />
                 </button>
               ))}
+              <a href="/personeel-gezocht" className={`text-sm font-semibold transition-colors relative group ${scrolled ? "text-gray-600 hover:text-purple-600" : "text-white/80 hover:text-white"}`}>
+                Ik zoek extra personeel
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-purple-500 group-hover:w-full transition-all duration-300" />
+              </a>
               <button onClick={() => scrollTo("final-cta")} className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold px-6 py-2.5 rounded-full transition-all hover:shadow-lg hover:shadow-purple-500/25 hover:-translate-y-0.5">
                 Contact
               </button>
@@ -220,6 +224,7 @@ export default function LandingPage() {
               {[["Sectoren","sectors"],["Hoe het werkt","how-it-works"],["Waarom extra","differentiators"],["EXTRAATje","rewards"],["Contact","final-cta"]].map(([label,id]) => (
                 <button key={id} onClick={() => scrollTo(id)} className="block w-full text-left text-gray-700 font-semibold py-2 hover:text-purple-600">{label}</button>
               ))}
+              <a href="/personeel-gezocht" className="block w-full text-left text-gray-700 font-semibold py-2 hover:text-purple-600">Ik zoek extra personeel</a>
             </div>
           </div>
         )}
