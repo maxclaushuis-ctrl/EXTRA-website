@@ -216,13 +216,13 @@ export default function PersoneelsAanvraag() {
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
         <XPatternBg count={3} opacity={0.1} color="rgba(255,255,255,0.8)" />
         <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
             Doe direct een personeelsaanvraag
           </h1>
-          <p className="text-base sm:text-lg text-purple-200 mb-4 max-w-xl mx-auto">
+          <p className="text-lg sm:text-xl text-purple-200 mb-5 max-w-xl mx-auto leading-relaxed">
             Binnen 1 minuut aangevraagd. We reageren zo snel mogelijk en denken direct met je mee.
           </p>
-          <p className="text-sm text-purple-300/80">
+          <p className="text-base text-purple-300/80">
             Liever direct contact?{" "}
             <a href="tel:0851305915" className="text-white font-semibold hover:text-purple-200 underline underline-offset-2">Bel 085 130 59 15</a>
             {" "}of{" "}
@@ -235,7 +235,7 @@ export default function PersoneelsAanvraag() {
       {/* 2. FORMULIER                                */}
       {/* ═══════════════════════════════════════════ */}
       <section className="relative py-8 sm:py-12 -mt-6">
-        <div className="max-w-[640px] mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-[720px] mx-auto px-4 sm:px-6 relative z-10">
           {submitted ? (
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 p-8 sm:p-12 text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -244,7 +244,7 @@ export default function PersoneelsAanvraag() {
               <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Aanvraag ontvangen!
               </h2>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              <p className="text-base sm:text-lg text-gray-500 mb-6 max-w-md mx-auto leading-relaxed">
                 Bedankt voor je aanvraag. We nemen zo snel mogelijk contact met je op — tijdens kantooruren meestal binnen 1 uur.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -255,43 +255,43 @@ export default function PersoneelsAanvraag() {
             </div>
           ) : (
             <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 p-6 sm:p-10">
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 mb-6 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Vertel ons wat je nodig hebt
               </h2>
 
               {/* A) Contactgegevens */}
-              <div className="space-y-4 mb-8">
-                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest">Contactgegevens</p>
+              <div className="space-y-5 mb-10">
+                <p className="text-sm font-bold text-purple-600 uppercase tracking-widest">Contactgegevens</p>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Bedrijfsnaam <span className="text-red-500">*</span></label>
-                  <input {...form.register("companyName")} className={`w-full px-4 py-3 rounded-xl border ${form.formState.errors.companyName ? "border-red-300 bg-red-50" : form.formState.dirtyFields.companyName && !form.formState.errors.companyName ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm`} placeholder="Bijv. Hotel Amsterdam" />
-                  {form.formState.errors.companyName && <p className="text-red-500 text-xs mt-1">{form.formState.errors.companyName.message}</p>}
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Bedrijfsnaam <span className="text-red-500">*</span></label>
+                  <input {...form.register("companyName")} className={`w-full px-4 py-3.5 rounded-xl border ${form.formState.errors.companyName ? "border-red-300 bg-red-50" : form.formState.dirtyFields.companyName && !form.formState.errors.companyName ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base`} placeholder="Bijv. Hotel Amsterdam" />
+                  {form.formState.errors.companyName && <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.companyName.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Voor- en achternaam <span className="text-red-500">*</span></label>
-                  <input {...form.register("contactName")} className={`w-full px-4 py-3 rounded-xl border ${form.formState.errors.contactName ? "border-red-300 bg-red-50" : form.formState.dirtyFields.contactName && !form.formState.errors.contactName ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm`} placeholder="Je volledige naam" />
-                  {form.formState.errors.contactName && <p className="text-red-500 text-xs mt-1">{form.formState.errors.contactName.message}</p>}
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Voor- en achternaam <span className="text-red-500">*</span></label>
+                  <input {...form.register("contactName")} className={`w-full px-4 py-3.5 rounded-xl border ${form.formState.errors.contactName ? "border-red-300 bg-red-50" : form.formState.dirtyFields.contactName && !form.formState.errors.contactName ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base`} placeholder="Je volledige naam" />
+                  {form.formState.errors.contactName && <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.contactName.message}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">E-mailadres <span className="text-red-500">*</span></label>
-                    <input {...form.register("email")} type="email" className={`w-full px-4 py-3 rounded-xl border ${form.formState.errors.email ? "border-red-300 bg-red-50" : form.formState.dirtyFields.email && !form.formState.errors.email ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm`} placeholder="je@bedrijf.nl" />
-                    {form.formState.errors.email && <p className="text-red-500 text-xs mt-1">{form.formState.errors.email.message}</p>}
+                    <label className="block text-base font-semibold text-gray-700 mb-2">E-mailadres <span className="text-red-500">*</span></label>
+                    <input {...form.register("email")} type="email" className={`w-full px-4 py-3.5 rounded-xl border ${form.formState.errors.email ? "border-red-300 bg-red-50" : form.formState.dirtyFields.email && !form.formState.errors.email ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base`} placeholder="je@bedrijf.nl" />
+                    {form.formState.errors.email && <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.email.message}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Telefoonnummer <span className="text-red-500">*</span></label>
-                    <input {...form.register("phone")} type="tel" className={`w-full px-4 py-3 rounded-xl border ${form.formState.errors.phone ? "border-red-300 bg-red-50" : form.formState.dirtyFields.phone && !form.formState.errors.phone ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm`} placeholder="06 12345678" />
-                    {form.formState.errors.phone && <p className="text-red-500 text-xs mt-1">{form.formState.errors.phone.message}</p>}
+                    <label className="block text-base font-semibold text-gray-700 mb-2">Telefoonnummer <span className="text-red-500">*</span></label>
+                    <input {...form.register("phone")} type="tel" className={`w-full px-4 py-3.5 rounded-xl border ${form.formState.errors.phone ? "border-red-300 bg-red-50" : form.formState.dirtyFields.phone && !form.formState.errors.phone ? "border-green-300 bg-green-50/30" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base`} placeholder="06 12345678" />
+                    {form.formState.errors.phone && <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.phone.message}</p>}
                   </div>
                 </div>
               </div>
 
               {/* B) Wat zoek je? */}
-              <div className="space-y-4 mb-8">
-                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest">Wat zoek je?</p>
+              <div className="space-y-5 mb-10">
+                <p className="text-sm font-bold text-purple-600 uppercase tracking-widest">Wat zoek je?</p>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type locatie <span className="text-red-500">*</span></label>
-                  <select {...form.register("locationType")} className={`w-full px-4 py-3 rounded-xl border ${form.formState.errors.locationType ? "border-red-300 bg-red-50" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm bg-white`}>
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Type locatie <span className="text-red-500">*</span></label>
+                  <select {...form.register("locationType")} className={`w-full px-4 py-3.5 rounded-xl border ${form.formState.errors.locationType ? "border-red-300 bg-red-50" : "border-gray-200"} focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base bg-white`}>
                     <option value="">Selecteer type...</option>
                     <option value="Hotel">Hotel</option>
                     <option value="Restaurant">Restaurant</option>
@@ -299,56 +299,56 @@ export default function PersoneelsAanvraag() {
                     <option value="Cateraar">Cateraar</option>
                     <option value="Anders">Anders, namelijk…</option>
                   </select>
-                  {form.formState.errors.locationType && <p className="text-red-500 text-xs mt-1">{form.formState.errors.locationType.message}</p>}
+                  {form.formState.errors.locationType && <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.locationType.message}</p>}
                 </div>
                 {locationType === "Anders" && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Omschrijf je locatie</label>
-                    <input {...form.register("locationTypeOther")} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm" placeholder="Bijv. bedrijfskantine, museum" />
+                    <label className="block text-base font-semibold text-gray-700 mb-2">Omschrijf je locatie</label>
+                    <input {...form.register("locationTypeOther")} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base" placeholder="Bijv. bedrijfskantine, museum" />
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Functies <span className="text-red-500">*</span></label>
-                  <div className="flex flex-wrap gap-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Functies <span className="text-red-500">*</span></label>
+                  <div className="flex flex-wrap gap-2.5">
                     {FUNCTION_OPTIONS.map(fn => (
                       <button key={fn} type="button" onClick={() => toggleFunction(fn)}
-                        className={`px-3.5 py-2 rounded-full text-sm font-semibold border transition-all ${selectedFunctions.includes(fn) ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20" : "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600"}`}
+                        className={`px-4 py-2.5 rounded-full text-base font-semibold border transition-all ${selectedFunctions.includes(fn) ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20" : "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600"}`}
                       >
-                        {selectedFunctions.includes(fn) && <Check className="w-3.5 h-3.5 inline mr-1" />}
+                        {selectedFunctions.includes(fn) && <Check className="w-4 h-4 inline mr-1" />}
                         {fn}
                       </button>
                     ))}
                   </div>
-                  {form.formState.errors.functions && <p className="text-red-500 text-xs mt-1">{form.formState.errors.functions.message}</p>}
+                  {form.formState.errors.functions && <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.functions.message}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Aantal medewerkers</label>
-                    <input type="number" min="1" onChange={e => form.setValue("staffCount", e.target.value ? parseInt(e.target.value) : null)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm" placeholder="Bijv. 5" />
+                    <label className="block text-base font-semibold text-gray-700 mb-2">Aantal medewerkers</label>
+                    <input type="number" min="1" onChange={e => form.setValue("staffCount", e.target.value ? parseInt(e.target.value) : null)} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base" placeholder="Bijv. 5" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Datum / periode</label>
-                    <input {...form.register("datesPeriod")} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm" placeholder="Bijv. 24 en 25 juni, avond" />
+                    <label className="block text-base font-semibold text-gray-700 mb-2">Datum / periode</label>
+                    <input {...form.register("datesPeriod")} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base" placeholder="Bijv. 24 en 25 juni, avond" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Locatie (adres/plaats)</label>
-                    <input {...form.register("locationAddress")} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm" placeholder="Bijv. Amsterdam" />
+                    <label className="block text-base font-semibold text-gray-700 mb-2">Locatie (adres/plaats)</label>
+                    <input {...form.register("locationAddress")} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base" placeholder="Bijv. Amsterdam" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Locatienaam</label>
-                    <input {...form.register("locationName")} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm" placeholder="Bijv. Marriott Arena" />
+                    <label className="block text-base font-semibold text-gray-700 mb-2">Locatienaam</label>
+                    <input {...form.register("locationName")} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base" placeholder="Bijv. Marriott Arena" />
                   </div>
                 </div>
               </div>
 
               {/* C) Type inzet */}
-              <div className="space-y-4 mb-8">
-                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest">Type inzet</p>
+              <div className="space-y-5 mb-10">
+                <p className="text-sm font-bold text-purple-600 uppercase tracking-widest">Type inzet</p>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Flexibele of vaste inzet</label>
-                  <select {...form.register("deploymentType")} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm bg-white">
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Flexibele of vaste inzet</label>
+                  <select {...form.register("deploymentType")} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base bg-white">
                     <option value="">Selecteer...</option>
                     <option value="eenmalig">Eenmalige aanvraag</option>
                     <option value="terugkerend">Terugkerend / vaker</option>
@@ -356,15 +356,15 @@ export default function PersoneelsAanvraag() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Urgentie</label>
-                  <div className="space-y-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Urgentie</label>
+                  <div className="space-y-2.5">
                     {[
                       { value: "vandaag_morgen", label: "Vandaag / morgen" },
                       { value: "deze_week", label: "Deze week" },
                       { value: "geen_haast", label: "Binnenkort, geen haast" },
                     ].map(opt => (
-                      <label key={opt.value} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-purple-300 cursor-pointer transition-all text-sm">
-                        <input type="radio" value={opt.value} {...form.register("urgency")} className="w-4 h-4 text-purple-600 focus:ring-purple-500" />
+                      <label key={opt.value} className="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-purple-300 cursor-pointer transition-all text-base">
+                        <input type="radio" value={opt.value} {...form.register("urgency")} className="w-5 h-5 text-purple-600 focus:ring-purple-500" />
                         <span className="font-medium text-gray-700">{opt.label}</span>
                       </label>
                     ))}
@@ -373,23 +373,23 @@ export default function PersoneelsAanvraag() {
               </div>
 
               {/* D) Toelichting */}
-              <div className="space-y-4 mb-8">
-                <p className="text-xs font-bold text-purple-600 uppercase tracking-widest">Extra toelichting</p>
+              <div className="space-y-5 mb-10">
+                <p className="text-sm font-bold text-purple-600 uppercase tracking-widest">Extra toelichting</p>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Toelichting (optioneel)</label>
-                  <textarea {...form.register("notes")} rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-sm resize-none" placeholder="Vertel kort wat voor soort event/locatie het is en wat je belangrijk vindt in het team." />
+                  <label className="block text-base font-semibold text-gray-700 mb-2">Toelichting (optioneel)</label>
+                  <textarea {...form.register("notes")} rows={4} className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base resize-none" placeholder="Vertel kort wat voor soort event/locatie het is en wat je belangrijk vindt in het team." />
                 </div>
               </div>
 
               {/* E) Opties */}
-              <div className="space-y-3 mb-8">
-                <label className="flex items-start gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-purple-300 cursor-pointer transition-all">
-                  <input type="checkbox" {...form.register("wantsCallback")} className="w-4 h-4 mt-0.5 rounded text-purple-600 focus:ring-purple-500" />
-                  <span className="text-sm text-gray-700 font-medium">Bel mij even terug om de aanvraag door te spreken.</span>
+              <div className="space-y-3 mb-10">
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:border-purple-300 cursor-pointer transition-all">
+                  <input type="checkbox" {...form.register("wantsCallback")} className="w-5 h-5 mt-0.5 rounded text-purple-600 focus:ring-purple-500" />
+                  <span className="text-base text-gray-700 font-medium">Bel mij even terug om de aanvraag door te spreken.</span>
                 </label>
-                <label className="flex items-start gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-purple-300 cursor-pointer transition-all">
-                  <input type="checkbox" {...form.register("wantsFavoritePool")} className="w-4 h-4 mt-0.5 rounded text-purple-600 focus:ring-purple-500" />
-                  <span className="text-sm text-gray-700 font-medium">Ik wil graag dat EXTRA alvast een vaste favorietenpoule voor ons gaat opbouwen.</span>
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:border-purple-300 cursor-pointer transition-all">
+                  <input type="checkbox" {...form.register("wantsFavoritePool")} className="w-5 h-5 mt-0.5 rounded text-purple-600 focus:ring-purple-500" />
+                  <span className="text-base text-gray-700 font-medium">Ik wil graag dat EXTRA alvast een vaste favorietenpoule voor ons gaat opbouwen.</span>
                 </label>
               </div>
 
@@ -412,9 +412,9 @@ export default function PersoneelsAanvraag() {
                 )}
               </button>
               {mutation.isError && (
-                <p className="text-red-500 text-sm mt-3 text-center">Er is iets misgegaan. Probeer het opnieuw of neem contact op.</p>
+                <p className="text-red-500 text-base mt-3 text-center">Er is iets misgegaan. Probeer het opnieuw of neem contact op.</p>
               )}
-              <p className="text-xs text-gray-400 text-center mt-4">
+              <p className="text-sm text-gray-400 text-center mt-4">
                 We reageren zo snel mogelijk. Tijdens kantooruren meestal binnen 1 uur.
               </p>
             </form>
@@ -438,7 +438,7 @@ export default function PersoneelsAanvraag() {
                   <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
                     <item.icon className="w-5 h-5 text-purple-700" />
                   </div>
-                  <p className="text-sm font-medium text-gray-600 leading-snug">{item.text}</p>
+                  <p className="text-base font-medium text-gray-600 leading-snug">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -452,7 +452,7 @@ export default function PersoneelsAanvraag() {
       <section className="py-8 sm:py-10 bg-white border-t border-gray-100">
         <div className="max-w-4xl mx-auto px-5 sm:px-6">
           <RevealSection>
-            <p className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Vertrouwd door o.a.</p>
+            <p className="text-center text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Vertrouwd door o.a.</p>
             <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
               {[
                 { src: logoMarriott, alt: "Marriott" },
@@ -475,7 +475,7 @@ export default function PersoneelsAanvraag() {
       <section className="py-10 sm:py-14 bg-gray-50 border-t border-gray-100">
         <div className="max-w-4xl mx-auto px-5 sm:px-6">
           <RevealSection>
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900 text-center mb-6 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 text-center mb-6 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Waarom opdrachtgevers EXTRA kiezen
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -484,10 +484,10 @@ export default function PersoneelsAanvraag() {
                 { quote: "Binnen 24 uur hadden we personeel voor ons evenement. Professioneel en representatief.", name: "Lisa Jansen", role: "Event Manager, Venues Amsterdam" },
                 { quote: "De kwaliteit is constant hoog. Eindelijk een bureau dat hospitality begrijpt.", name: "Sophie van Dijk", role: "Restaurant Manager" },
               ].map((t, i) => (
-                <div key={i} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                  <p className="text-sm text-gray-600 italic mb-3 leading-relaxed">"{t.quote}"</p>
-                  <p className="text-xs font-bold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-gray-400">{t.role}</p>
+                <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                  <p className="text-base text-gray-600 italic mb-3 leading-relaxed">"{t.quote}"</p>
+                  <p className="text-sm font-bold text-gray-900">{t.name}</p>
+                  <p className="text-sm text-gray-400">{t.role}</p>
                 </div>
               ))}
             </div>
@@ -501,7 +501,7 @@ export default function PersoneelsAanvraag() {
       <section id="faq" className="py-12 sm:py-16 bg-white border-t border-gray-100">
         <div className="max-w-2xl mx-auto px-5 sm:px-6">
           <RevealSection>
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900 text-center mb-6 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 text-center mb-6 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Veelgestelde vragen
             </h2>
           </RevealSection>
@@ -515,11 +515,11 @@ export default function PersoneelsAanvraag() {
               <RevealSection key={i} delay={i * 60}>
                 <div className="bg-gray-50 rounded-xl border border-gray-100 hover:border-purple-200 transition-all overflow-hidden">
                   <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-4 sm:p-5 text-left">
-                    <span className="text-sm sm:text-base font-bold text-gray-900 pr-4">{faq.q}</span>
-                    {openFaq === i ? <ChevronUp className="w-4 h-4 text-purple-500 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
+                    <span className="text-base sm:text-lg font-bold text-gray-900 pr-4">{faq.q}</span>
+                    {openFaq === i ? <ChevronUp className="w-5 h-5 text-purple-500 flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />}
                   </button>
-                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-32 pb-4 sm:pb-5" : "max-h-0"}`}>
-                    <p className="px-4 sm:px-5 text-sm text-gray-500 leading-relaxed">{faq.a}</p>
+                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-4 sm:pb-5" : "max-h-0"}`}>
+                    <p className="px-4 sm:px-5 text-base text-gray-500 leading-relaxed">{faq.a}</p>
                   </div>
                 </div>
               </RevealSection>
