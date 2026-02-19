@@ -4228,6 +4228,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/staffing-request", async (req: Request, res: Response) => {
+    try {
+      const { staffingRequests } = await import("@shared/schema");
+      const body = req.body;
+      const data = {
+        companyName: body.companyName,
+        contactName: body.contactName,
+        email: body.email,
+        phone: body.phone,
+        locationType: body.locationType,
+        locationTypeOther: body.locationTypeOther || null,
+        functions: Array.isArray(body.functions) ? body.functions : [],
+        staffCount: body.staffCount ? parseInt(body.staffCount) : null,
+        datesPeriod: body.datesPeriod || null,
+        locationAddress: body.locationAddress || null,
+        locationName: body.locationName || null,
+        deploymentType: body.deploymentType || null,
+        urgency: body.urgency || null,
+        notes: body.notes || null,
+        wantsCallback: !!body.wantsCallback,
+        wantsFavoritePool: !!body.wantsFavoritePool,
+      };
+      if (!data.companyName || !data.contactName || !data.email || !data.phone || !data.locationType || data.functions.length === 0) {
+        return res.status(400).json({ message: "Vul alle verplichte velden in." });
+      }
+      const [result] = await db.insert(staffingRequests).values(data).returning();
+      return res.status(201).json({ success: true, id: result.id });
+    } catch (error) {
+      console.error("Error saving staffing request:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het opslaan van de aanvraag" });
+    }
+  });
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }

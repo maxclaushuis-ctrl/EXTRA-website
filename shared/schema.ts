@@ -1058,3 +1058,36 @@ export type CandidateWithDetails = Candidate & {
 export type CandidateAuditLogWithUser = CandidateAuditLog & {
   changedBy?: User;
 };
+
+export const staffingRequestStatusEnum = pgEnum('staffing_request_status', ['new', 'contacted', 'in_progress', 'completed', 'cancelled']);
+
+export const staffingRequests = pgTable("staffing_requests", {
+  id: serial("id").primaryKey(),
+  companyName: text("company_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  locationType: text("location_type").notNull(),
+  locationTypeOther: text("location_type_other"),
+  functions: text("functions").array().notNull(),
+  staffCount: integer("staff_count"),
+  datesPeriod: text("dates_period"),
+  locationAddress: text("location_address"),
+  locationName: text("location_name"),
+  deploymentType: text("deployment_type"),
+  urgency: text("urgency"),
+  notes: text("notes"),
+  wantsCallback: boolean("wants_callback").default(false),
+  wantsFavoritePool: boolean("wants_favorite_pool").default(false),
+  status: staffingRequestStatusEnum("status").default("new"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertStaffingRequestSchema = createInsertSchema(staffingRequests).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+});
+
+export type InsertStaffingRequest = z.infer<typeof insertStaffingRequestSchema>;
+export type StaffingRequest = typeof staffingRequests.$inferSelect;

@@ -1,0 +1,179 @@
+Je bent UX- en CRO-expert en bouwt voor EXTRA een nieuwe pagina waar warme leads DIRECT een personeelsaanvraag kunnen doen.
+
+📍 URL & routing
+- Maak een nieuwe pagina: /personeelsaanvraag
+- Zorg voor de volgende routes:
+  - Op de homepage (/landing) blijft de knop “Ik zoek extra personeel” linken naar: /personeel-gezocht
+  - Op /personeel-gezocht:
+    - Alle primaire CTA-buttons met teksten als “Personeel aanvragen”, “Doe een aanvraag” of vergelijkbaar moeten linken naar: /personeelsaanvraag
+  - Vanuit /personeelsaanvraag is er een secundaire link “← Terug naar overzicht” die teruggaat naar /personeel-gezocht
+
+⚠️ Context
+De bezoeker heeft de pagina /personeel-gezocht al bekeken. Hij/zij:
+- Weet al wie EXTRA is
+- Heeft vertrouwen opgebouwd
+- Wil nu gewoon snel een aanvraag doen
+
+Dus:
+- Geen lange storytelling meer
+- Geen afleiding van het formulier
+- Korte, duidelijke tekst + sterke trust-elementen
+
+────────────────────────
+1. Algemene styling
+────────────────────────
+- Gebruik exact dezelfde huisstijl als de EXTRA-website:
+  - Paarse gradient als hoofdkleur
+  - Zachte afgeronde hoeken
+  - X-patronen subtiel in de achtergrond
+  - Zelfde font en icon-stijl als huidige site
+- Header en footer blijven identiek aan de rest van de site.
+- Pagina moet extreem rustig en overzichtelijk zijn op desktop én mobiel.
+
+────────────────────────
+2. Pagina-opbouw / layout
+────────────────────────
+
+SECTIE 1 – HERO + DIRECT CONTACTOPTIES
+- Smalle hero boven het formulier (geen full-screen, maar compact).
+- Titel (H1): “Doe direct een personeelsaanvraag”
+- Subtekst (korte regel, max 2 regels):
+  “Binnen 1 minuut aangevraagd. We reageren zo snel mogelijk en denken direct met je mee.”
+- Onder de subtekst een subtiele regel:
+  “Liever direct contact? Bel 085 130 59 15 of stuur ons een WhatsAppbericht.”
+  - Telefoonnummer klikbaar (tel: link)
+  - WhatsApp link: wa.me/ met het juiste nummer
+- Hero-achtergrond: lichte paarse gradient met een zachte X op de achtergrond.
+
+SECTIE 2 – HOOFD-FORMULIER (FOCUS VAN DE PAGINA)
+- Formulier in een centrale kaart (max-width ±640px), uitgelijnd in het midden.
+- Glass-card of witte kaart met lichte shadow, afgeronde hoeken en voldoende padding.
+- Op desktop: velden in 1 of 2 kolommen waar logisch.
+- Op mobiel: velden full-width onder elkaar.
+
+FORMULIERVELDEN (in logische volgorde):
+
+A) Contactgegevens
+1. Bedrijfsnaam (required)
+2. Voor- en achternaam (required)
+3. E-mailadres (required, realtime validatie)
+4. Telefoonnummer (required, met automatische formatting)
+
+B) Wat zoek je? (kern van de aanvraag)
+5. Type locatie (dropdown):
+   - Hotel
+   - Restaurant
+   - Eventlocatie
+   - Cateraar
+   - Anders, namelijk… (met extra invulveld dat verschijnt)
+6. Functies (multi-select chips of checkboxes):
+   - Bediening
+   - Bar
+   - Runner
+   - Housekeeping
+   - Keuken / chef
+   - Afwas
+   - Host / Hostess
+   - Banqueting
+   - Op-/afbouwteam
+7. Aantal medewerkers nodig (numeric input)
+8. Datum / periode (date/datetime picker of tekstveld “Bijv. 24 en 25 juni, in de avond”)
+9. Locatie (adres of plaatsnaam met extra veld voor locatienaam)
+
+C) Type inzet
+10. Flexibele of vaste inzet (dropdown):
+   - Eenmalige aanvraag
+   - Terugkerend / vaker
+   - We willen een vaste poule opbouwen
+11. Urgentie (radio buttons):
+   - Vandaag / morgen
+   - Deze week
+   - Binnenkort, geen haast
+
+D) Extra toelichting (optioneel, maar zichtbaar)
+12. Vrij tekstveld:
+   Placeholder: “Vertel kort wat voor soort event/locatie het is en wat je belangrijk vindt in het team.”
+
+E) Opties / checkboxes
+13. Checkbox 1: “Bel mij even terug om de aanvraag door te spreken.”
+14. Checkbox 2: “Ik wil graag dat EXTRA alvast een vaste favorietenpoule voor ons gaat opbouwen.”
+
+CTA-BUTTON
+- Grote, opvallende paarse button over de volledige breedte van de kaart.
+- Tekst: “Aanvraag versturen”
+- Rechts in de knop een klein arrow-right icon.
+- Hover: lichte glow + microlift.
+- Disabled state wanneer verplichte velden niet ingevuld zijn.
+
+Onder de knop:
+- Klein stukje microcopy:
+  “We reageren zo snel mogelijk. Tijdens kantooruren meestal binnen 1 uur.”
+
+────────────────────────
+3. Trust & conversieversterkers onder het formulier
+────────────────────────
+
+SECTIE 3 – MINI TRUSTBAR (DIRECT ONDER FORMULIER)
+Plaats een horizontale rij met 3 icon + tekst items:
+
+1) Icon schild  
+   Tekst: “100% in loondienst – NEN-4400-1 gecertificeerd”
+2) Icon ster  
+   Tekst: “We kennen al ons personeel persoonlijk”
+3) Icon grafiek / medaille  
+   Tekst: “Favorietenpoules, skillscores en EXTRAA’tje voor betere inzet”
+
+SECTIE 4 – LOGO’S OPDRACHTGEVERS (COMPACT)
+- Titel: “Vertrouwd door o.a.”
+- Rij met logo’s: Marriott, Hilton, Het Scheepvaartmuseum, Maison van den Boer, Select Catering, etc.
+- Zelfde stijl als op de homepage, maar compacter (geen hele sectie, meer een strook).
+
+SECTIE 5 – MINICASES (OPTIONEEL MAAR KORT)
+- 2 of 3 kleine testimonial cards (max 2 regels quote per stuk), bijvoorbeeld:
+  - F&B Manager hotel
+  - Eventmanager
+  - Restaurantmanager
+- Zorg dat dit kort blijft, zodat de pagina niet te lang wordt. Focus blijft op het formulier.
+
+SECTIE 6 – FAQ (UITKLAPBAAR, ONDERAAN)
+Kort FAQ-blok met 3–4 vragen die twijfels wegnemen:
+- Hoe snel kunnen jullie reageren op mijn aanvraag?
+- Leveren jullie alleen personeel in loondienst?
+- Kunnen we vaste medewerkers krijgen?
+- In welke regio’s zijn jullie actief?
+
+Accordion-stijl, standaard dichtgeklapt.
+
+────────────────────────
+4. UX / interactie
+────────────────────────
+- Realtime validatie per veld (idiaal: groene outline bij goed ingevuld, rood bij fout).
+- Toon foutmeldingen direct onder het veld, in eenvoudige taal.
+- Gebruik duidelijke veldlabels (geen alleen placeholders).
+- Bij mobiel: formulier vrijwel full-screen, met sticky “Aanvraag versturen” knop onderin viewport zodra formulier grotendeels is ingevuld.
+- Maak de pagina snel laadbaar (afbeeldingen geoptimaliseerd, lazy loading voor logos/testimonials).
+
+────────────────────────
+5. SEO & techniek
+────────────────────────
+- 1 H1 op de pagina: “Doe direct een personeelsaanvraag”
+- Subkoppen als H2:
+  - “Vertel ons wat je nodig hebt”
+  - “Waarom opdrachtgevers EXTRA kiezen”
+  - “Veelgestelde vragen”
+- Voeg JSON-LD FAQPage toe voor de FAQ-sectie.
+- Vul meta title & description passend in (kan dynamisch of statisch).
+
+────────────────────────
+6. Samenvatting doel
+────────────────────────
+De bezoeker is al overtuigd op /personeel-gezocht.  
+Deze pagina moet daarom:
+
+- Direct en zonder afleiding het formulier centraal zetten.
+- Snel, simpel en veilig aanvoelen.
+- Extra vertrouwen geven via kleine, compacte trust-elementen.
+- Perfect aansluiten qua design op de rest van de EXTRA-site.
+- Volledig responsive en conversie-geoptimaliseerd zijn.
+
+Bouw deze pagina pixel perfect, volgens bovenstaande structuur en principes.
