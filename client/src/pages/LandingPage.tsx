@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   Users, Trophy, Gift, Star, ChevronDown, ChevronUp,
   TrendingUp, Shield, Clock,
@@ -27,6 +27,10 @@ import blogCatering from "../assets/images/blog-catering.jpg";
 import blogBarista from "../assets/images/blog-barista.jpg";
 import blogTeam from "../assets/images/blog-team.jpg";
 import blogHotel from "../assets/images/blog-hotel.jpg";
+import dienstChef from "../assets/images/dienst-chef.jpg";
+import dienstHoreca from "../assets/images/dienst-horeca.jpg";
+import dienstFrontoffice from "../assets/images/dienst-frontoffice.jpg";
+import dienstHousekeeping from "../assets/images/dienst-housekeeping.jpg";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -326,6 +330,262 @@ function NewsSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+const PARTICLES = Array.from({ length: 30 }, (_, i) => ({
+  left: `${(i * 37 + 13) % 100}%`,
+  top: `${(i * 53 + 7) % 100}%`,
+  size: 2 + (i % 4),
+  opacity: 0.15 + (i % 5) * 0.06,
+  delay: (i % 7) * 0.7,
+  duration: 3 + (i % 5),
+}));
+
+function DienstenParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {PARTICLES.map((p, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full animate-pulse"
+          style={{
+            left: p.left,
+            top: p.top,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: `rgba(167,139,250,${p.opacity})`,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+type DienstItem = {
+  id: string;
+  label: string;
+  icon: any;
+  title: string;
+  subtitle: string;
+  usps: string[];
+  cta: string;
+  image: string;
+  accent: string;
+  glowColor: string;
+  ringColor: string;
+};
+
+function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
+  const [active, setActive] = useState(0);
+  const isPausedRef = useRef(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!isPausedRef.current) {
+        setActive((prev) => (prev + 1) % diensten.length);
+      }
+    }, 4000);
+    return () => clearInterval(id);
+  }, [diensten.length]);
+
+  const d = diensten[active];
+
+  return (
+    <RevealSection>
+      <div
+        className="relative"
+        onMouseEnter={() => { isPausedRef.current = true; }}
+        onMouseLeave={() => { isPausedRef.current = false; }}
+      >
+        <div className="flex justify-center gap-3 mb-10">
+          {diensten.map((item, i) => (
+            <button
+              key={item.id}
+              onClick={() => setActive(i)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm transition-all duration-300 ${
+                i === active
+                  ? "bg-white text-purple-900 shadow-xl shadow-purple-500/20 scale-105"
+                  : "bg-white/10 text-purple-200 hover:bg-white/20 hover:text-white border border-white/10"
+              }`}
+            >
+              <item.icon className="w-4 h-4" />
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative rounded-[2rem] overflow-hidden border border-white/10 bg-white/[0.04] backdrop-blur-sm" style={{ minHeight: 420 }}>
+          <div
+            className="absolute inset-0 rounded-[2rem] transition-all duration-700"
+            style={{
+              boxShadow: `0 0 120px 40px ${d.glowColor}, 0 0 60px 20px ${d.glowColor}`,
+              animation: "glow-pulse 3s ease-in-out infinite",
+            }}
+          />
+
+          <div className="relative z-10 grid grid-cols-2 h-full" style={{ minHeight: 420 }}>
+            <div className="flex flex-col justify-center p-10 lg:p-14">
+              <div className="inline-flex items-center gap-2 text-purple-300 text-sm font-bold mb-4 bg-white/10 px-4 py-2 rounded-full w-fit border border-white/10">
+                <d.icon className="w-4 h-4" />
+                {d.label}
+              </div>
+
+              <h3 className="relative text-4xl lg:text-5xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                {d.title}
+                <span className="absolute -bottom-1 left-0 h-1.5 rounded-full bg-gradient-to-r from-orange-400 via-amber-400 to-transparent" style={{ width: "60%" }} />
+              </h3>
+
+              <p className="text-lg text-purple-200/80 mb-6">{d.subtitle}</p>
+
+              <div className="space-y-3 mb-8">
+                {d.usps.map((usp, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-white/90 font-medium">{usp}</span>
+                  </div>
+                ))}
+              </div>
+
+              <a
+                href="/personeelsaanvraag"
+                className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 text-purple-900 font-bold px-7 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-white/20 hover:-translate-y-0.5 w-fit text-base"
+              >
+                {d.cta}
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+
+            <div className="relative flex items-end justify-center overflow-hidden">
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full blur-[80px] transition-colors duration-700"
+                style={{ backgroundColor: d.glowColor }}
+              />
+              {diensten.map((item, i) => (
+                <img
+                  key={item.id}
+                  src={item.image}
+                  alt={item.title}
+                  className={`absolute bottom-0 w-full h-full object-cover object-top transition-all duration-700 ${
+                    i === active ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+                  }`}
+                  style={{
+                    maskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {diensten.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                className={`h-1.5 rounded-full transition-all duration-500 ${
+                  i === active ? "w-10 bg-white" : "w-4 bg-white/30 hover:bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </RevealSection>
+  );
+}
+
+function DienstenMobiel({ diensten }: { diensten: DienstItem[] }) {
+  const [active, setActive] = useState(0);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleSwipe = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) setActive((p) => Math.min(p + 1, diensten.length - 1));
+      else setActive((p) => Math.max(p - 1, 0));
+    }
+  };
+
+  return (
+    <div
+      onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => { touchEndX.current = e.changedTouches[0].clientX; handleSwipe(); }}
+    >
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${active * 100}%)` }}
+        >
+          {diensten.map((d) => (
+            <div key={d.id} className="w-full flex-shrink-0 px-2">
+              <div className={`relative rounded-2xl overflow-hidden border ${d.ringColor} bg-white/[0.06] backdrop-blur-sm`}>
+                <div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{ boxShadow: `inset 0 0 60px 10px ${d.glowColor.replace("0.35", "0.15")}` }}
+                />
+                <div className="relative z-10">
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={d.image}
+                      alt={d.title}
+                      className="w-full h-full object-cover object-top"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-purple-950 via-purple-950/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4">
+                      <div className="inline-flex items-center gap-2 text-purple-200 text-xs font-bold bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                        <d.icon className="w-3.5 h-3.5" />
+                        {d.label}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <h3 className="text-2xl font-black text-white mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {d.title}
+                    </h3>
+                    <p className="text-sm text-purple-200/80 mb-4">{d.subtitle}</p>
+                    <div className="space-y-2 mb-5">
+                      {d.usps.map((usp, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </div>
+                          <span className="text-sm text-white/80 font-medium">{usp}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <a
+                      href="/personeelsaanvraag"
+                      className="flex items-center justify-center gap-2 w-full bg-white hover:bg-gray-100 text-purple-900 font-bold px-6 py-3 rounded-full transition-all text-sm"
+                    >
+                      {d.cta}
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-2 mt-6">
+        {diensten.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === active ? "w-8 bg-white" : "w-3 bg-white/30"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -791,52 +1051,124 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════ */}
-      {/* SECTOREN — DARK PURPLE                          */}
+      {/* DIENSTEN — DYNAMIC SPOTLIGHT SECTION             */}
       {/* ════════════════════════════════════════════════ */}
-      <section id="sectors" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-        <XPatternBg count={5} opacity={0.12} color="rgba(255,255,255,0.8)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+      {(() => {
+        const diensten = [
+          {
+            id: "chefs",
+            label: "Chef",
+            icon: UtensilsCrossed,
+            title: "Ervaren Chefs",
+            subtitle: "Direct inzetbaar voor jouw keuken.",
+            usps: ["Geselecteerd op ervaring & representativiteit", "Binnen 24 uur geleverd"],
+            cta: "Chef aanvragen",
+            image: dienstChef,
+            accent: "from-orange-400 via-amber-400 to-yellow-300",
+            glowColor: "rgba(251,146,60,0.35)",
+            ringColor: "border-orange-400/30",
+          },
+          {
+            id: "horeca",
+            label: "Horeca",
+            icon: Wine,
+            title: "Horecamedewerkers",
+            subtitle: "Bediening, bar & hospitality op topniveau.",
+            usps: ["Representatief & servicegericht", "Flexibel inzetbaar per dienst"],
+            cta: "Horeca aanvragen",
+            image: dienstHoreca,
+            accent: "from-purple-400 via-violet-400 to-fuchsia-400",
+            glowColor: "rgba(167,139,250,0.35)",
+            ringColor: "border-purple-400/30",
+          },
+          {
+            id: "frontoffice",
+            label: "Front-office",
+            icon: Users,
+            title: "Front-office",
+            subtitle: "Dé eerste indruk van jouw hotel of locatie.",
+            usps: ["Meertalig & representatief", "Ervaring met PMS-systemen"],
+            cta: "Front-office aanvragen",
+            image: dienstFrontoffice,
+            accent: "from-cyan-400 via-blue-400 to-indigo-400",
+            glowColor: "rgba(96,165,250,0.35)",
+            ringColor: "border-blue-400/30",
+          },
+          {
+            id: "housekeeping",
+            label: "Housekeeping",
+            icon: Sparkles,
+            title: "Housekeeping",
+            subtitle: "Kamers & ruimtes onberispelijk schoon.",
+            usps: ["Getraind op hotelstandaarden", "Direct beschikbaar, ook last-minute"],
+            cta: "Housekeeping aanvragen",
+            image: dienstHousekeeping,
+            accent: "from-emerald-400 via-green-400 to-teal-400",
+            glowColor: "rgba(52,211,153,0.35)",
+            ringColor: "border-emerald-400/30",
+          },
+        ];
+        return (
+      <section id="diensten-extra" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950" />
+        <DienstenParticles />
+        <XPatternBg count={4} opacity={0.06} color="rgba(255,255,255,0.8)" />
+
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <RevealSection>
-            <div className="text-center mb-10 sm:mb-16">
+            <div className="text-center mb-12 sm:mb-16 lg:mb-20">
               <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
-                <Briefcase className="w-4 h-4" /> Onze sectoren
+                <Sparkles className="w-4 h-4" /> Onze diensten
               </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Extra personeel per sector
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-4 sm:mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Welke <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">EXTRA's</span> heb je nodig?
               </h2>
+              <p className="text-base sm:text-lg text-purple-200/80 max-w-2xl mx-auto leading-relaxed">
+                Kies het team dat bij jouw locatie past — van keuken tot front-office, altijd representatief en in loondienst.
+              </p>
             </div>
           </RevealSection>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              { icon: Building2, title: "Hotels", color: "from-purple-500 to-purple-700", chips: ["Housekeeping", "Banqueting", "Front office", "Keuken"] },
-              { icon: UtensilsCrossed, title: "Catering", color: "from-indigo-500 to-purple-600", chips: ["Chefs", "Horecamedewerkers", "Host/hostessen"] },
-              { icon: PartyPopper, title: "Events", color: "from-pink-500 to-purple-600", chips: ["Chefs", "Horecamedewerkers", "Host/hostessen"] },
-              { icon: Wine, title: "Restaurants", color: "from-blue-500 to-indigo-600", chips: ["Runners", "Bar", "Bediening", "Chefs", "Afwas"] },
-            ].map((sector, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="group bg-white/[0.06] backdrop-blur-sm rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-white/[0.08] hover:border-purple-400/30 hover:bg-white/[0.10] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full flex flex-col">
-                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${sector.color} flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                    <sector.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-black text-white mb-3 sm:mb-4">{sector.title}</h3>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 flex-1">
-                    {sector.chips.map((chip, j) => (
-                      <span key={j} className="text-xs sm:text-sm bg-white/10 text-purple-200 px-3 py-1 sm:py-1.5 rounded-full border border-white/10 font-medium">
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 text-purple-300 font-bold text-sm group-hover:gap-3 group-hover:text-white transition-all">
-                    Bekijk functies <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </RevealSection>
-            ))}
+          {/* Desktop: 4 kaarten met spotlight */}
+          <div className="hidden lg:block">
+            <DienstenDesktop diensten={diensten} />
+          </div>
+
+          {/* Mobiel: swipeable carrousel */}
+          <div className="lg:hidden">
+            <DienstenMobiel diensten={diensten} />
           </div>
         </div>
+
+        <style>{`
+          @keyframes glow-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+          }
+          @keyframes brush-stroke {
+            0% { width: 0; opacity: 0; }
+            100% { width: 100%; opacity: 1; }
+          }
+          @keyframes float-up {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+          }
+          .dienst-card-active { animation: float-up 4s ease-in-out infinite; }
+          .brush-underline::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            height: 6px;
+            width: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #f97316, #fbbf24, transparent);
+            animation: brush-stroke 0.6s ease-out forwards;
+          }
+        `}</style>
       </section>
+        );
+      })()}
 
       {/* ════════════════════════════════════════════════ */}
       {/* 4. HOE EXTRA WERKT — WARM OFF-WHITE             */}
@@ -1251,7 +1583,7 @@ export default function LandingPage() {
               <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
                 <li><a href="/sollicitatieformulier" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
                 <li><button onClick={() => scrollTo("rewards")} className="hover:text-purple-400 transition-colors">EXTRAATje Rewards</button></li>
-                <li><button onClick={() => scrollTo("sectors")} className="hover:text-purple-400 transition-colors">Sectoren</button></li>
+                <li><button onClick={() => scrollTo("diensten-extra")} className="hover:text-purple-400 transition-colors">Diensten</button></li>
               </ul>
             </div>
             <div>
