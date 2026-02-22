@@ -1121,10 +1121,10 @@ export default function LandingPage() {
                 <Sparkles className="w-4 h-4" /> Onze diensten
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-4 sm:mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Welke <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">EXTRA's</span> heb je nodig?
+                Welke EXTRA's heb je nodig?
               </h2>
               <p className="text-base sm:text-lg text-purple-200/80 max-w-2xl mx-auto leading-relaxed">
-                Kies het team dat bij jouw locatie past — van keuken tot front-office, altijd representatief en in loondienst.
+                Kies het team dat bij jouw past, van keuken tot front-office, altijd representatief en in loondienst.
               </p>
             </div>
           </RevealSection>
