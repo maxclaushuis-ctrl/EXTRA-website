@@ -388,7 +388,7 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("personeel"); }}
               >
-                <button className={`flex items-center gap-2 text-[21px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
                   <Briefcase className="w-5 h-5" />
                   Ik zoek extra personeel
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "personeel" ? "rotate-180" : ""}`} />
@@ -417,7 +417,7 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("werk"); }}
               >
-                <button className={`flex items-center gap-2 text-[21px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
                   <UserCheck className="w-5 h-5" />
                   Ik zoek extra werk
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
@@ -446,7 +446,7 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("over"); }}
               >
-                <button className={`flex items-center gap-2 text-[21px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "over" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "over" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
                   <Star className="w-5 h-5" />
                   Over EXTRA
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "over" ? "rotate-180" : ""}`} />
@@ -472,7 +472,7 @@ export default function LandingPage() {
               {/* Contact CTA */}
               <a
                 href="/personeelsaanvraag"
-                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[21px] font-bold px-8 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2.5 border border-purple-500/20"
+                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[18px] font-bold px-8 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2.5 border border-purple-500/20"
               >
                 <Phone className="w-[18px] h-[18px]" />
                 Contact
