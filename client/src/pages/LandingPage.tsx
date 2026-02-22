@@ -380,18 +380,18 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA" className={`h-7 sm:h-8 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
+              <img src={extraLogoWit} alt="EXTRA" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
             </div>
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-2">
               {/* Ik zoek personeel */}
               <div
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("personeel"); }}
               >
-                <button className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-700 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/85 hover:text-white hover:bg-white/10")}`}>
-                  <Briefcase className="w-4 h-4" />
+                <button className={`flex items-center gap-2 text-[15px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                  <Briefcase className="w-[18px] h-[18px]" />
                   Ik zoek personeel
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === "personeel" ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "personeel" ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "personeel" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
@@ -417,10 +417,10 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("werk"); }}
               >
-                <button className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-700 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/85 hover:text-white hover:bg-white/10")}`}>
-                  <UserCheck className="w-4 h-4" />
+                <button className={`flex items-center gap-2 text-[15px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                  <UserCheck className="w-[18px] h-[18px]" />
                   Ik zoek werk
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "werk" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
@@ -446,10 +446,10 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("over"); }}
               >
-                <button className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg transition-all ${activeDropdown === "over" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-700 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/85 hover:text-white hover:bg-white/10")}`}>
-                  <Star className="w-4 h-4" />
+                <button className={`flex items-center gap-2 text-[15px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "over" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                  <Star className="w-[18px] h-[18px]" />
                   Over EXTRA
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === "over" ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "over" ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "over" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[260px]">
@@ -472,9 +472,9 @@ export default function LandingPage() {
               {/* Contact CTA */}
               <a
                 href="/personeelsaanvraag"
-                className="ml-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-bold px-7 py-3 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2 border border-purple-500/20"
+                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[15px] font-bold px-8 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2.5 border border-purple-500/20"
               >
-                <Phone className="w-4 h-4" />
+                <Phone className="w-[18px] h-[18px]" />
                 Contact
               </a>
             </div>
