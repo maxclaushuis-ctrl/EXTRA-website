@@ -1,0 +1,54 @@
+⭐ DEFINITIEVE REPLIT-PROMPT – DIENSTEN-SECTIE (“Welke EXTRA’s heb je nodig?”)
+Gebaseerd op UX, neuromarketing en de EXTRA-huisstijl (2026)
+🧠 Context
+Je bent een senior UI/UX designer + front-end creative met volledige vrijheid binnen de EXTRA branding (paars, glow, zachte neon, speelse X-patronen, premium hospitality look).
+Deze sectie vervangt de huidige “Extra personeel per sector” sectie.
+🎯 DOEL VAN DE SECTIE
+Bouw een sterk conversiegerichte sectie waarin onze vier kern-diensten visueel en dynamisch worden gepresenteerd:
+Chefs
+Horecamedewerkers
+Front-office
+Housekeeping
+Deze sectie moet duidelijk anders, speelser en dynamischer zijn dan alle andere secties op de website.
+🏷 TITEL + SUBTEXT
+Gebruik deze exacte teksten:
+H2:
+Welke EXTRA’s heb je nodig?
+Subregel:
+Kies het team dat bij jouw locatie past, van keuken tot front-office, altijd representatief en in loondienst.
+🧩 STRUCTUUR VAN DE DIENSTEN (4 kaarten)
+Voor elke dienst komt een dienstkaart met:
+Foto van medewerker (voor nu placeholder; later vervangen door echte foto’s die wij aanleveren)
+Titel
+2–3 USP’s
+CTA-knop
+📌 CTA-teksten per dienst:
+Chefs → Chef aanvragen
+Horecamedewerkers → Horeca aanvragen
+Front-office → Front-office aanvragen
+Housekeeping → Housekeeping aanvragen
+🎨 CREATIEVE ELEMENTEN (ZEER BELANGRIJK)
+Deze sectie MAG en MOET onderscheidend zijn van de rest van de website.
+Alles hieronder zijn inspiraties, maar jij mag volledig je eigen keuzes maken:
+✔ Voorbeeldideeën (maar geen verplichtingen!)
+Een timelapse / rotatie waarbij automatisch elke 3–5 seconden een nieuwe dienst kaart prominent in beeld komt.
+Een lichte 3D-tilt van kaarten bij hover.
+Floating particles / sparkles in paarstinten rondom de actuele dienstkaart.
+Zachte neon glow outlines die per dienst van kleur wisselen.
+Een parallax achtergrond met EXTRA X-patronen die subtiel meebewegen.
+Een 4-staps carrousel (met autoplay, maar stop bij hover).
+Kaarten die vergroten wanneer ze de actieve positie hebben.
+Een visuele energy streak / brush stroke achter de actieve titel (zoals eerder gebruikt bij het woord EXTRA).
+✨ Belangrijk:
+Replit heeft volledige creatieve vrijheid om dit nog beter, dynamischer en visueler te bouwen dan bovenstaande ideeën.
+🟣 STIJLRICHTLIJNEN
+Gebruik paarstinten, glow, modern 2026 UI.
+Geen strak corporate blok — deze sectie mag meer "alive" en speels zijn.
+Icons of micro-illustraties zijn welkom.
+Gebruik EXTRA’s X-pattern subtiel kris-kras door de achtergrond.
+📐 TECHNIEK / OPBOUW
+Bouw dit in een <section id="diensten-extra">
+Gebruik semantische HTML
+Animaties smooth & performant
+Responsive first (mobiel swipeable!)
+Desktop: 4 kaarten zichtbaar of 1 spotlight; mobiel: carrousel
