@@ -434,6 +434,10 @@ export default function LandingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
+          <div className="absolute" style={{ left: "5%", top: "10%", width: 200, height: 200, transform: "rotate(15deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          <div className="absolute" style={{ left: "15%", top: "75%", width: 180, height: 180, transform: "rotate(-10deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+        </div>
 
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
           <div className="max-w-2xl">
