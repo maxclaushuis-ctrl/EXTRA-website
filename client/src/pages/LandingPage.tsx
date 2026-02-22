@@ -22,6 +22,11 @@ import logoHilton from "@assets/Logo_Hilton_1771267205959.png";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.png";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.png";
 import logoAppel from "@assets/Logo-Appel_1771267205959.png";
+import blogHousekeeping from "../assets/images/blog-housekeeping.jpg";
+import blogCatering from "../assets/images/blog-catering.jpg";
+import blogBarista from "../assets/images/blog-barista.jpg";
+import blogTeam from "../assets/images/blog-team.jpg";
+import blogHotel from "../assets/images/blog-hotel.jpg";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -150,6 +155,179 @@ const appScreens = [
   { key: "challenges", img: screenChallenges, label: "Challenges", desc: "Behaal uitdagingen en verdien extra punten met elke mijlpaal.", emoji: "🏆" },
   { key: "ranglijst", img: screenRanglijst, label: "Ranglijst", desc: "Bekijk je positie op de maandelijkse ranglijst en versla je collega's.", emoji: "📈" },
 ];
+
+const blogArticles = [
+  {
+    image: blogHousekeeping,
+    category: "Hospitality",
+    title: "Vijf tips voor een onvergetelijke gastervaring in je hotel",
+    summary: "Van persoonlijke welkomstmomenten tot kleine verrassingen op de kamer — ontdek hoe tophotels het verschil maken.",
+    date: "18 feb 2026",
+  },
+  {
+    image: blogCatering,
+    category: "Events & Catering",
+    title: "Hoe plan je de perfecte catering voor een bedrijfsevent?",
+    summary: "Een goed doordacht menu en professioneel serviceteam tillen elk evenement naar een hoger niveau.",
+    date: "12 feb 2026",
+  },
+  {
+    image: blogBarista,
+    category: "Horeca",
+    title: "De barista als visitekaartje: waarom kwaliteit telt",
+    summary: "Gasten verwachten meer dan koffie. Een goede barista biedt beleving, snelheid en een glimlach.",
+    date: "5 feb 2026",
+  },
+  {
+    image: blogTeam,
+    category: "EXTRA Nieuws",
+    title: "Medewerker van de maand: het verhaal van Priya",
+    summary: "Na drie maanden bij EXTRA verdiende Priya haar eerste beloning. Lees hoe het EXTRAATje-systeem haar motiveert.",
+    date: "28 jan 2026",
+  },
+  {
+    image: blogHotel,
+    category: "Branche",
+    title: "Personeelstekort in de horeca: trends en oplossingen voor 2026",
+    summary: "De horecasector kampt met structurele tekorten. EXTRA zet in op beloning, begeleiding en flexibiliteit.",
+    date: "20 jan 2026",
+  },
+];
+
+function NewsSection() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const touchStart = useRef(0);
+  const touchEnd = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => { touchStart.current = e.targetTouches[0].clientX; };
+  const handleTouchMove = (e: React.TouchEvent) => { touchEnd.current = e.targetTouches[0].clientX; };
+  const handleTouchEnd = () => {
+    const diff = touchStart.current - touchEnd.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && activeSlide < blogArticles.length - 1) setActiveSlide(activeSlide + 1);
+      if (diff < 0 && activeSlide > 0) setActiveSlide(activeSlide - 1);
+    }
+  };
+
+  return (
+    <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-gray-950">
+      <XPatternBg count={3} opacity={0.06} color="rgba(255,255,255,0.5)" />
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+        <RevealSection>
+          <div className="mb-10 sm:mb-14">
+            <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-500/10 px-4 sm:px-5 py-2 rounded-full border border-purple-500/20">
+              <Sparkles className="w-4 h-4" /> Nieuws & Blogs
+            </span>
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Laatste nieuws uit{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">de branche</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+              </span>
+            </h2>
+            <p className="text-base sm:text-lg text-gray-400 mt-4 max-w-2xl">
+              Tips, verhalen en trends uit de horeca- en hotelwereld. Ontdek wat er speelt.
+            </p>
+          </div>
+        </RevealSection>
+
+        {/* Desktop: 3-column grid */}
+        <div className="hidden md:grid md:grid-cols-3 gap-5 lg:gap-6">
+          {blogArticles.slice(0, 3).map((article, i) => (
+            <RevealSection key={i} delay={i * 120}>
+              <div className="group relative rounded-2xl overflow-hidden cursor-pointer aspect-[3/4]">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-7">
+                  <span className="inline-block text-xs font-bold uppercase tracking-wider text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full mb-3 border border-purple-500/30">
+                    {article.category}
+                  </span>
+                  <h3 className="text-lg lg:text-xl font-bold text-white leading-snug mb-2">{article.title}</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed line-clamp-2">{article.summary}</p>
+                  <span className="text-xs text-gray-500 mt-3 block">{article.date}</span>
+                </div>
+              </div>
+            </RevealSection>
+          ))}
+        </div>
+
+        {/* Desktop: bottom row with 2 wider cards */}
+        <div className="hidden md:grid md:grid-cols-2 gap-5 lg:gap-6 mt-5 lg:mt-6">
+          {blogArticles.slice(3, 5).map((article, i) => (
+            <RevealSection key={i} delay={(i + 3) * 120}>
+              <div className="group relative rounded-2xl overflow-hidden cursor-pointer aspect-[16/9]">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-7">
+                  <span className="inline-block text-xs font-bold uppercase tracking-wider text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full mb-3 border border-purple-500/30">
+                    {article.category}
+                  </span>
+                  <h3 className="text-lg lg:text-xl font-bold text-white leading-snug mb-2">{article.title}</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed line-clamp-2">{article.summary}</p>
+                  <span className="text-xs text-gray-500 mt-3 block">{article.date}</span>
+                </div>
+              </div>
+            </RevealSection>
+          ))}
+        </div>
+
+        {/* Mobile: Carousel */}
+        <div className="md:hidden">
+          <div
+            className="relative overflow-hidden rounded-2xl"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div
+              className="flex transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+            >
+              {blogArticles.map((article, i) => (
+                <div key={i} className="w-full flex-shrink-0">
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mx-1">
+                    <img
+                      src={article.image}
+                      alt={article.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <span className="inline-block text-xs font-bold uppercase tracking-wider text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full mb-3 border border-purple-500/30">
+                        {article.category}
+                      </span>
+                      <h3 className="text-lg font-bold text-white leading-snug mb-2">{article.title}</h3>
+                      <p className="text-sm text-gray-300 leading-relaxed">{article.summary}</p>
+                      <span className="text-xs text-gray-500 mt-3 block">{article.date}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Dots */}
+          <div className="flex justify-center gap-2 mt-6">
+            {blogArticles.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveSlide(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === i ? "bg-purple-400 w-7" : "bg-gray-600 hover:bg-gray-500"}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -839,6 +1017,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════════════ */}
+      {/* 9b. NEWS / BLOG — DARK                          */}
+      {/* ════════════════════════════════════════════════ */}
+      <NewsSection />
 
       {/* ════════════════════════════════════════════════ */}
       {/* 10. FINAL CTA — DARK PURPLE                    */}
