@@ -477,11 +477,11 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
                         i === active ? "opacity-100 scale-100" : "opacity-0 scale-95"
                       }`}
                     >
-                      <div className="absolute bottom-[8%] right-[18%] w-[200px] h-[200px] rounded-full blur-[70px] bg-purple-500/20" />
+                      <div className="absolute bottom-[8%] right-[18%] w-[220px] h-[220px] rounded-full blur-[80px] bg-purple-500/20" />
                       <img
                         src={item.image}
                         alt={item.alt || item.title}
-                        className="absolute bottom-[-50px] right-[-30px] h-[115%] object-contain object-bottom z-10"
+                        className="absolute bottom-[-60px] right-[-35px] h-[125%] object-contain object-bottom z-10"
                         style={{
                           filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.3))",
                         }}
@@ -1102,8 +1102,8 @@ export default function LandingPage() {
             cta: "Chef aanvragen",
             image: dienstChefPng,
             accent: "from-orange-400 via-amber-400 to-yellow-300",
-            glowColor: "rgba(251,146,60,0.35)",
-            ringColor: "border-orange-400/30",
+            glowColor: "rgba(147,130,240,0.35)",
+            ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Lachende chef van EXTRA in witte koksjas en donker schort",
           },
