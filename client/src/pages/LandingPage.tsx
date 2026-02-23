@@ -30,7 +30,7 @@ import blogHotel from "../assets/images/blog-hotel.jpg";
 import dienstChefPng from "@assets/Chef_1771833440047.png";
 import dienstHoreca from "@assets/Horecamedewerker_1771836004844.png";
 import dienstFrontoffice from "@assets/ChatGPT_Image_23_feb_2026,_10_19_13_1771838461343.png";
-import dienstHousekeeping from "../assets/images/dienst-housekeeping.jpg";
+import dienstHousekeeping from "@assets/ChatGPT_Image_23_feb_2026,_10_45_21_1771839989281.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -1147,8 +1147,10 @@ export default function LandingPage() {
             cta: "Housekeeping aanvragen",
             image: dienstHousekeeping,
             accent: "from-emerald-400 via-green-400 to-teal-400",
-            glowColor: "rgba(52,211,153,0.35)",
-            ringColor: "border-emerald-400/30",
+            glowColor: "rgba(147,130,240,0.35)",
+            ringColor: "border-purple-400/30",
+            transparentBg: true,
+            alt: "Lachende housekeeping medewerker van EXTRA met handdoeken",
           },
         ];
         return (
