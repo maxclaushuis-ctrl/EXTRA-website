@@ -648,10 +648,16 @@ export default function LandingPage() {
     setMobileMenuOpen(false);
   }, []);
 
-  const googleReviews = [
+  const [reviewTab, setReviewTab] = useState<"medewerkers" | "klanten">("medewerkers");
+  const medewerkerReviews = [
     { quote: "Ontzettend leuk uitzendbureau! Open en flexibel team, leuke klussen", name: "Sophie Sybrandy", rating: 5 },
     { quote: "Extra is nice platform for from entry level to become a pro at hospitality industry.", name: "Oliur Rahman", rating: 5 },
     { quote: "Geweldig uitzendbureau met goede en leerzame opdrachten. Werkt met mooie locaties waar altijd een fijne sfeer hangt en goed personeel rondloopt. De communicatie in het bedrijf zelf verloopt goed waardoor je zonder problemen en miscommunicaties aan het werk kan.", name: "Nathalie Siegerma", rating: 5 },
+  ];
+  const klantReviews = [
+    { quote: "EXTRA levert keer op keer betrouwbaar en goed getraind personeel. De communicatie is snel en helder.", name: "Mark de Vries", rating: 5 },
+    { quote: "Binnen 24 uur hadden we personeel voor ons evenement. Professioneel en representatief. Aanrader.", name: "Lisa Jansen", rating: 5 },
+    { quote: "Eindelijk een uitzendbureau dat begrijpt wat hospitality écht betekent. De kwaliteit is constant hoog.", name: "Sophie van Dijk", rating: 5 },
   ];
 
   return (
@@ -1480,9 +1486,27 @@ export default function LandingPage() {
             </div>
           </RevealSection>
 
+          <RevealSection delay={100}>
+            <div className="flex justify-center gap-2 sm:gap-3 mb-10 sm:mb-14">
+              {(["medewerkers", "klanten"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setReviewTab(tab)}
+                  className={`px-5 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold transition-all duration-300 ${
+                    reviewTab === tab
+                      ? "bg-purple-600 text-white shadow-xl shadow-purple-500/25 scale-105"
+                      : "bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-gray-200"
+                  }`}
+                >
+                  {tab === "medewerkers" ? "Medewerkers" : "Klanten"}
+                </button>
+              ))}
+            </div>
+          </RevealSection>
+
           <div className="grid md:grid-cols-3 gap-4 sm:gap-8">
-            {googleReviews.map((review, i) => (
-              <RevealSection key={i} delay={i * 120}>
+            {(reviewTab === "medewerkers" ? medewerkerReviews : klantReviews).map((review, i) => (
+              <RevealSection key={`${reviewTab}-${i}`} delay={i * 120}>
                 <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col shadow-sm">
                   <div className="flex items-center justify-between mb-4 sm:mb-5">
                     <div className="flex gap-1">
