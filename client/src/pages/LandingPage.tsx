@@ -29,7 +29,7 @@ import blogTeam from "../assets/images/blog-team.jpg";
 import blogHotel from "../assets/images/blog-hotel.jpg";
 import dienstChefPng from "@assets/Chef_1771833440047.png";
 import dienstHoreca from "@assets/Horecamedewerker_1771836004844.png";
-import dienstFrontoffice from "../assets/images/dienst-frontoffice.jpg";
+import dienstFrontoffice from "@assets/ChatGPT_Image_23_feb_2026,_10_19_13_1771838461343.png";
 import dienstHousekeeping from "../assets/images/dienst-housekeeping.jpg";
 
 function useScrollReveal() {
@@ -1134,6 +1134,8 @@ export default function LandingPage() {
             accent: "from-cyan-400 via-blue-400 to-indigo-400",
             glowColor: "rgba(96,165,250,0.35)",
             ringColor: "border-blue-400/30",
+            transparentBg: true,
+            alt: "Professionele front-office medewerker van EXTRA in donker blazer",
           },
           {
             id: "housekeeping",
