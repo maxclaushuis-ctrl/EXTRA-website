@@ -258,6 +258,68 @@ const COPY = {
 
 const NON_EU_DISCLAIMER_EN = "Because of Dutch labour law and work permit regulations, we need a few extra questions. We treat every application equally, but we must check if working in the Netherlands is legally possible.";
 
+type CopyType = typeof COPY.NL;
+
+function ProgressBarComponent({ stepNumber, t }: { stepNumber: number; t: CopyType }) {
+  const steps = [t.progressStep1, t.progressStep2, t.progressStep3];
+  return (
+    <div className="flex items-center justify-center gap-0 mb-8 sm:mb-12 max-w-md mx-auto">
+      {steps.map((label, i) => {
+        const num = i + 1;
+        const isActive = stepNumber === num;
+        const isDone = stepNumber > num;
+        return (
+          <div key={i} className="flex items-center flex-1">
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${isDone ? "bg-green-500 text-white" : isActive ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30" : "bg-gray-200 text-gray-500"}`}>
+                {isDone ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : num}
+              </div>
+              <span className={`text-[10px] sm:text-xs font-semibold mt-1.5 ${isActive ? "text-purple-600" : isDone ? "text-green-600" : "text-gray-400"}`}>{label}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <div className={`h-0.5 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-300 ${isDone ? "bg-green-400" : "bg-gray-200"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function InputFieldComponent({ label, value, onChange, type = "text", required = false, placeholder = "", error }: {
+  label: string; value: string; onChange: (val: string) => void; type?: string; required?: boolean; placeholder?: string; error?: string;
+}) {
+  return (
+    <div>
+      <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`h-12 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 ${error ? "border-red-400 focus:border-red-500" : ""}`}
+      />
+      {error && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {error}</p>}
+    </div>
+  );
+}
+
+function WhyCardComponent({ text, whyLabel }: { text: string; whyLabel: string }) {
+  return (
+    <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 sm:p-5">
+      <div className="flex items-start gap-2.5">
+        <Info className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-purple-700 mb-1">{whyLabel}</p>
+          <p className="text-sm text-purple-600/80 leading-relaxed">{text}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Aanmelden() {
   const [step, setStep] = useState<WizardStep>("basics");
   const [flow, setFlow] = useState<FlowType>("NL");
@@ -479,64 +541,6 @@ export default function Aanmelden() {
     }
   }
 
-  function ProgressBar() {
-    const steps = [t.progressStep1, t.progressStep2, t.progressStep3];
-    return (
-      <div className="flex items-center justify-center gap-0 mb-8 sm:mb-12 max-w-md mx-auto">
-        {steps.map((label, i) => {
-          const num = i + 1;
-          const isActive = stepNumber === num;
-          const isDone = stepNumber > num;
-          return (
-            <div key={i} className="flex items-center flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${isDone ? "bg-green-500 text-white" : isActive ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30" : "bg-gray-200 text-gray-500"}`}>
-                  {isDone ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : num}
-                </div>
-                <span className={`text-[10px] sm:text-xs font-semibold mt-1.5 ${isActive ? "text-purple-600" : isDone ? "text-green-600" : "text-gray-400"}`}>{label}</span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className={`h-0.5 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-300 ${isDone ? "bg-green-400" : "bg-gray-200"}`} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  function InputField({ label, field, type = "text", required = false, placeholder = "" }: { label: string; field: string; type?: string; required?: boolean; placeholder?: string }) {
-    return (
-      <div>
-        <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">
-          {label} {required && <span className="text-red-500">*</span>}
-        </Label>
-        <Input
-          type={type}
-          value={(formData as any)[field]}
-          onChange={(e) => updateField(field, e.target.value)}
-          placeholder={placeholder}
-          className={`h-12 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 ${errors[field] ? "border-red-400 focus:border-red-500" : ""}`}
-        />
-        {errors[field] && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors[field]}</p>}
-      </div>
-    );
-  }
-
-  function WhyCard({ text }: { text: string }) {
-    return (
-      <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 sm:p-5">
-        <div className="flex items-start gap-2.5">
-          <Info className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-purple-700 mb-1">{t.whyWeAsk}</p>
-            <p className="text-sm text-purple-600/80 leading-relaxed">{text}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-gray-50" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -559,7 +563,7 @@ export default function Aanmelden() {
         </header>
 
         <main className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-24">
-          {step !== "success" && step !== "rejected" && <ProgressBar />}
+          {step !== "success" && step !== "rejected" && <ProgressBarComponent stepNumber={stepNumber} t={t} />}
 
           {step === "basics" && (
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 lg:p-12">
@@ -573,15 +577,15 @@ export default function Aanmelden() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <InputField label={t.firstName} field="firstName" required />
-                <InputField label={t.lastName} field="lastName" required />
-                <InputField label={t.birthDate} field="birthDate" type="date" required />
-                <InputField label={t.phone} field="phone" type="tel" required placeholder="+31 6 12345678" />
+                <InputFieldComponent label={t.firstName} value={formData.firstName} onChange={(v) => updateField("firstName", v)} required error={errors.firstName} />
+                <InputFieldComponent label={t.lastName} value={formData.lastName} onChange={(v) => updateField("lastName", v)} required error={errors.lastName} />
+                <InputFieldComponent label={t.birthDate} value={formData.birthDate} onChange={(v) => updateField("birthDate", v)} type="date" required error={errors.birthDate} />
+                <InputFieldComponent label={t.phone} value={formData.phone} onChange={(v) => updateField("phone", v)} type="tel" required placeholder="+31 6 12345678" error={errors.phone} />
                 <div className="sm:col-span-2">
-                  <InputField label={t.email} field="email" type="email" required placeholder="jouw@email.nl" />
+                  <InputFieldComponent label={t.email} value={formData.email} onChange={(v) => updateField("email", v)} type="email" required placeholder="jouw@email.nl" error={errors.email} />
                 </div>
-                <InputField label={t.city} field="city" placeholder="Amsterdam" />
-                <InputField label={t.postcode} field="postcode" placeholder="1012 AB" />
+                <InputFieldComponent label={t.city} value={formData.city} onChange={(v) => updateField("city", v)} placeholder="Amsterdam" error={errors.city} />
+                <InputFieldComponent label={t.postcode} value={formData.postcode} onChange={(v) => updateField("postcode", v)} placeholder="1012 AB" error={errors.postcode} />
 
                 <div>
                   <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">
@@ -716,8 +720,8 @@ export default function Aanmelden() {
               </div>
 
               <div className="space-y-4">
-                <WhyCard text={t.whyLanguage} />
-                <WhyCard text={t.whyExperience} />
+                <WhyCardComponent text={t.whyLanguage} whyLabel={t.whyWeAsk} />
+                <WhyCardComponent text={t.whyExperience} whyLabel={t.whyWeAsk} />
               </div>
             </div>
           )}
