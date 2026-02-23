@@ -17,6 +17,7 @@ import LandingPage from "@/pages/LandingPage";
 import PersoneelGezocht from "@/pages/PersoneelGezocht";
 import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
 import Aanmelden from "@/pages/Aanmelden";
+import NieuwsPage from "@/pages/NieuwsPage";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -97,6 +98,8 @@ function Router() {
         <Route path="/personeel-gezocht" component={PersoneelGezocht} />
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
         <Route path="/aanmelden" component={Aanmelden} />
+        <Route path="/nieuws" component={NieuwsPage} />
+        <Route path="/nieuws/:slug" component={NieuwsPage} />
         <Route path="/dashboard-mockup">
           {() => <ProtectedRoute component={DashboardMockup} adminOnly={true} />}
         </Route>

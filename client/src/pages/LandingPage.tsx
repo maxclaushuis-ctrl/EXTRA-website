@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Link } from "wouter";
 import {
   Users, Trophy, Gift, Star, ChevronDown, ChevronUp,
   TrendingUp, Shield, Clock,
@@ -330,6 +331,18 @@ function NewsSection() {
             ))}
           </div>
         </div>
+
+        <RevealSection delay={300}>
+          <div className="flex justify-center mt-10 sm:mt-14">
+            <Link
+              href="/nieuws"
+              className="group inline-flex items-center gap-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold text-base px-8 py-4 rounded-full shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105"
+            >
+              Lees EXTRA
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </RevealSection>
       </div>
     </section>
   );

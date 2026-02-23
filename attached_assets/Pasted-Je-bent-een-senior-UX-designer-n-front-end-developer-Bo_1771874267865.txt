@@ -1,0 +1,33 @@
+Je bent een senior UX-designer én front-end developer.
+Bouw een volledige pagina voor nieuws & blogposts in dezelfde huisstijl als de huidige EXTRA-website.
+Doel van de pagina
+Overzichtspagina voor alle nieuwsberichten en blogs.
+Stijl en opbouw sluiten aan bij de huidige sectie “Laatste nieuws uit de branche” (zie meegeleverde screenshot).
+Hero / header
+H1: “Laatste nieuws uit de branche”
+Subtitel: korte zin zoals in het voorbeeld: “Tips, verhalen en trends uit de horeca- en hotelwereld. Ontdek wat er speelt.”
+Plaats een accentstreep onder één woord in de titel (zoals bij EXTRA elders op de site) in onze oranje gradient.
+Grid met blogkaarten
+Gebruik dezelfde kaartstijl als in de screenshot: grote afbeelding, afgeronde hoeken, zachte shadow, lichte overlay onderin.
+Toon per kaart:
+Categorie-label (bijv. Hospitality, Events & catering, Horeca, Housekeeping).
+Titel van het artikel (2 regels, bold).
+Korte teaser/intro (max. 2–3 regels).
+Datum onderaan.
+Maak de hele kaart klikbaar (niet alleen de tekst) en laat deze linken naar de detailpagina van het artikel (bijv. /nieuws/slug-van-het-bericht).
+Hover-state op desktop: lichte scale-up, extra glow en subtiele parallax op de afbeelding.
+Layout:
+Desktop: 3 kaarten per rij.
+Tablet: 2 per rij.
+Mobiel: 1 per rij, full-width.
+Interactiviteit
+Gebruik smooth hover- en focus-states.
+Zorg dat cards ook via toetsenbord te focussen zijn (accessibility).
+CTA-knop “Lees EXTRA”
+Onder de eerste rij of onder het grid komt een primaire CTA-knop: “Lees EXTRA”.
+Deze knop linkt naar de volledige nieuws-/blogoverzichtspagina (bijv. /nieuws) of naar een paginatie/“alle berichten” sectie op dezelfde pagina.
+Stijl: zelfde button-stijl als andere primaire knoppen op de site (rond, gradient, icon-pijltje naar rechts).
+Algemeen
+Gebruik dezelfde kleuren, typografie, X-patronen op de achtergrond en glow-effects als de rest van de website.
+Teksten altijd met je/jij/jouw in plaats van “u”.
+Pagina moet volledig responsive zijn en naadloos aansluiten bij de rest van de EXTRA-site.
