@@ -1473,15 +1473,16 @@ export default function LandingPage() {
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Wat anderen zeggen
               </h2>
-              <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className={`w-5 h-5 sm:w-6 sm:h-6 ${j < 5 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                  ))}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 mt-4 sm:mt-6">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} className={`w-4 h-4 sm:w-6 sm:h-6 ${j < 5 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                    ))}
+                  </div>
+                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">4,8</span>
                 </div>
-                <span className="text-lg sm:text-xl font-bold text-gray-900 ml-1">4,8</span>
-                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit</span>
-                <span className="text-sm sm:text-base font-semibold text-gray-700">232 Google reviews</span>
+                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">232 Google reviews</span></span>
               </div>
             </div>
           </RevealSection>
