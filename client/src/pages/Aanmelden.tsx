@@ -835,29 +835,15 @@ export default function Aanmelden() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">{t.scheduleTitle}</h3>
                   <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.scheduleDesc}</p>
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">{t.preferredDate}</Label>
-                      <Input
-                        type="date"
-                        value={formData.preferredDate}
-                        onChange={(e) => updateField("preferredDate", e.target.value)}
-                        min={new Date().toISOString().split("T")[0]}
-                        className="h-12 rounded-xl border-gray-200"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">{t.preferredTime}</Label>
-                      <Select value={formData.preferredTime} onValueChange={(v) => updateField("preferredTime", v)}>
-                        <SelectTrigger className="h-12 rounded-xl border-gray-200">
-                          <SelectValue placeholder={lang === "NL" ? "Kies tijdslot" : "Choose time slot"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="morning">{t.morning}</SelectItem>
-                          <SelectItem value="afternoon">{t.afternoon}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: "400px" }}>
+                    <iframe
+                      src={`https://calendly.com/max-_zs/30min?hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=7c3aed${formData.firstName ? `&name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}` : ''}${formData.email ? `&email=${encodeURIComponent(formData.email)}` : ''}`}
+                      width="100%"
+                      height="500"
+                      frameBorder="0"
+                      title={lang === "NL" ? "Plan je gesprek" : "Schedule your interview"}
+                      className="rounded-xl"
+                    />
                   </div>
                 </div>
               </div>
