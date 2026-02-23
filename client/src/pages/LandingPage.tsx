@@ -27,7 +27,7 @@ import blogCatering from "../assets/images/blog-catering.jpg";
 import blogBarista from "../assets/images/blog-barista.jpg";
 import blogTeam from "../assets/images/blog-team.jpg";
 import blogHotel from "../assets/images/blog-hotel.jpg";
-import dienstChef from "../assets/images/dienst-chef.jpg";
+import dienstChefPng from "@assets/ChatGPT_Image_23_feb_2026,_08_42_18_1771832560317.png";
 import dienstHoreca from "../assets/images/dienst-horeca.jpg";
 import dienstFrontoffice from "../assets/images/dienst-frontoffice.jpg";
 import dienstHousekeeping from "../assets/images/dienst-housekeeping.jpg";
@@ -376,6 +376,8 @@ type DienstItem = {
   accent: string;
   glowColor: string;
   ringColor: string;
+  transparentBg?: boolean;
+  alt?: string;
 };
 
 function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
@@ -460,25 +462,33 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
               </a>
             </div>
 
-            <div className="relative flex items-end justify-center overflow-hidden">
+            <div className="relative flex items-end justify-center overflow-visible">
               <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full blur-[80px] transition-colors duration-700"
+                className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[320px] h-[320px] rounded-full blur-[90px] transition-colors duration-700"
                 style={{ backgroundColor: d.glowColor }}
               />
-              {diensten.map((item, i) => (
-                <img
-                  key={item.id}
-                  src={item.image}
-                  alt={item.title}
-                  className={`absolute bottom-0 w-full h-full object-cover object-top transition-all duration-700 ${
-                    i === active ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
-                  }`}
-                  style={{
-                    maskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
-                    WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
-                  }}
-                />
-              ))}
+              {diensten.map((item, i) => {
+                const isTransparent = item.transparentBg;
+                return (
+                  <img
+                    key={item.id}
+                    src={item.image}
+                    alt={item.alt || item.title}
+                    className={`absolute transition-all duration-700 ${
+                      i === active ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+                    } ${isTransparent
+                      ? "bottom-[-20px] right-0 w-[90%] h-[110%] object-contain object-bottom drop-shadow-2xl dienst-card-active"
+                      : "bottom-0 w-full h-full object-cover object-top"
+                    }`}
+                    style={isTransparent ? {
+                      filter: "drop-shadow(0 0 40px rgba(139,92,246,0.3))",
+                    } : {
+                      maskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
+                      WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
 
@@ -530,14 +540,26 @@ function DienstenMobiel({ diensten }: { diensten: DienstItem[] }) {
                   style={{ boxShadow: `inset 0 0 60px 10px ${d.glowColor.replace("0.35", "0.15")}` }}
                 />
                 <div className="relative z-10">
-                  <div className="relative h-56 overflow-hidden">
-                    <img
-                      src={d.image}
-                      alt={d.title}
-                      className="w-full h-full object-cover object-top"
-                    />
+                  <div className={`relative ${d.transparentBg ? "h-64 flex items-end justify-center" : "h-56"} overflow-hidden`}>
+                    {d.transparentBg ? (
+                      <>
+                        <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] rounded-full blur-[60px]" style={{ backgroundColor: d.glowColor }} />
+                        <img
+                          src={d.image}
+                          alt={d.alt || d.title}
+                          className="relative z-10 max-w-[75%] max-h-[95%] object-contain object-bottom drop-shadow-2xl"
+                          style={{ filter: "drop-shadow(0 0 30px rgba(139,92,246,0.25))" }}
+                        />
+                      </>
+                    ) : (
+                      <img
+                        src={d.image}
+                        alt={d.alt || d.title}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-purple-950 via-purple-950/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4">
+                    <div className="absolute bottom-4 left-4 z-20">
                       <div className="inline-flex items-center gap-2 text-purple-200 text-xs font-bold bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
                         <d.icon className="w-3.5 h-3.5" />
                         {d.label}
@@ -1063,10 +1085,12 @@ export default function LandingPage() {
             subtitle: "Direct inzetbaar voor jouw keuken.",
             usps: ["Geselecteerd op ervaring & representativiteit", "Binnen 24 uur geleverd"],
             cta: "Chef aanvragen",
-            image: dienstChef,
+            image: dienstChefPng,
             accent: "from-orange-400 via-amber-400 to-yellow-300",
             glowColor: "rgba(251,146,60,0.35)",
             ringColor: "border-orange-400/30",
+            transparentBg: true,
+            alt: "Lachende chef van EXTRA in witte koksjas en donker schort",
           },
           {
             id: "horeca",

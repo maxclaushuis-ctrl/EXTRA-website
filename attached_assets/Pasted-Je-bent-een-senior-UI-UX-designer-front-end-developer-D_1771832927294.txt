@@ -1,0 +1,40 @@
+Je bent een senior UI/UX designer & front-end developer.
+De diensten-sectie “Welke EXTRA’s heb je nodig?” en de kaarten/sliders zijn al gebouwd.
+De opdracht nu gaat alleen over de Chef-kaart.
+Opdracht
+Vervang de huidige afbeelding in de Chef-kaart door de aangeleverde chef-PNG zonder achtergrond (portret van een lachende chef met witte jas en donker schort).
+Gebruik deze chef als hero-visual binnen de kaart, speels en modern, maar passend bij de rest van de EXTRA-stijl (paars, glow, zachte gradients, 2026-look).
+Layout & stijl
+Desktop
+Plaats de chef in de rechterhelft van de kaart.
+Laat hem licht overlappen met de onder- of rechterrand van de kaart (mag net “uit het kader” komen) zodat het wat dynamischer oogt.
+Voeg achter de chef een subtiele, ronde glow of zachte gradient toe (paars → roze/oranje), zodat hij zich losmaakt van de achtergrond.
+Zorg dat:
+Hoofd en schouders volledig in beeld zijn.
+Tekst in de linkerhelft altijd goed leesbaar blijft.
+De chef niet over belangrijke tekst/CTA valt.
+Mobiel
+Chef moet zowel op mobile als desktop goed uitkomen.
+Op mobiel:
+Chef centraal en duidelijk zichtbaar plaatsen, bij voorkeur boven of onder de tekst in de kaart.
+Max-width zodat hij niet tegen de randen wordt platgedrukt.
+Genoeg witruimte/paarsruimte rondom voor adem.
+De verhouding tekst vs. beeld moet kloppen: eerst duidelijk wat de dienst is, dan de chef ter versterking.
+Technische details
+Gebruik de aangeleverde chef-PNG met transparante achtergrond.
+Optimaliseer de asset:
+Exporteer/desnoods converteren naar een moderne web-vriendelijke variant (bijv. WebP + 2x retina size) zonder zichtbare kwaliteitsverlies.
+Voeg een nette alt-tekst toe, bijvoorbeeld:
+alt="Lachende chef van EXTRA in witte koksjas en donker schort"
+Zorg dat de chef-afbeelding:
+Niet vervormt (gebruik object-fit / juiste aspect ratio).
+Netjes schaalt per breakpoints (desktop, tablet, mobiel).
+Interactie (optioneel, maar gewenst)
+Bij hover/actieve staat van de Chef-kaart:
+Een lichte parallax/float in de chef-afbeelding (paar pixels omhoog/omlaag).
+Een subtiele glow/brightness-animatie achter hem.
+Animaties moeten smooth en light-weight zijn.
+Belangrijk
+Verander niets aan de chef zelf: pose, kleuren, kleding en uitstraling blijven exact zoals in het aangeleverde PNG-beeld.
+De rest van de kaart (copy, CTA, icon, bullets) blijft zoals eerder door ons is aangeleverd.
+Zorg dat het geheel er anno 2026 modern en premium uitziet, in lijn met de huidige EXTRA-website.
