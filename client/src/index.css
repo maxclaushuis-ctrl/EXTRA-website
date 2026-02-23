@@ -60,6 +60,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    cursor: url('/cursors/x-cursor.svg') 16 16, crosshair;
   }
   
   body {
@@ -68,6 +69,16 @@
 
   * {
     @apply border-border;
+  }
+
+  a, button, [role="button"], label[for], select,
+  input[type="submit"], input[type="button"], input[type="reset"],
+  .cursor-pointer, [onclick] {
+    cursor: url('/cursors/x-cursor-pointer.svg') 16 16, pointer !important;
+  }
+
+  input, textarea, [contenteditable] {
+    cursor: text !important;
   }
   
   h1, h2, h3, h4, h5, h6 {
