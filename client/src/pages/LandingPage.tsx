@@ -1155,7 +1155,7 @@ export default function LandingPage() {
             ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Lachende housekeeping medewerker van EXTRA met handdoeken",
-            imgStyle: "bottom-[-70px] right-[-50px] h-[135%]",
+            imgStyle: "bottom-[-80px] right-[-40px] h-[155%]",
           },
         ];
         return (
