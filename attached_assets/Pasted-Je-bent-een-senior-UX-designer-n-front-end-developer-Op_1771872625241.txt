@@ -1,0 +1,46 @@
+Je bent een senior UX-designer én front-end developer.
+Optimaliseer de EXTRAATJE-sectie van de website volgens onderstaande instructies. Houd je strikt aan de huidige stijl: modern, speels, dynamisch en volledig in onze EXTRA-branding (kleuren, glow-gradients, ronde hoeken, subtiele animaties). Gebruik onze huidige visuele opbouw als basis.
+🔧 WIJZIGINGEN DIE JE MOET DOORVOEREN:
+1. Verwijder de huidige 3-stappen blokken (‘Werk & verdien punten’, ‘Klim in status’, ‘Claim je rewards’).
+Dit blok moet volledig verdwijnen – de nieuwe sectie moet visueler, dynamischer en meer storytelling uitstralen.
+2. Plaats de mockup-telefoon hoger in de sectie.
+Het scherm moet prominenter in beeld komen en fungeren als het centrale visuele element.
+3. Voeg dynamische push-meldingen toe in het telefoonscherm.
+De notificaties moeten verschijnen alsof het een echte app is. Wissel ze automatisch af door kleine fade/slide animaties.
+Gebruik letterlijk deze voorbeelden:
+“Je hebt een challenge behaald 🚀”
++500 EXTRA punten
+“Gefeliciteerd met je verjaardag 🎉”
++100 EXTRA punten
+“Je hebt een 5-sterren review gehaald ⭐️”
++50 EXTRA punten
+Ontwerp de notificaties in EXTRA-stijl: afgeronde blokken, helder contrast, kleine drop shadow, speelse emoji’s, en subtiele glow-accenten.
+4. Maak de gehele sectie UX-matig visueler en aantrekkelijker.
+Denk aan:
+subtiele floating elementen
+lichte gradient-flares
+kleine hover-animaties
+micro-interacties
+5. Voeg een bewegende beloningen-galerij toe (‘EXTRA beloningen’).
+Onder de telefoon komt een horizontale scroll-carousel met producten en rewards.
+Gebruik onderstaande visuals als assets (transparante PNG's):
+JBL speaker
+Pathé bon
+EXTRA padelsets
+Dinerbon
+Apple AirTags
+Museumkaart
+AirPods Pro
+GiG Hard Seltzer
+Zorg dat:
+de galerij automatisch scrolt (marquee effect, smooth & langzaam)
+elk item een klein label bevat zoals “5000 punten”, “10000 punten”, “2500 punten” etc. (gebruik placeholder-waarden)
+de stijl volledig in de glow/gradient uitstraling past
+6. Creëer een duidelijke UX-flow in de sectie.
+telefoon centraal → pushmeldingen → beloningen in scrolling gallery
+alles moet logisch op elkaar aansluiten en “gevoel van gamification” uitstralen
+7. Responsive eisen:
+op mobiel: telefoon centreren en galerij eronder
+op desktop: telefoon links, galerij rechts óf alles gecentreerd met ruime spacing
+8. Gebruik consequent "je", “jij” en “jouw” (geen "u").
+Doel: De bezoeker moet in één oogopslag begrijpen dat EXTRAATJE een gamified beloningssysteem is waarbij je punten verdient, stijgt in status en mooie rewards kunt claimen.
