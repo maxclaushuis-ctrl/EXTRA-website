@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -327,8 +327,19 @@ export default function Aanmelden() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvUploaded, setCvUploaded] = useState(false);
+  const [calendlyScheduled, setCalendlyScheduled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    function handleCalendlyEvent(e: MessageEvent) {
+      if (e.data?.event === "calendly.event_scheduled") {
+        setCalendlyScheduled(true);
+      }
+    }
+    window.addEventListener("message", handleCalendlyEvent);
+    return () => window.removeEventListener("message", handleCalendlyEvent);
+  }, []);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -495,7 +506,8 @@ export default function Aanmelden() {
     setCvUploaded(true);
   }
 
-  async function handleSubmit(skipCv = false) {
+  async function handleSubmit() {
+    if (!cvUploaded || !calendlyScheduled) return;
     setIsSubmitting(true);
     try {
       const payload = {
@@ -514,15 +526,15 @@ export default function Aanmelden() {
         functionType: formData.preferredFunction,
         horecaExperience: EXPERIENCE_MAP[formData.experience] || formData.experience,
         needsTwv: flow === "NON_EU" && formData.twvNeeded === "yes",
-        interviewDate: formData.preferredDate || null,
-        interviewTime: formData.preferredTime === "morning" ? "10:00" : formData.preferredTime === "afternoon" ? "14:00" : null,
+        interviewDate: null,
+        interviewTime: null,
         sourceChannel: "Website aanmeldflow",
-        notes: skipCv ? (lang === "NL" ? "CV nog niet geüpload" : "CV not yet uploaded") : (cvFile ? `CV: ${cvFile.name}` : ""),
+        notes: cvFile ? `CV: ${cvFile.name} | Gesprek ingepland via Calendly` : "Gesprek ingepland via Calendly",
       };
 
       await apiRequest("POST", "/api/aanmelden", payload);
 
-      if (cvFile && !skipCv) {
+      if (cvFile) {
         const fd = new FormData();
         fd.append("cv", cvFile);
         fd.append("email", formData.email);
@@ -798,67 +810,122 @@ export default function Aanmelden() {
           )}
 
           {step === "cv_schedule" && (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 lg:p-12">
-              <div className="flex items-center gap-3 mb-6 sm:mb-8">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white" />
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 lg:p-12">
+                <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{t.step3Title}</h2>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{t.step3Title}</h2>
-              </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{t.uploadCv}</h3>
-                  <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.uploadCvDesc}</p>
+                {/* Checklist */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-8 p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className={`flex items-center gap-2.5 text-sm font-semibold ${cvUploaded ? "text-green-600" : "text-gray-400"}`}>
+                    {cvUploaded ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
+                    {lang === "NL" ? "CV geüpload" : "CV uploaded"}
+                  </div>
+                  <div className={`flex items-center gap-2.5 text-sm font-semibold ${calendlyScheduled ? "text-green-600" : "text-gray-400"}`}>
+                    {calendlyScheduled ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
+                    {lang === "NL" ? "Gesprek ingepland" : "Interview scheduled"}
+                  </div>
+                </div>
 
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:border-purple-400 hover:bg-purple-50/50 ${cvUploaded ? "border-green-400 bg-green-50/50" : "border-gray-300"}`}
-                  >
-                    <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleCvUpload} className="hidden" />
-                    {cvUploaded && cvFile ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <CheckCircle2 className="w-10 h-10 text-green-500" />
-                        <p className="text-sm font-semibold text-green-700">{cvFile.name}</p>
-                        <p className="text-xs text-green-600">{(cvFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">
+                      {t.uploadCv} <span className="text-red-500">*</span>
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.uploadCvDesc}</p>
+
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:border-purple-400 hover:bg-purple-50/50 ${cvUploaded ? "border-green-400 bg-green-50/50" : "border-red-200 bg-red-50/30"}`}
+                    >
+                      <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleCvUpload} className="hidden" />
+                      {cvUploaded && cvFile ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <CheckCircle2 className="w-10 h-10 text-green-500" />
+                          <p className="text-sm font-semibold text-green-700">{cvFile.name}</p>
+                          <p className="text-xs text-green-600">{(cvFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="w-10 h-10 text-gray-400" />
+                          <p className="text-sm font-semibold text-gray-700">{t.uploadBtn}</p>
+                          <p className="text-xs text-gray-400">{t.acceptedFormats}</p>
+                        </div>
+                      )}
+                    </div>
+                    {!cvUploaded && (
+                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {lang === "NL" ? "Je cv is verplicht om je aanmelding te versturen" : "Your CV is required to submit your application"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">
+                      {t.scheduleTitle} <span className="text-red-500">*</span>
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.scheduleDesc}</p>
+                    {calendlyScheduled ? (
+                      <div className="rounded-xl border-2 border-green-400 bg-green-50/50 p-8 text-center">
+                        <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                        <p className="text-lg font-bold text-green-700 mb-1">
+                          {lang === "NL" ? "Gesprek ingepland!" : "Interview scheduled!"}
+                        </p>
+                        <p className="text-sm text-green-600">
+                          {lang === "NL" ? "Je ontvangt een bevestiging per e-mail van Calendly." : "You'll receive a confirmation email from Calendly."}
+                        </p>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Upload className="w-10 h-10 text-gray-400" />
-                        <p className="text-sm font-semibold text-gray-700">{t.uploadBtn}</p>
-                        <p className="text-xs text-gray-400">{t.acceptedFormats}</p>
+                      <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: "400px" }}>
+                        <iframe
+                          src={`https://calendly.com/max-_zs/30min?hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=7c3aed${formData.firstName ? `&name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}` : ''}${formData.email ? `&email=${encodeURIComponent(formData.email)}` : ''}`}
+                          width="100%"
+                          height="500"
+                          frameBorder="0"
+                          title={lang === "NL" ? "Plan je gesprek" : "Schedule your interview"}
+                          className="rounded-xl"
+                        />
                       </div>
+                    )}
+                    {!calendlyScheduled && (
+                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {lang === "NL" ? "Plan eerst je gesprek via de kalender hierboven" : "Please schedule your interview using the calendar above first"}
+                      </p>
                     )}
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{t.scheduleTitle}</h3>
-                  <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.scheduleDesc}</p>
-                  <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: "400px" }}>
-                    <iframe
-                      src={`https://calendly.com/max-_zs/30min?hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=7c3aed${formData.firstName ? `&name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}` : ''}${formData.email ? `&email=${encodeURIComponent(formData.email)}` : ''}`}
-                      width="100%"
-                      height="500"
-                      frameBorder="0"
-                      title={lang === "NL" ? "Plan je gesprek" : "Schedule your interview"}
-                      className="rounded-xl"
-                    />
-                  </div>
-                </div>
               </div>
 
-              <div className="mt-8 flex flex-col sm:flex-row justify-between gap-3">
-                <Button onClick={() => setStep(flow === "NON_EU" ? "twv" : "skills")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300">
+              {/* Submit bar */}
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <Button onClick={() => setStep(flow === "NON_EU" ? "twv" : "skills")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300 w-full sm:w-auto">
                   <ChevronLeft className="w-5 h-5 mr-1" /> {t.back}
                 </Button>
-                <div className="flex gap-3">
-                  {!cvUploaded && (
-                    <Button onClick={() => handleSubmit(true)} variant="outline" disabled={isSubmitting} className="font-bold px-6 py-5 rounded-xl text-base border-gray-300">
-                      {t.laterBtn}
-                    </Button>
+
+                <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
+                  {(!cvUploaded || !calendlyScheduled) && (
+                    <p className="text-xs text-gray-500 text-center sm:text-right">
+                      {lang === "NL"
+                        ? `Rond ${!cvUploaded && !calendlyScheduled ? "beide stappen" : !cvUploaded ? "het uploaden van je cv" : "het inplannen van je gesprek"} af om je aanmelding te versturen`
+                        : `Complete ${!cvUploaded && !calendlyScheduled ? "both steps" : !cvUploaded ? "uploading your CV" : "scheduling your interview"} to submit`
+                      }
+                    </p>
                   )}
-                  <Button onClick={() => handleSubmit(false)} disabled={isSubmitting} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-5 rounded-xl text-base shadow-lg shadow-purple-500/20">
+                  <Button
+                    onClick={() => handleSubmit()}
+                    disabled={isSubmitting || !cvUploaded || !calendlyScheduled}
+                    className={`font-bold px-8 py-5 rounded-xl text-base w-full sm:w-auto transition-all ${
+                      cvUploaded && calendlyScheduled
+                        ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
