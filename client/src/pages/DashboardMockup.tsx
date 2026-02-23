@@ -626,7 +626,7 @@ export default function DashboardMockup() {
                       <div>
                         <p className="text-xs text-gray-500">Totaal Gebruikers</p>
                         <p className="text-2xl font-bold mt-1">
-                          {statsLoading ? <Skeleton className="h-8 w-12" /> : totalUsers || 247}
+                          {statsLoading ? <Skeleton className="h-8 w-12" /> : 893}
                         </p>
                         <p className="text-xs text-gray-400">Geregistreerde medewerkers</p>
                       </div>
@@ -643,7 +643,7 @@ export default function DashboardMockup() {
                       <div>
                         <p className="text-xs text-gray-500">Actieve Gebruikers</p>
                         <p className="text-2xl font-bold mt-1">
-                          {usersLoading ? <Skeleton className="h-8 w-12" /> : activeUsers || 189}
+                          {usersLoading ? <Skeleton className="h-8 w-12" /> : 802}
                         </p>
                         <p className="text-xs text-gray-400">Minimaal 1 actie deze periode</p>
                       </div>
@@ -660,7 +660,7 @@ export default function DashboardMockup() {
                       <div>
                         <p className="text-xs text-gray-500">Uitgegeven Punten</p>
                         <p className="text-2xl font-bold mt-1">
-                          {statsLoading ? <Skeleton className="h-8 w-16" /> : totalPoints.toLocaleString() || '12.450'}
+                          {statsLoading ? <Skeleton className="h-8 w-16" /> : '371.638'}
                         </p>
                         <p className="text-xs text-gray-400">In geselecteerde periode</p>
                       </div>
