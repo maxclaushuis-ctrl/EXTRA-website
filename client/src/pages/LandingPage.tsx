@@ -378,6 +378,7 @@ type DienstItem = {
   ringColor: string;
   transparentBg?: boolean;
   alt?: string;
+  imgStyle?: string;
 };
 
 function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
@@ -481,7 +482,7 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
                       <img
                         src={item.image}
                         alt={item.alt || item.title}
-                        className="absolute bottom-[-60px] right-[-35px] h-[125%] object-contain object-bottom z-10"
+                        className={`absolute ${item.imgStyle || "bottom-[-60px] right-[-35px] h-[125%]"} object-contain object-bottom z-10`}
                         style={{
                           filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.3))",
                         }}
@@ -1106,6 +1107,7 @@ export default function LandingPage() {
             ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Lachende chef van EXTRA in witte koksjas en donker schort",
+            imgStyle: "bottom-[-60px] right-[-30px] h-[130%]",
           },
           {
             id: "horeca",
@@ -1121,6 +1123,7 @@ export default function LandingPage() {
             ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Lachende horecamedewerker van EXTRA in wit overhemd en donker schort",
+            imgStyle: "bottom-[-60px] right-[-30px] h-[130%]",
           },
           {
             id: "frontoffice",
@@ -1132,10 +1135,11 @@ export default function LandingPage() {
             cta: "Front-office aanvragen",
             image: dienstFrontoffice,
             accent: "from-cyan-400 via-blue-400 to-indigo-400",
-            glowColor: "rgba(96,165,250,0.35)",
-            ringColor: "border-blue-400/30",
+            glowColor: "rgba(147,130,240,0.35)",
+            ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Professionele front-office medewerker van EXTRA in donker blazer",
+            imgStyle: "bottom-[-60px] right-[-30px] h-[130%]",
           },
           {
             id: "housekeeping",
@@ -1151,6 +1155,7 @@ export default function LandingPage() {
             ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Lachende housekeeping medewerker van EXTRA met handdoeken",
+            imgStyle: "bottom-[-70px] right-[-50px] h-[135%]",
           },
         ];
         return (
