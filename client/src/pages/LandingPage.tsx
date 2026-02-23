@@ -477,14 +477,13 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
                         i === active ? "opacity-100 scale-100" : "opacity-0 scale-95"
                       }`}
                     >
-                      <div className="absolute bottom-[10%] right-[15%] w-[250px] h-[250px] rounded-full blur-[80px] bg-gradient-to-tr from-purple-600/40 via-pink-500/30 to-orange-400/20" />
-                      <div className="absolute bottom-[25%] right-[25%] w-[150px] h-[150px] rounded-full blur-[50px] bg-purple-400/25" />
+                      <div className="absolute bottom-[8%] right-[18%] w-[200px] h-[200px] rounded-full blur-[70px] bg-purple-500/20" />
                       <img
                         src={item.image}
                         alt={item.alt || item.title}
-                        className="absolute bottom-[-40px] right-[-20px] w-[95%] max-w-[420px] object-contain object-bottom z-10"
+                        className="absolute bottom-[-50px] right-[-30px] h-[115%] object-contain object-bottom z-10"
                         style={{
-                          filter: "drop-shadow(0 10px 50px rgba(139,92,246,0.4)) drop-shadow(0 0 20px rgba(168,85,247,0.2))",
+                          filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.3))",
                         }}
                       />
                     </div>
