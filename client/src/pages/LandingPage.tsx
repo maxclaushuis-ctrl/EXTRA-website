@@ -214,8 +214,11 @@ function NewsSection() {
   };
 
   return (
-    <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-gray-950">
-      <XPatternBg count={3} opacity={0.06} color="rgba(255,255,255,0.5)" />
+    <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#1a0a2e] via-[#170926] to-[#12071f]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_20%_80%,rgba(124,58,237,0.12),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_20%,rgba(99,102,241,0.08),transparent)]" />
+      <XPatternBg count={4} opacity={0.08} color="rgba(168,85,247,0.6)" />
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
         <RevealSection>
           <div className="mb-10 sm:mb-14">
@@ -1628,8 +1631,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-gray-950 text-gray-400 py-14 sm:py-20">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+      <footer className="relative text-gray-400 py-14 sm:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0518] via-[#0d0414] to-[#0a0310]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(124,58,237,0.08),transparent)]" />
+        <XPatternBg count={2} opacity={0.04} color="rgba(168,85,247,0.5)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-14">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center mb-4 sm:mb-5">
@@ -1668,7 +1674,7 @@ export default function LandingPage() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="border-t border-purple-900/30 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm">&copy; 2026 EXTRA Uitzendbureau. Alle rechten voorbehouden.</p>
             <div className="flex items-center gap-2">
               <span className="text-xs bg-purple-900/50 text-purple-300 px-3 py-1 rounded-full border border-purple-800/30">NEN 4400-1</span>
