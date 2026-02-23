@@ -723,10 +723,10 @@ export default function LandingPage() {
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "werk" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
                     {[
-                      { label: "Horeca", href: "/sollicitatieformulier", icon: UtensilsCrossed },
-                      { label: "Housekeeping", href: "/sollicitatieformulier", icon: Heart },
-                      { label: "Chefs", href: "/sollicitatieformulier", icon: Award },
-                      { label: "Front Office", href: "/sollicitatieformulier", icon: Handshake },
+                      { label: "Horeca", href: "/aanmelden", icon: UtensilsCrossed },
+                      { label: "Housekeeping", href: "/aanmelden", icon: Heart },
+                      { label: "Chefs", href: "/aanmelden", icon: Award },
+                      { label: "Front Office", href: "/aanmelden", icon: Handshake },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 flex items-center justify-center transition-colors">
@@ -826,7 +826,7 @@ export default function LandingPage() {
                 <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "werk" ? "max-h-60" : "max-h-0"}`}>
                   <div className="pl-16 pr-4 pb-2 space-y-0.5">
                     {["Horeca", "Housekeeping", "Chefs", "Front Office"].map((item) => (
-                      <a key={item} href="/sollicitatieformulier" className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item}</a>
+                      <a key={item} href="/aanmelden" className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item}</a>
                     ))}
                   </div>
                 </div>
@@ -941,7 +941,7 @@ export default function LandingPage() {
                 Ik zoek extra personeel
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="/sollicitatieformulier" className="group border-2 border-white/30 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+              <a href="/aanmelden" className="group border-2 border-white/30 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
                 Ik zoek extra werk
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
@@ -1016,7 +1016,7 @@ export default function LandingPage() {
             </RevealSection>
 
             <RevealSection delay={150}>
-              <a href="/sollicitatieformulier" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+              <a href="/aanmelden" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
                 <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
                 <div className="relative">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
@@ -1618,7 +1618,7 @@ export default function LandingPage() {
                 Vraag extra personeel aan
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="/sollicitatieformulier" className="group border-2 border-white/25 text-white font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
+              <a href="/aanmelden" className="group border-2 border-white/25 text-white font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
                 Ik zoek extra werk
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
@@ -1650,7 +1650,7 @@ export default function LandingPage() {
             <div>
               <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Werkzoekenden</h4>
               <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
-                <li><a href="/sollicitatieformulier" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
+                <li><a href="/aanmelden" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
                 <li><button onClick={() => scrollTo("rewards")} className="hover:text-purple-400 transition-colors">EXTRAATje Rewards</button></li>
                 <li><button onClick={() => scrollTo("diensten-extra")} className="hover:text-purple-400 transition-colors">Diensten</button></li>
               </ul>

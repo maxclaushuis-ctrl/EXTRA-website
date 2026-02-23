@@ -1,0 +1,280 @@
+
+Je bent een senior UX-designer + front-end developer.
+Bouw voor EXTRA (horeca-uitzendbureau) een nieuwe aanmeldflow voor kandidaten op de website.
+
+0. Algemene uitgangspunten
+	•	Doelgroep: jongeren en young professionals in de horeca (17+).
+	•	Tone of voice: informeel, “je/jij”, energiek maar duidelijk.
+	•	Huisstijl: huidige EXTRA website (paars, gradients, glow, ronde kaarten, knoppen zoals “Ik zoek extra werk” etc.).
+	•	Taal: interface standaard NL. Flow schakelt automatisch naar EN afhankelijk van nationaliteit.
+	•	De flow moet mobile-first zijn en ook op desktop strak uitlijnen.
+
+Plaats de flow op een nieuwe pagina /aanmelden en zorg dat alle “Ik zoek extra werk”-knoppen hier naartoe linken.
+
+⸻
+
+1. Stap 1 – Basisgegevens (voor iedereen hetzelfde)
+
+Maak een stap-voor-stap wizard (progressbar bovenin met 3–4 stappen).
+
+Step 1 – “Eerst wat basics”
+
+Velden (alles in één kaart):
+	1.	Voornaam (input, verplicht)
+	2.	Achternaam (input, verplicht)
+	3.	Geboortedatum (date-picker, verplicht)
+	•	Validatie: minimaal 17 jaar.
+	•	Bij <17: toon vriendelijke fout + blok door.
+	•	Foutmelding voorbeeld:
+	•	NL: “Je moet minimaal 17 jaar zijn om je bij EXTRA aan te melden.”
+	4.	Woonplaats (input)
+	5.	Postcode (input, optioneel maar fijn voor afstandscheck)
+	6.	Telefoonnummer (input, verplicht, internationaal formaat toegestaan)
+	7.	E-mailadres (input, verplicht, validatie op e-mailformat)
+	8.	Nationaliteit (dropdown, verplicht)
+	•	Dropdown met alle landen.
+	•	Gebruik een up-to-date lijst van landen en bepaal hieruit of het land in EU/EER of Zwitserland valt.
+	•	Regels:
+	•	Nationaliteit = Nederland → Flow NL
+	•	Nationaliteit = EU/EER of Zwitserland, maar niet NL → Flow EU
+	•	Nationaliteit = overige landen → Flow Buiten EU
+	•	Gebruik toolings / libraries die jaarlijks geüpdatet kunnen worden zodat EU/EER-indeling actueel blijft.
+	9.	Voorkeursfunctie (dropdown, verplicht):
+	•	“Horecamedewerker (bediening/bar)”
+	•	“Housekeeping”
+	•	“Front-office / receptie”
+	•	“Chef / keuken (kok, souschef, zelfstandig werkend kok)”
+
+CTA onderaan:
+	•	Primair: “Ga verder”
+
+Na submit:
+	•	Valideer alles inline met duidelijke fouten.
+	•	Sla data tijdelijk op (state) en bepaal welke flow wordt gestart: NL, EU, NON_EU.
+
+⸻
+
+2. Afstandscheck (voor iedereen)
+
+Na Step 1, maar vóór de echt inhoudelijke vragen:
+	•	Bereken op basis van postcode/woonplaats of de kandidaat binnen 50 km valt van:
+	•	Amsterdam
+	•	Den Haag / Scheveningen
+	•	Utrecht
+
+Je hoeft niet exact te berekenen; gebruik bijv. een eenvoudige geocoding / afstandsservice of laat het nu als pseudocode.
+	•	Als buiten straal: toon extra vraag (in taal van de flow):
+NL
+“We werken vooral in Amsterdam, Den Haag en Utrecht. Woon je wat verder weg, dan zijn diensten soms lastiger te combineren. Weet je zeker dat je je aanmelding wilt doorzetten?”
+
+	•	Knoppen:
+	•	“Ja, ik wil doorgaan” → ga door.
+	•	“Nee, ik stop mijn aanmelding” → bedankpagina + e-mail “fijn dat je het overwoog, je bent altijd later welkom”.
+EN (voor EU/Non-EU):
+“Most of our shifts are in Amsterdam, The Hague and Utrecht. If you live further away, travel can be challenging. Are you sure you want to continue your application?”
+
+⸻
+
+3. Flow-specifieke stappen & knock-out regels
+
+Maak per flow een eigen step-component met logica, maar gebruik dezelfde layout:
+	•	Linkerkant: vragen
+	•	Rechterkant (of boven mobiel): korte uitleg “Waarom we dit vragen” – juridisch correct, niet discriminerend.
+
+3.1 Flow NL (nationaliteit Nederland)
+
+Taal: Nederlands.
+
+Step 2 – Taal & ervaring
+
+Vragen:
+	1.	“Welke talen spreek je goed genoeg om gasten te helpen?” (multi-select checkboxes)
+	•	Nederlands
+	•	Engels
+	•	Anders, namelijk… (text)
+Regels:
+	•	Als geen NL en geen EN aangevinkt → afwijzen met vriendelijke boodschap.
+	2.	“Voor welke functie wil je solliciteren?” (herhaal dropdown uit step 1, maar toon ’m hier nogmaals voor bevestiging).
+	3.	“Hoeveel relevante werkervaring heb je in deze functie?”
+	•	Dropdown:
+	•	Geen ervaring
+	•	< 6 maanden
+	•	6–12 maanden
+	•	1–3 jaar
+	•	3+ jaar
+
+Knock-out regels NL:
+	•	Min. leeftijd 17 (reeds gecheckt).
+	•	Taal: kandidaat moet NL of EN goed spreken.
+
+Per functie:
+	•	Housekeeping → minimaal 3+ jaar ervaring.
+	•	Anders: vriendelijke afwijzing.
+	•	Horecamedewerker → minimaal 6–12 maanden (dus 6+ maanden).
+	•	Front-office → minimaal 1–3 jaar (min 1 jaar).
+	•	Chefs → minimaal 1–3 jaar (min 1 jaar).
+
+Als drempel niet gehaald → toon afwijspagina in NL + stuur e-mail (“Op basis van je antwoorden sluiten je ervaring en onze huidige opdrachten nog niet goed genoeg aan…”).
+
+Als drempel wél gehaald → ga naar Step 3 – CV + agenda (zie onder).
+
+⸻
+
+3.2 Flow EU (EU/EER + Zwitserland, niet NL)
+
+Taal: Engels.
+
+Step 2 – Language & experience
+
+Vragen:
+	1.	“What language do you speak most confidently at work?”
+	•	Dropdown: Dutch / English / Other (text).
+	2.	“Do you speak English well enough to help guests?” (Yes/No)
+	•	If No AND no Dutch → polite rejection.
+	3.	“Which role are you applying for?” (same options)
+	4.	“How many years of relevant experience do you have in this role?” (same buckets, but in EN).
+
+Experience thresholds EU (minima):
+	•	Housekeeping → 3+ years.
+	•	Horeca staff → 1+ year.
+	•	Front-office → 1+ year.
+	•	Chefs → 1+ year.
+
+Zelfde knock-out logica als NL, maar met Engelse copy.
+
+⸻
+
+3.3 Flow Buiten EU (NON_EU)
+
+Taal: Engels.
+
+Belangrijk: toon bovenaan kort tekstblok:
+
+“Because of Dutch labour law and work permit regulations, we need a few extra questions. We treat every application equally, but we must check if working in the Netherlands is legally possible.”
+
+Step 2 – Language & experience
+Zelfde vragen als in EU-flow (taal + ervaring) met dezelfde minima als bij EU-flow:
+	•	Housekeeping → 3+ years.
+	•	Horeca staff → 1+ year.
+	•	Front-office → niet mogelijk voor Non-EU (zie hieronder).
+	•	Chefs → 1+ year.
+
+Extra functie-regels Non-EU:
+	•	Horecamedewerker (bediening/bar) → momenteel geen plek voor kandidaten buiten EU → vriendelijk afwijzen direct na rolkeuze.
+	•	Front-office → eveneens niet mogelijk voor Non-EU → direct vriendelijke afwijzing.
+	•	Housekeeping en Chefs → toegestaan mits experience-drempels gehaald worden.
+
+Step 3 – TWV-vragen (alleen voor Non-EU)
+
+Voer op basis van nationaliteit aan de backend de check uit of de kandidaat normaal gesproken een TWV nodig heeft in NL (werkvergunning):
+	•	Gebruik hiervoor de huidige Nederlandse regels:
+	•	EU/EER + Zwitserland → geen TWV;
+	•	alle overige nationaliteiten → TWV doorgaans wel nodig.
+Voor deze flow gaan we ervan uit dat een TWV nodig kan zijn, dus stel extra vragen:
+
+	1.	“Do you need a work permit (TWV) to work in the Netherlands?”
+	•	Options: Yes / No / I don’t know.
+	•	Bij “I don’t know”: tooltip:
+“If you are not an EU/EEA or Swiss citizen, you usually need a TWV. Our team will check this with you in the interview.”
+	2.	Als antwoord = Yes → vraag:
+	•	“Do you already have a valid TWV for another employer in the Netherlands?” (Yes/No)
+	3.	Als “Yes” → extra vraag:
+	•	“Are you willing to stop that TWV if you start working via EXTRA?” (Yes/No)
+	•	If No → vriendelijke afwijzing (“We can only continue if your work permit allows you to work via EXTRA.”).
+	4.	Als “No TWV needed” of “Yes, and I’m willing to stop it” → kandidaat kan door.
+
+⸻
+
+4. Step 3 – CV upload + planning gesprek (voor iedereen die door de checks komt)
+
+Deze stap is in de voertaal van de flow (NL of EN).
+
+Layout
+	•	Linkerkant: korte tekst + bulletpoints wat EXTRA biedt.
+	•	Rechterkant: CV upload + daarna de agenda.
+
+4.1 CV upload
+
+Blok:
+
+NL:
+
+Titel: “Upload je cv”
+Tekst:
+
+“Voordat je een gesprek inplant, willen we je cv erbij. Zo kunnen we gericht meekijken welke opdrachten bij je passen.”
+
+Elementen:
+	•	File-upload: accepteer PDF, DOC, DOCX (max 10 MB).
+	•	Maak CV verplicht voordat de agenda verschijnt.
+	•	Als iemand op “later” klikt:
+	•	Sla de aanmelding als “incompleet” op.
+	•	Stuur automatische e-mail (in NL/EN) met link om cv later alsnog te uploaden en gesprek te boeken.
+
+EN: zelfde tekst, vertaald.
+
+4.2 Agenda integratie
+
+Na succesvolle CV-upload:
+	•	Toon embedded agenda (bijv. Cal.com / Calendly / eigen Apple agenda-integratie).
+	•	Gebruiker kiest:
+	•	Datum
+	•	Tijdslot
+	•	Na bevestigen:
+	•	Schrijf afspraak weg naar gekoppelde agenda (Apple calendar of alternatief).
+	•	Sla ook op in database met koppeling naar kandidaat.
+
+⸻
+
+5. Bevestigings- en afwijsflows
+
+5.1 Succes (na geplande afspraak)
+
+Toon bevestigingsscherm + stuur e-mail in juiste taal.
+
+NL:
+
+Titel: “Top, je gesprek staat ingepland!”
+Tekst:
+
+“Je ontvangt zo een bevestiging per mail met alle details. App ons gerust als je nog vragen hebt.”
+
+E-mail bevat: datum/tijd, locatie/online link, wat mee te nemen (ID, BSN later etc.).
+
+EN: zelfde strekking.
+
+(Optioneel: voeg WhatsApp-automation toe via een externe API; bouw alvast hooks / webhooks-punten in zodat dit later eenvoudig is aan te sluiten.)
+
+5.2 Afwijzing (knock-out momenten)
+
+Gebruik overal vriendelijke, niet-discriminerende teksten. Leg nadruk op:
+	•	aansluiting met huidige opdrachten
+	•	wettelijke regels (werkvergunning)
+	•	de optie om later opnieuw te proberen.
+
+Voorbeelden (NL):
+	•	Leeftijd:
+“Op dit moment kun je je vanaf 17 jaar bij EXTRA aanmelden. Zodra je 17 bent, ben je van harte welkom om het opnieuw te proberen.”
+	•	Te weinig ervaring:
+“Voor de opdrachten die we nu hebben, vragen onze klanten meer ervaring in [functie]. Dat wil niet zeggen dat je geen talent hebt, maar nu matcht het nog niet goed genoeg. Je kunt je later altijd opnieuw aanmelden.”
+	•	Geen NL/EN:
+“Bij bijna al onze opdrachten heb je Nederlands of Engels nodig om met gasten en collega’s te kunnen werken. Omdat je aangaf dat je deze talen nog niet voldoende spreekt, kunnen we je nu helaas niet verder helpen.”
+	•	Buiten EU + rol niet mogelijk (bediening/front-office):
+“Vanwege Nederlandse wetgeving rond werkvergunningen kunnen we voor deze functie op dit moment alleen kandidaten aannemen met een andere verblijfsstatus. Dat is geen beoordeling van jou als persoon, maar puur een juridische voorwaarde.”
+
+Engelse varianten idem.
+
+⸻
+
+6. UX-details & design
+	•	Multi-step wizard met duidelijke progressbar (“1/3 Persoonlijk”, “2/3 Skills”, “3/3 CV & gesprek”).
+	•	Grote paarse CTA-knoppen; disabled state bij incomplete velden.
+	•	Inline validatie met korte, duidelijke foutmeldingen.
+	•	Microcopy in EXTRA-stijl (luchtig, maar professioneel).
+	•	Gebruik overal “je/jij/jouw” in de NL-flow, nooit “u”.
+	•	Zorg dat alle tekst makkelijk aanpasbaar is (bijv. als constants / JSON copy file).
+
+⸻
+
+Einddoel:
+Na deze prompt moet je een werkende, visueel passende aanmeldflow opleveren op /aanmelden, met alle hierboven beschreven logica (NL / EU / Non-EU flows, nationaliteits-check, taal-check, ervaringseisen, TWV-vragen, CV upload en agenda-planning), volledig in de stijl van de huidige EXTRA-website.

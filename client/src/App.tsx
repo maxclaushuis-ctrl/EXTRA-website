@@ -16,6 +16,7 @@ import BrochureEvents from "@/pages/BrochureEvents";
 import LandingPage from "@/pages/LandingPage";
 import PersoneelGezocht from "@/pages/PersoneelGezocht";
 import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
+import Aanmelden from "@/pages/Aanmelden";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -95,6 +96,7 @@ function Router() {
         <Route path="/landing" component={LandingPage} />
         <Route path="/personeel-gezocht" component={PersoneelGezocht} />
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
+        <Route path="/aanmelden" component={Aanmelden} />
         <Route path="/dashboard-mockup">
           {() => <ProtectedRoute component={DashboardMockup} adminOnly={true} />}
         </Route>

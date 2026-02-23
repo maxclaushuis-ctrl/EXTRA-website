@@ -701,7 +701,7 @@ export default function PersoneelGezocht() {
             <div>
               <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Werkzoekenden</h4>
               <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
-                <li><a href="/sollicitatieformulier" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
+                <li><a href="/aanmelden" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
                 <li><button onClick={() => scrollTo("rewards")} className="hover:text-purple-400 transition-colors">EXTRAATje Rewards</button></li>
                 <li><a href="/landing" className="hover:text-purple-400 transition-colors">Over EXTRA</a></li>
               </ul>

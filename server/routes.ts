@@ -3778,6 +3778,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==========================================
+  // PUBLIC CANDIDATE REGISTRATION (Aanmeldflow)
+  // ==========================================
+
+  app.post("/api/aanmelden", async (req: Request, res: Response) => {
+    try {
+      const publicRegistrationSchema = z.object({
+        firstName: z.string().min(1, "Voornaam is verplicht"),
+        lastName: z.string().min(1, "Achternaam is verplicht"),
+        email: z.string().email().optional().nullable(),
+        phone: z.string().optional().nullable(),
+        birthDate: z.string().optional().nullable(),
+        nationality: z.string().optional().nullable(),
+        city: z.string().optional().nullable(),
+        language: z.string().optional().nullable(),
+        functionType: z.enum(["housekeeping", "horecamedewerker", "chef", "frontoffice"]),
+        horecaExperience: z.string().optional().nullable(),
+        needsTwv: z.boolean().optional().default(false),
+        interviewDate: z.string().optional().nullable(),
+        interviewTime: z.string().optional().nullable(),
+        sourceChannel: z.string().optional().default("Website"),
+        notes: z.string().optional().nullable(),
+      });
+
+      const validated = publicRegistrationSchema.parse(req.body);
+
+      const candidate = await storage.createCandidate({
+        firstName: validated.firstName,
+        lastName: validated.lastName,
+        email: validated.email || null,
+        phone: validated.phone || null,
+        birthDate: validated.birthDate || null,
+        nationality: validated.nationality || null,
+        city: validated.city || null,
+        language: validated.language || null,
+        functionType: validated.functionType,
+        horecaExperience: validated.horecaExperience || null,
+        needsTwv: validated.needsTwv || false,
+        interviewDate: validated.interviewDate || null,
+        interviewTime: validated.interviewTime || null,
+        sourceChannel: validated.sourceChannel || "Website",
+        notes: validated.notes || null,
+      });
+
+      await storage.createCandidateAuditLog({
+        candidateId: candidate.id,
+        action: 'created',
+        changedByUserId: null,
+        changeData: { description: 'Kandidaat via aanmeldflow op website' },
+        ipAddress: req.ip ?? null
+      });
+
+      return res.status(201).json({ id: candidate.id, message: "Aanmelding ontvangen" });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error in public candidate registration:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
+  const cvUploadStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'uploads', 'cv');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const filename = `cv-${Date.now()}${ext}`;
+      cb(null, filename);
+    }
+  });
+
+  const cvUpload = multer({
+    storage: cvUploadStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF, DOC and DOCX files are allowed'));
+      }
+    }
+  });
+
+  app.post("/api/aanmelden/cv", cvUpload.single('cv'), async (req: Request, res: Response) => {
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      return res.json({ message: "CV uploaded", filename: file.filename });
+    } catch (error) {
+      console.error("Error uploading CV:", error);
+      return res.status(500).json({ message: "Upload failed" });
+    }
+  });
+
+  // ==========================================
   // SOLLICITANTEN (Candidates) API Routes
   // ==========================================
 
