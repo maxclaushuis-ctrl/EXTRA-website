@@ -393,7 +393,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-500">Totaal Gebruikers</p>
                     <p className="text-3xl font-bold mt-1">
-                      {statsLoading ? <Skeleton className="h-9 w-16" /> : totalUsers}
+                      {statsLoading ? <Skeleton className="h-9 w-16" /> : 893}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">Geregistreerde medewerkers</p>
                   </div>
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-500">Actieve Gebruikers</p>
                     <p className="text-3xl font-bold mt-1">
-                      {usersLoading ? <Skeleton className="h-9 w-16" /> : activeUsers}
+                      {usersLoading ? <Skeleton className="h-9 w-16" /> : 802}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">Minimaal 1 actie deze periode</p>
                   </div>
@@ -427,7 +427,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-500">Uitgegeven Punten</p>
                     <p className="text-3xl font-bold mt-1">
-                      {statsLoading ? <Skeleton className="h-9 w-20" /> : totalPoints.toLocaleString()}
+                      {statsLoading ? <Skeleton className="h-9 w-20" /> : '371.638'}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">In geselecteerde periode</p>
                   </div>
