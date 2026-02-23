@@ -29,8 +29,8 @@ import blogTeam from "../assets/images/blog-team.jpg";
 import blogHotel from "../assets/images/blog-hotel.jpg";
 import dienstChefPng from "@assets/Chef_1771833440047.png";
 import dienstHoreca from "@assets/Horecamedewerker_1771836004844.png";
-import dienstFrontoffice from "@assets/Front-office_1771842663934.png";
-import dienstHousekeeping from "@assets/ChatGPT_Image_23_feb_2026,_10_45_21_1771839989281.png";
+import dienstFrontoffice from "@assets/Front-office_1771842809388.png";
+import dienstHousekeeping from "@assets/Housekeeping_1771842919384.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -1155,7 +1155,7 @@ export default function LandingPage() {
             ringColor: "border-purple-400/30",
             transparentBg: true,
             alt: "Lachende housekeeping medewerker van EXTRA met handdoeken",
-            imgStyle: "bottom-[-80px] right-[-40px] h-[155%]",
+            imgStyle: "bottom-[-60px] right-[-30px] h-[130%]",
           },
         ];
         return (
