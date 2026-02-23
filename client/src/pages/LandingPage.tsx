@@ -1232,7 +1232,7 @@ export default function LandingPage() {
                 <Zap className="w-4 h-4" /> Simpel & snel
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Hoe extra werkt
+                Hoe EXTRA werkt
               </h2>
             </div>
           </RevealSection>
@@ -1270,11 +1270,11 @@ export default function LandingPage() {
                 { icon: Gift, step: "5", title: "Claim rewards", desc: "Wissel punten in voor echte beloningen.", color: "from-emerald-500 to-teal-600" },
               ];
               return (
-                <div className={`grid grid-cols-2 ${howItWorksTab === "werkgever" ? "lg:grid-cols-4" : "lg:grid-cols-5"} gap-4 sm:gap-6`}>
+                <div className={`grid grid-cols-2 ${howItWorksTab === "werkgever" ? "lg:grid-cols-4" : "lg:grid-cols-5"} gap-4 sm:gap-6 auto-rows-fr`}>
                   {steps.map((item, i) => (
-                    <div key={`${howItWorksTab}-${i}`} className="relative group">
+                    <div key={`${howItWorksTab}-${i}`} className={`relative group ${howItWorksTab === "medewerker" && i === 4 ? "col-span-2 lg:col-span-1 max-w-[calc(50%-0.5rem)] sm:max-w-[calc(50%-0.75rem)] lg:max-w-none mx-auto lg:mx-0" : ""}`}>
                       {i < steps.length - 1 && <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-3rem)] h-0.5 bg-gradient-to-r from-purple-200 to-transparent z-0" />}
-                      <div className="relative bg-white rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-8 border border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-sm">
+                      <div className="relative bg-white rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-8 border border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-sm h-full flex flex-col">
                         <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
                           <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                         </div>
