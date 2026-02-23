@@ -28,7 +28,7 @@ import blogBarista from "../assets/images/blog-barista.jpg";
 import blogTeam from "../assets/images/blog-team.jpg";
 import blogHotel from "../assets/images/blog-hotel.jpg";
 import dienstChefPng from "@assets/Chef_1771833440047.png";
-import dienstHoreca from "../assets/images/dienst-horeca.jpg";
+import dienstHoreca from "@assets/Horecamedewerker_1771836004844.png";
 import dienstFrontoffice from "../assets/images/dienst-frontoffice.jpg";
 import dienstHousekeeping from "../assets/images/dienst-housekeeping.jpg";
 
@@ -1119,6 +1119,8 @@ export default function LandingPage() {
             accent: "from-purple-400 via-violet-400 to-fuchsia-400",
             glowColor: "rgba(167,139,250,0.35)",
             ringColor: "border-purple-400/30",
+            transparentBg: true,
+            alt: "Lachende horecamedewerker van EXTRA in wit overhemd en donker schort",
           },
           {
             id: "frontoffice",
