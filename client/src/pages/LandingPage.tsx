@@ -10,9 +10,6 @@ import heroBgImage from "@assets/hero-background.png";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import screenDashboard from "@assets/IMG_8803_1770915286475.png";
-import screenRewards from "@assets/IMG_8805_1770915286475.png";
-import screenChallenges from "@assets/IMG_8807_1770915286475.png";
-import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.png";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
 import logoFunda from "@assets/Logo_funda_1771267205959.png";
@@ -31,6 +28,14 @@ import dienstChefPng from "@assets/Chef_1771833440047.png";
 import dienstHoreca from "@assets/Horecamedewerker_1771836004844.png";
 import dienstFrontoffice from "@assets/Front-office_1771842809388.png";
 import dienstHousekeeping from "@assets/Housekeeping_1771842919384.png";
+import rewardJBL from "@assets/JBL_1771872665358.png";
+import rewardPathe from "@assets/Pathe_1771872665358.png";
+import rewardPadel from "@assets/Padelracket_1771872665358.png";
+import rewardDinerbon from "@assets/Dinerbon_1771872665358.png";
+import rewardAirtag from "@assets/airtag_1771872665358.png";
+import rewardMuseumkaart from "@assets/Museumjaarkaart_1771872665358.png";
+import rewardAirpods from "@assets/Airpods_1771872665358.png";
+import rewardGig from "@assets/Gig_1771872665358.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -153,12 +158,6 @@ function XDivider({ className = "" }: { className?: string }) {
   );
 }
 
-const appScreens = [
-  { key: "dashboard", img: screenDashboard, label: "Dashboard", desc: "Bekijk je totale punten, status en maandelijkse voortgang in één overzicht.", emoji: "📊" },
-  { key: "rewards", img: screenRewards, label: "Rewards", desc: "Wissel je punten in voor toffe beloningen zoals AirPods, museumjaarkaarten en meer.", emoji: "🎁" },
-  { key: "challenges", img: screenChallenges, label: "Challenges", desc: "Behaal uitdagingen en verdien extra punten met elke mijlpaal.", emoji: "🏆" },
-  { key: "ranglijst", img: screenRanglijst, label: "Ranglijst", desc: "Bekijk je positie op de maandelijkse ranglijst en versla je collega's.", emoji: "📈" },
-];
 
 const blogArticles = [
   {
@@ -636,9 +635,56 @@ export default function LandingPage() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [activeScreen, setActiveScreen] = useState(0);
   const [howItWorksTab, setHowItWorksTab] = useState<"werkgever" | "medewerker">("werkgever");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeNotification, setActiveNotification] = useState(0);
+
+  const rewardNotifications = useMemo(() => [
+    { text: "Je hebt een challenge behaald 🚀", points: "+500 EXTRA punten" },
+    { text: "Gefeliciteerd met je verjaardag 🎉", points: "+100 EXTRA punten" },
+    { text: "Je hebt een 5-sterren review gehaald ⭐", points: "+50 EXTRA punten" },
+  ], []);
+
+  const rewardItems = useMemo(() => [
+    { name: "JBL Speaker", points: "7.500 punten", image: rewardJBL },
+    { name: "Pathé Bon", points: "2.500 punten", image: rewardPathe },
+    { name: "EXTRA Padelset", points: "15.000 punten", image: rewardPadel },
+    { name: "Dinerbon", points: "5.000 punten", image: rewardDinerbon },
+    { name: "Apple AirTags", points: "3.000 punten", image: rewardAirtag },
+    { name: "Museumkaart", points: "10.000 punten", image: rewardMuseumkaart },
+    { name: "AirPods Pro", points: "12.500 punten", image: rewardAirpods },
+    { name: "GiG Hard Seltzer", points: "1.500 punten", image: rewardGig },
+  ], []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveNotification((prev) => (prev + 1) % 3);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const styleId = "rewards-animations";
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      @keyframes notification-slide {
+        0% { transform: translateY(-20px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes float-slow {
+        0%, 100% { transform: translateY(-10px); }
+        50% { transform: translateY(10px); }
+      }
+      @keyframes marquee-scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => { document.getElementById(styleId)?.remove(); };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -1300,6 +1346,32 @@ export default function LandingPage() {
       <section id="rewards" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
         <XPatternBg count={5} opacity={0.1} color="rgba(255,255,255,0.8)" />
+
+        {[
+          { left: "8%", top: "15%", size: 6, delay: 0, dur: 4 },
+          { left: "92%", top: "25%", size: 4, delay: 1, dur: 5 },
+          { left: "15%", top: "70%", size: 5, delay: 2, dur: 3.5 },
+          { left: "85%", top: "65%", size: 7, delay: 0.5, dur: 4.5 },
+          { left: "25%", top: "30%", size: 3, delay: 1.5, dur: 5.5 },
+          { left: "75%", top: "80%", size: 5, delay: 3, dur: 4 },
+          { left: "50%", top: "10%", size: 4, delay: 2.5, dur: 3 },
+          { left: "40%", top: "85%", size: 6, delay: 0.8, dur: 5 },
+        ].map((dot, i) => (
+          <div
+            key={`float-dot-${i}`}
+            className="absolute rounded-full pointer-events-none z-[5]"
+            style={{
+              left: dot.left,
+              top: dot.top,
+              width: dot.size,
+              height: dot.size,
+              backgroundColor: "rgba(168,85,247,0.35)",
+              animation: `float-slow ${dot.dur}s ease-in-out infinite`,
+              animationDelay: `${dot.delay}s`,
+            }}
+          />
+        ))}
+
         <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <RevealSection>
             <div className="text-center mb-12 sm:mb-20">
@@ -1315,73 +1387,110 @@ export default function LandingPage() {
               </h2>
               <p className="text-base sm:text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
                 Medewerkers verdienen automatisch punten voor elke gewerkte shift en behaalde challenge.
-                Die punten wisselen ze in voor echte beloningen.
+                Die punten wissel je in voor echte beloningen.
               </p>
             </div>
           </RevealSection>
 
           <RevealSection delay={100}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-20 max-w-4xl mx-auto">
-              {[
-                { step: "1", title: "Werk & verdien punten", desc: "Elke shift levert punten op. Extra inzet? Extra punten.", icon: "🏃" },
-                { step: "2", title: "Klim in status", desc: "Van Bronze naar Diamond. Hogere status = betere beloningen.", icon: "💎" },
-                { step: "3", title: "Claim je rewards", desc: "AirPods, TrainMore, Starbucks en meer. Jij kiest.", icon: "🎁" },
-              ].map((item, i) => (
-                <div key={i} className="bg-white/[0.06] backdrop-blur-sm rounded-2xl border border-white/10 p-6 sm:p-8 text-center hover:bg-white/[0.10] transition-all duration-300 hover:-translate-y-1">
-                  <div className="text-4xl sm:text-5xl mb-4 sm:mb-5">{item.icon}</div>
-                  <div className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
-                  <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{item.title}</h4>
-                  <p className="text-purple-200/70 text-sm sm:text-base leading-relaxed">{item.desc}</p>
+            <div className="flex justify-center mb-16 sm:mb-24">
+              <div className="relative">
+                <div className="relative w-[260px] sm:w-[300px]">
+                  <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[6px] border-gray-800 bg-gray-900">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[22px] bg-gray-900 rounded-b-xl z-20" />
+                    <img src={screenDashboard} alt="Dashboard" className="w-full relative z-10" />
+                  </div>
+                  <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-[3.5rem] blur-3xl -z-10" />
                 </div>
-              ))}
+
+                <div className="absolute top-8 sm:top-12 -left-4 sm:-left-32 right-4 sm:-right-32 z-30 pointer-events-none">
+                  {rewardNotifications.map((notif, i) => (
+                    <div
+                      key={i}
+                      className="absolute left-0 right-0 mx-auto max-w-[280px] sm:max-w-[320px]"
+                      style={{
+                        animation: activeNotification === i ? "notification-slide 0.5s ease-out forwards" : "none",
+                        opacity: activeNotification === i ? 1 : 0,
+                        transition: "opacity 0.3s ease-out",
+                      }}
+                    >
+                      <div
+                        className="rounded-2xl p-3 sm:p-4 backdrop-blur-xl border border-white/20"
+                        style={{
+                          background: "rgba(255,255,255,0.12)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(139,92,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/30">
+                            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-semibold text-sm sm:text-base leading-tight">{notif.text}</p>
+                            <span className="inline-block mt-1.5 text-xs font-bold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-full border border-purple-400/30">
+                              {notif.points}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-center gap-2 mt-5">
+                  {rewardNotifications.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all duration-500 ${
+                        activeNotification === i ? "w-8 bg-purple-400" : "w-2 bg-white/20"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </RevealSection>
 
           <RevealSection delay={200}>
-            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-8 sm:gap-10 lg:gap-16 max-w-5xl mx-auto">
-              <div className="flex lg:flex-col gap-2 sm:gap-3 lg:gap-4 lg:justify-center order-2 lg:order-1 flex-wrap justify-center">
-                {appScreens.map((screen, i) => (
-                  <button
-                    key={screen.key}
-                    onClick={() => setActiveScreen(i)}
-                    className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-left transition-all duration-300 min-w-[140px] sm:min-w-[170px] ${
-                      activeScreen === i
-                        ? "bg-white/15 border-2 border-purple-400/60 shadow-lg shadow-purple-500/20 scale-105"
-                        : "bg-white/5 border-2 border-transparent hover:bg-white/10 hover:border-white/20"
-                    }`}
-                  >
-                    <span className="text-2xl sm:text-3xl">{screen.emoji}</span>
-                    <div>
-                      <span className={`font-bold text-sm sm:text-base block ${activeScreen === i ? "text-white" : "text-purple-200/80"}`}>{screen.label}</span>
-                      {activeScreen === i && <span className="text-[10px] sm:text-xs text-purple-300/60 font-medium">Actief</span>}
-                    </div>
-                  </button>
-                ))}
+            <div className="mb-12 sm:mb-16">
+              <div className="text-center mb-6 sm:mb-8">
+                <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
+                  <Star className="w-3.5 h-3.5" /> EXTRA beloningen
+                </span>
               </div>
 
-              <div className="relative order-1 lg:order-2 flex-shrink-0">
-                <div className="relative w-[240px] sm:w-[300px]">
-                  <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[5px] border-gray-700 bg-gray-900">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-gray-900 rounded-b-xl z-20" />
-                    <div className="relative">
-                      {appScreens.map((screen, i) => (
-                        <img key={screen.key} src={screen.img} alt={screen.label} className={`w-full transition-opacity duration-500 ${activeScreen === i ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-[3rem] blur-3xl -z-10" />
-                </div>
-              </div>
+              <div className="relative overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-purple-950 to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-purple-950 to-transparent z-10 pointer-events-none" />
 
-              <div className="flex flex-col justify-center order-3 max-w-sm text-center lg:text-left">
-                <div className="transition-all duration-300">
-                  <span className="text-4xl sm:text-5xl block mb-3 sm:mb-5">{appScreens[activeScreen].emoji}</span>
-                  <h4 className="text-xl sm:text-2xl font-black text-white mb-3 sm:mb-4">{appScreens[activeScreen].label}</h4>
-                  <p className="text-base sm:text-lg text-purple-200/70 leading-relaxed">{appScreens[activeScreen].desc}</p>
-                </div>
-                <div className="flex gap-2.5 mt-6 sm:mt-8 justify-center lg:justify-start">
-                  {appScreens.map((_, i) => (
-                    <button key={i} onClick={() => setActiveScreen(i)} className={`h-2.5 rounded-full transition-all duration-300 ${activeScreen === i ? "bg-purple-400 w-10" : "bg-white/20 w-2.5 hover:bg-white/40"}`} />
+                <div
+                  className="flex gap-4 sm:gap-6"
+                  style={{
+                    animation: "marquee-scroll 40s linear infinite",
+                    width: "fit-content",
+                  }}
+                >
+                  {[...rewardItems, ...rewardItems].map((reward, i) => (
+                    <div
+                      key={i}
+                      className="flex-shrink-0 w-[160px] sm:w-[200px] rounded-2xl border border-white/[0.15] p-4 sm:p-5 text-center transition-all duration-300 hover:border-purple-400/40 hover:scale-105 group"
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        backdropFilter: "blur(12px)",
+                      }}
+                    >
+                      <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] mx-auto mb-3 sm:mb-4 flex items-center justify-center">
+                        <img
+                          src={reward.image}
+                          alt={reward.name}
+                          className="max-w-full max-h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <h5 className="text-white font-bold text-sm sm:text-base mb-2 leading-tight">{reward.name}</h5>
+                      <span className="inline-block text-[10px] sm:text-xs font-bold text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full border border-purple-400/30">
+                        {reward.points}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
