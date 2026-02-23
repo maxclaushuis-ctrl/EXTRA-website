@@ -27,7 +27,7 @@ import blogCatering from "../assets/images/blog-catering.jpg";
 import blogBarista from "../assets/images/blog-barista.jpg";
 import blogTeam from "../assets/images/blog-team.jpg";
 import blogHotel from "../assets/images/blog-hotel.jpg";
-import dienstChefPng from "@assets/ChatGPT_Image_23_feb_2026,_08_42_18_1771832560317.png";
+import dienstChefPng from "@assets/Chef_1771833440047.png";
 import dienstHoreca from "../assets/images/dienst-horeca.jpg";
 import dienstFrontoffice from "../assets/images/dienst-frontoffice.jpg";
 import dienstHousekeeping from "../assets/images/dienst-housekeeping.jpg";
@@ -469,20 +469,36 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
               />
               {diensten.map((item, i) => {
                 const isTransparent = item.transparentBg;
+                if (isTransparent) {
+                  return (
+                    <div
+                      key={item.id}
+                      className={`absolute inset-0 transition-all duration-700 ${
+                        i === active ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                      }`}
+                    >
+                      <div className="absolute bottom-[10%] right-[15%] w-[250px] h-[250px] rounded-full blur-[80px] bg-gradient-to-tr from-purple-600/40 via-pink-500/30 to-orange-400/20" />
+                      <div className="absolute bottom-[25%] right-[25%] w-[150px] h-[150px] rounded-full blur-[50px] bg-purple-400/25" />
+                      <img
+                        src={item.image}
+                        alt={item.alt || item.title}
+                        className="absolute bottom-[-40px] right-[-20px] w-[95%] max-w-[420px] object-contain object-bottom z-10"
+                        style={{
+                          filter: "drop-shadow(0 10px 50px rgba(139,92,246,0.4)) drop-shadow(0 0 20px rgba(168,85,247,0.2))",
+                        }}
+                      />
+                    </div>
+                  );
+                }
                 return (
                   <img
                     key={item.id}
                     src={item.image}
                     alt={item.alt || item.title}
-                    className={`absolute transition-all duration-700 ${
+                    className={`absolute bottom-0 w-full h-full object-cover object-top transition-all duration-700 ${
                       i === active ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
-                    } ${isTransparent
-                      ? "bottom-[-20px] right-0 w-[90%] h-[110%] object-contain object-bottom drop-shadow-2xl dienst-card-active"
-                      : "bottom-0 w-full h-full object-cover object-top"
                     }`}
-                    style={isTransparent ? {
-                      filter: "drop-shadow(0 0 40px rgba(139,92,246,0.3))",
-                    } : {
+                    style={{
                       maskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
                       WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 80%, transparent 100%)",
                     }}
