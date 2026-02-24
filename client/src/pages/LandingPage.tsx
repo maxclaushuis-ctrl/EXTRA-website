@@ -199,32 +199,40 @@ const blogArticles = [
 ];
 
 function InstagramFeed() {
-  const [loaded, setLoaded] = useState(false);
+  const tiles = [
+    { gradient: "from-purple-600 via-pink-500 to-orange-400", icon: "🎉", text: "Events & hospitality", delay: 0 },
+    { gradient: "from-indigo-500 via-purple-500 to-pink-400", icon: "🏨", text: "Hotel service", delay: 50 },
+    { gradient: "from-purple-500 via-violet-500 to-blue-400", icon: "🍽️", text: "Catering & dining", delay: 100 },
+    { gradient: "from-pink-500 via-rose-400 to-purple-500", icon: "⭐", text: "Top prestaties", delay: 150 },
+    { gradient: "from-violet-500 via-indigo-500 to-cyan-400", icon: "👥", text: "Ons team", delay: 200 },
+    { gradient: "from-orange-400 via-pink-500 to-purple-600", icon: "🎯", text: "EXTRA rewards", delay: 250 },
+  ];
 
   return (
     <RevealSection delay={100}>
-      <div className="flex justify-center">
-        <div className="w-full max-w-2xl">
-          <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden relative" style={{ minHeight: loaded ? "auto" : "500px" }}>
-            {!loaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-purple-50/50">
-                <div className="text-center">
-                  <div className="w-10 h-10 border-3 border-purple-300 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-sm text-gray-400">Instagram laden...</p>
-                </div>
-              </div>
-            )}
-            <iframe
-              src="https://www.instagram.com/doehetextra/embed"
-              className="w-full border-0"
-              style={{ minHeight: "650px" }}
-              onLoad={() => setLoaded(true)}
-              allowTransparency={true}
-              loading="lazy"
-              title="Instagram @doehetextra"
-            />
-          </div>
-        </div>
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 max-w-3xl mx-auto">
+        {tiles.map((item, i) => (
+          <a
+            key={i}
+            href="https://instagram.com/doehetextra"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient}`} />
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-3 sm:p-4">
+              <span className="text-3xl sm:text-4xl lg:text-5xl mb-1.5 sm:mb-2 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 drop-shadow-lg">{item.icon}</span>
+              <span className="text-[10px] sm:text-xs lg:text-sm font-bold text-center opacity-95 drop-shadow-md leading-tight">{item.text}</span>
+            </div>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-300 flex items-end justify-center pb-2 sm:pb-3 opacity-0 group-hover:opacity-100">
+              <span className="text-white text-[10px] sm:text-xs font-bold bg-white/25 backdrop-blur-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5"/></svg>
+                Bekijk
+              </span>
+            </div>
+          </a>
+        ))}
       </div>
     </RevealSection>
   );
