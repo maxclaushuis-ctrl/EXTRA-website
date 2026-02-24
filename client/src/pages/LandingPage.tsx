@@ -1564,7 +1564,7 @@ export default function LandingPage() {
                 <Shield className="w-4 h-4" /> Wetgeving-proof
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom extra
+                Waarom EXTRA
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">
                 Klaar voor de nieuwe arbeidswetgeving van 2026. Zekerheid voor jou en je personeel.
@@ -1794,7 +1794,7 @@ export default function LandingPage() {
               <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
                 <li><button onClick={() => scrollTo("final-cta")} className="hover:text-purple-400 transition-colors">Personeel aanvragen</button></li>
                 <li><button onClick={() => scrollTo("how-it-works")} className="hover:text-purple-400 transition-colors">Hoe het werkt</button></li>
-                <li><button onClick={() => scrollTo("differentiators")} className="hover:text-purple-400 transition-colors">Waarom extra</button></li>
+                <li><button onClick={() => scrollTo("differentiators")} className="hover:text-purple-400 transition-colors">Waarom EXTRA</button></li>
               </ul>
             </div>
             <div>
