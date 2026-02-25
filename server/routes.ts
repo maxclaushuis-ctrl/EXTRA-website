@@ -31,7 +31,7 @@ import {
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -3827,6 +3827,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         changedByUserId: null,
         changeData: { description: 'Kandidaat via aanmeldflow op website' },
         ipAddress: req.ip ?? null
+      });
+
+      // Stuur bevestigingsmail naar kandidaat (niet-blocking)
+      sendCandidateConfirmationEmail({
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email,
+        functionType: candidate.functionType,
+        interviewDate: candidate.interviewDate,
+        interviewTime: candidate.interviewTime,
+      }).then((sent) => {
+        if (sent) {
+          console.log(`Bevestigingsmail verstuurd naar ${candidate.email}`);
+        } else {
+          console.warn(`Bevestigingsmail NIET verstuurd naar ${candidate.email}`);
+        }
+      }).catch((err) => {
+        console.error("Fout bij versturen bevestigingsmail:", err);
       });
 
       return res.status(201).json({ id: candidate.id, message: "Aanmelding ontvangen" });
