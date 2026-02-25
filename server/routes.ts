@@ -3857,6 +3857,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Tijdelijke email preview route
+  app.get("/api/email-preview/kandidaat", (req: Request, res: Response) => {
+    const firstName = (req.query.naam as string) || "Sophie";
+    const lastName = (req.query.achternaam as string) || "van den Berg";
+    const functionType = (req.query.functie as string) || "horecamedewerker";
+    const interviewDate = (req.query.datum as string) || "vrijdag 27 februari 2026";
+    const interviewTime = (req.query.tijd as string) || "13:00 - 13:30";
+
+    const fullName = `${firstName} ${lastName}`;
+    const functionLabels: Record<string, string> = {
+      housekeeping: "Housekeeping medewerker",
+      horecamedewerker: "Horecamedewerker",
+      chef: "Chef / Kok",
+      frontoffice: "Front office medewerker",
+    };
+    const functionLabel = functionLabels[functionType] || functionType;
+
+    const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aanmelding ontvangen – EXTRA</title></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#6c2bd9 0%,#9333ea 100%);padding:40px 40px 32px;text-align:center;">
+            <div style="font-size:32px;font-weight:900;color:#ffffff;letter-spacing:-1px;">EXTRA</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:4px;letter-spacing:2px;text-transform:uppercase;">hospitality staffing</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <h1 style="margin:0 0 16px 0;font-size:24px;color:#1a1a2e;font-weight:700;">Aanmelding ontvangen! 🎉</h1>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#4b5563;line-height:1.6;">Hoi ${firstName},</p>
+            <p style="margin:0 0 24px 0;font-size:16px;color:#4b5563;line-height:1.6;">
+              Bedankt voor je aanmelding bij <strong>EXTRA</strong>. We hebben je gegevens ontvangen en gaan er zo snel mogelijk mee aan de slag!
+            </p>
+            <div style="background:#f9fafb;border-radius:8px;padding:24px;margin-bottom:24px;">
+              <h2 style="margin:0 0 16px 0;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">Jouw aanmelding</h2>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:6px 0;font-size:14px;color:#6b7280;width:40%;">Naam</td>
+                  <td style="padding:6px 0;font-size:14px;color:#1a1a2e;font-weight:600;">${fullName}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;font-size:14px;color:#6b7280;">Gewenste functie</td>
+                  <td style="padding:6px 0;font-size:14px;color:#1a1a2e;font-weight:600;">${functionLabel}</td>
+                </tr>
+              </table>
+            </div>
+            <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:24px;">
+              <h3 style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#15803d;">Wat nu?</h3>
+              <p style="margin:0 0 8px 0;">Je gesprek is ingepland op <strong>${interviewDate}</strong> om <strong>${interviewTime}</strong>.</p>
+              <p style="margin:0;font-size:14px;color:#166534;line-height:1.5;">Heb je vragen? Stuur ons een berichtje via WhatsApp of mail naar <a href="mailto:max@doehetextra.nl" style="color:#166534;">max@doehetextra.nl</a>.</p>
+            </div>
+            <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.6;">Welkom bij de EXTRA-familie! We kijken ernaar uit om je te leren kennen.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:24px 40px;border-top:1px solid #e5e7eb;text-align:center;">
+            <p style="margin:0 0 4px 0;font-size:13px;color:#9ca3af;">EXTRA Hospitality Staffing</p>
+            <p style="margin:0;font-size:12px;color:#d1d5db;">Dit is een automatisch gegenereerde e-mail. Neem contact op via max@doehetextra.nl voor vragen.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  });
+
   const cvUploadStorage = multer.diskStorage({
     destination: (req, file, cb) => {
       const uploadDir = path.join(process.cwd(), 'uploads', 'cv');
