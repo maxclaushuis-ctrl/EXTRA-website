@@ -29,7 +29,7 @@ import {
   insertCandidateAuditLogSchema,
   insertCandidateImportSchema,
 } from "@shared/schema";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
 import { initMailService, sendCandidateConfirmationEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
