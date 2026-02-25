@@ -306,6 +306,116 @@ function InputFieldComponent({ label, value, onChange, type = "text", required =
   );
 }
 
+const COUNTRY_CODES = [
+  { flag: "🇳🇱", code: "+31", name: "Nederland" },
+  { flag: "🇧🇪", code: "+32", name: "België" },
+  { flag: "🇩🇪", code: "+49", name: "Duitsland" },
+  { flag: "🇬🇧", code: "+44", name: "Verenigd Koninkrijk" },
+  { flag: "🇫🇷", code: "+33", name: "Frankrijk" },
+  { flag: "🇵🇱", code: "+48", name: "Polen" },
+  { flag: "🇷🇴", code: "+40", name: "Roemenië" },
+  { flag: "🇹🇷", code: "+90", name: "Turkije" },
+  { flag: "🇲🇦", code: "+212", name: "Marokko" },
+  { flag: "🇳🇬", code: "+234", name: "Nigeria" },
+  { flag: "🇮🇳", code: "+91", name: "India" },
+  { flag: "🇸🇷", code: "+597", name: "Suriname" },
+  { flag: "🇧🇬", code: "+359", name: "Bulgarije" },
+  { flag: "🇭🇺", code: "+36", name: "Hongarije" },
+  { flag: "🇮🇹", code: "+39", name: "Italië" },
+  { flag: "🇪🇸", code: "+34", name: "Spanje" },
+  { flag: "🇵🇹", code: "+351", name: "Portugal" },
+  { flag: "🇺🇸", code: "+1", name: "VS / Canada" },
+  { flag: "🌍", code: "+other", name: "Anders" },
+];
+
+export function normalizeToE164(countryCode: string, localNumber: string): string {
+  let digits = localNumber.replace(/[\s\-().]/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  else if (digits.startsWith("0")) digits = digits.slice(1);
+  return `${countryCode}${digits}`;
+}
+
+export function isValidE164(e164: string): boolean {
+  return /^\+\d{7,15}$/.test(e164);
+}
+
+function PhoneInputComponent({ countryCode, localNumber, onCountryChange, onNumberChange, error, label, lang }: {
+  countryCode: string;
+  localNumber: string;
+  onCountryChange: (code: string) => void;
+  onNumberChange: (num: string) => void;
+  error?: string;
+  label: string;
+  lang: "NL" | "EN";
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0];
+
+  const handleNumberInput = (val: string) => {
+    const cleaned = val.replace(/[^\d\s\-().+]/g, "");
+    onNumberChange(cleaned);
+  };
+
+  const placeholder = countryCode === "+31" ? "06 12345678" : "Jouw nummer";
+
+  return (
+    <div>
+      <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+        {label} <span className="text-red-500">*</span>
+      </Label>
+      <div className={`flex h-12 rounded-xl border bg-white overflow-hidden transition-colors ${error ? "border-red-400" : "border-gray-200 focus-within:border-purple-500"}`}>
+        {/* Country code selector */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen(o => !o)}
+            className="flex items-center gap-1.5 px-3 h-full bg-gray-50 hover:bg-gray-100 border-r border-gray-200 text-sm font-medium text-gray-700 min-w-[80px] transition-colors"
+          >
+            <span>{selected.flag}</span>
+            <span>{countryCode === "+other" ? "+" : selected.code}</span>
+            <svg className={`w-3 h-3 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          {open && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-xl border border-gray-200 shadow-xl min-w-[220px] max-h-64 overflow-y-auto">
+              {COUNTRY_CODES.map(c => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => { onCountryChange(c.code); setOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-purple-50 text-left transition-colors ${c.code === countryCode ? "bg-purple-50 text-purple-700 font-semibold" : "text-gray-700"}`}
+                >
+                  <span className="text-lg">{c.flag}</span>
+                  <span className="flex-1">{c.name}</span>
+                  <span className="text-gray-400 text-xs">{c.code === "+other" ? "" : c.code}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Number input */}
+        <input
+          type="tel"
+          value={localNumber}
+          onChange={e => handleNumberInput(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 px-3 text-sm bg-transparent outline-none text-gray-900 placeholder-gray-400"
+          inputMode="tel"
+        />
+      </div>
+
+      {/* Hint */}
+      <p className="text-gray-400 text-xs mt-1">
+        {lang === "NL"
+          ? `Bijv. 06 12345678 → wordt opgeslagen als ${normalizeToE164(countryCode === "+other" ? "+31" : countryCode, "612345678")}`
+          : `E.g. 06 12345678 → saved as ${normalizeToE164(countryCode === "+other" ? "+31" : countryCode, "612345678")}`}
+      </p>
+
+      {error && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {error}</p>}
+    </div>
+  );
+}
+
 function WhyCardComponent({ text, whyLabel }: { text: string; whyLabel: string }) {
   return (
     <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 sm:p-5">
@@ -348,6 +458,7 @@ export default function Aanmelden() {
     city: "",
     postcode: "",
     phone: "",
+    phoneCountryCode: "+31",
     email: "",
     nationality: "",
     preferredFunction: "",
@@ -384,11 +495,23 @@ export default function Aanmelden() {
     if (!formData.firstName.trim()) newErrors.firstName = lang === "NL" ? "Voornaam is verplicht" : "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = lang === "NL" ? "Achternaam is verplicht" : "Last name is required";
     if (!formData.birthDate) newErrors.birthDate = lang === "NL" ? "Geboortedatum is verplicht" : "Date of birth is required";
-    if (!formData.phone.trim()) newErrors.phone = lang === "NL" ? "Telefoonnummer is verplicht" : "Phone number is required";
+    if (!formData.city.trim()) newErrors.city = lang === "NL" ? "Woonplaats is verplicht" : "City is required";
     if (!formData.email.trim()) newErrors.email = lang === "NL" ? "E-mailadres is verplicht" : "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = lang === "NL" ? "Ongeldig e-mailadres" : "Invalid email address";
     if (!formData.nationality) newErrors.nationality = lang === "NL" ? "Nationaliteit is verplicht" : "Nationality is required";
     if (!formData.preferredFunction) newErrors.preferredFunction = lang === "NL" ? "Kies een functie" : "Please select a role";
+
+    const code = formData.phoneCountryCode === "+other" ? "" : formData.phoneCountryCode;
+    if (!formData.phone.trim()) {
+      newErrors.phone = lang === "NL" ? "Telefoonnummer is verplicht" : "Phone number is required";
+    } else if (code) {
+      const e164 = normalizeToE164(code, formData.phone);
+      if (!isValidE164(e164)) {
+        newErrors.phone = lang === "NL"
+          ? "Voer een geldig telefoonnummer in (minimaal 7 cijfers)"
+          : "Enter a valid phone number (at least 7 digits)";
+      }
+    }
 
     if (formData.birthDate) {
       const age = calculateAge(formData.birthDate);
@@ -514,7 +637,9 @@ export default function Aanmelden() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.phoneCountryCode !== "+other"
+          ? normalizeToE164(formData.phoneCountryCode, formData.phone)
+          : formData.phone,
         birthDate: formData.birthDate,
         nationality: formData.nationality,
         city: formData.city,
@@ -592,11 +717,19 @@ export default function Aanmelden() {
                 <InputFieldComponent label={t.firstName} value={formData.firstName} onChange={(v) => updateField("firstName", v)} required error={errors.firstName} />
                 <InputFieldComponent label={t.lastName} value={formData.lastName} onChange={(v) => updateField("lastName", v)} required error={errors.lastName} />
                 <InputFieldComponent label={t.birthDate} value={formData.birthDate} onChange={(v) => updateField("birthDate", v)} type="date" required error={errors.birthDate} />
-                <InputFieldComponent label={t.phone} value={formData.phone} onChange={(v) => updateField("phone", v)} type="tel" required placeholder="+31 6 12345678" error={errors.phone} />
+                <PhoneInputComponent
+                  countryCode={formData.phoneCountryCode}
+                  localNumber={formData.phone}
+                  onCountryChange={(v) => updateField("phoneCountryCode", v)}
+                  onNumberChange={(v) => updateField("phone", v)}
+                  error={errors.phone}
+                  label={t.phone}
+                  lang={lang}
+                />
                 <div className="sm:col-span-2">
                   <InputFieldComponent label={t.email} value={formData.email} onChange={(v) => updateField("email", v)} type="email" required placeholder="jouw@email.nl" error={errors.email} />
                 </div>
-                <InputFieldComponent label={t.city} value={formData.city} onChange={(v) => updateField("city", v)} placeholder="Amsterdam" error={errors.city} />
+                <InputFieldComponent label={t.city} value={formData.city} onChange={(v) => updateField("city", v)} required placeholder="Amsterdam" error={errors.city} />
                 <InputFieldComponent label={t.postcode} value={formData.postcode} onChange={(v) => updateField("postcode", v)} placeholder="1012 AB" error={errors.postcode} />
 
                 <div>
