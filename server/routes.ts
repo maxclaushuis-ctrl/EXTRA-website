@@ -3874,51 +3874,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
     const functionLabel = functionLabels[functionType] || functionType;
 
+    const CALENDLY_URL = "https://calendly.com/max-_zs/30min";
     const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aanmelding ontvangen – EXTRA</title></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Je aanmelding is binnen – EXTRA</title></head>
+<body style="margin:0;padding:0;background:#f0eff5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eff5;padding:32px 16px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 4px 24px rgba(30,10,70,0.10);">
         <tr>
-          <td style="background:linear-gradient(135deg,#6c2bd9 0%,#9333ea 100%);padding:40px 40px 32px;text-align:center;">
-            <div style="font-size:32px;font-weight:900;color:#ffffff;letter-spacing:-1px;">EXTRA</div>
-            <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:4px;letter-spacing:2px;text-transform:uppercase;">hospitality staffing</div>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;">
-            <h1 style="margin:0 0 16px 0;font-size:24px;color:#1a1a2e;font-weight:700;">Aanmelding ontvangen! 🎉</h1>
-            <p style="margin:0 0 16px 0;font-size:16px;color:#4b5563;line-height:1.6;">Hoi ${firstName},</p>
-            <p style="margin:0 0 24px 0;font-size:16px;color:#4b5563;line-height:1.6;">
-              Bedankt voor je aanmelding bij <strong>EXTRA</strong>. We hebben je gegevens ontvangen en gaan er zo snel mogelijk mee aan de slag!
-            </p>
-            <div style="background:#f9fafb;border-radius:8px;padding:24px;margin-bottom:24px;">
-              <h2 style="margin:0 0 16px 0;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">Jouw aanmelding</h2>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding:6px 0;font-size:14px;color:#6b7280;width:40%;">Naam</td>
-                  <td style="padding:6px 0;font-size:14px;color:#1a1a2e;font-weight:600;">${fullName}</td>
-                </tr>
-                <tr>
-                  <td style="padding:6px 0;font-size:14px;color:#6b7280;">Gewenste functie</td>
-                  <td style="padding:6px 0;font-size:14px;color:#1a1a2e;font-weight:600;">${functionLabel}</td>
-                </tr>
+          <td height="200" style="padding:0;overflow:hidden;background:#1a0a3e;">
+            <div style="position:relative;overflow:hidden;height:200px;width:600px;background:linear-gradient(135deg, #2e1065 0%, #1a0a3e 48%, #1e1b4b 100%);">
+              <div style="position:absolute;top:-60px;left:50%;width:340px;height:280px;margin-left:-170px;background:radial-gradient(ellipse at center, rgba(120,40,210,0.22) 0%, rgba(30,10,80,0) 70%);border-radius:50%;"></div>
+              <span style="position:absolute;top:-28px;left:-22px;font-size:170px;font-weight:900;color:rgba(255,255,255,0.055);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-8px;">X</span>
+              <span style="position:absolute;bottom:-55px;right:-18px;font-size:195px;font-weight:900;color:rgba(255,255,255,0.055);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-8px;">X</span>
+              <span style="position:absolute;top:8px;right:110px;font-size:105px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-4px;">X</span>
+              <span style="position:absolute;bottom:2px;left:155px;font-size:88px;font-weight:900;color:rgba(255,255,255,0.038);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-3px;">X</span>
+              <span style="position:absolute;top:-14px;left:300px;font-size:76px;font-weight:900;color:rgba(255,255,255,0.032);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-3px;">X</span>
+              <span style="position:absolute;bottom:20px;right:270px;font-size:60px;font-weight:900;color:rgba(255,255,255,0.03);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-2px;">X</span>
+              <table width="600" height="200" cellpadding="0" cellspacing="0" style="position:absolute;top:0;left:0;">
+                <tr><td align="center" valign="middle" style="padding:0;">
+                  <span style="font-size:58px;font-weight:900;color:#ffffff;letter-spacing:-2px;font-family:'Arial Black',Arial,sans-serif;line-height:1;display:block;">EXTRA</span>
+                </td></tr>
               </table>
             </div>
-            <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:24px;">
-              <h3 style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#15803d;">Wat nu?</h3>
-              <p style="margin:0 0 8px 0;">Je gesprek is ingepland op <strong>${interviewDate}</strong> om <strong>${interviewTime}</strong>.</p>
-              <p style="margin:0;font-size:14px;color:#166534;line-height:1.5;">Heb je vragen? Stuur ons een berichtje via WhatsApp of mail naar <a href="mailto:max@doehetextra.nl" style="color:#166534;">max@doehetextra.nl</a>.</p>
-            </div>
-            <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.6;">Welkom bij de EXTRA-familie! We kijken ernaar uit om je te leren kennen.</p>
           </td>
         </tr>
         <tr>
-          <td style="background:#f9fafb;padding:24px 40px;border-top:1px solid #e5e7eb;text-align:center;">
-            <p style="margin:0 0 4px 0;font-size:13px;color:#9ca3af;">EXTRA Hospitality Staffing</p>
-            <p style="margin:0;font-size:12px;color:#d1d5db;">Dit is een automatisch gegenereerde e-mail. Neem contact op via max@doehetextra.nl voor vragen.</p>
+          <td style="padding:40px 44px 12px;">
+            <p style="margin:0 0 20px 0;font-size:17px;color:#1a0a3e;line-height:1.7;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Top dat je je hebt aangemeld bij EXTRA, mooi dat je erbij wil horen! ⚡</p>
+            <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker aan de slag te gaan.</p>
+            <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;margin-bottom:28px;border:1px solid #ede9fe;">
+              <p style="margin:0 0 10px 0;font-size:16px;color:#1a0a3e;font-weight:700;line-height:1.5;">Heb je nog geen datum ingepland voor je kennismaking?</p>
+              <p style="margin:0 0 18px 0;font-size:15px;color:#4b5563;line-height:1.65;">Plan 'm dan hier in:</p>
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="border-radius:50px;background:#2e1065;">
+                  <a href="${CALENDLY_URL}" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">Afspraak inplannen →</a>
+                </td>
+              </tr></table>
+            </div>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Je bent welkom bij ons op <strong>Herengracht 372</strong> in Amsterdam.</p>
+            <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">Kun je toch niet? No stress, <a href="${CALENDLY_URL}" style="color:#6d28d9;font-weight:600;text-decoration:none;">pas je afspraak even aan</a> zodat we iemand anders kunnen inplannen.</p>
+            <p style="margin:0 0 32px 0;font-size:16px;color:#374151;line-height:1.75;">We kijken ernaar uit om je te ontmoeten. Tot snel! 🙌</p>
+            <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">Groet,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 44px 32px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">Dit is een automatisch gegenereerde e-mail. Neem voor vragen contact op via <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.</p>
           </td>
         </tr>
       </table>
