@@ -193,6 +193,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
   const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
 
   const CALENDLY_URL = "https://calendly.com/max-_zs/30min";
+  const WHATSAPP_URL = "https://wa.me/31854012373";
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -243,8 +244,11 @@ export async function sendCandidateConfirmationEmail(candidate: {
               <p style="margin:0 0 10px 0;font-size:16px;color:#1a0a3e;font-weight:700;line-height:1.5;">Heb je nog geen datum ingepland voor je kennismaking?</p>
               <p style="margin:0 0 18px 0;font-size:15px;color:#4b5563;line-height:1.65;">Plan 'm dan hier in:</p>
               <table cellpadding="0" cellspacing="0"><tr>
-                <td style="border-radius:50px;background:#2e1065;">
+                <td style="border-radius:50px;background:#2e1065;padding-right:12px;">
                   <a href="${CALENDLY_URL}" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">Afspraak inplannen →</a>
+                </td>
+                <td style="border-radius:50px;background:#25d366;">
+                  <a href="${WHATSAPP_URL}" style="display:inline-block;padding:13px 24px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">💬 WhatsApp</a>
                 </td>
               </tr></table>
             </div>
@@ -278,6 +282,7 @@ We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker
 
 Heb je nog geen datum ingepland voor je kennismaking?
 Plan 'm dan hier in: ${CALENDLY_URL}
+Of stuur ons een WhatsApp: ${WHATSAPP_URL}
 
 Je bent welkom bij ons op Herengracht 372 in Amsterdam.
 
