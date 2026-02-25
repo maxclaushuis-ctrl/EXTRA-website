@@ -259,7 +259,7 @@ export default function NieuwsPage() {
                         <span className="text-purple-300/40 text-xs sm:text-sm">{article.readTime} lezen</span>
                       </div>
                       <div className="mt-4 flex items-center gap-2 text-purple-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        Lees meer <ArrowRight className="w-4 h-4" />
+                        Lees EXTRA <ArrowRight className="w-4 h-4" />
                       </div>
                     </div>
                   </article>
