@@ -630,7 +630,6 @@ export default function Aanmelden() {
   }
 
   async function handleSubmit() {
-    if (!cvUploaded || !calendlyScheduled) return;
     setIsSubmitting(true);
     try {
       const payload = {
@@ -1043,21 +1042,25 @@ export default function Aanmelden() {
 
                 <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
                   {(!cvUploaded || !calendlyScheduled) && (
-                    <p className="text-xs text-gray-500 text-center sm:text-right">
+                    <p className="text-xs text-gray-400 text-center sm:text-right">
                       {lang === "NL"
-                        ? `Rond ${!cvUploaded && !calendlyScheduled ? "beide stappen" : !cvUploaded ? "het uploaden van je cv" : "het inplannen van je gesprek"} af om je aanmelding te versturen`
-                        : `Complete ${!cvUploaded && !calendlyScheduled ? "both steps" : !cvUploaded ? "uploading your CV" : "scheduling your interview"} to submit`
+                        ? (!cvUploaded && !calendlyScheduled
+                            ? "Upload je cv en plan je gesprek in voor de beste kansen"
+                            : !cvUploaded
+                            ? "Tip: upload ook je cv voor de beste kansen"
+                            : "Tip: plan ook een gesprek in via de kalender")
+                        : (!cvUploaded && !calendlyScheduled
+                            ? "Upload your CV and schedule an interview for the best chances"
+                            : !cvUploaded
+                            ? "Tip: also upload your CV for the best chances"
+                            : "Tip: also schedule an interview via the calendar")
                       }
                     </p>
                   )}
                   <Button
                     onClick={() => handleSubmit()}
-                    disabled={isSubmitting || !cvUploaded || !calendlyScheduled}
-                    className={`font-bold px-8 py-5 rounded-xl text-base w-full sm:w-auto transition-all ${
-                      cvUploaded && calendlyScheduled
-                        ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    }`}
+                    disabled={isSubmitting}
+                    className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 font-bold px-8 py-5 rounded-xl text-base w-full sm:w-auto transition-all"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
