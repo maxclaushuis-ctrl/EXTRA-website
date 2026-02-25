@@ -656,7 +656,10 @@ export default function Aanmelden() {
         notes: cvFile ? `CV: ${cvFile.name} | Gesprek ingepland via Calendly` : "Gesprek ingepland via Calendly",
       };
 
-      await apiRequest("POST", "/api/aanmelden", payload);
+      await apiRequest("/api/aanmelden", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
       if (cvFile) {
         const fd = new FormData();
