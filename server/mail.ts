@@ -74,10 +74,16 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       text: params.text,
       html: params.html,
     });
-    console.log(`E-mail succesvol verzonden naar ${params.to}`);
+    console.log(`✅ E-mail succesvol verzonden naar ${params.to} (onderwerp: ${params.subject})`);
     return true;
-  } catch (error) {
-    console.error('Fout bij verzenden van e-mail:', error);
+  } catch (error: any) {
+    console.error('❌ Fout bij verzenden van e-mail via SendGrid:');
+    console.error('  - Naar:', params.to);
+    console.error('  - Van:', params.from);
+    console.error('  - Fout:', error?.message || error);
+    if (error?.response?.body) {
+      console.error('  - SendGrid response:', JSON.stringify(error.response.body, null, 2));
+    }
     return false;
   }
 }
