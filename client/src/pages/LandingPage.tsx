@@ -1446,9 +1446,58 @@ export default function LandingPage() {
           </RevealSection>
 
           <RevealSection delay={100}>
-            <div className="flex justify-center mb-16 sm:mb-24 overflow-visible">
-              <div className="relative" style={{ overflow: "visible" }}>
-                <div className="relative w-[260px] sm:w-[300px]">
+            {/* Mobile: notification boven, telefoon onder */}
+            {/* Desktop: telefoon midden, notificaties links en rechts */}
+            <div className="flex flex-col items-center mb-16 sm:mb-24 gap-6 sm:gap-0">
+
+              {/* Mobiele pushmelding — alleen zichtbaar op kleine schermen, in-flow */}
+              <div className="sm:hidden w-full px-5 max-w-[360px]" style={{ minHeight: "130px", position: "relative" }}>
+                {rewardNotifications.map((notif, i) => {
+                  const isActive = activeNotification === i;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        opacity: isActive ? 1 : 0,
+                        transform: isActive ? "scale(1) translateY(0)" : "scale(0.95) translateY(4px)",
+                        transition: "opacity 0.35s ease, transform 0.35s ease",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <div
+                        className="rounded-2xl backdrop-blur-xl border border-white/25 px-5 py-5"
+                        style={{
+                          background: "rgba(255,255,255,0.13)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 0 24px rgba(139,92,246,0.35), inset 0 1px 0 rgba(255,255,255,0.18)",
+                        }}
+                      >
+                        <p className="text-white font-semibold text-base leading-snug mb-3">{notif.text}</p>
+                        <span
+                          className="inline-flex items-center font-black px-4 py-2 rounded-full"
+                          style={{
+                            background: "linear-gradient(135deg, rgba(168,85,247,0.55), rgba(99,102,241,0.55))",
+                            border: "1px solid rgba(168,85,247,0.55)",
+                            color: "#ede9fe",
+                            fontSize: "1rem",
+                            letterSpacing: "0.02em",
+                            boxShadow: "0 0 12px rgba(139,92,246,0.4)",
+                          }}
+                        >
+                          {notif.points}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Telefoon + desktop notificaties */}
+              <div className="relative flex justify-center" style={{ overflow: "visible" }}>
+                <div className="relative w-[240px] sm:w-[280px]">
                   <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[6px] border-gray-800 bg-gray-900">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[22px] bg-gray-900 rounded-b-xl z-20" />
                     <img src={screenDashboard} alt="Dashboard" className="w-full relative z-10" />
@@ -1456,72 +1505,63 @@ export default function LandingPage() {
                   <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-[3.5rem] blur-3xl -z-10" />
                 </div>
 
+                {/* Desktop notificaties — verborgen op mobiel */}
                 {rewardNotifications.map((notif, i) => {
-                  const positions = [
-                    { className: "hidden sm:block sm:-left-[280px] sm:top-[30px]", mobileClass: "sm:hidden -top-[70px] left-1/2 -translate-x-1/2", rot: "-2deg" },
-                    { className: "hidden sm:block sm:-right-[280px] sm:top-[120px]", mobileClass: "sm:hidden -top-[70px] left-1/2 -translate-x-1/2", rot: "1.5deg" },
-                    { className: "hidden sm:block sm:-right-[240px] sm:-top-[20px]", mobileClass: "sm:hidden -top-[70px] left-1/2 -translate-x-1/2", rot: "3deg" },
+                  const desktopPos = [
+                    { style: { left: "-300px", top: "20px" }, rot: "-2deg" },
+                    { style: { right: "-300px", top: "100px" }, rot: "1.5deg" },
+                    { style: { right: "-270px", top: "-10px" }, rot: "3deg" },
                   ];
-                  const pos = positions[i];
+                  const pos = desktopPos[i];
                   const isActive = activeNotification === i;
-                  const notifCard = (
+                  return (
                     <div
-                      className="rounded-2xl p-3 sm:p-4 backdrop-blur-xl border border-white/20 w-[260px] sm:w-[270px]"
+                      key={i}
+                      className="hidden sm:block absolute z-30 pointer-events-none"
                       style={{
-                        background: "rgba(255,255,255,0.12)",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(139,92,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
-                        transform: `rotate(${pos.rot})`,
+                        ...pos.style,
+                        animation: isActive ? "notification-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none",
+                        opacity: isActive ? 1 : 0,
+                        transition: "opacity 0.3s ease-out",
                       }}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/30">
-                          <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-sm leading-tight">{notif.text}</p>
-                          <span className="inline-block mt-1.5 text-xs font-bold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-full border border-purple-400/30">
-                            {notif.points}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                  return (
-                    <div key={i}>
                       <div
-                        className={`absolute z-30 pointer-events-none ${pos.className}`}
+                        className="rounded-2xl backdrop-blur-xl border border-white/25 w-[260px] px-5 py-4"
                         style={{
-                          animation: isActive ? "notification-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none",
-                          opacity: isActive ? 1 : 0,
-                          transition: "opacity 0.4s ease-out",
+                          background: "rgba(255,255,255,0.13)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 0 24px rgba(139,92,246,0.35), inset 0 1px 0 rgba(255,255,255,0.18)",
+                          transform: `rotate(${pos.rot})`,
                         }}
                       >
-                        {notifCard}
-                      </div>
-                      <div
-                        className={`absolute z-30 pointer-events-none ${pos.mobileClass}`}
-                        style={{
-                          animation: isActive ? "notification-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none",
-                          opacity: isActive ? 1 : 0,
-                          transition: "opacity 0.4s ease-out",
-                        }}
-                      >
-                        {notifCard}
+                        <p className="text-white font-semibold text-sm leading-snug mb-3">{notif.text}</p>
+                        <span
+                          className="inline-flex items-center gap-1.5 font-black px-4 py-1.5 rounded-full"
+                          style={{
+                            background: "linear-gradient(135deg, rgba(168,85,247,0.5), rgba(99,102,241,0.5))",
+                            border: "1px solid rgba(168,85,247,0.5)",
+                            color: "#e9d5ff",
+                            fontSize: "0.9rem",
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          {notif.points}
+                        </span>
                       </div>
                     </div>
                   );
                 })}
+              </div>
 
-                <div className="flex justify-center gap-2 mt-5">
-                  {rewardNotifications.map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${
-                        activeNotification === i ? "w-8 bg-purple-400" : "w-2 bg-white/20"
-                      }`}
-                    />
-                  ))}
-                </div>
+              {/* Stippen indicator */}
+              <div className="flex justify-center gap-2 mt-4 sm:mt-5">
+                {rewardNotifications.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      activeNotification === i ? "w-8 bg-purple-400" : "w-2 bg-white/20"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </RevealSection>
