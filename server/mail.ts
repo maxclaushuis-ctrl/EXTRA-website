@@ -175,7 +175,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
   }
 
   const fullName = `${candidate.firstName} ${candidate.lastName}`.trim();
-  const fromEmail = "info@doehetextra.nl";
+  const fromEmail = "max@doehetextra.nl";
   const fromName = "EXTRA";
 
   const functionLabels: Record<string, string> = {
@@ -230,7 +230,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
             <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:24px;">
               <h3 style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#15803d;">Wat nu?</h3>
               ${interviewInfo}
-              <p style="margin:0;font-size:14px;color:#166534;line-height:1.5;">Heb je vragen? Stuur ons een berichtje via WhatsApp of mail naar <a href="mailto:info@doehetextra.nl" style="color:#166534;">info@doehetextra.nl</a>.</p>
+              <p style="margin:0;font-size:14px;color:#166534;line-height:1.5;">Heb je vragen? Stuur ons een berichtje via WhatsApp of mail naar <a href="mailto:max@doehetextra.nl" style="color:#166534;">max@doehetextra.nl</a>.</p>
             </div>
             <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.6;">Welkom bij de EXTRA-familie! We kijken ernaar uit om je te leren kennen.</p>
           </td>
@@ -239,7 +239,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
         <tr>
           <td style="background:#f9fafb;padding:24px 40px;border-top:1px solid #e5e7eb;text-align:center;">
             <p style="margin:0 0 4px 0;font-size:13px;color:#9ca3af;">EXTRA Hospitality Staffing</p>
-            <p style="margin:0;font-size:12px;color:#d1d5db;">Dit is een automatisch gegenereerde e-mail. Neem contact op via info@doehetextra.nl voor vragen.</p>
+            <p style="margin:0;font-size:12px;color:#d1d5db;">Dit is een automatisch gegenereerde e-mail. Neem contact op via max@doehetextra.nl voor vragen.</p>
           </td>
         </tr>
       </table>
@@ -258,7 +258,7 @@ ${candidate.interviewDate
   ? `Je gesprek is ingepland op ${candidate.interviewDate}${candidate.interviewTime ? ` om ${candidate.interviewTime}` : ""}.`
   : "We nemen binnenkort contact met je op om een gesprek in te plannen."}
 
-Heb je vragen? Stuur ons een e-mail via info@doehetextra.nl.
+Heb je vragen? Stuur ons een e-mail via max@doehetextra.nl.
 
 Met vriendelijke groet,
 Het EXTRA team`;
