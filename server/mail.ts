@@ -172,6 +172,8 @@ export async function sendCandidateConfirmationEmail(candidate: {
   lastName: string;
   email: string | null;
   functionType: string;
+  nationality?: string | null;
+  language?: string | null;
   interviewDate?: string | null;
   interviewTime?: string | null;
 }): Promise<boolean> {
@@ -180,17 +182,29 @@ export async function sendCandidateConfirmationEmail(candidate: {
     return false;
   }
 
-  const fullName = `${candidate.firstName} ${candidate.lastName}`.trim();
+  // Taal bepalen: Engels als nationaliteit niet NL is EN geen Nederlands opgegeven als taal
+  const speaksDutch = (candidate.language || "").toLowerCase().includes("nederland");
+  const isNlNationality = (candidate.nationality || "").toLowerCase().includes("nederland");
+  const useEnglish = !speaksDutch && !isNlNationality;
+
   const fromEmail = "max@doehetextra.nl";
   const fromName = "EXTRA";
 
-  const functionLabels: Record<string, string> = {
+  const functionLabelsNL: Record<string, string> = {
     housekeeping: "Housekeeping medewerker",
     horecamedewerker: "Horecamedewerker",
     chef: "Chef / Kok",
     frontoffice: "Front office medewerker",
   };
-  const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
+  const functionLabelsEN: Record<string, string> = {
+    housekeeping: "Housekeeping staff",
+    horecamedewerker: "Hospitality staff",
+    chef: "Chef / Cook",
+    frontoffice: "Front office staff",
+  };
+  const functionLabel = useEnglish
+    ? (functionLabelsEN[candidate.functionType] || candidate.functionType)
+    : (functionLabelsNL[candidate.functionType] || candidate.functionType);
 
   const CALENDLY_URL = "https://calendly.com/max-_zs/30min";
   const WHATSAPP_URL = "https://wa.me/31854012373";
@@ -235,11 +249,30 @@ export async function sendCandidateConfirmationEmail(candidate: {
         <!-- ===== BODY ===== -->
         <tr>
           <td style="padding:40px 44px 12px;">
+            ${useEnglish ? `
+            <p style="margin:0 0 20px 0;font-size:17px;color:#1a0a3e;line-height:1.7;">Hi ${candidate.firstName},</p>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Great that you've signed up with EXTRA — happy to have you on board! ⚡</p>
+            <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">We always love meeting new people who are ready to get to work.</p>
+            <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;margin-bottom:28px;border:1px solid #ede9fe;">
+              <p style="margin:0 0 10px 0;font-size:16px;color:#1a0a3e;font-weight:700;line-height:1.5;">Haven't scheduled your introduction yet?</p>
+              <p style="margin:0 0 18px 0;font-size:15px;color:#4b5563;line-height:1.65;">Book your slot here:</p>
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="border-radius:50px;background:#2e1065;padding-right:12px;">
+                  <a href="${CALENDLY_URL}" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">Schedule a meeting →</a>
+                </td>
+                <td style="border-radius:50px;background:#25d366;">
+                  <a href="${WHATSAPP_URL}" style="display:inline-block;padding:13px 24px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">💬 WhatsApp</a>
+                </td>
+              </tr></table>
+            </div>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">You're welcome to visit us at <strong>Herengracht 372</strong> in Amsterdam.</p>
+            <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">Can't make it? No worries — <a href="${CALENDLY_URL}" style="color:#6d28d9;font-weight:600;text-decoration:none;">reschedule your appointment</a> so we can plan someone else in.</p>
+            <p style="margin:0 0 32px 0;font-size:16px;color:#374151;line-height:1.75;">Looking forward to meeting you. See you soon! 🙌</p>
+            <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">Best regards,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+            ` : `
             <p style="margin:0 0 20px 0;font-size:17px;color:#1a0a3e;line-height:1.7;">Hi ${candidate.firstName},</p>
             <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Top dat je je hebt aangemeld bij EXTRA, mooi dat je erbij wil horen! ⚡</p>
             <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker aan de slag te gaan.</p>
-
-            <!-- Afspraak inplannen -->
             <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;margin-bottom:28px;border:1px solid #ede9fe;">
               <p style="margin:0 0 10px 0;font-size:16px;color:#1a0a3e;font-weight:700;line-height:1.5;">Heb je nog geen datum ingepland voor je kennismaking?</p>
               <p style="margin:0 0 18px 0;font-size:15px;color:#4b5563;line-height:1.65;">Plan 'm dan hier in:</p>
@@ -252,19 +285,21 @@ export async function sendCandidateConfirmationEmail(candidate: {
                 </td>
               </tr></table>
             </div>
-
             <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Je bent welkom bij ons op <strong>Herengracht 372</strong> in Amsterdam.</p>
             <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">Kun je toch niet? No stress, <a href="${CALENDLY_URL}" style="color:#6d28d9;font-weight:600;text-decoration:none;">pas je afspraak even aan</a> zodat we iemand anders kunnen inplannen.</p>
             <p style="margin:0 0 32px 0;font-size:16px;color:#374151;line-height:1.75;">We kijken ernaar uit om je te ontmoeten. Tot snel! 🙌</p>
-
             <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">Groet,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+            `}
           </td>
         </tr>
 
         <!-- ===== FOOTER ===== -->
         <tr>
-          <td style="padding:28px 44px 32px;border-top:1px solid #f3f4f6;margin-top:32px;">
-            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">Dit is een automatisch gegenereerde e-mail. Neem voor vragen contact op via <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.</p>
+          <td style="padding:28px 44px 32px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">${useEnglish
+              ? `This is an automated email. For questions, contact us at <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.`
+              : `Dit is een automatisch gegenereerde e-mail. Neem voor vragen contact op via <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.`
+            }</p>
           </td>
         </tr>
 
@@ -274,7 +309,26 @@ export async function sendCandidateConfirmationEmail(candidate: {
 </body>
 </html>`;
 
-  const text = `Hi ${candidate.firstName},
+  const text = useEnglish
+    ? `Hi ${candidate.firstName},
+
+Great that you've signed up with EXTRA — happy to have you on board! ⚡
+
+We always love meeting new people who are ready to get to work.
+
+Haven't scheduled your introduction yet?
+Book your slot here: ${CALENDLY_URL}
+Or send us a WhatsApp: ${WHATSAPP_URL}
+
+You're welcome to visit us at Herengracht 372 in Amsterdam.
+
+Can't make it? No worries — reschedule your appointment so we can plan someone else in.
+
+Looking forward to meeting you. See you soon! 🙌
+
+Best regards,
+Team EXTRA`
+    : `Hi ${candidate.firstName},
 
 Top dat je je hebt aangemeld bij EXTRA, mooi dat je erbij wil horen! ⚡
 
@@ -296,7 +350,9 @@ Team EXTRA`;
   return await sendEmail({
     to: candidate.email,
     from: `${fromName} <${fromEmail}>`,
-    subject: `Je aanmelding is binnen, let's go! 🚀`,
+    subject: useEnglish
+      ? `Your application is in, let's go! 🚀`
+      : `Je aanmelding is binnen, let's go! 🚀`,
     html,
     text,
   });

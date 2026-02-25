@@ -3835,6 +3835,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: candidate.lastName,
         email: candidate.email,
         functionType: candidate.functionType,
+        nationality: candidate.nationality,
+        language: candidate.language,
         interviewDate: candidate.interviewDate,
         interviewTime: candidate.interviewTime,
       }).then((sent) => {
@@ -3862,8 +3864,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const firstName = (req.query.naam as string) || "Sophie";
     const lastName = (req.query.achternaam as string) || "van den Berg";
     const functionType = (req.query.functie as string) || "horecamedewerker";
-    const interviewDate = (req.query.datum as string) || "vrijdag 27 februari 2026";
-    const interviewTime = (req.query.tijd as string) || "13:00 - 13:30";
+    const taal = (req.query.taal as string) || "nl";
+    const useEnglish = taal === "en";
 
     const fullName = `${firstName} ${lastName}`;
     const functionLabels: Record<string, string> = {
@@ -3903,6 +3905,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </tr>
         <tr>
           <td style="padding:40px 44px 12px;">
+            ${useEnglish ? `
+            <p style="margin:0 0 20px 0;font-size:17px;color:#1a0a3e;line-height:1.7;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Great that you've signed up with EXTRA — happy to have you on board! ⚡</p>
+            <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">We always love meeting new people who are ready to get to work.</p>
+            <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;margin-bottom:28px;border:1px solid #ede9fe;">
+              <p style="margin:0 0 10px 0;font-size:16px;color:#1a0a3e;font-weight:700;line-height:1.5;">Haven't scheduled your introduction yet?</p>
+              <p style="margin:0 0 18px 0;font-size:15px;color:#4b5563;line-height:1.65;">Book your slot here:</p>
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="border-radius:50px;background:#2e1065;padding-right:12px;">
+                  <a href="${CALENDLY_URL}" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">Schedule a meeting →</a>
+                </td>
+                <td style="border-radius:50px;background:#25d366;">
+                  <a href="${WHATSAPP_URL}" style="display:inline-block;padding:13px 24px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.2px;">💬 WhatsApp</a>
+                </td>
+              </tr></table>
+            </div>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">You're welcome to visit us at <strong>Herengracht 372</strong> in Amsterdam.</p>
+            <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">Can't make it? No worries — <a href="${CALENDLY_URL}" style="color:#6d28d9;font-weight:600;text-decoration:none;">reschedule your appointment</a> so we can plan someone else in.</p>
+            <p style="margin:0 0 32px 0;font-size:16px;color:#374151;line-height:1.75;">Looking forward to meeting you. See you soon! 🙌</p>
+            <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">Best regards,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+            ` : `
             <p style="margin:0 0 20px 0;font-size:17px;color:#1a0a3e;line-height:1.7;">Hi ${firstName},</p>
             <p style="margin:0 0 16px 0;font-size:16px;color:#374151;line-height:1.75;">Top dat je je hebt aangemeld bij EXTRA, mooi dat je erbij wil horen! ⚡</p>
             <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker aan de slag te gaan.</p>
@@ -3922,11 +3945,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <p style="margin:0 0 28px 0;font-size:16px;color:#374151;line-height:1.75;">Kun je toch niet? No stress, <a href="${CALENDLY_URL}" style="color:#6d28d9;font-weight:600;text-decoration:none;">pas je afspraak even aan</a> zodat we iemand anders kunnen inplannen.</p>
             <p style="margin:0 0 32px 0;font-size:16px;color:#374151;line-height:1.75;">We kijken ernaar uit om je te ontmoeten. Tot snel! 🙌</p>
             <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">Groet,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+            `}
           </td>
         </tr>
         <tr>
           <td style="padding:28px 44px 32px;border-top:1px solid #f3f4f6;">
-            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">Dit is een automatisch gegenereerde e-mail. Neem voor vragen contact op via <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.</p>
+            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">${useEnglish
+              ? `This is an automated email. For questions, contact us at <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.`
+              : `Dit is een automatisch gegenereerde e-mail. Neem voor vragen contact op via <a href="mailto:max@doehetextra.nl" style="color:#6d28d9;text-decoration:none;">max@doehetextra.nl</a>.`
+            }</p>
           </td>
         </tr>
       </table>
