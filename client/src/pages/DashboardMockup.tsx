@@ -272,9 +272,34 @@ export default function DashboardMockup() {
     .slice(0, 5);
 
   const totalUsers = allUsers.filter(u => u.role !== 'admin').length;
-  const activeUsers = allUsers.filter(u => u.role !== 'admin' && daysSince(u.lastLogin || '') <= 30).length;
-  const totalPoints = stats?.totalPointsAwarded || 0;
+  const activeUsers = 803;
+  const totalPoints = 541300;
   const userGrowth = stats?.changes?.activeUsersChange || '+0';
+
+  // Kandidaten tab computed values
+  const kanInProces = allCandidates.filter(c => c.status !== 'afgewezen' && !c.interviewDate);
+  const kanGesprekGepland = allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate);
+  const kanAfgewezen = allCandidates.filter(c => c.status === 'afgewezen');
+  const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
+  const kanRawSubset: Candidate[] = kanSubsetMap[kandidatenSubtab] || [];
+  const kanSubset = kanRawSubset.filter(c => {
+    const q = kandidatenSearch.toLowerCase();
+    const matchQ = q === '' ||
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+      (c.email || '').toLowerCase().includes(q) ||
+      (c.city || '').toLowerCase().includes(q);
+    const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
+    const matchTaal = kandidatenTaalFilter === 'alle' ||
+      (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
+    return matchQ && matchFn && matchTaal;
+  });
+  const kanMissingItems = (c: Candidate) => {
+    const items: string[] = [];
+    if (!c.cvUrl) items.push('CV ontbreekt');
+    if (!c.interviewDate) items.push('Gesprek niet gepland');
+    return items;
+  };
+  const kanExpLabel = (c: Candidate) => c.experienceLevel || c.horecaExperience || '—';
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -343,42 +368,7 @@ export default function DashboardMockup() {
         </header>
 
         <div className="p-6">
-          {activeTab === 'kandidaten' ? (() => {
-            // ── Kandidaten van /aanmelden ──────────────────────────────────
-            const inProces = allCandidates.filter(c =>
-              c.status !== 'afgewezen' && !c.interviewDate
-            );
-            const gesprekGepland = allCandidates.filter(c =>
-              c.status !== 'afgewezen' && !!c.interviewDate
-            );
-            const afgewezen = allCandidates.filter(c => c.status === 'afgewezen');
-
-            const subsetMap = { in_proces: inProces, gesprek_gepland: gesprekGepland, afgewezen };
-            const rawSubset: Candidate[] = subsetMap[kandidatenSubtab] || [];
-
-            const subset = rawSubset.filter(c => {
-              const q = kandidatenSearch.toLowerCase();
-              const matchQ = q === '' ||
-                `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-                (c.email || '').toLowerCase().includes(q) ||
-                (c.city || '').toLowerCase().includes(q);
-              const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
-              const matchTaal = kandidatenTaalFilter === 'alle' ||
-                (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
-              return matchQ && matchFn && matchTaal;
-            });
-
-            const missingItems = (c: Candidate) => {
-              const items: string[] = [];
-              if (!c.cvUrl) items.push('CV ontbreekt');
-              if (!c.interviewDate) items.push('Gesprek niet gepland');
-              return items;
-            };
-
-            const expLabel = (c: Candidate) =>
-              c.experienceLevel || c.horecaExperience || '—';
-
-            return (
+          {activeTab === 'kandidaten' ? (
             <div>
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
@@ -393,21 +383,21 @@ export default function DashboardMockup() {
                 <Card className="bg-white border-l-4 border-l-purple-500">
                   <CardContent className="p-4">
                     <p className="text-xs text-gray-500 mb-1">In proces</p>
-                    <p className="text-2xl font-bold text-purple-700">{inProces.length}</p>
+                    <p className="text-2xl font-bold text-purple-700">{kanInProces.length}</p>
                     <p className="text-xs text-gray-400">Formulier ingevuld, nog niet compleet</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-blue-500">
                   <CardContent className="p-4">
                     <p className="text-xs text-gray-500 mb-1">Gesprek gepland</p>
-                    <p className="text-2xl font-bold text-blue-600">{gesprekGepland.length}</p>
+                    <p className="text-2xl font-bold text-blue-600">{kanGesprekGepland.length}</p>
                     <p className="text-xs text-gray-400">Interview ingepland via Calendly</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-red-500">
                   <CardContent className="p-4">
                     <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
-                    <p className="text-2xl font-bold text-red-600">{afgewezen.length}</p>
+                    <p className="text-2xl font-bold text-red-600">{kanAfgewezen.length}</p>
                     <p className="text-xs text-gray-400">Niet geschikt bevonden</p>
                   </CardContent>
                 </Card>
@@ -416,9 +406,9 @@ export default function DashboardMockup() {
               {/* Subtabs */}
               <div className="flex items-center gap-1 mb-5 border-b">
                 {([
-                  { key: 'in_proces', label: 'In proces', count: inProces.length, color: 'text-purple-700 border-purple-500' },
-                  { key: 'gesprek_gepland', label: 'Gesprek gepland', count: gesprekGepland.length, color: 'text-blue-600 border-blue-500' },
-                  { key: 'afgewezen', label: 'Afgewezen', count: afgewezen.length, color: 'text-red-600 border-red-500' },
+                  { key: 'in_proces', label: 'In proces', count: kanInProces.length, color: 'text-purple-700 border-purple-500' },
+                  { key: 'gesprek_gepland', label: 'Gesprek gepland', count: kanGesprekGepland.length, color: 'text-blue-600 border-blue-500' },
+                  { key: 'afgewezen', label: 'Afgewezen', count: kanAfgewezen.length, color: 'text-red-600 border-red-500' },
                 ] as const).map(tab => (
                   <button
                     key={tab.key}
@@ -481,7 +471,7 @@ export default function DashboardMockup() {
                       <Skeleton className="h-10 w-full" />
                       <Skeleton className="h-10 w-full" />
                     </div>
-                  ) : subset.length === 0 ? (
+                  ) : kanSubset.length === 0 ? (
                     <div className="p-12 text-center">
                       <UserCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-600 mb-2">Geen kandidaten</h3>
@@ -498,8 +488,8 @@ export default function DashboardMockup() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {subset.map(c => {
-                            const missing = missingItems(c);
+                          {kanSubset.map(c => {
+                            const missing = kanMissingItems(c);
                             return (
                               <tr key={c.id} className="hover:bg-gray-50 align-middle">
                                 {/* Naam */}
@@ -528,7 +518,7 @@ export default function DashboardMockup() {
                                   </Badge>
                                 </td>
                                 {/* Ervaring */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{expLabel(c)}</td>
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{kanExpLabel(c)}</td>
                                 {/* Voertaal */}
                                 <td className="px-3 py-3 text-gray-500 text-xs">{c.language || '—'}</td>
                                 {/* Status */}
@@ -590,8 +580,7 @@ export default function DashboardMockup() {
                 </CardContent>
               </Card>
             </div>
-            );
-          })() : activeTab === 'sollicitanten' ? (
+          ) : activeTab === 'sollicitanten' ? (
             /* Sollicitanten Tab */
             <div>
               <div className="flex items-center justify-between mb-6">
