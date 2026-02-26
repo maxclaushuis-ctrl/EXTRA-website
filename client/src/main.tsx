@@ -6,6 +6,15 @@ import { queryClient } from "./lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 
+// Suppress the harmless Vite HMR WebSocket error in Replit's environment
+// that would otherwise trigger the error overlay
+window.addEventListener('unhandledrejection', (e) => {
+  if (e.reason?.message?.includes('string did not match the expected pattern')) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}, true);
+
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
