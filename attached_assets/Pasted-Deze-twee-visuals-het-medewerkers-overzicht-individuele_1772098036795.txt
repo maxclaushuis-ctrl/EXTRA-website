@@ -1,0 +1,89 @@
+Deze twee visuals (het medewerkers-overzicht + individuele medewerkerstatistieken) horen niet in het EXTRAATJE-blok zelf, maar in een aparte sectie direct ná “Waarom opdrachtgevers voor EXTRA kiezen”.
+Dus:
+Hero
+Welke EXTRA’s heb je nodig?
+Waarom opdrachtgevers voor EXTRA kiezen
+👉 Nieuwe sectie: “Altijd de beste mensen door continue kwaliteitsmeting”
+Andere secties (branches, stappenplan, klantcases, CTA’s, etc.)
+🌟 Waarom deze plek perfect is
+Na de USP-sectie “Waarom opdrachtgevers voor EXTRA kiezen” is de bezoeker al overtuigd van de basis: loondienst, selectie, soft/hard skills, beloningssysteem, enzovoort.
+Maar dan komt de vraag:
+“Hoe zorgen ze dat de kwaliteit blijvend hoog blijft?”
+Dáár is deze nieuwe sectie het antwoord op.
+Jij hebt een systeem dat nauwelijks andere horeca-uitzendbureaus hebben:
+continu meten, data bijhouden, micro-prestaties, ratings per dienst, complimenten & klachtenhistorie, en op basis daarvan een sterke poule bouwen.
+Dat is een enorme troef.
+🧩 Nieuwe sectie: “Altijd de beste mensen dankzij continue kwaliteitsmeting”
+Doel van de sectie
+→ Klanten laten zien dat jij niet zomaar personeel levert, maar gemeten, bewezen goede mensen, met transparante data.
+Plaatsing op de pagina
+Tussen:
+Waarom opdrachtgevers voor EXTRA kiezen
+en
+Branches (waar heb je personeel voor nodig?)
+Dat is logisch, want:
+Eerst overtuig je op hoog niveau (USP’s)
+Daarna toon je bewijs en technologie
+Daarna leid je naar conversie en concrete diensten
+🖼️ Welk beeld waar?
+1. Medewerker-overzicht (Dashboard-overview)
+Gebruik dit als de hoofdvisual van de sectie.
+Dit beeld laat zien:
+Totalen: gebruikers, actief, totale punten
+Overzicht van medewerkers + rating + ervaring
+Real-time data & performance indicators
+Dit beeld benadrukt:
+“We sturen op feiten, niet op gevoel.”
+2. Individueel medewerkerprofiel (Statistieken)
+Dit beeld gebruik je onder de eerste visual.
+Dit beeld maakt zichtbaar:
+Scores per competentie
+Complimenten
+Klachten (nul = kracht)
+No-shows
+Diensthistorie
+Dit laat exact zien wat opdrachtgevers willen:
+“Hoe weet EXTRA wie goed is?”
+“Hoe selecteren jullie op basis van kwaliteit?”
+→ Dit beeld bewijst het.
+🏗️ Tekstopbouw die je hierbij moet zetten
+Hier is een directe, kant-en-klare tekst voor in de nieuwe sectie:
+Altijd de beste mensen door continue kwaliteitsmeting
+Bij EXTRA draait alles om kwaliteit. Daarom meten we elke dienst, elke prestatie en elke medewerker met ons eigen systeem. Niet één keer per maand, maar continu — zodat jij alleen medewerkers krijgt die bewezen goed presteren.
+✔ Soft skills & hard skills real-time gemeten
+✔ Scores per dienst opgeslagen in de medewerkers-database
+✔ Complimenten, no-shows en klachten direct inzichtelijk
+✔ We bouwen voor elke klant een vaste poule van toppers
+✔ Slechte kwaliteitsdalingen signaleren we direct
+Met deze data weten we precies wie betrouwbaar is, wie groeit en wie structureel sterker presteert. Zo schaal je op zonder in te leveren op kwaliteit — iets wat bij snelle groei vaak misgaat.
+📌 Waarom deze sectie belangrijk is
+Veel opdrachtgevers denken:
+“Hoe zorg ik dat ik niet de minder goede mensen krijg, zoals bij veel andere bureaus?”
+Deze sectie geeft het antwoord.
+🧱 Waar hoort het EXTRAATJE-beloningssysteem dan?
+Dat laat je in een aparte sectie staan, want het beloningssysteem:
+Gaat over motivatie
+Is vooral intern gericht
+Is een onderscheidende USP
+Maar deze nieuwe sectie gaat over kwaliteit voor de klant — dat moet er dus naast, niet erdoorheen gemixt.
+🎨 Visuele hiërarchie (belangrijk voor Replit)
+De nieuwe sectie moet qua look voelen als:
+Witte achtergrond (of licht gradient)
+Card-stijl visuals (zoals je andere secties)
+Een duidelijke kop + subkop
+Twee beelden naast elkaar of onder elkaar
+Eventueel animatie: dashboard scroll of hover-effect
+🚀 Samenvatting — dit is wat je moet doen
+➤ Maak een nieuwe sectie genaamd:
+“Altijd de beste mensen dankzij continue kwaliteitsmeting”
+➤ Plaats deze direct onder:
+“Waarom opdrachtgevers voor EXTRA kiezen.”
+➤ Gebruik hier de twee visuals:
+Overzicht van alle medewerkers
+Profiel van één medewerker (ratings)
+➤ Benadruk dat:
+alle sollicitaties in persoon plaatsvinden
+elke dienst wordt beoordeeld
+gegevens permanent worden opgeslagen
+jullie daardoor altijd kwaliteit kunnen garanderen
+dit dé valkuil van groeiende organisaties oplost

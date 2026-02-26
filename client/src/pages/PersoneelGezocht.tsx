@@ -23,6 +23,8 @@ import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
 import logoFunda from "@assets/Logo_funda_1771267205959.png";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.png";
+import screenshotGebruikers from "@assets/Gebruikers_1772098047298.png";
+import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);
@@ -426,7 +428,111 @@ export default function PersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 3. LOGO'S OPDRACHTGEVERS                           */}
+      {/* 3. KWALITEITSMETING                                */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 lg:py-36 bg-white">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <div className="text-center mb-12 sm:mb-18">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                <BarChart3 className="w-4 h-4" /> Kwaliteitsgarantie
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-5 sm:mb-7" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Altijd de beste mensen dankzij<br className="hidden sm:block" /> continue kwaliteitsmeting
+              </h2>
+              <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                Bij EXTRA meten we elke dienst, elke prestatie en elke medewerker met ons eigen systeem. Niet één keer per maand, maar continu — zodat jij alleen medewerkers krijgt die bewezen goed presteren.
+              </p>
+            </div>
+          </RevealSection>
+
+          {/* Checklijst */}
+          <RevealSection delay={100}>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-14 sm:mb-20 max-w-4xl mx-auto">
+              {[
+                { text: "Soft skills & hard skills real-time gemeten" },
+                { text: "Scores per dienst opgeslagen in de database" },
+                { text: "Complimenten, no-shows en klachten direct inzichtelijk" },
+                { text: "Vaste poule van toppers voor elke klant" },
+                { text: "Kwaliteitsdalingen signaleren we direct" },
+                { text: "Alle sollicitaties vinden persoonlijk op kantoor plaats" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm">
+                  <div className="mt-0.5 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                  </div>
+                  <span className="text-sm sm:text-base font-semibold text-gray-800 leading-snug">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </RevealSection>
+
+          {/* Twee dashboard screenshots */}
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+            <RevealSection delay={150}>
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-br from-purple-200 to-indigo-200 rounded-2xl sm:rounded-3xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100">
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-5 sm:px-6 py-3 sm:py-4 border-b border-purple-100/60">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-purple-600" />
+                      <span className="text-xs sm:text-sm font-bold text-purple-800 uppercase tracking-wide">Medewerkers overzicht</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">Real-time data van alle medewerkers in één oogopslag</p>
+                  </div>
+                  <img
+                    src={screenshotGebruikers}
+                    alt="Dashboard medewerkers overzicht met ratings en statistieken"
+                    className="w-full object-cover group-hover:scale-[1.01] transition-transform duration-500"
+                  />
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-xs sm:text-sm text-gray-500 font-medium">We sturen op feiten, niet op gevoel</p>
+                </div>
+              </div>
+            </RevealSection>
+
+            <RevealSection delay={250}>
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-br from-green-200 to-emerald-200 rounded-2xl sm:rounded-3xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 sm:px-6 py-3 sm:py-4 border-b border-green-100/60">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-green-600" />
+                      <span className="text-xs sm:text-sm font-bold text-green-800 uppercase tracking-wide">Individueel medewerkersprofiel</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">Scores, complimenten, no-shows en diensthistorie per persoon</p>
+                  </div>
+                  <img
+                    src={screenshotProfiel}
+                    alt="Individueel medewerkersprofiel met beoordelingen en statistieken"
+                    className="w-full object-cover group-hover:scale-[1.01] transition-transform duration-500"
+                  />
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-xs sm:text-sm text-gray-500 font-medium">Zo selecteren we op bewezen kwaliteit</p>
+                </div>
+              </div>
+            </RevealSection>
+          </div>
+
+          {/* Bottom quote */}
+          <RevealSection delay={300}>
+            <div className="mt-14 sm:mt-20 text-center">
+              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 text-white px-6 sm:px-8 py-4 sm:py-5 rounded-2xl shadow-lg shadow-purple-900/20">
+                <TrendingUp className="w-5 h-5 text-purple-300 flex-shrink-0" />
+                <p className="text-sm sm:text-base font-semibold leading-snug">
+                  Met deze data weet je precies wie betrouwbaar is, wie groeit en wie structureel sterker presteert.<br className="hidden sm:block" />
+                  <span className="text-purple-300"> Zo schaal je op zonder in te leveren op kwaliteit.</span>
+                </p>
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 4. LOGO'S OPDRACHTGEVERS                           */}
       {/* ═══════════════════════════════════════════════════ */}
       <section className="py-10 sm:py-14 bg-white border-y border-gray-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
