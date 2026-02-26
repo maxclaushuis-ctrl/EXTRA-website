@@ -14,7 +14,7 @@ import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
-  RefreshCw, Settings2, TrendingUp, Clock, UserPlus, Eye, Star, Trash2,
+  RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown
 } from 'lucide-react';
 
