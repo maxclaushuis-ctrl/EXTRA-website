@@ -1,0 +1,97 @@
+Je bent een senior UX designer en front-end developer. Je werkt aan het dashboard op /dashboard-mockup#, in exact dezelfde stijl, componenten, kleuren en structuur als het huidige dashboard.
+
+🔧 Opdracht
+
+Breid het dashboard uit met een nieuw hoofdtabblad naast “Sollicitanten”, met de naam “Kandidaten”.
+
+Dit tabblad verzamelt alle aanmeldingen vanuit /aanmelden, inclusief incomplete aanmeldingen.
+
+Het doel: alle kandidaten overzichtelijk beheren in drie fases van de sollicitatieprocedure.
+
+⸻
+
+📂 Structuur van het tabblad “Kandidaten”
+
+Het hoofdtabblad bevat drie subtabbladen, elk met zijn eigen dataset:
+
+⸻
+
+1. Subtabblad: “In proces”
+
+Hier komen alle kandidaten die:
+	•	het formulier hebben ingevuld,
+	•	maar nog geen CV hebben geüpload,
+	•	of nog geen gesprek hebben ingepland.
+
+⸻
+
+2. Subtabblad: “Gesprek gepland”
+
+Hier komen kandidaten die:
+	•	het formulier volledig hebben ingevuld
+	•	én een gesprek hebben ingepland via de website.
+
+⸻
+
+3. Subtabblad: “Afgewezen”
+
+Hier komen alle kandidaten die door de recruiter zijn afgewezen.
+
+⸻
+
+🧩 Gegevensstructuur – verplichte kolommen
+
+Gebruik overal dezelfde kolomstructuur, in onderstaande optimale volgorde op basis van UX/logica:
+	1.	Naam (voor- & achternaam)
+	2.	Woonplaats
+	3.	E-mail
+	4.	Telefoonnummer
+	5.	Nationaliteit
+	6.	Functie / Rol (wat iemand wil werken — horeca, keuken, front-office etc.)
+	7.	Ervaring (in jaren of categorie)
+	8.	Voertaal (bijv. Nederlands, Engels of beide)
+	9.	Statusbadge (In proces / Gesprek gepland / Afgewezen)
+	10.	Datum aanmelding
+	11.	Missing items indicator (bijv. “CV ontbreekt”)
+
+Zorg dat de tabel superoverzichtelijk is:
+	•	vaste kolombreedtes
+	•	statusbadges met kleurcodes
+	•	icons voor ontbrekende onderdelen
+	•	sorteerbare kolommen
+	•	zoekfunctie bovenaan
+	•	filters (functie, voertaal, status)
+
+⸻
+
+🔌 Koppeling
+
+Maak een koppeling tussen:
+	•	het formulier /aanmelden,
+	•	en het nieuwe tabblad Kandidaten.
+
+Alle velden moeten automatisch worden opgeslagen en direct zichtbaar worden in het juiste subtabblad op basis van de status:
+	•	incomplete → In proces
+	•	volledig + gesprek → Gesprek gepland
+	•	afgewezen → Afgewezen
+
+⸻
+
+🎨 UX & Design richtlijnen
+	•	Gebruik 100% de huisstijl van het bestaande /dashboard-mockup#.
+	•	Zelfde card-stijl, datagrid, typografie, spacing en header-tabs.
+	•	Minimalistisch, clean, perfect scanbaar.
+	•	Werk met duidelijke labels en badges:
+	•	Paars → In proces
+	•	Blauw → Gesprek gepland
+	•	Rood → Afgewezen
+	•	Elke subtab krijgt een eigen tabelcomponent.
+
+⸻
+
+📌 Doel (context voor Replit)
+
+Het uiteindelijke doel is dat alle data vanuit EXTRA centraal in één dashboard terechtkomt.
+Voor nu focussen we uitsluitend op:
+	•	de koppeling met /aanmelden
+	•	én het bouwen van het volledige tabblad “Kandidaten” zoals hierboven beschreven.

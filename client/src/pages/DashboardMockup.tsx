@@ -38,6 +38,11 @@ type Candidate = {
   functionType: string;
   status: string;
   city?: string;
+  nationality?: string;
+  language?: string;
+  experienceLevel?: string;
+  horecaExperience?: string;
+  cvUrl?: string;
   createdAt: string;
   interviewDate?: string;
   interviewTime?: string;
@@ -61,6 +66,7 @@ const sidebarItems = [
   { icon: Gift, label: 'Beloningen', tab: 'beloningen' },
   { icon: Tag, label: 'Kortingen', tab: 'kortingen' },
   { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
+  { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
   { icon: BarChart3, label: 'Klassement', tab: 'klassement' },
   { icon: Mail, label: 'E-mailcampagnes', tab: 'email' },
   { icon: Receipt, label: 'Transacties', tab: 'transacties' },
@@ -114,6 +120,10 @@ export default function DashboardMockup() {
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('alle');
   const [candidateSearch, setCandidateSearch] = useState('');
+  const [kandidatenSubtab, setKandidatenSubtab] = useState<'in_proces' | 'gesprek_gepland' | 'afgewezen'>('in_proces');
+  const [kandidatenSearch, setKandidatenSearch] = useState('');
+  const [kandidatenFunctionFilter, setKandidatenFunctionFilter] = useState('alle');
+  const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
@@ -223,6 +233,12 @@ export default function DashboardMockup() {
   });
   const allCandidates = candidatesData?.candidates || [];
 
+  const rejectCandidateMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest('PATCH', `/api/admin/candidates/${id}`, { status: 'afgewezen' }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); },
+  });
+
   const filteredCandidates = allCandidates.filter(c => {
     const matchesStatus = candidateStatusFilter === 'alle' || c.status === candidateStatusFilter;
     const searchTerm = candidateSearch.toLowerCase();
@@ -327,7 +343,255 @@ export default function DashboardMockup() {
         </header>
 
         <div className="p-6">
-          {activeTab === 'sollicitanten' ? (
+          {activeTab === 'kandidaten' ? (() => {
+            // ── Kandidaten van /aanmelden ──────────────────────────────────
+            const inProces = allCandidates.filter(c =>
+              c.status !== 'afgewezen' && !c.interviewDate
+            );
+            const gesprekGepland = allCandidates.filter(c =>
+              c.status !== 'afgewezen' && !!c.interviewDate
+            );
+            const afgewezen = allCandidates.filter(c => c.status === 'afgewezen');
+
+            const subsetMap = { in_proces: inProces, gesprek_gepland: gesprekGepland, afgewezen };
+            const rawSubset: Candidate[] = subsetMap[kandidatenSubtab] || [];
+
+            const subset = rawSubset.filter(c => {
+              const q = kandidatenSearch.toLowerCase();
+              const matchQ = q === '' ||
+                `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                (c.email || '').toLowerCase().includes(q) ||
+                (c.city || '').toLowerCase().includes(q);
+              const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
+              const matchTaal = kandidatenTaalFilter === 'alle' ||
+                (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
+              return matchQ && matchFn && matchTaal;
+            });
+
+            const missingItems = (c: Candidate) => {
+              const items: string[] = [];
+              if (!c.cvUrl) items.push('CV ontbreekt');
+              if (!c.interviewDate) items.push('Gesprek niet gepland');
+              return items;
+            };
+
+            const expLabel = (c: Candidate) =>
+              c.experienceLevel || c.horecaExperience || '—';
+
+            return (
+            <div>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-xl font-bold">Kandidaten</h1>
+                  <p className="text-sm text-gray-500">Alle aanmeldingen via /aanmelden — realtime gesynchroniseerd</p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <Card className="bg-white border-l-4 border-l-purple-500">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-gray-500 mb-1">In proces</p>
+                    <p className="text-2xl font-bold text-purple-700">{inProces.length}</p>
+                    <p className="text-xs text-gray-400">Formulier ingevuld, nog niet compleet</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white border-l-4 border-l-blue-500">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-gray-500 mb-1">Gesprek gepland</p>
+                    <p className="text-2xl font-bold text-blue-600">{gesprekGepland.length}</p>
+                    <p className="text-xs text-gray-400">Interview ingepland via Calendly</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white border-l-4 border-l-red-500">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
+                    <p className="text-2xl font-bold text-red-600">{afgewezen.length}</p>
+                    <p className="text-xs text-gray-400">Niet geschikt bevonden</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Subtabs */}
+              <div className="flex items-center gap-1 mb-5 border-b">
+                {([
+                  { key: 'in_proces', label: 'In proces', count: inProces.length, color: 'text-purple-700 border-purple-500' },
+                  { key: 'gesprek_gepland', label: 'Gesprek gepland', count: gesprekGepland.length, color: 'text-blue-600 border-blue-500' },
+                  { key: 'afgewezen', label: 'Afgewezen', count: afgewezen.length, color: 'text-red-600 border-red-500' },
+                ] as const).map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setKandidatenSubtab(tab.key)}
+                    className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                      kandidatenSubtab === tab.key
+                        ? tab.color + ' bg-transparent'
+                        : 'text-gray-500 border-transparent hover:text-gray-700'
+                    }`}
+                  >
+                    {tab.label}
+                    <span className={`ml-2 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                      kandidatenSubtab === tab.key ? 'bg-gray-100' : 'bg-gray-100 text-gray-400'
+                    }`}>{tab.count}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Search + Filters */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Zoek op naam, e-mail of woonplaats..."
+                    className="pl-10 h-9 text-sm"
+                    value={kandidatenSearch}
+                    onChange={e => setKandidatenSearch(e.target.value)}
+                  />
+                </div>
+                <Select value={kandidatenFunctionFilter} onValueChange={setKandidatenFunctionFilter}>
+                  <SelectTrigger className="w-[150px] h-9 text-sm">
+                    <SelectValue placeholder="Alle functies" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle functies</SelectItem>
+                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                    <SelectItem value="horecamedewerker">Horecamedewerker</SelectItem>
+                    <SelectItem value="chef">Chef / Kok</SelectItem>
+                    <SelectItem value="frontoffice">Front-office</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={kandidatenTaalFilter} onValueChange={setKandidatenTaalFilter}>
+                  <SelectTrigger className="w-[150px] h-9 text-sm">
+                    <SelectValue placeholder="Alle talen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle talen</SelectItem>
+                    <SelectItem value="nederlandsstalig">Nederlands</SelectItem>
+                    <SelectItem value="english">Engels</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Table */}
+              <Card>
+                <CardContent className="p-0">
+                  {candidatesLoading ? (
+                    <div className="p-6 space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : subset.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <UserCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">Geen kandidaten</h3>
+                      <p className="text-gray-400 text-sm">Er zijn nog geen kandidaten in dit overzicht.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            {['Naam', 'Woonplaats', 'E-mail', 'Telefoon', 'Nationaliteit', 'Functie', 'Ervaring', 'Voertaal', 'Status', 'Aangemeld', 'Ontbrekend', ''].map(h => (
+                              <th key={h} className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {subset.map(c => {
+                            const missing = missingItems(c);
+                            return (
+                              <tr key={c.id} className="hover:bg-gray-50 align-middle">
+                                {/* Naam */}
+                                <td className="px-3 py-3 min-w-[140px]">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-7 w-7 flex-shrink-0">
+                                      <AvatarFallback className={`text-xs ${getFunctionBadgeColor(c.functionType)}`}>
+                                        {getInitials(c.firstName, c.lastName)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium text-gray-900 whitespace-nowrap">{c.firstName} {c.lastName}</span>
+                                  </div>
+                                </td>
+                                {/* Woonplaats */}
+                                <td className="px-3 py-3 text-gray-500 text-xs">{c.city || '—'}</td>
+                                {/* E-mail */}
+                                <td className="px-3 py-3 text-gray-600 text-xs max-w-[160px] truncate">{c.email || '—'}</td>
+                                {/* Telefoon */}
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{c.phone || '—'}</td>
+                                {/* Nationaliteit */}
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{c.nationality || '—'}</td>
+                                {/* Functie */}
+                                <td className="px-3 py-3">
+                                  <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(c.functionType)}`}>
+                                    {c.functionType || '—'}
+                                  </Badge>
+                                </td>
+                                {/* Ervaring */}
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{expLabel(c)}</td>
+                                {/* Voertaal */}
+                                <td className="px-3 py-3 text-gray-500 text-xs">{c.language || '—'}</td>
+                                {/* Status */}
+                                <td className="px-3 py-3">
+                                  {kandidatenSubtab === 'in_proces' && (
+                                    <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200">In proces</Badge>
+                                  )}
+                                  {kandidatenSubtab === 'gesprek_gepland' && (
+                                    <Badge className="text-xs bg-blue-100 text-blue-700 border border-blue-200">
+                                      <Calendar className="h-2.5 w-2.5 mr-1" />{c.interviewDate}
+                                    </Badge>
+                                  )}
+                                  {kandidatenSubtab === 'afgewezen' && (
+                                    <Badge className="text-xs bg-red-100 text-red-700 border border-red-200">Afgewezen</Badge>
+                                  )}
+                                </td>
+                                {/* Datum aanmelding */}
+                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
+                                  {new Date(c.createdAt).toLocaleDateString('nl-NL')}
+                                </td>
+                                {/* Missing */}
+                                <td className="px-3 py-3">
+                                  {missing.length > 0 ? (
+                                    <div className="flex flex-col gap-0.5">
+                                      {missing.map(m => (
+                                        <span key={m} className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                                          <Clock className="h-2.5 w-2.5" />{m}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-green-600 font-medium">✓ Compleet</span>
+                                  )}
+                                </td>
+                                {/* Acties */}
+                                <td className="px-3 py-3">
+                                  <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                      <Eye className="h-3.5 w-3.5 text-gray-400" />
+                                    </Button>
+                                    {kandidatenSubtab !== 'afgewezen' && (
+                                      <Button
+                                        variant="ghost" size="icon" className="h-7 w-7"
+                                        onClick={() => rejectCandidateMutation.mutate(c.id)}
+                                        title="Afwijzen"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            );
+          })() : activeTab === 'sollicitanten' ? (
             /* Sollicitanten Tab */
             <div>
               <div className="flex items-center justify-between mb-6">
