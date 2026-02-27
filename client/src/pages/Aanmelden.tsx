@@ -457,6 +457,8 @@ export default function Aanmelden() {
   const [savedCandidateId, setSavedCandidateId] = useState<number | null>(null);
   const [intakeCandidates, setIntakeCandidates] = useState<IntakeCandidate[]>([]);
   const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
+  const [intakeFetched, setIntakeFetched] = useState(false);
+  const [intakeIsAdmin, setIntakeIsAdmin] = useState(false);
   const [intakeMode, setIntakeMode] = useState(false);
   const [selectedIntakeId, setSelectedIntakeId] = useState<number | 'manual' | null>(null);
   const [intakeCandidateSearch, setIntakeCandidateSearch] = useState('');
@@ -632,18 +634,22 @@ export default function Aanmelden() {
 
     // Probeer kandidaten op te halen voor intake-modus (werkt alleen als admin is ingelogd)
     setIntakeCandidatesLoading(true);
+    setIntakeFetched(false);
     setSelectedIntakeId(null);
     setIntakeCandidateSearch('');
     try {
       const res: any = await apiRequest(`/api/intake/candidates?functionType=${encodeURIComponent(formData.preferredFunction)}`);
       const list: IntakeCandidate[] = res?.candidates || [];
       setIntakeCandidates(list);
+      setIntakeIsAdmin(true);
       setIntakeMode(list.length > 0);
     } catch {
       setIntakeCandidates([]);
+      setIntakeIsAdmin(false);
       setIntakeMode(false);
     } finally {
       setIntakeCandidatesLoading(false);
+      setIntakeFetched(true);
     }
 
     const cityCheck = formData.city.trim();
@@ -1011,7 +1017,7 @@ export default function Aanmelden() {
                   </div>
                 )}
 
-                {!intakeCandidatesLoading && !intakeMode && intakeCandidates.length === 0 && selectedIntakeId === null && (
+                {intakeFetched && intakeIsAdmin && !intakeCandidatesLoading && !intakeMode && intakeCandidates.length === 0 && selectedIntakeId === null && (
                   <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
                     Geen kandidaten gevonden voor deze functie. Vul het formulier handmatig in.
                   </div>
