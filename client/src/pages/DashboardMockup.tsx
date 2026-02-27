@@ -272,10 +272,14 @@ export default function DashboardMockup() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
-  const totalUsers = allUsers.filter(u => u.role !== 'admin').length;
-  const activeUsers = 803;
-  const totalPoints = 541300;
-  const userGrowth = stats?.changes?.activeUsersChange || '+0';
+  const dashTotalUsers = 247;
+  const dashActiveUsers = 189;
+  const dashPoints = 12450;
+  const dashGrowth = '+28';
+  const gbTotalUsers = 893;
+  const gbActiveUsers = 802;
+  const gbPoints = 371638;
+  const userGrowth = stats?.changes?.activeUsersChange || '+28';
 
   // Kandidaten tab computed values
   const kanInProces = allCandidates.filter(c => c.status !== 'afgewezen' && !c.interviewDate);
@@ -884,14 +888,14 @@ export default function DashboardMockup() {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
+              <div className={`grid gap-4 mb-6 ${activeTab === 'gebruikers' ? 'grid-cols-3' : 'grid-cols-4'}`}>
                 <Card className="bg-white">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-500">Totaal Gebruikers</p>
                         <p className="text-2xl font-bold mt-1">
-                          {usersLoading ? <Skeleton className="h-8 w-12" /> : totalUsers}
+                          {activeTab === 'gebruikers' ? gbTotalUsers : dashTotalUsers}
                         </p>
                         <p className="text-xs text-gray-400">Geregistreerde medewerkers</p>
                       </div>
@@ -908,7 +912,7 @@ export default function DashboardMockup() {
                       <div>
                         <p className="text-xs text-gray-500">Actieve Gebruikers</p>
                         <p className="text-2xl font-bold mt-1">
-                          {usersLoading ? <Skeleton className="h-8 w-12" /> : activeUsers}
+                          {activeTab === 'gebruikers' ? gbActiveUsers : dashActiveUsers}
                         </p>
                         <p className="text-xs text-gray-400">Minimaal 1 actie deze periode</p>
                       </div>
@@ -923,9 +927,9 @@ export default function DashboardMockup() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-gray-500">Totaal Punten</p>
+                        <p className="text-xs text-gray-500">{activeTab === 'gebruikers' ? 'Totaal Punten' : 'Uitgegeven Punten'}</p>
                         <p className="text-2xl font-bold mt-1">
-                          {statsLoading ? <Skeleton className="h-8 w-16" /> : totalPoints.toLocaleString('nl-NL')}
+                          {(activeTab === 'gebruikers' ? gbPoints : dashPoints).toLocaleString('nl-NL')}
                         </p>
                         <p className="text-xs text-gray-400">In geselecteerde periode</p>
                       </div>
@@ -936,22 +940,24 @@ export default function DashboardMockup() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-500">Gebruikersgroei</p>
-                        <p className="text-2xl font-bold mt-1 text-green-600">
-                          {statsLoading ? <Skeleton className="h-8 w-12" /> : userGrowth || '+28'}
-                        </p>
-                        <p className="text-xs text-gray-400">Nieuwe gebruikers deze periode</p>
+                {activeTab !== 'gebruikers' && (
+                  <Card className="bg-white">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-500">Gebruikersgroei</p>
+                          <p className="text-2xl font-bold mt-1 text-green-600">
+                            {dashGrowth}
+                          </p>
+                          <p className="text-xs text-gray-400">Nieuwe gebruikers deze periode</p>
+                        </div>
+                        <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
+                          <TrendingUp className="h-5 w-5 text-pink-600" />
+                        </div>
                       </div>
-                      <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-pink-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Three Column Layout */}

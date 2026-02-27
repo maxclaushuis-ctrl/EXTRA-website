@@ -74,11 +74,14 @@ function Router() {
   
   // Check of we op een planningspagina zijn
   const isPlanningPage = location.startsWith('/planning');
+
+  // Dashboard mockup heeft eigen navigatie
+  const isDashboardMockup = location.startsWith('/dashboard-mockup');
   
   return (
     <>
-      {/* Notificatie en navigatie, maar niet op employee dashboard */}
-      {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && (
+      {/* Notificatie en navigatie, maar niet op employee dashboard of dashboard mockup */}
+      {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && !isDashboardMockup && (
         <>
           <MainNav />
           <NotificationToast />
