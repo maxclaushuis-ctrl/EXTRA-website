@@ -144,6 +144,38 @@ export default function DashboardMockup() {
     }
   };
 
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
+    totalPointsAwarded?: number;
+    totalRedemptions?: number;
+    activeEmployees?: number;
+    changes?: { pointsChange?: string; redemptionsChange?: string; activeUsersChange?: string };
+  }>({
+    queryKey: ['/api/stats'],
+    enabled: isAuthenticated,
+  });
+
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ['/api/users'],
+    enabled: isAuthenticated,
+  });
+
+  const { data: transactions = [] } = useQuery<Transaction[]>({
+    queryKey: ['/api/transactions'],
+    enabled: isAuthenticated,
+  });
+
+  const { data: candidatesData, isLoading: candidatesLoading } = useQuery<{ candidates: Candidate[]; total: number }>({
+    queryKey: ['/api/admin/candidates'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 0,
+  });
+
+  const rejectCandidateMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest('PATCH', `/api/admin/candidates/${id}`, { status: 'afgewezen' }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); },
+  });
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -206,38 +238,7 @@ export default function DashboardMockup() {
     );
   }
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
-    totalPointsAwarded?: number;
-    totalRedemptions?: number;
-    activeEmployees?: number;
-    changes?: { pointsChange?: string; redemptionsChange?: string; activeUsersChange?: string };
-  }>({
-    queryKey: ['/api/stats'],
-    enabled: isAuthenticated,
-  });
-
-  const { data: allUsers = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ['/api/users'],
-    enabled: isAuthenticated,
-  });
-
-  const { data: transactions = [] } = useQuery<Transaction[]>({
-    queryKey: ['/api/transactions'],
-    enabled: isAuthenticated,
-  });
-
-  const { data: candidatesData, isLoading: candidatesLoading } = useQuery<{ candidates: Candidate[]; total: number }>({
-    queryKey: ['/api/admin/candidates'],
-    enabled: isAuthenticated && user?.role === 'admin',
-    staleTime: 0,
-  });
   const allCandidates = candidatesData?.candidates || [];
-
-  const rejectCandidateMutation = useMutation({
-    mutationFn: (id: number) =>
-      apiRequest('PATCH', `/api/admin/candidates/${id}`, { status: 'afgewezen' }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); },
-  });
 
   const filteredCandidates = allCandidates.filter(c => {
     const matchesStatus = candidateStatusFilter === 'alle' || c.status === candidateStatusFilter;

@@ -97,9 +97,7 @@ function Router() {
         <Route path="/aanmelden" component={Aanmelden} />
         <Route path="/nieuws" component={NieuwsPage} />
         <Route path="/nieuws/:slug" component={NieuwsArtikel} />
-        <Route path="/dashboard-mockup">
-          {() => <ProtectedRoute component={DashboardMockup} adminOnly={true} />}
-        </Route>
+        <Route path="/dashboard-mockup" component={DashboardMockup} />
         
         {/* Gebruiker routes */}
         <Route path="/dashboard">
