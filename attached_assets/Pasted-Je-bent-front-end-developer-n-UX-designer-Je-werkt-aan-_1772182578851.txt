@@ -1,0 +1,46 @@
+Je bent front-end developer én UX designer.
+Je werkt aan het EXTRAATJE beheerdersdashboard (zie screenshot: linker sidebar met o.a. “Dashboard, Gebruikers, Uitdagingen, Beloningen, Kortingen, Sollicitanten, Klassement, E-mailcampagnes, Transacties”).
+Belangrijk: je antwoord mag niet alleen beschrijven wat je zou doen, maar moet de daadwerkelijke code laten zien waarmee het menu en het nieuwe tabblad echt worden toegevoegd. Toon de relevante component(en) en pas ze aan.
+1. Nieuw item “Kandidaten” in de sidebar
+Voeg in de linker navigatie onder “Sollicitanten” een nieuw menu-item toe met de naam “Kandidaten”.
+Dit item moet zichtbaar zijn in de UI en klikbaar zijn, net zoals “Gebruikers” en “Sollicitanten”.
+Laat expliciet zien in welke file de sidebar/menu staat (bijvoorbeeld Sidebar.tsx, Navigation.tsx of iets vergelijkbaars) en plak daar de aangepaste code van het menu-component met het nieuwe item “Kandidaten”.
+Zorg dat:
+“Kandidaten” dezelfde stijl, icon-alignment, hover-state en active-state krijgt als de andere items.
+Het route-pad bijvoorbeeld /dashboard/kandidaten of /kandidaten wordt.
+2. Pagina-layout voor “Kandidaten”
+Wanneer ik klik op “Kandidaten” moet ik op een nieuwe pagina komen met:
+Een paginatitel: “Kandidaten”
+Een korte subtitel: “Overzicht van alle aanmeldingen vanuit /aanmelden.”
+Daaronder een tab-component met drie subtabs:
+In proces
+Gesprek gepland
+Afgewezen
+Laat de code zien van deze nieuwe pagina/component (bijv. KandidatenPage.tsx of Kandidaten.vue) inclusief:
+De tab-component
+Een tabel met de volgende kolommen (in deze volgorde):
+Naam
+Woonplaats
+E-mail
+Telefoonnummer
+Nationaliteit
+Functie
+Ervaring
+Voertaal
+Status (In proces / Gesprek gepland / Afgewezen)
+Datum aanmelding
+Zorg dat de tabel qua stijl lijkt op de tabel bij “Gebruikers” (zelfde fonts, borders, row-spacing, hover).
+3. Koppeling met formulier /aanmelden (dataflow)
+Leg in de code of in korte comments uit:
+Waar de data van /aanmelden binnenkomt (bijvoorbeeld via een API endpoint of mock-data).
+Hoe je bepaalt in welke subtab een kandidaat valt:
+In proces: formulier ingevuld, maar geen CV en geen gesprek ingepland
+Gesprek gepland: gesprek ingepland
+Afgewezen: status op “afgewezen”
+Gebruik desnoods mock-data (een array kandidaten[]) om de UI nu al goed te tonen. Belangrijk: de UI moet werken, ook al is de backend nog niet echt gekoppeld.
+4. Controle
+Controleer zelf:
+Dat het woord “Kandidaten” daadwerkelijk in de linker sidebar zichtbaar is.
+Dat ik, als ik erop klik, de nieuwe pagina met tabs en tabel zie.
+Dat je alle aangepaste componenten volledig toont in je antwoord zodat ik ze 1-op-1 kan plakken.
+Als je ergens aannames moet doen (bijvoorbeeld bestandsnamen of router-structuur), beschrijf die kort en houd je daar dan consequent aan.
