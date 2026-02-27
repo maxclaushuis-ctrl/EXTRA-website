@@ -4121,6 +4121,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SOLLICITANTEN (Candidates) API Routes
   // ==========================================
 
+  // Intake lookup — returns candidates by functionType for admin intake form
+  app.get("/api/intake/candidates", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { functionType } = req.query;
+      const result = await storage.getCandidates({
+        functionType: functionType as string | undefined,
+        status: 'in_behandeling',
+        page: 1,
+        limit: 200
+      });
+      const slim = result.candidates.map((c: any) => ({
+        id: c.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: c.phone,
+        city: c.city,
+        postcode: c.postcode,
+        nationality: c.nationality,
+        birthDate: c.birthDate,
+        functionType: c.functionType,
+        language: c.language,
+        horecaExperience: c.horecaExperience,
+        experienceLevel: c.experienceLevel,
+      }));
+      return res.json({ candidates: slim });
+    } catch (error) {
+      console.error("Error fetching intake candidates:", error);
+      return res.status(500).json({ message: "Fout bij ophalen kandidaten" });
+    }
+  });
+
   // Get all candidates with filters
   app.get("/api/admin/candidates", adminMiddleware, async (req: Request, res: Response) => {
     try {

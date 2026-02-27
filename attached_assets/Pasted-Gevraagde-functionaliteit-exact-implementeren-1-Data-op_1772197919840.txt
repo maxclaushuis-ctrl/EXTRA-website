@@ -1,0 +1,50 @@
+Gevraagde functionaliteit (exact implementeren)
+1. Data ophalen op basis van opgeslagen functies in het tabblad “Kandidaten”
+Wanneer op pagina 1 op “Volgende” wordt geklikt:
+Haal alle kandidaten op via de bestaande API (bijv. /api/candidates).
+Filter kandidaten aan de hand van hun functie zoals die in de database is opgeslagen:
+Bijvoorbeeld: functie = "horecamedewerker" of "housekeeping"
+(dit zijn de functies zoals weergegeven in het kandidatenoverzicht).
+💡 Pagina 1 van het formulier bepaalt NIET welke functie gebruikt moet worden voor filtering.
+De filtering moet puur gebaseerd zijn op de functie die bij de kandidaat staat opgeslagen in het tabblad Kandidaten.
+2. Pagina 2: dropdown met kandidaten
+Op pagina 2 moet bovenaan komen:
+"Welke kandidaat zit nu bij je aan tafel?"
+Daaronder:
+Een searchable dropdown met alle kandidaten die matchen op functie vanuit het tabblad Kandidaten.
+De dropdown toont bijvoorbeeld: Naam – Woonplaats – E-mail
+Handmatige fallback
+Onderin moet een optie staan:
+“Kandidaat niet in lijst / handmatig invullen”
+Als deze wordt gekozen:
+Geen autofill
+Alle velden blijven volledig handmatig invulbaar
+3. Autofill van formulierdata
+Wanneer een kandidaat uit de lijst wordt geselecteerd:
+Prefill de bekende gegevens automatisch in alle volgende stappen van het formulier:
+voornaam
+achternaam
+telefoonnummer
+e-mail
+woonplaats
+postcode
+nationaliteit
+geboortedatum (indien aanwezig)
+functie (zoals opgeslagen bij de kandidaat)
+eventuele andere velden die al bestaan
+Alle velden moeten bewerkbaar blijven.
+Sla ook de candidateId op in de form-state zodat het formulier gekoppeld wordt aan de juiste kandidaat.
+4. UX-eisen
+Dropdown komt pas op pagina 2, dus niet op de startpagina.
+Zelfde styling als bestaande inputs: paarse border, soft shadow, afgeronde hoeken.
+Als er géén kandidaten bestaan voor de betreffende functie:
+Toon tekst:
+“Geen kandidaten gevonden voor deze functie. Vul het formulier handmatig in.”
+Verberg de dropdown en toon direct de handmatige velden.
+5. Oplevering
+Graag opleveren:
+Welke componenten/bestanden zijn aangepast
+De API-call die kandidaten ophaalt
+De code waarmee filtering plaatsvindt op basis van de functie uit het tabblad Kandidaten
+Hoe de prefill is geïmplementeerd bij selectie
+Een werkende UI-flow in Replit (testbaar)
