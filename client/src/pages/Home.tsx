@@ -22,13 +22,13 @@ export default function Home() {
       if (isAuthenticated && user) {
         // User is already logged in, redirect to appropriate dashboard
         if (user.role === 'admin') {
-          navigate('/admin');
+          navigate('/dashboard-mockup');
         } else {
           navigate('/dashboard');
         }
       } else {
-        // User is not logged in, redirect to login page
-        navigate('/login');
+        // User is not logged in, redirect to landing page
+        navigate('/landing');
       }
     }
   }, [isAuthenticated, user, isLoading, navigate]);
