@@ -3732,20 +3732,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Dashboard mockup route (voor derde partij ontwikkelaar)
-  app.get("/dashboard-mockup", async (req: Request, res: Response) => {
-    const fs = await import('fs');
-    const path = await import('path');
-    const mockupPath = path.join(process.cwd(), 'dashboard-mockup', 'index.html');
-    
-    try {
-      const html = fs.readFileSync(mockupPath, 'utf-8');
-      res.setHeader('Content-Type', 'text/html');
-      res.send(html);
-    } catch (error) {
-      res.status(404).send('Mockup niet gevonden');
-    }
-  });
 
   // Employee app mockup route (mobiele app design - simpele versie)
   app.get("/employee-app", async (req: Request, res: Response) => {
