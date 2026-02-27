@@ -8,8 +8,6 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import SollicitatieFormulier from "@/pages/SollicitatieFormulier";
 import DashboardMockup from "@/pages/DashboardMockup";
-import PitchPresentation from "@/pages/PitchPresentation";
-import BusinessPresentation from "@/pages/BusinessPresentation";
 import Brochure from "@/pages/Brochure";
 import BrochureEN from "@/pages/BrochureEN";
 import BrochureEvents from "@/pages/BrochureEvents";
@@ -90,8 +88,6 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
-        <Route path="/pitch" component={PitchPresentation} />
-        <Route path="/presentatie" component={BusinessPresentation} />
         <Route path="/brochure" component={Brochure} />
         <Route path="/brochures" component={BrochureEN} />
         <Route path="/events" component={BrochureEvents} />
