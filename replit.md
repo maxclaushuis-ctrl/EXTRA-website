@@ -37,6 +37,11 @@ The application utilizes a monorepo structure, organizing code into `client/` fo
 ### Deployment
 Configured for Replit autoscale deployment, utilizing Vite for frontend builds and `tsx` for development. Environment variables are used for configuration (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`).
 
+### Important Technical Notes
+-   **queryClient (`client/src/lib/queryClient.ts`)**: Has a `defaultQueryFn` that uses `queryKey[0]` as the URL and returns parsed JSON. All `useQuery` calls in DashboardMockup rely on this — do NOT remove it.
+-   **apiRequest**: Supports 3 calling patterns: `(url, options)`, `(method, url, body)`, `(url, method, body)`. Returns parsed JSON (not a Response object).
+-   **Candidate flow**: Step 1 "Ga verder" triggers `POST /api/aanmelden` with `partial:true`. This creates the candidate immediately in the DB as `status='in_behandeling'`. The admin Kandidaten tab shows them under "In proces". The "Vernieuwen" button and 30-second auto-refresh keep the list current.
+
 ## External Dependencies
 -   **PostgreSQL Database**: Main data store.
 -   **SendGrid API**: Email delivery service (with mock mode for development).

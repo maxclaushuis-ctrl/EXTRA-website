@@ -1,0 +1,52 @@
+Je bent een senior full-stack developer en QA-engineer. In dit project heb ik:
+Een aanmeldformulier (titel: “Eerst wat basics”) waar kandidaten hun gegevens invullen.
+Een beheerdersdashboard met tabblad “Kandidaten”, waar alle aanmeldingen zouden moeten verschijnen.
+Replit gaf eerder aan dat de flow klopt, maar in de praktijk gaat het mis:
+als ik het formulier invul en verstuur, verschijnt de kandidaat niet in het kandidaten-overzicht.
+Ik wil dat je de hele data-flow end-to-end controleert én repareert. Volg hierbij deze stappen:
+Zoek de aanmeldpagina en submit-logica
+Zoek in de codebase naar de component/pagina met de titel “Eerst wat basics”.
+Controleer welke functie wordt aangeroepen bij het verzenden van het formulier (onSubmit / handleSubmit).
+Controleer naar welke API-route of backend-functie de data wordt gestuurd (URL, HTTP-methode, body).
+Controleer en fix de backend-opslag
+Vind de server-/API-handler die de formulierdata ontvangt.
+Controleer:
+Of de route daadwerkelijk wordt aangeroepen bij een formulier-submit.
+Of de body velden bevat als: voornaam, achternaam, geboortedatum, telefoonnummer, e-mail, woonplaats, postcode, nationaliteit, voorkeursfunctie.
+Of deze data wordt weggeschreven naar dezelfde tabel/collectie die het kandidaten-overzicht gebruikt (bijv. candidates, kandidaten of iets vergelijkbaars).
+Los eventuele problemen op, zoals:
+Verkeerde endpoint-URL of methode (GET i.p.v. POST, verkeerde route).
+Mismatch tussen veldnamen uit het formulier en veldnamen in de database.
+Ontbrekende await of foutafhandeling waardoor er niets wordt opgeslagen.
+Voeg tijdelijk duidelijke logging toe (console.log of equivalent) zodat te zien is dat:
+De request binnenkomt.
+De data succesvol wordt opgeslagen.
+Controleer en fix het kandidaten-overzicht
+Zoek de code van het tabblad “Kandidaten” in het dashboard.
+Controleer hoe de data wordt opgehaald:
+Welke query / API-route wordt aangeroepen.
+Of dezelfde tabel/collectie wordt gebruikt als waar je net de data naartoe schrijft.
+Controleer of er filters zijn (bijv. status in_proces, gesprek_gepland, afgewezen) die ervoor kunnen zorgen dat nieuwe kandidaten niet zichtbaar zijn.
+Zorg dat een nieuwe kandidaat standaard zichtbaar is onder “In proces”:
+Stel zo nodig een default status in bij het opslaan.
+Pas de query in het overzicht aan zodat deze nieuwe records daadwerkelijk ophaalt.
+Voeg ook hier tijdelijk logging toe zodat zichtbaar is:
+Dat de data wordt opgehaald.
+Welke records terugkomen.
+End-to-end test uitvoeren
+Start de app lokaal in Replit.
+Vul zelf (via de UI) het formulier in met een testkandidaat, bijvoorbeeld:
+Voornaam: “Test”
+Achternaam: “Kandidaat”
+Verzend het formulier en navigeer vervolgens naar het “Kandidaten”-overzicht.
+Zorg dat deze testkandidaat direct zichtbaar is in de lijst onder “In proces” zonder handmatige database-acties.
+Als dit niet gebeurt, debug je verder totdat het wel werkt.
+Opruimen & opleveren
+Verwijder tijdelijke logs of maak ze minimaal.
+Geef een korte samenvatting van:
+Wat er mis was.
+Welke bestanden/functies zijn aangepast.
+Hoe de nieuwe flow nu precies loopt (formulier → API → database → kandidaten-overzicht).
+Belangrijk:
+Richt je op het werkend krijgen van de koppeling tussen formulier en kandidatenlijst, niet op visuele wijzigingen in de UI.
+De UX en styling moeten gelijk blijven; alleen de data-flow en logica mogen aangepast worden.
