@@ -164,10 +164,12 @@ export default function DashboardMockup() {
     enabled: isAuthenticated,
   });
 
-  const { data: candidatesData, isLoading: candidatesLoading } = useQuery<{ candidates: Candidate[]; total: number }>({
+  const { data: candidatesData, isLoading: candidatesLoading, refetch: refetchCandidates } = useQuery<{ candidates: Candidate[]; total: number }>({
     queryKey: ['/api/admin/candidates'],
     enabled: isAuthenticated && user?.role === 'admin',
     staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
   });
 
   const rejectCandidateMutation = useMutation({
@@ -476,6 +478,10 @@ export default function DashboardMockup() {
                     <SelectItem value="english">Engels</SelectItem>
                   </SelectContent>
                 </Select>
+                <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => refetchCandidates()}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Vernieuwen
+                </Button>
               </div>
 
               {/* Table */}
@@ -880,7 +886,7 @@ export default function DashboardMockup() {
                     <Settings2 className="h-3 w-3" />
                     Widgets beheren
                   </Button>
-                  <Button size="sm" className="gap-1 bg-green-500 hover:bg-green-600 text-xs h-8" onClick={() => refetchStats()}>
+                  <Button size="sm" className="gap-1 bg-green-500 hover:bg-green-600 text-xs h-8" onClick={() => { refetchStats(); refetchCandidates(); }}>
                     <RefreshCw className="h-3 w-3" />
                     Vernieuwen
                   </Button>
