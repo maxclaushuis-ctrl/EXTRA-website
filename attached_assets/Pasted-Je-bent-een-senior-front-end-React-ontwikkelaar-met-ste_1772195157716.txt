@@ -1,0 +1,60 @@
+Je bent een senior front-end / React-ontwikkelaar met sterke UX-focus. Ik wil dat je het Kandidaten-tabblad in het beheerdersdashboard aanpast. Het gaat alleen om de tabelweergave, niet om de backend of data.
+1. Kolomvolgorde aanpassen
+Pas de volgorde van de kolommen in de kandidaten-tabel als volgt aan (van links naar rechts):
+AANGEMELD (datum) – dit moet de eerste kolom worden
+NAAM
+FUNCTIE
+WOONPLAATS
+E-MAIL
+TELEFOON
+NATIONALITEIT
+ERVARING
+VOERTAAL
+STATUS
+ONTBREEKEND (geel blokje met bv. “CV ontbreekt / Gesprek niet gepland”)
+ACTIES (icoontjes: prullenbak / oog als die bestaan)
+Belangrijke punten:
+Zorg dat zowel de kolomkop als de onderliggende data worden verplaatst, dus niet alleen de header.
+Als er sorteerfunctionaliteit op kolommen zit, zorg dan dat sorteren op datum (AANGEMELD) ook werkt en standaard aflopend (nieuwste bovenaan) is.
+2. Tabel laten passen op één pagina (desktop)
+Doel: op een normaal desktopformaat (± 1440px breed) moet de volledige tabel zonder horizontale scroll zichtbaar zijn.
+Gebruik zo nodig:
+table-layout: fixed;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+Beperk vooral de breedte van:
+E-MAIL
+WOONPLAATS
+NATIONALITEIT
+ONTBREEKEND
+Voor lange teksten:
+Toon ingekorte tekst met … (ellipsis).
+Zet het volledige veld in de title-attribute, zodat je de volledige inhoud ziet bij hover.
+Voorbeeld (pseudocode):
+<td title={candidate.email} className="truncate-cell">
+  {candidate.email}
+</td>
+en in CSS:
+.truncate-cell {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+Pas dit principe toe op alle kolommen die te breed kunnen worden.
+3. Responsiveness
+Op kleinere schermen mag er eventueel horizontale scroll zijn, maar optimaliseer primair voor desktop.
+Let erop dat de uitlijning van kolomkoppen en celinhoud netjes blijft (links uitgelijnd, consistente padding).
+4. Styling behouden
+Behoud de huidige stijl, kleuren, fonts, pill-buttons (“In proces”, etc.) en het gele “ONTBREEKEND”-blokje.
+Het gaat uitsluitend om:
+Kolomvolgorde
+Kolombreedtes
+Truncation/ellipsis
+Zo nodig lichte CSS-aanpassingen voor layout
+5. Oplevering
+Geef aan welke bestanden en componenten je hebt aangepast (bijv. CandidatesTable.tsx, CandidatesRow.tsx, styles.css etc.).
+Controleer zelf in de running app of:
+De datum nu als eerste kolom staat.
+De tabel op een standaard desktopbreedte in één keer zichtbaar is zonder horizontale scroll.

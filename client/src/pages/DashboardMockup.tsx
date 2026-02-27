@@ -124,6 +124,7 @@ export default function DashboardMockup() {
   const [kandidatenSearch, setKandidatenSearch] = useState('');
   const [kandidatenFunctionFilter, setKandidatenFunctionFilter] = useState('alle');
   const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
+  const [kanSortDesc, setKanSortDesc] = useState(true);
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
@@ -289,17 +290,22 @@ export default function DashboardMockup() {
   const kanAfgewezen = allCandidates.filter(c => c.status === 'afgewezen');
   const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
   const kanRawSubset: Candidate[] = kanSubsetMap[kandidatenSubtab] || [];
-  const kanSubset = kanRawSubset.filter(c => {
-    const q = kandidatenSearch.toLowerCase();
-    const matchQ = q === '' ||
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-      (c.email || '').toLowerCase().includes(q) ||
-      (c.city || '').toLowerCase().includes(q);
-    const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
-    const matchTaal = kandidatenTaalFilter === 'alle' ||
-      (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
-    return matchQ && matchFn && matchTaal;
-  });
+  const kanSubset = kanRawSubset
+    .filter(c => {
+      const q = kandidatenSearch.toLowerCase();
+      const matchQ = q === '' ||
+        `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+        (c.email || '').toLowerCase().includes(q) ||
+        (c.city || '').toLowerCase().includes(q);
+      const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
+      const matchTaal = kandidatenTaalFilter === 'alle' ||
+        (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
+      return matchQ && matchFn && matchTaal;
+    })
+    .sort((a, b) => {
+      const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return kanSortDesc ? diff : -diff;
+    });
   const kanMissingItems = (c: Candidate) => {
     const items: string[] = [];
     if (!c.cvUrl) items.push('CV ontbreekt');
@@ -501,12 +507,41 @@ export default function DashboardMockup() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
+                      <table className="w-full text-sm" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
+                        <colgroup>
+                          <col style={{ width: '7%' }} />
+                          <col style={{ width: '13%' }} />
+                          <col style={{ width: '9%' }} />
+                          <col style={{ width: '8%' }} />
+                          <col style={{ width: '11%' }} />
+                          <col style={{ width: '9%' }} />
+                          <col style={{ width: '6%' }} />
+                          <col style={{ width: '7%' }} />
+                          <col style={{ width: '6%' }} />
+                          <col style={{ width: '8%' }} />
+                          <col style={{ width: '12%' }} />
+                          <col style={{ width: '4%' }} />
+                        </colgroup>
                         <thead className="bg-gray-50 border-b">
                           <tr>
-                            {['Naam', 'Woonplaats', 'E-mail', 'Telefoon', 'Nationaliteit', 'Functie', 'Ervaring', 'Voertaal', 'Status', 'Aangemeld', 'Ontbrekend', ''].map(h => (
-                              <th key={h} className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">{h}</th>
-                            ))}
+                            {/* AANGEMELD — klikbaar voor sortering */}
+                            <th
+                              className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap cursor-pointer select-none hover:text-gray-700"
+                              onClick={() => setKanSortDesc(v => !v)}
+                            >
+                              Aangemeld {kanSortDesc ? '↓' : '↑'}
+                            </th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Naam</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Functie</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Woonplaats</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">E-mail</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Telefoon</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Nat.</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Ervaring</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Taal</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Status</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Ontbrekend</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -514,80 +549,110 @@ export default function DashboardMockup() {
                             const missing = kanMissingItems(c);
                             return (
                               <tr key={c.id} className="hover:bg-gray-50 align-middle">
-                                {/* Naam */}
-                                <td className="px-3 py-3 min-w-[140px]">
-                                  <div className="flex items-center gap-2">
-                                    <Avatar className="h-7 w-7 flex-shrink-0">
+                                {/* AANGEMELD */}
+                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                  {new Date(c.createdAt).toLocaleDateString('nl-NL')}
+                                </td>
+                                {/* NAAM */}
+                                <td className="px-3 py-3 overflow-hidden">
+                                  <div className="flex items-center gap-1.5">
+                                    <Avatar className="h-6 w-6 flex-shrink-0">
                                       <AvatarFallback className={`text-xs ${getFunctionBadgeColor(c.functionType)}`}>
                                         {getInitials(c.firstName, c.lastName)}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <span className="font-medium text-gray-900 whitespace-nowrap">{c.firstName} {c.lastName}</span>
+                                    <span
+                                      className="font-medium text-gray-900 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
+                                      title={`${c.firstName} ${c.lastName}`}
+                                    >
+                                      {c.firstName} {c.lastName}
+                                    </span>
                                   </div>
                                 </td>
-                                {/* Woonplaats */}
-                                <td className="px-3 py-3 text-gray-500 text-xs">{c.city || '—'}</td>
-                                {/* E-mail */}
-                                <td className="px-3 py-3 text-gray-600 text-xs max-w-[160px] truncate">{c.email || '—'}</td>
-                                {/* Telefoon */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{c.phone || '—'}</td>
-                                {/* Nationaliteit */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{c.nationality || '—'}</td>
-                                {/* Functie */}
-                                <td className="px-3 py-3">
-                                  <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(c.functionType)}`}>
+                                {/* FUNCTIE */}
+                                <td className="px-3 py-3 overflow-hidden">
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${getFunctionBadgeColor(c.functionType)} overflow-hidden text-ellipsis whitespace-nowrap max-w-full block`}
+                                    title={c.functionType || '—'}
+                                  >
                                     {c.functionType || '—'}
                                   </Badge>
                                 </td>
-                                {/* Ervaring */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{kanExpLabel(c)}</td>
-                                {/* Voertaal */}
-                                <td className="px-3 py-3 text-gray-500 text-xs">{c.language || '—'}</td>
-                                {/* Status */}
-                                <td className="px-3 py-3">
+                                {/* WOONPLAATS */}
+                                <td
+                                  className="px-3 py-3 text-gray-500 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
+                                  title={c.city || '—'}
+                                >
+                                  {c.city || '—'}
+                                </td>
+                                {/* E-MAIL */}
+                                <td
+                                  className="px-3 py-3 text-gray-600 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
+                                  title={c.email || '—'}
+                                >
+                                  {c.email || '—'}
+                                </td>
+                                {/* TELEFOON */}
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                  {c.phone || '—'}
+                                </td>
+                                {/* NATIONALITEIT */}
+                                <td
+                                  className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis"
+                                  title={c.nationality || '—'}
+                                >
+                                  {c.nationality || '—'}
+                                </td>
+                                {/* ERVARING */}
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                  {kanExpLabel(c)}
+                                </td>
+                                {/* VOERTAAL */}
+                                <td className="px-3 py-3 text-gray-500 text-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {c.language || '—'}
+                                </td>
+                                {/* STATUS */}
+                                <td className="px-3 py-3 overflow-hidden">
                                   {kandidatenSubtab === 'in_proces' && (
-                                    <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200">In proces</Badge>
+                                    <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">In proces</Badge>
                                   )}
                                   {kandidatenSubtab === 'gesprek_gepland' && (
-                                    <Badge className="text-xs bg-blue-100 text-blue-700 border border-blue-200">
+                                    <Badge className="text-xs bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
                                       <Calendar className="h-2.5 w-2.5 mr-1" />{c.interviewDate}
                                     </Badge>
                                   )}
                                   {kandidatenSubtab === 'afgewezen' && (
-                                    <Badge className="text-xs bg-red-100 text-red-700 border border-red-200">Afgewezen</Badge>
+                                    <Badge className="text-xs bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">Afgewezen</Badge>
                                   )}
                                 </td>
-                                {/* Datum aanmelding */}
-                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
-                                  {new Date(c.createdAt).toLocaleDateString('nl-NL')}
-                                </td>
-                                {/* Missing */}
-                                <td className="px-3 py-3">
+                                {/* ONTBREKEND */}
+                                <td className="px-3 py-3 overflow-hidden">
                                   {missing.length > 0 ? (
-                                    <div className="flex flex-col gap-0.5">
-                                      {missing.map(m => (
-                                        <span key={m} className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
-                                          <Clock className="h-2.5 w-2.5" />{m}
-                                        </span>
-                                      ))}
+                                    <div
+                                      className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded overflow-hidden text-ellipsis whitespace-nowrap max-w-full"
+                                      title={missing.join(', ')}
+                                    >
+                                      <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                                      <span className="overflow-hidden text-ellipsis">{missing.join(', ')}</span>
                                     </div>
                                   ) : (
-                                    <span className="text-xs text-green-600 font-medium">✓ Compleet</span>
+                                    <span className="text-xs text-green-600 font-medium whitespace-nowrap">✓ Compleet</span>
                                   )}
                                 </td>
-                                {/* Acties */}
+                                {/* ACTIES */}
                                 <td className="px-3 py-3">
-                                  <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                                      <Eye className="h-3.5 w-3.5 text-gray-400" />
+                                  <div className="flex items-center gap-0.5">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                                      <Eye className="h-3 w-3 text-gray-400" />
                                     </Button>
                                     {kandidatenSubtab !== 'afgewezen' && (
                                       <Button
-                                        variant="ghost" size="icon" className="h-7 w-7"
+                                        variant="ghost" size="icon" className="h-6 w-6"
                                         onClick={() => rejectCandidateMutation.mutate(c.id)}
                                         title="Afwijzen"
                                       >
-                                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                        <Trash2 className="h-3 w-3 text-red-400" />
                                       </Button>
                                     )}
                                   </div>
