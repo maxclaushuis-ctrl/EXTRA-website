@@ -1,0 +1,60 @@
+Je bent front-end developer én UX designer.
+Let op: je vorige antwoord klopt niet – er is geen “Kandidaten”-tab te zien in de sidebar en ik kan nergens inloggen. Alles draait nu nog op mockups, niet op een live dashboard.
+Ik wil dat je nu concreet de UI en code aanpast. Beschrijf dus niet dat het al bestaat, maar laat de aangepaste code zien.
+1. Sidebar: item “Kandidaten” toevoegen
+In de linker sidebar staan nu deze items:
+Dashboard
+Gebruikers
+Uitdagingen
+Beloningen
+Kortingen
+Sollicitanten
+Klassement
+E-mailcampagnes
+Transacties
+Voeg hier onder “Sollicitanten” een nieuw item “Kandidaten” toe.
+🔧 Vereisten:
+Toon de volledige component waar de sidebar is gedefinieerd (bijv. Sidebar.tsx, Navigation.tsx of iets vergelijkbaars).
+Voeg daar het menu-item “Kandidaten” aan toe, met:
+dezelfde styling als de andere items
+een route, bijvoorbeeld /dashboard/kandidaten
+Zorg dat je echt code geeft die ik kan copy-pasten; dus geen pseudocode.
+2. Nieuwe pagina “Kandidaten”
+Maak een nieuwe pagina/component voor de route /dashboard/kandidaten (of de route die je net gekozen hebt).
+Structuur van de pagina:
+Titel bovenaan: “Kandidaten”
+Subtitel: “Overzicht van alle aanmeldingen via /aanmelden.”
+Daaronder een tabs-component met drie subtabs:
+In proces
+Gesprek gepland
+Afgewezen
+Onder de tabs komt een tabel met deze kolommen (in deze volgorde):
+Naam
+Woonplaats
+E-mail
+Telefoonnummer
+Nationaliteit
+Functie
+Ervaring
+Voertaal
+Status
+Datum aanmelding
+Zorg dat de tabel qua look & feel zoveel mogelijk lijkt op de tabel bij Gebruikers in het dashboard (zelfde fonts, afstanden, hover states).
+Laat de volledige code zien van deze nieuwe pagina/component, inclusief:
+de tabs
+de mapping van een array kandidaten[] naar de rijen in de tabel
+Gebruik desnoods mock-data; de belangrijkste stap is dat de UI staat.
+3. Data & status-logica (mock)
+Gebruik een voorbeeld-array zoals:
+status: "in_proces" | "gesprek_gepland" | "afgewezen"
+en filter deze array per tab:
+Tab In proces → alleen kandidaten met status in_proces
+Tab Gesprek gepland → gesprek_gepland
+Tab Afgewezen → afgewezen
+Zet korte comments in de code waar later de echte koppeling met /aanmelden of /api/admin/candidates zou moeten komen.
+4. Controle
+Controleer zelf aan het eind van je antwoord:
+Dat de sidebar-code in je antwoord zichtbaar het item “Kandidaten” bevat.
+Dat de nieuwe pagina/component in je antwoord een werkende tabstructuur + tabel gebruikt.
+Dat ik met jouw code zonder extra stappen een zichtbaar “Kandidaten”-tab in de UI kan krijgen.
+Geef geen tekst als “dit bestaat al” meer terug. Als iets volgens jou al bestaat, laat dan de exacte code + bestandsnaam zien. Bestaat het niet, bouw het dan nu.
