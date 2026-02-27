@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
-  Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown
+  Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut
 } from 'lucide-react';
 
 type User = {
@@ -113,7 +113,7 @@ function daysSince(dateStr: string): number {
 }
 
 export default function DashboardMockup() {
-  const { user, isAuthenticated, login, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, login, logout, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
@@ -319,7 +319,7 @@ export default function DashboardMockup() {
 
         <div className="p-2 text-xs text-gray-400 uppercase tracking-wider mt-4 px-4">Beheer</div>
         
-        <nav className="flex-1 px-2">
+        <nav className="flex-1 px-2 overflow-y-auto">
           {sidebarItems.map((item) => (
             <button
               key={item.label}
@@ -335,6 +335,17 @@ export default function DashboardMockup() {
             </button>
           ))}
         </nav>
+
+        <div className="p-2 border-t">
+          <div className="px-3 py-2 text-xs text-gray-400 truncate">{user?.firstName} {user?.lastName}</div>
+          <button
+            onClick={() => logout()}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Uitloggen</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
