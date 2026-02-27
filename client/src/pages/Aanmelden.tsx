@@ -438,6 +438,7 @@ export default function Aanmelden() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvUploaded, setCvUploaded] = useState(false);
   const [calendlyScheduled, setCalendlyScheduled] = useState(false);
+  const [savedCandidateId, setSavedCandidateId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -536,10 +537,58 @@ export default function Aanmelden() {
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleStep1Next() {
+  async function saveCandidate(status: "in_behandeling" | "afgewezen", partial: boolean, rejReason?: string): Promise<number | null> {
+    try {
+      const phone = formData.phoneCountryCode !== "+other"
+        ? normalizeToE164(formData.phoneCountryCode, formData.phone)
+        : formData.phone;
+
+      const body: any = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone,
+        birthDate: formData.birthDate,
+        nationality: formData.nationality,
+        city: formData.city,
+        functionType: formData.preferredFunction,
+        sourceChannel: "Website aanmeldflow",
+        status,
+        partial,
+        notes: rejReason ? `Afgewezen reden: ${rejReason}` : undefined,
+      };
+
+      if (savedCandidateId) {
+        await apiRequest(`/api/aanmelden/${savedCandidateId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ email: formData.email, status, partial, rejectionReason: rejReason }),
+        });
+        return savedCandidateId;
+      } else {
+        const res: any = await apiRequest("/api/aanmelden", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        if (res?.id) {
+          setSavedCandidateId(res.id);
+          return res.id;
+        }
+      }
+    } catch (err: any) {
+      if (err?.status === 409) {
+        console.log("Kandidaat al aangemeld met dit e-mailadres");
+      } else {
+        console.error("Fout bij opslaan kandidaat:", err);
+      }
+    }
+    return null;
+  }
+
+  async function handleStep1Next() {
     if (!validateStep1()) return;
 
     if (formData.birthDate && calculateAge(formData.birthDate) < 17) {
+      await saveCandidate("afgewezen", false, "Te jong (< 17 jaar)");
       setRejectionReason(t.ageTooYoung);
       setStep("rejected");
       return;
@@ -551,11 +600,14 @@ export default function Aanmelden() {
     if (detectedFlow === "NON_EU") {
       const fn = formData.preferredFunction;
       if (fn === "horecamedewerker" || fn === "frontoffice") {
+        await saveCandidate("afgewezen", false, "Functie niet beschikbaar voor non-EU");
         setRejectionReason(COPY.EN.roleNotAvailable);
         setStep("rejected");
         return;
       }
     }
+
+    await saveCandidate("in_behandeling", true);
 
     const cityCheck = formData.city.trim();
     if (cityCheck && !isWithin50km(cityCheck)) {
@@ -565,10 +617,11 @@ export default function Aanmelden() {
     }
   }
 
-  function handleStep2Next() {
+  async function handleStep2Next() {
     if (!validateStep2()) return;
 
     if (!formData.speaksDutch && !formData.speaksEnglish) {
+      await saveCandidate("afgewezen", false, "Geen taalvaardigheid Nederlands/Engels");
       setRejectionReason(t.noLanguage);
       setStep("rejected");
       return;
@@ -579,12 +632,14 @@ export default function Aanmelden() {
     const allowed = thresholds[fn] || [];
 
     if (allowed.length === 0) {
+      await saveCandidate("afgewezen", false, "Functie niet beschikbaar");
       setRejectionReason(t.roleNotAvailable);
       setStep("rejected");
       return;
     }
 
     if (!allowed.includes(formData.experience)) {
+      await saveCandidate("afgewezen", false, "Onvoldoende ervaring");
       setRejectionReason(t.notEnoughExperience);
       setStep("rejected");
       return;
@@ -597,8 +652,9 @@ export default function Aanmelden() {
     }
   }
 
-  function handleTwvNext() {
+  async function handleTwvNext() {
     if (formData.twvNeeded === "yes" && formData.hasExistingTwv === "yes" && formData.willingToStopTwv === "no") {
+      await saveCandidate("afgewezen", false, "TWV blokkeert samenwerking");
       setRejectionReason(lang === "EN"
         ? "We can only continue if your work permit allows you to work via EXTRA."
         : "We kunnen alleen verder als je werkvergunning het toelaat om via EXTRA te werken."
@@ -656,10 +712,24 @@ export default function Aanmelden() {
         notes: cvFile ? `CV: ${cvFile.name} | Gesprek ingepland via Calendly` : "Gesprek ingepland via Calendly",
       };
 
-      await apiRequest("/api/aanmelden", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      if (savedCandidateId) {
+        await apiRequest(`/api/aanmelden/${savedCandidateId}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            email: formData.email,
+            language: payload.language,
+            horecaExperience: payload.horecaExperience,
+            needsTwv: payload.needsTwv,
+            notes: payload.notes,
+            partial: false,
+          }),
+        });
+      } else {
+        await apiRequest("/api/aanmelden", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (cvFile) {
         const fd = new FormData();

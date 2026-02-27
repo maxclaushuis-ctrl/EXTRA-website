@@ -3785,6 +3785,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         interviewTime: z.string().optional().nullable(),
         sourceChannel: z.string().optional().default("Website"),
         notes: z.string().optional().nullable(),
+        status: z.enum(["in_behandeling", "aangenomen", "afgewezen"]).optional().default("in_behandeling"),
+        partial: z.boolean().optional().default(false),
       });
 
       const validated = publicRegistrationSchema.parse(req.body);
@@ -3805,35 +3807,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         interviewTime: validated.interviewTime || null,
         sourceChannel: validated.sourceChannel || "Website",
         notes: validated.notes || null,
-      });
+        status: validated.status || "in_behandeling",
+      } as any);
 
       await storage.createCandidateAuditLog({
         candidateId: candidate.id,
         action: 'created',
         changedByUserId: null,
-        changeData: { description: 'Kandidaat via aanmeldflow op website' },
+        changeData: { description: validated.partial ? 'Kandidaat deels aangemeld (stap 1)' : 'Kandidaat via aanmeldflow op website', status: validated.status },
         ipAddress: req.ip ?? null
       });
 
-      // Stuur bevestigingsmail naar kandidaat (niet-blocking)
-      sendCandidateConfirmationEmail({
-        firstName: candidate.firstName,
-        lastName: candidate.lastName,
-        email: candidate.email,
-        functionType: candidate.functionType,
-        nationality: candidate.nationality,
-        language: candidate.language,
-        interviewDate: candidate.interviewDate,
-        interviewTime: candidate.interviewTime,
-      }).then((sent) => {
-        if (sent) {
-          console.log(`Bevestigingsmail verstuurd naar ${candidate.email}`);
-        } else {
-          console.warn(`Bevestigingsmail NIET verstuurd naar ${candidate.email}`);
-        }
-      }).catch((err) => {
-        console.error("Fout bij versturen bevestigingsmail:", err);
-      });
+      // Stuur bevestigingsmail alleen bij voltooide aanmelding
+      if (!validated.partial && validated.status !== 'afgewezen') {
+        sendCandidateConfirmationEmail({
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          email: candidate.email,
+          functionType: candidate.functionType,
+          nationality: candidate.nationality,
+          language: candidate.language,
+          interviewDate: candidate.interviewDate,
+          interviewTime: candidate.interviewTime,
+        }).then((sent) => {
+          if (sent) {
+            console.log(`Bevestigingsmail verstuurd naar ${candidate.email}`);
+          } else {
+            console.warn(`Bevestigingsmail NIET verstuurd naar ${candidate.email}`);
+          }
+        }).catch((err) => {
+          console.error("Fout bij versturen bevestigingsmail:", err);
+        });
+      }
 
       return res.status(201).json({ id: candidate.id, message: "Aanmelding ontvangen" });
     } catch (error) {
@@ -3841,6 +3846,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Validatiefout", details: error.errors });
       }
       console.error("Error in public candidate registration:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
+  // Public PATCH: update kandidaat na gedeeltelijke save (beveiligd via email + id)
+  app.patch("/api/aanmelden/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+
+      const updateSchema = z.object({
+        email: z.string().email(),
+        status: z.enum(["in_behandeling", "aangenomen", "afgewezen"]).optional(),
+        language: z.string().optional().nullable(),
+        horecaExperience: z.string().optional().nullable(),
+        needsTwv: z.boolean().optional(),
+        interviewDate: z.string().optional().nullable(),
+        interviewTime: z.string().optional().nullable(),
+        notes: z.string().optional().nullable(),
+        rejectionReason: z.string().optional().nullable(),
+        partial: z.boolean().optional().default(false),
+      });
+
+      const validated = updateSchema.parse(req.body);
+
+      const existing = await storage.getCandidate(id);
+      if (!existing) return res.status(404).json({ message: "Kandidaat niet gevonden" });
+      if (existing.email !== validated.email) return res.status(403).json({ message: "Geen toegang" });
+
+      const updateData: Record<string, any> = {};
+      if (validated.status) updateData.status = validated.status;
+      if (validated.language !== undefined) updateData.language = validated.language;
+      if (validated.horecaExperience !== undefined) updateData.horecaExperience = validated.horecaExperience;
+      if (validated.needsTwv !== undefined) updateData.needsTwv = validated.needsTwv;
+      if (validated.interviewDate !== undefined) updateData.interviewDate = validated.interviewDate;
+      if (validated.interviewTime !== undefined) updateData.interviewTime = validated.interviewTime;
+      if (validated.notes !== undefined) updateData.notes = validated.notes;
+
+      const updated = await storage.updateCandidate(id, updateData);
+
+      await storage.createCandidateAuditLog({
+        candidateId: id,
+        action: 'updated',
+        changedByUserId: null,
+        changeData: { description: validated.status === 'afgewezen' ? `Afgewezen: ${validated.rejectionReason || 'onbekend'}` : 'Kandidaat bijgewerkt via aanmeldflow', ...updateData },
+        ipAddress: req.ip ?? null
+      });
+
+      // Stuur bevestigingsmail bij voltooiing
+      if (!validated.partial && validated.status !== 'afgewezen' && updated?.email) {
+        sendCandidateConfirmationEmail({
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          email: updated.email,
+          functionType: updated.functionType,
+          nationality: updated.nationality,
+          language: updated.language,
+          interviewDate: updated.interviewDate,
+          interviewTime: updated.interviewTime,
+        }).catch((err) => console.error("Fout bij versturen bevestigingsmail:", err));
+      }
+
+      return res.status(200).json({ id, message: "Kandidaat bijgewerkt" });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Validatiefout", details: error.errors });
+      }
+      console.error("Error updating candidate:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
+  // Calendly webhook: detecteer ingeplande gesprekken
+  app.post("/api/webhooks/calendly", async (req: Request, res: Response) => {
+    try {
+      const { event, payload } = req.body;
+
+      if (event !== "invitee.created") {
+        return res.status(200).json({ message: "Event genegeerd" });
+      }
+
+      const inviteeEmail = payload?.email;
+      const eventStartTime = payload?.event?.start_time || payload?.scheduled_event?.start_time;
+
+      if (!inviteeEmail || !eventStartTime) {
+        return res.status(400).json({ message: "Ontbrekende Calendly data" });
+      }
+
+      const { candidates: allCandidates } = await storage.getCandidates({ search: inviteeEmail });
+      const candidate = allCandidates.find((c: any) => c.email === inviteeEmail);
+
+      if (!candidate) {
+        console.log(`Calendly webhook: geen kandidaat gevonden voor ${inviteeEmail}`);
+        return res.status(200).json({ message: "Geen kandidaat gevonden, webhook ontvangen" });
+      }
+
+      const eventDate = new Date(eventStartTime);
+      const interviewDate = eventDate.toISOString().split('T')[0];
+      const hours = eventDate.getHours().toString().padStart(2, '0');
+      const minutes = eventDate.getMinutes().toString().padStart(2, '0');
+      const interviewTime = `${hours}:${minutes}`;
+
+      await storage.updateCandidate(candidate.id, { interviewDate, interviewTime });
+
+      await storage.createCandidateAuditLog({
+        candidateId: candidate.id,
+        action: 'updated',
+        changedByUserId: null,
+        changeData: { description: `Gesprek ingepland via Calendly: ${interviewDate} ${interviewTime}`, interviewDate, interviewTime },
+        ipAddress: req.ip ?? null
+      });
+
+      console.log(`Calendly: gesprek ingepland voor ${inviteeEmail} op ${interviewDate} ${interviewTime}`);
+      return res.status(200).json({ message: "Gesprek bijgewerkt" });
+    } catch (error) {
+      console.error("Calendly webhook fout:", error);
       return res.status(500).json({ message: "Er is iets misgegaan" });
     }
   });

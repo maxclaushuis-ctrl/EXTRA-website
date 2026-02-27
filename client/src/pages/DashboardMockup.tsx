@@ -277,8 +277,8 @@ export default function DashboardMockup() {
   const dashPoints = 12450;
   const dashGrowth = '+28';
   const gbTotalUsers = 893;
-  const gbActiveUsers = 802;
-  const gbPoints = 371638;
+  const gbActiveUsers = 803;
+  const gbPoints = 541300;
   const userGrowth = stats?.changes?.activeUsersChange || '+28';
 
   // Kandidaten tab computed values
