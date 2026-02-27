@@ -982,7 +982,7 @@ export default function LandingPage() {
             className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
             style={{ filter: "contrast(1.03) saturate(1.02)" }}
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
             decoding="async"
           />
           <div
