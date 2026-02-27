@@ -160,7 +160,6 @@ export default function PersoneelGezocht() {
 
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       <GrainOverlay />
 
       <nav
@@ -175,7 +174,7 @@ export default function PersoneelGezocht() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <a href="/landing" className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
+              <img src={extraLogoWit} alt="EXTRA – Horecapersoneel uitzendbureau Amsterdam" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
             </a>
             <div className="hidden lg:flex items-center gap-2">
               {/* Ik zoek personeel */}
@@ -342,7 +341,7 @@ export default function PersoneelGezocht() {
       {/* ═══════════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroBgImage} alt="" className="absolute inset-0 w-full h-full object-cover object-right sm:object-center" style={{ filter: "contrast(1.03) saturate(1.02)" }} loading="eager" />
+          <img src={heroBgImage} alt="" className="absolute inset-0 w-full h-full object-cover object-right sm:object-center" style={{ filter: "contrast(1.03) saturate(1.02)" }} loading="eager" fetchPriority="high" decoding="async" />
           <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(88,22,164,0.92) 0%, rgba(88,22,164,0.88) 40%, rgba(88,22,164,0.70) 65%, rgba(88,22,164,0.35) 82%, rgba(88,22,164,0.10) 100%)` }} />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
@@ -926,7 +925,7 @@ export default function PersoneelGezocht() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-14">
             <div className="col-span-2 md:col-span-1">
               <a href="/landing" className="flex items-center mb-4 sm:mb-5">
-                <img src={extraLogoWit} alt="EXTRA" className="h-6 sm:h-7 w-auto" />
+                <img src={extraLogoWit} alt="EXTRA Horecapersoneel" className="h-6 sm:h-7 w-auto" />
               </a>
               <p className="text-sm sm:text-base leading-relaxed">
                 Uitzendbureau voor horeca, hotels en evenementen. Met ons unieke EXTRAATje beloningssysteem.

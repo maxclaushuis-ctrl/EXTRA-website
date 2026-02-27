@@ -764,7 +764,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       <GrainOverlay />
 
       {/* ── NAVIGATION ── */}
@@ -780,7 +779,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
+              <img src={extraLogoWit} alt="EXTRA – Horecapersoneel uitzendbureau Amsterdam" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
             </div>
             <div className="hidden lg:flex items-center gap-2">
               {/* Ik zoek personeel */}
@@ -983,6 +982,8 @@ export default function LandingPage() {
             className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
             style={{ filter: "contrast(1.03) saturate(1.02)" }}
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
           <div
             className="absolute inset-0"
@@ -1171,7 +1172,7 @@ export default function LandingPage() {
                     { src: logoAppel, alt: "Appèl" },
                   ].map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" />
+                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
                     </div>
                   ))}
                 </div>
@@ -1500,7 +1501,7 @@ export default function LandingPage() {
                 <div className="relative w-[240px] sm:w-[280px]">
                   <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50 border-[6px] border-gray-800 bg-gray-900">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[22px] bg-gray-900 rounded-b-xl z-20" />
-                    <img src={screenDashboard} alt="Dashboard" className="w-full relative z-10" />
+                    <img src={screenDashboard} alt="EXTRA medewerkers app – beloningssysteem en diensten dashboard" className="w-full relative z-10" loading="lazy" decoding="async" />
                   </div>
                   <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-[3.5rem] blur-3xl -z-10" />
                 </div>
@@ -1902,7 +1903,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-14">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center mb-4 sm:mb-5">
-                <img src={extraLogoWit} alt="EXTRA" className="h-6 sm:h-7 w-auto" />
+                <img src={extraLogoWit} alt="EXTRA Horecapersoneel" className="h-6 sm:h-7 w-auto" />
               </div>
               <p className="text-sm sm:text-base leading-relaxed">
                 Uitzendbureau voor horeca, hotels en evenementen. Met ons unieke EXTRAATje beloningssysteem.
