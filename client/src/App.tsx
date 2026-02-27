@@ -77,11 +77,16 @@ function Router() {
 
   // Dashboard mockup heeft eigen navigatie
   const isDashboardMockup = location.startsWith('/dashboard-mockup');
+
+  // Publieke pagina's krijgen nooit de interne nav te zien
+  const isPublicPage = ['/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/brochure', '/brochures', '/events', '/nieuws'].some(
+    p => location === p || location.startsWith(p + '/')
+  );
   
   return (
     <>
-      {/* Notificatie en navigatie, maar niet op employee dashboard of dashboard mockup */}
-      {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && !isDashboardMockup && (
+      {/* Notificatie en navigatie, maar niet op employee dashboard, dashboard mockup of publieke pagina's */}
+      {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && !isDashboardMockup && !isPublicPage && (
         <>
           <MainNav />
           <NotificationToast />
