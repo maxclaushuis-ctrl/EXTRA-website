@@ -1,0 +1,48 @@
+Je bent een senior React/TypeScript developer én QA-engineer.
+Er is nog steeds een runtime-bug in deze Replit, ook al is eerder aangegeven dat het opgelost was.
+Huidige situatie:
+Bij het starten van de app in Replit krijg ik het scherm:
+“Your app encountered an error” (volledig witte rechterkant met die melding).
+Eerder heb je fetchPriority/fetchpriority aangepast en gemeld dat het opgelost was, maar de error blijft terugkomen zodra ik de app run.
+Ik wil dat je dit nu end-to-end en definitief oplost. Volg daarom strikt deze stappen:
+1. Reproduceer de fout zelf
+Start de app in de Replit-preview zoals ik dat ook doe.
+Ga naar alle relevante routes (o.a. /, /landing, /personeel-gezocht en andere entry-pages).
+Stop pas met deze stap als je ofwel:
+de fout zelf ziet (“Your app encountered an error”), of
+zeker weet dat hij niet meer voorkomt, na meerdere navigaties.
+Gebruik de browserconsole én de serverlog om de volledige stack trace van de error op te halen.
+2. Analyseer de oorzaak
+Achterhaal exact:
+In welk component / welke file de error ontstaat.
+Welke prop / hook / functie de crash veroorzaakt.
+Controleer expliciet:
+Alle plaatsen waar fetchpriority, fetchPriority of andere experimentele props op <img> of andere elementen worden gebruikt.
+Of er hooks verkeerd worden aangeroepen (bijv. in conditionals, loops, of buiten een component).
+Schrijf in je uitleg heel concreet:
+Welke file(s) en regels de fout veroorzaakten.
+Waarom de eerdere “fix” niet voldoende was.
+3. Fix de code zó dat de runtime-error verdwijnt
+Pas de betreffende componenten aan zodat:
+Er geen ongeldig attribuut meer naar React wordt gepusht.
+Hooks alleen op geldige plekken worden aangeroepen.
+Ruim eventuele dubbele of verouderde props op in alle relevante componenten (niet alleen de hero-afbeelding, maar elke image/section waar je dezelfde pattern ziet).
+Zorg dat de fix niet alleen een quick patch is, maar de onderliggende oorzaak wegneemt.
+4. Verifieer de oplossing grondig
+Na je wijzigingen:
+Restart de app.
+Navigeer opnieuw langs alle belangrijke pagina’s (minimaal: home/landing/personeel-gezocht).
+Controleer:
+Geen “Your app encountered an error”.
+Geen React-warnings over onbekende props of “Invalid hook call”.
+Geen nieuwe fouten in de console.
+Stop pas als je zelf hebt gezien dat de app volledig laadt zonder errors.
+5. Lever dit als output
+In je antwoord wil ik:
+Een korte root-cause analyse:
+“De crash werd veroorzaakt door … in bestand X op regel Y.”
+Een lijst met alle aangepaste bestanden + een korte omschrijving per bestand.
+Bevestiging dat je de app zelf hebt gerund en alle genoemde pagina’s zonder fouten hebt bezocht.
+Belangrijk:
+Geen “Alles werkt nu” opschrijven als je de runtime-error niet daadwerkelijk hebt gereproduceerd en weggewerkt.
+Liever één keer goed en grondig fixen dan weer een gedeeltelijke oplossing.
