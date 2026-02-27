@@ -12,10 +12,27 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+
+interface IntakeCandidate {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  postcode?: string;
+  nationality?: string;
+  birthDate?: string;
+  functionType?: string;
+  language?: string;
+  horecaExperience?: string;
+  experienceLevel?: string;
+}
 
 const formSchema = z.object({
   interviewer: z.string().min(1, "Selecteer een interviewer"),
-  functionType: z.enum(["horecamedewerker", "chef", "housekeeping", "front_office"]),
+  functionType: z.enum(["horecamedewerker", "chef", "housekeeping", "frontoffice"]),
   
   firstName: z.string().min(1, "Voornaam is verplicht"),
   lastName: z.string().min(1, "Achternaam is verplicht"),
@@ -71,7 +88,7 @@ const functionTypes = [
   { value: "horecamedewerker", label: "Horecamedewerker" },
   { value: "chef", label: "Chef" },
   { value: "housekeeping", label: "Housekeeping" },
-  { value: "front_office", label: "Front-office" },
+  { value: "frontoffice", label: "Front-office" },
 ];
 
 const sections = [
@@ -89,6 +106,11 @@ export default function SollicitatieFormulier() {
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [intakeCandidates, setIntakeCandidates] = useState<IntakeCandidate[]>([]);
+  const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
+  const [intakeIsAdmin, setIntakeIsAdmin] = useState(false);
+  const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
+  const [intakeCandidateSearch, setIntakeCandidateSearch] = useState('');
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -112,7 +134,34 @@ export default function SollicitatieFormulier() {
 
   const progress = ((currentSection + 1) / sections.length) * 100;
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // When leaving the Start section (section 0), fetch candidates for the selected function
+    if (currentSection === 0) {
+      const ft = watchedFunctionType;
+      if (ft) {
+        setIntakeCandidatesLoading(true);
+        setSelectedIntakeId(null);
+        setIntakeCandidateSearch('');
+        try {
+          const res = await fetch(`/api/intake/candidates?functionType=${encodeURIComponent(ft)}`, {
+            credentials: 'include',
+          });
+          if (res.ok) {
+            const json = await res.json();
+            setIntakeCandidates(json.candidates || []);
+            setIntakeIsAdmin(true);
+          } else {
+            setIntakeCandidates([]);
+            setIntakeIsAdmin(false);
+          }
+        } catch {
+          setIntakeCandidates([]);
+          setIntakeIsAdmin(false);
+        } finally {
+          setIntakeCandidatesLoading(false);
+        }
+      }
+    }
     if (currentSection < sections.length - 1) {
       setCurrentSection(currentSection + 1);
     }
@@ -124,28 +173,45 @@ export default function SollicitatieFormulier() {
     }
   };
 
+  function applyIntakeCandidate(candidate: IntakeCandidate) {
+    setValue("firstName", candidate.firstName || '');
+    setValue("lastName", candidate.lastName || '');
+    setValue("email", candidate.email || '');
+    setValue("phone", candidate.phone || '');
+    setValue("city", candidate.city || '');
+    setValue("birthDate", candidate.birthDate || '');
+    if (candidate.nationality) setValue("nationality", candidate.nationality);
+    if (candidate.horecaExperience) setValue("horecaExperience", candidate.horecaExperience);
+    setSelectedIntakeId(candidate.id);
+  }
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/sollicitatie", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        credentials: "include",
+        body: JSON.stringify({ ...data, linkedCandidateId: selectedIntakeId }),
       });
 
       if (!response.ok) {
-        throw new Error("Fout bij versturen");
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Fout bij versturen");
       }
+
+      // Ververs de Kandidaten-tab zodat de nieuwe kandidaat direct zichtbaar is
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
 
       setIsSubmitted(true);
       toast({
         title: "Sollicitatie opgeslagen!",
         description: "De gegevens zijn succesvol opgeslagen.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Fout",
-        description: "Er ging iets mis bij het opslaan. Probeer opnieuw.",
+        description: error.message || "Er ging iets mis bij het opslaan. Probeer opnieuw.",
         variant: "destructive",
       });
     } finally {
@@ -191,6 +257,10 @@ export default function SollicitatieFormulier() {
             onClick={() => {
               setIsSubmitted(false);
               setCurrentSection(0);
+              setIntakeCandidates([]);
+              setIntakeIsAdmin(false);
+              setSelectedIntakeId(null);
+              setIntakeCandidateSearch('');
               form.reset();
             }}
             className="w-full bg-purple-600 hover:bg-purple-700"
@@ -272,6 +342,65 @@ export default function SollicitatieFormulier() {
 
             {currentSection === 1 && (
               <>
+                {/* ── Kandidaatpicker (alleen voor admins) ── */}
+                {intakeCandidatesLoading && (
+                  <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3 mb-2">
+                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                    Kandidaten ophalen…
+                  </div>
+                )}
+
+                {!intakeCandidatesLoading && intakeIsAdmin && intakeCandidates.length > 0 && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
+                        <User className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <p className="text-sm font-bold text-purple-900">Welke kandidaat zit nu bij je aan tafel?</p>
+                    </div>
+                    <Input
+                      value={intakeCandidateSearch}
+                      onChange={e => setIntakeCandidateSearch(e.target.value)}
+                      placeholder="Zoek op naam of e-mail…"
+                      className="h-10 rounded-xl border-purple-300 bg-white text-sm"
+                    />
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {intakeCandidates
+                        .filter(c => {
+                          const q = intakeCandidateSearch.toLowerCase();
+                          return q === '' ||
+                            `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                            (c.email || '').toLowerCase().includes(q);
+                        })
+                        .map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => applyIntakeCandidate(c)}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
+                              selectedIntakeId === c.id
+                                ? 'border-purple-500 bg-purple-100 text-purple-900 font-semibold'
+                                : 'border-purple-200 bg-white hover:border-purple-400 hover:bg-purple-50 text-gray-800'
+                            }`}
+                          >
+                            <span className="font-semibold">{c.firstName} {c.lastName}</span>
+                            <span className="text-gray-500 font-normal"> — {c.city || '?'} — {c.email}</span>
+                          </button>
+                        ))}
+                    </div>
+                    {selectedIntakeId && (
+                      <p className="text-xs text-purple-700 font-medium">✓ Gegevens vooraf ingevuld — je kunt ze nog aanpassen</p>
+                    )}
+                  </div>
+                )}
+
+                {!intakeCandidatesLoading && intakeIsAdmin && intakeCandidates.length === 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                    Geen kandidaten gevonden voor deze functie. Vul de gegevens handmatig in.
+                  </div>
+                )}
+                {/* ── Einde kandidaatpicker ── */}
+
                 <div className="space-y-2">
                   <Label>Voornaam + achternaam *</Label>
                   <div className="grid grid-cols-2 gap-3">
