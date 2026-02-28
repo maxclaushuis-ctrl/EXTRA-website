@@ -81,6 +81,22 @@
     cursor: text !important;
   }
   
+  .normal-cursor, .normal-cursor * {
+    cursor: auto !important;
+  }
+  .normal-cursor a, .normal-cursor button, .normal-cursor [role="button"],
+  .normal-cursor label, .normal-cursor select,
+  .normal-cursor input[type="submit"], .normal-cursor input[type="button"],
+  .normal-cursor input[type="reset"], .normal-cursor input[type="radio"],
+  .normal-cursor input[type="checkbox"] {
+    cursor: pointer !important;
+  }
+  .normal-cursor input[type="text"], .normal-cursor input[type="email"],
+  .normal-cursor input[type="tel"], .normal-cursor input[type="number"],
+  .normal-cursor textarea {
+    cursor: text !important;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-poppins font-bold;
   }

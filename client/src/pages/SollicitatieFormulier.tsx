@@ -101,7 +101,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const interviewers = ["Eveline", "Isa", "Britt", "Max", "Lea"];
+const interviewers = ["Eveline", "Isa", "Charlotte", "Max", "Lea"];
 
 const functionTypes = [
   { value: "horecamedewerker", label: "Horecamedewerker" },
@@ -258,7 +258,7 @@ export default function SollicitatieFormulier() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-4">
+      <div className="normal-cursor min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-10 h-10 text-green-600" />
@@ -270,7 +270,6 @@ export default function SollicitatieFormulier() {
               setIsSubmitted(false);
               setCurrentSection(0);
               setIntakeCandidates([]);
-              setIntakeIsAdmin(false);
               setSelectedIntakeId(null);
               setIntakeCandidateSearch('');
               form.reset();
@@ -285,7 +284,7 @@ export default function SollicitatieFormulier() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
+    <div className="normal-cursor min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
       <div className="bg-purple-600 text-white py-4 px-6 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -350,26 +349,6 @@ export default function SollicitatieFormulier() {
                   {errors.functionType && <p className="text-red-500 text-sm">{errors.functionType.message}</p>}
                 </div>
 
-                {watchedFunctionType && (
-                  <div className={`rounded-xl px-4 py-3 text-sm flex items-center gap-2 ${
-                    intakeCandidatesLoading
-                      ? 'bg-purple-50 border border-purple-100 text-purple-600'
-                      : intakeCandidates.length > 0
-                        ? 'bg-green-50 border border-green-200 text-green-800'
-                        : 'bg-gray-50 border border-gray-200 text-gray-600'
-                  }`}>
-                    {intakeCandidatesLoading ? (
-                      <>
-                        <div className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                        Kandidaten ophalen…
-                      </>
-                    ) : intakeCandidates.length > 0 ? (
-                      <>✓ {intakeCandidates.length} aangemelde kandidaat{intakeCandidates.length !== 1 ? 'en' : ''} gevonden — kies er een op de volgende stap</>
-                    ) : (
-                      <>Geen aangemelde kandidaten voor deze functie — gegevens handmatig invullen</>
-                    )}
-                  </div>
-                )}
               </>
             )}
 
