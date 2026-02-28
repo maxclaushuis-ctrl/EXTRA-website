@@ -127,7 +127,7 @@ export default function SollicitatieFormulier() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [intakeCandidates, setIntakeCandidates] = useState<IntakeCandidate[]>([]);
   const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
-  const [intakeIsAdmin, setIntakeIsAdmin] = useState(false);
+  const [intakeIsAdmin, setIntakeIsAdmin] = useState<boolean | null>(null);
   const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
   const [intakeCandidateSearch, setIntakeCandidateSearch] = useState('');
   const { toast } = useToast();
@@ -148,10 +148,28 @@ export default function SollicitatieFormulier() {
   useEffect(() => {
     setIsSubmitted(false);
     setCurrentSection(0);
+    // Check admin status on mount
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(user => setIntakeIsAdmin(!!(user && user.role === 'admin')))
+      .catch(() => setIntakeIsAdmin(false));
   }, []);
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedFunctionType = watch("functionType");
+
+  // Auto-fetch candidates when functionType changes (if admin)
+  useEffect(() => {
+    if (!watchedFunctionType || intakeIsAdmin !== true) return;
+    setIntakeCandidatesLoading(true);
+    setSelectedIntakeId(null);
+    setIntakeCandidateSearch('');
+    fetch(`/api/intake/candidates?functionType=${encodeURIComponent(watchedFunctionType)}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : { candidates: [] })
+      .then(json => setIntakeCandidates(json.candidates || []))
+      .catch(() => setIntakeCandidates([]))
+      .finally(() => setIntakeCandidatesLoading(false));
+  }, [watchedFunctionType, intakeIsAdmin]);
 
   const hkSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Housekeeping ervaring", "Beschikbaarheid & vervoer", "Tags", "Beoordeling", "Afronden"];
   const getSectionTitle = (idx: number) => {
@@ -161,34 +179,7 @@ export default function SollicitatieFormulier() {
 
   const progress = ((currentSection + 1) / sections.length) * 100;
 
-  const handleNext = async () => {
-    // When leaving the Start section (section 0), fetch candidates for the selected function
-    if (currentSection === 0) {
-      const ft = watchedFunctionType;
-      if (ft) {
-        setIntakeCandidatesLoading(true);
-        setSelectedIntakeId(null);
-        setIntakeCandidateSearch('');
-        try {
-          const res = await fetch(`/api/intake/candidates?functionType=${encodeURIComponent(ft)}`, {
-            credentials: 'include',
-          });
-          if (res.ok) {
-            const json = await res.json();
-            setIntakeCandidates(json.candidates || []);
-            setIntakeIsAdmin(true);
-          } else {
-            setIntakeCandidates([]);
-            setIntakeIsAdmin(false);
-          }
-        } catch {
-          setIntakeCandidates([]);
-          setIntakeIsAdmin(false);
-        } finally {
-          setIntakeCandidatesLoading(false);
-        }
-      }
-    }
+  const handleNext = () => {
     if (currentSection < sections.length - 1) {
       setCurrentSection(currentSection + 1);
     }
@@ -364,26 +355,75 @@ export default function SollicitatieFormulier() {
                   </Select>
                   {errors.functionType && <p className="text-red-500 text-sm">{errors.functionType.message}</p>}
                 </div>
+
+                {intakeIsAdmin === true && watchedFunctionType && (
+                  <div className={`rounded-xl px-4 py-3 text-sm flex items-center gap-2 ${
+                    intakeCandidatesLoading
+                      ? 'bg-purple-50 border border-purple-100 text-purple-600'
+                      : intakeCandidates.length > 0
+                        ? 'bg-green-50 border border-green-200 text-green-800'
+                        : 'bg-gray-50 border border-gray-200 text-gray-600'
+                  }`}>
+                    {intakeCandidatesLoading ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                        Kandidaten ophalen…
+                      </>
+                    ) : intakeCandidates.length > 0 ? (
+                      <>✓ {intakeCandidates.length} aangemelde kandidaat{intakeCandidates.length !== 1 ? 'en' : ''} gevonden — kies er een op de volgende stap</>
+                    ) : (
+                      <>Geen aangemelde kandidaten voor deze functie — gegevens handmatig invullen</>
+                    )}
+                  </div>
+                )}
+
+                {intakeIsAdmin === false && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                    Log in als admin om de kandidatenlijst te kunnen gebruiken.
+                    <a href="/dashboard-mockup" className="ml-2 font-medium underline">Naar dashboard →</a>
+                  </div>
+                )}
               </>
             )}
 
             {currentSection === 1 && (
               <>
-                {/* ── Kandidaatpicker (alleen voor admins) ── */}
-                {intakeCandidatesLoading && (
-                  <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3 mb-2">
+                {/* ── Kandidaatpicker ── */}
+                {intakeIsAdmin === null && (
+                  <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
+                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                    Controleren…
+                  </div>
+                )}
+
+                {intakeIsAdmin === false && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+                    <p className="text-sm font-semibold text-amber-900">Je bent niet ingelogd als admin</p>
+                    <p className="text-sm text-amber-800">Log eerst in op het dashboard om de kandidatenlijst te zien en gegevens automatisch in te vullen.</p>
+                    <a
+                      href="/dashboard-mockup"
+                      className="inline-block mt-1 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      Naar het dashboard →
+                    </a>
+                  </div>
+                )}
+
+                {intakeIsAdmin === true && intakeCandidatesLoading && (
+                  <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
                     <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
                     Kandidaten ophalen…
                   </div>
                 )}
 
-                {!intakeCandidatesLoading && intakeIsAdmin && intakeCandidates.length > 0 && (
+                {intakeIsAdmin === true && !intakeCandidatesLoading && intakeCandidates.length > 0 && (
                   <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
                         <User className="w-3.5 h-3.5 text-white" />
                       </div>
                       <p className="text-sm font-bold text-purple-900">Welke kandidaat zit nu bij je aan tafel?</p>
+                      <span className="ml-auto text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">{intakeCandidates.length} kandidaten</span>
                     </div>
                     <Input
                       value={intakeCandidateSearch}
@@ -421,9 +461,9 @@ export default function SollicitatieFormulier() {
                   </div>
                 )}
 
-                {!intakeCandidatesLoading && intakeIsAdmin && intakeCandidates.length === 0 && (
+                {intakeIsAdmin === true && !intakeCandidatesLoading && intakeCandidates.length === 0 && watchedFunctionType && (
                   <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                    Geen kandidaten gevonden voor deze functie. Vul de gegevens handmatig in.
+                    Geen aangemelde kandidaten gevonden voor deze functie. Vul de gegevens handmatig in.
                   </div>
                 )}
                 {/* ── Einde kandidaatpicker ── */}
