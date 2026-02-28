@@ -363,21 +363,20 @@ export default function SollicitatieFormulier() {
                 )}
 
                 {!intakeCandidatesLoading && intakeCandidates.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
-                        <User className="w-3.5 h-3.5 text-white" />
+                  <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                    <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-800 mb-2.5">Welke kandidaat zit nu bij je aan tafel?</p>
+                      <div className="relative">
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                        <input
+                          value={intakeCandidateSearch}
+                          onChange={e => setIntakeCandidateSearch(e.target.value)}
+                          placeholder="Zoek op naam…"
+                          className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                        />
                       </div>
-                      <p className="text-sm font-bold text-purple-900">Welke kandidaat zit nu bij je aan tafel?</p>
-                      <span className="ml-auto text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">{intakeCandidates.length} kandidaten</span>
                     </div>
-                    <Input
-                      value={intakeCandidateSearch}
-                      onChange={e => setIntakeCandidateSearch(e.target.value)}
-                      placeholder="Zoek op naam of e-mail…"
-                      className="h-10 rounded-xl border-purple-300 bg-white text-sm"
-                    />
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    <div className="max-h-52 overflow-y-auto divide-y divide-gray-50">
                       {intakeCandidates
                         .filter(c => {
                           const q = intakeCandidateSearch.toLowerCase();
@@ -385,31 +384,49 @@ export default function SollicitatieFormulier() {
                             `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
                             (c.email || '').toLowerCase().includes(q);
                         })
-                        .map(c => (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => applyIntakeCandidate(c)}
-                            className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
-                              selectedIntakeId === c.id
-                                ? 'border-purple-500 bg-purple-100 text-purple-900 font-semibold'
-                                : 'border-purple-200 bg-white hover:border-purple-400 hover:bg-purple-50 text-gray-800'
-                            }`}
-                          >
-                            <span className="font-semibold">{c.firstName} {c.lastName}</span>
-                            <span className="text-gray-500 font-normal"> — {c.city || '?'} — {c.email}</span>
-                          </button>
-                        ))}
+                        .map(c => {
+                          const initials = `${c.firstName?.[0] ?? ''}${c.lastName?.[0] ?? ''}`.toUpperCase();
+                          const isSelected = selectedIntakeId === c.id;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => applyIntakeCandidate(c)}
+                              className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                                isSelected
+                                  ? 'bg-purple-50'
+                                  : 'hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                isSelected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {initials}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className={`text-sm font-semibold truncate ${isSelected ? 'text-purple-900' : 'text-gray-800'}`}>
+                                  {c.firstName} {c.lastName}
+                                </p>
+                                <p className="text-xs text-gray-400 truncate">{c.city || '—'} · {c.email}</p>
+                              </div>
+                              {isSelected && (
+                                <svg className="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                              )}
+                            </button>
+                          );
+                        })}
                     </div>
                     {selectedIntakeId && (
-                      <p className="text-xs text-purple-700 font-medium">✓ Gegevens vooraf ingevuld — je kunt ze nog aanpassen</p>
+                      <div className="px-4 py-2.5 border-t border-gray-100 bg-purple-50">
+                        <p className="text-xs text-purple-700 font-medium">✓ Gegevens vooraf ingevuld — je kunt ze nog aanpassen</p>
+                      </div>
                     )}
                   </div>
                 )}
 
                 {!intakeCandidatesLoading && intakeCandidates.length === 0 && watchedFunctionType && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                    Geen aangemelde kandidaten gevonden voor deze functie. Vul de gegevens handmatig in.
+                  <div className="rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500 bg-gray-50">
+                    Geen aangemelde kandidaten voor deze functie — vul de gegevens hieronder handmatig in.
                   </div>
                 )}
                 {/* ── Einde kandidaatpicker ── */}
