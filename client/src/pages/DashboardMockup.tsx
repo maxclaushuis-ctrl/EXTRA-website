@@ -507,21 +507,7 @@ export default function DashboardMockup() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
-                        <colgroup>
-                          <col style={{ width: '7%' }} />
-                          <col style={{ width: '13%' }} />
-                          <col style={{ width: '9%' }} />
-                          <col style={{ width: '8%' }} />
-                          <col style={{ width: '11%' }} />
-                          <col style={{ width: '9%' }} />
-                          <col style={{ width: '6%' }} />
-                          <col style={{ width: '7%' }} />
-                          <col style={{ width: '6%' }} />
-                          <col style={{ width: '8%' }} />
-                          <col style={{ width: '12%' }} />
-                          <col style={{ width: '4%' }} />
-                        </colgroup>
+                      <table className="text-sm" style={{ minWidth: '1200px' }}>
                         <thead className="bg-gray-50 border-b">
                           <tr>
                             {/* AANGEMELD — klikbaar voor sortering */}
@@ -550,70 +536,57 @@ export default function DashboardMockup() {
                             return (
                               <tr key={c.id} className="hover:bg-gray-50 align-middle">
                                 {/* AANGEMELD */}
-                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
                                   {new Date(c.createdAt).toLocaleDateString('nl-NL')}
                                 </td>
                                 {/* NAAM */}
-                                <td className="px-3 py-3 overflow-hidden">
+                                <td className="px-3 py-3 whitespace-nowrap">
                                   <div className="flex items-center gap-1.5">
                                     <Avatar className="h-6 w-6 flex-shrink-0">
                                       <AvatarFallback className={`text-xs ${getFunctionBadgeColor(c.functionType)}`}>
                                         {getInitials(c.firstName, c.lastName)}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <span
-                                      className="font-medium text-gray-900 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
-                                      title={`${c.firstName} ${c.lastName}`}
-                                    >
+                                    <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                       {c.firstName} {c.lastName}
                                     </span>
                                   </div>
                                 </td>
                                 {/* FUNCTIE */}
-                                <td className="px-3 py-3 overflow-hidden">
+                                <td className="px-3 py-3 whitespace-nowrap">
                                   <Badge
                                     variant="outline"
-                                    className={`text-xs ${getFunctionBadgeColor(c.functionType)} overflow-hidden text-ellipsis whitespace-nowrap max-w-full block`}
-                                    title={c.functionType || '—'}
+                                    className={`text-xs ${getFunctionBadgeColor(c.functionType)} whitespace-nowrap`}
                                   >
                                     {c.functionType || '—'}
                                   </Badge>
                                 </td>
                                 {/* WOONPLAATS */}
-                                <td
-                                  className="px-3 py-3 text-gray-500 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
-                                  title={c.city || '—'}
-                                >
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                                   {c.city || '—'}
                                 </td>
                                 {/* E-MAIL */}
-                                <td
-                                  className="px-3 py-3 text-gray-600 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
-                                  title={c.email || '—'}
-                                >
+                                <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">
                                   {c.email || '—'}
                                 </td>
                                 {/* TELEFOON */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                                   {c.phone || '—'}
                                 </td>
                                 {/* NATIONALITEIT */}
-                                <td
-                                  className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis"
-                                  title={c.nationality || '—'}
-                                >
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                                   {c.nationality || '—'}
                                 </td>
                                 {/* ERVARING */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                                   {kanExpLabel(c)}
                                 </td>
                                 {/* VOERTAAL */}
-                                <td className="px-3 py-3 text-gray-500 text-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                                   {c.language || '—'}
                                 </td>
                                 {/* STATUS */}
-                                <td className="px-3 py-3 overflow-hidden">
+                                <td className="px-3 py-3 whitespace-nowrap">
                                   {kandidatenSubtab === 'in_proces' && (
                                     <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">In proces</Badge>
                                   )}
@@ -627,14 +600,11 @@ export default function DashboardMockup() {
                                   )}
                                 </td>
                                 {/* ONTBREKEND */}
-                                <td className="px-3 py-3 overflow-hidden">
+                                <td className="px-3 py-3 whitespace-nowrap">
                                   {missing.length > 0 ? (
-                                    <div
-                                      className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded overflow-hidden text-ellipsis whitespace-nowrap max-w-full"
-                                      title={missing.join(', ')}
-                                    >
+                                    <div className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                                       <Clock className="h-2.5 w-2.5 flex-shrink-0" />
-                                      <span className="overflow-hidden text-ellipsis">{missing.join(', ')}</span>
+                                      <span>{missing.join(', ')}</span>
                                     </div>
                                   ) : (
                                     <span className="text-xs text-green-600 font-medium whitespace-nowrap">✓ Compleet</span>

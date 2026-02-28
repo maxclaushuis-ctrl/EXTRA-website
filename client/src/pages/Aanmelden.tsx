@@ -18,21 +18,6 @@ import { apiRequest } from "@/lib/queryClient";
 type FlowType = "NL" | "EU" | "NON_EU";
 type WizardStep = "basics" | "distance_check" | "skills" | "twv" | "cv_schedule" | "success" | "rejected";
 
-interface IntakeCandidate {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  city?: string;
-  postcode?: string;
-  nationality?: string;
-  birthDate?: string;
-  functionType?: string;
-  language?: string;
-  horecaExperience?: string;
-  experienceLevel?: string;
-}
 
 const EU_EER_COUNTRIES = [
   "Oostenrijk", "België", "Bulgarije", "Kroatië", "Cyprus", "Tsjechië",
@@ -455,13 +440,6 @@ export default function Aanmelden() {
   const [cvUploaded, setCvUploaded] = useState(false);
   const [calendlyScheduled, setCalendlyScheduled] = useState(false);
   const [savedCandidateId, setSavedCandidateId] = useState<number | null>(null);
-  const [intakeCandidates, setIntakeCandidates] = useState<IntakeCandidate[]>([]);
-  const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
-  const [intakeFetched, setIntakeFetched] = useState(false);
-  const [intakeIsAdmin, setIntakeIsAdmin] = useState(false);
-  const [intakeMode, setIntakeMode] = useState(false);
-  const [selectedIntakeId, setSelectedIntakeId] = useState<number | 'manual' | null>(null);
-  const [intakeCandidateSearch, setIntakeCandidateSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -632,51 +610,12 @@ export default function Aanmelden() {
 
     await saveCandidate("in_behandeling", true);
 
-    // Probeer kandidaten op te halen voor intake-modus (werkt alleen als admin is ingelogd)
-    setIntakeCandidatesLoading(true);
-    setIntakeFetched(false);
-    setSelectedIntakeId(null);
-    setIntakeCandidateSearch('');
-    try {
-      const res: any = await apiRequest(`/api/intake/candidates?functionType=${encodeURIComponent(formData.preferredFunction)}`);
-      const list: IntakeCandidate[] = res?.candidates || [];
-      setIntakeCandidates(list);
-      setIntakeIsAdmin(true);
-      setIntakeMode(list.length > 0);
-    } catch {
-      setIntakeCandidates([]);
-      setIntakeIsAdmin(false);
-      setIntakeMode(false);
-    } finally {
-      setIntakeCandidatesLoading(false);
-      setIntakeFetched(true);
-    }
-
     const cityCheck = formData.city.trim();
     if (cityCheck && !isWithin50km(cityCheck)) {
       setStep("distance_check");
     } else {
       setStep("skills");
     }
-  }
-
-  function applyIntakeCandidate(candidate: IntakeCandidate) {
-    setFormData(prev => ({
-      ...prev,
-      firstName: candidate.firstName || prev.firstName,
-      lastName: candidate.lastName || prev.lastName,
-      email: candidate.email || prev.email,
-      phone: candidate.phone || prev.phone,
-      city: candidate.city || prev.city,
-      postcode: candidate.postcode || prev.postcode,
-      nationality: candidate.nationality || prev.nationality,
-      birthDate: candidate.birthDate || prev.birthDate,
-      preferredFunction: candidate.functionType || prev.preferredFunction,
-      speaksDutch: candidate.language?.toLowerCase().includes('nederland') ? true : prev.speaksDutch,
-      speaksEnglish: candidate.language?.toLowerCase().includes('engel') ? true : prev.speaksEnglish,
-      experience: candidate.horecaExperience || candidate.experienceLevel || prev.experience,
-    }));
-    setSavedCandidateId(candidate.id);
   }
 
   async function handleStep2Next() {
@@ -940,89 +879,6 @@ export default function Aanmelden() {
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{t.step2Title}</h2>
                 </div>
-
-                {/* ── Intake kandidaatpicker (alleen zichtbaar als admin is ingelogd) ── */}
-                {intakeCandidatesLoading && (
-                  <div className="mb-6 flex items-center gap-2 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
-                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                    Kandidaten ophalen…
-                  </div>
-                )}
-
-                {!intakeCandidatesLoading && intakeMode && (
-                  <div className="mb-6 bg-purple-50 border border-purple-200 rounded-2xl p-4 sm:p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
-                        <User className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <p className="text-sm font-bold text-purple-900">Welke kandidaat zit nu bij je aan tafel?</p>
-                    </div>
-
-                    {/* Zoekbalk */}
-                    <div className="relative mb-3">
-                      <Input
-                        value={intakeCandidateSearch}
-                        onChange={e => setIntakeCandidateSearch(e.target.value)}
-                        placeholder="Zoek op naam of e-mail…"
-                        className="h-10 rounded-xl border-purple-300 bg-white pl-3 pr-3 text-sm focus:ring-purple-400"
-                      />
-                    </div>
-
-                    {/* Kandidatenlijst */}
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                      {intakeCandidates
-                        .filter(c => {
-                          const q = intakeCandidateSearch.toLowerCase();
-                          return q === '' ||
-                            `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-                            (c.email || '').toLowerCase().includes(q);
-                        })
-                        .map(c => (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedIntakeId(c.id);
-                              applyIntakeCandidate(c);
-                            }}
-                            className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
-                              selectedIntakeId === c.id
-                                ? 'border-purple-500 bg-purple-100 text-purple-900 font-semibold'
-                                : 'border-purple-200 bg-white hover:border-purple-400 hover:bg-purple-50 text-gray-800'
-                            }`}
-                          >
-                            <span className="font-semibold">{c.firstName} {c.lastName}</span>
-                            <span className="text-gray-500 font-normal"> — {c.city || '?'} — {c.email}</span>
-                          </button>
-                        ))}
-                    </div>
-
-                    {/* Handmatige fallback */}
-                    <div className="mt-3 pt-3 border-t border-purple-200">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedIntakeId('manual');
-                          setIntakeMode(false);
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
-                          selectedIntakeId === 'manual'
-                            ? 'border-gray-400 bg-gray-100 text-gray-900 font-semibold'
-                            : 'border-gray-200 bg-white hover:border-gray-400 text-gray-600'
-                        }`}
-                      >
-                        Kandidaat niet in lijst / handmatig invullen
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {intakeFetched && intakeIsAdmin && !intakeCandidatesLoading && !intakeMode && intakeCandidates.length === 0 && selectedIntakeId === null && (
-                  <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                    Geen kandidaten gevonden voor deze functie. Vul het formulier handmatig in.
-                  </div>
-                )}
-                {/* ── Einde intake picker ── */}
 
                 {flow === "NON_EU" && (
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
