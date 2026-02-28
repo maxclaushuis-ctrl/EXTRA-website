@@ -42,10 +42,14 @@ const formSchema = z.object({
   city: z.string().optional(),
   channel: z.string().optional(),
   
+  // Horeca achtergrond
   languages: z.array(z.string()).default([]),
   needsWorkPermit: z.enum(["ja", "nee"]).optional(),
   nationality: z.string().optional(),
+  // Housekeeping achtergrond
+  voertaal: z.enum(["nederlands", "engels"]).optional(),
   
+  // Horeca ervaring
   otherJob: z.string().optional(),
   experienceTypes: z.array(z.string()).default([]),
   horecaExperience: z.string().optional(),
@@ -59,15 +63,30 @@ const formSchema = z.object({
   isAssistantChef: z.enum(["ja", "nee"]).optional(),
   canWashDishes: z.enum(["ja", "nee"]).optional(),
   isPromoWorker: z.enum(["ja", "nee"]).optional(),
+  // Housekeeping ervaring
+  hkTasks: z.string().optional(),
+  hkYearsExperience: z.string().optional(),
+  hkLocationTypes: z.array(z.string()).default([]),
+  hkHotelStars: z.array(z.string()).default([]),
+  hkCompanies: z.string().optional(),
+  hkReference: z.string().optional(),
   
+  // Horeca praktisch
   hasDriversLicense: z.enum(["ja", "nee"]).optional(),
   hasStudentOV: z.enum(["ja", "nee"]).optional(),
   ovType: z.enum(["week", "weekend"]).optional(),
   workClothing: z.array(z.string()).default([]),
+  // Housekeeping vervoer
+  hasCar: z.enum(["ja", "nee"]).optional(),
   
   availableHours: z.string().optional(),
   preferredDays: z.array(z.string()).default([]),
   preferredTimes: z.array(z.string()).default([]),
+  
+  // Housekeeping tags (1-5 schalen)
+  hkBetrouwbaarheid: z.number().min(1).max(5).optional(),
+  hkCommunicatie: z.number().min(1).max(5).optional(),
+  hkRepresentativiteit: z.number().min(1).max(5).optional(),
   
   assessmentRating: z.string().optional(),
   experienceLevel: z.string().optional(),
@@ -121,6 +140,8 @@ export default function SollicitatieFormulier() {
       workClothing: [],
       preferredDays: [],
       preferredTimes: [],
+      hkLocationTypes: [],
+      hkHotelStars: [],
     },
   });
 
@@ -131,6 +152,12 @@ export default function SollicitatieFormulier() {
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedFunctionType = watch("functionType");
+
+  const hkSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Housekeeping ervaring", "Beschikbaarheid & vervoer", "Tags", "Beoordeling", "Afronden"];
+  const getSectionTitle = (idx: number) => {
+    if (watchedFunctionType === "housekeeping") return hkSectionTitles[idx] ?? sections[idx].title;
+    return sections[idx].title;
+  };
 
   const progress = ((currentSection + 1) / sections.length) * 100;
 
@@ -300,7 +327,7 @@ export default function SollicitatieFormulier() {
                 const Icon = sections[currentSection].icon;
                 return <Icon className="w-5 h-5" />;
               })()}
-              {sections[currentSection].title}
+              {getSectionTitle(currentSection)}
             </h2>
           </div>
 
@@ -439,49 +466,174 @@ export default function SollicitatieFormulier() {
 
             {currentSection === 2 && (
               <>
+                {watchedFunctionType === "housekeeping" ? (
+                  <>
+                    <div className="space-y-4">
+                      <Label className="text-base font-medium">Wat is de voertaal van de sollicitant?</Label>
+                      <RadioGroup
+                        value={watch("voertaal")}
+                        onValueChange={(val: any) => setValue("voertaal", val)}
+                      >
+                        <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                          <RadioGroupItem value="nederlands" id="voertaal-nl" />
+                          <Label htmlFor="voertaal-nl" className="cursor-pointer">Nederlands</Label>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                          <RadioGroupItem value="engels" id="voertaal-en" />
+                          <Label htmlFor="voertaal-en" className="cursor-pointer">Engels</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-base font-medium">Tewerkstellingsvergunning nodig?</Label>
+                      <RadioGroup
+                        value={watch("needsWorkPermit")}
+                        onValueChange={(val: any) => setValue("needsWorkPermit", val)}
+                      >
+                        <div className="flex gap-4">
+                          <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                            <RadioGroupItem value="ja" id="permit-ja" />
+                            <Label htmlFor="permit-ja" className="cursor-pointer">Ja</Label>
+                          </div>
+                          <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                            <RadioGroupItem value="nee" id="permit-nee" />
+                            <Label htmlFor="permit-nee" className="cursor-pointer">Nee</Label>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Indien TWV of buiten NL: welk land van herkomst of welke nationaliteit</Label>
+                      <Input {...register("nationality")} placeholder="Jouw antwoord" className="h-12" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      <Label className="text-base font-medium">Taalvaardigheid</Label>
+                      <div className="space-y-2">
+                        {["Nederlands", "Engels", "Duits", "Frans", "Spaans"].map((lang) => (
+                          <div key={lang} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                            <Checkbox
+                              id={`lang-${lang}`}
+                              checked={(watch("languages") || []).includes(lang)}
+                              onCheckedChange={() => toggleArrayValue("languages", lang)}
+                            />
+                            <Label htmlFor={`lang-${lang}`} className="flex-1 cursor-pointer">{lang}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-base font-medium">Tewerkstellingsvergunning nodig?</Label>
+                      <RadioGroup
+                        value={watch("needsWorkPermit")}
+                        onValueChange={(val: any) => setValue("needsWorkPermit", val)}
+                      >
+                        <div className="flex gap-4">
+                          <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                            <RadioGroupItem value="ja" id="permit-ja" />
+                            <Label htmlFor="permit-ja" className="cursor-pointer">Ja</Label>
+                          </div>
+                          <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                            <RadioGroupItem value="nee" id="permit-nee" />
+                            <Label htmlFor="permit-nee" className="cursor-pointer">Nee</Label>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Nationaliteit</Label>
+                      <Input {...register("nationality")} placeholder="Nederlands" className="h-12" />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {currentSection === 3 && watchedFunctionType === "housekeeping" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Welke taken heb je eerder gedaan in de housekeeping?</Label>
+                  <Textarea
+                    {...register("hkTasks")}
+                    placeholder="Jouw antwoord"
+                    className="min-h-[100px]"
+                  />
+                </div>
+
                 <div className="space-y-4">
-                  <Label className="text-base font-medium">Taalvaardigheid</Label>
+                  <Label className="text-base font-medium">Hoeveel jaar heb je in de housekeeping? *</Label>
+                  <RadioGroup
+                    value={watch("hkYearsExperience")}
+                    onValueChange={(val) => setValue("hkYearsExperience", val)}
+                  >
+                    {["1-3 jaar ervaring", "3-5 jaar ervaring", "5-10 jaar ervaring", "10> jaar ervaring"].map((opt) => (
+                      <div key={opt} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <RadioGroupItem value={opt} id={`hkyears-${opt}`} />
+                        <Label htmlFor={`hkyears-${opt}`} className="cursor-pointer">{opt}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Op welke type locatie heb je gewerkt?</Label>
                   <div className="space-y-2">
-                    {["Nederlands", "Engels", "Duits", "Frans", "Spaans"].map((lang) => (
-                      <div key={lang} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                    {["Hotel", "Hostel", "Ziekenhuis", "Kantoor", "Verzorgingstehuis", "Particulier/ bij mensen thuis", "Anders"].map((loc) => (
+                      <div key={loc} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
                         <Checkbox
-                          id={`lang-${lang}`}
-                          checked={(watch("languages") || []).includes(lang)}
-                          onCheckedChange={() => toggleArrayValue("languages", lang)}
+                          id={`hkloc-${loc}`}
+                          checked={(watch("hkLocationTypes") || []).includes(loc)}
+                          onCheckedChange={() => toggleArrayValue("hkLocationTypes", loc)}
                         />
-                        <Label htmlFor={`lang-${lang}`} className="flex-1 cursor-pointer">{lang}</Label>
+                        <Label htmlFor={`hkloc-${loc}`} className="flex-1 cursor-pointer">{loc}</Label>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <Label className="text-base font-medium">Tewerkstellingsvergunning nodig?</Label>
-                  <RadioGroup
-                    value={watch("needsWorkPermit")}
-                    onValueChange={(val: any) => setValue("needsWorkPermit", val)}
-                  >
-                    <div className="flex gap-4">
-                      <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
-                        <RadioGroupItem value="ja" id="permit-ja" />
-                        <Label htmlFor="permit-ja" className="cursor-pointer">Ja</Label>
+                  <Label className="text-base font-medium">Bij hoeveel sterren hotels heb je gewerkt?</Label>
+                  <div className="space-y-2">
+                    {["1 Ster", "2 Sterren", "3 Sterren", "4 Sterren", "5 Sterren"].map((star) => (
+                      <div key={star} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`hkstar-${star}`}
+                          checked={(watch("hkHotelStars") || []).includes(star)}
+                          onCheckedChange={() => toggleArrayValue("hkHotelStars", star)}
+                        />
+                        <Label htmlFor={`hkstar-${star}`} className="flex-1 cursor-pointer">{star}</Label>
                       </div>
-                      <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
-                        <RadioGroupItem value="nee" id="permit-nee" />
-                        <Label htmlFor="permit-nee" className="cursor-pointer">Nee</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Nationaliteit</Label>
-                  <Input {...register("nationality")} placeholder="Nederlands" className="h-12" />
+                  <Label>Bij welke bedrijven heb je allemaal gewerkt?</Label>
+                  <Textarea
+                    {...register("hkCompanies")}
+                    placeholder="Jouw antwoord"
+                    className="min-h-[80px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Bij wie mogen wij eventueel een referentie opvragen om een beter beeld te krijgen van je eerdere werkzaamheden?</Label>
+                  <Textarea
+                    {...register("hkReference")}
+                    placeholder="Jouw antwoord"
+                    className="min-h-[80px]"
+                  />
                 </div>
               </>
             )}
 
-            {currentSection === 3 && (
+            {currentSection === 3 && watchedFunctionType !== "housekeeping" && (
               <>
                 <div className="space-y-2">
                   <Label>Heeft de sollicitant een andere bijbaan?</Label>
@@ -685,7 +837,67 @@ export default function SollicitatieFormulier() {
               </>
             )}
 
-            {currentSection === 4 && (
+            {currentSection === 4 && watchedFunctionType === "housekeeping" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Beschikbaarheid per week (in dagen)</Label>
+                  <Input {...register("availableHours")} placeholder="Jouw antwoord" className="h-12" />
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Voorkeur werkdagen</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag", "N.v.t."].map((day) => (
+                      <div key={day} className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`day-${day}`}
+                          checked={(watch("preferredDays") || []).includes(day)}
+                          onCheckedChange={() => toggleArrayValue("preferredDays", day)}
+                        />
+                        <Label htmlFor={`day-${day}`} className="cursor-pointer text-sm">{day}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Voorkeur moment van de dag</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Ochtend", "Middag", "Avond", "N.v.t."].map((time) => (
+                      <div key={time} className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`time-${time}`}
+                          checked={(watch("preferredTimes") || []).includes(time)}
+                          onCheckedChange={() => toggleArrayValue("preferredTimes", time)}
+                        />
+                        <Label htmlFor={`time-${time}`} className="cursor-pointer text-sm">{time}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Heb je een auto?</Label>
+                  <RadioGroup
+                    value={watch("hasCar")}
+                    onValueChange={(val: any) => setValue("hasCar", val)}
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                        <RadioGroupItem value="ja" id="car-ja" />
+                        <Label htmlFor="car-ja" className="cursor-pointer">Ja</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                        <RadioGroupItem value="nee" id="car-nee" />
+                        <Label htmlFor="car-nee" className="cursor-pointer">Nee</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </>
+            )}
+
+            {currentSection === 4 && watchedFunctionType !== "housekeeping" && (
               <>
                 <div className="space-y-4">
                   <Label className="text-base font-medium">Rijbewijs</Label>
@@ -764,7 +976,61 @@ export default function SollicitatieFormulier() {
               </>
             )}
 
-            {currentSection === 5 && (
+            {currentSection === 5 && watchedFunctionType === "housekeeping" && (
+              <>
+                <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">Selecteer per categorie welke tag van toepassing is.</p>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base font-semibold">Betrouwbaarheid en werkhouding *</Label>
+                    <p className="text-sm text-gray-500 mt-1">Komt degene over als iemand die afspraken nakomt en gemotiveerd is?</p>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-500 px-2">
+                    <span className="text-xs max-w-[40%] text-center">Onbetrouwbare indruk, weinig motivatie</span>
+                    <span className="text-xs max-w-[40%] text-center">Zeer betrouwbaar en gemotiveerd</span>
+                  </div>
+                  <StarRating
+                    name="hkBetrouwbaarheid"
+                    value={watch("hkBetrouwbaarheid")}
+                    onChange={(val) => setValue("hkBetrouwbaarheid", val)}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base font-semibold">Communicatieve vaardigheden *</Label>
+                    <p className="text-sm text-gray-500 mt-1">Kan de kandidaat voldoende Nederlands of Engels om instructies te begrijpen en zich verstaanbaar te maken?</p>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-500 px-2">
+                    <span className="text-xs max-w-[40%] text-center">Begrijpt nauwelijks iets, communicatie lastig</span>
+                    <span className="text-xs max-w-[40%] text-center">Spreekt goed, communiceert helder</span>
+                  </div>
+                  <StarRating
+                    name="hkCommunicatie"
+                    value={watch("hkCommunicatie")}
+                    onChange={(val) => setValue("hkCommunicatie", val)}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base font-semibold">Representativiteit & houding *</Label>
+                    <p className="text-sm text-gray-500 mt-1">Komt de kandidaat verzorgd, vriendelijk en geschikt over om in een hotelomgeving te werken?</p>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-500 px-2">
+                    <span className="text-xs max-w-[40%] text-center">Onverzorgd of ongepaste houding</span>
+                    <span className="text-xs max-w-[40%] text-center">Zeer representatief, prettige uitstraling</span>
+                  </div>
+                  <StarRating
+                    name="hkRepresentativiteit"
+                    value={watch("hkRepresentativiteit")}
+                    onChange={(val) => setValue("hkRepresentativiteit", val)}
+                  />
+                </div>
+              </>
+            )}
+
+            {currentSection === 5 && watchedFunctionType !== "housekeeping" && (
               <>
                 <div className="space-y-2">
                   <Label>Beschikbaarheid per week (in uren)</Label>
@@ -922,25 +1188,40 @@ export default function SollicitatieFormulier() {
             {currentSection === 7 && (
               <>
                 <div className="space-y-4">
-                  <Label className="text-base font-medium">Salaris *</Label>
+                  <Label className="text-base font-medium">Afgesproken Salaris *</Label>
                   <RadioGroup
                     value={watch("salaryScale")}
                     onValueChange={(val) => setValue("salaryScale", val)}
                   >
-                    {[
-                      { value: "15", label: "15 jaar: €8,-" },
-                      { value: "16", label: "16 jaar: €9,-" },
-                      { value: "17", label: "17 jaar: €10,-" },
-                      { value: "18", label: "18 jaar: €11,-" },
-                      { value: "19", label: "19 jaar: €12,50" },
-                      { value: "20", label: "20 jaar: €14,-" },
-                      { value: "21", label: "21 jaar: €17,29" },
-                    ].map((option) => (
-                      <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
-                        <RadioGroupItem value={option.value} id={`salary-${option.value}`} />
-                        <Label htmlFor={`salary-${option.value}`} className="cursor-pointer">{option.label}</Label>
-                      </div>
-                    ))}
+                    {watchedFunctionType === "housekeeping" ? (
+                      [
+                        { value: "17", label: "17 jaar: €10,-" },
+                        { value: "18", label: "18 jaar: €11,-" },
+                        { value: "19", label: "19 jaar: €12,50" },
+                        { value: "20", label: "20 jaar: €14,-" },
+                        { value: "21", label: "21 jaar: €17,29" },
+                      ].map((option) => (
+                        <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                          <RadioGroupItem value={option.value} id={`salary-${option.value}`} />
+                          <Label htmlFor={`salary-${option.value}`} className="cursor-pointer">{option.label}</Label>
+                        </div>
+                      ))
+                    ) : (
+                      [
+                        { value: "15", label: "15 jaar: €8,-" },
+                        { value: "16", label: "16 jaar: €9,-" },
+                        { value: "17", label: "17 jaar: €10,-" },
+                        { value: "18", label: "18 jaar: €11,-" },
+                        { value: "19", label: "19 jaar: €12,50" },
+                        { value: "20", label: "20 jaar: €14,-" },
+                        { value: "21", label: "21 jaar: €17,29" },
+                      ].map((option) => (
+                        <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                          <RadioGroupItem value={option.value} id={`salary-${option.value}`} />
+                          <Label htmlFor={`salary-${option.value}`} className="cursor-pointer">{option.label}</Label>
+                        </div>
+                      ))
+                    )}
                   </RadioGroup>
                 </div>
 
