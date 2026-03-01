@@ -1,0 +1,81 @@
+Je bent UX designer, front-end specialist en SEO-strateeg binnen dit project.
+We willen de sectie “Werken wordt beloond” uitbreiden met een extra informatieve pagina over ons beloningssysteem EXTRAATJE.
+1. Nieuwe button toevoegen
+Plaats een button met de tekst “Lees EXTRA” in de sectie “Werken wordt beloond” op de landingspagina.
+Button-stijl moet consistent zijn met onze huidige call-to-actions (paars, afgerond, hover-staat).
+Button linkt naar een nieuwe subpagina:
+/extraatje
+2. Nieuwe subpagina: /extraatje
+Ontwerp en ontwikkel een nieuwe pagina die visueel aansluit op de rest van de site, maar met voldoende ruimte voor SEO-tekst.
+Doel van deze pagina
+De bezoeker uitleggen waarom werken bij EXTRA leuker, slimmer en aantrekkelijker is door ons unieke puntensysteem EXTRAATJE.
+Paginastructuur (op basis van UX + SEO best practices)
+2.1 Hero / Intro-sectie
+Duidelijke titel (H1):
+“EXTRAATJE – Het beloningssysteem dat jouw werk beloont”
+Korte introductietekst (2–3 zinnen):
+Uitleg dat medewerkers automatisch punten sparen.
+Een energieke, moderne tone-of-voice.
+CTA in de hero mag optioneel: “Start met verdienen”.
+2.2 SEO-vriendelijke indeling met H2’s
+H2: Hoe werkt het EXTRAATJE puntensysteem?
+Korte uitleg dat medewerkers punten verdienen op basis van gedrag, prestaties en inzet.
+Houd tekst compact maar krachtig, SEO-proof.
+H2: Challenges (Uitdagingen & doelen)
+Leg uit:
+Medewerkers kunnen wekelijks/maandelijks optionele challenges voltooien.
+Voorbeelden van challenges (Replit mag placeholders toevoegen).
+Benoem dat challenges motiveren en leiden tot extra punten.
+H2: Kortingscodes & Deals
+Uitleg:
+Medewerkers kunnen punten omwisselen voor exclusieve kortingscodes.
+Geef Replit ruimte om een nette lijst/kaartopmaak te maken.
+H2: Beloningen die je kunt verdienen
+Leg uit welke soorten beloningen er zijn (reiskosten, cadeaubonnen, EXTRA-gear, etc.).
+Replit mag hier zelf passende UI-cards maken zodat het visueel aantrekkelijk is.
+H2: Micro-prestaties (automatisch punten verdienen)
+Deze sectie is belangrijk.
+Leg uit dat medewerkers punten verdienen voor:
+Op tijd komen
+Hoge beoordeling/scoring door opdrachtgevers
+Juiste houding en uitstraling
+Extra shifts draaien
+Last-minute beschikbaar zijn
+Betrouwbaarheid (geen no-shows)
+Geef Replit creatieve vrijheid om icons, badges of visuele indicators toe te voegen om deze microperformances aantrekkelijk te maken.
+3. UX & Front-end eisen
+Replit moet de pagina:
+Rustig, overzichtelijk en visueel aantrekkelijk maken.
+In dezelfde EXTRA-stijl houden qua kleuren, fonts en spacing.
+Mobile-first ontwerpen (goede responsiviteit).
+Afbeeldingen optimaliseren voor performance.
+SEO-technisch correct structureren (H1 → H2 → H3).
+Tekstinhoud netjes laten lezen in maximaal 80–100 characters per regel.
+Zorg voor:
+Duidelijke witruimtes
+Scanbare blokken
+Icons / visuele cues (indien passend)
+Een consistente layout met de rest van de site
+4. SEO vereisten
+Replit moet:
+Een goede meta-title schrijven voor /extraatje.
+Een sterke meta-description maken.
+OG-tags genereren.
+Een canonical toevoegen.
+Structured data toevoegen (FAQ of HowTo schema mag indien passend).
+Interne links gebruiken (bijv. teruglink naar Landingspagina of Werken bij EXTRA).
+De pagina mag meer tekst bevatten dan de rest van de site, zolang het visueel rustig blijft en SEO-geoptimaliseerd is.
+5. Interactie met jou (indien nodig)
+Als Replit aanvullende informatie nodig heeft over:
+Challenges
+Beloningen
+Puntwaardes
+Spaarmechanismen
+Toekomstige features van EXTRAATJE
+Dan mag Replit gericht vragen stellen zodat jij extra context kunt geven.
+6. Oplevering
+Replit moet opleveren:
+De nieuwe pagina /extraatje, volledig vormgegeven.
+De nieuwe button “Lees EXTRA” op de landingspagina.
+Volledige SEO-optimalisatie van de nieuwe pagina.
+Volledige UX-optimalisatie volgens de EXTRA-stijl.

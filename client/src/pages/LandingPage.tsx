@@ -1439,10 +1439,18 @@ export default function LandingPage() {
                   <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
                 </span>
               </h2>
-              <p className="text-base sm:text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed mb-7">
                 Medewerkers verdienen automatisch punten voor elke gewerkte shift en behaalde challenge.
                 Die punten wissel je in voor echte beloningen.
               </p>
+              <Link
+                href="/extraatje"
+                className="inline-flex items-center gap-2 font-bold px-7 py-3 rounded-full text-white text-sm sm:text-base transition-all duration-200 shadow-lg shadow-purple-900/50 hover:shadow-purple-700/60 hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+              >
+                <Gift className="h-4 w-4" />
+                Lees meer over EXTRAATJE
+              </Link>
             </div>
           </RevealSection>
 

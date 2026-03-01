@@ -17,6 +17,7 @@ import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
 import Aanmelden from "@/pages/Aanmelden";
 import NieuwsPage from "@/pages/NieuwsPage";
 import NieuwsArtikel from "@/pages/NieuwsArtikel";
+import Extraatje from "@/pages/Extraatje";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -105,6 +106,7 @@ function Router() {
         <Route path="/aanmelden" component={Aanmelden} />
         <Route path="/nieuws" component={NieuwsPage} />
         <Route path="/nieuws/:slug" component={NieuwsArtikel} />
+        <Route path="/extraatje" component={Extraatje} />
         <Route path="/dashboard-mockup" component={DashboardMockup} />
         
         {/* Gebruiker routes */}
