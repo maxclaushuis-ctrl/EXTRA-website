@@ -87,7 +87,18 @@ const formSchema = z.object({
   hkBetrouwbaarheid: z.number().min(1).max(5).optional(),
   hkCommunicatie: z.number().min(1).max(5).optional(),
   hkRepresentativiteit: z.number().min(1).max(5).optional(),
-  
+
+  // Chef specifieke velden
+  chefKitchenTypes: z.array(z.string()).default([]),
+  chefDiplomas: z.array(z.string()).default([]),
+  chefYearsAsKok: z.string().optional(),
+  chefLeadershipExp: z.string().optional(),
+  chefMainKitchen: z.string().optional(),
+  chefCompanies: z.string().optional(),
+  chefClothing: z.array(z.string()).default([]),
+  chefStartDate: z.string().optional(),
+  chefProfessioneleUitstraling: z.number().min(1).max(5).optional(),
+
   assessmentRating: z.string().optional(),
   experienceLevel: z.string().optional(),
   appearance: z.string().optional(),
@@ -141,6 +152,9 @@ export default function SollicitatieFormulier() {
       preferredTimes: [],
       hkLocationTypes: [],
       hkHotelStars: [],
+      chefKitchenTypes: [],
+      chefDiplomas: [],
+      chefClothing: [],
     },
   });
 
@@ -166,8 +180,10 @@ export default function SollicitatieFormulier() {
   }, [watchedFunctionType]);
 
   const hkSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Housekeeping ervaring", "Beschikbaarheid & vervoer", "Tags", "Beoordeling", "Afronden"];
+  const chefSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Hard skills en ervaring", "Beschikbaarheid & vervoer", "Kleding", "Tags & Beoordeling", "Afronden"];
   const getSectionTitle = (idx: number) => {
     if (watchedFunctionType === "housekeeping") return hkSectionTitles[idx] ?? sections[idx].title;
+    if (watchedFunctionType === "chef") return chefSectionTitles[idx] ?? sections[idx].title;
     return sections[idx].title;
   };
 
@@ -469,7 +485,7 @@ export default function SollicitatieFormulier() {
 
             {currentSection === 2 && (
               <>
-                {watchedFunctionType === "housekeeping" ? (
+                {(watchedFunctionType === "housekeeping" || watchedFunctionType === "chef") ? (
                   <>
                     <div className="space-y-4">
                       <Label className="text-base font-medium">Wat is de voertaal van de sollicitant?</Label>
@@ -636,7 +652,87 @@ export default function SollicitatieFormulier() {
               </>
             )}
 
-            {currentSection === 3 && watchedFunctionType !== "housekeeping" && (
+            {currentSection === 3 && watchedFunctionType === "chef" && (
+              <>
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">In welke soorten keuken heb je ervaring?</Label>
+                  <div className="space-y-2">
+                    {["Ontbijt", "Lunch", "Fine dining", "Banqueting", "Mise-en-place"].map((keuken) => (
+                      <div key={keuken} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`keuken-${keuken}`}
+                          checked={(watch("chefKitchenTypes") || []).includes(keuken)}
+                          onCheckedChange={() => toggleArrayValue("chefKitchenTypes", keuken)}
+                        />
+                        <Label htmlFor={`keuken-${keuken}`} className="flex-1 cursor-pointer">{keuken}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Welke diploma's of certificaten heb je?</Label>
+                  <div className="space-y-2">
+                    {["Koksdiploma", "HACCP", "SVH"].map((dip) => (
+                      <div key={dip} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`diploma-${dip}`}
+                          checked={(watch("chefDiplomas") || []).includes(dip)}
+                          onCheckedChange={() => toggleArrayValue("chefDiplomas", dip)}
+                        />
+                        <Label htmlFor={`diploma-${dip}`} className="flex-1 cursor-pointer">{dip}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Hoeveel jaar heb je ervaring als kok? *</Label>
+                  <RadioGroup
+                    value={watch("chefYearsAsKok")}
+                    onValueChange={(val) => setValue("chefYearsAsKok", val)}
+                  >
+                    {["1-3 jaar ervaring", "3-5 jaar ervaring", "5-10 jaar ervaring", "10> jaar ervaring"].map((opt) => (
+                      <div key={opt} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <RadioGroupItem value={opt} id={`chefyears-${opt}`} />
+                        <Label htmlFor={`chefyears-${opt}`} className="cursor-pointer">{opt}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Leidinggevende ervaring:</Label>
+                  <RadioGroup
+                    value={watch("chefLeadershipExp")}
+                    onValueChange={(val) => setValue("chefLeadershipExp", val)}
+                  >
+                    {["1-2 jaar ervaring", "3-5 jaar ervaring", "5> jaar ervaring", "Geen"].map((opt) => (
+                      <div key={opt} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <RadioGroupItem value={opt} id={`chefleider-${opt}`} />
+                        <Label htmlFor={`chefleider-${opt}`} className="cursor-pointer">{opt}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>In welke keuken heb je de meeste ervaring?</Label>
+                  <Input {...register("chefMainKitchen")} placeholder="Jouw antwoord" className="h-12" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Bij welke bedrijven heb je gewerkt?</Label>
+                  <Textarea
+                    {...register("chefCompanies")}
+                    placeholder="Jouw antwoord"
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </>
+            )}
+
+            {currentSection === 3 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && (
               <>
                 <div className="space-y-2">
                   <Label>Heeft de sollicitant een andere bijbaan?</Label>
@@ -900,7 +996,72 @@ export default function SollicitatieFormulier() {
               </>
             )}
 
-            {currentSection === 4 && watchedFunctionType !== "housekeeping" && (
+            {currentSection === 4 && watchedFunctionType === "chef" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Beschikbaarheid per week (in dagen)</Label>
+                  <Input {...register("availableHours")} placeholder="Jouw antwoord" className="h-12" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Vanaf wanneer kan je starten? *</Label>
+                  <Input {...register("chefStartDate")} type="date" className="h-12" />
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Voorkeur werkdagen</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag", "N.v.t."].map((day) => (
+                      <div key={day} className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`cday-${day}`}
+                          checked={(watch("preferredDays") || []).includes(day)}
+                          onCheckedChange={() => toggleArrayValue("preferredDays", day)}
+                        />
+                        <Label htmlFor={`cday-${day}`} className="cursor-pointer text-sm">{day}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Voorkeur moment van de dag</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Ochtend", "Middag", "Avond", "N.v.t."].map((time) => (
+                      <div key={time} className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`ctime-${time}`}
+                          checked={(watch("preferredTimes") || []).includes(time)}
+                          onCheckedChange={() => toggleArrayValue("preferredTimes", time)}
+                        />
+                        <Label htmlFor={`ctime-${time}`} className="cursor-pointer text-sm">{time}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Heb je een auto?</Label>
+                  <RadioGroup
+                    value={watch("hasCar")}
+                    onValueChange={(val: any) => setValue("hasCar", val)}
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                        <RadioGroupItem value="ja" id="chef-car-ja" />
+                        <Label htmlFor="chef-car-ja" className="cursor-pointer">Ja</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 flex-1 hover:bg-purple-50">
+                        <RadioGroupItem value="nee" id="chef-car-nee" />
+                        <Label htmlFor="chef-car-nee" className="cursor-pointer">Nee</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </>
+            )}
+
+            {currentSection === 4 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && (
               <>
                 <div className="space-y-4">
                   <Label className="text-base font-medium">Rijbewijs</Label>
@@ -1033,7 +1194,27 @@ export default function SollicitatieFormulier() {
               </>
             )}
 
-            {currentSection === 5 && watchedFunctionType !== "housekeeping" && (
+            {currentSection === 5 && watchedFunctionType === "chef" && (
+              <>
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Beschikt de chef over de juiste kleding?</Label>
+                  <div className="space-y-2">
+                    {["Koksbroek", "Koksbuis", "Veiligheidsschoenen", "Messenset"].map((item) => (
+                      <div key={item} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                        <Checkbox
+                          id={`chefcloth-${item}`}
+                          checked={(watch("chefClothing") || []).includes(item)}
+                          onCheckedChange={() => toggleArrayValue("chefClothing", item)}
+                        />
+                        <Label htmlFor={`chefcloth-${item}`} className="flex-1 cursor-pointer">{item}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {currentSection === 5 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && (
               <>
                 <div className="space-y-2">
                   <Label>Beschikbaarheid per week (in uren)</Label>
@@ -1076,6 +1257,47 @@ export default function SollicitatieFormulier() {
 
             {currentSection === 6 && (
               <>
+                {watchedFunctionType === "chef" && (
+                  <>
+                    <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">Selecteer per categorie welke tag van toepassing is.</p>
+
+                    <div className="space-y-4">
+                      <Label className="text-base font-semibold">Professionele uitstraling (chef): *</Label>
+                      <div className="flex items-center justify-between text-xs text-gray-500 px-2">
+                        <span>❌ Onverzorgd</span>
+                        <span>⭐ Zeer representatief</span>
+                      </div>
+                      <StarRating
+                        name="chefProfessioneleUitstraling"
+                        value={watch("chefProfessioneleUitstraling")}
+                        onChange={(val) => setValue("chefProfessioneleUitstraling", val)}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-base font-semibold">Communicatieve vaardigheden (chef): *</Label>
+                      <div className="flex items-center justify-between text-xs text-gray-500 px-2">
+                        <span>❌ Gesloten</span>
+                        <span>⭐ Super vlot</span>
+                      </div>
+                      <StarRating
+                        name="communicationSkills"
+                        value={watch("communicationSkills")}
+                        onChange={(val) => setValue("communicationSkills", val)}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-base font-semibold">Algehele indruk: *</Label>
+                      <StarRating
+                        name="overallImpression"
+                        value={watch("overallImpression")}
+                        onChange={(val) => setValue("overallImpression", val)}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div className="space-y-4">
                   <Label className="text-base font-medium">Beoordeling</Label>
                   <RadioGroup
@@ -1203,6 +1425,18 @@ export default function SollicitatieFormulier() {
                         { value: "19", label: "19 jaar: €12,50" },
                         { value: "20", label: "20 jaar: €14,-" },
                         { value: "21", label: "21 jaar: €17,29" },
+                      ].map((option) => (
+                        <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
+                          <RadioGroupItem value={option.value} id={`salary-${option.value}`} />
+                          <Label htmlFor={`salary-${option.value}`} className="cursor-pointer">{option.label}</Label>
+                        </div>
+                      ))
+                    ) : watchedFunctionType === "chef" ? (
+                      [
+                        { value: "assistent_chef", label: "Assistent chef: €20,-" },
+                        { value: "zwk_licht", label: "ZWK licht ervaren (0-5 jaar): €21,-" },
+                        { value: "zwk_goed", label: "ZWK goed ervaren (5-12 jaar): €22,50" },
+                        { value: "zwk_zwaar", label: "ZWK zwaar ervaren (12+ jaar): €24,-" },
                       ].map((option) => (
                         <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-purple-50">
                           <RadioGroupItem value={option.value} id={`salary-${option.value}`} />
