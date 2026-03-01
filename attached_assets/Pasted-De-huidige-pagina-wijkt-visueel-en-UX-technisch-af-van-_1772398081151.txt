@@ -1,0 +1,50 @@
+De huidige pagina wijkt visueel en UX-technisch af van de landingspagina en de overige pagina’s van de site.
+Ik wil dat je deze pagina volledig omzet naar dezelfde stijl als de rest van de EXTRA-website.
+Zorg dat alles volledig consistent is met onze bestaande design-systemen.
+Opdracht: Maak de pagina 100% consistent met de EXTRA-stijl
+🔧 Concreet aanpassen:
+Lettertypes
+Gebruik exact dezelfde fonts, font-weights en letter-spacing als op de landingspagina.
+Geen alternatieve of afwijkende heading-stijlen.
+Kleurgebruik
+Gebruik dezelfde paarstinten, groentinten en achtergrondverlopen die nu standaard op de site staan.
+Geen afwijkende kleuren of pastelvarianten tenzij deze al onderdeel zijn van het EXTRA-design.
+Buttons & links
+Gebruik exact dezelfde button-componenten als de rest van de website:
+afgeronde hoeken
+paarse primary knop
+consistente hover-state
+dezelfde spacing/padding
+Layout & spacing
+Pas dezelfde section-spacing toe als op de homepage (boven + onder marges, padding, whitespace).
+Gebruik dezelfde card-stijlen, schaduwen en grid-systemen.
+Headers & kopteksten
+H1, H2, H3 moeten dezelfde stijl krijgen als de rest van de site.
+Houd de hiërarchie en consistentie gelijk aan de landingspagina.
+Afbeeldingsgebruik
+Volg dezelfde styling als op de andere pagina’s (rounded edges, shadow-style, of juist geen shadow — afhankelijk van wat EXTRA standaard gebruikt).
+Optimaliseer alle afbeeldingen voor snelheid (lazy-loading, juiste formaten, compressie).
+Componentconsistentie
+Als er op andere pagina’s componenten worden gebruikt (cards, grid, container widths, icon style), gebruik die hier óók.
+Geen nieuwe componentstijlen introduceren tenzij deze automatisch matchen met het bestaande design.
+Paginaopbouw
+Match de structuur van pagina’s zoals:
+landingspagina
+werken-bij pagina
+over-EXTRA pagina
+Gebruik dezelfde maximale breedte, dezelfde containers en dezelfde responsive breakpoints.
+Doel van deze aanpassing
+De bezoeker moet het gevoel krijgen dat hij op één en dezelfde website zit, met:
+dezelfde visuele identiteit
+dezelfde vibes
+dezelfde typografie
+dezelfde front-end structuur
+een vloeiende UX
+herkenbare componenten
+Alles moet voelen als EXTRA: jong, fris, modern, energiek.
+Oplevering
+Replit moet na implementatie:
+een pagina opleveren die exact dezelfde look & feel heeft als de landingspagina;
+gebruikmaken van dezelfde fonts, kleuren, knoppen, spacing, grids en componenten;
+laten zien welke elementen zijn aangepast om volledige consistentie te garanderen;
+alle visuele inconsistenties verwijderen.

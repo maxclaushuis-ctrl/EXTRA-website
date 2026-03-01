@@ -1,41 +1,64 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import {
-  Users, ArrowRight, ChevronRight, MapPin, Zap, Heart,
-  Star, Coffee, Music, Bike, Trophy, Flame
+  Users, ArrowRight, ChevronRight, Zap, Heart,
+  Star, Coffee, Trophy, Flame, Check
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
 
 function useScrollReveal() {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.style.opacity = "1";
-          el.style.transform = "translateY(0)";
-        }
-      },
-      { threshold: 0.08 }
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
     );
-    el.style.opacity = "0";
-    el.style.transform = "translateY(28px)";
-    el.style.transition = "opacity 0.55s ease, transform 0.55s ease";
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-  return ref;
+  return { ref, visible };
 }
 
-function RevealSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useScrollReveal();
+function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const { ref, visible } = useScrollReveal();
   return (
-    <section ref={ref} style={{ transitionDelay: `${delay}ms` }}>
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
       {children}
-    </section>
+    </div>
+  );
+}
+
+function XPatternBg() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[
+        { left: "5%", top: "10%", w: 180, rot: 15, op: 0.07 },
+        { left: "78%", top: "15%", w: 140, rot: -8, op: 0.05 },
+        { left: "48%", top: "72%", w: 160, rot: 25, op: 0.06 },
+      ].map((x, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: x.left, top: x.top, width: x.w, height: x.w,
+            transform: `rotate(${x.rot}deg)`, opacity: x.op,
+            WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+            WebkitMaskSize: "contain", maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center", maskPosition: "center",
+            backgroundColor: "rgba(139,92,246,1)",
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -43,11 +66,12 @@ type TeamMember = {
   naam: string;
   functie: string;
   initials: string;
-  color: string;
+  avatarColor: string;
   bio: string;
   badge: string;
   badgeIcon: React.ElementType;
-  badgeColor: string;
+  badgeBg: string;
+  badgeText: string;
   fun: string;
 };
 
@@ -56,149 +80,154 @@ const team: TeamMember[] = [
     naam: "Eveline",
     functie: "Operations Manager",
     initials: "EV",
-    color: "from-purple-500 to-violet-600",
+    avatarColor: "from-purple-500 to-violet-600",
     bio: "Geen obstakel is te hoog voor Eveline. Hoe groter de uitdaging, hoe meer energie ze krijgt. Ze schakelt sneller dan je wifi op kantoor en staat bekend om haar 'komt goed'-mentaliteit. Achter de schermen is zij de motor die EXTRA draaiende houdt.",
     badge: "Onverslaanbaar",
     badgeIcon: Flame,
-    badgeColor: "bg-orange-500/20 text-orange-400",
+    badgeBg: "bg-orange-100",
+    badgeText: "text-orange-700",
     fun: "Kan elke situatie omtoveren tot een kans 🚀",
   },
   {
     naam: "Jayden",
     functie: "Planner",
     initials: "JA",
-    color: "from-blue-500 to-cyan-500",
+    avatarColor: "from-blue-500 to-cyan-500",
     bio: "Jayden plant niet alleen mensen in — hij plant chaos uit. Als iemand last-minute uitvalt, heeft hij al een oplossing voordat jij 'no-show' kunt zeggen. Zijn planning-skills zijn legendarisch. Zijn koffieverbruik ook.",
     badge: "Last-minute held",
     badgeIcon: Zap,
-    badgeColor: "bg-blue-500/20 text-blue-400",
+    badgeBg: "bg-blue-100",
+    badgeText: "text-blue-700",
     fun: "Heeft waarschijnlijk al jouw volgende shift gepland 📅",
   },
   {
     naam: "Lotte",
     functie: "Recruiter",
     initials: "LO",
-    color: "from-pink-500 to-rose-500",
+    avatarColor: "from-pink-500 to-rose-500",
     bio: "Lotte spot talent van drie kilometer afstand. Ze weet precies wie waar past en heeft een neus voor mensen met dat echte EXTRA-gevoel. Haar motto: 'Iedereen heeft een EXTRAatje — je moet 'm alleen even vinden.' Spoiler: zij vindt 'm altijd.",
     badge: "Talentspotter",
     badgeIcon: Star,
-    badgeColor: "bg-pink-500/20 text-pink-400",
+    badgeBg: "bg-pink-100",
+    badgeText: "text-pink-700",
     fun: "Heeft meer mensen gescout dan een voetbalmakelaar 🌟",
   },
   {
     naam: "Milan",
     functie: "Klantenmanager",
     initials: "MI",
-    color: "from-green-500 to-emerald-500",
+    avatarColor: "from-green-500 to-emerald-500",
     bio: "Milan is de brug tussen klanten en medewerkers. Altijd positief, altijd strak geregeld. Hij kent onze klanten bij naam — en soms ook hun honden. Zijn geheim? Echt luisteren, en dan nóg een stapje verder gaan.",
     badge: "Klantkampioen",
     badgeIcon: Trophy,
-    badgeColor: "bg-green-500/20 text-green-400",
+    badgeBg: "bg-green-100",
+    badgeText: "text-green-700",
     fun: "Onthoudt elke verjaardag van elke klant 🎂",
   },
   {
     naam: "Sanne",
     functie: "HR & Medewerkerszaken",
     initials: "SA",
-    color: "from-yellow-500 to-amber-500",
+    avatarColor: "from-yellow-500 to-amber-500",
     bio: "Bij Sanne is je verhaal altijd veilig. Of je nu een vraag hebt, een punt wil maken of gewoon even wil sparren — zij staat klaar. Ze zorgt dat medewerkers zich gehoord voelen en dat EXTRA een plek is waar je echt jezelf kunt zijn.",
     badge: "People person",
     badgeIcon: Heart,
-    badgeColor: "bg-yellow-500/20 text-yellow-400",
+    badgeBg: "bg-yellow-100",
+    badgeText: "text-yellow-700",
     fun: "Heeft nog nooit een e-mail onbeantwoord gelaten ✉️",
   },
   {
     naam: "Daan",
     functie: "Account Manager Hospitality",
     initials: "DA",
-    color: "from-indigo-500 to-purple-500",
+    avatarColor: "from-indigo-500 to-purple-500",
     bio: "Daan weet alles van de hospitality-sector. Van sterrenzaken tot boutique hotels — hij heeft ze gezien, geserviced en verbeterd. Hij snapt wat klanten nodig hebben, vaak voordat ze het zelf weten. Zijn handshake-deals zijn legendarisch.",
     badge: "Hospitality pro",
     badgeIcon: Star,
-    badgeColor: "bg-indigo-500/20 text-indigo-400",
+    badgeBg: "bg-indigo-100",
+    badgeText: "text-indigo-700",
     fun: "Heeft in meer keukens gestaan dan de meeste koks 👨‍🍳",
   },
   {
     naam: "Yara",
     functie: "Marketing & Communicatie",
     initials: "YA",
-    color: "from-fuchsia-500 to-pink-500",
-    bio: "Yara maakt van EXTRA een merk dat je voelt. Van social media tot campagnes en van copywriting tot design — zij geeft EXTRA haar stem. Ze heeft een gave voor het vertellen van verhalen die mensen echt raken. Dit stukje tekst? Waarschijnlijk haar werk.",
+    avatarColor: "from-fuchsia-500 to-pink-500",
+    bio: "Yara maakt van EXTRA een merk dat je voelt. Van social media tot campagnes — zij geeft EXTRA haar stem. Ze heeft een gave voor het vertellen van verhalen die mensen echt raken. Dit stukje tekst? Waarschijnlijk haar werk.",
     badge: "Storyteller",
-    badgeIcon: Music,
-    badgeColor: "bg-fuchsia-500/20 text-fuchsia-400",
+    badgeIcon: Star,
+    badgeBg: "bg-fuchsia-100",
+    badgeText: "text-fuchsia-700",
     fun: "Vindt in elke situatie een goede caption 📸",
   },
   {
     naam: "Remi",
     functie: "Finance & Administratie",
     initials: "RE",
-    color: "from-teal-500 to-cyan-500",
+    avatarColor: "from-teal-500 to-cyan-500",
     bio: "Remi houdt EXTRA scherp. Cijfers zijn zijn taal, nauwkeurigheid zijn superkracht. Terwijl de rest bezig is met de buitenwereld, zorgt Remi dat alles intern klopt tot op de cent. Saai? Nooit. Essentieel? Altijd.",
     badge: "Cijferaar",
     badgeIcon: Zap,
-    badgeColor: "bg-teal-500/20 text-teal-400",
+    badgeBg: "bg-teal-100",
+    badgeText: "text-teal-700",
     fun: "Heeft elk budget altijd on point 💰",
   },
   {
     naam: "Nina",
     functie: "Trainer & Onboarding",
     initials: "NI",
-    color: "from-orange-500 to-red-500",
+    avatarColor: "from-orange-500 to-red-500",
     bio: "Nina zorgt dat nieuwe medewerkers van dag één het gevoel hebben dat ze thuis zijn. Ze traint, begeleidt en motiveert — met een energie die aanstekelijk is. Als jij goed begint, heeft Nina daar ongetwijfeld iets mee te maken.",
     badge: "Coach",
     badgeIcon: Coffee,
-    badgeColor: "bg-orange-500/20 text-orange-400",
+    badgeBg: "bg-orange-100",
+    badgeText: "text-orange-700",
     fun: "Heeft de beste onboarding-playlist van het kantoor 🎵",
   },
 ];
 
+const NAV_LINKS = [
+  { label: "Wie zijn wij?", href: "/over-extra" },
+  { label: "Ons team", href: "/over-extra/ons-team" },
+  { label: "Beloningssysteem", href: "/extraatje" },
+  { label: "Aanmelden", href: "/aanmelden" },
+];
+
 function TeamCard({ member, delay }: { member: TeamMember; delay: number }) {
-  const [hovered, setHovered] = useState(false);
   const BadgeIcon = member.badgeIcon;
-
   return (
-    <article
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        transform: hovered ? "translateY(-6px)" : "translateY(0)",
-        boxShadow: hovered ? "0 20px 60px rgba(124,58,237,0.2)" : "none",
-        transition: "transform 0.3s ease, box-shadow 0.3s ease",
-        transitionDelay: `${delay}ms`,
-      }}
-      className="rounded-2xl border border-white/10 hover:border-purple-500/30 p-6 flex flex-col"
-    >
-      {/* Avatar */}
-      <div className="flex items-start justify-between mb-5">
-        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${member.color} flex items-center justify-center text-2xl font-black text-white shadow-lg`}>
-          {member.initials}
+    <RevealSection delay={delay}>
+      <article className="bg-white rounded-2xl sm:rounded-[1.5rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-6 sm:p-7 hover:shadow-xl hover:border-purple-200 hover:-translate-y-1.5 transition-all duration-300 h-full flex flex-col">
+        <div className="flex items-start justify-between mb-5">
+          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${member.avatarColor} flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-purple-500/20`}>
+            {member.initials}
+          </div>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-full ${member.badgeBg} ${member.badgeText}`}>
+            <BadgeIcon className="h-3 w-3" />
+            {member.badge}
+          </span>
         </div>
-        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${member.badgeColor}`}>
-          <BadgeIcon className="h-3 w-3" />
-          {member.badge}
-        </span>
-      </div>
-
-      {/* Name & Role */}
-      <h3 className="text-lg font-black text-white mb-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-        {member.naam}
-      </h3>
-      <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-4">{member.functie}</p>
-
-      {/* Bio */}
-      <p className="text-sm text-purple-200 leading-relaxed flex-1 mb-5">{member.bio}</p>
-
-      {/* Fun fact */}
-      <div className="border-t border-white/10 pt-4">
-        <p className="text-xs text-purple-400 italic leading-relaxed">{member.fun}</p>
-      </div>
-    </article>
+        <h3 className="text-lg font-black text-gray-900 mb-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>{member.naam}</h3>
+        <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-4">{member.functie}</p>
+        <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-4">{member.bio}</p>
+        <div className="border-t border-purple-100 pt-4">
+          <p className="text-xs text-gray-400 italic leading-relaxed">{member.fun}</p>
+        </div>
+      </article>
+    </RevealSection>
   );
 }
 
 export default function OnsTeam() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     document.title = "Ons Team – De mensen achter EXTRA | EXTRA Hospitality Staffing";
     const setMeta = (name: string, content: string, prop = false) => {
@@ -210,8 +239,6 @@ export default function OnsTeam() {
     setMeta("description", "Maak kennis met het team achter EXTRA – jong, energiek en gedreven. Ontdek wie elke dag zorgt dat de beste medewerkers matchen met de mooiste opdrachtgevers.");
     setMeta("og:title", "Ons Team – De mensen achter EXTRA", true);
     setMeta("og:description", "Jong horeca team met grote energie. Planners, recruiters, klantenmanagers en trainers die werken met passie voor hospitality.", true);
-    setMeta("og:type", "website", true);
-
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
     canonical.href = "https://www.doehetextra.nl/over-extra/ons-team";
@@ -221,7 +248,6 @@ export default function OnsTeam() {
       "@type": "Organization",
       "name": "EXTRA Hospitality Staffing",
       "url": "https://www.doehetextra.nl",
-      "description": "Jong en energiek uitzendbureau gespecialiseerd in hospitality medewerkers",
       "employee": team.map(m => ({
         "@type": "Person",
         "name": m.naam,
@@ -237,20 +263,29 @@ export default function OnsTeam() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/10" style={{ background: "rgba(10,5,30,0.88)" }}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+      {/* ── NAV ── */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
           <Link href="/landing">
-            <img src={extraLogoWit} alt="EXTRA logo" className="h-7 cursor-pointer" />
+            <img
+              src={extraLogoWit}
+              alt="EXTRA logo"
+              className={`h-8 sm:h-9 w-auto cursor-pointer transition-all ${scrolled ? "brightness-0" : ""}`}
+            />
           </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="/over-extra" className="text-purple-300 hover:text-white transition-colors hidden sm:block">Over EXTRA</Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/over-extra"
+              className={`text-sm font-semibold transition-colors hidden sm:block ${scrolled ? "text-gray-700 hover:text-purple-600" : "text-white/90 hover:text-white"}`}
+            >
+              Over EXTRA
+            </Link>
             <a
               href="/aanmelden"
-              className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full text-white"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+              className="inline-flex items-center gap-2 font-bold text-sm px-5 py-2.5 rounded-full text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
             >
               Aanmelden <ArrowRight className="h-3.5 w-3.5" />
             </a>
@@ -258,52 +293,70 @@ export default function OnsTeam() {
         </div>
       </nav>
 
-      {/* HERO */}
-      <div className="relative overflow-hidden pt-16" style={{ background: "linear-gradient(160deg, #0a0518 0%, #1a0a3e 55%, #0f0726 100%)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.06] pointer-events-none select-none" />
-        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24">
+      {/* ── HERO ── */}
+      <section
+        className="relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}
+      >
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "5%", top: "10%", w: 200, rot: 15, op: 0.12 },
+            { left: "15%", top: "75%", w: 180, rot: -10, op: 0.10 },
+            { left: "75%", top: "20%", w: 240, rot: 30, op: 0.08 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{
+              left: x.left, top: x.top, width: x.w, height: x.w,
+              transform: `rotate(${x.rot}deg)`, opacity: x.op,
+              WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+              WebkitMaskSize: "contain", maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center", maskPosition: "center",
+              backgroundColor: "rgba(255,255,255,0.9)",
+            }} />
+          ))}
+        </div>
+
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 pb-20 sm:pb-28">
           {/* Breadcrumb */}
-          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-purple-400 mb-8">
+          <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-xs text-white/60 mb-8">
             <Link href="/landing" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="h-3 w-3" />
             <Link href="/over-extra" className="hover:text-white transition-colors">Over EXTRA</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-white font-medium">Ons Team</span>
+            <span className="text-white font-semibold">Ons Team</span>
           </nav>
 
-          <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest mb-6 bg-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10">
-            <Users className="w-4 h-4" /> Het team
-          </span>
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.05]" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2 mb-6 border border-white/20">
+            <Users className="w-4 h-4 text-white/80" />
+            <span className="text-white/90 text-xs sm:text-sm font-semibold">{team.length} teamleden, 1 missie</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
             Ons team –{" "}
-            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-              de mensen achter EXTRA
+            <span className="relative inline-block">
+              <span className="relative z-10">de mensen</span>
+              <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
             </span>
+            {" "}achter EXTRA
           </h1>
-          <p className="text-lg sm:text-xl text-purple-200 max-w-2xl leading-relaxed">
-            Bij EXTRA draait alles om mensen. Jong, energiek en een tikje eigenwijs — precies zoals we het leuk vinden.
-            Dit is ons team: de mensen die elke dag zorgen dat alles loopt zoals het moet lopen… en soms net een beetje EXTRA.
+          <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium">
+            Jong, energiek en een tikje eigenwijs — precies zoals we het leuk vinden. Dit zijn de mensen die elke dag zorgen dat alles loopt zoals het moet.
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* SUBNAV */}
-      <div className="border-b border-white/10 sticky top-16 z-40 backdrop-blur-xl" style={{ background: "rgba(10,5,30,0.9)" }}>
+      {/* ── SUBNAV ── */}
+      <div className="border-b border-purple-100 bg-white sticky top-0 sm:top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="flex gap-6 text-sm overflow-x-auto">
-            {[
-              { label: "Wie zijn wij?", href: "/over-extra" },
-              { label: "Ons team", href: "/over-extra/ons-team" },
-              { label: "Beloningssysteem", href: "/extraatje" },
-              { label: "Medewerkers gezocht", href: "/aanmelden" },
-            ].map(({ label, href }) => (
+          <div className="flex gap-0 overflow-x-auto text-sm">
+            {NAV_LINKS.map(({ label, href }) => (
               <Link
                 key={href}
                 href={href}
-                className={`py-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                className={`py-4 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${
                   href === "/over-extra/ons-team"
-                    ? "border-purple-500 text-white"
-                    : "border-transparent text-purple-400 hover:text-white hover:border-white/30"
+                    ? "border-purple-600 text-purple-700"
+                    : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
                 }`}
               >
                 {label}
@@ -313,47 +366,56 @@ export default function OnsTeam() {
         </div>
       </div>
 
-      {/* STATS BAR */}
-      <div className="py-10 border-b border-white/10" style={{ background: "#0d0820" }}>
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
-          <div className="grid grid-cols-3 sm:grid-cols-3 gap-6 text-center">
+      {/* ── STATS BAR ── */}
+      <div className="bg-white border-b border-purple-100">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
+          <div className="grid grid-cols-3 gap-6 text-center">
             {[
               { num: `${team.length}`, label: "Teamleden" },
               { num: "5+", label: "Steden actief" },
               { num: "100%", label: "Passie voor hospitality" },
             ].map(({ num, label }) => (
               <div key={label}>
-                <p className="text-2xl sm:text-3xl font-black text-white">{num}</p>
-                <p className="text-xs text-purple-400 mt-1">{label}</p>
+                <p className="text-2xl sm:text-3xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{num}</p>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1 font-semibold">{label}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* TEAM GRID */}
-      <div className="py-16 sm:py-24" style={{ background: "#0d0820" }}>
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      {/* ── TEAM GRID ── */}
+      <section className="relative bg-white py-14 sm:py-20 lg:py-28 overflow-hidden">
+        <XPatternBg />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {team.map((member, i) => (
-                <TeamCard key={member.naam} member={member} delay={i * 40} />
-              ))}
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Maak kennis</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Het volledige team
+              </h2>
+              <p className="text-gray-500 mt-3 text-base sm:text-lg max-w-xl mx-auto">
+                Van planning tot recruting, van finance tot training — elk stukje van EXTRA zit in goede handen.
+              </p>
             </div>
           </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {team.map((member, i) => (
+              <TeamCard key={member.naam} member={member} delay={i * 50} />
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* SEO CONTENT BLOCK */}
-      <div className="py-16 sm:py-20 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0f0726, #1a0a3e)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.04] pointer-events-none" />
-        <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8">
+      {/* ── CULTUUR TEKST ── */}
+      <section className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <RevealSection>
-            <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Onze cultuur</span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white mt-3 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Onze cultuur</span>
+            <h2 className="text-2xl sm:text-4xl font-black text-gray-900 mt-3 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Wat maakt ons horeca team anders?
             </h2>
-            <div className="space-y-4 text-purple-200 leading-relaxed text-sm sm:text-base">
+            <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base">
               <p>
                 Het EXTRA team bestaat uit een mix van jonge professionals met een gemeenschappelijk doel: de beste medewerkers koppelen aan de mooiste opdrachtgevers in de hospitality. We werken snel, denken vooruit en communiceren helder — omdat dat de enige manier is om écht het verschil te maken.
               </p>
@@ -361,63 +423,74 @@ export default function OnsTeam() {
                 Onze planners denken in oplossingen, onze recruiters denken in mensen en onze klantenmanagers denken in relaties. Samen vormen we een uitzendbureau-team dat de sector begrijpt van binnenuit — omdat we er zelf mee opgegroeid zijn.
               </p>
               <p>
-                Flexibiliteit zit in ons DNA. We schakelen razendsnel bij last-minute verzoeken, denken mee bij complexe planningsvraagstukken en zorgen altijd dat de communicatie richting medewerkers en klanten klopt. Geen ellenlange procedures — gewoon directe actie.
-              </p>
-              <p>
                 Wat ons echt uniek maakt? We geloven dat motivatie van binnenuit komt. Daarom hebben we het EXTRAATJE puntensysteem gebouwd: een manier om medewerkers te belonen voor wie ze zijn en wat ze bijdragen. Ons team draagt dat systeem zelf uit — elke dag opnieuw.
               </p>
             </div>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {["Jong team", "Hospitality specialist", "Snel schakelen", "Medewerkersgericht", "EXTRAATJE beloningssysteem"].map(tag => (
-                <span key={tag} className="text-xs font-semibold px-3 py-1.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20">
+            <div className="mt-8 flex flex-wrap gap-2.5">
+              {["Jong team", "Hospitality specialist", "Snel schakelen", "Medewerkersgericht", "EXTRAATJE systeem"].map(tag => (
+                <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full bg-purple-100 text-purple-700">
                   {tag}
                 </span>
               ))}
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
-      {/* CTA */}
-      <div className="py-20 sm:py-28 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #4c1d95, #6d28d9, #7c3aed)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.07] pointer-events-none" />
+      {/* ── CTA ── */}
+      <section className="relative bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950 py-16 sm:py-24 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[{ left: "5%", top: "10%", w: 200, rot: 15, op: 0.1 }, { left: "80%", top: "50%", w: 240, rot: -20, op: 0.08 }].map((x, i) => (
+            <div key={i} className="absolute" style={{
+              left: x.left, top: x.top, width: x.w, height: x.w,
+              transform: `rotate(${x.rot}deg)`, opacity: x.op,
+              WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+              WebkitMaskSize: "contain", maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center", maskPosition: "center",
+              backgroundColor: "rgba(255,255,255,0.9)",
+            }} />
+          ))}
+        </div>
         <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8 text-center">
           <RevealSection>
-            <Bike className="h-12 w-12 text-yellow-400 mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Werken bij EXTRA?
+            <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest mb-5 bg-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10">
+              <Users className="w-4 h-4" /> Werken bij EXTRA?
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black text-white mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Onderdeel worden van dit team?
             </h2>
-            <p className="text-purple-200 text-lg mb-8 leading-relaxed">
-              Ben jij klaar om onderdeel te worden van dit team? Of ben je opzoek naar de beste
-              hospitality medewerkers voor jouw locatie?
+            <p className="text-purple-200/80 text-base sm:text-lg mb-8 leading-relaxed">
+              Meld je aan als medewerker en begin vandaag nog met werken én verdienen — of vraag personeel aan voor jouw locatie.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="/aanmelden"
-                className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-purple-900 shadow-xl"
-                style={{ background: "linear-gradient(135deg, #fde68a, #fbbf24)" }}
+                className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
               >
-                Aanmelden als medewerker <ArrowRight className="h-5 w-5" />
+                Aanmelden als medewerker <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <Link href="/personeel-gezocht" className="text-white/80 hover:text-white font-medium transition-colors text-sm inline-flex items-center gap-1">
-                Opdrachtgever? <ChevronRight className="h-4 w-4" />
-              </Link>
+              <a
+                href="/personeel-gezocht"
+                className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full text-base hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
+              >
+                Opdrachtgever? <ChevronRight className="w-5 h-5" />
+              </a>
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
-      {/* MINI FOOTER */}
-      <div className="py-8 border-t border-white/10 text-center" style={{ background: "#0a0518" }}>
-        <div className="flex items-center justify-center gap-6 text-xs text-purple-400 flex-wrap">
-          <Link href="/landing" className="hover:text-white transition-colors">Home</Link>
-          <Link href="/over-extra" className="hover:text-white transition-colors">Over EXTRA</Link>
-          <Link href="/extraatje" className="hover:text-white transition-colors">EXTRAATJE</Link>
-          <Link href="/aanmelden" className="hover:text-white transition-colors">Aanmelden</Link>
+      {/* ── FOOTER ── */}
+      <footer className="py-8 border-t border-purple-100 bg-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-center gap-6 text-xs text-gray-400 flex-wrap">
+          <Link href="/landing" className="hover:text-purple-600 transition-colors">Home</Link>
+          <Link href="/over-extra" className="hover:text-purple-600 transition-colors">Over EXTRA</Link>
+          <Link href="/extraatje" className="hover:text-purple-600 transition-colors">EXTRAATJE</Link>
+          <Link href="/aanmelden" className="hover:text-purple-600 transition-colors">Aanmelden</Link>
           <span>© 2025 EXTRA Hospitality Staffing</span>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
