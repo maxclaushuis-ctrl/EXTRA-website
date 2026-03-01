@@ -126,6 +126,15 @@ export default function DashboardMockup() {
   const [kandidatenFunctionFilter, setKandidatenFunctionFilter] = useState('alle');
   const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
   const [kanSortDesc, setKanSortDesc] = useState(true);
+
+  // Sollicitanten tab state
+  const [appSearch, setAppSearch] = useState('');
+  const [appFunctionFilter, setAppFunctionFilter] = useState('alle');
+  const [appInterviewerFilter, setAppInterviewerFilter] = useState('alle');
+  const [appStatusFilter, setAppStatusFilter] = useState('alle');
+  const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  const [appDetailOpen, setAppDetailOpen] = useState(false);
+
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
@@ -178,6 +187,23 @@ export default function DashboardMockup() {
     mutationFn: (id: number) =>
       apiRequest('PATCH', `/api/admin/candidates/${id}`, { status: 'afgewezen' }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); },
+  });
+
+  const { data: applicationsData, isLoading: applicationsLoading, refetch: refetchApplications } = useQuery<{ applications: any[]; total: number }>({
+    queryKey: ['/api/admin/applications'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  const updateAppStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      apiRequest('PATCH', `/api/admin/applications/${id}/status`, { status }),
+    onSuccess: (_, { id, status }) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
+      if (selectedApp?.id === id) setSelectedApp((prev: any) => prev ? { ...prev, status } : prev);
+      toast({ title: 'Status bijgewerkt' });
+    },
   });
 
   if (authLoading) {
@@ -260,6 +286,28 @@ export default function DashboardMockup() {
     inBehandeling: allCandidates.filter(c => c.status === 'in_behandeling').length,
     aangenomen: allCandidates.filter(c => c.status === 'aangenomen').length,
     afgewezen: allCandidates.filter(c => c.status === 'afgewezen').length,
+  };
+
+  // Applications (sollicitanten) computed
+  const allApplications: any[] = applicationsData?.applications || [];
+  const filteredApplications = allApplications.filter(a => {
+    const matchesFn = appFunctionFilter === 'alle' || a.functionType === appFunctionFilter;
+    const matchesIv = appInterviewerFilter === 'alle' || a.interviewer === appInterviewerFilter;
+    const matchesSt = appStatusFilter === 'alle' || a.status === appStatusFilter;
+    const q = appSearch.toLowerCase();
+    const matchesQ = !appSearch || `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q);
+    return matchesFn && matchesIv && matchesSt && matchesQ;
+  });
+  const appCounts = {
+    total: allApplications.length,
+    nieuw: allApplications.filter(a => a.status === 'nieuw').length,
+    beoordeeld: allApplications.filter(a => a.status === 'beoordeeld').length,
+    aangenomen: allApplications.filter(a => a.status === 'aangenomen').length,
+    afgewezen: allApplications.filter(a => a.status === 'afgewezen').length,
+    horecamedewerker: allApplications.filter(a => a.functionType === 'horecamedewerker').length,
+    housekeeping: allApplications.filter(a => a.functionType === 'housekeeping').length,
+    chef: allApplications.filter(a => a.functionType === 'chef').length,
+    frontoffice: allApplications.filter(a => a.functionType === 'frontoffice' || a.functionType === 'front-office').length,
   };
 
   const topUsers = [...allUsers]
@@ -639,236 +687,521 @@ export default function DashboardMockup() {
               </Card>
             </div>
           ) : activeTab === 'sollicitanten' ? (
-            /* Sollicitanten Tab */
+            /* Sollicitanten Tab — Applications from HR intake form */
             <div>
+              {/* Detail Modal */}
+              <Dialog open={appDetailOpen} onOpenChange={setAppDetailOpen}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  {selectedApp && (() => {
+                    const fd = selectedApp.formData || {};
+                    const fn = selectedApp.functionType;
+
+                    const renderStars = (val: any) => {
+                      const n = parseInt(val) || 0;
+                      return (
+                        <span className="flex gap-0.5">
+                          {[1,2,3,4,5].map(i => (
+                            <Star key={i} className={`h-4 w-4 ${i <= n ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
+                          ))}
+                        </span>
+                      );
+                    };
+
+                    const renderBool = (val: any) => val === true || val === 'true' || val === 'ja' ? 
+                      <span className="text-green-600 font-medium">Ja</span> : 
+                      <span className="text-gray-400">Nee</span>;
+
+                    const renderVal = (val: any) => {
+                      if (val === null || val === undefined || val === '') return <span className="text-gray-300">—</span>;
+                      if (Array.isArray(val)) return val.length ? val.join(', ') : <span className="text-gray-300">—</span>;
+                      if (typeof val === 'boolean') return renderBool(val);
+                      return String(val);
+                    };
+
+                    const Section = ({ title, rows }: { title: string; rows: [string, any][] }) => (
+                      <div className="mb-5">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">{title}</h4>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                          {rows.map(([label, val]) => (
+                            <div key={label} className="flex justify-between text-sm py-0.5">
+                              <span className="text-gray-500 shrink-0 mr-2">{label}</span>
+                              <span className="font-medium text-right text-gray-800">{renderVal(val)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+
+                    const RatingSection = ({ title, rows }: { title: string; rows: [string, any][] }) => (
+                      <div className="mb-5">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">{title}</h4>
+                        <div className="space-y-1.5">
+                          {rows.map(([label, val]) => (
+                            <div key={label} className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">{label}</span>
+                              {renderStars(val)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+
+                    return (
+                      <>
+                        <DialogHeader className="mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                                fn === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
+                                fn === 'chef' ? 'bg-gray-100 text-gray-700' :
+                                fn === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
+                                'bg-blue-100 text-blue-700'
+                              }`}>
+                                {getInitials(selectedApp.firstName, selectedApp.lastName)}
+                              </div>
+                              <div>
+                                <DialogTitle className="text-xl">{selectedApp.firstName} {selectedApp.lastName}</DialogTitle>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(fn)}`}>
+                                    {fn === 'horecamedewerker' ? 'Horecamedewerker' :
+                                     fn === 'housekeeping' ? 'Housekeeping' :
+                                     fn === 'chef' ? 'Chef' : 'Front-office'}
+                                  </Badge>
+                                  <span className="text-xs text-gray-400">
+                                    {new Date(selectedApp.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Select
+                              value={selectedApp.status}
+                              onValueChange={(s) => updateAppStatusMutation.mutate({ id: selectedApp.id, status: s })}
+                            >
+                              <SelectTrigger className="w-36 h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="nieuw">Nieuw</SelectItem>
+                                <SelectItem value="beoordeeld">Beoordeeld</SelectItem>
+                                <SelectItem value="aangenomen">Aangenomen</SelectItem>
+                                <SelectItem value="afgewezen">Afgewezen</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </DialogHeader>
+
+                        {/* Contact + Assessment overview */}
+                        <div className="grid grid-cols-2 gap-4 mb-5">
+                          <Card className="bg-gray-50 border-0">
+                            <CardContent className="p-3 space-y-1.5 text-sm">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Contactgegevens</p>
+                              {selectedApp.email && <div className="flex items-center gap-2 text-gray-700"><Mail className="h-3.5 w-3.5 text-gray-400" />{selectedApp.email}</div>}
+                              {selectedApp.phone && <div className="flex items-center gap-2 text-gray-700"><Phone className="h-3.5 w-3.5 text-gray-400" />{selectedApp.phone}</div>}
+                              {selectedApp.city && <div className="flex items-center gap-2 text-gray-700"><Building2 className="h-3.5 w-3.5 text-gray-400" />{selectedApp.city}</div>}
+                              {selectedApp.interviewer && <div className="flex items-center gap-2 text-gray-700"><Users className="h-3.5 w-3.5 text-gray-400" />Interviewer: <span className="font-medium">{selectedApp.interviewer}</span></div>}
+                              {selectedApp.salaryScale && <div className="flex items-center gap-2 text-gray-700"><Receipt className="h-3.5 w-3.5 text-gray-400" />Salariswens: <span className="font-medium">{selectedApp.salaryScale}</span></div>}
+                            </CardContent>
+                          </Card>
+                          <Card className="bg-gray-50 border-0">
+                            <CardContent className="p-3 text-sm">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Beoordeling</p>
+                              {selectedApp.assessmentRating ? (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-gray-500">Eindoordeel</span>
+                                  <span className="flex gap-0.5">
+                                    {[1,2,3,4,5].map(i => (
+                                      <Star key={i} className={`h-4 w-4 ${i <= parseInt(selectedApp.assessmentRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
+                                    ))}
+                                  </span>
+                                </div>
+                              ) : <p className="text-gray-400 text-xs">Nog geen eindoordeel</p>}
+                              {fd.remarks && <p className="text-gray-600 text-xs mt-2 italic">"{fd.remarks}"</p>}
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Function-specific sections */}
+                        {fn === 'horecamedewerker' && (
+                          <>
+                            <Section title="Achtergrond" rows={[
+                              ['Voertaal', fd.languages],
+                              ['Werkvergunning nodig', fd.needsWorkPermit],
+                              ['Nationaliteit', fd.nationality],
+                              ['Andere baan', fd.otherJob],
+                            ]} />
+                            <Section title="Werkervaring" rows={[
+                              ['Ervaring in', fd.experienceTypes],
+                              ['Horeca-ervaring', fd.horecaExperience ? `${fd.horecaExperience} jaar` : null],
+                              ['Zelfstandig werken', fd.canWorkIndependently],
+                              ['3 borden dragen', fd.canCarry3Plates],
+                              ['Barista', fd.isBarista],
+                              ['Cocktails', fd.canShakeCocktails],
+                              ['Gerechten afwassen', fd.canWashDishes],
+                              ['Assistent-kok', fd.isAssistantChef],
+                              ['Promowerk', fd.isPromoWorker],
+                            ]} />
+                            <RatingSection title="Vaardigheden (1–5)" rows={[
+                              ['Bediening', fd.serviceSkills],
+                              ['Bar', fd.barSkills],
+                              ['Diner', fd.dinerSkills],
+                            ]} />
+                            <Section title="Praktisch" rows={[
+                              ['Rijbewijs', fd.hasDriversLicense],
+                              ['OV-kaart', fd.hasStudentOV],
+                              ['OV-type', fd.ovType],
+                              ['Eigen kleding', fd.workClothing],
+                            ]} />
+                            <Section title="Beschikbaarheid" rows={[
+                              ['Uren per week', fd.availableHours],
+                              ['Voorkeursdagen', fd.preferredDays],
+                              ['Voorkeurstijden', fd.preferredTimes],
+                            ]} />
+                            <RatingSection title="Beoordeling interviewer" rows={[
+                              ['Ervaringsniveau', fd.experienceLevel],
+                              ['Verschijning', fd.appearance],
+                              ['Attitude', fd.attitude],
+                              ['Communicatie', fd.communicationSkills],
+                              ['Algemene indruk', fd.overallImpression],
+                            ]} />
+                          </>
+                        )}
+
+                        {fn === 'housekeeping' && (
+                          <>
+                            <Section title="Achtergrond" rows={[
+                              ['Voertaal', fd.voertaal],
+                              ['Werkvergunning nodig', fd.needsWorkPermit],
+                              ['Nationaliteit', fd.nationality],
+                            ]} />
+                            <Section title="Werkervaring" rows={[
+                              ['Taken', fd.hkTasks],
+                              ['Jaren ervaring', fd.hkYearsExperience ? `${fd.hkYearsExperience} jaar` : null],
+                              ['Locatietypes', fd.hkLocationTypes],
+                              ['Hotelsterren', fd.hkHotelStars],
+                              ['Vorige werkgevers', fd.hkCompanies],
+                              ['Referentie', fd.hkReference],
+                            ]} />
+                            <Section title="Beschikbaarheid" rows={[
+                              ['Uren per week', fd.availableHours],
+                              ['Voorkeursdagen', fd.preferredDays],
+                              ['Voorkeurstijden', fd.preferredTimes],
+                              ['Eigen auto', fd.hasCar],
+                            ]} />
+                            <RatingSection title="Soft skills (1–5)" rows={[
+                              ['Betrouwbaarheid', fd.hkBetrouwbaarheid],
+                              ['Communicatie', fd.hkCommunicatie],
+                              ['Representativiteit', fd.hkRepresentativiteit],
+                            ]} />
+                            <RatingSection title="Beoordeling interviewer" rows={[
+                              ['Ervaringsniveau', fd.experienceLevel],
+                              ['Verschijning', fd.appearance],
+                              ['Attitude', fd.attitude],
+                              ['Communicatie', fd.communicationSkills],
+                              ['Algemene indruk', fd.overallImpression],
+                            ]} />
+                          </>
+                        )}
+
+                        {fn === 'chef' && (
+                          <>
+                            <Section title="Achtergrond" rows={[
+                              ['Voertaal', fd.voertaal],
+                              ['Werkvergunning nodig', fd.needsWorkPermit],
+                              ['Nationaliteit', fd.nationality],
+                            ]} />
+                            <Section title="Hard skills" rows={[
+                              ['Keukentypen', fd.chefKitchenTypes],
+                              ['Diploma', fd.chefDiplomas],
+                              ['Jaren als kok', fd.chefYearsAsKok ? `${fd.chefYearsAsKok} jaar` : null],
+                              ['Leiderschapservaring', fd.chefLeadershipExp],
+                              ['Hoofdkeuken', fd.chefMainKitchen],
+                              ['Vorige werkgevers', fd.chefCompanies],
+                            ]} />
+                            <Section title="Beschikbaarheid & Vervoer" rows={[
+                              ['Startdatum', fd.chefStartDate],
+                              ['Uren per week', fd.availableHours],
+                              ['Voorkeursdagen', fd.preferredDays],
+                              ['Voorkeurstijden', fd.preferredTimes],
+                              ['Eigen auto', fd.hasCar],
+                            ]} />
+                            <Section title="Kleding" rows={[
+                              ['Koksbuis', fd.chefClothing?.includes?.('koksbuis') ?? (Array.isArray(fd.chefClothing) ? fd.chefClothing.includes('koksbuis') : null)],
+                              ['Koksbroek', fd.chefClothing?.includes?.('koksbroek') ?? null],
+                              ['Veiligheidsschoenen', fd.chefClothing?.includes?.('veiligheidsschoenen') ?? null],
+                              ['Messenset', fd.chefClothing?.includes?.('messenset') ?? null],
+                            ]} />
+                            <RatingSection title="Tags & uitstraling (1–5)" rows={[
+                              ['Professionele uitstraling', fd.chefProfessioneleUitstraling],
+                              ['Communicatie', fd.communicationSkills],
+                              ['Algemene indruk', fd.overallImpression],
+                            ]} />
+                            <RatingSection title="Beoordeling interviewer" rows={[
+                              ['Ervaringsniveau', fd.experienceLevel],
+                              ['Verschijning', fd.appearance],
+                              ['Attitude', fd.attitude],
+                            ]} />
+                          </>
+                        )}
+
+                        {(fn === 'frontoffice' || fn === 'front-office') && (
+                          <Section title="Formuliergegevens" rows={
+                            Object.entries(fd)
+                              .filter(([k]) => !['functionType','interviewer','firstName','lastName','email','phone','city','salaryScale','assessmentRating','remarks','linkedCandidateId'].includes(k))
+                              .map(([k, v]) => [k, v] as [string, any])
+                          } />
+                        )}
+                      </>
+                    );
+                  })()}
+                </DialogContent>
+              </Dialog>
+
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-xl font-bold">Sollicitanten</h1>
-                  <p className="text-sm text-gray-500">Beheer sollicitanten en hun sollicitatieproces</p>
+                  <p className="text-sm text-gray-500">Ingevulde HR-intakeformulieren per functie</p>
                 </div>
-                <Button variant="outline" className="gap-2 text-sm">
-                  <Settings2 className="h-4 w-4" />
-                  Weergave: Master
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 text-sm" onClick={() => refetchApplications()}>
+                    <RefreshCw className="h-4 w-4" />
+                    Vernieuwen
+                  </Button>
+                  <a href="/sollicitatieformulier" target="_blank">
+                    <Button size="sm" className="gap-2 bg-purple-600 hover:bg-purple-700 text-sm">
+                      <FileText className="h-4 w-4" />
+                      Intakeformulier
+                    </Button>
+                  </a>
+                </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
+              {/* Stats Cards — status overzicht */}
+              <div className="grid grid-cols-4 gap-4 mb-4">
                 <Card className="bg-white border-l-4 border-l-purple-500">
                   <CardContent className="p-4">
-                    <p className="text-xs text-gray-500 mb-1">Totaal Sollicitanten</p>
-                    <p className="text-2xl font-bold">{candidateCounts.total}</p>
+                    <p className="text-xs text-gray-500 mb-1">Totaal ingevuld</p>
+                    <p className="text-2xl font-bold">{appCounts.total}</p>
+                    <p className="text-xs text-gray-400 mt-1">Alle formulieren</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-white border-l-4 border-l-yellow-500">
+                <Card className="bg-white border-l-4 border-l-blue-400">
                   <CardContent className="p-4">
-                    <p className="text-xs text-gray-500 mb-1">In Behandeling</p>
-                    <p className="text-2xl font-bold text-yellow-600">{candidateCounts.inBehandeling}</p>
+                    <p className="text-xs text-gray-500 mb-1">Nieuw</p>
+                    <p className="text-2xl font-bold text-blue-600">{appCounts.nieuw}</p>
+                    <p className="text-xs text-gray-400 mt-1">Nog te beoordelen</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-green-500">
                   <CardContent className="p-4">
                     <p className="text-xs text-gray-500 mb-1">Aangenomen</p>
-                    <p className="text-2xl font-bold text-green-600">{candidateCounts.aangenomen}</p>
+                    <p className="text-2xl font-bold text-green-600">{appCounts.aangenomen}</p>
+                    <p className="text-xs text-gray-400 mt-1">Goedgekeurd</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-white border-l-4 border-l-red-500">
+                <Card className="bg-white border-l-4 border-l-red-400">
                   <CardContent className="p-4">
                     <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
-                    <p className="text-2xl font-bold text-red-600">{candidateCounts.afgewezen}</p>
+                    <p className="text-2xl font-bold text-red-500">{appCounts.afgewezen}</p>
+                    <p className="text-xs text-gray-400 mt-1">Niet doorgegaan</p>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Search and Filters */}
-              <div className="flex items-center gap-4 mb-4">
+              {/* Function breakdown */}
+              <div className="grid grid-cols-4 gap-3 mb-5">
+                {[
+                  { label: 'Horecamedewerker', count: appCounts.horecamedewerker, color: 'bg-orange-50 border-orange-200 text-orange-700' },
+                  { label: 'Housekeeping', count: appCounts.housekeeping, color: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
+                  { label: 'Chef', count: appCounts.chef, color: 'bg-gray-50 border-gray-200 text-gray-700' },
+                  { label: 'Front-office', count: appCounts.frontoffice, color: 'bg-blue-50 border-blue-200 text-blue-700' },
+                ].map(({ label, count, color }) => (
+                  <button
+                    key={label}
+                    onClick={() => setAppFunctionFilter(appFunctionFilter === label.toLowerCase().replace('-', '') ? 'alle' : label.toLowerCase().replace('-office', 'office').replace('horecamedewerker', 'horecamedewerker').replace('housekeeping', 'housekeeping').replace('chef', 'chef'))}
+                    className={`border rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-sm ${color}`}
+                  >
+                    <span className="text-sm font-medium">{label}</span>
+                    <span className="text-xl font-bold">{count}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Filters */}
+              <div className="flex items-center gap-3 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input 
-                    placeholder="Zoek op naam, e-mail of telefoon..." 
-                    className="pl-10"
-                    value={candidateSearch}
-                    onChange={(e) => setCandidateSearch(e.target.value)}
+                  <Input
+                    placeholder="Zoek op naam of e-mail..."
+                    className="pl-9"
+                    value={appSearch}
+                    onChange={(e) => setAppSearch(e.target.value)}
                   />
                 </div>
-                <Select value="alle" onValueChange={() => {}}>
+                <Select value={appFunctionFilter} onValueChange={setAppFunctionFilter}>
+                  <SelectTrigger className="w-[170px]">
+                    <SelectValue placeholder="Alle functies" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle functies</SelectItem>
+                    <SelectItem value="horecamedewerker">Horecamedewerker</SelectItem>
+                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                    <SelectItem value="chef">Chef</SelectItem>
+                    <SelectItem value="frontoffice">Front-office</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={appInterviewerFilter} onValueChange={setAppInterviewerFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Alle interviewers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle interviewers</SelectItem>
+                    {['Eveline', 'Isa', 'Charlotte', 'Max', 'Lea'].map(iv => (
+                      <SelectItem key={iv} value={iv}>{iv}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={appStatusFilter} onValueChange={setAppStatusFilter}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Alle statussen" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="alle">Alle statussen</SelectItem>
-                    <SelectItem value="in_behandeling">In behandeling</SelectItem>
+                    <SelectItem value="nieuw">Nieuw</SelectItem>
+                    <SelectItem value="beoordeeld">Beoordeeld</SelectItem>
                     <SelectItem value="aangenomen">Aangenomen</SelectItem>
                     <SelectItem value="afgewezen">Afgewezen</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value="alle" onValueChange={() => {}}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Alle functies" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle functies</SelectItem>
-                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
-                    <SelectItem value="horecamedewerker">Horecamedewerker</SelectItem>
-                    <SelectItem value="chef">Chef</SelectItem>
-                    <SelectItem value="front-office">Front-office</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button className="gap-2 bg-green-500 hover:bg-green-600">
-                  <Plus className="h-4 w-4" />
-                  Nieuwe Sollicitant
-                </Button>
               </div>
 
-              {/* Status Tabs */}
-              <div className="flex items-center gap-2 mb-4 border-b pb-2">
-                <Button 
-                  variant={candidateStatusFilter === 'alle' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCandidateStatusFilter('alle')}
-                  className={candidateStatusFilter === 'alle' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : ''}
-                >
-                  Alle ({candidateCounts.total})
-                </Button>
-                <Button 
-                  variant={candidateStatusFilter === 'in_behandeling' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCandidateStatusFilter('in_behandeling')}
-                  className={candidateStatusFilter === 'in_behandeling' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : ''}
-                >
-                  <Clock className="h-3 w-3 mr-1" />
-                  In behandeling ({candidateCounts.inBehandeling})
-                </Button>
-                <Button 
-                  variant={candidateStatusFilter === 'aangenomen' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCandidateStatusFilter('aangenomen')}
-                  className={candidateStatusFilter === 'aangenomen' ? 'bg-green-100 text-green-700 hover:bg-green-200' : ''}
-                >
-                  <Star className="h-3 w-3 mr-1" />
-                  Aangenomen ({candidateCounts.aangenomen})
-                </Button>
-                <Button 
-                  variant={candidateStatusFilter === 'afgewezen' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCandidateStatusFilter('afgewezen')}
-                  className={candidateStatusFilter === 'afgewezen' ? 'bg-red-100 text-red-700 hover:bg-red-200' : ''}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Afgewezen ({candidateCounts.afgewezen})
-                </Button>
+              {/* Status tab pills */}
+              <div className="flex items-center gap-2 mb-4 border-b pb-3">
+                {[
+                  { val: 'alle', label: `Alle (${appCounts.total})`, cls: 'bg-purple-100 text-purple-700 hover:bg-purple-200' },
+                  { val: 'nieuw', label: `Nieuw (${appCounts.nieuw})`, cls: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
+                  { val: 'beoordeeld', label: `Beoordeeld (${appCounts.beoordeeld})`, cls: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' },
+                  { val: 'aangenomen', label: `Aangenomen (${appCounts.aangenomen})`, cls: 'bg-green-100 text-green-700 hover:bg-green-200' },
+                  { val: 'afgewezen', label: `Afgewezen (${appCounts.afgewezen})`, cls: 'bg-red-100 text-red-700 hover:bg-red-200' },
+                ].map(({ val, label, cls }) => (
+                  <Button
+                    key={val}
+                    variant={appStatusFilter === val ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setAppStatusFilter(val)}
+                    className={appStatusFilter === val ? cls : 'text-gray-500'}
+                  >
+                    {label}
+                  </Button>
+                ))}
               </div>
 
-              {/* Candidates Table */}
+              {/* Applications Table */}
               <Card>
                 <CardContent className="p-0">
-                  {candidatesLoading ? (
-                    <div className="p-6">
-                      <Skeleton className="h-10 w-full mb-4" />
-                      <Skeleton className="h-10 w-full mb-4" />
-                      <Skeleton className="h-10 w-full" />
+                  {applicationsLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
                     </div>
-                  ) : filteredCandidates.length === 0 ? (
+                  ) : filteredApplications.length === 0 ? (
                     <div className="p-12 text-center">
-                      <UserPlus className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-600 mb-2">Geen sollicitanten</h3>
-                      <p className="text-gray-400">Er zijn nog geen sollicitaties binnengekomen.</p>
-                      <p className="text-sm text-gray-400 mt-2">
-                        Deel het formulier: <span className="font-mono bg-gray-100 px-2 py-1 rounded">/sollicitatieformulier</span>
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">Geen sollicitaties gevonden</h3>
+                      <p className="text-gray-400 text-sm">
+                        {appCounts.total === 0
+                          ? 'Er zijn nog geen HR-intakeformulieren ingevuld.'
+                          : 'Geen resultaten voor de huidige filters.'}
                       </p>
+                      {appCounts.total === 0 && (
+                        <p className="text-xs text-gray-400 mt-2">
+                          Formulier: <a href="/sollicitatieformulier" target="_blank" className="font-mono underline">/sollicitatieformulier</a>
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b text-left">
                           <tr>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Naam</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Functie</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Contact</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Status</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Sollicitatiedatum</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Interview</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Wie</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase">Acties</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Datum</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Naam</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Functie</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">E-mail</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Interviewer</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Beoordeling</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Status</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {filteredCandidates.map((candidate) => (
-                            <tr key={candidate.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-3">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback className={`text-xs ${
-                                      candidate.functionType === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
-                                      candidate.functionType === 'chef' ? 'bg-gray-200 text-gray-700' :
-                                      candidate.functionType === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
+                          {filteredApplications.map((app) => {
+                            const rating = parseInt(app.assessmentRating) || 0;
+                            const statusColors: Record<string, string> = {
+                              nieuw: 'bg-blue-100 text-blue-700',
+                              beoordeeld: 'bg-yellow-100 text-yellow-700',
+                              aangenomen: 'bg-green-100 text-green-700',
+                              afgewezen: 'bg-red-100 text-red-700',
+                            };
+                            const fnLabels: Record<string, string> = {
+                              horecamedewerker: 'Horeca',
+                              housekeeping: 'Housekeeping',
+                              chef: 'Chef',
+                              frontoffice: 'Front-office',
+                              'front-office': 'Front-office',
+                            };
+                            return (
+                              <tr key={app.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                                  {new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                                      app.functionType === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
+                                      app.functionType === 'chef' ? 'bg-gray-100 text-gray-600' :
+                                      app.functionType === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
                                       'bg-blue-100 text-blue-700'
                                     }`}>
-                                      {getInitials(candidate.firstName, candidate.lastName)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <p className="font-medium text-gray-900">{candidate.firstName} {candidate.lastName}</p>
-                                    {candidate.city && <p className="text-xs text-gray-400">{candidate.city}</p>}
+                                      {getInitials(app.firstName, app.lastName)}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-gray-900">{app.firstName} {app.lastName}</p>
+                                      {app.city && <p className="text-xs text-gray-400">{app.city}</p>}
+                                    </div>
                                   </div>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(candidate.functionType)}`}>
-                                  {candidate.functionType}
-                                </Badge>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="text-gray-600 flex items-center gap-1">
-                                    <Mail className="h-3 w-3" />
-                                    {candidate.email}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>
+                                    {fnLabels[app.functionType] || app.functionType}
+                                  </Badge>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600 text-xs">{app.email || '—'}</td>
+                                <td className="px-4 py-3 text-gray-600 text-xs">{app.interviewer || '—'}</td>
+                                <td className="px-4 py-3">
+                                  <span className="flex gap-0.5">
+                                    {[1,2,3,4,5].map(i => (
+                                      <Star key={i} className={`h-3.5 w-3.5 ${i <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
+                                    ))}
                                   </span>
-                                  {candidate.phone && (
-                                    <span className="text-gray-400 flex items-center gap-1 text-xs">
-                                      <Phone className="h-3 w-3" />
-                                      {candidate.phone}
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <Badge className={`text-xs ${getStatusBadgeColor(candidate.status)}`}>
-                                  {getStatusLabel(candidate.status)}
-                                </Badge>
-                              </td>
-                              <td className="px-4 py-3 text-gray-600">
-                                {new Date(candidate.createdAt).toLocaleDateString('nl-NL')}
-                              </td>
-                              <td className="px-4 py-3 text-gray-500">
-                                {candidate.interviewDate ? (
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {candidate.interviewDate}
-                                    {candidate.interviewTime && <span className="text-xs">@ {candidate.interviewTime}</span>}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400 text-xs">Niet gepland</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-gray-600">
-                                {candidate.assignedTo || '-'}
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                    <Eye className="h-4 w-4 text-gray-400" />
+                                </td>
+                                <td className="px-4 py-3">
+                                  <Badge className={`text-xs ${statusColors[app.status] || 'bg-gray-100 text-gray-600'}`}>
+                                    {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
+                                  </Badge>
+                                </td>
+                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}
+                                  >
+                                    <Eye className="h-3.5 w-3.5 mr-1" />
+                                    Bekijken
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                    <Star className="h-4 w-4 text-gray-400" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                    <Trash2 className="h-4 w-4 text-gray-400" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
