@@ -856,6 +856,7 @@ export default function LandingPage() {
                       { label: "Onze werkwijze", action: () => scrollTo("how-it-works"), icon: Clock },
                       { label: "Klantcases", action: () => scrollTo("differentiators"), icon: Trophy },
                       { label: "Ons beloningssysteem", action: () => scrollTo("rewards"), icon: Gift },
+                      { label: "Ons team", action: () => { window.location.href = "/over-extra/ons-team"; }, icon: Users },
                     ].map((item) => (
                       <button key={item.label} onClick={() => { item.action(); setActiveDropdown(null); }} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group w-full text-left">
                         <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
@@ -952,6 +953,7 @@ export default function LandingPage() {
                     <button onClick={() => { scrollTo("how-it-works"); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Onze werkwijze</button>
                     <button onClick={() => { scrollTo("differentiators"); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Klantcases</button>
                     <button onClick={() => { scrollTo("rewards"); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Ons beloningssysteem</button>
+                    <button onClick={() => { window.location.href = "/over-extra/ons-team"; }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Ons team</button>
                   </div>
                 </div>
               </div>
