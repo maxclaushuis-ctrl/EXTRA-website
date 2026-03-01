@@ -326,11 +326,6 @@ export default function OnsTeam() {
             <span className="text-white font-semibold">Ons Team</span>
           </nav>
 
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2 mb-6 border border-white/20">
-            <Users className="w-4 h-4 text-white/80" />
-            <span className="text-white/90 text-xs sm:text-sm font-semibold">{team.length} teamleden, 1 missie</span>
-          </div>
-
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
             Ons team –{" "}
             <span className="relative inline-block">
@@ -361,24 +356,6 @@ export default function OnsTeam() {
               >
                 {label}
               </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── STATS BAR ── */}
-      <div className="bg-white border-b border-purple-100">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
-          <div className="grid grid-cols-3 gap-6 text-center">
-            {[
-              { num: `${team.length}`, label: "Teamleden" },
-              { num: "5+", label: "Steden actief" },
-              { num: "100%", label: "Passie voor hospitality" },
-            ].map(({ num, label }) => (
-              <div key={label}>
-                <p className="text-2xl sm:text-3xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{num}</p>
-                <p className="text-xs sm:text-sm text-gray-400 mt-1 font-semibold">{label}</p>
-              </div>
             ))}
           </div>
         </div>

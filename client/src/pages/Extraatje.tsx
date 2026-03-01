@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import {
   Gift, Star, Trophy, Zap, Clock, ThumbsUp, Shield, TrendingUp,
-  ArrowRight, CheckCircle2, Users, Target, Award, Flame,
-  ChevronRight, Tag, Sparkles
+  ArrowRight, CheckCircle2, Users, Award, Flame,
+  ChevronRight, Sparkles, Check
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
@@ -15,50 +15,95 @@ import imgRanglijst from "@assets/IMG_8977_1772396250204.png";
 
 function PhoneMockup({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="relative w-[200px] sm:w-[240px] mx-auto">
-      <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/60 border-[6px] border-gray-800 bg-gray-900">
+    <div className="relative w-[180px] sm:w-[220px] mx-auto">
+      <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-900/30 border-[6px] border-gray-800 bg-gray-900">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-gray-900 rounded-b-xl z-20" />
         <img src={src} alt={alt} className="w-full relative z-10" loading="lazy" decoding="async" />
       </div>
-      <div className="absolute -inset-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-[3.5rem] blur-3xl -z-10" />
+      <div className="absolute -inset-6 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-[3.5rem] blur-3xl -z-10" />
     </div>
   );
 }
 
 function useScrollReveal() {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { el.style.opacity = "1"; el.style.transform = "translateY(0)"; } },
-      { threshold: 0.1 }
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
     );
-    el.style.opacity = "0";
-    el.style.transform = "translateY(32px)";
-    el.style.transition = "opacity 0.6s ease, transform 0.6s ease";
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-  return ref;
+  return { ref, visible };
 }
 
-function RevealSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useScrollReveal();
+function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const { ref, visible } = useScrollReveal();
   return (
-    <section ref={ref} style={{ transitionDelay: `${delay}ms` }}>
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
       {children}
-    </section>
+    </div>
+  );
+}
+
+function XPatternBg() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[
+        { left: "5%", top: "10%", w: 180, rot: 15, op: 0.07 },
+        { left: "78%", top: "15%", w: 140, rot: -8, op: 0.05 },
+        { left: "48%", top: "72%", w: 160, rot: 25, op: 0.06 },
+      ].map((x, i) => (
+        <div key={i} className="absolute" style={{
+          left: x.left, top: x.top, width: x.w, height: x.w,
+          transform: `rotate(${x.rot}deg)`, opacity: x.op,
+          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: "rgba(139,92,246,1)",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function XPatternBgDark() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[
+        { left: "5%", top: "10%", w: 200, rot: 15, op: 0.1 },
+        { left: "80%", top: "55%", w: 240, rot: -20, op: 0.08 },
+      ].map((x, i) => (
+        <div key={i} className="absolute" style={{
+          left: x.left, top: x.top, width: x.w, height: x.w,
+          transform: `rotate(${x.rot}deg)`, opacity: x.op,
+          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: "rgba(255,255,255,0.9)",
+        }} />
+      ))}
+    </div>
   );
 }
 
 const microPrestaties = [
-  { icon: Clock, label: "Op tijd komen", desc: "Punten voor punctualiteit bij elke dienst", color: "from-blue-500 to-cyan-500" },
-  { icon: Star, label: "Hoge beoordeling", desc: "Extra punten bij een topbeoordeling van opdrachtgevers", color: "from-yellow-500 to-orange-500" },
-  { icon: Sparkles, label: "Uitstraling & houding", desc: "Beloond voor professionele presentatie", color: "from-purple-500 to-pink-500" },
-  { icon: Zap, label: "Extra shifts", desc: "Meer shifts = meer punten, zo simpel is het", color: "from-green-500 to-emerald-500" },
-  { icon: Flame, label: "Last-minute beschikbaar", desc: "Bijspringen op korte termijn? Dubbele waardering", color: "from-red-500 to-orange-500" },
-  { icon: Shield, label: "Betrouwbaarheid", desc: "Geen no-shows levert een betrouwbaarheidsbonus op", color: "from-indigo-500 to-purple-500" },
+  { icon: Clock, label: "Op tijd komen", desc: "Punten voor punctualiteit bij elke dienst", color: "from-blue-500 to-cyan-500", bg: "bg-blue-50", accent: "text-blue-600" },
+  { icon: Star, label: "Hoge beoordeling", desc: "Extra punten bij een topbeoordeling van opdrachtgevers", color: "from-yellow-500 to-orange-500", bg: "bg-yellow-50", accent: "text-yellow-600" },
+  { icon: Sparkles, label: "Uitstraling & houding", desc: "Beloond voor professionele presentatie", color: "from-purple-500 to-pink-500", bg: "bg-purple-50", accent: "text-purple-600" },
+  { icon: Zap, label: "Extra shifts", desc: "Meer shifts = meer punten, zo simpel is het", color: "from-green-500 to-emerald-500", bg: "bg-green-50", accent: "text-green-600" },
+  { icon: Flame, label: "Last-minute beschikbaar", desc: "Bijspringen op korte termijn? Dubbele waardering", color: "from-red-500 to-orange-500", bg: "bg-red-50", accent: "text-red-600" },
+  { icon: Shield, label: "Betrouwbaarheid", desc: "Geen no-shows levert een betrouwbaarheidsbonus op", color: "from-indigo-500 to-purple-500", bg: "bg-indigo-50", accent: "text-indigo-600" },
 ];
 
 const challenges = [
@@ -86,6 +131,15 @@ const kortingen = [
 ];
 
 export default function Extraatje() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     document.title = "EXTRAATJE – Het beloningssysteem dat jouw werk beloont | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
@@ -94,11 +148,10 @@ export default function Extraatje() {
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "EXTRAATJE is het unieke puntensysteem van EXTRA waarmee medewerkers automatisch punten verdienen voor elke gewerkte shift, challenge en micro-prestatie. Wissel ze in voor echte beloningen.");
+    setMeta("description", "EXTRAATJE is het unieke puntensysteem van EXTRA waarmee medewerkers automatisch punten verdienen voor elke gewerkte shift, challenge en micro-prestatie.");
     setMeta("og:title", "EXTRAATJE – Het beloningssysteem dat jouw werk beloont", true);
     setMeta("og:description", "Verdien punten, behaal challenges en wissel ze in voor beloningen, kortingen en deals. Werken bij EXTRA loont letterlijk.", true);
     setMeta("og:type", "website", true);
-    setMeta("og:url", "https://www.doehetextra.nl/extraatje", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
     canonical.href = "https://www.doehetextra.nl/extraatje";
@@ -106,9 +159,9 @@ export default function Extraatje() {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "Hoe werkt het EXTRAATJE puntensysteem?", "acceptedAnswer": { "@type": "Answer", "text": "Medewerkers verdienen automatisch punten voor elke gewerkte shift, op tijd komen, hoge beoordelingen en het voltooien van challenges. Punten zijn in te wisselen voor beloningen en kortingen." } },
-        { "@type": "Question", "name": "Wat zijn challenges bij EXTRA?", "acceptedAnswer": { "@type": "Answer", "text": "Challenges zijn optionele doelen die medewerkers wekelijks of maandelijks kunnen behalen, zoals extra shifts draaien, stipt zijn of last-minute beschikbaar zijn. Ze leveren bonuspunten op." } },
-        { "@type": "Question", "name": "Wat kan ik doen met mijn punten?", "acceptedAnswer": { "@type": "Answer", "text": "Punten zijn inwisselbaar voor fysieke beloningen (gadgets, cadeaubonnen), exclusieve kortingscodes van partners zoals Swapfiets, of ervaringen." } },
+        { "@type": "Question", "name": "Hoe werkt het EXTRAATJE puntensysteem?", "acceptedAnswer": { "@type": "Answer", "text": "Medewerkers verdienen automatisch punten voor elke gewerkte shift, op tijd komen, hoge beoordelingen en het voltooien van challenges." } },
+        { "@type": "Question", "name": "Wat zijn challenges bij EXTRA?", "acceptedAnswer": { "@type": "Answer", "text": "Challenges zijn optionele doelen die medewerkers wekelijks of maandelijks kunnen behalen. Ze leveren bonuspunten op." } },
+        { "@type": "Question", "name": "Wat kan ik doen met mijn punten?", "acceptedAnswer": { "@type": "Answer", "text": "Punten zijn inwisselbaar voor fysieke beloningen, exclusieve kortingscodes van partners, of ervaringen." } },
       ]
     };
     let scriptEl = document.querySelector("#extraatje-schema") as HTMLScriptElement;
@@ -118,20 +171,29 @@ export default function Extraatje() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── NAVIGATION ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/10" style={{ background: "rgba(10,5,30,0.85)" }}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+      {/* ── NAV ── */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
           <Link href="/landing">
-            <img src={extraLogoWit} alt="EXTRA logo" className="h-7 cursor-pointer" />
+            <img
+              src={extraLogoWit}
+              alt="EXTRA logo"
+              className={`h-8 sm:h-9 w-auto cursor-pointer transition-all ${scrolled ? "brightness-0" : ""}`}
+            />
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/landing" className="text-sm text-purple-300 hover:text-white transition-colors hidden sm:block">← Terug naar home</Link>
+            <Link
+              href="/over-extra"
+              className={`text-sm font-semibold transition-colors hidden sm:block ${scrolled ? "text-gray-700 hover:text-purple-600" : "text-white/90 hover:text-white"}`}
+            >
+              Over EXTRA
+            </Link>
             <a
               href="/aanmelden"
-              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full text-white"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+              className="inline-flex items-center gap-2 font-bold text-sm px-5 py-2.5 rounded-full text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
             >
               Aanmelden <ArrowRight className="h-3.5 w-3.5" />
             </a>
@@ -140,71 +202,80 @@ export default function Extraatje() {
       </nav>
 
       {/* ── HERO ── */}
-      <div className="relative overflow-hidden pt-16" style={{ background: "linear-gradient(160deg, #0a0518 0%, #1a0a3e 50%, #0f0726 100%)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.06] pointer-events-none select-none" />
-        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-20 sm:pt-28 pb-20 sm:pb-32 text-center">
-          <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest mb-6 bg-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10">
-            <Gift className="w-4 h-4" /> Beloningssysteem
-          </span>
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.05]" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <section
+        className="relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}
+      >
+        <XPatternBgDark />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 pb-20 sm:pb-28 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2 mb-6 border border-white/20">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-white/90 text-xs sm:text-sm font-semibold">Exclusief voor EXTRA medewerkers</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
             EXTRAATJE –{" "}
-            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-              het beloningssysteem
-            </span>{" "}
-            dat jouw werk beloont
+            <span className="relative inline-block">
+              <span className="relative z-10">het beloningssysteem</span>
+              <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+            </span>
+            {" "}dat jouw werk beloont
           </h1>
-          <p className="text-lg sm:text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed mb-8">
+          <p className="text-lg sm:text-xl text-purple-100/90 max-w-2xl mx-auto mb-8 leading-relaxed font-medium">
             Medewerkers bij EXTRA verdienen automatisch punten voor elke gewerkte shift,
             behaalde challenge en micro-prestatie. Die punten wissel je in voor échte beloningen.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               href="/aanmelden"
-              className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base sm:text-lg shadow-xl shadow-purple-900/50"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+              className="group bg-white text-purple-900 font-bold px-7 py-3.5 rounded-full hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
             >
-              Start met verdienen <ArrowRight className="h-5 w-5" />
+              Start met verdienen <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <Link href="/landing" className="inline-flex items-center gap-2 text-purple-300 hover:text-white font-medium transition-colors text-sm">
-              Meer over EXTRA <ChevronRight className="h-4 w-4" />
+            <Link
+              href="/over-extra"
+              className="border-2 border-white/30 text-white font-bold px-7 py-3.5 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
+            >
+              Meer over EXTRA <ChevronRight className="w-5 h-5" />
             </Link>
           </div>
+        </div>
+      </section>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-16 max-w-xl mx-auto">
-            {[
-              { num: "9.250", label: "Gemiddelde punten" },
-              { num: "30+", label: "Exclusieve deals" },
-              { num: "9+", label: "Uitdagingen actief" },
-            ].map(({ num, label }) => (
-              <div key={label} className="text-center">
-                <p className="text-2xl sm:text-3xl font-black text-white">{num}</p>
-                <p className="text-xs sm:text-sm text-purple-300 mt-1">{label}</p>
-              </div>
-            ))}
-          </div>
+      {/* ── STATS ── */}
+      <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 -mt-12 mb-0">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-900/10 border border-purple-100/60 p-6 sm:p-8 lg:p-10 grid grid-cols-3 gap-4 sm:gap-6">
+          {[
+            { num: "9.250", label: "Gem. punten per medewerker", icon: Star, color: "text-yellow-500" },
+            { num: "30+", label: "Exclusieve partner deals", icon: Gift, color: "text-purple-600" },
+            { num: "9+", label: "Actieve uitdagingen", icon: Trophy, color: "text-orange-500" },
+          ].map(({ num, label, icon: Icon, color }) => (
+            <div key={label} className="text-center">
+              <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color} mx-auto mb-2`} />
+              <p className="text-xl sm:text-3xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{num}</p>
+              <p className="text-[11px] sm:text-sm text-gray-400 mt-1 font-semibold leading-snug">{label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* ── HOE WERKT HET? ── */}
-      <div className="py-20 sm:py-28" style={{ background: "#0d0820" }}>
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="relative bg-white py-16 sm:py-24 lg:py-32 overflow-hidden">
+        <XPatternBg />
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 relative z-10">
           <RevealSection>
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
-                <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Puntensysteem</span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white mt-3 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Puntensysteem</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Hoe werkt het EXTRAATJE puntensysteem?
                 </h2>
-                <p className="text-purple-200 leading-relaxed mb-6">
+                <p className="text-gray-600 leading-relaxed mb-5 text-base sm:text-lg">
                   Zodra je een dienst draait bij EXTRA, begint je puntenbalans te groeien.
-                  Het systeem registreert automatisch jouw inzet, prestaties en gedrag
-                  — zonder dat jij er iets voor hoeft te doen.
+                  Het systeem registreert automatisch jouw inzet, prestaties en gedrag — zonder dat jij er iets voor hoeft te doen.
                 </p>
-                <p className="text-purple-200 leading-relaxed mb-8">
-                  Hoe meer je werkt, hoe hoger je score. En hoe hoger je score,
-                  hoe aantrekkelijker de beloningen die je kunt claimen.
-                  Van BRONS naar ZILVER naar GOUD naar DIAMANT.
+                <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
+                  Hoe meer je werkt, hoe hoger je score. Van <strong className="text-gray-900">BRONS</strong> naar <strong className="text-gray-900">ZILVER</strong> naar <strong className="text-gray-900">GOUD</strong> naar <strong className="text-gray-900">DIAMANT</strong>.
                 </p>
                 <div className="space-y-3">
                   {[
@@ -213,218 +284,218 @@ export default function Extraatje() {
                     "Real-time inzicht via de EXTRA app",
                     "Punten verlopen niet — ze bouwen op",
                   ].map(item => (
-                    <div key={item} className="flex items-center gap-3 text-sm text-white">
-                      <CheckCircle2 className="h-5 w-5 text-green-400 shrink-0" />
-                      {item}
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700 font-medium text-sm sm:text-base">{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <PhoneMockup src={imgDashboard} alt="EXTRA app – jouw punten dashboard met BRONS status" />
+              <PhoneMockup src={imgDashboard} alt="EXTRA app – jouw punten dashboard" />
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
       {/* ── MICRO-PRESTATIES ── */}
-      <div className="py-20 sm:py-28 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0f0726, #1a0a3e)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.04] pointer-events-none" />
-        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="py-16 sm:py-24 lg:py-32" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
-            <div className="text-center mb-12 sm:mb-16">
-              <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Automatisch verdienen</span>
-              <h2 className="text-3xl sm:text-4xl font-black text-white mt-3 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Micro-prestaties (automatisch punten verdienen)
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Automatisch verdienen</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 mb-4 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Micro-prestaties
               </h2>
-              <p className="text-purple-200 max-w-2xl mx-auto">
+              <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg">
                 Je hoeft niets extra's te doen. EXTRA beloont jou voor wat je toch al doet:
                 goed je werk doen. Elke kleine prestatie telt mee.
               </p>
             </div>
           </RevealSection>
-          <RevealSection delay={100}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {microPrestaties.map(({ icon: Icon, label, desc, color }) => (
-                <div
-                  key={label}
-                  className="rounded-2xl p-5 border border-white/10 backdrop-blur-sm"
-                  style={{ background: "rgba(255,255,255,0.05)" }}
-                >
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg`}>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {microPrestaties.map(({ icon: Icon, label, desc, color }, i) => (
+              <RevealSection key={label} delay={i * 60}>
+                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-6 hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all h-full">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg shadow-purple-500/20`}>
                     <Icon className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="text-base font-bold text-white mb-1.5">{label}</h3>
-                  <p className="text-sm text-purple-300 leading-relaxed">{desc}</p>
+                  <h3 className="text-base font-black text-gray-900 mb-1.5" style={{ fontFamily: "'Poppins', sans-serif" }}>{label}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                 </div>
-              ))}
-            </div>
-          </RevealSection>
+              </RevealSection>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── CHALLENGES ── */}
-      <div className="py-20 sm:py-28" style={{ background: "#0d0820" }}>
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="relative bg-white py-16 sm:py-24 lg:py-32 overflow-hidden">
+        <XPatternBg />
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 relative z-10">
           <RevealSection>
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-12 sm:mb-16">
               <div className="order-2 lg:order-1">
-                <PhoneMockup src={imgChallenges} alt="EXTRA app – actieve uitdagingen en challenges" />
+                <PhoneMockup src={imgChallenges} alt="EXTRA app – actieve uitdagingen" />
               </div>
               <div className="order-1 lg:order-2">
-                <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Uitdagingen & doelen</span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white mt-3 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Uitdagingen & doelen</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Challenges
                 </h2>
-                <p className="text-purple-200 leading-relaxed mb-6">
+                <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
                   Naast de automatische punten kun je extra verdienen door wekelijkse en maandelijkse
                   challenges te voltooien. Optioneel, maar wel lonend.
                 </p>
-                <div className="space-y-3 mb-8">
+                <div className="space-y-2.5 mb-6">
                   {challenges.slice(0, 4).map(({ icon, title, punten }) => (
-                    <div key={title} className="flex items-center justify-between rounded-xl px-4 py-3 border border-white/10" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <div key={title} className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border-2 border-purple-100 shadow-sm">
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{icon}</span>
-                        <span className="text-sm font-medium text-white">{title}</span>
+                        <span className="text-sm font-semibold text-gray-900">{title}</span>
                       </div>
-                      <span className="text-sm font-bold text-green-400">{punten}</span>
+                      <span className="text-sm font-black text-green-600 bg-green-50 px-2.5 py-1 rounded-full">{punten}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-purple-400">En nog 5+ andere challenges elke maand →</p>
+                <p className="text-xs text-gray-400 font-medium">En nog 5+ andere challenges elke maand →</p>
               </div>
             </div>
           </RevealSection>
 
-          {/* Challenge cards grid */}
           <RevealSection delay={100}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-14">
-              {challenges.map(({ icon, title, desc, punten }) => (
-                <div key={title} className="rounded-2xl p-5 border border-white/10" style={{ background: "rgba(255,255,255,0.04)" }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl">{icon}</span>
-                    <span className="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">{punten}</span>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {challenges.map(({ icon, title, desc, punten }, i) => (
+                <RevealSection key={title} delay={i * 50}>
+                  <div className="bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-sm hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all h-full">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-2xl">{icon}</span>
+                      <span className="text-xs font-black text-green-600 bg-green-100 px-2.5 py-1 rounded-full">{punten}</span>
+                    </div>
+                    <h3 className="text-sm font-black text-gray-900 mb-1.5" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
                   </div>
-                  <h3 className="text-sm font-bold text-white mb-1.5">{title}</h3>
-                  <p className="text-xs text-purple-300 leading-relaxed">{desc}</p>
-                </div>
+                </RevealSection>
               ))}
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
       {/* ── BELONINGEN ── */}
-      <div className="py-20 sm:py-28 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0f0726, #1a0a3e)" }}>
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="py-16 sm:py-24 lg:py-32" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
-                <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Echte beloningen</span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white mt-3 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Echte beloningen</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Beloningen die je kunt verdienen
                 </h2>
-                <p className="text-purple-200 leading-relaxed mb-8">
+                <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
                   Je punten zijn geen punten op papier — ze zijn echte waarde. Wissel ze in
                   voor gadgets, cadeaubonnen, ervaringen of merchandise. Jij kiest.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {beloningen.map(({ icon, title, pts, cat }) => (
-                    <div key={title} className="rounded-xl p-4 border border-white/10" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div key={title} className="bg-white rounded-xl p-4 border-2 border-purple-100 shadow-sm hover:border-purple-200 hover:shadow-md transition-all">
                       <span className="text-2xl block mb-2">{icon}</span>
-                      <p className="text-sm font-bold text-white leading-tight mb-1">{title}</p>
-                      <p className="text-xs text-purple-400">{cat}</p>
-                      <p className="text-xs font-bold text-green-400 mt-2">{pts}</p>
+                      <p className="text-sm font-black text-gray-900 leading-tight mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</p>
+                      <p className="text-xs text-gray-400 font-medium">{cat}</p>
+                      <p className="text-xs font-black text-green-600 mt-2">{pts}</p>
                     </div>
                   ))}
                 </div>
               </div>
-              <PhoneMockup src={imgBeloningen} alt="EXTRA app – beloningen zoals JBL en AirPods inwisselen met punten" />
+              <PhoneMockup src={imgBeloningen} alt="EXTRA app – beloningen zoals JBL en AirPods" />
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
       {/* ── KORTINGEN ── */}
-      <div className="py-20 sm:py-28" style={{ background: "#0d0820" }}>
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="relative bg-white py-16 sm:py-24 lg:py-32 overflow-hidden">
+        <XPatternBg />
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 relative z-10">
           <RevealSection>
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div className="order-2 lg:order-1">
-                <PhoneMockup src={imgKortingen} alt="EXTRA app – kortingscodes en deals van partners zoals Swapfiets" />
+                <PhoneMockup src={imgKortingen} alt="EXTRA app – kortingscodes en partner deals" />
               </div>
               <div className="order-1 lg:order-2">
-                <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Partner deals</span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white mt-3 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Partner deals</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Kortingscodes & Deals
                 </h2>
-                <p className="text-purple-200 leading-relaxed mb-8">
+                <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
                   Naast fysieke beloningen hebben we exclusieve deals met onze partners.
-                  Ruil je punten in voor kortingscodes die je direct kunt gebruiken —
-                  van fietsabonnementen tot tech-kortingen.
+                  Ruil je punten in voor kortingscodes die je direct kunt gebruiken.
                 </p>
                 <div className="space-y-3">
                   {kortingen.map(({ brand, korting, desc }) => (
-                    <div key={brand} className="flex items-center justify-between rounded-xl px-4 py-3.5 border border-white/10" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <div key={brand} className="flex items-center justify-between bg-white rounded-xl px-4 py-3.5 border-2 border-purple-100 shadow-sm hover:border-purple-200 transition-all">
                       <div>
-                        <p className="text-sm font-bold text-white">{brand}</p>
-                        <p className="text-xs text-purple-300">{desc}</p>
+                        <p className="text-sm font-black text-gray-900">{brand}</p>
+                        <p className="text-xs text-gray-500">{desc}</p>
                       </div>
-                      <span className="text-sm font-black text-green-400 shrink-0 ml-4">{korting}</span>
+                      <span className="text-sm font-black text-green-600 bg-green-100 px-3 py-1.5 rounded-full shrink-0 ml-4">{korting}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-purple-400 mt-4">Meer deals worden maandelijks toegevoegd</p>
+                <p className="text-xs text-gray-400 mt-4 font-medium">Meer deals worden maandelijks toegevoegd</p>
               </div>
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
       {/* ── RANGLIJST ── */}
-      <div className="py-20 sm:py-28 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0f0726, #1a0a3e)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.04] pointer-events-none" />
-        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="relative bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950 py-16 sm:py-24 overflow-hidden">
+        <XPatternBgDark />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
-                <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Competitie & status</span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white mt-3 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest mb-4 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
+                  <Trophy className="w-4 h-4" /> Competitie & status
+                </span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mt-0 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   De ranglijst — wie staat er bovenaan?
                 </h2>
-                <p className="text-purple-200 leading-relaxed mb-6">
+                <p className="text-purple-200/80 leading-relaxed mb-8 text-base sm:text-lg">
                   In de EXTRA app zie je maandelijks wie de meeste punten heeft verdiend.
-                  Sta je in de top 3? Dan wacht er een extra beloning. Spannend, motiverend
-                  en eerlijk — want iedereen begint elke maand opnieuw.
+                  Sta je in de top 3? Dan wacht er een extra beloning — eerlijk en motiverend.
                 </p>
                 <div className="space-y-3">
                   {[
-                    { pos: "🥇", label: "1e plaats", extra: "Exlusieve maandbonus" },
+                    { pos: "🥇", label: "1e plaats", extra: "Exclusieve maandbonus" },
                     { pos: "🥈", label: "2e plaats", extra: "Extra puntenbonus" },
                     { pos: "🥉", label: "3e plaats", extra: "Beloningsbonus" },
                   ].map(({ pos, label, extra }) => (
-                    <div key={label} className="flex items-center gap-4 rounded-xl px-4 py-3.5 border border-white/10" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <div key={label} className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3.5 border border-white/10">
                       <span className="text-2xl">{pos}</span>
                       <div>
-                        <p className="text-sm font-bold text-white">{label}</p>
+                        <p className="text-sm font-black text-white">{label}</p>
                         <p className="text-xs text-purple-300">{extra}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <PhoneMockup src={imgRanglijst} alt="EXTRA app – ranglijst met top 3 medewerkers en punten" />
+              <PhoneMockup src={imgRanglijst} alt="EXTRA app – ranglijst met top 3 medewerkers" />
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
       {/* ── FAQ ── */}
-      <div className="py-20 sm:py-28" style={{ background: "#0d0820" }}>
+      <section className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
         <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <RevealSection>
-            <div className="text-center mb-12">
-              <span className="text-purple-400 text-sm font-semibold uppercase tracking-widest">Veelgestelde vragen</span>
-              <h2 className="text-3xl sm:text-4xl font-black text-white mt-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Veelgestelde vragen</span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Alles over EXTRAATJE
               </h2>
             </div>
@@ -436,54 +507,58 @@ export default function Extraatje() {
                 { q: "Hoe werken de statusniveaus?", a: "Je begint als BRONS-medewerker. Naarmate je meer punten verdient, stijg je naar ZILVER (10.000 ptn), GOUD (15.000 ptn) en DIAMANT (25.000 ptn). Hogere niveaus geven toegang tot exclusievere beloningen." },
                 { q: "Kan ik meedoen als ik niet bij EXTRA werk?", a: "Het EXTRAATJE systeem is exclusief voor medewerkers van EXTRA. Nog niet aangemeld? Doe dat dan via onze aanmeldpagina." },
               ].map(({ q, a }) => (
-                <div key={q} className="rounded-2xl p-5 border border-white/10" style={{ background: "rgba(255,255,255,0.04)" }}>
-                  <h3 className="text-sm font-bold text-white mb-2">{q}</h3>
-                  <p className="text-sm text-purple-300 leading-relaxed">{a}</p>
+                <div key={q} className="bg-white rounded-2xl p-5 sm:p-6 border-2 border-purple-100 shadow-sm hover:border-purple-200 transition-all">
+                  <h3 className="text-sm sm:text-base font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>{q}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{a}</p>
                 </div>
               ))}
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
-      {/* ── CTA BOTTOM ── */}
-      <div className="py-20 sm:py-28 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #4c1d95, #6d28d9, #7c3aed)" }}>
-        <img src={xPatroon} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.08] pointer-events-none" />
+      {/* ── CTA ── */}
+      <section className="relative bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950 py-16 sm:py-24 overflow-hidden">
+        <XPatternBgDark />
         <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8 text-center">
           <RevealSection>
-            <Gift className="h-12 w-12 text-yellow-400 mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-5xl font-black text-white mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Klaar om te verdienen?
+            <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest mb-5 bg-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10">
+              <Gift className="w-4 h-4" /> Klaar om te verdienen?
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black text-white mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Begin vandaag nog met verdienen
             </h2>
-            <p className="text-purple-200 text-lg mb-8 leading-relaxed">
-              Meld je aan als medewerker bij EXTRA en begin vandaag nog met het verzamelen van punten.
-              Je eerste punten verdien je al bij je eerste shift.
+            <p className="text-purple-200/80 text-base sm:text-lg mb-8 leading-relaxed">
+              Meld je aan als medewerker bij EXTRA en verdien je eerste punten al bij je eerste shift.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="/aanmelden"
-                className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-purple-900 text-base shadow-xl"
-                style={{ background: "linear-gradient(135deg, #fde68a, #fbbf24)" }}
+                className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
               >
-                Meld je nu aan <ArrowRight className="h-5 w-5" />
+                Meld je nu aan <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <Link href="/landing" className="inline-flex items-center gap-2 text-white/80 hover:text-white font-medium transition-colors text-sm">
-                Meer over EXTRA <ChevronRight className="h-4 w-4" />
+              <Link
+                href="/landing"
+                className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
+              >
+                Meer over EXTRA <ChevronRight className="w-5 h-5" />
               </Link>
             </div>
           </RevealSection>
         </div>
-      </div>
+      </section>
 
-      {/* ── MINI FOOTER ── */}
-      <div className="py-8 border-t border-white/10 text-center" style={{ background: "#0a0518" }}>
-        <div className="flex items-center justify-center gap-6 text-xs text-purple-400">
-          <Link href="/landing" className="hover:text-white transition-colors">Home</Link>
-          <Link href="/aanmelden" className="hover:text-white transition-colors">Aanmelden</Link>
-          <Link href="/personeel-gezocht" className="hover:text-white transition-colors">Opdrachtgevers</Link>
+      {/* ── FOOTER ── */}
+      <footer className="py-8 border-t border-purple-100 bg-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-center gap-6 text-xs text-gray-400 flex-wrap">
+          <Link href="/landing" className="hover:text-purple-600 transition-colors">Home</Link>
+          <Link href="/over-extra" className="hover:text-purple-600 transition-colors">Over EXTRA</Link>
+          <Link href="/over-extra/ons-team" className="hover:text-purple-600 transition-colors">Ons team</Link>
+          <Link href="/aanmelden" className="hover:text-purple-600 transition-colors">Aanmelden</Link>
           <span>© 2025 EXTRA Hospitality Staffing</span>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
