@@ -10,7 +10,7 @@ import {
 import heroBgImage from "@assets/hero-background.png";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import screenDashboard from "@assets/EXTRA_app_1772394156269.png";
+import screenDashboard from "@assets/IMG_8971_1772395165096.png";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.png";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
 import logoFunda from "@assets/Logo_funda_1771267205959.png";
