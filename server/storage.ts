@@ -42,7 +42,9 @@ import {
   type SalaryScale, type InsertSalaryScale,
   type CandidateAuditLog, type InsertCandidateAuditLog,
   type CandidateImport, type InsertCandidateImport,
-  type CandidateWithDetails
+  type CandidateWithDetails,
+  applications as applicationsTable,
+  type Application, type InsertApplication,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -329,6 +331,23 @@ export interface IStorage {
   getCandidateImport(id: number): Promise<CandidateImport | undefined>;
   updateCandidateImport(id: number, importData: Partial<InsertCandidateImport>): Promise<CandidateImport | undefined>;
   getCandidateImports(): Promise<CandidateImport[]>;
+
+  // ==========================================
+  // SOLLICITATIES (Applications) methods
+  // ==========================================
+  createApplication(app: InsertApplication): Promise<Application>;
+  getApplications(filters?: {
+    functionType?: string;
+    interviewer?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ applications: Application[]; total: number }>;
+  getApplicationById(id: number): Promise<Application | undefined>;
+  updateApplicationStatus(id: number, status: string): Promise<Application | undefined>;
 }
 
 // In-memory storage implementation
@@ -363,6 +382,7 @@ export class MemStorage implements IStorage {
   private staffPools: Map<number, StaffPool>;
   private poolMembers: Map<number, PoolMember>;
   private challengeRequests: Map<number, any>;
+  private applicationRecords: Map<number, Application>;
   
   private currentIds: {
     applicants: number;
@@ -395,6 +415,7 @@ export class MemStorage implements IStorage {
     staffPools: number;
     poolMembers: number;
     challengeRequests: number;
+    applicationRecords: number;
   };
 
   constructor() {
@@ -460,8 +481,10 @@ export class MemStorage implements IStorage {
       assignments: 1,
       staffPools: 1,
       poolMembers: 1,
-      challengeRequests: 1
+      challengeRequests: 1,
+      applicationRecords: 1
     };
+    this.applicationRecords = new Map();
     
     // Initialiseer een admin gebruiker
     this.createUser({
@@ -3381,6 +3404,87 @@ export class MemStorage implements IStorage {
 
     this.challengeRequests.set(id, updatedRequest);
     return updatedRequest;
+  }
+
+  // ==========================================
+  // SOLLICITATIES (Applications) implementation
+  // ==========================================
+  async createApplication(app: InsertApplication): Promise<Application> {
+    const id = this.currentIds.applicationRecords++;
+    const record: Application = {
+      id,
+      candidateId: app.candidateId ?? null,
+      functionType: app.functionType,
+      interviewer: app.interviewer ?? null,
+      status: app.status ?? "nieuw",
+      firstName: app.firstName ?? null,
+      lastName: app.lastName ?? null,
+      email: app.email ?? null,
+      phone: app.phone ?? null,
+      city: app.city ?? null,
+      assessmentRating: app.assessmentRating ?? null,
+      salaryScale: app.salaryScale ?? null,
+      formData: app.formData ?? null,
+      createdAt: new Date(),
+    };
+    this.applicationRecords.set(id, record);
+    return record;
+  }
+
+  async getApplications(filters?: {
+    functionType?: string;
+    interviewer?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ applications: Application[]; total: number }> {
+    let all = Array.from(this.applicationRecords.values()).sort(
+      (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
+    if (filters?.functionType && filters.functionType !== 'alle') {
+      all = all.filter(a => a.functionType === filters.functionType);
+    }
+    if (filters?.interviewer && filters.interviewer !== 'alle') {
+      all = all.filter(a => a.interviewer === filters.interviewer);
+    }
+    if (filters?.status && filters.status !== 'alle') {
+      all = all.filter(a => a.status === filters.status);
+    }
+    if (filters?.search) {
+      const q = filters.search.toLowerCase();
+      all = all.filter(a =>
+        `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
+        (a.email || '').toLowerCase().includes(q)
+      );
+    }
+    if (filters?.dateFrom) {
+      const from = new Date(filters.dateFrom);
+      all = all.filter(a => new Date(a.createdAt!) >= from);
+    }
+    if (filters?.dateTo) {
+      const to = new Date(filters.dateTo);
+      to.setHours(23, 59, 59, 999);
+      all = all.filter(a => new Date(a.createdAt!) <= to);
+    }
+    const total = all.length;
+    const offset = filters?.offset ?? 0;
+    const limit = filters?.limit ?? 100;
+    return { applications: all.slice(offset, offset + limit), total };
+  }
+
+  async getApplicationById(id: number): Promise<Application | undefined> {
+    return this.applicationRecords.get(id);
+  }
+
+  async updateApplicationStatus(id: number, status: string): Promise<Application | undefined> {
+    const app = this.applicationRecords.get(id);
+    if (!app) return undefined;
+    const updated = { ...app, status };
+    this.applicationRecords.set(id, updated);
+    return updated;
   }
 
   // Challenge completion methods

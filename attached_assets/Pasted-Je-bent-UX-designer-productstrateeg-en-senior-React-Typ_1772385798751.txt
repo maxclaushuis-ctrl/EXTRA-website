@@ -1,0 +1,71 @@
+Je bent UX-designer, productstrateeg en senior React/TypeScript developer binnen dit project.
+We hebben nu:
+Het tabblad “Kandidaten” in /dashboard-mockup, waar alle basisgegevens staan.
+Het /sollicitatieformulier, waar de prefilled data van een kandidaat wordt aangevuld tijdens het gesprek.
+Een compleet werkende prefill-flow.
+Nu willen we de volgende belangrijke stap zetten:
+alle ingevulde sollicitatieformulieren moeten overzichtelijk getoond worden in een volledig nieuw tabblad “Sollicitanten”.
+1. Nieuwe datastroom
+Bij het versturen van het sollicitatieformulier moet een nieuw record worden opgeslagen in een nieuwe tabel/collection, bijvoorbeeld sollicitanten of applications.
+Elke sollicitatie bevat:
+ID van de sollicitatie
+ID van de kandidaat
+Functie waarvoor wordt gesolliciteerd (altijd één van deze vier):
+“Housekeeping”, “Horecamedewerker”, “Chef”, “Front-office”
+Datum + tijd van het gesprek
+Wie het gesprek heeft afgenomen
+Alle antwoorden die in het sollicitatieformulier zijn ingevuld (per functie verschillende vragen)
+Replit heeft toegang tot alle vraag-structuren behalve Front-office — laat Front-office generiek.
+2. Volledig nieuwe inrichting van het tabblad “Sollicitanten”
+Het tabblad moet opnieuw opgebouwd worden met de volgende UX-structuur:
+2.1 Bovenste sectie – Filters
+Maak bovenaan het tabblad overzichtelijke filters:
+Filter op functie met exact deze vier opties:
+Housekeeping, Horecamedewerker, Chef, Front-office
+Filter op datum (van/tot of presets zoals “Laatste week / maand”)
+Optioneel: filter op interviewer
+Door de filter “Functie” te gebruiken, kan de admin alle sollicitanten per functie bekijken.
+3. Hoofdtabel – Algemene informatie (voor alle functies)
+Ontwerp één uniforme hoofdtabel waarin van élke sollicitatie dezelfde algemene informatie zichtbaar is:
+Kolommen (in deze volgorde):
+Datum + tijdstip gesprek
+Voor- en achternaam sollicitant
+Functie
+Woonplaats
+E-mailadres
+Telefoonnummer
+Wie het gesprek heeft afgenomen (interviewer)
+Status (bijv. nieuw, beoordeeld, afgewezen, aangenomen)
+Acties (zoals “bekijken”)
+De admin moet hiermee een totaaloverzicht hebben van alle sollicitaties, ongeacht functie.
+4. Functie-specifieke details – door Replit zelf in te vullen op basis van de vragen
+Wanneer een admin op een sollicitatie klikt (bijv. via een detailpaneel, drawer of modal):
+Toon eerst opnieuw de algemene gegevens.
+Daaronder toon je een sectie “Antwoorden per functie”.
+Belangrijk:
+Replit moet zelf bepalen welke velden worden weergegeven per functie, op basis van de vragen uit het sollicitatieformulier.
+Dus:
+Voor Housekeeping → toon de vragen die horen bij de Housekeeping-flow
+Voor Horecamedewerker → toon de vragen die horen bij Horecamedewerker
+Voor Chef → toon de vragen uit de Chef-flow
+Voor Front-office → toon de (voorlopig) generieke vraag/antwoord lijst
+Niets hoeft handmatig gecodeerd te worden; Replit mag de vragen automatisch ophalen uit de bestaande formulierlogica en die gebruiken als blueprint voor welke velden zichtbaar moeten zijn.
+5. UX-eisen
+Het tabblad moet rustig, consistent en overzichtelijk zijn, in dezelfde stijl als de rest van /dashboard-mockup.
+Gebruik:
+duidelijke uitlijning
+matching fonts/colors
+hover states
+truncation voor te lange tekst
+Zorg voor een lege-staat bij geen resultaten:
+“Nog geen sollicitanten voor deze functie.”
+6. Wat Replit moet opleveren
+Bij oplevering verwacht ik:
+Een volledig nieuw tabblad “Sollicitanten” met filters, tabel en detailweergave.
+Functie-specifieke dataweergave op basis van formulier-vragen (Door Replit zelf bepaald).
+De nieuwe datastroom van het sollicitatieformulier → sollicitanten-tab (met opslag).
+Een korte technische samenvatting:
+welke componenten zijn aangemaakt of aangepast
+hoe filtering werkt
+hoe de functie-specifieke detailweergave automatisch wordt opgebouwd
+JSON-structuur van opgeslagen sollicitaties

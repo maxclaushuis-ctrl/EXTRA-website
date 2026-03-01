@@ -1091,3 +1091,34 @@ export const insertStaffingRequestSchema = createInsertSchema(staffingRequests).
 
 export type InsertStaffingRequest = z.infer<typeof insertStaffingRequestSchema>;
 export type StaffingRequest = typeof staffingRequests.$inferSelect;
+
+// ==========================================
+// SOLLICITATIES (Submitted application forms)
+// ==========================================
+
+export const applicationStatusEnum = pgEnum('application_status', ['nieuw', 'beoordeeld', 'aangenomen', 'afgewezen']);
+
+export const applications = pgTable("applications", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id"),
+  functionType: text("function_type").notNull(),
+  interviewer: text("interviewer"),
+  status: text("status").default("nieuw"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  email: text("email"),
+  phone: text("phone"),
+  city: text("city"),
+  assessmentRating: text("assessment_rating"),
+  salaryScale: text("salary_scale"),
+  formData: json("form_data"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertApplicationSchema = createInsertSchema(applications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertApplication = z.infer<typeof insertApplicationSchema>;
+export type Application = typeof applications.$inferSelect;

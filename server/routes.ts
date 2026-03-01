@@ -4526,6 +4526,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public Sollicitatie Form API (no auth required)
   // ==========================================
   
+  // GET applications for admin
+  app.get("/api/admin/applications", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { functionType, interviewer, status, dateFrom, dateTo, search, limit, offset } = req.query;
+      const result = await storage.getApplications({
+        functionType: functionType as string,
+        interviewer: interviewer as string,
+        status: status as string,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
+        search: search as string,
+        limit: limit ? parseInt(limit as string) : 200,
+        offset: offset ? parseInt(offset as string) : 0,
+      });
+      return res.json(result);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      return res.status(500).json({ message: "Fout bij ophalen sollicitaties" });
+    }
+  });
+
+  app.get("/api/admin/applications/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const app = await storage.getApplicationById(parseInt(req.params.id));
+      if (!app) return res.status(404).json({ message: "Sollicitatie niet gevonden" });
+      return res.json(app);
+    } catch (error) {
+      console.error("Error fetching application:", error);
+      return res.status(500).json({ message: "Fout bij ophalen sollicitatie" });
+    }
+  });
+
+  app.patch("/api/admin/applications/:id/status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { status } = req.body;
+      const updated = await storage.updateApplicationStatus(parseInt(req.params.id), status);
+      if (!updated) return res.status(404).json({ message: "Sollicitatie niet gevonden" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      return res.status(500).json({ message: "Fout bij bijwerken status" });
+    }
+  });
+
   app.post("/api/sollicitatie", async (req: Request, res: Response) => {
     try {
       const data = req.body;
@@ -4589,6 +4633,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const candidate = await storage.createCandidate(candidateData as any);
+
+      // Also save as an application record with full form data
+      await storage.createApplication({
+        candidateId: data.linkedCandidateId || candidate.id,
+        functionType: data.functionType,
+        interviewer: data.interviewer || null,
+        status: "nieuw",
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email || null,
+        phone: data.phone || null,
+        city: data.city || null,
+        assessmentRating: data.assessmentRating || null,
+        salaryScale: data.salaryScale || null,
+        formData: data,
+      });
 
       return res.status(201).json({ 
         message: "Sollicitatie succesvol opgeslagen",
