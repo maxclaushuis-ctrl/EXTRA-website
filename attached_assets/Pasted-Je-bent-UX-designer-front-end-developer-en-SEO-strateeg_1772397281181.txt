@@ -1,0 +1,97 @@
+Je bent UX-designer, front-end developer en SEO-strateeg binnen dit project.
+We willen een nieuwe pagina bouwen: /over-extra/ons-team
+Dit is een subpagina van /over-extra en moet visueel, technisch en inhoudelijk aansluiten op die pagina.
+De content op /ons-team is voorlopig fictief, zodat we later zelf echte teamleden kunnen toevoegen.
+1. Doel van deze pagina
+De pagina /over-extra/ons-team moet:
+Het team van EXTRA op een energieke, jonge manier presenteren
+De cultuur van EXTRA zichtbaar maken
+SEO-waarde toevoegen voor zoektermen als team, ons team, horeca team, over ons
+Naadloos aansluiten op de pagina “Over EXTRA”
+Makkelijk uitbreidbaar zijn (nieuwe teamleden kunnen snel worden toegevoegd)
+Consistent blijven met onze merkidentiteit (EXTRA-stijl)
+2. Navigatie & hiërarchie (BELANGRIJK)
+Deze pagina moet technisch worden opgezet als een subpagina van /over-extra:
+Hoofdroute: /over-extra
+Subroute: /over-extra/ons-team
+Aanpassingen:
+Breadcrumbs toevoegen bovenaan de pagina:
+Home → Over EXTRA → Ons Team
+In de sidebar of sectienavigatie van Over EXTRA moet een nieuwe link komen naar Ons Team.
+De hoofd CTA op /over-extra mag (optioneel) verwijzen naar de nieuwe team-pagina met tekst als:
+→ “Maak kennis met ons team”
+Replit mag het beste UX-patroon gebruiken (breadcrumbs / subnavigation / interne linking).
+3. SEO-instellingen voor deze subpagina
+Replit moet:
+Meta-title schrijven
+Meta-description schrijven
+Canonical genereren
+OG-tags toevoegen
+Interne links naar Over EXTRA en andere relevante pagina’s
+Structured data (Organization / Person schema) mag optioneel met placeholders
+H1, H2, H3 structuur consistent opbouwen
+SEO-vereisten voor subpagina’s:
+H1 moet uniek zijn (niet gelijk aan Over EXTRA)
+Gebruik zoekwoorden zoals:
+team, horeca team, uitzendbureau team, EXTRA team, ons team, achter de schermen EXTRA
+4. Structuur van de pagina
+H1: Ons team – de mensen achter EXTRA
+Intro-tekst (speels & modern):
+Replit mag zelf een goede intro schrijven, maar dit is de stijl:
+Bij EXTRA draait alles om mensen. Jong, energiek en een tikje eigenwijs — precies zoals we het leuk vinden. Dit is ons team: de mensen die elke dag zorgen dat alles loopt zoals het moet lopen… en soms net een beetje EXTRA.
+5. Teamgrid (fictieve teamleden)
+Replit moet een component-based grid maken (3–4 kolommen desktop):
+Elk teamlid bevat:
+Avatar / foto-placeholder
+Naam
+Functie
+Korte bio (2–4 zinnen)
+Eventueel een fun highlight (microbadge)
+Replit moet zelf fictieve teamleden verzinnen.
+De bios moeten EXTRA-stijl zijn: jong, leuk, energiek, speels, beetje humor.
+Voorbeeldstijl (maar Replit moet meer en beter schrijven):
+Eveline – Operations Manager
+Geen obstakel is te hoog voor Eveline. Hoe groter de uitdaging, hoe meer energie ze krijgt. Ze schakelt sneller dan je wifi op kantoor en staat bekend om haar “komt goed”-mentaliteit.
+Jayden – Planner
+Jayden plant niet alleen mensen in — hij plant chaos uit. Als iemand last-minute uitvalt, heeft hij al een oplossing voordat jij “no-show” kunt zeggen.
+Lotte – Recruiter
+Lotte spot talent van drie kilometer afstand. Ze weet precies wie waar past. Haar motto: “Iedereen heeft een EXTRA-atje — je moet ’m alleen even vinden.”
+Milan – Klantenmanager
+Milan is de brug tussen klanten en medewerkers. Altijd positief, altijd strak geregeld. Hij kent onze klanten bij naam… en soms ook hun honden.
+Replit mag:
+Het aantal fictieve teamleden zelf uitbreiden
+De bios productievere en leuker maken
+Icons en micro-animaties toevoegen (hover lifts, soft shadow, etc.)
+6. Front-end & UX-eisen
+De pagina moet:
+Volledig in EXTRA-stijl zijn (kleuren, fonts, vormen, spacing)
+Voldoende witruimte hebben voor rust en overzicht
+Mobile-first worden opgebouwd
+Een responsive grid krijgen:
+1 kolom mobiel
+2 kolommen tablet
+3–4 desktop
+Hover interactions voor teamcards
+Duidelijke CTA onderaan, bijvoorbeeld:
+“Werken bij EXTRA? Bekijk onze vacatures.”
+Laat Replit dit zelf vormgeven.
+7. SEO-contentblok (optioneel, maar sterk voor ranking)
+Onder het grid mag Replit een SEO-tekst toevoegen (150–250 woorden) over:
+De cultuur van EXTRA
+Hoe jong het team is
+Hoe we werken (snel schakelen, flexibiliteit, communicatie, beloning)
+Wat EXTRA uniek maakt in de hospitality-sector
+De tekst moet modern, energiek en goed scanbaar zijn.
+8. Toekomstbestendigheid
+Replit moet de pagina zo inrichten dat:
+Teamleden makkelijk kunnen worden toegevoegd/verwijderd
+De bio’s onafhankelijk van de structuur kunnen worden aangepast
+De pagina onderdeel wordt van de volledige content-structuur (niet losstaand)
+9. Oplevering
+Bij oplevering verwachten we:
+Werkende subpagina op /over-extra/ons-team
+Teamgrid met fictieve teamleden en bio’s
+SEO-optimalisatie (meta, og, canonical, H1/H2/H3)
+Breadcrumbs + subnavigation van Over EXTRA
+UX-consistente, responsive front-end layout
+Replit mag vragen stellen als bepaalde keuzes onduidelijk zijn of refinement nodig is.

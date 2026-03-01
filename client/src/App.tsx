@@ -18,6 +18,8 @@ import Aanmelden from "@/pages/Aanmelden";
 import NieuwsPage from "@/pages/NieuwsPage";
 import NieuwsArtikel from "@/pages/NieuwsArtikel";
 import Extraatje from "@/pages/Extraatje";
+import OverExtra from "@/pages/OverExtra";
+import OnsTeam from "@/pages/OnsTeam";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -80,7 +82,7 @@ function Router() {
   const isDashboardMockup = location.startsWith('/dashboard-mockup');
 
   // Publieke pagina's krijgen nooit de interne nav te zien
-  const isPublicPage = ['/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/brochure', '/brochures', '/events', '/nieuws'].some(
+  const isPublicPage = ['/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/brochure', '/brochures', '/events', '/nieuws', '/extraatje', '/over-extra'].some(
     p => location === p || location.startsWith(p + '/')
   );
   
@@ -107,6 +109,8 @@ function Router() {
         <Route path="/nieuws" component={NieuwsPage} />
         <Route path="/nieuws/:slug" component={NieuwsArtikel} />
         <Route path="/extraatje" component={Extraatje} />
+        <Route path="/over-extra/ons-team" component={OnsTeam} />
+        <Route path="/over-extra" component={OverExtra} />
         <Route path="/dashboard-mockup" component={DashboardMockup} />
         
         {/* Gebruiker routes */}

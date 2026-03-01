@@ -27,6 +27,7 @@ The application utilizes a monorepo structure, organizing code into `client/` fo
 -   **Authentication & Authorization**: Session-based with role-based access control and WebSocket authentication.
 -   **Marketing & Communications**: Email template system, campaign management, and automation triggers (e.g., birthdays).
 -   **Candidate Management**: Comprehensive pre-onboarding system for candidates, including skills assessment, availability, and GDPR compliance features.
+-   **Public Website Pages**: `/landing`, `/extraatje` (rewards system showcase), `/over-extra` (company about page), `/over-extra/ons-team` (team page with 9 fictional members, SEO-optimized with breadcrumbs, subnav, JSON-LD Person schema).
 
 ### UI/UX
 -   Modern UI built with shadcn/ui.
