@@ -1,0 +1,73 @@
+1. Vervang mockups + update huidige sectie
+Vervang in de bestaande sectie “Direct salaris na elke gewerkte shift” de huidige mockups door de twee meegeleverde afbeeldingen:
+Jixbee Payout succes.png
+Jixbee Gewerkte uren.png
+Zorg dat ze mooi uitgelijnd zijn, met subtiele schaduwen en een lichte floating-animatie (zoals de rest van de website).
+Maak ook een knop:
+Hoe werkt dagbetaling? →
+Deze knop moet leiden naar een nieuwe pagina die je hieronder bouwt.
+2. Nieuwe pagina: /hoe-werkt-dagbetaling
+Maak een compleet nieuwe UX-pagina in de stijl van EXTRA — energiek, jong, professioneel, hospitality vibe.
+Doel: uitleggen hoe dagbetaling werkt op een manier die kandidaten (young professionals) enthousiast maakt én vertrouwen geeft.
+Sectie-indeling:
+🔹 Hero sectie
+Grote titel:
+Dagbetaling: direct grip op je inkomsten
+Subtekst:
+“Na elke gewerkte shift zie je direct wat je hebt verdiend en staat jouw voorschot klaar in Jixbee. Supersnel, transparant en volledig geregeld via EXTRA.”
+Voeg één van de mockups toe (jouw keuze welke het beste past).
+🔹 Sectie: Hoe werkt dagbetaling?
+Visueel in 3 stappen (iconen in EXTRA-stijl):
+Stap 1 — Je hebt gewerkt
+Kandidaat werkt een shift en meldt zich via de EXTRA app af.
+Stap 2 — Wij keuren je uren goed
+De uren komen bij ons binnen → EXTRA HQ keurt ze handmatig goed.
+Stap 3 — Voorschot komt direct beschikbaar in Jixbee
+Bij loonheffing AAN: €75 wordt direct beschikbaar gesteld.
+Bij loonheffing UIT: 50% van de verdiende shift wordt direct beschikbaar.
+Het bedrag verschijnt automatisch in de Jixbee-wallet.
+Het restbedrag wordt verwerkt in het reguliere loon.
+Zorg voor cards, iconen, checkmarks en een modern horizontaal stappenpad.
+🔹 Sectie: Voorbeeld pushmeldingen
+Voeg realistische iPhone-style pushmeldingen toe (zoals system notifications).
+Gebruik luchtige, EXTRA-achtige copy die vertrouwen én enthousiasme uitstraalt:
+Voorbeeldmeldingen
+“Je uren bij Marriott zijn goedgekeurd ✔️”
+“€150,- staat klaar in je Jixbee account 💸”
+“Voorschot uitbetaald — check je Jixbee app 🚀”
+Toon 3–4 notificatiecards, inklapbare animatie mag.
+🔹 Sectie: Waarom dagbetaling werkt
+4 voordelen in gridvorm (zoals alle EXTRA secties):
+Meteen je geld
+Geen wachttijd, direct controle over je inkomsten.
+Super transparant
+Je ziet altijd exact hoeveel je hebt verdiend, uitbetaald en open hebt staan.
+100% veilig payroll systeem
+Alles via gecertificeerde payroll — geen verrassingen achteraf.
+Werkt elke dag + weekend
+Werkt 7 dagen per week, altijd automatisch.
+🔹 Sectie: Veelgestelde vragen (FAQ)
+(gebruik het bestaande FAQ-component)
+Voorbeelden:
+Hoe werkt dagbetaling met loonheffing aan/uit?
+Wat gebeurt er als er onduidelijkheid is over mijn uren?
+Kan het voorschot lager of hoger zijn?
+Hoe snel staat het op mijn rekening?
+🔹 Sectie: CTA afsluiter
+Maak een opvallende paarse CTA-sectie:
+Titel:
+“Klaar om direct voor je werk betaald te worden?”
+Knoppen:
+Meld je aan in 2 minuten
+Bekijk functies
+Zorg dat deze CTA dezelfde energie heeft als de homepage-CTA’s.
+3. Tone of voice & visuele richtlijnen
+Gebruik de EXTRA-stijl: jong, professioneel, innovatief, hospitality-vibe.
+Werk met paarstinten, gradients, zachte schaduwen en floating elements.
+Teksten: kort, actief, energiek, conversie-gericht.
+Gebruik de X-patterns subtiel in de achtergrond.
+4. Technische instructie
+Maak /hoe-werkt-dagbetaling als nieuwe route.
+Voeg SEO-titels & meta descriptions toe.
+Optimaliseer de mockups voor laadsnelheid.
+Zorg dat de CTA-knop in de originele sectie linken naar deze nieuwe pagina.
