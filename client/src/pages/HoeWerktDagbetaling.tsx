@@ -189,7 +189,7 @@ export default function HoeWerktDagbetaling() {
                 <span className="relative z-10">direct grip</span>
                 <span className="absolute bottom-1 left-0 right-0 h-3 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
-              {" "}op je<br />inkomsten
+              {" "}op je inkomsten
             </h1>
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-lg leading-relaxed font-medium mb-8">
               Na elke gewerkte shift zie je direct wat je hebt verdiend en staat jouw voorschot klaar in Jixbee. Supersnel, transparant en volledig geregeld via EXTRA.
