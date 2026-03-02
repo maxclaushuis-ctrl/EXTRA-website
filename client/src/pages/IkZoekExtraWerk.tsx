@@ -291,9 +291,8 @@ export default function IkZoekExtraWerk() {
               </a>
 
               {/* CTA */}
-              <a href="/aanmelden" className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[18px] font-bold px-8 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2.5 border border-purple-500/20">
-                <ArrowRight className="w-[18px] h-[18px]" />
-                Aanmelden
+              <a href="/aanmelden" className={`ml-4 text-[18px] font-black px-8 py-3.5 rounded-full transition-all hover:shadow-2xl hover:-translate-y-0.5 flex items-center gap-2.5 ${scrolled ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30" : "bg-white text-purple-700 hover:shadow-white/30 border-2 border-white"}`}>
+                Aanmelden <ArrowRight className="w-[18px] h-[18px]" />
               </a>
             </div>
 
