@@ -148,15 +148,15 @@ export default function IkZoekExtraWerk() {
   }, []);
 
   useEffect(() => {
-    document.title = "Flexibel werk in de hospitality — wanneer jij wil | EXTRA";
+    document.title = "Flexibel werk in de horeca & hospitality — wanneer het jou uitkomt | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Flexibel werk in de hospitality — via EXTRA. Dagbetaling, premium locaties, EXTRAATJE rewards en shifts die bij jou passen. Meld je aan in 2 minuten.");
-    setMeta("og:title", "Flexibel werk in de hospitality — EXTRA", true);
+    setMeta("description", "Werken in de horeca op jouw voorwaarden. Kies je eigen flexibele diensten bij hotels, events & restaurants. Dagbetaling na elke shift, EXTRAATJE rewards en iedereen in loondienst. Meld je aan in 2 minuten.");
+    setMeta("og:title", "Flexibel werk in de horeca & hospitality — EXTRA", true);
     setMeta("og:description", "Werken bij Marriott, Amrath, NH Hotels en meer. Dagbetaling via Jixbee, EXTRAATJE rewards en échte doorgroeimogelijkheden.", true);
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
@@ -380,18 +380,17 @@ export default function IkZoekExtraWerk() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Flexibel werk<br />
-              in de{" "}
+              Flexibel werk in de<br />
               <span className="relative inline-block">
-                <span className="relative z-10">hospitality</span>
+                <span className="relative z-10">horeca & hospitality</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
               ,<br />
-              wanneer jij wilt!
+              wanneer het jou uitkomt
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Kies je eigen shifts, word dagelijks uitbetaald en werk op de mooiste hotellocaties en evenementenplekken. EXTRA begeleidt je en beloont je prestaties.
+              Werken in de horeca op jouw voorwaarden. Kies zelf je flexibele diensten bij hotels, events & restaurants — en word <strong className="text-white">dagelijks uitbetaald</strong> via de EXTRA app.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -406,13 +405,13 @@ export default function IkZoekExtraWerk() {
             {/* Micro badges */}
             <div className="mt-8 flex flex-wrap gap-2.5">
               {[
-                { icon: Zap, label: "Dagbetaling" },
-                { icon: MapPin, label: "Premium locaties" },
-                { icon: Gift, label: "EXTRAATJE rewards" },
-                { icon: Shield, label: "Altijd begeleid" },
-              ].map(({ icon: Icon, label }) => (
+                { emoji: "⚡", label: "Dagbetaling na elke shift" },
+                { emoji: "🏨", label: "Hotels, events & restaurants" },
+                { emoji: "🎁", label: "EXTRAATJE: spaar punten" },
+                { emoji: "✅", label: "Iedereen in loondienst" },
+              ].map(({ emoji, label }) => (
                 <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
-                  <Icon className="w-3 h-3" /> {label}
+                  {emoji} {label}
                 </span>
               ))}
             </div>
