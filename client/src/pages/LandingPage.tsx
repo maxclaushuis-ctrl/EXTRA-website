@@ -1393,6 +1393,18 @@ export default function LandingPage() {
               );
             })()}
           </RevealSection>
+
+          <RevealSection delay={300}>
+            <div className="flex justify-center mt-10 sm:mt-12">
+              <a
+                href="/hoe-extra-werkt"
+                className="inline-flex items-center gap-2 font-bold px-7 py-3.5 rounded-full text-white text-sm sm:text-base transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-500/25"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
+              >
+                Lees EXTRA <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+          </RevealSection>
         </div>
       </section>
 

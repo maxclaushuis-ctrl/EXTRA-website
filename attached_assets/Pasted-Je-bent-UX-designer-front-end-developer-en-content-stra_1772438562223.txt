@@ -1,0 +1,106 @@
+Je bent UX-designer, front-end developer en content-strateeg binnen dit project.
+We willen een nieuwe pagina die de werkwijze van EXTRA duidelijk en overtuigend uitlegt — gericht op zowel werkgevers als werknemers.
+Deze pagina moet het vertrouwen versterken, helder zijn en onze unieke manier van werken laten zien.
+Daarnaast moet het aansluiten op onze jonge, energieke EXTRA-stijl, zonder te veel tekst op de homepage zelf.
+1. Nieuwe button toevoegen aan de homepage
+Plaats in de sectie “Hoe EXTRA werkt” een nieuwe button met de tekst:
+“Lees EXTRA”
+→ Wanneer de bezoeker hierop klikt, moet hij worden doorgestuurd naar een nieuwe subpagina:
+/hoe-extra-werkt
+De button moet dezelfde styling hebben als de rest van de knoppen op de website (kleur, font, hover, spacing).
+2. Nieuwe pagina: /hoe-extra-werkt
+Replit moet een pagina bouwen die:
+De werkwijze van EXTRA helder uitlegt
+Twee routes bevat: Voor werkgevers en Voor werknemers
+Qua UX, design, kleurgebruik en componenten volledig aansluit op de bestaande EXTRA-stijl
+Scanbaar, overzichtelijk en modern is
+Converteert door duidelijkheid en structuur
+De pagina moet worden opgebouwd met duidelijke H2-secties, iconen, process-steps en box-cards.
+3. Paginastructuur
+🎯 H1: Hoe EXTRA werkt
+Intro
+Replit mag zelf een korte, moderne, toegankelijke introductie schrijven waarin wordt uitgelegd dat EXTRA zowel werkgevers als werknemers ondersteunt met een slimme, geautomatiseerde en mensgerichte aanpak.
+H2: Voor werkgevers
+Maak hiervan een stappenplan (step-by-step) in een visueel duidelijke flow.
+Gebruik dezelfde UI-stijl als de “Hoe EXTRA werkt” sectie op de homepage.
+Hier zijn de stappen die Replit moet verwerken (maar mag inkorten/visualiseren voor beste UX):
+Stap 1: We komen persoonlijk langs
+We inventariseren samen met de klant de behoeften, doelstellingen en piekmomenten.
+We achterhalen wat er nodig is aan flexibele én vaste ondersteuning.
+Stap 2: Raamovereenkomst & onboarding
+Voordat we starten ontvangt de klant een raamovereenkomst die voldoet aan alle wet- & regelgeving (incl. ABU, Wet DBA, StiPP, NEN, identiteitscontroles).
+Pas daarna gaan we live.
+Stap 3: Sourcing & selectie
+We combineren drie bronnen:
+Onze bestaande poule
+Meest passende kandidaten via targeting
+Sourcen op maat wanneer nodig
+We zorgen dat dit niet te veel tekst wordt — Replit mag dit bundelen in 1 blok.
+Stap 4: Gesprekken & beoordeling (soft- + hardskills)
+Alle kandidaten komen eerst bij ons langs op kantoor.
+We beoordelen ze op:
+Houding
+Representativiteit
+Ervaring
+Skills
+Betrouwbaarheid
+Elke kandidaat krijgt scores die weer terugkomen in planning, kwaliteit en rapportages.
+Stap 5: Opbouw van een vaste poule
+We stellen een vaste poule samen van kandidaten die:
+geschikt zijn
+graag bij de klant willen werken
+goed matchen met cultuur & verwachtingen
+Stap 6: Planning & communicatie
+De klant maakt diensten aan via:
+het portaal
+of direct via een accountmanager
+Wij verzorgen de volledige planning door altijd de best scorende kandidaten te selecteren.
+Stap 7: Evaluatie na elke shift (ratings & reviews)
+Na elke dienst wordt elke medewerker beoordeeld.
+De beste medewerkers blijven vanzelf over in de poule.
+Stap 8: Continu verbeteren (EXTRAATJE + microprestaties)
+Hier moet Replit een aparte visuele box maken.
+Leg uit:
+Medewerkers worden beloond via het puntensysteem EXTRAATJE.
+Ze verdienen punten voor microprestaties zoals:
+op tijd komen
+hoge beoordelingen
+juiste houding
+geen no-shows
+extra inzet
+Dit geeft ons extra inzichten in kwaliteit en motivatie.
+Dit is een belangrijk unique selling point → visueel goed uitwerken.
+H2: Voor werknemers
+Replit moet voor werknemers ook een stappenplan maken, korter en speelser.
+Schets deze flow:
+Stap 1: Aanmelden
+Werknemer meldt zich aan via de website / WhatsApp / indeed.
+Stap 2: Sollicitatiegesprek bij EXTRA
+We leren elkaar kennen, checken skills en bespreken voorkeuren.
+Stap 3: Profiel & poule
+We plaatsen de medewerker in de juiste poule(s) op basis van:
+skills
+persoonlijkheid
+beschikbaarheid
+Stap 4: Werken via EXTRA
+Via het portaal of via de planning krijgt de medewerker shifts → snel, duidelijk en flexibel.
+Stap 5: EXTRAATJE – punten verdienen
+Replit moet dit onderdeel visueel aantrekkelijk uitwerken.
+4. UX, SEO & Design-eisen
+Replit moet:
+De pagina bouwen in EXTRA-stijl (kleur, spacing, fonts, knoppen, componenten)
+Een duidelijke scheiding maken tussen werkgevers & werknemers
+Icons, nummering, micro-illustraties of cards gebruiken
+Veel witruimte toepassen zodat de pagina rust uitstraalt
+H2-structuur gebruiken voor SEO
+Een meta-title en meta-description genereren
+Interne links maken naar /extraatje, /sollicitatieformulier en /kandidaten waar logisch
+De pagina soft, duidelijk en scanbaar maken
+5. Oplevering
+Replit moet leveren:
+De pagina /hoe-extra-werkt
+Een volledig uitgewerkte “Voor werkgevers” en “Voor werknemers” sectie
+Een strak, modern, EXTRA-waardig stappenplan
+Een sterk UX-ontwerp dat aansluit bij de landingspagina
+SEO-meta’s, OG’s en interne links
+Eventuele vragen stellen als bepaalde onderdelen verduidelijking nodig hebben
