@@ -448,7 +448,7 @@ export default function IkZoekExtraWerk() {
       ══════════════════════════════════════════════ */}
       <section className="py-10 sm:py-14 bg-white border-b border-gray-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
+          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Werk op locaties waar jij trots op kunt zijn</p>
           <div className="relative overflow-hidden group">
             <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
@@ -496,27 +496,6 @@ export default function IkZoekExtraWerk() {
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-100/60 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
-
-          {/* ── Logo strip ── */}
-          <RevealSection>
-            <div className="mb-14 sm:mb-20">
-              <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">
-                Werk op locaties waar jij trots op kunt zijn
-              </p>
-              <div className="flex items-center justify-center gap-8 sm:gap-12 lg:gap-16 flex-wrap">
-                {[
-                  { src: marriottLogo, alt: "Marriott" },
-                  { src: amrathLogo, alt: "Amrâth Hotels" },
-                  { src: nhLogo, alt: "NH Hotels" },
-                  { src: hiltonLogo, alt: "Hilton" },
-                  { src: logoFcUtrecht, alt: "FC Utrecht" },
-                  { src: logoSelectCatering, alt: "Select Catering" },
-                ].map(({ src, alt }) => (
-                  <img key={alt} src={src} alt={alt} className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 hover:grayscale-0 transition-all duration-300" loading="lazy" />
-                ))}
-              </div>
-            </div>
-          </RevealSection>
 
           {/* ── Heading ── */}
           <RevealSection>
