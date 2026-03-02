@@ -489,34 +489,131 @@ export default function IkZoekExtraWerk() {
       {/* ══════════════════════════════════════════════
           3. USPs – WAAROM EXTRA
       ══════════════════════════════════════════════ */}
-      <section className="relative bg-white py-16 sm:py-24 overflow-hidden">
+      <section className="relative bg-white py-16 sm:py-28 overflow-hidden">
         <XPatternBg />
-        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
+
+        {/* subtle top gradient blob */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-100/60 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+
+          {/* ── Logo strip ── */}
           <RevealSection>
-            <div className="text-center mb-10 sm:mb-14">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Professional perks</span>
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <div className="mb-14 sm:mb-20">
+              <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">
+                Werk op locaties waar jij trots op kunt zijn
+              </p>
+              <div className="flex items-center justify-center gap-8 sm:gap-12 lg:gap-16 flex-wrap">
+                {[
+                  { src: marriottLogo, alt: "Marriott" },
+                  { src: amrathLogo, alt: "Amrâth Hotels" },
+                  { src: nhLogo, alt: "NH Hotels" },
+                  { src: hiltonLogo, alt: "Hilton" },
+                  { src: logoFcUtrecht, alt: "FC Utrecht" },
+                  { src: logoSelectCatering, alt: "Select Catering" },
+                ].map(({ src, alt }) => (
+                  <img key={alt} src={src} alt={alt} className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 hover:grayscale-0 transition-all duration-300" loading="lazy" />
+                ))}
+              </div>
+            </div>
+          </RevealSection>
+
+          {/* ── Heading ── */}
+          <RevealSection>
+            <div className="text-center mb-12 sm:mb-16">
+              <span className="inline-block bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                Waarom EXTRA?
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Waarom werken via EXTRA?
               </h2>
-              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                EXTRA is geen standaard uitzendbureau. We zoeken en behouden professionals die kwaliteit hoog in het vaandel hebben.
+              <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+                Professioneel, flexibel én eerlijk. EXTRA is het hospitality-bureau voor young professionals die kwaliteit leveren — en daar ook voor beloond worden.
               </p>
             </div>
           </RevealSection>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+
+          {/* ── 4 Cards 2×2 ── */}
+          <div className="grid sm:grid-cols-2 gap-5 sm:gap-7">
             {[
-              { icon: Zap, title: "Direct salaris", desc: "Na elke gewerkte shift betalen we je dagelijks uit. Volledige controle over je financiën.", color: "from-purple-500 to-violet-600" },
-              { icon: MapPin, title: "Premium locaties", desc: "Marriott, Amrath, NH Hotels, evenementencentra. Werken op plekken waar je trots op bent.", color: "from-blue-500 to-indigo-600" },
-              { icon: Target, title: "Match op niveau", desc: "Van front office tot culinair. Wij koppelen je aan opdrachten die aansluiten bij jouw ervaring.", color: "from-teal-500 to-cyan-600" },
-              { icon: Award, title: "EXTRAATJE rewards", desc: "Professionele erkenning via ons puntensysteem. Goede prestaties worden beloond met echte rewards.", color: "from-orange-500 to-amber-500" },
-            ].map(({ icon: Icon, title, desc, color }, i) => (
-              <RevealSection key={title} delay={i * 70}>
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1.5 transition-all h-full">
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg`}>
-                    <Icon className="w-5 h-5 text-white" />
+              {
+                icon: Zap,
+                badge: "Financiële vrijheid",
+                title: "Direct salaris",
+                desc: "Na elke gewerkte shift staat jouw salaris direct op je rekening via Jixbee. Geen weken wachten, maar direct controle over je geld.",
+                gradient: "from-violet-500 to-purple-600",
+                bg: "from-violet-50 to-purple-50",
+                border: "border-violet-200",
+                iconBg: "bg-violet-100",
+                iconColor: "text-violet-600",
+                tag: "⚡ Dagbetaling",
+              },
+              {
+                icon: MapPin,
+                badge: "Premium werkomgeving",
+                title: "Werken op mooie locaties",
+                desc: "Hotels, events en restaurants in o.a. Amsterdam, Utrecht en Den Haag. Je werkt op plekken waar jij energie van krijgt.",
+                gradient: "from-blue-500 to-indigo-600",
+                bg: "from-blue-50 to-indigo-50",
+                border: "border-blue-200",
+                iconBg: "bg-blue-100",
+                iconColor: "text-blue-600",
+                tag: "🏨 Amsterdam · Utrecht · Den Haag",
+              },
+              {
+                icon: Target,
+                badge: "Passende matches",
+                title: "Altijd passende diensten",
+                desc: "Van bediening tot housekeeping, chefs en front office. Wij matchen je alleen op diensten die bij jouw niveau en ervaring passen.",
+                gradient: "from-teal-500 to-cyan-600",
+                bg: "from-teal-50 to-cyan-50",
+                border: "border-teal-200",
+                iconBg: "bg-teal-100",
+                iconColor: "text-teal-600",
+                tag: "✅ Match op maat",
+              },
+              {
+                icon: Gift,
+                badge: "Exclusief beloningssysteem",
+                title: "EXTRAATJE rewards",
+                desc: "Jouw inzet telt. Met ons puntensysteem spaar je automatisch voor cadeaus, uitjes en voordelen — gewoon door te werken.",
+                gradient: "from-orange-500 to-amber-500",
+                bg: "from-orange-50 to-amber-50",
+                border: "border-orange-200",
+                iconBg: "bg-orange-100",
+                iconColor: "text-orange-600",
+                tag: "🎁 Punten sparen",
+              },
+            ].map(({ icon: Icon, badge, title, desc, bg, border, iconBg, iconColor, tag }, i) => (
+              <RevealSection key={title} delay={i * 80}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 sm:p-9 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  {/* subtle corner glow */}
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+
+                  <div className="relative">
+                    {/* Badge + icon row */}
+                    <div className="flex items-center justify-between mb-6">
+                      <span className={`text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${iconBg} ${iconColor}`}>
+                        {badge}
+                      </span>
+                      <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                        <Icon className={`w-6 h-6 ${iconColor}`} />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-3 leading-snug" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {title}
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5">
+                      {desc}
+                    </p>
+
+                    {/* Tag pill */}
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-white/70 border border-white px-3 py-1.5 rounded-full">
+                      {tag}
+                    </span>
                   </div>
-                  <h3 className="text-base font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                 </div>
               </RevealSection>
             ))}
