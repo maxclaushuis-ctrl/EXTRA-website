@@ -20,6 +20,12 @@ import marriottLogo from "@assets/Logo_Marriott_1771267205959.png";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.png";
 import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.png";
 import hiltonLogo from "@assets/Logo_Hilton_1771267205959.png";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
+import logoFunda from "@assets/Logo_funda_1771267205959.png";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.png";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.png";
+import logoAppel from "@assets/Logo-Appel_1771267205959.png";
 import imgDashboard from "@assets/IMG_8971_1772395165096.png";
 import imgBeloningen from "@assets/IMG_8973_1772396250204.png";
 import imgRanglijst from "@assets/IMG_8977_1772396250204.png";
@@ -343,21 +349,45 @@ export default function IkZoekExtraWerk() {
       {/* ══════════════════════════════════════════════
           2. TRUST STRIP – PARTNER LOGOS
       ══════════════════════════════════════════════ */}
-      <div className="bg-white border-y border-purple-100">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-6 sm:py-8">
-          <p className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Je werkt bij de beste locaties</p>
-          <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
-            {[
-              { src: marriottLogo, alt: "Marriott" },
-              { src: amrathLogo, alt: "Amrath Hotels" },
-              { src: nhLogo, alt: "NH Hotels" },
-              { src: hiltonLogo, alt: "Hilton" },
-            ].map(({ src, alt }) => (
-              <img key={alt} src={src} alt={alt} className="h-7 sm:h-9 w-auto object-contain grayscale opacity-50 hover:opacity-80 hover:grayscale-0 transition-all" loading="lazy" />
-            ))}
+      <section className="py-10 sm:py-14 bg-white border-b border-gray-100 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
+          <div className="relative overflow-hidden group">
+            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
+            <div className="flex animate-marquee-izew group-hover:[animation-play-state:paused]">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                  {[
+                    { src: amrathLogo, alt: "Amrâth Hotels" },
+                    { src: logoFcUtrecht, alt: "FC Utrecht" },
+                    { src: logoFunda, alt: "Funda" },
+                    { src: logoHartMuseum, alt: "H'art Museum" },
+                    { src: logoHetePeper, alt: "Hete Peper" },
+                    { src: hiltonLogo, alt: "Hilton" },
+                    { src: marriottLogo, alt: "Marriott" },
+                    { src: logoSelectCatering, alt: "Select Catering" },
+                    { src: logoAppel, alt: "Appèl" },
+                  ].map((logo) => (
+                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+        <style>{`
+          @keyframes marquee-izew {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee-izew {
+            animation: marquee-izew 40s linear infinite;
+          }
+        `}</style>
+      </section>
 
       {/* ══════════════════════════════════════════════
           3. USPs – WAAROM EXTRA
