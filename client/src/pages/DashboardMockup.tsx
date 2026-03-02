@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,7 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
-  Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X
+  Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X,
+  Bell, BellOff
 } from 'lucide-react';
 
 type User = {
@@ -116,6 +119,27 @@ function daysSince(dateStr: string): number {
 export default function DashboardMockup() {
   const { user, isAuthenticated, login, logout, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { notifications, clearNotifications } = useWebSocket();
+  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
+  const seenNotifIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    notifications.forEach((notif: any) => {
+      if (notif.type === 'new_candidate') {
+        const id = `${notif.type}-${notif.data?.candidateId}`;
+        if (!seenNotifIds.current.has(id)) {
+          seenNotifIds.current.add(id);
+          toast({
+            title: '📋 Nieuw formulier ingediend',
+            description: notif.message || 'Er is een nieuwe kandidaat aangemeld.',
+            duration: 8000,
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+        }
+      }
+    });
+  }, [notifications, toast]);
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
@@ -425,12 +449,29 @@ export default function DashboardMockup() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center absolute -top-1 -right-1">2</div>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Mail className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 relative ${isSubscribed ? 'text-purple-600' : 'text-gray-400'}`}
+                onClick={async () => {
+                  const success = isSubscribed ? await unsubscribe() : await subscribe();
+                  if (success) {
+                    toast({
+                      title: isSubscribed ? 'Notificaties uitgeschakeld' : '🔔 Notificaties ingeschakeld',
+                      description: isSubscribed
+                        ? 'Je ontvangt geen pushmeldingen meer.'
+                        : 'Je ontvangt nu een melding bij elk nieuw formulier.',
+                    });
+                  }
+                }}
+                disabled={pushLoading}
+                title={isSubscribed ? 'Notificaties uitschakelen' : 'Notificaties inschakelen'}
+              >
+                {isSubscribed ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                {isSubscribed && (
+                  <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-green-500 rounded-full" />
+                )}
+              </Button>
               <Avatar className="h-8 w-8 bg-purple-600">
                 <AvatarFallback className="bg-purple-600 text-white text-xs">
                   {getInitials(user?.firstName || 'A', user?.lastName || 'D')}

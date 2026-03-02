@@ -53,11 +53,12 @@ export interface NotificationPayload {
   badge?: string;
   tag?: string;
   data?: {
-    type: 'achievement' | 'challenge' | 'leaderboard' | 'reward' | 'social';
+    type: 'achievement' | 'challenge' | 'leaderboard' | 'reward' | 'social' | 'candidate';
     action?: string;
     url?: string;
     points?: number;
     challengeId?: number;
+    candidateId?: number;
   };
   actions?: Array<{
     action: string;
@@ -146,6 +147,35 @@ class PushNotificationService {
   async sendToUsers(userIds: number[], payload: NotificationPayload) {
     const promises = userIds.map(userId => this.sendToUser(userId, payload));
     await Promise.allSettled(promises);
+  }
+
+  /**
+   * Send new candidate / form submission alert to admin users
+   */
+  async sendNewCandidateAlert(adminUserIds: number[], candidateName: string, functionType: string, candidateId: number) {
+    const functionLabels: Record<string, string> = {
+      horecamedewerker: 'Horecamedewerker',
+      housekeeping: 'Housekeeping',
+      chef: 'Chef',
+      frontoffice: 'Front Office',
+    };
+    const label = functionLabels[functionType] || functionType;
+    const payload: NotificationPayload = {
+      title: '📋 Nieuw formulier ingediend',
+      body: `${candidateName} heeft zich aangemeld als ${label}.`,
+      tag: `new-candidate-${candidateId}`,
+      data: {
+        type: 'candidate',
+        action: 'view_candidate',
+        url: '/dashboard-mockup',
+        candidateId,
+      },
+      actions: [
+        { action: 'view_candidate', title: 'Bekijk kandidaat' },
+        { action: 'dismiss', title: 'Sluiten' },
+      ],
+    };
+    await this.sendToUsers(adminUserIds, payload);
   }
 
   /**

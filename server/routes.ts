@@ -3840,6 +3840,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Notify admins on complete submission (not partial)
+      if (!validated.partial) {
+        try {
+          const allUsers = await storage.getUsers();
+          const adminUserIds = allUsers.filter((u: any) => u.role === 'admin').map((u: any) => u.id);
+          const candidateName = `${candidate.firstName} ${candidate.lastName}`;
+
+          const pushService = getPushNotificationService();
+          if (pushService && adminUserIds.length > 0) {
+            pushService.sendNewCandidateAlert(adminUserIds, candidateName, candidate.functionType, candidate.id).catch(console.error);
+          }
+
+          if (typeof (global as any).broadcastNotification === 'function') {
+            (global as any).broadcastNotification(
+              'new_candidate',
+              {
+                message: `📋 Nieuwe aanmelding: ${candidateName} (${candidate.functionType})`,
+                data: { candidateId: candidate.id, functionType: candidate.functionType, name: candidateName },
+              },
+              undefined,
+              'admin'
+            );
+          }
+        } catch (notifErr) {
+          console.error('Fout bij versturen aanmelding-notificatie:', notifErr);
+        }
+      }
+
       return res.status(201).json({ id: candidate.id, message: "Aanmelding ontvangen" });
     } catch (error) {
       if (error instanceof ZodError) {
@@ -4649,6 +4677,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         salaryScale: data.salaryScale || null,
         formData: data,
       });
+
+      // Notify admins via push + WebSocket
+      try {
+        const allUsers = await storage.getUsers();
+        const adminUserIds = allUsers.filter((u: any) => u.role === 'admin').map((u: any) => u.id);
+        const candidateName = `${data.firstName} ${data.lastName}`;
+
+        const pushService = getPushNotificationService();
+        if (pushService && adminUserIds.length > 0) {
+          pushService.sendNewCandidateAlert(adminUserIds, candidateName, data.functionType, candidate.id).catch(console.error);
+        }
+
+        if (typeof (global as any).broadcastNotification === 'function') {
+          (global as any).broadcastNotification(
+            'new_candidate',
+            {
+              message: `📋 Nieuw formulier: ${candidateName} (${data.functionType})`,
+              data: { candidateId: candidate.id, functionType: data.functionType, name: candidateName },
+            },
+            undefined,
+            'admin'
+          );
+        }
+      } catch (notifErr) {
+        console.error('Fout bij versturen kandidaat-notificatie:', notifErr);
+      }
 
       return res.status(201).json({ 
         message: "Sollicitatie succesvol opgeslagen",
