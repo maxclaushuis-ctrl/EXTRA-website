@@ -320,16 +320,6 @@ function TeamCard({ m, delay, size = "md" }: { m: Member; delay: number; size?: 
 }
 
 /* ─────────────────────────────────────────────
-   SUBNAV LINKS
-───────────────────────────────────────────── */
-const NAV_LINKS = [
-  { label: "Wie zijn wij?", href: "/over-extra" },
-  { label: "Ons team", href: "/over-extra/ons-team" },
-  { label: "Beloningssysteem", href: "/extraatje" },
-  { label: "Aanmelden", href: "/aanmelden" },
-];
-
-/* ─────────────────────────────────────────────
    PAGE
 ───────────────────────────────────────────── */
 export default function OnsTeam() {
@@ -398,15 +388,6 @@ export default function OnsTeam() {
       <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
         <XPatternBgDark />
         <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 pb-20 sm:pb-28">
-          {/* Breadcrumb */}
-          <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-xs text-white/60 mb-10">
-            <Link href="/landing" className="hover:text-white transition-colors">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <Link href="/over-extra" className="hover:text-white transition-colors">Over EXTRA</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-white font-semibold">Ons Team</span>
-          </nav>
-
           <div className="max-w-3xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
               De mensen{" "}
@@ -428,19 +409,6 @@ export default function OnsTeam() {
           </div>
         </div>
       </section>
-
-      {/* ── SUBNAV ── */}
-      <div className="border-b border-purple-100 bg-white sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="flex gap-0 overflow-x-auto text-sm">
-            {NAV_LINKS.map(({ label, href }) => (
-              <Link key={href} href={href} className={`py-4 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${href === "/over-extra/ons-team" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"}`}>
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* ── INTRO QUOTE ── */}
       <section className="relative bg-white py-14 sm:py-20 overflow-hidden">
