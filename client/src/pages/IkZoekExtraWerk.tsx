@@ -389,7 +389,8 @@ export default function IkZoekExtraWerk() {
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
               ,<br />
-              wanneer jij wilt!
+              wanneer jij<br />
+              wilt!
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
