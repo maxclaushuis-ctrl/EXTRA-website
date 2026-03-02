@@ -610,17 +610,17 @@ export default function IkZoekExtraWerk() {
               <div>
                 <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Financiële vrijheid</span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Direct salaris na elke gewerkte shift
+                  Direct uitbetaald na elke gewerkte shift 💸
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Geen wachten tot het einde van de maand. Na elke gewerkte shift wordt je salaris de volgende ochtend bijgeschreven. Volledig transparant, direct te bekijken in de EXTRA app.
+                  Bij EXTRA hoef je nooit te wachten op je geld. Werk je een shift? Dan staat je salaris de volgende ochtend al op je rekening, transparant, snel en volledig inzichtelijk in de EXTRA-app.
                 </p>
                 <div className="space-y-3 mb-8">
                   {[
-                    "Dagelijks uitbetaald — ook op weekenden",
-                    "Volledig inzicht via de EXTRA app",
-                    "Gecertificeerde payroll, geen verrassingen",
-                    "Reiskostenvergoeding inbegrepen",
+                    "Dagelijkse uitbetaling",
+                    "Altijd real-time inzicht in je verdiende uren",
+                    "Officiële payroll, 100% volgens wetgeving",
+                    "Reiskostenvergoeding waar nodig",
                   ].map(item => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
