@@ -380,17 +380,18 @@ export default function IkZoekExtraWerk() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Flexibel werk in de<br />
+              Flexibel werk<br />
+              in de{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">horeca & hospitality</span>
+                <span className="relative z-10">hospitality</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
               ,<br />
-              wanneer het jou uitkomt
+              wanneer jij wilt!
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Werken in de horeca op jouw voorwaarden. Kies zelf je flexibele diensten bij hotels, events & restaurants — en word <strong className="text-white">dagelijks uitbetaald</strong> via de EXTRA app.
+              Werken in de horeca op jouw voorwaarden. Kies zelf je flexibele diensten bij hotels, events & restaurants en word <strong className="text-white">dagelijks uitbetaald</strong> via de EXTRA app.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
