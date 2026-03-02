@@ -21,6 +21,7 @@ import Extraatje from "@/pages/Extraatje";
 import OverExtra from "@/pages/OverExtra";
 import OnsTeam from "@/pages/OnsTeam";
 import HoeExtraWerkt from "@/pages/HoeExtraWerkt";
+import IkZoekExtraWerk from "@/pages/IkZoekExtraWerk";
 
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
@@ -83,7 +84,7 @@ function Router() {
   const isDashboardMockup = location.startsWith('/dashboard-mockup');
 
   // Publieke pagina's krijgen nooit de interne nav te zien
-  const isPublicPage = ['/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/brochure', '/brochures', '/events', '/nieuws', '/extraatje', '/over-extra', '/hoe-extra-werkt'].some(
+  const isPublicPage = ['/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/brochure', '/brochures', '/events', '/nieuws', '/extraatje', '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk'].some(
     p => location === p || location.startsWith(p + '/')
   );
   
@@ -111,6 +112,7 @@ function Router() {
         <Route path="/nieuws/:slug" component={NieuwsArtikel} />
         <Route path="/extraatje" component={Extraatje} />
         <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
+        <Route path="/ik-zoek-extra-werk" component={IkZoekExtraWerk} />
         <Route path="/over-extra/ons-team" component={OnsTeam} />
         <Route path="/over-extra" component={OverExtra} />
         <Route path="/dashboard-mockup" component={DashboardMockup} />

@@ -1,0 +1,127 @@
+Je bent UX-designer én front-end developer voor EXTRA, een modern hospitality-uitzendbureau.
+Maak een nieuwe landingspagina voor werkzoekenden met de URL /ik-zoek-extra-werk.
+1. Doel & doelgroep
+Primair: young professionals (18–35 jaar) die betrouwbaar, flexibel werk zoeken in de hospitality-, hotel- en restaurantscene.
+Focus: ambitieus, verantwoordelijk, sociaal sterk — mensen die kwaliteit willen leveren en trots zijn op hun werk.
+Doel van de pagina: conversie naar aanmelding én laten zien wat EXTRA onderscheidt in de markt.
+Belangrijk: deze pagina moet minder “studentikoos” zijn. Geen kinderachtige tone-of-voice, maar volwassen, energiek en professioneel. De stijl van EXTRA zorgt zelf al voor de jongere vibe.
+2. Huisstijl & look & feel
+Exact dezelfde moderne stijl als de huidige EXTRA-landingspagina
+(dark gradients, glows, afgeronde kaarten, levendige paarstinten).
+Premium vibe: clean, high-end hospitality, visueel sterk.
+Gebruik de meegeleverde visuals (Jixbee mockup, Adidas padelracket, etc.) als inspiratie en stijlreferentie.
+Je mag bestaande componenten hergebruiken, maar verbeter waar nodig.
+3. Pagina navigatie / menu
+Bovenaan een sticky dropdown:
+“Ik zoek extra werk”
+→ Horeca
+→ Housekeeping
+→ Chefs
+→ Front Office
+Elke optie linkt naar de juiste functiepagina (dummy-link mag).
+4. Sectie-indeling (van boven naar beneden)
+(1) Hero – professioneel & ambitieus
+H1 voorbeeld:
+“Flexibel werk in de hospitality — wanneer jij wil.”
+Subtekst:
+2–3 regels over: flexibele diensten, dagbetaling, mooie locaties, goede begeleiding.
+CTA’s:
+“Meld je aan in 2 minuten” → /aanmelden
+“Bekijk functies” → anchor naar functies-sectie
+Rechts: mockups van app + badges met: dagbetaling, premium locaties, EXTRAATJE rewards.
+(2) Waarom werken bij EXTRA (USPs)
+Versterk deze richting young professionals — minder “studentendeals”, meer “professional perks”:
+Direct betaald via Jixbee (financiële vrijheid)
+Werken bij mooie plekken (Marriott, Amrath, evenementenlocaties)
+Opdrachten die bij je niveau passen (front office, banqueting, chefs)
+EXTRAATJE (professionele recognition & rewards voor prestaties)
+Gebruik 4 moderne cards met iconen + korte tekst.
+(3) Sectie “Direct salaris na elke gewerkte shift 💸”
+Gebruik de aangeleverde Jixbee-visual.
+Links:
+Korte, volwassen uitleg: dagbetaling, financieel overzicht, direct controle.
+Rechts: twee telefoon-mockups (uit de meegeleverde afbeelding).
+CTA: “Hoe werkt dagbetaling?” (scroll naar FAQ).
+(4) Sectie “Voordelen & EXTRAATJE rewards”
+Young professional insteek:
+Niet “studentendeals” maar “professionele voordelen”.
+Gebruik de Adidas-padelracket-visual, maar schrijf volwassener:
+Sparen voor beloningen (sport, lifestyle, tech)
+Exclusieve deals
+Extra motivatie voor goede prestaties
+Alles zichtbaar in de EXTRA app
+Button: “Bekijk voordelen” → /extraatje
+(5) Functies – routes naar werk
+4 premium-looking cards:
+Horeca (banqueting, bediening, events)
+Housekeeping (hotels, kwaliteitsteams)
+Chefs (koks van diverse niveaus — noem geen “horecakok”)
+Front Office (professionele eerste indruk van hotels)
+Elke card bevat:
+Icoon
+1 zin tekst
+2–3 bullets met voordelen
+CTA: “Meer over [functie]”
+(6) Hoe het werkt — Professioneel stappenplan
+4 stappen:
+Aanmelden
+Kennismakingsgesprek
+Match op basis van ervaring + voorkeuren
+Dagbetaling + rewards + doorgroeimogelijkheden
+Premium UI + animaties toegestaan.
+(7) Reviews van young professionals
+Herbruik de bestaande review-carousel, maar style hem volwassener.
+Reviews moeten gaan over:
+professionaliteit
+flexibiliteit
+betrouwbaarheid van uitbetaling
+mooie locaties
+Onder de reviews: logo-grid van opdrachtgevers (Marriott, Amrath, FC Utrecht etc.).
+(8) EXTRAATJE + continu rating systeem (compact sectie)
+Doel: laten zien dat professionele prestaties beloond worden.
+Leg kort uit:
+Iedere medewerker krijgt feedback op soft/hard skills.
+Hierdoor kunnen we topteams bouwen.
+Goed presteren = eerder gebeld worden + rewards.
+Dit houdt het niveau hoog, ook als we groeien.
+Kleine dashboard-mockup erbij.
+(9) Aanmeldbonus / voordelen strip
+Volwassen insteek:
+“Meld je aan en ontvang toegang tot exclusieve voordelen, rewards & deals.”
+CTA: “Start je aanmelding”
+(10) Blog / kennisbank
+H2:
+“Horeca & hospitality insights”
+Toon 3 blogcards (zoals in jouw nieuws/blogs sectie).
+Button: “Lees alle artikelen”
+(11) FAQ (gericht op young professionals)
+Voorbeeldvragen:
+Hoe werkt dagbetaling precies?
+Hoe ziet het kennismakingsgesprek eruit?
+Moet ik ervaring hebben?
+Hoe flexibel kan ik werken?
+Wat zijn doorgroeimogelijkheden?
+(12) SEO-“Vacatures” sectie
+Zet hier 6–8 sterke SEO-titels zoals:
+“Banqueting medewerker Amsterdam (flexibel)”
+“Front Office medewerker hotel Utrecht”
+“Zelfstandig werkend chef – Randstad”
+Elke card:
+Titel
+2 bullets
+Button: “Solliciteer direct” → /aanmelden
+Niet overdreven studentikoos — professioneel, clean.
+(13) Afsluitende CTA
+Donkere streep over de breedte:
+“Klaar om EXTRA te gaan verdienen?”
+Subtekst: Aanmelden duurt 2 minuten.
+Buttons:
+“Meld je nu aan”
+“Stel een vraag via WhatsApp”
+5. Interactie & techniek
+Volledig responsive
+Gebruik scroll-animaties, hover effects
+Houd de structuur schoon en uitbreidbaar
+Alle links moeten werken (dummy ok waar nodig)
+Gebruik meegeleverde visuals in een professionele context
+Voer deze opdracht volledig uit en genereer de complete pagina /ik-zoek-extra-werk in dezelfde high-end stijl als de rest van de EXTRA website.
