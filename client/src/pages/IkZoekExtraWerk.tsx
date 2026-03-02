@@ -29,6 +29,8 @@ import logoAppel from "@assets/Logo-Appel_1771267205959.png";
 import imgDashboard from "@assets/IMG_8971_1772395165096.png";
 import imgBeloningen from "@assets/IMG_8973_1772396250204.png";
 import imgRanglijst from "@assets/IMG_8977_1772396250204.png";
+import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.png";
+import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.png";
 
 /* ── SCROLL REVEAL ── */
 function useScrollReveal() {
@@ -630,21 +632,24 @@ export default function IkZoekExtraWerk() {
                     </div>
                   ))}
                 </div>
-                <a href="#faq" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                <a href="/hoe-werkt-dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
                   Hoe werkt dagbetaling? <ChevronRight className="w-4 h-4" />
                 </a>
               </div>
 
-              {/* Phone stack */}
+              {/* Jixbee phone stack */}
               <div className="flex justify-center">
-                <div className="relative flex gap-6 items-end h-[320px] sm:h-[380px]">
-                  <div style={{ transform: "rotate(-5deg)" }}>
-                    <PhoneMockup src={imgDashboard} alt="EXTRA app – jouw salaris" className="w-[140px] sm:w-[170px]" />
+                <div className="relative flex gap-5 items-end h-[320px] sm:h-[380px]">
+                  <div style={{ transform: "rotate(-5deg)", animation: "float 5s ease-in-out infinite" }}>
+                    <img src={jixbeeUren} alt="Jixbee – gewerkte uren overzicht" className="w-[145px] sm:w-[175px] drop-shadow-2xl rounded-[2rem]" />
                   </div>
-                  <div className="relative z-10 -mb-4">
-                    <PhoneMockup src={imgBeloningen} alt="EXTRA app – uitbetalingen" className="w-[150px] sm:w-[185px]" />
+                  <div className="relative z-10 -mb-4" style={{ animation: "float 4s ease-in-out infinite" }}>
+                    <img src={jixbeePayout} alt="Jixbee – payout succesvol" className="w-[155px] sm:w-[190px] drop-shadow-2xl rounded-[2rem]" />
                     <div className="absolute -top-3 -right-10 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-purple-100 whitespace-nowrap">
-                      💳 +€87,50 bijgeschreven
+                      💸 €750,- uitbetaald
+                    </div>
+                    <div className="absolute -bottom-2 -left-8 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-green-100 whitespace-nowrap">
+                      ✅ Uren goedgekeurd
                     </div>
                   </div>
                 </div>

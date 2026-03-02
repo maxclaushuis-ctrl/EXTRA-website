@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
-import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772453692809.png";
-import jixbeePayout from "@assets/Jixbee_Payout_succes_1772453692809.png";
+import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.png";
+import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.png";
 
 /* ── SCROLL REVEAL ── */
 function useScrollReveal() {
