@@ -137,6 +137,17 @@ export default function DashboardMockup() {
           queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
         }
       }
+      if (notif.type === 'new_staffing_request') {
+        const id = `${notif.type}-${notif.data?.requestId}`;
+        if (!seenNotifIds.current.has(id)) {
+          seenNotifIds.current.add(id);
+          toast({
+            title: '🏢 Nieuwe personeelsaanvraag',
+            description: notif.message || 'Een werkgever heeft een personeelsaanvraag ingediend.',
+            duration: 8000,
+          });
+        }
+      }
     });
   }, [notifications, toast]);
 

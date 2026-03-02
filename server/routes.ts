@@ -4740,6 +4740,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Vul alle verplichte velden in." });
       }
       const [result] = await db.insert(staffingRequests).values(data).returning();
+
+      // Notify admins about new staffing request
+      try {
+        const allUsers = await storage.getUsers();
+        const adminUserIds = allUsers.filter((u: any) => u.role === 'admin').map((u: any) => u.id);
+
+        const pushService = getPushNotificationService();
+        if (pushService && adminUserIds.length > 0) {
+          pushService.sendStaffingRequestAlert(adminUserIds, data.companyName, data.contactName, data.functions).catch(console.error);
+        }
+
+        if (typeof (global as any).broadcastNotification === 'function') {
+          (global as any).broadcastNotification(
+            'new_staffing_request',
+            {
+              message: `🏢 Nieuwe personeelsaanvraag van ${data.companyName} (${data.contactName})`,
+              data: { requestId: result.id, companyName: data.companyName, functions: data.functions },
+            },
+            undefined,
+            'admin'
+          );
+        }
+      } catch (notifErr) {
+        console.error('Fout bij versturen personeelsaanvraag-notificatie:', notifErr);
+      }
+
       return res.status(201).json({ success: true, id: result.id });
     } catch (error) {
       console.error("Error saving staffing request:", error);

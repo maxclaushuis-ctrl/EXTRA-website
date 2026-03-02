@@ -179,6 +179,27 @@ class PushNotificationService {
   }
 
   /**
+   * Send new staffing request alert to admin users
+   */
+  async sendStaffingRequestAlert(adminUserIds: number[], companyName: string, contactName: string, functions: string[]) {
+    const payload: NotificationPayload = {
+      title: '🏢 Nieuwe personeelsaanvraag',
+      body: `${companyName} (${contactName}) heeft personeel aangevraagd: ${functions.join(', ')}.`,
+      tag: `staffing-${Date.now()}`,
+      data: {
+        type: 'candidate',
+        action: 'view_dashboard',
+        url: '/dashboard-mockup',
+      },
+      actions: [
+        { action: 'view_dashboard', title: 'Bekijk dashboard' },
+        { action: 'dismiss', title: 'Sluiten' },
+      ],
+    };
+    await this.sendToUsers(adminUserIds, payload);
+  }
+
+  /**
    * Send achievement notification
    */
   async sendAchievementNotification(user: User, achievement: {
