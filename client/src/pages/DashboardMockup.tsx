@@ -1115,126 +1115,69 @@ export default function DashboardMockup() {
                 </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
-                <Card className="bg-white border-l-4 border-l-purple-500">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">Totaal</p>
-                    <p className="text-2xl font-bold">{appCounts.total}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Alle formulieren</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-l-4 border-l-blue-400">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">Nieuw</p>
-                    <p className="text-2xl font-bold text-blue-600">{appCounts.nieuw}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Te beoordelen</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-l-4 border-l-green-500">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">Aangenomen</p>
-                    <p className="text-2xl font-bold text-green-600">{appCounts.aangenomen}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Goedgekeurd</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-l-4 border-l-red-400">
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
-                    <p className="text-2xl font-bold text-red-500">{appCounts.afgewezen}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Niet doorgegaan</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Function breakdown */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+              {/* Status tabs — primary navigation, tappable, scrollable */}
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
                 {[
-                  { label: 'Horeca', fullLabel: 'Horecamedewerker', key: 'horecamedewerker', count: appCounts.horecamedewerker, color: 'bg-orange-50 border-orange-200 text-orange-700' },
-                  { label: 'Housekeeping', fullLabel: 'Housekeeping', key: 'housekeeping', count: appCounts.housekeeping, color: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
-                  { label: 'Chef', fullLabel: 'Chef', key: 'chef', count: appCounts.chef, color: 'bg-gray-50 border-gray-200 text-gray-700' },
-                  { label: 'Front-office', fullLabel: 'Front-office', key: 'frontoffice', count: appCounts.frontoffice, color: 'bg-blue-50 border-blue-200 text-blue-700' },
-                ].map(({ label, key, count, color }) => (
+                  { val: 'alle',       label: 'Alle',       count: appCounts.total,      active: 'bg-purple-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'nieuw',      label: 'Nieuw',      count: appCounts.nieuw,      active: 'bg-blue-500 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'beoordeeld', label: 'Beoordeeld', count: appCounts.beoordeeld, active: 'bg-yellow-500 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'aangenomen', label: 'Aangenomen', count: appCounts.aangenomen, active: 'bg-green-500 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'afgewezen',  label: 'Afgewezen',  count: appCounts.afgewezen,  active: 'bg-red-500 text-white',    inactive: 'bg-white border border-gray-200 text-gray-600' },
+                ].map(({ val, label, count, active, inactive }) => (
                   <button
-                    key={key}
-                    onClick={() => setAppFunctionFilter(appFunctionFilter === key ? 'alle' : key)}
-                    className={`border rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-sm ${color} ${appFunctionFilter === key ? 'ring-2 ring-offset-1 ring-current' : ''}`}
+                    key={val}
+                    onClick={() => setAppStatusFilter(val)}
+                    className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${appStatusFilter === val ? active : inactive}`}
                   >
-                    <span className="text-sm font-medium">{label}</span>
-                    <span className="text-xl font-bold">{count}</span>
+                    {label}
+                    <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${appStatusFilter === val ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+                      {count}
+                    </span>
                   </button>
                 ))}
               </div>
 
-              {/* Filters */}
-              <div className="space-y-2 mb-4">
-                <div className="relative">
+              {/* Filters — search + 2 labeled dropdowns */}
+              <div className="flex gap-2 mb-4">
+                <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Zoek naam of e-mail..."
-                    className="pl-9 w-full"
+                    placeholder="Naam of e-mail..."
+                    className="pl-9"
                     value={appSearch}
                     onChange={(e) => setAppSearch(e.target.value)}
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Select value={appFunctionFilter} onValueChange={setAppFunctionFilter}>
-                    <SelectTrigger className="flex-1 min-w-0">
-                      <SelectValue placeholder="Functie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="alle">Alle functies</SelectItem>
-                      <SelectItem value="horecamedewerker">Horeca</SelectItem>
-                      <SelectItem value="housekeeping">Housekeeping</SelectItem>
-                      <SelectItem value="chef">Chef</SelectItem>
-                      <SelectItem value="frontoffice">Front-office</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={appInterviewerFilter} onValueChange={setAppInterviewerFilter}>
-                    <SelectTrigger className="flex-1 min-w-0">
-                      <SelectValue placeholder="Interviewer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="alle">Alle interviewers</SelectItem>
-                      {['Eveline', 'Isa', 'Charlotte', 'Max', 'Lea'].map(iv => (
-                        <SelectItem key={iv} value={iv}>{iv}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={appStatusFilter} onValueChange={setAppStatusFilter}>
-                    <SelectTrigger className="flex-1 min-w-0">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="alle">Alle statussen</SelectItem>
-                      <SelectItem value="nieuw">Nieuw</SelectItem>
-                      <SelectItem value="beoordeeld">Beoordeeld</SelectItem>
-                      <SelectItem value="aangenomen">Aangenomen</SelectItem>
-                      <SelectItem value="afgewezen">Afgewezen</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Status tab pills — scrollable on mobile */}
-              <div className="flex items-center gap-1.5 mb-4 border-b pb-3 overflow-x-auto">
-                {[
-                  { val: 'alle', label: `Alle (${appCounts.total})`, cls: 'bg-purple-100 text-purple-700 hover:bg-purple-200' },
-                  { val: 'nieuw', label: `Nieuw (${appCounts.nieuw})`, cls: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
-                  { val: 'beoordeeld', label: `Beoordeeld (${appCounts.beoordeeld})`, cls: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' },
-                  { val: 'aangenomen', label: `Aangenomen (${appCounts.aangenomen})`, cls: 'bg-green-100 text-green-700 hover:bg-green-200' },
-                  { val: 'afgewezen', label: `Afgewezen (${appCounts.afgewezen})`, cls: 'bg-red-100 text-red-700 hover:bg-red-200' },
-                ].map(({ val, label, cls }) => (
-                  <Button
-                    key={val}
-                    variant={appStatusFilter === val ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setAppStatusFilter(val)}
-                    className={`shrink-0 text-xs ${appStatusFilter === val ? cls : 'text-gray-500'}`}
-                  >
-                    {label}
-                  </Button>
-                ))}
+                <Select value={appFunctionFilter} onValueChange={setAppFunctionFilter}>
+                  <SelectTrigger className="w-[120px] sm:w-[150px]">
+                    <span className="text-sm truncate">
+                      {appFunctionFilter === 'alle' ? 'Functie' :
+                       appFunctionFilter === 'horecamedewerker' ? 'Horeca' :
+                       appFunctionFilter === 'housekeeping' ? 'Housekeeping' :
+                       appFunctionFilter === 'chef' ? 'Chef' : 'Front-office'}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle functies</SelectItem>
+                    <SelectItem value="horecamedewerker">Horeca</SelectItem>
+                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                    <SelectItem value="chef">Chef</SelectItem>
+                    <SelectItem value="frontoffice">Front-office</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={appInterviewerFilter} onValueChange={setAppInterviewerFilter}>
+                  <SelectTrigger className="w-[100px] sm:w-[130px]">
+                    <span className="text-sm truncate">
+                      {appInterviewerFilter === 'alle' ? 'Wie' : appInterviewerFilter}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle interviewers</SelectItem>
+                    {['Eveline', 'Isa', 'Charlotte', 'Max', 'Lea'].map(iv => (
+                      <SelectItem key={iv} value={iv}>{iv}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Applications Table */}
@@ -1292,10 +1235,10 @@ export default function DashboardMockup() {
                             };
                             return (
                               <tr key={app.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
-                                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden sm:table-cell">
                                   {new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-3 py-3">
                                   <div className="flex items-center gap-2.5">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                                       app.functionType === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
@@ -1306,39 +1249,39 @@ export default function DashboardMockup() {
                                       {getInitials(app.firstName, app.lastName)}
                                     </div>
                                     <div>
-                                      <p className="font-medium text-gray-900">{app.firstName} {app.lastName}</p>
-                                      {app.city && <p className="text-xs text-gray-400">{app.city}</p>}
+                                      <p className="font-medium text-gray-900 text-sm">{app.firstName} {app.lastName}</p>
+                                      <p className="text-xs text-gray-400 sm:hidden">{fnLabels[app.functionType] || app.functionType}</p>
+                                      {app.city && <p className="text-xs text-gray-400 hidden sm:block">{app.city}</p>}
                                     </div>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-3 py-3 hidden sm:table-cell">
                                   <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>
                                     {fnLabels[app.functionType] || app.functionType}
                                   </Badge>
                                 </td>
-                                <td className="px-4 py-3 text-gray-600 text-xs">{app.email || '—'}</td>
-                                <td className="px-4 py-3 text-gray-600 text-xs">{app.interviewer || '—'}</td>
-                                <td className="px-4 py-3">
+                                <td className="px-3 py-3 text-gray-600 text-xs hidden lg:table-cell">{app.email || '—'}</td>
+                                <td className="px-3 py-3 text-gray-600 text-xs hidden md:table-cell">{app.interviewer || '—'}</td>
+                                <td className="px-3 py-3 hidden md:table-cell">
                                   <span className="flex gap-0.5">
                                     {[1,2,3,4,5].map(i => (
                                       <Star key={i} className={`h-3.5 w-3.5 ${i <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
                                     ))}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-3 py-3">
                                   <Badge className={`text-xs ${statusColors[app.status] || 'bg-gray-100 text-gray-600'}`}>
                                     {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
                                   </Badge>
                                 </td>
-                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                                   <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
                                     onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}
                                   >
-                                    <Eye className="h-3.5 w-3.5 mr-1" />
-                                    Bekijken
+                                    <Eye className="h-3.5 w-3.5 text-purple-500" />
                                   </Button>
                                 </td>
                               </tr>
