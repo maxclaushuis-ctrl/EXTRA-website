@@ -527,60 +527,61 @@ export default function DashboardMockup() {
           </div>
         </header>
 
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {activeTab === 'kandidaten' ? (
             <div>
               {/* Header */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <h1 className="text-xl font-bold">Kandidaten</h1>
-                  <p className="text-sm text-gray-500">Alle aanmeldingen via /aanmelden — realtime gesynchroniseerd</p>
+                  <p className="text-xs text-gray-500 hidden sm:block">Alle aanmeldingen via /aanmelden — realtime gesynchroniseerd</p>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
                 <Card className="bg-white border-l-4 border-l-purple-500">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1">In proces</p>
                     <p className="text-2xl font-bold text-purple-700">{kanInProces.length}</p>
-                    <p className="text-xs text-gray-400">Formulier ingevuld, nog niet compleet</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Formulier ingevuld</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-blue-500">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-gray-500 mb-1">Gesprek gepland</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <p className="text-xs text-gray-500 mb-1 leading-tight">Gepland</p>
                     <p className="text-2xl font-bold text-blue-600">{kanGesprekGepland.length}</p>
-                    <p className="text-xs text-gray-400">Interview ingepland via Calendly</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Interview ingepland</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-red-500">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
                     <p className="text-2xl font-bold text-red-600">{kanAfgewezen.length}</p>
-                    <p className="text-xs text-gray-400">Niet geschikt bevonden</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Niet geschikt</p>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Subtabs */}
-              <div className="flex items-center gap-1 mb-5 border-b">
+              <div className="flex items-center gap-0 mb-4 border-b">
                 {([
-                  { key: 'in_proces', label: 'In proces', count: kanInProces.length, color: 'text-purple-700 border-purple-500' },
-                  { key: 'gesprek_gepland', label: 'Gesprek gepland', count: kanGesprekGepland.length, color: 'text-blue-600 border-blue-500' },
-                  { key: 'afgewezen', label: 'Afgewezen', count: kanAfgewezen.length, color: 'text-red-600 border-red-500' },
+                  { key: 'in_proces', labelFull: 'In proces', labelShort: 'In proces', count: kanInProces.length, color: 'text-purple-700 border-purple-500' },
+                  { key: 'gesprek_gepland', labelFull: 'Gesprek gepland', labelShort: 'Gepland', count: kanGesprekGepland.length, color: 'text-blue-600 border-blue-500' },
+                  { key: 'afgewezen', labelFull: 'Afgewezen', labelShort: 'Afgewezen', count: kanAfgewezen.length, color: 'text-red-600 border-red-500' },
                 ] as const).map(tab => (
                   <button
                     key={tab.key}
                     onClick={() => setKandidatenSubtab(tab.key)}
-                    className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                    className={`flex-1 px-2 py-2.5 text-xs sm:text-sm font-semibold border-b-2 -mb-px transition-colors text-center ${
                       kandidatenSubtab === tab.key
                         ? tab.color + ' bg-transparent'
                         : 'text-gray-500 border-transparent hover:text-gray-700'
                     }`}
                   >
-                    {tab.label}
-                    <span className={`ml-2 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                    <span className="sm:hidden">{tab.labelShort}</span>
+                    <span className="hidden sm:inline">{tab.labelFull}</span>
+                    <span className={`ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
                       kandidatenSubtab === tab.key ? 'bg-gray-100' : 'bg-gray-100 text-gray-400'
                     }`}>{tab.count}</span>
                   </button>
@@ -588,42 +589,44 @@ export default function DashboardMockup() {
               </div>
 
               {/* Search + Filters */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="relative flex-1">
+              <div className="space-y-2 mb-4">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Zoek op naam, e-mail of woonplaats..."
-                    className="pl-10 h-9 text-sm"
+                    placeholder="Zoek naam, e-mail of woonplaats..."
+                    className="pl-10 h-9 text-sm w-full"
                     value={kandidatenSearch}
                     onChange={e => setKandidatenSearch(e.target.value)}
                   />
                 </div>
-                <Select value={kandidatenFunctionFilter} onValueChange={setKandidatenFunctionFilter}>
-                  <SelectTrigger className="w-[150px] h-9 text-sm">
-                    <SelectValue placeholder="Alle functies" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle functies</SelectItem>
-                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
-                    <SelectItem value="horecamedewerker">Horecamedewerker</SelectItem>
-                    <SelectItem value="chef">Chef / Kok</SelectItem>
-                    <SelectItem value="frontoffice">Front-office</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={kandidatenTaalFilter} onValueChange={setKandidatenTaalFilter}>
-                  <SelectTrigger className="w-[150px] h-9 text-sm">
-                    <SelectValue placeholder="Alle talen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle talen</SelectItem>
-                    <SelectItem value="nederlandsstalig">Nederlands</SelectItem>
-                    <SelectItem value="english">Engels</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => refetchCandidates()}>
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  Vernieuwen
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Select value={kandidatenFunctionFilter} onValueChange={setKandidatenFunctionFilter}>
+                    <SelectTrigger className="flex-1 h-9 text-sm min-w-0">
+                      <SelectValue placeholder="Functie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle functies</SelectItem>
+                      <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                      <SelectItem value="horecamedewerker">Horeca</SelectItem>
+                      <SelectItem value="chef">Chef / Kok</SelectItem>
+                      <SelectItem value="frontoffice">Front-office</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={kandidatenTaalFilter} onValueChange={setKandidatenTaalFilter}>
+                    <SelectTrigger className="flex-1 h-9 text-sm min-w-0">
+                      <SelectValue placeholder="Taal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle talen</SelectItem>
+                      <SelectItem value="nederlandsstalig">Nederlands</SelectItem>
+                      <SelectItem value="english">Engels</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm shrink-0" onClick={() => refetchCandidates()}>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Vernieuwen</span>
+                  </Button>
+                </div>
               </div>
 
               {/* Table */}
@@ -643,26 +646,23 @@ export default function DashboardMockup() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="text-sm" style={{ minWidth: '1200px' }}>
+                      <table className="text-sm w-full">
                         <thead className="bg-gray-50 border-b">
                           <tr>
-                            {/* AANGEMELD — klikbaar voor sortering */}
                             <th
-                              className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap cursor-pointer select-none hover:text-gray-700"
+                              className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap cursor-pointer select-none hover:text-gray-700 hidden sm:table-cell"
                               onClick={() => setKanSortDesc(v => !v)}
                             >
-                              Aangemeld {kanSortDesc ? '↓' : '↑'}
+                              Datum {kanSortDesc ? '↓' : '↑'}
                             </th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Naam</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Functie</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Woonplaats</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">E-mail</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Telefoon</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Nat.</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Ervaring</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Taal</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Status</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Ontbrekend</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden md:table-cell">Woonplaats</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">E-mail</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Telefoon</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Nat.</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Taal</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden sm:table-cell">Status</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase"></th>
                           </tr>
                         </thead>
@@ -671,8 +671,8 @@ export default function DashboardMockup() {
                             const missing = kanMissingItems(c);
                             return (
                               <tr key={c.id} className="hover:bg-gray-50 align-middle">
-                                {/* AANGEMELD */}
-                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
+                                {/* DATUM */}
+                                <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">
                                   {new Date(c.createdAt).toLocaleDateString('nl-NL')}
                                 </td>
                                 {/* NAAM */}
@@ -683,9 +683,12 @@ export default function DashboardMockup() {
                                         {getInitials(c.firstName, c.lastName)}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                      {c.firstName} {c.lastName}
-                                    </span>
+                                    <div>
+                                      <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                        {c.firstName} {c.lastName}
+                                      </span>
+                                      <div className="text-xs text-gray-400 sm:hidden">{new Date(c.createdAt).toLocaleDateString('nl-NL')}</div>
+                                    </div>
                                   </div>
                                 </td>
                                 {/* FUNCTIE */}
@@ -698,31 +701,27 @@ export default function DashboardMockup() {
                                   </Badge>
                                 </td>
                                 {/* WOONPLAATS */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden md:table-cell">
                                   {c.city || '—'}
                                 </td>
                                 {/* E-MAIL */}
-                                <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap hidden lg:table-cell">
                                   {c.email || '—'}
                                 </td>
                                 {/* TELEFOON */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden lg:table-cell">
                                   {c.phone || '—'}
                                 </td>
                                 {/* NATIONALITEIT */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden xl:table-cell">
                                   {c.nationality || '—'}
                                 </td>
-                                {/* ERVARING */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
-                                  {kanExpLabel(c)}
-                                </td>
                                 {/* VOERTAAL */}
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden xl:table-cell">
                                   {c.language || '—'}
                                 </td>
                                 {/* STATUS */}
-                                <td className="px-3 py-3 whitespace-nowrap">
+                                <td className="px-3 py-3 whitespace-nowrap hidden sm:table-cell">
                                   {kandidatenSubtab === 'in_proces' && (
                                     <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">In proces</Badge>
                                   )}
@@ -733,17 +732,6 @@ export default function DashboardMockup() {
                                   )}
                                   {kandidatenSubtab === 'afgewezen' && (
                                     <Badge className="text-xs bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">Afgewezen</Badge>
-                                  )}
-                                </td>
-                                {/* ONTBREKEND */}
-                                <td className="px-3 py-3 whitespace-nowrap">
-                                  {missing.length > 0 ? (
-                                    <div className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded whitespace-nowrap">
-                                      <Clock className="h-2.5 w-2.5 flex-shrink-0" />
-                                      <span>{missing.join(', ')}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-xs text-green-600 font-medium whitespace-nowrap">✓ Compleet</span>
                                   )}
                                 </td>
                                 {/* ACTIES */}
