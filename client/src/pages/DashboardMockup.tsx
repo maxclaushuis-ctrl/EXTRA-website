@@ -155,6 +155,9 @@ export default function DashboardMockup() {
   const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
   const [kanSortDesc, setKanSortDesc] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedKandidate, setSelectedKandidate] = useState<Candidate | null>(null);
+  const [kanDetailOpen, setKanDetailOpen] = useState(false);
+  const [rejectConfirmId, setRejectConfirmId] = useState<number | null>(null);
 
   // Sollicitanten tab state
   const [appSearch, setAppSearch] = useState('');
@@ -530,6 +533,64 @@ export default function DashboardMockup() {
         <div className="p-3 sm:p-6">
           {activeTab === 'kandidaten' ? (
             <div>
+              {/* Kandidaat detail dialog */}
+              <Dialog open={kanDetailOpen} onOpenChange={setKanDetailOpen}>
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                  {selectedKandidate && (
+                    <>
+                      <DialogHeader className="mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${getFunctionBadgeColor(selectedKandidate.functionType)}`}>
+                            {getInitials(selectedKandidate.firstName, selectedKandidate.lastName)}
+                          </div>
+                          <div>
+                            <DialogTitle className="text-lg">{selectedKandidate.firstName} {selectedKandidate.lastName}</DialogTitle>
+                            <p className="text-sm text-gray-500">{selectedKandidate.functionType}</p>
+                          </div>
+                        </div>
+                      </DialogHeader>
+                      <div className="space-y-3 text-sm">
+                        {[
+                          ['E-mail', selectedKandidate.email],
+                          ['Telefoon', selectedKandidate.phone],
+                          ['Woonplaats', selectedKandidate.city],
+                          ['Geboortedatum', selectedKandidate.birthDate],
+                          ['Nationaliteit', selectedKandidate.nationality],
+                          ['Taal', selectedKandidate.language],
+                          ['Aangemeld', new Date(selectedKandidate.createdAt).toLocaleDateString('nl-NL')],
+                          ['Status', selectedKandidate.status],
+                          ['Datum gesprek', selectedKandidate.interviewDate || null],
+                        ].map(([label, value]) => value ? (
+                          <div key={label as string} className="flex justify-between py-2 border-b border-gray-50">
+                            <span className="text-gray-500">{label}</span>
+                            <span className="font-medium text-right">{value as string}</span>
+                          </div>
+                        ) : null)}
+                      </div>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              {/* Afwijs-bevestiging dialog */}
+              <Dialog open={rejectConfirmId !== null} onOpenChange={(open) => { if (!open) setRejectConfirmId(null); }}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Kandidaat afwijzen</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-gray-600 mb-4">Weet je zeker dat je deze kandidaat wilt afwijzen? Dit kan niet ongedaan worden gemaakt.</p>
+                  <div className="flex gap-3 justify-end">
+                    <Button variant="outline" onClick={() => setRejectConfirmId(null)}>Annuleren</Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => { if (rejectConfirmId !== null) { rejectCandidateMutation.mutate(rejectConfirmId); setRejectConfirmId(null); } }}
+                    >
+                      Ja, afwijzen
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -737,16 +798,20 @@ export default function DashboardMockup() {
                                 {/* ACTIES */}
                                 <td className="px-3 py-3">
                                   <div className="flex items-center gap-0.5">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                      <Eye className="h-3 w-3 text-gray-400" />
+                                    <Button
+                                      variant="ghost" size="icon" className="h-7 w-7"
+                                      onClick={() => { setSelectedKandidate(c); setKanDetailOpen(true); }}
+                                      title="Details bekijken"
+                                    >
+                                      <Eye className="h-3.5 w-3.5 text-purple-500" />
                                     </Button>
                                     {kandidatenSubtab !== 'afgewezen' && (
                                       <Button
-                                        variant="ghost" size="icon" className="h-6 w-6"
-                                        onClick={() => rejectCandidateMutation.mutate(c.id)}
+                                        variant="ghost" size="icon" className="h-7 w-7"
+                                        onClick={() => setRejectConfirmId(c.id)}
                                         title="Afwijzen"
                                       >
-                                        <Trash2 className="h-3 w-3 text-red-400" />
+                                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
                                       </Button>
                                     )}
                                   </div>
@@ -1031,69 +1096,69 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <h1 className="text-xl font-bold">Sollicitanten</h1>
-                  <p className="text-sm text-gray-500">Ingevulde HR-intakeformulieren per functie</p>
+                  <p className="text-xs text-gray-500 hidden sm:block">Ingevulde HR-intakeformulieren per functie</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="gap-2 text-sm" onClick={() => refetchApplications()}>
+                  <Button variant="outline" size="sm" className="h-8" onClick={() => refetchApplications()}>
                     <RefreshCw className="h-4 w-4" />
-                    Vernieuwen
+                    <span className="hidden sm:inline ml-1.5">Vernieuwen</span>
                   </Button>
                   <a href="/sollicitatieformulier" target="_blank">
-                    <Button size="sm" className="gap-2 bg-purple-600 hover:bg-purple-700 text-sm">
+                    <Button size="sm" className="h-8 bg-purple-600 hover:bg-purple-700">
                       <FileText className="h-4 w-4" />
-                      Intakeformulier
+                      <span className="hidden sm:inline ml-1.5">Intakeformulier</span>
                     </Button>
                   </a>
                 </div>
               </div>
 
-              {/* Stats Cards — status overzicht */}
-              <div className="grid grid-cols-4 gap-4 mb-4">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
                 <Card className="bg-white border-l-4 border-l-purple-500">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-gray-500 mb-1">Totaal ingevuld</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <p className="text-xs text-gray-500 mb-1">Totaal</p>
                     <p className="text-2xl font-bold">{appCounts.total}</p>
-                    <p className="text-xs text-gray-400 mt-1">Alle formulieren</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Alle formulieren</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-blue-400">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1">Nieuw</p>
                     <p className="text-2xl font-bold text-blue-600">{appCounts.nieuw}</p>
-                    <p className="text-xs text-gray-400 mt-1">Nog te beoordelen</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Te beoordelen</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-green-500">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1">Aangenomen</p>
                     <p className="text-2xl font-bold text-green-600">{appCounts.aangenomen}</p>
-                    <p className="text-xs text-gray-400 mt-1">Goedgekeurd</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Goedgekeurd</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-red-400">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1">Afgewezen</p>
                     <p className="text-2xl font-bold text-red-500">{appCounts.afgewezen}</p>
-                    <p className="text-xs text-gray-400 mt-1">Niet doorgegaan</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Niet doorgegaan</p>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Function breakdown */}
-              <div className="grid grid-cols-4 gap-3 mb-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
                 {[
-                  { label: 'Horecamedewerker', count: appCounts.horecamedewerker, color: 'bg-orange-50 border-orange-200 text-orange-700' },
-                  { label: 'Housekeeping', count: appCounts.housekeeping, color: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
-                  { label: 'Chef', count: appCounts.chef, color: 'bg-gray-50 border-gray-200 text-gray-700' },
-                  { label: 'Front-office', count: appCounts.frontoffice, color: 'bg-blue-50 border-blue-200 text-blue-700' },
-                ].map(({ label, count, color }) => (
+                  { label: 'Horeca', fullLabel: 'Horecamedewerker', key: 'horecamedewerker', count: appCounts.horecamedewerker, color: 'bg-orange-50 border-orange-200 text-orange-700' },
+                  { label: 'Housekeeping', fullLabel: 'Housekeeping', key: 'housekeeping', count: appCounts.housekeeping, color: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
+                  { label: 'Chef', fullLabel: 'Chef', key: 'chef', count: appCounts.chef, color: 'bg-gray-50 border-gray-200 text-gray-700' },
+                  { label: 'Front-office', fullLabel: 'Front-office', key: 'frontoffice', count: appCounts.frontoffice, color: 'bg-blue-50 border-blue-200 text-blue-700' },
+                ].map(({ label, key, count, color }) => (
                   <button
-                    key={label}
-                    onClick={() => setAppFunctionFilter(appFunctionFilter === label.toLowerCase().replace('-', '') ? 'alle' : label.toLowerCase().replace('-office', 'office').replace('horecamedewerker', 'horecamedewerker').replace('housekeeping', 'housekeeping').replace('chef', 'chef'))}
-                    className={`border rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-sm ${color}`}
+                    key={key}
+                    onClick={() => setAppFunctionFilter(appFunctionFilter === key ? 'alle' : key)}
+                    className={`border rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-sm ${color} ${appFunctionFilter === key ? 'ring-2 ring-offset-1 ring-current' : ''}`}
                   >
                     <span className="text-sm font-medium">{label}</span>
                     <span className="text-xl font-bold">{count}</span>
@@ -1102,55 +1167,57 @@ export default function DashboardMockup() {
               </div>
 
               {/* Filters */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="relative flex-1">
+              <div className="space-y-2 mb-4">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Zoek op naam of e-mail..."
-                    className="pl-9"
+                    placeholder="Zoek naam of e-mail..."
+                    className="pl-9 w-full"
                     value={appSearch}
                     onChange={(e) => setAppSearch(e.target.value)}
                   />
                 </div>
-                <Select value={appFunctionFilter} onValueChange={setAppFunctionFilter}>
-                  <SelectTrigger className="w-[170px]">
-                    <SelectValue placeholder="Alle functies" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle functies</SelectItem>
-                    <SelectItem value="horecamedewerker">Horecamedewerker</SelectItem>
-                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
-                    <SelectItem value="chef">Chef</SelectItem>
-                    <SelectItem value="frontoffice">Front-office</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={appInterviewerFilter} onValueChange={setAppInterviewerFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Alle interviewers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle interviewers</SelectItem>
-                    {['Eveline', 'Isa', 'Charlotte', 'Max', 'Lea'].map(iv => (
-                      <SelectItem key={iv} value={iv}>{iv}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={appStatusFilter} onValueChange={setAppStatusFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Alle statussen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle statussen</SelectItem>
-                    <SelectItem value="nieuw">Nieuw</SelectItem>
-                    <SelectItem value="beoordeeld">Beoordeeld</SelectItem>
-                    <SelectItem value="aangenomen">Aangenomen</SelectItem>
-                    <SelectItem value="afgewezen">Afgewezen</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={appFunctionFilter} onValueChange={setAppFunctionFilter}>
+                    <SelectTrigger className="flex-1 min-w-0">
+                      <SelectValue placeholder="Functie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle functies</SelectItem>
+                      <SelectItem value="horecamedewerker">Horeca</SelectItem>
+                      <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                      <SelectItem value="chef">Chef</SelectItem>
+                      <SelectItem value="frontoffice">Front-office</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={appInterviewerFilter} onValueChange={setAppInterviewerFilter}>
+                    <SelectTrigger className="flex-1 min-w-0">
+                      <SelectValue placeholder="Interviewer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle interviewers</SelectItem>
+                      {['Eveline', 'Isa', 'Charlotte', 'Max', 'Lea'].map(iv => (
+                        <SelectItem key={iv} value={iv}>{iv}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={appStatusFilter} onValueChange={setAppStatusFilter}>
+                    <SelectTrigger className="flex-1 min-w-0">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle statussen</SelectItem>
+                      <SelectItem value="nieuw">Nieuw</SelectItem>
+                      <SelectItem value="beoordeeld">Beoordeeld</SelectItem>
+                      <SelectItem value="aangenomen">Aangenomen</SelectItem>
+                      <SelectItem value="afgewezen">Afgewezen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              {/* Status tab pills */}
-              <div className="flex items-center gap-2 mb-4 border-b pb-3">
+              {/* Status tab pills — scrollable on mobile */}
+              <div className="flex items-center gap-1.5 mb-4 border-b pb-3 overflow-x-auto">
                 {[
                   { val: 'alle', label: `Alle (${appCounts.total})`, cls: 'bg-purple-100 text-purple-700 hover:bg-purple-200' },
                   { val: 'nieuw', label: `Nieuw (${appCounts.nieuw})`, cls: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
@@ -1163,7 +1230,7 @@ export default function DashboardMockup() {
                     variant={appStatusFilter === val ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setAppStatusFilter(val)}
-                    className={appStatusFilter === val ? cls : 'text-gray-500'}
+                    className={`shrink-0 text-xs ${appStatusFilter === val ? cls : 'text-gray-500'}`}
                   >
                     {label}
                   </Button>
@@ -1197,14 +1264,14 @@ export default function DashboardMockup() {
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b text-left">
                           <tr>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Datum</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Naam</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Functie</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">E-mail</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Interviewer</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Beoordeling</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Status</th>
-                            <th className="px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide"></th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Datum</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Naam</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Functie</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell">E-mail</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Interviewer</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Beoordeling</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Status</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
