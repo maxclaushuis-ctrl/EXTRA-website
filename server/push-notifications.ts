@@ -71,6 +71,30 @@ class PushNotificationService {
   private subscriptions: Map<number, PushSubscription[]> = new Map();
 
   /**
+   * Load all subscriptions from DB into memory (call on server startup)
+   */
+  async loadFromDb(db: any, pushSubscriptionsTable: any) {
+    try {
+      const rows = await db.select().from(pushSubscriptionsTable);
+      this.subscriptions.clear();
+      for (const row of rows) {
+        if (!this.subscriptions.has(row.userId)) {
+          this.subscriptions.set(row.userId, []);
+        }
+        this.subscriptions.get(row.userId)!.push({
+          userId: row.userId,
+          endpoint: row.endpoint,
+          keys: { p256dh: row.p256dh, auth: row.auth },
+          createdAt: row.createdAt ?? new Date(),
+        });
+      }
+      console.log(`Push subscriptions geladen uit DB: ${rows.length} abonnementen voor ${this.subscriptions.size} gebruikers`);
+    } catch (err) {
+      console.error('Fout bij laden push subscriptions uit DB:', err);
+    }
+  }
+
+  /**
    * Subscribe user to push notifications
    */
   subscribe(userId: number, subscription: Omit<PushSubscription, 'userId' | 'createdAt'>) {
@@ -79,14 +103,23 @@ class PushNotificationService {
     }
     
     const userSubscriptions = this.subscriptions.get(userId)!;
+
+    // Prevent duplicate endpoints
+    const alreadyExists = userSubscriptions.some(s => s.endpoint === subscription.endpoint);
+    if (alreadyExists) {
+      console.log(`Push subscription al aanwezig voor user ${userId}, overschrijven...`);
+      this.unsubscribe(userId, subscription.endpoint);
+      this.subscriptions.get(userId) || this.subscriptions.set(userId, []);
+    }
+
     const newSubscription: PushSubscription = {
       userId,
       ...subscription,
       createdAt: new Date()
     };
     
-    userSubscriptions.push(newSubscription);
-    console.log(`Push subscription added for user ${userId}`);
+    this.subscriptions.get(userId)!.push(newSubscription);
+    console.log(`Push subscription toegevoegd voor user ${userId}. Totaal: ${this.subscriptions.get(userId)!.length}`);
   }
 
   /**

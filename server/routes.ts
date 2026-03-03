@@ -28,6 +28,7 @@ import {
   insertSalaryScaleSchema,
   insertCandidateAuditLogSchema,
   insertCandidateImportSchema,
+  pushSubscriptions,
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
@@ -244,7 +245,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize push notification service
   const pushService = initPushNotificationService();
   console.log('Push notification service geïnitialiseerd');
-  
+
+  // Load persisted push subscriptions from DB into memory
+  pushService.loadFromDb(db, pushSubscriptions).catch(console.error);
+
   // Start de verjaardagscontrole planning
   scheduleBirthdayCheck();
   // Legacy API routes - behouden voor backward compatibility
