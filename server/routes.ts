@@ -32,7 +32,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -3857,6 +3857,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }).catch((err) => {
           console.error("Fout bij versturen bevestigingsmail:", err);
         });
+
+        sendAdminCandidateNotificationEmail({
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          functionType: candidate.functionType,
+          city: candidate.city,
+          email: candidate.email,
+          birthDate: candidate.birthDate,
+          phone: candidate.phone,
+          nationality: candidate.nationality,
+        }).then((sent) => {
+          console.log(`Admin-notificatiemail (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+        }).catch((err) => {
+          console.error("Fout bij versturen admin-notificatiemail:", err);
+        });
       }
 
       // Notify admins on complete submission (not partial)
@@ -3961,6 +3976,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           interviewDate: updated.interviewDate,
           interviewTime: updated.interviewTime,
         }).catch((err) => console.error("Fout bij versturen bevestigingsmail:", err));
+
+        sendAdminCandidateNotificationEmail({
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          functionType: updated.functionType,
+          city: updated.city,
+          email: updated.email,
+          birthDate: updated.birthDate,
+          phone: updated.phone,
+          nationality: updated.nationality,
+        }).then((sent) => {
+          console.log(`Admin-notificatiemail (PATCH) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+        }).catch((err) => {
+          console.error("Fout bij versturen admin-notificatiemail:", err);
+        });
 
         // Push notification to admins
         try {

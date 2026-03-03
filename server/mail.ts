@@ -358,6 +358,82 @@ Team EXTRA`;
   });
 }
 
+// Stuur admin-notificatiemail bij nieuwe voltooide aanmelding
+export async function sendAdminCandidateNotificationEmail(candidate: {
+  firstName: string;
+  lastName: string;
+  functionType: string;
+  city?: string | null;
+  email?: string | null;
+  birthDate?: string | null;
+  phone?: string | null;
+  nationality?: string | null;
+}): Promise<boolean> {
+  const functionLabels: Record<string, string> = {
+    housekeeping: 'Housekeeping medewerker',
+    horecamedewerker: 'Horecamedewerker',
+    chef: 'Chef / Kok',
+    frontoffice: 'Front office medewerker',
+  };
+  const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
+
+  const row = (label: string, value: string | null | undefined) =>
+    value
+      ? `<tr><td style="padding:8px 12px;color:#6b7280;font-size:14px;white-space:nowrap;width:160px;">${label}</td><td style="padding:8px 12px;color:#111827;font-size:14px;font-weight:500;">${value}</td></tr>`
+      : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:28px 32px;">
+            <div style="color:#ffffff;font-size:22px;font-weight:700;">📋 Nieuwe aanmelding</div>
+            <div style="color:#ddd6fe;font-size:14px;margin-top:4px;">Er heeft iemand het aanmeldformulier ingevuld op doehetextra.nl</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+              ${row('Voornaam', candidate.firstName)}
+              ${row('Achternaam', candidate.lastName)}
+              ${row('Functie', functionLabel)}
+              ${row('Woonplaats', candidate.city)}
+              ${row('E-mail', candidate.email)}
+              ${row('Geboortedatum', candidate.birthDate)}
+              ${row('Telefoonnummer', candidate.phone)}
+              ${row('Nationaliteit', candidate.nationality)}
+            </table>
+            <div style="margin-top:24px;text-align:center;">
+              <a href="https://www.doehetextra.nl/dashboard-mockup" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Bekijk in dashboard</a>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName}\nAchternaam: ${candidate.lastName}\nFunctie: ${functionLabel}\nWoonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'}\nGeboortedatum: ${candidate.birthDate || '—'}\nTelefoonnummer: ${candidate.phone || '—'}\nNationaliteit: ${candidate.nationality || '—'}`;
+
+  return await sendEmail({
+    to: 'max@doehetextra.nl',
+    from: 'max@doehetextra.nl',
+    subject: 'Nieuwe aanmelding',
+    html,
+    text,
+  });
+}
+
 // Helper functie om instellingen op te halen
 async function getSettingValue(key: string, defaultValue: string): Promise<string> {
   try {
