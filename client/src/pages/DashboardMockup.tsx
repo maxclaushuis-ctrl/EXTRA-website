@@ -64,16 +64,8 @@ type Transaction = {
 };
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', tab: 'dashboard' },
-  { icon: Users, label: 'Gebruikers', tab: 'gebruikers' },
-  { icon: Trophy, label: 'Uitdagingen', tab: 'uitdagingen' },
-  { icon: Gift, label: 'Beloningen', tab: 'beloningen' },
-  { icon: Tag, label: 'Kortingen', tab: 'kortingen' },
-  { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
   { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
-  { icon: BarChart3, label: 'Klassement', tab: 'klassement' },
-  { icon: Mail, label: 'E-mailcampagnes', tab: 'email' },
-  { icon: Receipt, label: 'Transacties', tab: 'transacties' },
+  { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
 ];
 
 function getFunctionBadgeColor(functionType: string): string {
@@ -152,7 +144,7 @@ export default function DashboardMockup() {
     });
   }, [notifications, toast]);
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('kandidaten');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('alle');
