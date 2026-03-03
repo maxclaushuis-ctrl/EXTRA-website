@@ -3949,7 +3949,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ipAddress: req.ip ?? null
       });
 
-      // Stuur bevestigingsmail bij voltooiing
+      // Stuur bevestigingsmail en push notificatie bij voltooiing
       if (!validated.partial && validated.status !== 'afgewezen' && updated?.email) {
         sendCandidateConfirmationEmail({
           firstName: updated.firstName,
@@ -3961,6 +3961,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           interviewDate: updated.interviewDate,
           interviewTime: updated.interviewTime,
         }).catch((err) => console.error("Fout bij versturen bevestigingsmail:", err));
+
+        // Push notification to admins
+        try {
+          const allUsers = await storage.getUsers();
+          const adminUserIds = allUsers.filter((u: any) => u.role === 'admin').map((u: any) => u.id);
+          const candidateName = `${updated.firstName} ${updated.lastName}`;
+          const pushService = getPushNotificationService();
+          console.log(`[PUSH PATCH] adminUserIds: ${JSON.stringify(adminUserIds)}, pushService: ${!!pushService}`);
+          if (pushService && adminUserIds.length > 0) {
+            await pushService.sendNewCandidateAlert(adminUserIds, candidateName, updated.functionType || 'onbekend', id);
+            console.log(`[PUSH PATCH] sendNewCandidateAlert voltooid`);
+          }
+          if (typeof (global as any).broadcastNotification === 'function') {
+            (global as any).broadcastNotification(
+              'new_candidate',
+              { message: `📋 Nieuwe aanmelding: ${candidateName}`, data: { candidateId: id } },
+              undefined, 'admin'
+            );
+          }
+        } catch (notifErr) {
+          console.error('[PUSH PATCH] Fout bij push notificatie:', notifErr);
+        }
       }
 
       return res.status(200).json({ id, message: "Kandidaat bijgewerkt" });
