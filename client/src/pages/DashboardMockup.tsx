@@ -471,19 +471,26 @@ export default function DashboardMockup() {
                     setShowIOSGuide(true);
                     return;
                   }
-                  const wasSubscribed = isSubscribed;
-                  const success = wasSubscribed ? await unsubscribe() : await subscribe();
+                  // Must be logged in
+                  if (!isAuthenticated) {
+                    toast({
+                      title: 'Niet ingelogd',
+                      description: 'Log eerst in om meldingen in te schakelen.',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  // Always try to subscribe fresh (handles stale old subscriptions)
+                  const success = await subscribe();
                   if (success) {
                     toast({
-                      title: wasSubscribed ? 'Notificaties uitgeschakeld' : '🔔 Notificaties ingeschakeld',
-                      description: wasSubscribed
-                        ? 'Je ontvangt geen pushmeldingen meer.'
-                        : 'Je ontvangt nu een melding bij elk nieuw formulier.',
+                      title: '🔔 Meldingen ingeschakeld',
+                      description: 'Je ontvangt nu een pushmelding bij elke nieuwe aanmelding.',
                     });
-                  } else if (!wasSubscribed) {
+                  } else {
                     toast({
-                      title: 'Kon notificaties niet inschakelen',
-                      description: 'Controleer of je browser meldingen toestaat voor deze site.',
+                      title: 'Kon meldingen niet inschakelen',
+                      description: 'Zorg dat meldingen zijn toegestaan in je instellingen, of probeer opnieuw.',
                       variant: 'destructive',
                     });
                   }
