@@ -209,7 +209,7 @@ export default function DashboardMockup() {
     enabled: isAuthenticated && user?.role === 'admin',
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000,
+    refetchInterval: 5000,
   });
 
   const rejectCandidateMutation = useMutation({
@@ -223,6 +223,7 @@ export default function DashboardMockup() {
     enabled: isAuthenticated && user?.role === 'admin',
     staleTime: 0,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000,
   });
 
   const updateAppStatusMutation = useMutation({
