@@ -120,7 +120,7 @@ export default function DashboardMockup() {
   const { user, isAuthenticated, login, logout, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { notifications, clearNotifications } = useWebSocket();
-  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isIOSSafari, isIOSPWA } = usePushNotifications();
+  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isIOSSafari, isIOSPWA, error: pushError } = usePushNotifications();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const seenNotifIds = useRef<Set<string>>(new Set());
 
@@ -490,7 +490,7 @@ export default function DashboardMockup() {
                   } else {
                     toast({
                       title: 'Kon meldingen niet inschakelen',
-                      description: 'Zorg dat meldingen zijn toegestaan in je instellingen, of probeer opnieuw.',
+                      description: pushError || 'Zorg dat meldingen zijn toegestaan in je instellingen, of probeer opnieuw.',
                       variant: 'destructive',
                     });
                   }
