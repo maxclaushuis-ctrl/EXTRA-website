@@ -3328,8 +3328,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       pushService.subscribe(userId, { endpoint, keys });
 
       // Persist to DB (upsert by endpoint)
-      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
-      await db.insert(pushSubscriptions).values({ userId, endpoint, p256dh: keys.p256dh, auth: keys.auth });
+      console.log(`[PUSH DB] Saving subscription for user ${userId}, endpoint: ${endpoint.slice(0, 40)}...`);
+      try {
+        await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+        await db.insert(pushSubscriptions).values({ userId, endpoint, p256dh: keys.p256dh, auth: keys.auth });
+        const count = await db.select().from(pushSubscriptions);
+        console.log(`[PUSH DB] Saved OK. Total rows in DB: ${count.length}`);
+      } catch (dbErr) {
+        console.error(`[PUSH DB] DB save FAILED:`, dbErr);
+      }
       
       res.json({ message: "Push notifications ingeschakeld" });
     } catch (error) {
@@ -3860,8 +3867,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const candidateName = `${candidate.firstName} ${candidate.lastName}`;
 
           const pushService = getPushNotificationService();
+          console.log(`[PUSH] adminUserIds: ${JSON.stringify(adminUserIds)}, pushService: ${!!pushService}`);
           if (pushService && adminUserIds.length > 0) {
-            pushService.sendNewCandidateAlert(adminUserIds, candidateName, candidate.functionType, candidate.id).catch(console.error);
+            try {
+              await pushService.sendNewCandidateAlert(adminUserIds, candidateName, candidate.functionType, candidate.id);
+              console.log(`[PUSH] sendNewCandidateAlert voltooid voor ${adminUserIds}`);
+            } catch (pushErr) {
+              console.error('[PUSH] sendNewCandidateAlert fout:', pushErr);
+            }
+          } else {
+            console.warn(`[PUSH] Geen push verstuurd: pushService=${!!pushService}, admins=${adminUserIds.length}`);
           }
 
           if (typeof (global as any).broadcastNotification === 'function') {
