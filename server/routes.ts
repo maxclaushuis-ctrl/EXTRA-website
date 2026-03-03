@@ -3328,7 +3328,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       pushService.subscribe(userId, { endpoint, keys });
 
       // Persist to DB (upsert by endpoint)
-      const { pushSubscriptions } = await import("@shared/schema");
       await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
       await db.insert(pushSubscriptions).values({ userId, endpoint, p256dh: keys.p256dh, auth: keys.auth });
       
@@ -3381,7 +3380,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       pushService.unsubscribe(userId, endpoint);
 
       // Remove from DB
-      const { pushSubscriptions } = await import("@shared/schema");
       await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
       
       res.json({ message: "Push notifications uitgeschakeld" });
