@@ -107,7 +107,13 @@ export function usePushNotifications() {
   };
 
   const subscribe = useCallback(async () => {
-    if (!state.isSupported || !isAuthenticated) {
+    if (!isAuthenticated) {
+      console.warn('Subscribe geblokkeerd: niet ingelogd');
+      return false;
+    }
+
+    if (!state.isSupported) {
+      console.warn('Subscribe geblokkeerd: push niet ondersteund op dit apparaat');
       return false;
     }
 
@@ -116,8 +122,9 @@ export function usePushNotifications() {
     try {
       // Request notification permission
       const permission = await Notification.requestPermission();
+      console.log('Notification permission:', permission);
       if (permission !== 'granted') {
-        throw new Error('Notification permission geweigerd');
+        throw new Error('Meldingen zijn geblokkeerd. Geef toestemming in de browserinstellingen.');
       }
 
       // Check if we have push manager support
@@ -128,19 +135,29 @@ export function usePushNotifications() {
         });
         
         if (!vapidResponse.ok) {
-          throw new Error('Kan VAPID key niet ophalen');
+          throw new Error(`Kan serversleutel niet ophalen (${vapidResponse.status})`);
         }
         
         const { publicKey } = await vapidResponse.json();
+        console.log('VAPID key opgehaald, aanmaken abonnement...');
         
         // Get service worker registration
         const registration = await navigator.serviceWorker.ready;
+
+        // Always unsubscribe existing subscription first (handles VAPID key changes)
+        const existing = await registration.pushManager.getSubscription();
+        if (existing) {
+          console.log('Oud abonnement gevonden, verwijderen voor herregistratie...');
+          await existing.unsubscribe();
+        }
         
-        // Subscribe to push notifications
+        // Subscribe to push notifications with fresh subscription
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
+
+        console.log('Browser abonnement aangemaakt, opslaan bij server...');
 
         // Send subscription to server
         const subscribeResponse = await fetch('/api/push/subscribe', {
@@ -159,7 +176,8 @@ export function usePushNotifications() {
         });
 
         if (!subscribeResponse.ok) {
-          throw new Error('Server subscription mislukt');
+          const errText = await subscribeResponse.text();
+          throw new Error(`Server kon abonnement niet opslaan (${subscribeResponse.status}): ${errText}`);
         }
 
         setState(prev => ({ 
@@ -168,21 +186,15 @@ export function usePushNotifications() {
           isLoading: false 
         }));
         
-        console.log('Push notifications geactiveerd');
+        console.log('Push notifications geactiveerd en opgeslagen');
         return true;
       } else {
-        // Fallback for Safari/browsers without push manager
-        // Just register basic notification permission
-        const fallbackResponse = await fetch('/api/push/subscribe-basic', {
+        // Fallback for browsers without push manager (older Safari)
+        await fetch('/api/push/subscribe-basic', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            type: 'basic',
-            userAgent: navigator.userAgent
-          })
+          body: JSON.stringify({ type: 'basic', userAgent: navigator.userAgent })
         });
 
         setState(prev => ({ 
@@ -196,7 +208,7 @@ export function usePushNotifications() {
       }
 
     } catch (error) {
-      console.error('Push subscription error:', error);
+      console.error('Push subscription fout:', error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 

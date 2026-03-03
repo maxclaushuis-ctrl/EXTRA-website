@@ -465,13 +465,20 @@ export default function DashboardMockup() {
                 size="icon"
                 className={`h-8 w-8 relative ${isSubscribed ? 'text-purple-600' : 'text-gray-400'}`}
                 onClick={async () => {
-                  const success = isSubscribed ? await unsubscribe() : await subscribe();
+                  const wasSubscribed = isSubscribed;
+                  const success = wasSubscribed ? await unsubscribe() : await subscribe();
                   if (success) {
                     toast({
-                      title: isSubscribed ? 'Notificaties uitgeschakeld' : '🔔 Notificaties ingeschakeld',
-                      description: isSubscribed
+                      title: wasSubscribed ? 'Notificaties uitgeschakeld' : '🔔 Notificaties ingeschakeld',
+                      description: wasSubscribed
                         ? 'Je ontvangt geen pushmeldingen meer.'
                         : 'Je ontvangt nu een melding bij elk nieuw formulier.',
+                    });
+                  } else if (!wasSubscribed) {
+                    toast({
+                      title: 'Kon notificaties niet inschakelen',
+                      description: 'Controleer of je browser meldingen toestaat voor deze site, of gebruik Chrome/Edge op je telefoon.',
+                      variant: 'destructive',
                     });
                   }
                 }}
