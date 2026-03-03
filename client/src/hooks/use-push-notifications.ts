@@ -6,6 +6,8 @@ interface PushNotificationState {
   isSubscribed: boolean;
   isLoading: boolean;
   error: string | null;
+  isIOSSafari: boolean;
+  isIOSPWA: boolean;
 }
 
 export function usePushNotifications() {
@@ -14,31 +16,37 @@ export function usePushNotifications() {
     isSupported: false,
     isSubscribed: false,
     isLoading: false,
-    error: null
+    error: null,
+    isIOSSafari: false,
+    isIOSPWA: false,
   });
 
   // Check if push notifications are supported
   useEffect(() => {
     const checkSupport = () => {
-      // Basic notification support check
       const hasNotification = 'Notification' in window;
-      
-      // More lenient check for Safari/iOS
       const hasServiceWorker = 'serviceWorker' in navigator;
       const hasPushManager = 'PushManager' in window;
-      
-      // Consider supported if we have at least basic notifications
-      const isSupported = hasNotification && (hasServiceWorker || hasPushManager);
-      
-      console.log('Push notification support check:', {
-        hasNotification,
-        hasServiceWorker,
-        hasPushManager,
-        isSupported,
-        userAgent: navigator.userAgent
-      });
-      
-      setState(prev => ({ ...prev, isSupported }));
+
+      // Detect iOS Safari
+      const ua = navigator.userAgent;
+      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      const isSafariEngine = /WebKit/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua);
+      const isIOSSafari = isIOS && isSafariEngine;
+
+      // Detect if running as PWA (added to home screen)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || (navigator as any).standalone === true;
+      const isIOSPWA = isIOSSafari && isStandalone;
+
+      // On iOS Safari without PWA mode, push is not available
+      const isSupported = isIOSSafari
+        ? isIOSPWA && hasNotification && hasServiceWorker
+        : hasNotification && (hasServiceWorker || hasPushManager);
+
+      console.log('Push support check:', { hasNotification, hasServiceWorker, hasPushManager, isIOSSafari, isIOSPWA, isSupported });
+
+      setState(prev => ({ ...prev, isSupported, isIOSSafari, isIOSPWA }));
     };
 
     checkSupport();

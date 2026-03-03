@@ -120,7 +120,8 @@ export default function DashboardMockup() {
   const { user, isAuthenticated, login, logout, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { notifications, clearNotifications } = useWebSocket();
-  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
+  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isIOSSafari, isIOSPWA } = usePushNotifications();
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
   const seenNotifIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -465,6 +466,11 @@ export default function DashboardMockup() {
                 size="icon"
                 className={`h-8 w-8 relative ${isSubscribed ? 'text-purple-600' : 'text-gray-400'}`}
                 onClick={async () => {
+                  // iOS Safari without PWA: show installation guide
+                  if (isIOSSafari && !isIOSPWA) {
+                    setShowIOSGuide(true);
+                    return;
+                  }
                   const wasSubscribed = isSubscribed;
                   const success = wasSubscribed ? await unsubscribe() : await subscribe();
                   if (success) {
@@ -477,7 +483,7 @@ export default function DashboardMockup() {
                   } else if (!wasSubscribed) {
                     toast({
                       title: 'Kon notificaties niet inschakelen',
-                      description: 'Controleer of je browser meldingen toestaat voor deze site, of gebruik Chrome/Edge op je telefoon.',
+                      description: 'Controleer of je browser meldingen toestaat voor deze site.',
                       variant: 'destructive',
                     });
                   }
@@ -1582,6 +1588,50 @@ export default function DashboardMockup() {
           )}
         </div>
       </main>
+
+      {/* iOS Safari installation guide */}
+      <Dialog open={showIOSGuide} onOpenChange={setShowIOSGuide}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-purple-700">
+              🍎 Meldingen instellen op iPhone
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm text-gray-700">
+            <p className="font-medium">
+              Safari op iPhone vereist dat je de site eerst als app installeert voordat je meldingen kunt ontvangen. Dat doe je zo:
+            </p>
+            <ol className="space-y-3">
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                <span>Tik op de <strong>Deel-knop</strong> onderaan Safari (het vierkantje met een pijl omhoog)</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                <span>Scroll naar beneden en tik op <strong>"Zet op beginscherm"</strong></span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+                <span>Tik op <strong>"Voeg toe"</strong> rechtsboven</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">4</span>
+                <span>Open het EXTRA-icoon op je beginscherm en log opnieuw in</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">5</span>
+                <span>Tik dan op het <strong>bel-icoon</strong> en geef toestemming</span>
+              </li>
+            </ol>
+            <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+              Dit is een beperking van Apple — push meldingen in Safari werken alleen via een geïnstalleerde app (vereist iOS 16.4 of nieuwer).
+            </p>
+          </div>
+          <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => setShowIOSGuide(false)}>
+            Begrepen
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
