@@ -1,7 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+const PgStore = connectPg(session);
 
 
 // Declareer type voor session gegevens
@@ -24,6 +27,7 @@ declare global {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -44,15 +48,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Voeg sessie middleware toe
+// Voeg sessie middleware toe (PostgreSQL store zodat autoscale werkt)
 app.use(session({
+  store: new PgStore({
+    conString: process.env.DATABASE_URL,
+    tableName: 'session',
+    createTableIfMissing: true,
+  }),
   secret: 'extra-rewards-secret',
-  resave: true,           // Opslaan op elke request, ook als niet gewijzigd
-  saveUninitialized: true, // Zelfs niet geïnitialiseerde sessies opslaan
-  rolling: true,          // Cookie vernieuwen bij elke request
-  name: 'extra.sid',      // Expliciete naam voor cookie voor betere debugging
+  resave: false,
+  saveUninitialized: false,
+  rolling: true,
+  name: 'extra.sid',
   cookie: {
-    secure: false,        // In productie 'true' gebruiken voor HTTPS only
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 24 * 60 * 60 * 1000, // 24 uur
     httpOnly: true,
     sameSite: 'lax',
