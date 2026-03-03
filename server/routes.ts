@@ -3320,7 +3320,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Niet ingelogd" });
       }
 
+      // Save in memory
       pushService.subscribe(userId, { endpoint, keys });
+
+      // Persist to DB (upsert by endpoint)
+      const { pushSubscriptions } = await import("@shared/schema");
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+      await db.insert(pushSubscriptions).values({ userId, endpoint, p256dh: keys.p256dh, auth: keys.auth });
       
       res.json({ message: "Push notifications ingeschakeld" });
     } catch (error) {
@@ -3369,6 +3375,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       pushService.unsubscribe(userId, endpoint);
+
+      // Remove from DB
+      const { pushSubscriptions } = await import("@shared/schema");
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
       
       res.json({ message: "Push notifications uitgeschakeld" });
     } catch (error) {
