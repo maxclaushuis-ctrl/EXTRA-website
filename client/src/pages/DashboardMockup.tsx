@@ -154,6 +154,7 @@ export default function DashboardMockup() {
   const [kandidatenFunctionFilter, setKandidatenFunctionFilter] = useState('alle');
   const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
   const [kanSortDesc, setKanSortDesc] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Sollicitanten tab state
   const [appSearch, setAppSearch] = useState('');
@@ -393,9 +394,18 @@ export default function DashboardMockup() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col fixed h-full">
-        <div className="p-4 border-b">
+      <aside className={`w-56 bg-white border-r border-gray-200 flex flex-col fixed h-full z-30 transition-transform duration-200
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
               <LayoutDashboard className="h-4 w-4 text-white" />
@@ -405,6 +415,12 @@ export default function DashboardMockup() {
               <div className="text-xs text-gray-400">Beheerdersdashboard</div>
             </div>
           </div>
+          <button
+            className="md:hidden p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         <div className="p-2 text-xs text-gray-400 uppercase tracking-wider mt-4 px-4">Beheer</div>
@@ -413,7 +429,7 @@ export default function DashboardMockup() {
           {sidebarItems.map((item) => (
             <button
               key={item.label}
-              onClick={() => setActiveTab(item.tab)}
+              onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                 activeTab === item.tab 
                   ? 'bg-purple-100 text-purple-700 font-medium' 
@@ -439,12 +455,18 @@ export default function DashboardMockup() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-56 overflow-auto">
+      <main className="flex-1 md:ml-56 overflow-auto">
         {/* Header */}
         <header className="bg-white border-b px-6 py-3 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+              <button
+                className="md:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hidden md:flex">
                 <Mail className="h-4 w-4 text-gray-500" />
               </div>
               <div>
