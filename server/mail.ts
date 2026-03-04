@@ -408,11 +408,11 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
                 ${cell('Woonplaats', candidate.city)}
               </tr>
               <tr>
-                ${cell('E-mail', candidate.email)}
                 ${cell('Telefoonnummer', candidate.phone)}
+                ${cell('E-mail', candidate.email)}
               </tr>
               <tr>
-                ${cell('Geboortedatum', candidate.birthDate)}
+                ${cell('Geboortedatum', candidate.birthDate ? candidate.birthDate.split('-').reverse().join('-') : null)}
                 ${cell('Nationaliteit', candidate.nationality)}
               </tr>
             </table>
