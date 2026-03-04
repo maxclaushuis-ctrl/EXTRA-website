@@ -4330,14 +4330,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const candidate = await storage.createCandidate(validatedData);
       
-      // Log creation
-      await storage.createCandidateAuditLog({
-        candidateId: candidate.id,
-        action: 'created',
-        changedByUserId: req.session?.userId ?? null,
-        changeData: { description: 'Sollicitant aangemaakt' },
-        ipAddress: req.ip ?? null
-      });
+      try {
+        await storage.createCandidateAuditLog({
+          candidateId: candidate.id,
+          action: 'created',
+          changedByUserId: req.session?.userId ?? null,
+          changeData: { description: 'Sollicitant aangemaakt' },
+          ipAddress: req.ip ?? null
+        });
+      } catch (auditErr) {
+        console.warn('Audit log kon niet worden aangemaakt (niet-kritiek):', auditErr);
+      }
       
       return res.status(201).json(candidate);
     } catch (error) {
@@ -4360,14 +4363,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updatedCandidate = await storage.updateCandidate(id, req.body);
       
-      // Log update
-      await storage.createCandidateAuditLog({
-        candidateId: id,
-        action: 'updated',
-        changedByUserId: req.session?.userId ?? null,
-        changeData: { updatedFields: Object.keys(req.body) },
-        ipAddress: req.ip ?? null
-      });
+      try {
+        await storage.createCandidateAuditLog({
+          candidateId: id,
+          action: 'updated',
+          changedByUserId: req.session?.userId ?? null,
+          changeData: { updatedFields: Object.keys(req.body) },
+          ipAddress: req.ip ?? null
+        });
+      } catch (auditErr) {
+        console.warn('Audit log kon niet worden aangemaakt (niet-kritiek):', auditErr);
+      }
       
       return res.json(updatedCandidate);
     } catch (error) {

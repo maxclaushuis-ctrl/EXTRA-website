@@ -2973,13 +2973,17 @@ export class MemStorage implements IStorage {
       .where(eq(candidatesTable.id, id))
       .returning();
     
-    await this.createCandidateAuditLog({
-      candidateId: id,
-      action: 'status_changed',
-      changedByUserId: changedByUserId ?? null,
-      changeData: { fieldName: 'status', oldValue: oldStatus, newValue: status },
-      ipAddress: null
-    });
+    try {
+      await this.createCandidateAuditLog({
+        candidateId: id,
+        action: 'status_changed',
+        changedByUserId: changedByUserId ?? null,
+        changeData: { fieldName: 'status', oldValue: oldStatus, newValue: status },
+        ipAddress: null
+      });
+    } catch (auditErr) {
+      console.warn('Audit log kon niet worden aangemaakt (niet-kritiek):', auditErr);
+    }
     
     return updated;
   }
@@ -3009,13 +3013,17 @@ export class MemStorage implements IStorage {
       })
       .where(eq(candidatesTable.id, id));
     
-    await this.createCandidateAuditLog({
-      candidateId: id,
-      action: 'anonymized',
-      changedByUserId: changedByUserId ?? null,
-      changeData: { description: 'Kandidaat geanonimiseerd conform AVG' },
-      ipAddress: null
-    });
+    try {
+      await this.createCandidateAuditLog({
+        candidateId: id,
+        action: 'anonymized',
+        changedByUserId: changedByUserId ?? null,
+        changeData: { description: 'Kandidaat geanonimiseerd conform AVG' },
+        ipAddress: null
+      });
+    } catch (auditErr) {
+      console.warn('Audit log kon niet worden aangemaakt (niet-kritiek):', auditErr);
+    }
     
     return true;
   }
