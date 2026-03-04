@@ -47,6 +47,8 @@ type Candidate = {
   experienceLevel?: string;
   horecaExperience?: string;
   cvUrl?: string;
+  hasCv?: boolean;
+  cvFilename?: string;
   createdAt: string;
   interviewDate?: string;
   interviewTime?: string;
@@ -158,6 +160,9 @@ export default function DashboardMockup() {
   const [selectedKandidate, setSelectedKandidate] = useState<Candidate | null>(null);
   const [kanDetailOpen, setKanDetailOpen] = useState(false);
   const [rejectConfirmId, setRejectConfirmId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState<'diensten' | 'cv'>('diensten');
+  const [cvPreviewOpen, setCvPreviewOpen] = useState(false);
+  const [cvPreviewCandidate, setCvPreviewCandidate] = useState<Candidate | null>(null);
 
   // Sollicitanten tab state
   const [appSearch, setAppSearch] = useState('');
@@ -217,8 +222,8 @@ export default function DashboardMockup() {
   });
 
   const rejectCandidateMutation = useMutation({
-    mutationFn: (id: number) =>
-      apiRequest('PATCH', `/api/admin/candidates/${id}`, { status: 'afgewezen' }),
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      apiRequest('PATCH', `/api/admin/candidates/${id}/status`, { status: 'afgewezen', rejectionReason: reason }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); },
   });
 
@@ -583,22 +588,87 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
-              {/* Afwijs-bevestiging dialog */}
+              {/* Afwijs-bevestiging dialog met reden */}
               <Dialog open={rejectConfirmId !== null} onOpenChange={(open) => { if (!open) setRejectConfirmId(null); }}>
                 <DialogContent className="max-w-sm">
                   <DialogHeader>
-                    <DialogTitle>Kandidaat afwijzen</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">Kandidaat afwijzen</DialogTitle>
                   </DialogHeader>
-                  <p className="text-sm text-gray-600 mb-4">Weet je zeker dat je deze kandidaat wilt afwijzen? Dit kan niet ongedaan worden gemaakt.</p>
+                  <p className="text-sm text-gray-600 mb-3">Wat is de reden van afwijzing?</p>
+                  <div className="space-y-2 mb-5">
+                    {([
+                      { value: 'diensten', label: 'Te weinig diensten beschikbaar' },
+                      { value: 'cv', label: 'CV onvoldoende passend' },
+                    ] as const).map(opt => (
+                      <label key={opt.value} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${rejectReason === opt.value ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <input
+                          type="radio"
+                          name="rejectReason"
+                          value={opt.value}
+                          checked={rejectReason === opt.value}
+                          onChange={() => setRejectReason(opt.value)}
+                          className="accent-purple-600"
+                        />
+                        <span className="text-sm text-gray-700">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
                   <div className="flex gap-3 justify-end">
-                    <Button variant="outline" onClick={() => setRejectConfirmId(null)}>Annuleren</Button>
+                    <Button variant="outline" size="sm" onClick={() => setRejectConfirmId(null)}>Annuleren</Button>
                     <Button
-                      variant="destructive"
-                      onClick={() => { if (rejectConfirmId !== null) { rejectCandidateMutation.mutate(rejectConfirmId); setRejectConfirmId(null); } }}
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      disabled={rejectCandidateMutation.isPending}
+                      onClick={() => {
+                        if (rejectConfirmId !== null) {
+                          rejectCandidateMutation.mutate({ id: rejectConfirmId, reason: rejectReason });
+                          setRejectConfirmId(null);
+                        }
+                      }}
                     >
-                      Ja, afwijzen
+                      Afwijzen & e-mail sturen
                     </Button>
                   </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* CV preview modal */}
+              <Dialog open={cvPreviewOpen} onOpenChange={setCvPreviewOpen}>
+                <DialogContent className="max-w-3xl max-h-[90vh]">
+                  <DialogHeader>
+                    <DialogTitle className="text-base">
+                      CV — {cvPreviewCandidate?.firstName} {cvPreviewCandidate?.lastName}
+                    </DialogTitle>
+                  </DialogHeader>
+                  {cvPreviewCandidate?.hasCv ? (
+                    <div className="flex flex-col gap-3">
+                      <div className="w-full h-[60vh] rounded-lg overflow-hidden border border-gray-200">
+                        <iframe
+                          src={`/api/admin/candidates/${cvPreviewCandidate.id}/cv`}
+                          className="w-full h-full"
+                          title="CV preview"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <a
+                          href={`/api/admin/candidates/${cvPreviewCandidate.id}/cv`}
+                          download
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Downloaden
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-3">
+                        <FileText className="h-7 w-7 text-red-400" />
+                      </div>
+                      <p className="text-gray-600 font-medium">Geen CV geüpload</p>
+                      <p className="text-gray-400 text-sm mt-1">Deze kandidaat heeft nog geen CV geüpload.</p>
+                    </div>
+                  )}
                 </DialogContent>
               </Dialog>
 
@@ -734,8 +804,7 @@ export default function DashboardMockup() {
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Telefoon</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Nat.</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Taal</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden sm:table-cell">Status</th>
-                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase"></th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase">CV</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -792,34 +861,20 @@ export default function DashboardMockup() {
                                 <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden xl:table-cell">
                                   {c.language || '—'}
                                 </td>
-                                {/* STATUS */}
-                                <td className="px-3 py-3 whitespace-nowrap hidden sm:table-cell">
-                                  {kandidatenSubtab === 'in_proces' && (
-                                    <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">In proces</Badge>
-                                  )}
-                                  {kandidatenSubtab === 'gesprek_gepland' && (
-                                    <Badge className="text-xs bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
-                                      <Calendar className="h-2.5 w-2.5 mr-1" />{c.interviewDate}
-                                    </Badge>
-                                  )}
-                                  {kandidatenSubtab === 'afgewezen' && (
-                                    <Badge className="text-xs bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">Afgewezen</Badge>
-                                  )}
-                                </td>
-                                {/* ACTIES */}
+                                {/* CV + ACTIES */}
                                 <td className="px-3 py-3">
                                   <div className="flex items-center gap-0.5">
                                     <Button
                                       variant="ghost" size="icon" className="h-7 w-7"
-                                      onClick={() => { setSelectedKandidate(c); setKanDetailOpen(true); }}
-                                      title="Details bekijken"
+                                      onClick={() => { setCvPreviewCandidate(c); setCvPreviewOpen(true); }}
+                                      title={c.hasCv ? "CV bekijken" : "Geen CV geüpload"}
                                     >
-                                      <Eye className="h-3.5 w-3.5 text-purple-500" />
+                                      <Eye className={`h-3.5 w-3.5 ${c.hasCv ? 'text-green-500' : 'text-red-400'}`} />
                                     </Button>
                                     {kandidatenSubtab !== 'afgewezen' && (
                                       <Button
                                         variant="ghost" size="icon" className="h-7 w-7"
-                                        onClick={() => setRejectConfirmId(c.id)}
+                                        onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
                                         title="Afwijzen"
                                       >
                                         <Trash2 className="h-3.5 w-3.5 text-red-400" />

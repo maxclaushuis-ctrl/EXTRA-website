@@ -927,6 +927,7 @@ export const candidates = pgTable("candidates", {
   
   // CV status
   hasCv: boolean("has_cv").default(false),
+  cvFilename: text("cv_filename"),
   cvReminderSentAt: timestamp("cv_reminder_sent_at"),
   
   // Wie heeft aangemaakt

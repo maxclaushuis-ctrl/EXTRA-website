@@ -494,6 +494,105 @@ export async function sendApplicationRejectionEmail(applicant: {
   });
 }
 
+export async function sendCandidateRejectionEmailDiensten(candidate: {
+  firstName: string;
+  email: string;
+}): Promise<boolean> {
+  if (!candidate.email) return false;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#7c3aed;padding:24px 28px;">
+            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je aanmelding en het gesprek bij EXTRA.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Op dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat momenteel beschikbaar is in verhouding tot het aantal mensen in onze poule.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Dat zegt dus niet per se iets over jou, maar meer over de planning en beschikbare plekken.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je veel succes en wie weet kruisen onze paden in de toekomst nog eens.</p>
+            <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding en het gesprek bij EXTRA.\n\nOp dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat momenteel beschikbaar is in verhouding tot het aantal mensen in onze poule.\n\nDat zegt dus niet per se iets over jou, maar meer over de planning en beschikbare plekken.\n\nWe wensen je veel succes en wie weet kruisen onze paden in de toekomst nog eens.\n\nGroet,\nTeam EXTRA`;
+
+  return await sendEmail({
+    to: candidate.email,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: 'Bedankt voor je sollicitatie bij EXTRA',
+    html,
+    text,
+  });
+}
+
+export async function sendCandidateRejectionEmailCv(candidate: {
+  firstName: string;
+  email: string;
+}): Promise<boolean> {
+  if (!candidate.email) return false;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#7c3aed;padding:24px 28px;">
+            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je interesse in EXTRA en het insturen van je gegevens.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Na het bekijken van je CV hebben we besloten om op dit moment niet verder te gaan met de sollicitatie. Voor de opdrachten waar we momenteel mensen voor zoeken is meer relevante ervaring nodig.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je veel succes met je verdere stappen en bedanken je voor je interesse in EXTRA.</p>
+            <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${candidate.firstName},\n\nBedankt voor je interesse in EXTRA en het insturen van je gegevens.\n\nNa het bekijken van je CV hebben we besloten om op dit moment niet verder te gaan met de sollicitatie. Voor de opdrachten waar we momenteel mensen voor zoeken is meer relevante ervaring nodig.\n\nWe wensen je veel succes met je verdere stappen en bedanken je voor je interesse in EXTRA.\n\nGroet,\nTeam EXTRA`;
+
+  return await sendEmail({
+    to: candidate.email,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: 'Update over je sollicitatie bij EXTRA',
+    html,
+    text,
+  });
+}
+
 export async function sendCvUploadFirstEmail(candidate: { firstName: string; email: string; id: number }): Promise<boolean> {
   const uploadUrl = `https://www.doehetextra.nl/aanmelden`;
 

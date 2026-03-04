@@ -32,7 +32,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -4239,7 +4239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const candidateId = req.body?.candidateId ? parseInt(req.body.candidateId) : null;
       if (candidateId && !isNaN(candidateId)) {
         try {
-          await storage.updateCandidate(candidateId, { hasCv: true });
+          await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: file.filename });
         } catch (err) {
           console.error("Fout bij markeren hasCv:", err);
         }
@@ -4380,7 +4380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admin/candidates/:id/status", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { status } = req.body;
+      const { status, rejectionReason } = req.body;
       
       if (!['in_behandeling', 'aangenomen', 'afgewezen'].includes(status)) {
         return res.status(400).json({ message: "Ongeldige status" });
@@ -4390,11 +4390,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedCandidate) {
         return res.status(404).json({ message: "Sollicitant niet gevonden" });
       }
+
+      if (status === 'afgewezen' && updatedCandidate.email && updatedCandidate.firstName) {
+        const candidate = { firstName: updatedCandidate.firstName, email: updatedCandidate.email };
+        if (rejectionReason === 'cv') {
+          sendCandidateRejectionEmailCv(candidate).catch(err =>
+            console.error("Fout bij versturen afwijzingsmail (cv):", err)
+          );
+        } else {
+          sendCandidateRejectionEmailDiensten(candidate).catch(err =>
+            console.error("Fout bij versturen afwijzingsmail (diensten):", err)
+          );
+        }
+      }
       
       return res.json(updatedCandidate);
     } catch (error) {
       console.error("Error updating candidate status:", error);
       return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de status" });
+    }
+  });
+
+  app.get("/api/admin/candidates/:id/cv", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const candidate = await storage.getCandidate(id);
+      if (!candidate || !candidate.cvFilename) {
+        return res.status(404).json({ message: "Geen CV gevonden" });
+      }
+      const cvPath = path.join(process.cwd(), 'uploads', 'cv', candidate.cvFilename);
+      if (!fs.existsSync(cvPath)) {
+        return res.status(404).json({ message: "CV bestand niet gevonden" });
+      }
+      const ext = path.extname(candidate.cvFilename).toLowerCase();
+      const mimeType = ext === '.pdf' ? 'application/pdf'
+        : ext === '.docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        : 'application/msword';
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `inline; filename="cv-${id}${ext}"`);
+      res.sendFile(cvPath);
+    } catch (error) {
+      console.error("Error serving CV:", error);
+      return res.status(500).json({ message: "Fout bij ophalen CV" });
     }
   });
 
