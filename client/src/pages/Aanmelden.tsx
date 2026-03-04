@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -167,17 +166,21 @@ const COPY = {
     continue: "Ga verder",
     back: "Terug",
     submit: "Verstuur aanmelding",
-    languageQuestion: "Welke talen spreek je goed genoeg om gasten te helpen?",
-    dutch: "Nederlands",
-    english: "Engels",
-    otherLang: "Anders, namelijk...",
+    dutchLevelQuestion: "Hoe goed spreek je Nederlands?",
+    englishLevelQuestion: "Hoe goed spreek je Engels?",
+    langLevelNiet: "Niet",
+    langLevelBasis: "Basis",
+    langLevelRedelijk: "Redelijk",
+    langLevelGoed: "Goed",
     functionConfirm: "Voor welke functie wil je solliciteren?",
     experienceQuestion: "Hoeveel relevante werkervaring heb je in deze functie?",
     distanceWarning: "We werken vooral in Amsterdam, Den Haag en Utrecht. Woon je wat verder weg, dan zijn diensten soms lastiger te combineren. Weet je zeker dat je je aanmelding wilt doorzetten?",
     yesContine: "Ja, ik wil doorgaan",
     noStop: "Nee, ik stop mijn aanmelding",
     ageTooYoung: "Je moet minimaal 17 jaar zijn om je bij EXTRA aan te melden.",
-    noLanguage: "Bij bijna al onze opdrachten heb je Nederlands of Engels nodig om met gasten en collega's te kunnen werken. Omdat je aangaf dat je deze talen nog niet voldoende spreekt, kunnen we je nu helaas niet verder helpen.",
+    noLanguage: "Bij bijna al onze opdrachten heb je Nederlands of Engels nodig. Omdat je hebt aangegeven beide talen niet goed genoeg te spreken, kunnen we je helaas niet verder helpen.",
+    noCvBlocker: "Om een gesprek in te plannen vragen we je eerst je cv te uploaden. Zo kunnen we kijken of er een goede match is met onze opdrachten.",
+    noCvHelper: "Je cv helpt ons om je sneller te matchen met opdrachten. Zonder cv kun je nog geen gesprek inplannen.",
     notEnoughExperience: "Voor de opdrachten die we nu hebben, vragen onze klanten meer ervaring in deze functie. Dat wil niet zeggen dat je geen talent hebt, maar nu matcht het nog niet goed genoeg. Je kunt je later altijd opnieuw aanmelden.",
     roleNotAvailable: "Vanwege Nederlandse wetgeving rond werkvergunningen kunnen we voor deze functie op dit moment alleen kandidaten aannemen met een andere verblijfsstatus. Dat is geen beoordeling van jou als persoon, maar puur een juridische voorwaarde.",
     uploadCv: "Upload je cv",
@@ -219,17 +222,21 @@ const COPY = {
     continue: "Continue",
     back: "Back",
     submit: "Submit application",
-    languageQuestion: "What language do you speak most confidently at work?",
-    dutch: "Dutch",
-    english: "English",
-    otherLang: "Other, namely...",
+    dutchLevelQuestion: "How well do you speak Dutch?",
+    englishLevelQuestion: "How well do you speak English?",
+    langLevelNiet: "Not at all",
+    langLevelBasis: "Basic",
+    langLevelRedelijk: "Conversational",
+    langLevelGoed: "Fluent",
     functionConfirm: "Which role are you applying for?",
     experienceQuestion: "How many years of relevant experience do you have in this role?",
     distanceWarning: "Most of our shifts are in Amsterdam, The Hague and Utrecht. If you live further away, travel can be challenging. Are you sure you want to continue your application?",
     yesContine: "Yes, I want to continue",
     noStop: "No, I'll stop my application",
     ageTooYoung: "You must be at least 17 years old to register with EXTRA.",
-    noLanguage: "Most of our assignments require you to communicate with guests and colleagues in Dutch or English. Since you indicated you don't speak these languages sufficiently, we unfortunately cannot proceed.",
+    noLanguage: "Most of our assignments require Dutch or English. Since you indicated you don't speak either language sufficiently, we unfortunately cannot proceed.",
+    noCvBlocker: "To schedule an interview, we need your CV first. This helps us find the best assignments for you.",
+    noCvHelper: "Your CV helps us match you faster with assignments. Without a CV, you cannot yet schedule an interview.",
     notEnoughExperience: "For the assignments we currently have, our clients require more experience in this role. This doesn't mean you lack talent, but it's not the right match at this time. You're always welcome to reapply later.",
     roleNotAvailable: "Due to Dutch labour law and work permit regulations, we can only accept candidates with a different residency status for this role at this time. This is not a judgment of you as a person, but purely a legal requirement.",
     uploadCv: "Upload your CV",
@@ -439,6 +446,7 @@ export default function Aanmelden() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvUploaded, setCvUploaded] = useState(false);
   const [calendlyScheduled, setCalendlyScheduled] = useState(false);
+  const [showCvBlocker, setShowCvBlocker] = useState(false);
   const [savedCandidateId, setSavedCandidateId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -464,9 +472,8 @@ export default function Aanmelden() {
     email: "",
     nationality: "",
     preferredFunction: "",
-    speaksDutch: false,
-    speaksEnglish: false,
-    otherLanguage: "",
+    dutchLevel: "",
+    englishLevel: "",
     experience: "",
     twvNeeded: "",
     hasExistingTwv: "",
@@ -528,14 +535,25 @@ export default function Aanmelden() {
 
   function validateStep2(): boolean {
     const newErrors: Record<string, string> = {};
-    if (!formData.speaksDutch && !formData.speaksEnglish) {
-      newErrors.language = t.noLanguage;
+    if (!formData.dutchLevel) {
+      newErrors.dutchLevel = lang === "NL" ? "Geef je Nederlands niveau op" : "Please select your Dutch level";
+    }
+    const needsEnglish = formData.dutchLevel === "niet" || formData.dutchLevel === "basis";
+    if (needsEnglish && !formData.englishLevel) {
+      newErrors.englishLevel = lang === "NL" ? "Geef je Engels niveau op" : "Please select your English level";
     }
     if (!formData.experience) {
       newErrors.experience = lang === "NL" ? "Selecteer je ervaring" : "Please select your experience";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  }
+
+  function isLanguageSufficient(): boolean {
+    if (formData.dutchLevel === "redelijk" || formData.dutchLevel === "goed") return true;
+    if ((formData.dutchLevel === "niet" || formData.dutchLevel === "basis") &&
+        (formData.englishLevel === "redelijk" || formData.englishLevel === "goed")) return true;
+    return false;
   }
 
   async function saveCandidate(status: "in_behandeling" | "afgewezen", partial: boolean, rejReason?: string): Promise<number | null> {
@@ -621,7 +639,7 @@ export default function Aanmelden() {
   async function handleStep2Next() {
     if (!validateStep2()) return;
 
-    if (!formData.speaksDutch && !formData.speaksEnglish) {
+    if (!isLanguageSufficient()) {
       await saveCandidate("afgewezen", false, "Geen taalvaardigheid Nederlands/Engels");
       setRejectionReason(t.noLanguage);
       setStep("rejected");
@@ -646,6 +664,16 @@ export default function Aanmelden() {
       return;
     }
 
+    if (!cvUploaded) {
+      const candidateId = await saveCandidate("in_behandeling", true);
+      if (candidateId) {
+        fetch(`/api/aanmelden/${candidateId}/cv-reminder`, { method: "POST" }).catch(() => {});
+      }
+      setShowCvBlocker(true);
+      return;
+    }
+
+    setShowCvBlocker(false);
     if (flow === "NON_EU") {
       setStep("twv");
     } else {
@@ -699,11 +727,18 @@ export default function Aanmelden() {
         birthDate: formData.birthDate,
         nationality: formData.nationality,
         city: formData.city,
-        language: [
-          formData.speaksDutch ? "Nederlands" : "",
-          formData.speaksEnglish ? "Engels" : "",
-          formData.otherLanguage,
-        ].filter(Boolean).join(", "),
+        language: (() => {
+          const parts: string[] = [];
+          if (formData.dutchLevel && formData.dutchLevel !== "niet") {
+            const map: Record<string, string> = { basis: "Basis", redelijk: "Redelijk", goed: "Goed" };
+            parts.push(`${map[formData.dutchLevel] || formData.dutchLevel} Nederlands`);
+          }
+          if (formData.englishLevel && formData.englishLevel !== "niet") {
+            const map: Record<string, string> = { basis: "Basis", redelijk: "Redelijk", goed: "Goed" };
+            parts.push(`${map[formData.englishLevel] || formData.englishLevel} Engels`);
+          }
+          return parts.join(", ") || "Geen";
+        })(),
         functionType: formData.preferredFunction,
         horecaExperience: EXPERIENCE_MAP[formData.experience] || formData.experience,
         needsTwv: flow === "NON_EU" && formData.twvNeeded === "yes",
@@ -736,6 +771,7 @@ export default function Aanmelden() {
         const fd = new FormData();
         fd.append("cv", cvFile);
         fd.append("email", formData.email);
+        if (savedCandidateId) fd.append("candidateId", String(savedCandidateId));
         await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
       }
 
@@ -887,33 +923,64 @@ export default function Aanmelden() {
                 )}
 
                 <div className="space-y-6">
+                  {/* Vraag 1: Nederlands niveau */}
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.languageQuestion}</Label>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-purple-300 transition-colors cursor-pointer">
-                        <Checkbox checked={formData.speaksDutch} onCheckedChange={(v) => updateField("speaksDutch", !!v)} />
-                        <span className="text-sm font-medium text-gray-700">{t.dutch}</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-purple-300 transition-colors cursor-pointer">
-                        <Checkbox checked={formData.speaksEnglish} onCheckedChange={(v) => updateField("speaksEnglish", !!v)} />
-                        <span className="text-sm font-medium text-gray-700">{t.english}</span>
-                      </label>
-                      <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-200">
-                        <span className="text-sm font-medium text-gray-500 flex-shrink-0">{t.otherLang}</span>
-                        <Input
-                          value={formData.otherLanguage}
-                          onChange={(e) => updateField("otherLanguage", e.target.value)}
-                          className="h-9 rounded-lg border-gray-200 text-sm"
-                          placeholder="..."
-                        />
-                      </div>
+                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.dutchLevelQuestion}</Label>
+                    <div className="space-y-2">
+                      {[
+                        { value: "niet", label: t.langLevelNiet },
+                        { value: "basis", label: t.langLevelBasis },
+                        { value: "redelijk", label: t.langLevelRedelijk },
+                        { value: "goed", label: t.langLevelGoed },
+                      ].map((opt) => (
+                        <label key={opt.value} className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${formData.dutchLevel === opt.value ? "border-purple-400 bg-purple-50" : "border-gray-200 hover:border-purple-200 hover:bg-purple-50/30"}`}>
+                          <input
+                            type="radio"
+                            name="dutchLevel"
+                            value={opt.value}
+                            checked={formData.dutchLevel === opt.value}
+                            onChange={(e) => { updateField("dutchLevel", e.target.value); updateField("englishLevel", ""); setShowCvBlocker(false); }}
+                            className="accent-purple-600 w-4 h-4"
+                          />
+                          <span className="text-sm font-medium text-gray-700">{opt.label}</span>
+                        </label>
+                      ))}
                     </div>
-                    {errors.language && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.language}</p>}
+                    {errors.dutchLevel && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.dutchLevel}</p>}
                   </div>
 
+                  {/* Vraag 2: Engels niveau (conditioneel) */}
+                  {(formData.dutchLevel === "niet" || formData.dutchLevel === "basis") && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                      <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.englishLevelQuestion}</Label>
+                      <div className="space-y-2">
+                        {[
+                          { value: "niet", label: t.langLevelNiet },
+                          { value: "basis", label: t.langLevelBasis },
+                          { value: "redelijk", label: t.langLevelRedelijk },
+                          { value: "goed", label: t.langLevelGoed },
+                        ].map((opt) => (
+                          <label key={opt.value} className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${formData.englishLevel === opt.value ? "border-purple-400 bg-purple-50" : "border-gray-200 hover:border-purple-200 hover:bg-purple-50/30"}`}>
+                            <input
+                              type="radio"
+                              name="englishLevel"
+                              value={opt.value}
+                              checked={formData.englishLevel === opt.value}
+                              onChange={(e) => { updateField("englishLevel", e.target.value); setShowCvBlocker(false); }}
+                              className="accent-purple-600 w-4 h-4"
+                            />
+                            <span className="text-sm font-medium text-gray-700">{opt.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {errors.englishLevel && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.englishLevel}</p>}
+                    </div>
+                  )}
+
+                  {/* Vraag 3: Werkervaring */}
                   <div>
                     <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">{t.experienceQuestion}</Label>
-                    <Select value={formData.experience} onValueChange={(v) => updateField("experience", v)}>
+                    <Select value={formData.experience} onValueChange={(v) => { updateField("experience", v); setShowCvBlocker(false); }}>
                       <SelectTrigger className={`h-12 rounded-xl border-gray-200 ${errors.experience ? "border-red-400" : ""}`}>
                         <SelectValue placeholder={lang === "NL" ? "Selecteer ervaring" : "Select experience"} />
                       </SelectTrigger>
@@ -925,6 +992,39 @@ export default function Aanmelden() {
                     </Select>
                     {errors.experience && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.experience}</p>}
                   </div>
+
+                  {/* CV upload */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-1">{t.uploadCv}</h3>
+                    <p className="text-xs text-gray-500 mb-3 leading-relaxed">{t.noCvHelper}</p>
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-purple-400 hover:bg-purple-50/50 ${cvUploaded ? "border-green-400 bg-green-50/50" : "border-gray-200 bg-gray-50/50"}`}
+                    >
+                      <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleCvUpload} className="hidden" />
+                      {cvUploaded && cvFile ? (
+                        <div className="flex flex-col items-center gap-1.5">
+                          <CheckCircle2 className="w-8 h-8 text-green-500" />
+                          <p className="text-sm font-semibold text-green-700">{cvFile.name}</p>
+                          <p className="text-xs text-green-600">{(cvFile.size / 1024 / 1024).toFixed(1)} MB · <span className="underline cursor-pointer">{lang === "NL" ? "Ander bestand kiezen" : "Choose different file"}</span></p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5">
+                          <Upload className="w-8 h-8 text-gray-400" />
+                          <p className="text-sm font-semibold text-gray-700">{t.uploadBtn}</p>
+                          <p className="text-xs text-gray-400">{t.acceptedFormats}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* CV blocker melding */}
+                  {showCvBlocker && !cvUploaded && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-800 leading-relaxed">{t.noCvBlocker}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-8 flex justify-between">
@@ -1027,8 +1127,8 @@ export default function Aanmelden() {
 
                 {/* Checklist */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-8 p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className={`flex items-center gap-2.5 text-sm font-semibold ${cvUploaded ? "text-green-600" : "text-gray-400"}`}>
-                    {cvUploaded ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
+                  <div className="flex items-center gap-2.5 text-sm font-semibold text-green-600">
+                    <CheckCircle2 className="w-5 h-5" />
                     {lang === "NL" ? "CV geüpload" : "CV uploaded"}
                   </div>
                   <div className={`flex items-center gap-2.5 text-sm font-semibold ${calendlyScheduled ? "text-green-600" : "text-gray-400"}`}>
@@ -1037,74 +1137,39 @@ export default function Aanmelden() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {t.uploadCv} <span className="text-red-500">*</span>
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.uploadCvDesc}</p>
-
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all hover:border-purple-400 hover:bg-purple-50/50 ${cvUploaded ? "border-green-400 bg-green-50/50" : "border-red-200 bg-red-50/30"}`}
-                    >
-                      <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleCvUpload} className="hidden" />
-                      {cvUploaded && cvFile ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <CheckCircle2 className="w-10 h-10 text-green-500" />
-                          <p className="text-sm font-semibold text-green-700">{cvFile.name}</p>
-                          <p className="text-xs text-green-600">{(cvFile.size / 1024 / 1024).toFixed(1)} MB</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <Upload className="w-10 h-10 text-gray-400" />
-                          <p className="text-sm font-semibold text-gray-700">{t.uploadBtn}</p>
-                          <p className="text-xs text-gray-400">{t.acceptedFormats}</p>
-                        </div>
-                      )}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    {t.scheduleTitle} <span className="text-red-500">*</span>
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.scheduleDesc}</p>
+                  {calendlyScheduled ? (
+                    <div className="rounded-xl border-2 border-green-400 bg-green-50/50 p-8 text-center">
+                      <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                      <p className="text-lg font-bold text-green-700 mb-1">
+                        {lang === "NL" ? "Gesprek ingepland!" : "Interview scheduled!"}
+                      </p>
+                      <p className="text-sm text-green-600">
+                        {lang === "NL" ? "Je ontvangt een bevestiging per e-mail van Calendly." : "You'll receive a confirmation email from Calendly."}
+                      </p>
                     </div>
-                    {!cvUploaded && (
-                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {lang === "NL" ? "Je cv is verplicht om je aanmelding te versturen" : "Your CV is required to submit your application"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {t.scheduleTitle} <span className="text-red-500">*</span>
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.scheduleDesc}</p>
-                    {calendlyScheduled ? (
-                      <div className="rounded-xl border-2 border-green-400 bg-green-50/50 p-8 text-center">
-                        <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                        <p className="text-lg font-bold text-green-700 mb-1">
-                          {lang === "NL" ? "Gesprek ingepland!" : "Interview scheduled!"}
-                        </p>
-                        <p className="text-sm text-green-600">
-                          {lang === "NL" ? "Je ontvangt een bevestiging per e-mail van Calendly." : "You'll receive a confirmation email from Calendly."}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: "400px" }}>
-                        <iframe
-                          src={`https://calendly.com/max-_zs/30min?hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=7c3aed${formData.firstName ? `&name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}` : ''}${formData.email ? `&email=${encodeURIComponent(formData.email)}` : ''}`}
-                          width="100%"
-                          height="500"
-                          frameBorder="0"
-                          title={lang === "NL" ? "Plan je gesprek" : "Schedule your interview"}
-                          className="rounded-xl"
-                        />
-                      </div>
-                    )}
-                    {!calendlyScheduled && (
-                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {lang === "NL" ? "Plan eerst je gesprek via de kalender hierboven" : "Please schedule your interview using the calendar above first"}
-                      </p>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: "400px" }}>
+                      <iframe
+                        src={`https://calendly.com/max-_zs/30min?hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=7c3aed${formData.firstName ? `&name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}` : ''}${formData.email ? `&email=${encodeURIComponent(formData.email)}` : ''}`}
+                        width="100%"
+                        height="500"
+                        frameBorder="0"
+                        title={lang === "NL" ? "Plan je gesprek" : "Schedule your interview"}
+                        className="rounded-xl"
+                      />
+                    </div>
+                  )}
+                  {!calendlyScheduled && (
+                    <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {lang === "NL" ? "Plan eerst je gesprek via de kalender hierboven" : "Please schedule your interview using the calendar above first"}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1115,20 +1180,9 @@ export default function Aanmelden() {
                 </Button>
 
                 <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
-                  {(!cvUploaded || !calendlyScheduled) && (
+                  {!calendlyScheduled && (
                     <p className="text-xs text-gray-400 text-center sm:text-right">
-                      {lang === "NL"
-                        ? (!cvUploaded && !calendlyScheduled
-                            ? "Upload je cv en plan je gesprek in voor de beste kansen"
-                            : !cvUploaded
-                            ? "Tip: upload ook je cv voor de beste kansen"
-                            : "Tip: plan ook een gesprek in via de kalender")
-                        : (!cvUploaded && !calendlyScheduled
-                            ? "Upload your CV and schedule an interview for the best chances"
-                            : !cvUploaded
-                            ? "Tip: also upload your CV for the best chances"
-                            : "Tip: also schedule an interview via the calendar")
-                      }
+                      {lang === "NL" ? "Plan een gesprek in via de kalender hierboven" : "Schedule an interview via the calendar above"}
                     </p>
                   )}
                   <Button

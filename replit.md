@@ -26,7 +26,7 @@ The application utilizes a monorepo structure, organizing code into `client/` fo
 -   **Leaderboard**: Real-time monthly leaderboard with position badges for top performers.
 -   **Authentication & Authorization**: Session-based with role-based access control and WebSocket authentication.
 -   **Marketing & Communications**: Email template system, campaign management, and automation triggers (e.g., birthdays).
--   **Candidate Management**: Comprehensive pre-onboarding system for candidates, including skills assessment, availability, and GDPR compliance features.
+-   **Candidate Management**: Comprehensive pre-onboarding system for candidates, including skills assessment, availability, and GDPR compliance features. Aanmeldflow (step 2 Skills) now uses Dutch/English proficiency radio buttons (Niet/Basis/Redelijk/Goed) with conditional English question, CV upload required in step 2 before proceeding to Calendly. Candidates without CV receive an initial email + daily reminders until CV is uploaded (`hasCv`, `cvReminderSentAt` fields on candidates table).
 -   **Public Website Pages**: `/landing`, `/extraatje` (rewards system showcase), `/over-extra` (company about page), `/over-extra/ons-team` (team page with 9 fictional members, portrait photo placeholders, editorial card design), `/hoe-extra-werkt` (werkwijze page with werkgever 8-step and medewerker 5-step flows, tab switcher), `/ik-zoek-extra-werk` (hospitality jobs landing page targeting young professionals, 14 sections: hero, USPs, dagbetaling, EXTRAATJE rewards, functies, hoe het werkt, reviews, rating systeem, FAQ, vacatures, closing CTA).
 
 ### UI/UX

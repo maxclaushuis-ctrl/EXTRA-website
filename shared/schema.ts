@@ -925,6 +925,10 @@ export const candidates = pgTable("candidates", {
   // Opmerkingen
   notes: text("notes"),
   
+  // CV status
+  hasCv: boolean("has_cv").default(false),
+  cvReminderSentAt: timestamp("cv_reminder_sent_at"),
+  
   // Wie heeft aangemaakt
   createdByUserId: integer("created_by_user_id").references(() => users.id),
   

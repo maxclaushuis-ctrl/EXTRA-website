@@ -494,6 +494,107 @@ export async function sendApplicationRejectionEmail(applicant: {
   });
 }
 
+export async function sendCvUploadFirstEmail(candidate: { firstName: string; email: string; id: number }): Promise<boolean> {
+  const uploadUrl = `https://www.doehetextra.nl/aanmelden`;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Upload je cv bij EXTRA</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:32px 28px;text-align:center;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:16px;">
+              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:1px;">EXTRA</span>
+            </div>
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Nog één stap — upload je cv</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hi ${candidate.firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je aanmelding bij EXTRA! We hebben je gegevens goed ontvangen.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Om een gesprek in te plannen hebben we nog je cv nodig. Zo kunnen we kijken of er een goede match is met onze opdrachten.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Het hele proces duurt nog maar een paar minuten.</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${uploadUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Upload je cv &rarr;</a>
+            </div>
+            <p style="margin:24px 0 0;font-size:14px;color:#9ca3af;line-height:1.6;">Zonder cv kunnen we helaas geen gesprek inplannen. Heb je vragen? App ons gerust.</p>
+            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: candidate.email,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: 'Upload je cv om een gesprek in te plannen',
+    html,
+    text: `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding bij EXTRA!\n\nOm een gesprek in te plannen hebben we nog je cv nodig. Ga naar ${uploadUrl} om je cv te uploaden.\n\nGroet,\nTeam EXTRA`,
+  });
+}
+
+export async function sendCvReminderEmail(candidate: { firstName: string; email: string; id: number }): Promise<boolean> {
+  const uploadUrl = `https://www.doehetextra.nl/aanmelden`;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reminder: upload je cv bij EXTRA</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:32px 28px;text-align:center;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:16px;">
+              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:1px;">EXTRA</span>
+            </div>
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Vergeet je cv niet!</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hi ${candidate.firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">We hebben je aanmelding bij EXTRA nog staan, maar je cv ontbreekt nog. Zonder cv kunnen we helaas geen gesprek inplannen.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Het uploaden duurt maar een minuutje — dan kunnen we snel kijken of er een goede match is!</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${uploadUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Upload je cv nu &rarr;</a>
+            </div>
+            <p style="margin:24px 0 0;font-size:14px;color:#9ca3af;line-height:1.6;">Heb je vragen of wil je je aanmelding intrekken? Stuur ons dan even een berichtje.</p>
+            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: candidate.email,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: 'Reminder: upload je cv om een gesprek in te plannen',
+    html,
+    text: `Hi ${candidate.firstName},\n\nJe cv ontbreekt nog bij je aanmelding bij EXTRA. Zonder cv kunnen we geen gesprek inplannen.\n\nGa naar ${uploadUrl} om je cv te uploaden.\n\nGroet,\nTeam EXTRA`,
+  });
+}
+
 // Helper functie om instellingen op te halen
 async function getSettingValue(key: string, defaultValue: string): Promise<string> {
   try {

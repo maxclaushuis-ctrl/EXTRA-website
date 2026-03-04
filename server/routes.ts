@@ -32,7 +32,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -4022,6 +4022,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error updating candidate:", error);
       return res.status(500).json({ message: "Er is iets misgegaan" });
+
+    }
+  });
+
+  // Stuur cv-upload eerste e-mail voor kandidaat zonder cv
+  app.post("/api/aanmelden/:id/cv-reminder", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const candidate = await storage.getCandidate(id);
+      if (!candidate || !candidate.email) return res.status(404).json({ message: "Kandidaat niet gevonden" });
+      if (candidate.hasCv) return res.status(200).json({ message: "Kandidaat heeft al een cv" });
+      sendCvUploadFirstEmail({ firstName: candidate.firstName, email: candidate.email, id }).catch(console.error);
+      await storage.updateCandidate(id, { cvReminderSentAt: new Date() });
+      return res.status(200).json({ message: "Cv-reminder verstuurd" });
+    } catch (error) {
+      console.error("Fout bij cv-reminder:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
     }
   });
 
@@ -4217,6 +4235,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
+
+      const candidateId = req.body?.candidateId ? parseInt(req.body.candidateId) : null;
+      if (candidateId && !isNaN(candidateId)) {
+        try {
+          await storage.updateCandidate(candidateId, { hasCv: true });
+        } catch (err) {
+          console.error("Fout bij markeren hasCv:", err);
+        }
+      }
+
       return res.json({ message: "CV uploaded", filename: file.filename });
     } catch (error) {
       console.error("Error uploading CV:", error);

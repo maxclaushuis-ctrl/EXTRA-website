@@ -3,6 +3,8 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
+import { sendCvReminderEmail } from "./mail";
 
 const PgStore = connectPg(session);
 
@@ -129,7 +131,48 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-    
 
+    scheduleDailyCvReminders();
   });
 })();
+
+function scheduleDailyCvReminders() {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  async function runDailyCvReminders() {
+    try {
+      const result = await storage.getCandidates({ status: 'in_behandeling', page: 1, limit: 500 });
+      const now = new Date();
+      for (const candidate of result.candidates) {
+        if (candidate.hasCv || !candidate.email) continue;
+        const created = new Date(candidate.createdAt);
+        const daysSinceCreated = (now.getTime() - created.getTime()) / MS_PER_DAY;
+        if (daysSinceCreated < 1) continue;
+
+        const lastReminder = candidate.cvReminderSentAt ? new Date(candidate.cvReminderSentAt) : null;
+        const daysSinceReminder = lastReminder ? (now.getTime() - lastReminder.getTime()) / MS_PER_DAY : Infinity;
+
+        if (daysSinceReminder >= 1) {
+          await sendCvReminderEmail({ firstName: candidate.firstName, email: candidate.email, id: candidate.id });
+          await storage.updateCandidate(candidate.id, { cvReminderSentAt: now });
+          log(`Cv-reminder verstuurd naar ${candidate.email}`);
+        }
+      }
+    } catch (err) {
+      console.error("Fout bij dagelijkse cv-reminders:", err);
+    }
+  }
+
+  const now = new Date();
+  const nextRun = new Date(now);
+  nextRun.setHours(9, 0, 0, 0);
+  if (nextRun <= now) nextRun.setDate(nextRun.getDate() + 1);
+  const msUntilFirst = nextRun.getTime() - now.getTime();
+
+  log(`Volgende cv-reminder check gepland om ${nextRun.toLocaleString('nl-NL')} (over ${Math.round(msUntilFirst / 60000)} minuten)`);
+
+  setTimeout(() => {
+    runDailyCvReminders();
+    setInterval(runDailyCvReminders, MS_PER_DAY);
+  }, msUntilFirst);
+}
