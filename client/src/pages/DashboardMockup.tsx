@@ -146,6 +146,37 @@ export default function DashboardMockup() {
     });
   }, [notifications, toast]);
 
+  useEffect(() => {
+    if (!cvPreviewOpen || !cvPreviewCandidate) {
+      setDocxHtml(null);
+      setDocxError(null);
+      setDocxLoading(false);
+      return;
+    }
+    const filename = cvPreviewCandidate.cvFilename || '';
+    const isDocx = filename.toLowerCase().endsWith('.docx') || filename.toLowerCase().endsWith('.doc');
+    if (!isDocx || !cvPreviewCandidate.hasCv) return;
+
+    setDocxLoading(true);
+    setDocxHtml(null);
+    setDocxError(null);
+
+    const cvHtmlUrl = `/api/admin/candidates/${cvPreviewCandidate.id}/cv-html`;
+    fetch(cvHtmlUrl, { credentials: 'include' })
+      .then(r => {
+        if (!r.ok) throw new Error('Fout bij laden');
+        return r.text();
+      })
+      .then(html => {
+        setDocxHtml(html);
+        setDocxLoading(false);
+      })
+      .catch(() => {
+        setDocxError('Het bestand kon niet worden geladen.');
+        setDocxLoading(false);
+      });
+  }, [cvPreviewOpen, cvPreviewCandidate]);
+
   const [activeTab, setActiveTab] = useState('kandidaten');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
@@ -163,6 +194,9 @@ export default function DashboardMockup() {
   const [rejectReason, setRejectReason] = useState<'diensten' | 'cv'>('diensten');
   const [cvPreviewOpen, setCvPreviewOpen] = useState(false);
   const [cvPreviewCandidate, setCvPreviewCandidate] = useState<Candidate | null>(null);
+  const [docxHtml, setDocxHtml] = useState<string | null>(null);
+  const [docxLoading, setDocxLoading] = useState(false);
+  const [docxError, setDocxError] = useState<string | null>(null);
 
   // Sollicitanten tab state
   const [appSearch, setAppSearch] = useState('');
@@ -674,17 +708,35 @@ export default function DashboardMockup() {
 
                     if (!isPdf) {
                       return (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                          <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3">
-                            <FileText className="h-7 w-7 text-blue-500" />
+                        <div className="flex flex-col gap-3">
+                          {docxLoading && (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                              <div className="w-10 h-10 border-2 border-purple-400 border-t-transparent rounded-full animate-spin mb-3" />
+                              <p className="text-gray-500 text-sm">Word-document laden…</p>
+                            </div>
+                          )}
+                          {docxError && (
+                            <div className="flex flex-col items-center justify-center py-8 text-center">
+                              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-3">
+                                <FileText className="h-7 w-7 text-red-400" />
+                              </div>
+                              <p className="text-gray-600 font-medium">Fout bij laden</p>
+                              <p className="text-gray-400 text-sm mt-1 mb-4">{docxError}</p>
+                            </div>
+                          )}
+                          {docxHtml && !docxLoading && (
+                            <div
+                              className="border border-gray-200 rounded-lg p-6 overflow-y-auto bg-white text-gray-800 text-sm leading-relaxed prose prose-sm max-w-none"
+                              style={{ maxHeight: '60vh' }}
+                              dangerouslySetInnerHTML={{ __html: docxHtml }}
+                            />
+                          )}
+                          <div className="flex justify-end">
+                            <a href={cvUrl} download className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
+                              <FileText className="h-4 w-4" />
+                              Downloaden ({filename.split('-').slice(-1)[0] || 'cv.docx'})
+                            </a>
                           </div>
-                          <p className="text-gray-600 font-medium">Word-document</p>
-                          <p className="text-gray-400 text-sm mt-1 mb-1">Browsers kunnen Word-documenten niet direct tonen.</p>
-                          <p className="text-gray-400 text-sm mb-4">Download het bestand om het in Word of Google Docs te openen.</p>
-                          <a href={cvUrl} download className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
-                            <FileText className="h-4 w-4" />
-                            Downloaden ({filename.split('-').slice(-1)[0] || 'cv.docx'})
-                          </a>
                         </div>
                       );
                     }

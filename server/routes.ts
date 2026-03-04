@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { createHash } from "crypto";
 import { 
@@ -4438,6 +4439,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error serving CV:", error);
       return res.status(500).json({ message: "Fout bij ophalen CV" });
+    }
+  });
+
+  // Convert docx CV to HTML for preview
+  app.get("/api/admin/candidates/:id/cv-html", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const candidate = await storage.getCandidate(id);
+      if (!candidate || !candidate.cvFilename) {
+        return res.status(404).json({ message: "Geen CV gevonden" });
+      }
+      const cvPath = path.join(process.cwd(), 'uploads', 'cv', candidate.cvFilename);
+      if (!fs.existsSync(cvPath)) {
+        return res.status(404).json({ message: "CV bestand niet gevonden" });
+      }
+      const ext = path.extname(candidate.cvFilename).toLowerCase();
+      if (ext !== '.docx' && ext !== '.doc') {
+        return res.status(400).json({ message: "Alleen Word-bestanden kunnen worden omgezet" });
+      }
+
+      // Extract and convert docx to HTML using adm-zip
+      const zip = new AdmZip(cvPath);
+      const documentEntry = zip.getEntry("word/document.xml");
+      if (!documentEntry) {
+        return res.status(500).json({ message: "Ongeldig Word-bestand" });
+      }
+      const xmlContent = documentEntry.getData().toString("utf-8");
+
+      // Simple XML to HTML conversion
+      function docxXmlToHtml(xml: string): string {
+        let html = "";
+        // Process paragraphs
+        const paragraphRegex = /<w:p[ >][\s\S]*?<\/w:p>/g;
+        const paragraphs = xml.match(paragraphRegex) || [];
+
+        for (const para of paragraphs) {
+          // Determine paragraph style
+          const styleMatch = para.match(/<w:pStyle w:val="([^"]+)"/);
+          const style = styleMatch ? styleMatch[1].toLowerCase() : "";
+
+          // Extract text runs, preserving spaces
+          const textRegex = /<w:t(?:[^>]* xml:space="preserve"[^>]*)?>([^<]*)<\/w:t>|<w:t>([^<]*)<\/w:t>/g;
+          let text = "";
+          let match;
+          while ((match = textRegex.exec(para)) !== null) {
+            text += (match[1] || match[2] || "");
+          }
+
+          // Check for bold
+          const isBold = /<w:b(?:\/>| w:val="1")/.test(para) && !/<w:bCs\/>/.test(para);
+
+          if (!text.trim()) {
+            html += "<br>";
+            continue;
+          }
+
+          if (style.startsWith("heading") || style.startsWith("kop") || style === "title") {
+            const level = style.match(/\d+/)?.[0] || "2";
+            const hNum = Math.min(parseInt(level) + 1, 6);
+            html += `<h${hNum}>${escHtml(text)}</h${hNum}>`;
+          } else if (isBold && text.trim()) {
+            html += `<p><strong>${escHtml(text)}</strong></p>`;
+          } else {
+            html += `<p>${escHtml(text)}</p>`;
+          }
+        }
+        return html;
+      }
+
+      function escHtml(str: string): string {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      const html = docxXmlToHtml(xmlContent);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html || "<p>Geen tekst gevonden in dit document.</p>");
+    } catch (error) {
+      console.error("Error converting CV to HTML:", error);
+      return res.status(500).json({ message: "Fout bij omzetten CV" });
     }
   });
 
