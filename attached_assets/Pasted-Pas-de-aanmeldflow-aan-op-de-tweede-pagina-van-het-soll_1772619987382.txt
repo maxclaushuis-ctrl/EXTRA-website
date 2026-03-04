@@ -1,0 +1,67 @@
+Pas de aanmeldflow aan op de tweede pagina van het sollicitatieformulier (zie screenshot “Skills”).
+Het doel is om de flow slimmer te maken op basis van taalniveau en CV-upload, terwijl de huidige stijl en UX van de website behouden blijft.
+1. Aanpassen van de eerste vraag (taalniveau)
+De eerste vraag op deze pagina moet worden:
+“Hoe goed spreek je Nederlands?”
+Antwoordopties:
+Niet
+Basis
+Redelijk
+Goed
+(Zorg dat deze opties als radio buttons worden weergegeven, zoals in het huidige design.)
+2. Conditionele vervolgvraag (Engels)
+Afhankelijk van het antwoord op “Hoe goed spreek je Nederlands?” moet er een conditionele vraag verschijnen.
+Alleen tonen wanneer iemand kiest voor:
+Niet
+Basis
+De vervolgvraag wordt:
+“Hoe goed spreek je Engels?”
+Antwoordopties:
+Niet
+Basis
+Redelijk
+Goed
+Wanneer iemand Redelijk of Goed Nederlands spreekt, hoeft deze vraag niet te verschijnen.
+3. Werkervaring (bestaande vraag behouden)
+Daarna komt voor alle kandidaten de bestaande vraag:
+“Hoeveel relevante werkervaring heb je in deze functie?”
+Deze dropdown kan blijven zoals die nu is.
+4. CV upload toevoegen
+Onder de werkervaring vraag moet een nieuwe sectie komen:
+“Upload je CV”
+Met een duidelijke upload button.
+Extra tekst onder het veld:
+Je CV helpt ons om je sneller te matchen met opdrachten.
+Zonder CV kun je nog geen gesprek inplannen.
+Het uploaden van een CV is niet verplicht, maar wel vereist om een gesprek te plannen.
+5. Logica bij klikken op "Ga verder"
+Wanneer de kandidaat op “Ga verder” klikt:
+Scenario 1 — CV is geüpload
+De kandidaat mag doorgaan naar de volgende stap:
+Plan je gesprek via Calendly (zoals het nu al werkt).
+Scenario 2 — Geen CV geüpload
+De kandidaat kan geen gesprek plannen.
+Toon een nette melding:
+“Om een gesprek in te plannen vragen we je eerst je CV te uploaden. Zo kunnen we kijken of er een goede match is met onze opdrachten.”
+De kandidaat blijft op dezelfde pagina totdat een CV is geüpload.
+6. Automatische e-mails wanneer geen CV is geüpload
+Als een kandidaat het formulier invult maar geen CV uploadt, moet er automatisch een e-mail worden gestuurd.
+Eerste e-mail
+Onderwerp:
+Upload je CV om een gesprek in te plannen
+Strekking:
+Bedanken voor de aanmelding
+Uitleggen dat een CV nodig is om een gesprek te plannen
+Link naar de pagina waar ze hun CV kunnen uploaden
+Reminder
+Stuur vervolgens een dagelijkse reminder totdat de kandidaat een CV uploadt.
+Wanneer de kandidaat alsnog een CV uploadt:
+Stop de reminders automatisch.
+7. Kandidaten die wel een CV uploaden
+Voor kandidaten die wel een CV uploaden:
+Laat de bestaande flow en e-mailautomatisering exact hetzelfde zoals die nu is.
+Zij mogen direct een gesprek plannen via Calendly.
+8. UX-richtlijnen
+Behoud dezelfde stijl als de huidige website (paars gradient, afgeronde kaarten, moderne UX).
+Zorg dat conditionele vragen vloeiend verschijnen (smooth transition).
+Mobile-first design.
