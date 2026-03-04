@@ -1,0 +1,66 @@
+Pas het tabblad “Kandidaten” in het dashboard aan (zie screenshot). Het doel is om het bekijken van CV’s sneller en overzichtelijker te maken.
+1. Kolom “Status” verwijderen
+Verwijder de kolom “Status” uit de tabel.
+Reden:
+De status is al duidelijk zichtbaar via de tabbladen bovenaan:
+In proces
+Gesprek gepland
+Afgewezen
+Door deze kolom te verwijderen ontstaat er meer ruimte in de tabel.
+2. Kolom met oog-icoon aanpassen
+De kolom met het 👁️ icoon moet worden hernoemd naar:
+CV
+Dit icoon krijgt een extra functie.
+Functionaliteit
+Wanneer er op het oogje wordt geklikt:
+Open een preview van het CV van de kandidaat.
+Dit mag in een modal / overlay gebeuren.
+Het CV moet direct zichtbaar zijn (PDF preview).
+3. Visuele status van het CV
+Het oog-icoon moet een kleurstatus krijgen:
+Groen oogje
+→ kandidaat heeft een CV geüpload
+→ klik opent CV preview
+Rood oogje
+→ kandidaat heeft geen CV geüpload
+→ klik toont melding:
+"Deze kandidaat heeft nog geen CV geüpload."
+4. Afwijzen van een kandidaat
+Wanneer op het prullenbak-icoon wordt gedrukt moet er eerst een keuzevenster (modal) verschijnen.
+Titel:
+Kandidaat afwijzen
+Vraag:
+Wat is de reden van afwijzing?
+Keuzeopties:
+Te weinig diensten beschikbaar
+CV onvoldoende passend
+5. Automatische e-mail bij afwijzing
+Na het kiezen van een reden en bevestigen:
+De kandidaat wordt verplaatst naar het tabblad Afgewezen
+De kandidaat ontvangt automatisch een e-mail
+E-mail 1 – Te weinig diensten
+Onderwerp:
+Bedankt voor je sollicitatie bij EXTRA
+Inhoud:
+Hi [voornaam],
+Bedankt voor je aanmelding en het gesprek bij EXTRA.
+Op dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat momenteel beschikbaar is in verhouding tot het aantal mensen in onze poule.
+Dat zegt dus niet per se iets over jou, maar meer over de planning en beschikbare plekken.
+We wensen je veel succes en wie weet kruisen onze paden in de toekomst nog eens.
+Groet,
+Team EXTRA
+E-mail 2 – CV onvoldoende
+Onderwerp:
+Update over je sollicitatie bij EXTRA
+Inhoud:
+Hi [voornaam],
+Bedankt voor je interesse in EXTRA en het insturen van je gegevens.
+Na het bekijken van je CV hebben we besloten om op dit moment niet verder te gaan met de sollicitatie. Voor de opdrachten waar we momenteel mensen voor zoeken is meer relevante ervaring nodig.
+We wensen je veel succes met je verdere stappen en bedanken je voor je interesse in EXTRA.
+Groet,
+Team EXTRA
+6. UX richtlijnen
+Modal moet dezelfde stijl hebben als de rest van het dashboard.
+Gebruik paarse accentkleur van EXTRA.
+Zorg dat de CV-preview goed werkt op desktop en tablet.
+Indien mogelijk: CV-preview met zoom en download optie.
