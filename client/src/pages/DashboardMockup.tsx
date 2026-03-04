@@ -19,7 +19,7 @@ import {
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
-  Bell, BellOff
+  Bell, BellOff, ArrowUpDown
 } from 'lucide-react';
 
 type User = {
@@ -161,11 +161,12 @@ export default function DashboardMockup() {
 
   // Sollicitanten tab state
   const [appSearch, setAppSearch] = useState('');
-  const [appFunctionFilter, setAppFunctionFilter] = useState('alle');
+  const [appTab, setAppTab] = useState('alle'); // 'alle' | 'horecamedewerker' | 'chef' | 'housekeeping' | 'frontoffice' | 'afgewezen'
   const [appInterviewerFilter, setAppInterviewerFilter] = useState('alle');
-  const [appStatusFilter, setAppStatusFilter] = useState('alle');
+  const [appSortDesc, setAppSortDesc] = useState(true);
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [appDetailOpen, setAppDetailOpen] = useState(false);
+  const [appRejectConfirmApp, setAppRejectConfirmApp] = useState<any | null>(null);
 
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
@@ -323,24 +324,34 @@ export default function DashboardMockup() {
 
   // Applications (sollicitanten) computed
   const allApplications: any[] = applicationsData?.applications || [];
-  const filteredApplications = allApplications.filter(a => {
-    const matchesFn = appFunctionFilter === 'alle' || a.functionType === appFunctionFilter;
-    const matchesIv = appInterviewerFilter === 'alle' || a.interviewer === appInterviewerFilter;
-    const matchesSt = appStatusFilter === 'alle' || a.status === appStatusFilter;
+  const activeApplications = allApplications.filter(a => a.status !== 'afgewezen');
+  const rejectedApplications = allApplications.filter(a => a.status === 'afgewezen');
+
+  const filteredApplications = (() => {
+    let base = appTab === 'afgewezen' ? rejectedApplications : activeApplications.filter(a => {
+      if (appTab !== 'alle') {
+        const fn = a.functionType === 'front-office' ? 'frontoffice' : a.functionType;
+        if (fn !== appTab) return false;
+      }
+      return true;
+    });
+    const matchesIv = (a: any) => appInterviewerFilter === 'alle' || a.interviewer === appInterviewerFilter;
     const q = appSearch.toLowerCase();
-    const matchesQ = !appSearch || `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q);
-    return matchesFn && matchesIv && matchesSt && matchesQ;
-  });
+    const matchesQ = (a: any) => !appSearch || `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q);
+    base = base.filter(a => matchesIv(a) && matchesQ(a));
+    return [...base].sort((a, b) => {
+      const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return appSortDesc ? diff : -diff;
+    });
+  })();
+
   const appCounts = {
-    total: allApplications.length,
-    nieuw: allApplications.filter(a => a.status === 'nieuw').length,
-    beoordeeld: allApplications.filter(a => a.status === 'beoordeeld').length,
-    aangenomen: allApplications.filter(a => a.status === 'aangenomen').length,
-    afgewezen: allApplications.filter(a => a.status === 'afgewezen').length,
-    horecamedewerker: allApplications.filter(a => a.functionType === 'horecamedewerker').length,
-    housekeeping: allApplications.filter(a => a.functionType === 'housekeeping').length,
-    chef: allApplications.filter(a => a.functionType === 'chef').length,
-    frontoffice: allApplications.filter(a => a.functionType === 'frontoffice' || a.functionType === 'front-office').length,
+    alle: activeApplications.length,
+    afgewezen: rejectedApplications.length,
+    horecamedewerker: activeApplications.filter(a => a.functionType === 'horecamedewerker').length,
+    housekeeping: activeApplications.filter(a => a.functionType === 'housekeeping').length,
+    chef: activeApplications.filter(a => a.functionType === 'chef').length,
+    frontoffice: activeApplications.filter(a => a.functionType === 'frontoffice' || a.functionType === 'front-office').length,
   };
 
   const topUsers = [...allUsers]
@@ -1096,6 +1107,34 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
+              {/* Afwijs-bevestiging dialog voor sollicitanten */}
+              <Dialog open={appRejectConfirmApp !== null} onOpenChange={(open) => { if (!open) setAppRejectConfirmApp(null); }}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Sollicitant afwijzen</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-gray-600 mb-1">Weet je zeker dat je de sollicitant wilt afwijzen?</p>
+                  {appRejectConfirmApp?.email && (
+                    <p className="text-xs text-gray-400 mb-4">Er wordt automatisch een afwijzingsmail gestuurd naar <span className="font-medium">{appRejectConfirmApp.email}</span>.</p>
+                  )}
+                  <div className="flex gap-3 justify-end">
+                    <Button variant="outline" onClick={() => setAppRejectConfirmApp(null)}>Annuleren</Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        if (appRejectConfirmApp) {
+                          updateAppStatusMutation.mutate({ id: appRejectConfirmApp.id, status: 'afgewezen' });
+                          setAppRejectConfirmApp(null);
+                          setAppTab('afgewezen');
+                        }
+                      }}
+                    >
+                      Ja, afwijzen
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h1 className="text-xl font-bold">Sollicitanten</h1>
@@ -1115,29 +1154,30 @@ export default function DashboardMockup() {
                 </div>
               </div>
 
-              {/* Status tabs — primary navigation, tappable, scrollable */}
+              {/* Functie-tabs — primaire navigatie */}
               <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
                 {[
-                  { val: 'alle',       label: 'Alle',       count: appCounts.total,      active: 'bg-purple-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'nieuw',      label: 'Nieuw',      count: appCounts.nieuw,      active: 'bg-blue-500 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'beoordeeld', label: 'Beoordeeld', count: appCounts.beoordeeld, active: 'bg-yellow-500 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'aangenomen', label: 'Aangenomen', count: appCounts.aangenomen, active: 'bg-green-500 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
-                  { val: 'afgewezen',  label: 'Afgewezen',  count: appCounts.afgewezen,  active: 'bg-red-500 text-white',    inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'alle',            label: 'Alle',            count: appCounts.alle,            active: 'bg-purple-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'horecamedewerker',label: 'Horecamedewerker',count: appCounts.horecamedewerker,active: 'bg-orange-500 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'chef',            label: 'Chef',            count: appCounts.chef,            active: 'bg-gray-700 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'housekeeping',    label: 'Housekeeping',    count: appCounts.housekeeping,    active: 'bg-cyan-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'frontoffice',     label: 'Front-office',    count: appCounts.frontoffice,     active: 'bg-blue-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'afgewezen',       label: 'Afgewezen',       count: appCounts.afgewezen,       active: 'bg-red-500 text-white',    inactive: 'bg-white border border-red-200 text-red-600' },
                 ].map(({ val, label, count, active, inactive }) => (
                   <button
                     key={val}
-                    onClick={() => setAppStatusFilter(val)}
-                    className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${appStatusFilter === val ? active : inactive}`}
+                    onClick={() => setAppTab(val)}
+                    className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${appTab === val ? active : inactive}`}
                   >
                     {label}
-                    <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${appStatusFilter === val ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${appTab === val ? 'bg-white/20' : val === 'afgewezen' ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
                       {count}
                     </span>
                   </button>
                 ))}
               </div>
 
-              {/* Filters — search + 2 labeled dropdowns */}
+              {/* Filters — zoek + wie + datum sortering */}
               <div className="flex gap-2 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -1148,25 +1188,8 @@ export default function DashboardMockup() {
                     onChange={(e) => setAppSearch(e.target.value)}
                   />
                 </div>
-                <Select value={appFunctionFilter} onValueChange={setAppFunctionFilter}>
-                  <SelectTrigger className="w-[120px] sm:w-[150px]">
-                    <span className="text-sm truncate">
-                      {appFunctionFilter === 'alle' ? 'Functie' :
-                       appFunctionFilter === 'horecamedewerker' ? 'Horeca' :
-                       appFunctionFilter === 'housekeeping' ? 'Housekeeping' :
-                       appFunctionFilter === 'chef' ? 'Chef' : 'Front-office'}
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle functies</SelectItem>
-                    <SelectItem value="horecamedewerker">Horeca</SelectItem>
-                    <SelectItem value="housekeeping">Housekeeping</SelectItem>
-                    <SelectItem value="chef">Chef</SelectItem>
-                    <SelectItem value="frontoffice">Front-office</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Select value={appInterviewerFilter} onValueChange={setAppInterviewerFilter}>
-                  <SelectTrigger className="w-[100px] sm:w-[130px]">
+                  <SelectTrigger className="w-[100px] sm:w-[120px]">
                     <span className="text-sm truncate">
                       {appInterviewerFilter === 'alle' ? 'Wie' : appInterviewerFilter}
                     </span>
@@ -1178,6 +1201,16 @@ export default function DashboardMockup() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 gap-1.5 text-xs"
+                  onClick={() => setAppSortDesc(prev => !prev)}
+                  title="Sorteren op datum"
+                >
+                  <ArrowUpDown className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{appSortDesc ? 'Nieuwst eerst' : 'Oudst eerst'}</span>
+                </Button>
               </div>
 
               {/* Applications Table */}
@@ -1207,13 +1240,12 @@ export default function DashboardMockup() {
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b text-left">
                           <tr>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Datum</th>
                             <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Naam</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Functie</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Functie</th>
                             <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell">E-mail</th>
                             <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Interviewer</th>
                             <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Beoordeling</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Status</th>
+                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Datum</th>
                             <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide"></th>
                           </tr>
                         </thead>
@@ -1235,9 +1267,6 @@ export default function DashboardMockup() {
                             };
                             return (
                               <tr key={app.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
-                                <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden sm:table-cell">
-                                  {new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
-                                </td>
                                 <td className="px-3 py-3">
                                   <div className="flex items-center gap-2.5">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
@@ -1269,20 +1298,37 @@ export default function DashboardMockup() {
                                     ))}
                                   </span>
                                 </td>
-                                <td className="px-3 py-3">
-                                  <Badge className={`text-xs ${statusColors[app.status] || 'bg-gray-100 text-gray-600'}`}>
-                                    {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
-                                  </Badge>
+                                <td className="px-3 py-3 hidden sm:table-cell">
+                                  {app.status === 'afgewezen' ? (
+                                    <Badge className="text-xs bg-red-100 text-red-700">Afgewezen</Badge>
+                                  ) : (
+                                    <span className="text-xs text-gray-400">
+                                      {new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}
-                                  >
-                                    <Eye className="h-3.5 w-3.5 text-purple-500" />
-                                  </Button>
+                                  <div className="flex items-center gap-0.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}
+                                    >
+                                      <Eye className="h-3.5 w-3.5 text-purple-500" />
+                                    </Button>
+                                    {app.status !== 'afgewezen' && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 hover:bg-red-50"
+                                        onClick={() => setAppRejectConfirmApp(app)}
+                                        title="Afwijzen"
+                                      >
+                                        <X className="h-3.5 w-3.5 text-red-400" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             );

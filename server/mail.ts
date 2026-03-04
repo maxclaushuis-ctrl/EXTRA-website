@@ -443,6 +443,57 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   });
 }
 
+// Stuur afwijzingsmail naar sollicitant
+export async function sendApplicationRejectionEmail(applicant: {
+  firstName: string;
+  email: string;
+}): Promise<boolean> {
+  if (!applicant.email) return false;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#7c3aed;padding:24px 28px;">
+            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${applicant.firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt dat je laatst bij ons langs bent geweest voor het gesprek. Leuk om kennis te maken en meer over je te horen!</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Op dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat we momenteel beschikbaar hebben in verhouding tot het aantal mensen in onze poule.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Dat zegt dus niet per se iets over jou, maar meer over de planning en het aantal plekken dat we nu hebben.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je in ieder geval veel succes met je verdere zoektocht en wie weet kruisen onze paden in de toekomst nog eens.</p>
+            <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${applicant.firstName},\n\nBedankt dat je laatst bij ons langs bent geweest voor het gesprek. Leuk om kennis te maken en meer over je te horen!\n\nOp dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat we momenteel beschikbaar hebben in verhouding tot het aantal mensen in onze poule.\n\nDat zegt dus niet per se iets over jou, maar meer over de planning en het aantal plekken dat we nu hebben.\n\nWe wensen je in ieder geval veel succes met je verdere zoektocht en wie weet kruisen onze paden in de toekomst nog eens.\n\nGroet,\nTeam EXTRA`;
+
+  return await sendEmail({
+    to: applicant.email,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: 'Update over je sollicitatie bij EXTRA',
+    html,
+    text,
+  });
+}
+
 // Helper functie om instellingen op te halen
 async function getSettingValue(key: string, defaultValue: string): Promise<string> {
   try {

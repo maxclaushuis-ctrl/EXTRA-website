@@ -32,7 +32,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -4670,6 +4670,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
       const updated = await storage.updateApplicationStatus(parseInt(req.params.id), status);
       if (!updated) return res.status(404).json({ message: "Sollicitatie niet gevonden" });
+      if (status === 'afgewezen' && updated.email && updated.firstName) {
+        sendApplicationRejectionEmail({ firstName: updated.firstName, email: updated.email }).catch(err =>
+          console.error("Fout bij versturen afwijzingsmail:", err)
+        );
+      }
       return res.json(updated);
     } catch (error) {
       console.error("Error updating application status:", error);
