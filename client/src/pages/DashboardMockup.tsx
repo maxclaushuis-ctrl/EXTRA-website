@@ -634,41 +634,99 @@ export default function DashboardMockup() {
 
               {/* CV preview modal */}
               <Dialog open={cvPreviewOpen} onOpenChange={setCvPreviewOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh]">
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-base">
                       CV — {cvPreviewCandidate?.firstName} {cvPreviewCandidate?.lastName}
                     </DialogTitle>
                   </DialogHeader>
-                  {cvPreviewCandidate?.hasCv ? (
-                    <div className="flex flex-col gap-3">
-                      <div className="w-full h-[60vh] rounded-lg overflow-hidden border border-gray-200">
-                        <iframe
-                          src={`/api/admin/candidates/${cvPreviewCandidate.id}/cv`}
-                          className="w-full h-full"
-                          title="CV preview"
-                        />
+                  {(() => {
+                    if (!cvPreviewCandidate?.hasCv) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-3">
+                            <FileText className="h-7 w-7 text-red-400" />
+                          </div>
+                          <p className="text-gray-600 font-medium">Geen CV geüpload</p>
+                          <p className="text-gray-400 text-sm mt-1">Deze kandidaat heeft nog geen CV geüpload.</p>
+                        </div>
+                      );
+                    }
+                    const cvUrl = `/api/admin/candidates/${cvPreviewCandidate.id}/cv`;
+                    const filename = cvPreviewCandidate.cvFilename || '';
+                    const isPdf = filename.toLowerCase().endsWith('.pdf');
+
+                    if (!filename) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-14 h-14 bg-yellow-50 rounded-full flex items-center justify-center mb-3">
+                            <FileText className="h-7 w-7 text-yellow-500" />
+                          </div>
+                          <p className="text-gray-600 font-medium">CV geüpload maar niet beschikbaar</p>
+                          <p className="text-gray-400 text-sm mt-1 mb-4">Dit CV is aangeleverd via een oudere versie van het systeem en kan niet worden voorvertoond.</p>
+                          <a href={cvUrl} download className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
+                            <FileText className="h-4 w-4" />
+                            Probeer te downloaden
+                          </a>
+                        </div>
+                      );
+                    }
+
+                    if (!isPdf) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3">
+                            <FileText className="h-7 w-7 text-blue-500" />
+                          </div>
+                          <p className="text-gray-600 font-medium">Word-document</p>
+                          <p className="text-gray-400 text-sm mt-1 mb-1">Browsers kunnen Word-documenten niet direct tonen.</p>
+                          <p className="text-gray-400 text-sm mb-4">Download het bestand om het in Word of Google Docs te openen.</p>
+                          <a href={cvUrl} download className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
+                            <FileText className="h-4 w-4" />
+                            Downloaden ({filename.split('-').slice(-1)[0] || 'cv.docx'})
+                          </a>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="flex flex-col gap-3">
+                        <div className="w-full rounded-lg overflow-hidden border border-gray-200" style={{ height: '65vh' }}>
+                          <object
+                            data={cvUrl}
+                            type="application/pdf"
+                            className="w-full h-full"
+                          >
+                            <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50">
+                              <FileText className="h-8 w-8 text-gray-400 mb-3" />
+                              <p className="text-gray-600 text-sm mb-3">PDF kan niet worden voorvertoond in jouw browser.</p>
+                              <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
+                                Openen in nieuw tabblad
+                              </a>
+                            </div>
+                          </object>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <a
+                            href={cvUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-purple-200 text-purple-700 hover:bg-purple-50 text-sm font-medium rounded-lg"
+                          >
+                            Openen in nieuw tabblad
+                          </a>
+                          <a
+                            href={cvUrl}
+                            download
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg"
+                          >
+                            <FileText className="h-4 w-4" />
+                            Downloaden
+                          </a>
+                        </div>
                       </div>
-                      <div className="flex justify-end">
-                        <a
-                          href={`/api/admin/candidates/${cvPreviewCandidate.id}/cv`}
-                          download
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Downloaden
-                        </a>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-3">
-                        <FileText className="h-7 w-7 text-red-400" />
-                      </div>
-                      <p className="text-gray-600 font-medium">Geen CV geüpload</p>
-                      <p className="text-gray-400 text-sm mt-1">Deze kandidaat heeft nog geen CV geüpload.</p>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </DialogContent>
               </Dialog>
 
