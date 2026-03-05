@@ -5180,6 +5180,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   scheduleTwvCheck();
 
+  // ─── XLSX Import routes ───────────────────────────────────────────────────
+  const xlsxUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+  const { previewImport, commitImport } = await import('./import-xlsx');
+
+  app.post('/api/import/:role/preview', adminMiddleware, xlsxUpload.single('file'), async (req: Request, res: Response) => {
+    const { role } = req.params;
+    if (!['horeca', 'housekeeping', 'chef'].includes(role)) {
+      return res.status(400).json({ error: `Ongeldig role: ${role}` });
+    }
+    if (!req.file) return res.status(400).json({ error: 'Geen bestand ontvangen' });
+    try {
+      const result = await previewImport(req.file.buffer, role);
+      if ((result as any).error) return res.status(422).json(result);
+      return res.json(result);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Parse fout' });
+    }
+  });
+
+  app.post('/api/import/:role/commit', adminMiddleware, xlsxUpload.single('file'), async (req: Request, res: Response) => {
+    const { role } = req.params;
+    if (!['horeca', 'housekeeping', 'chef'].includes(role)) {
+      return res.status(400).json({ error: `Ongeldig role: ${role}` });
+    }
+    if (!req.file) return res.status(400).json({ error: 'Geen bestand ontvangen' });
+    const batchId = `import_${role}_${Date.now()}`;
+    try {
+      const result = await commitImport(req.file.buffer, role, batchId);
+      if ((result as any).error) return res.status(422).json(result);
+      return res.json(result);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Import fout' });
+    }
+  });
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }

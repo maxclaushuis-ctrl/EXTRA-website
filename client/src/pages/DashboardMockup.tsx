@@ -19,7 +19,8 @@ import {
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
-  Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical
+  Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
+  Upload, FileSpreadsheet, ChevronRight, Info
 } from 'lucide-react';
 
 type User = {
@@ -231,6 +232,16 @@ export default function DashboardMockup() {
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [appDetailOpen, setAppDetailOpen] = useState(false);
   const [appRejectConfirmApp, setAppRejectConfirmApp] = useState<any | null>(null);
+
+  // Import modal state
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importRole, setImportRole] = useState<'horeca' | 'housekeeping' | 'chef'>('horeca');
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importDryRun, setImportDryRun] = useState(true);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importPreview, setImportPreview] = useState<any | null>(null);
+  const [importResult, setImportResult] = useState<any | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
@@ -1047,6 +1058,262 @@ export default function DashboardMockup() {
           ) : activeTab === 'sollicitanten' ? (
             /* Sollicitanten Tab — Applications from HR intake form */
             <div>
+              {/* Import XLSX Modal */}
+              <Dialog open={importModalOpen} onOpenChange={(open) => { if (!importLoading) setImportModalOpen(open); }}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                      Import .xlsx — {importRole === 'horeca' ? 'Horecamedewerker' : importRole === 'chef' ? 'Chef' : 'Housekeeping'}
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4 pt-2">
+                    {/* File picker */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Excel-bestand (.xlsx)</label>
+                      <div
+                        className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-green-400 hover:bg-green-50 transition-colors"
+                        onClick={() => document.getElementById('xlsx-file-input')?.click()}
+                      >
+                        <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                        {importFile ? (
+                          <p className="text-sm font-medium text-green-700">{importFile.name} ({(importFile.size / 1024).toFixed(0)} KB)</p>
+                        ) : (
+                          <p className="text-sm text-gray-500">Klik om een .xlsx bestand te selecteren</p>
+                        )}
+                        <input
+                          id="xlsx-file-input"
+                          type="file"
+                          accept=".xlsx"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] || null;
+                            setImportFile(f);
+                            setImportPreview(null);
+                            setImportResult(null);
+                            setImportError(null);
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dry-run toggle */}
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <input
+                        type="checkbox"
+                        id="dry-run-toggle"
+                        checked={importDryRun}
+                        onChange={(e) => {
+                          setImportDryRun(e.target.checked);
+                          setImportResult(null);
+                        }}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <label htmlFor="dry-run-toggle" className="text-sm">
+                        <span className="font-medium text-blue-800">Dry-run (alleen preview)</span>
+                        <span className="text-blue-600 ml-1">— analyseer het bestand zonder iets op te slaan</span>
+                      </label>
+                    </div>
+
+                    {/* Analyse button */}
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      disabled={!importFile || importLoading}
+                      onClick={async () => {
+                        if (!importFile) return;
+                        setImportLoading(true);
+                        setImportError(null);
+                        setImportPreview(null);
+                        setImportResult(null);
+                        try {
+                          const fd = new FormData();
+                          fd.append('file', importFile);
+                          const res = await fetch(`/api/import/${importRole}/preview`, {
+                            method: 'POST', body: fd, credentials: 'include',
+                          });
+                          const json = await res.json();
+                          if (!res.ok || json.error) throw new Error(json.error || 'Fout bij analyseren');
+                          setImportPreview(json);
+                          if (!importDryRun) {
+                            const res2 = await fetch(`/api/import/${importRole}/commit`, {
+                              method: 'POST', body: fd, credentials: 'include',
+                            });
+                            const json2 = await res2.json();
+                            if (!res2.ok || json2.error) throw new Error(json2.error || 'Fout bij importeren');
+                            setImportResult(json2);
+                            queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
+                            refetchApplications();
+                          }
+                        } catch (err: any) {
+                          setImportError(err.message || 'Onbekende fout');
+                        } finally {
+                          setImportLoading(false);
+                        }
+                      }}
+                    >
+                      {importLoading ? (
+                        <span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" />{importDryRun ? 'Analyseren...' : 'Importeren...'}</span>
+                      ) : importDryRun ? 'Analyseer bestand' : 'Importeer nu'}
+                    </Button>
+
+                    {/* Error */}
+                    {importError && (
+                      <div className="p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+                        <p className="text-sm text-red-700">{importError}</p>
+                      </div>
+                    )}
+
+                    {/* Preview */}
+                    {importPreview && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                          <div className="text-sm">
+                            <span className="font-medium text-green-800">Sheet gevonden: "{importPreview.sheetName}"</span>
+                            <span className="text-green-600 ml-2">— {importPreview.totalRows} rijen</span>
+                          </div>
+                        </div>
+
+                        {/* Column mapping */}
+                        <div>
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Kolom-mapping</h4>
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(importPreview.columnMapping || {}).map(([field, col]: [string, any]) => (
+                              <div key={field} className="flex items-center gap-1 text-xs">
+                                <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                                <span className="text-gray-500">{field}</span>
+                                <ChevronRight className="h-3 w-3 text-gray-300 shrink-0" />
+                                <span className="font-medium text-gray-700 truncate">{col}</span>
+                              </div>
+                            ))}
+                            {(importPreview.missingFields || []).map((field: string) => (
+                              <div key={field} className="flex items-center gap-1 text-xs">
+                                <Info className="h-3 w-3 text-gray-400 shrink-0" />
+                                <span className="text-gray-400 italic">{field} niet gevonden</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Preview rows */}
+                        {importPreview.previewRows?.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                              Preview (eerste {Math.min(importPreview.previewRows.length, 10)} rijen)
+                            </h4>
+                            <div className="overflow-x-auto rounded-lg border border-gray-200">
+                              <table className="w-full text-xs">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-2 py-1.5 text-left font-medium text-gray-500">Naam</th>
+                                    <th className="px-2 py-1.5 text-left font-medium text-gray-500">Email</th>
+                                    <th className="px-2 py-1.5 text-left font-medium text-gray-500">Telefoon</th>
+                                    <th className="px-2 py-1.5 text-left font-medium text-gray-500">Stad</th>
+                                    {importRole === 'horeca' && <>
+                                      <th className="px-2 py-1.5 text-left font-medium text-gray-500">SS</th>
+                                      <th className="px-2 py-1.5 text-left font-medium text-gray-500">Bar</th>
+                                      <th className="px-2 py-1.5 text-left font-medium text-gray-500">Bed.</th>
+                                      <th className="px-2 py-1.5 text-left font-medium text-gray-500">Din.</th>
+                                    </>}
+                                    {importRole !== 'horeca' && <th className="px-2 py-1.5 text-left font-medium text-gray-500">Score</th>}
+                                    <th className="px-2 py-1.5 text-left font-medium text-gray-500">TWV</th>
+                                    <th className="px-2 py-1.5 text-left font-medium text-gray-500">Datum</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {importPreview.previewRows.map((row: any, i: number) => (
+                                    <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
+                                      <td className="px-2 py-1.5 font-medium">{row.fullName || '—'}</td>
+                                      <td className="px-2 py-1.5 text-gray-500 max-w-[100px] truncate">{row.email || '—'}</td>
+                                      <td className="px-2 py-1.5 text-gray-500">{row.phone || '—'}</td>
+                                      <td className="px-2 py-1.5">{row.city || '—'}</td>
+                                      {importRole === 'horeca' && <>
+                                        <td className="px-2 py-1.5">{row.softskillsScore != null ? `${row.softskillsScore}%` : '—'}</td>
+                                        <td className="px-2 py-1.5">{row.barScore != null ? `${row.barScore}%` : '—'}</td>
+                                        <td className="px-2 py-1.5">{row.bedieningScore != null ? `${row.bedieningScore}%` : '—'}</td>
+                                        <td className="px-2 py-1.5">{row.dinerScore != null ? `${row.dinerScore}%` : '—'}</td>
+                                      </>}
+                                      {importRole === 'housekeeping' && <td className="px-2 py-1.5">{row.indrukScore != null ? `${row.indrukScore}%` : '—'}</td>}
+                                      {importRole === 'chef' && <td className="px-2 py-1.5">{row.totaalscore != null ? `${row.totaalscore}%` : '—'}</td>}
+                                      <td className="px-2 py-1.5">{row.twv ? <span className="text-amber-600 font-medium">Ja</span> : 'Nee'}</td>
+                                      <td className="px-2 py-1.5 text-gray-400">{row.appliedAt ? new Date(row.appliedAt).toLocaleDateString('nl-NL') : '—'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Importeer button (only in dry-run mode after preview) */}
+                        {importDryRun && !importResult && (
+                          <Button
+                            className="w-full bg-orange-600 hover:bg-orange-700"
+                            disabled={importLoading}
+                            onClick={async () => {
+                              if (!importFile) return;
+                              setImportLoading(true);
+                              setImportError(null);
+                              try {
+                                const fd = new FormData();
+                                fd.append('file', importFile);
+                                const res = await fetch(`/api/import/${importRole}/commit`, {
+                                  method: 'POST', body: fd, credentials: 'include',
+                                });
+                                const json = await res.json();
+                                if (!res.ok || json.error) throw new Error(json.error || 'Fout bij importeren');
+                                setImportResult(json);
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
+                                refetchApplications();
+                              } catch (err: any) {
+                                setImportError(err.message || 'Onbekende fout');
+                              } finally {
+                                setImportLoading(false);
+                              }
+                            }}
+                          >
+                            {importLoading ? <span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" />Importeren...</span> : `Importeer nu (${importPreview.totalRows} rijen)`}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Result */}
+                    {importResult && (
+                      <div className="p-4 bg-green-50 rounded-xl border border-green-200 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          <span className="font-semibold text-green-800">Import voltooid!</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-center">
+                          {[
+                            { label: 'Nieuw', value: importResult.inserted, color: 'text-green-700' },
+                            { label: 'Bijgewerkt', value: importResult.updated, color: 'text-blue-700' },
+                            { label: 'Overgeslagen', value: importResult.skipped, color: 'text-gray-500' },
+                            { label: 'Fouten', value: importResult.errors?.length || 0, color: 'text-red-600' },
+                          ].map(({ label, value, color }) => (
+                            <div key={label} className="bg-white rounded-lg p-2 border border-gray-100">
+                              <div className={`text-xl font-bold ${color}`}>{value}</div>
+                              <div className="text-xs text-gray-500">{label}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {importResult.errors?.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs font-medium text-red-700">Fouten:</p>
+                            {importResult.errors.slice(0, 5).map((e: any, i: number) => (
+                              <p key={i} className="text-xs text-red-600">Rij {e.row}: {e.reason}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               {/* Detail Modal */}
               <Dialog open={appDetailOpen} onOpenChange={setAppDetailOpen}>
                 <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1352,6 +1619,28 @@ export default function DashboardMockup() {
                     <RefreshCw className="h-4 w-4" />
                     <span className="hidden sm:inline ml-1.5">Vernieuwen</span>
                   </Button>
+                  {['horecamedewerker', 'chef', 'housekeeping'].includes(appTab) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 border-green-300 text-green-700 hover:bg-green-50"
+                      onClick={() => {
+                        const roleMap: Record<string, 'horeca' | 'housekeeping' | 'chef'> = {
+                          horecamedewerker: 'horeca', chef: 'chef', housekeeping: 'housekeeping',
+                        };
+                        setImportRole(roleMap[appTab] || 'horeca');
+                        setImportFile(null);
+                        setImportPreview(null);
+                        setImportResult(null);
+                        setImportError(null);
+                        setImportDryRun(true);
+                        setImportModalOpen(true);
+                      }}
+                    >
+                      <FileSpreadsheet className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-1.5">Import .xlsx</span>
+                    </Button>
+                  )}
                   <a href="/sollicitatieformulier" target="_blank">
                     <Button size="sm" className="h-8 bg-purple-600 hover:bg-purple-700">
                       <FileText className="h-4 w-4" />

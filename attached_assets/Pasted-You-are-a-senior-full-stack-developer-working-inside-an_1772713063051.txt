@@ -1,0 +1,254 @@
+You are a senior full-stack developer working inside an existing Replit project.
+
+CONTEXT
+- The Sollicitanten dashboard already exists and is connected to a form.
+- There are tabs per function (Horecamedewerker, Chef, Housekeeping, etc.).
+- We now want to import historical applicants from an .xlsx file into the existing database so the dashboard shows all previous data.
+- The .xlsx file is exported from Google Sheets and may have slightly different column names than our internal field names.
+
+GOAL
+Add an "Import .xlsx" button PER function tab (at least: Horecamedewerker, Chef, Housekeeping) to import records from the matching Excel sheet into the existing applicants storage, including correct scores.
+
+IMPORTANT
+- Do NOT rebuild the whole app.
+- Extend the existing backend + DB + UI.
+- Make the import safe: preview -> import, and avoid duplicates (upsert).
+- Must support fuzzy column matching (different naming, spaces, punctuation, emoji, casing).
+- Preserve raw imported row JSON for future mapping changes.
+
+------------------------------------------------------------
+UI REQUIREMENTS
+1) In each role tab (Horecamedewerker / Chef / Housekeeping) add a button:
+   "Import .xlsx"
+   - Place it near the existing top-right actions (next to Vernieuwen / Intakeformulier).
+
+2) Clicking the button opens a modal:
+   - File uploader (.xlsx only)
+   - Toggle: "Dry-run (alleen preview)" default ON
+   - Button: "Analyseer bestand" (shows preview)
+   - Preview table: first 10 rows that will be imported + mapping status
+   - Show mapping summary: matched columns + missing columns
+   - Button: "Importeer nu" (enabled only when dry-run preview succeeded)
+
+3) After import:
+   - Show: imported count, updated count, skipped duplicates count, errors count
+   - Refresh the table automatically.
+
+------------------------------------------------------------
+BACKEND REQUIREMENTS
+Add endpoints:
+
+A) POST /api/import/:role/preview
+- role in {horeca, chef, housekeeping}
+- multipart/form-data with file
+- Parse the .xlsx
+- Select the sheet based on role:
+  horeca -> sheet name "Horecamedewerker"
+  chef -> sheet name "Chef"
+  housekeeping -> sheet name "Housekeeping"
+  If sheet not found: return clear error + list available sheet names.
+
+- Return:
+  - columnMapping (internalField -> xlsxColumn)
+  - missingFields
+  - previewRows (first 10 normalized rows + computed scores)
+  - stats (rowCount in sheet)
+
+B) POST /api/import/:role/commit
+- same input, but actually writes to DB
+- Must run in a transaction
+- Returns counts: inserted, updated, skipped, errors + error list (row index + reason)
+
+------------------------------------------------------------
+XLSX PARSING
+- Use a robust XLSX parser (e.g. SheetJS 'xlsx' npm package).
+- Read header row (row 1) and data rows starting row 2.
+- Treat empty rows as skip.
+- Store original row as raw_json.
+
+HEADER NORMALIZATION / FUZZY MATCH
+Implement normalizeHeader(str):
+- to string
+- trim
+- lower-case
+- remove spaces
+- remove punctuation
+- remove diacritics
+- remove emoji / non-alphanumerics
+Examples:
+"Voornaam + achternaam" -> "voornaamaachternaam"
+"Telefoonnummer " -> "telefoonnummer"
+"🍻 Bar vaardigheden" -> "barvaardigheden"
+"Tewerkstellingvergunning nodig? (chef)" -> "tewerkstellingvergunningnodigchef"
+
+Matching logic:
+1) Build map: normalizedHeader -> originalHeader
+2) For each internal field, match by:
+   - exact normalized match
+   - OR contains match (e.g. "barvaardigheden" contains "bar")
+   - OR alias list (see below)
+
+Provide an explicit alias dictionary per field so mapping stays predictable.
+
+------------------------------------------------------------
+INTERNAL FIELDS TO FILL
+We already have an applicant model/table. Add columns only if missing.
+
+Shared fields (all roles):
+- applied_at (timestamp)
+- interviewer (Wie)
+- full_name
+- email (if present)
+- phone
+- language
+- twv (boolean or 'Ja/Nee')
+- city
+- birthdate (optional)
+- nationality
+- channel
+- raw_json
+- source = "xlsx_import"
+- import_batch_id
+
+Role score fields:
+Horeca:
+- softskills_score (int 0-100)
+- bar_score (int 0-100)
+- bediening_score (int 0-100)
+- diner_score (int 0-100)
+
+Housekeeping:
+- indruk_score (int 0-100)  (store in existing field used by UI; keep naming consistent)
+
+Chef:
+- totaalscore (int 0-100) (or whatever score column your Chef UI expects)
+
+------------------------------------------------------------
+MAPPING ALIASES (VERY IMPORTANT)
+Use these aliases in addition to fuzzy matching:
+
+HORECA sheet ("Horecamedewerker"):
+- applied_at: ["tijdstempel", "datum", "timestamp"]
+- interviewer: ["wie", "interviewer"]
+- full_name: ["voornaamaachternaam", "naam", "voornaam+achternaam"]
+- softskills_score: ["softskills"]
+- bar_score: ["barscore", "bar"]
+- bediening_score: ["bedieningscore", "bediening"]
+- diner_score: ["dinerscore", "diner"]
+- phone: ["telefoonnummer", "telefoon"]
+- language: ["taal"]
+- twv: ["twv", "tww", "tewerkstellingvergunning"]
+- city: ["woonplaats", "plaats"]
+- birthdate: ["geboortedatum"]
+- nationality: ["nationaliteit"]
+- channel: ["kanaal"]
+- email: ["e-mail", "email", "e-mailadres", "e-mailadres:"]
+
+HOUSEKEEPING sheet ("Housekeeping"):
+- applied_at: ["tijdstempel", "datum"]
+- interviewer: ["wie"]
+- full_name: ["voornaamaachternaam", "naam"]
+- indruk_score: ["indruk"]
+- phone: ["telefoonnummer", "telefoon"]
+- language: ["taal"]
+- twv: ["twv", "tww"]
+- city: ["woonplaats"]
+- birthdate: ["geboortedatum"]
+- nationality: ["nationaliteit"]
+- channel: ["kanaal"]
+- availability: ["beschikbaarheid"]
+- preferred_days: ["voorkeurwerkdagen"]
+- preferred_daypart: ["voorkeurmomentvandegag", "voorkeurmomentvanddedag", "voorkeurmomentvandegdag", "voorkeurmomentvanddag", "voorkeur moment van de dag"]
+
+CHEF sheet ("Chef"):
+- applied_at: ["tijdstempel", "datum"]
+- interviewer: ["wie"]
+- full_name: ["voornaamaachternaam", "naam"]
+- totaalscore: ["totaalscore", "score", "totaal score"]
+- phone: ["telefoonnummer", "telefoon"]
+- language: ["taal"]
+- city: ["woonplaats"]
+- birthdate: ["geboortedatum"]
+- channel: ["kanaal"]
+- twv: ["twv", "tww", "tewerkstellingvergunning"]
+- nationality: ["nationaliteit"]
+
+NOTE: Some sheets use "TWW" in headers; treat as TWV.
+
+------------------------------------------------------------
+SCORE PARSING & CONSISTENCY
+In XLSX, scores may be stored as:
+- "80%" (string)
+- 0.8 (number)
+- 80 (number)
+
+Implement parseScore(value):
+- if string contains "%" -> parseInt
+- else if number between 0 and 1 -> *100 and round
+- else if number between 1 and 100 -> round
+- else null
+
+For Horeca:
+- Prefer using the existing columns Softskills/Barscore/Bedieningscore/Dinerscore from XLSX if available.
+- If any of these are missing, attempt to compute from raw fields IF they exist in the row (beoordeling/houding/verzorging etc.) using the same scoring module as the live form.
+- If computed and imported both exist, keep imported but also compute and log a warning if delta > 5 points (for debugging).
+
+For Housekeeping:
+- Use "Indruk" column if present, else compute from Betrouwbaar/Communicatief/Representatief if available.
+
+For Chef:
+- Use "Totaalscore" if present; otherwise leave null (no guessing).
+
+------------------------------------------------------------
+DATE PARSING
+- applied_at can be an Excel date serial, ISO string, or "d-m-yyyy hh:mm:ss" string.
+- Convert to ISO in DB.
+- UI can format as dd-mm-yyyy (existing behavior).
+
+Birthdate:
+- parse if present; else keep null.
+- UI already calculates age; do NOT store age.
+
+TWV FIELD
+- Accept "Ja"/"Nee", true/false, 1/0.
+- Normalize to boolean.
+
+PHONE NORMALIZATION
+- Trim and remove double spaces.
+- Keep leading +.
+
+------------------------------------------------------------
+DUPLICATE / UPSERT LOGIC
+We need to prevent importing the same person multiple times.
+
+Create a deterministic unique key per role:
+- Prefer email if present
+- Else phone
+- Else (full_name + birthdate + city)
+
+Also include applied_at date (day-level) to avoid overwriting different applications years apart.
+Example unique key:
+(role, key_identity, applied_at_date)
+
+Behavior:
+- If record exists -> UPDATE missing fields + scores + raw_json append/import_batch_id
+- Else -> INSERT
+
+Return inserted/updated/skipped counts.
+
+------------------------------------------------------------
+TESTING
+- Add a small unit test or script route to validate:
+  - parsing of "80%" vs 0.8 vs 80
+  - mapping of "TWW" -> TWV
+  - sheet selection works
+- Ensure import works with our exact file structure:
+  Sheets include at least: "Horecamedewerker", "Chef", "Housekeeping".
+
+DELIVERABLE
+Implement:
+- UI import modal per function tab
+- Backend preview + commit endpoints
+- XLSX parsing + fuzzy mapping + score parsing
+- Upsert logic + transaction
+- Clear success/error messages
