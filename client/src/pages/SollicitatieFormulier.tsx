@@ -215,6 +215,10 @@ export default function SollicitatieFormulier() {
   }
 
   const onSubmit = async (data: FormData) => {
+    if (currentSection !== sections.length - 1) {
+      handleNext();
+      return;
+    }
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/sollicitatie", {

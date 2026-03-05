@@ -489,7 +489,7 @@ export default function DashboardMockup() {
   const kanExpLabel = (c: Candidate) => c.experienceLevel || c.horecaExperience || '—';
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="normal-cursor flex min-h-screen bg-gray-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
