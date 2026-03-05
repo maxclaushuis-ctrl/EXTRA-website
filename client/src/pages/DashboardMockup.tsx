@@ -132,6 +132,10 @@ export default function DashboardMockup() {
   const seenNotifIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    document.title = 'Admin Dashboard – EXTRA';
+  }, []);
+
+  useEffect(() => {
     notifications.forEach((notif: any) => {
       if (notif.type === 'new_candidate') {
         const id = `${notif.type}-${notif.data?.candidateId}`;

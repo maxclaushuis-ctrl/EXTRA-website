@@ -159,6 +159,7 @@ export default function SollicitatieFormulier() {
   });
 
   useEffect(() => {
+    document.title = 'Sollicitatieformulier – EXTRA';
     setIsSubmitted(false);
     setCurrentSection(0);
   }, []);
