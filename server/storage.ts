@@ -3478,7 +3478,7 @@ export class MemStorage implements IStorage {
     }
     const total = all.length;
     const offset = filters?.offset ?? 0;
-    const limit = filters?.limit ?? 100;
+    const limit = filters?.limit ?? 10000;
     return { applications: all.slice(offset, offset + limit), total };
   }
 

@@ -4796,7 +4796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dateFrom: dateFrom as string,
         dateTo: dateTo as string,
         search: search as string,
-        limit: limit ? parseInt(limit as string) : 200,
+        limit: limit ? parseInt(limit as string) : 10000,
         offset: offset ? parseInt(offset as string) : 0,
       });
       return res.json(result);

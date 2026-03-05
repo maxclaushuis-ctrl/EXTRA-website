@@ -252,12 +252,27 @@ export function parseXlsx(buffer: Buffer, role: string): {
 
   const candidates = SHEET_NAMES[role] || [];
   let sheetName = '';
+  // 1) Exact match (case-insensitive)
   for (const candidate of candidates) {
-    if (availableSheets.some(s => s.toLowerCase() === candidate.toLowerCase())) {
-      sheetName = availableSheets.find(s => s.toLowerCase() === candidate.toLowerCase())!;
-      break;
+    const found = availableSheets.find(s => s.toLowerCase() === candidate.toLowerCase());
+    if (found) { sheetName = found; break; }
+  }
+  // 2) Fuzzy match: sheet name contains keyword or vice versa
+  if (!sheetName) {
+    const roleKeywords = {
+      horeca: ['horeca'],
+      housekeeping: ['housekeeping', 'hk'],
+      chef: ['chef'],
+    }[role] || [];
+    for (const s of availableSheets) {
+      const sLow = s.toLowerCase();
+      if (roleKeywords.some(k => sLow.includes(k) || k.includes(sLow))) {
+        sheetName = s;
+        break;
+      }
     }
   }
+  // 3) Single sheet fallback
   if (!sheetName && availableSheets.length === 1) sheetName = availableSheets[0];
 
   if (!sheetName) {

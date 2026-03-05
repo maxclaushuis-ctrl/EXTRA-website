@@ -1215,13 +1215,26 @@ export default function DashboardMockup() {
                     {/* Preview */}
                     {importPreview && (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex flex-wrap items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
                           <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-                          <div className="text-sm">
+                          <div className="text-sm flex-1">
                             <span className="font-medium text-green-800">Sheet gevonden: "{importPreview.sheetName}"</span>
                             <span className="text-green-600 ml-2">— {importPreview.totalRows} rijen</span>
                           </div>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${
+                            importRole === 'horeca' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                            importRole === 'chef' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                            'bg-cyan-100 text-cyan-700 border-cyan-200'
+                          }`}>
+                            Functie: {importRole === 'horeca' ? 'Horecamedewerker' : importRole === 'chef' ? 'Chef' : 'Housekeeping'}
+                          </span>
                         </div>
+                        {importPreview.availableSheets?.length > 1 && (
+                          <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                            <Info className="h-3 w-3 shrink-0" />
+                            Alle tabbladen in dit bestand: {importPreview.availableSheets.join(', ')} — alleen "{importPreview.sheetName}" wordt geïmporteerd
+                          </div>
+                        )}
 
                         {/* Column mapping */}
                         <div>
