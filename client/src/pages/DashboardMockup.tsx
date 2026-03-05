@@ -66,11 +66,6 @@ type Transaction = {
   user?: User;
 };
 
-const sidebarItems = [
-  { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
-  { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
-  { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
-];
 
 type TwvCandidate = {
   id: number;
@@ -165,6 +160,9 @@ export default function DashboardMockup() {
   }, [notifications, toast]);
 
   const [activeTab, setActiveTab] = useState('kandidaten');
+  const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
+  const [bedrijvenExpanded, setBedrijvenExpanded] = useState(true);
+  const [bedrijvenSearch, setBedrijvenSearch] = useState('');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('alle');
@@ -331,6 +329,14 @@ export default function DashboardMockup() {
       toast({ title: 'TWV status bijgewerkt' });
     },
     onError: () => toast({ title: 'Fout bij bijwerken TWV status', variant: 'destructive' }),
+  });
+
+  const { data: staffingRequestsData = [], isLoading: staffingRequestsLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/staffing-requests'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 10000,
   });
 
   if (authLoading) {
@@ -539,23 +545,55 @@ export default function DashboardMockup() {
           </button>
         </div>
 
-        <div className="p-2 text-xs text-gray-400 uppercase tracking-wider mt-4 px-4">Beheer</div>
-        
-        <nav className="flex-1 px-2 overflow-y-auto">
-          {sidebarItems.map((item) => (
+        <nav className="flex-1 px-2 overflow-y-auto pt-3">
+          {/* Group: Medewerkers */}
+          <button
+            onClick={() => setMedewerkerExpanded(e => !e)}
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mb-0.5"
+          >
+            <span>Medewerkers</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${medewerkerExpanded ? '' : '-rotate-90'}`} />
+          </button>
+          {medewerkerExpanded && (
+            <>
+              {[
+                { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
+                { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
+                { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
+              ].map(item => (
+                <button
+                  key={item.tab}
+                  onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                    activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* Group: Bedrijven */}
+          <button
+            onClick={() => setBedrijvenExpanded(e => !e)}
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+          >
+            <span>Bedrijven</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${bedrijvenExpanded ? '' : '-rotate-90'}`} />
+          </button>
+          {bedrijvenExpanded && (
             <button
-              key={item.label}
-              onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+              onClick={() => { setActiveTab('bedrijven-aanvragen'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                activeTab === item.tab 
-                  ? 'bg-purple-100 text-purple-700 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-100'
+                activeTab === 'bedrijven-aanvragen' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
+              <Building2 className="h-4 w-4" />
+              <span>Personeelsaanvragen</span>
             </button>
-          ))}
+          )}
         </nav>
 
         <div className="p-2 border-t">
@@ -2439,6 +2477,106 @@ export default function DashboardMockup() {
                   <GripVertical className="h-3.5 w-3.5" /> Sleep kaarten tussen kolommen om status te wijzigen
                 </div>
               </div>
+            </div>
+          ) : activeTab === 'bedrijven-aanvragen' ? (
+            /* ─── PERSONEELSAANVRAGEN tab ─── */
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h1 className="text-xl font-bold">Personeelsaanvragen</h1>
+                  <p className="text-sm text-gray-500">Aanvragen van bedrijven via het personeelsaanvraagformulier</p>
+                </div>
+                <a
+                  href="/personeelsaanvraag"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-purple-600 hover:underline flex items-center gap-1"
+                >
+                  <Building2 className="h-3.5 w-3.5" /> Formulier bekijken
+                </a>
+              </div>
+
+              {/* Search */}
+              <div className="relative mb-4 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Zoek op bedrijf, contactpersoon of e-mail…"
+                  value={bedrijvenSearch}
+                  onChange={e => setBedrijvenSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </div>
+
+              {staffingRequestsLoading ? (
+                <div className="flex gap-3 flex-col">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
+                </div>
+              ) : (() => {
+                const q = bedrijvenSearch.toLowerCase();
+                const filtered = staffingRequestsData.filter((r: any) =>
+                  !q ||
+                  (r.companyName || '').toLowerCase().includes(q) ||
+                  (r.contactName || '').toLowerCase().includes(q) ||
+                  (r.email || '').toLowerCase().includes(q)
+                );
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-16 text-gray-400">
+                      <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">{bedrijvenSearch ? 'Geen resultaten gevonden' : 'Nog geen personeelsaanvragen ontvangen'}</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b text-left">
+                          <tr>
+                            {['Datum', 'Bedrijf', 'Contactpersoon', 'E-mail', 'Telefoon', 'Plaats', 'Functies', 'Bericht'].map(h => (
+                              <th key={h} className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map((r: any) => (
+                            <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors">
+                              <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">
+                                {r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
+                              </td>
+                              <td className="px-3 py-2.5 text-xs font-medium text-gray-800 whitespace-nowrap">{r.companyName || '—'}</td>
+                              <td className="px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap">{r.contactName || '—'}</td>
+                              <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">
+                                <a href={`mailto:${r.email}`} className="hover:text-purple-600">{r.email || '—'}</a>
+                              </td>
+                              <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">
+                                {r.phone ? <a href={`tel:${r.phone}`} className="hover:text-purple-600">{r.phone}</a> : '—'}
+                              </td>
+                              <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">{r.locationAddress || r.locationName || '—'}</td>
+                              <td className="px-3 py-2.5 text-xs text-gray-700 max-w-[160px]">
+                                {Array.isArray(r.functions) && r.functions.length > 0
+                                  ? <span className="flex flex-wrap gap-1">
+                                      {r.functions.map((f: string) => (
+                                        <span key={f} className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-medium">{f}</span>
+                                      ))}
+                                    </span>
+                                  : '—'
+                                }
+                              </td>
+                              <td className="px-3 py-2.5 text-xs text-gray-500 max-w-[200px] truncate" title={r.notes || ''}>
+                                {r.notes || '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+              })()}
             </div>
           ) : (
             /* Dashboard / Gebruikers Tab */

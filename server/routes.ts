@@ -5028,6 +5028,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Staffing requests (admin) ───────────────────────────────────────────
+  app.get("/api/admin/staffing-requests", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const { staffingRequests } = await import("@shared/schema");
+      const { desc } = await import("drizzle-orm");
+      const results = await db.select().from(staffingRequests).orderBy(desc(staffingRequests.createdAt));
+      return res.json(results);
+    } catch (error) {
+      console.error("Error fetching staffing requests:", error);
+      return res.status(500).json({ message: "Fout bij ophalen personeelsaanvragen" });
+    }
+  });
+
   // ─── TWV (Tewerkstellingsvergunning) routes ───────────────────────────────
 
   // Get all TWV candidates (needsTwv = true)

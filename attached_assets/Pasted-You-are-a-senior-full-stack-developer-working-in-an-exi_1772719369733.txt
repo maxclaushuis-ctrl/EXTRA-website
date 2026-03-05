@@ -1,0 +1,146 @@
+You are a senior full-stack developer working in an existing Replit project.
+
+The admin dashboard already exists and currently has these menu items in the sidebar:
+
+- Kandidaten
+- Sollicitanten
+- TWV
+
+GOAL
+Improve the sidebar structure by grouping related pages and add a new section for companies.
+
+Do NOT rebuild the dashboard. Only update the sidebar navigation and add the new company submissions page.
+
+--------------------------------------------------
+
+SIDEBAR STRUCTURE
+
+Replace the current sidebar structure with two dropdown groups.
+
+Group 1:
+Medewerkers
+
+When expanded it should contain:
+- Kandidaten
+- Sollicitanten
+- TWV
+
+Behavior:
+- The dropdown should be collapsible.
+- Default state: expanded.
+- Active page should still highlight correctly.
+
+Routes must remain unchanged:
+- /dashboard/kandidaten
+- /dashboard/sollicitanten
+- /dashboard/twv
+
+Only change the visual grouping in the sidebar.
+
+--------------------------------------------------
+
+NEW DROPDOWN GROUP
+
+Add a second dropdown:
+
+Bedrijven
+
+Inside this dropdown add a new page:
+
+Personeelsaanvragen
+
+Route:
+ /dashboard/bedrijven-aanvragen
+
+Icon suggestion:
+building or office icon.
+
+--------------------------------------------------
+
+COMPANY REQUESTS PAGE
+
+This page must display all submissions from the company request form.
+
+The form already exists at:
+ /personeelsaanvraag
+
+Create a backend endpoint that stores every submission from this form.
+
+Example endpoint:
+POST /api/company-request
+
+--------------------------------------------------
+
+DATABASE STORAGE
+
+Create a table (if not existing):
+
+company_requests
+
+Fields:
+
+id
+submitted_at (timestamp)
+company_name
+contact_name
+email
+phone
+city
+requested_role
+message
+raw_payload (JSON)
+
+submitted_at should store the exact submission time.
+
+--------------------------------------------------
+
+COMPANY REQUEST DASHBOARD
+
+On page:
+/dashboard/bedrijven-aanvragen
+
+Create a table with columns:
+
+Datum
+Bedrijf
+Contactpersoon
+E-mail
+Telefoon
+Plaats
+Functie aanvraag
+Bericht
+Acties
+
+Sort by:
+Newest first.
+
+Add a search bar to filter by:
+- company name
+- contact name
+- email
+
+--------------------------------------------------
+
+FORM CONNECTION
+
+The form at:
+/personeelsaanvraag
+
+must send its data to:
+
+POST /api/company-request
+
+After submission:
+- store the request in company_requests
+- return success
+- optionally show confirmation message on frontend
+
+--------------------------------------------------
+
+UI CONSISTENCY
+
+Use the same styling as the existing dashboard tables.
+
+The sidebar dropdown style should match the current design system.
+
+Icons and spacing should remain consistent with the current UI.
