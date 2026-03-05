@@ -91,12 +91,9 @@ function Router() {
   
   return (
     <>
-      {/* Notificatie en navigatie, maar niet op employee dashboard, dashboard mockup of publieke pagina's */}
+      {/* Notificatie toast, maar niet op employee dashboard, dashboard mockup of publieke pagina's */}
       {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && !isDashboardMockup && !isPublicPage && (
-        <>
-          <MainNav />
-          <NotificationToast />
-        </>
+        <NotificationToast />
       )}
       
       <Switch>
