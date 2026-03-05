@@ -102,11 +102,21 @@ export function parseScore(value: any): number | null {
 // ─── Date parsing ────────────────────────────────────────────────────────────
 function parseDate(value: any): string | null {
   if (!value) return null;
+  // When cellDates:true, xlsx returns Date objects directly
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value.toISOString();
+  }
+  // Fallback: numeric serial date (Excel date number)
   if (typeof value === 'number') {
-    const date = XLSX.SSF.parse_date_code(value);
-    if (date) {
-      const d = new Date(date.y, date.m - 1, date.d, date.H || 0, date.M || 0, date.S || 0);
-      return d.toISOString();
+    try {
+      // Excel date serial: days since 1900-01-01 (with Lotus 1-2-3 bug offset)
+      const excelEpoch = new Date(1900, 0, 1);
+      const msPerDay = 86400000;
+      const adjusted = value > 59 ? value - 1 : value; // skip Lotus bug day
+      const d = new Date(excelEpoch.getTime() + (adjusted - 1) * msPerDay);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    } catch {
+      return null;
     }
   }
   if (typeof value === 'string') {
@@ -237,7 +247,7 @@ export function parseXlsx(buffer: Buffer, role: string): {
   missing: string[];
   rows: Record<string, any>[];
 } {
-  const wb = XLSX.read(buffer, { type: 'buffer', cellDates: false });
+  const wb = XLSX.read(buffer, { type: 'buffer', cellDates: true });
   const availableSheets = wb.SheetNames;
 
   const candidates = SHEET_NAMES[role] || [];
