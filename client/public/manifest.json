@@ -1,8 +1,8 @@
 {
-  "name": "EXTRA Dashboard",
+  "name": "EXTRA Sollicitatieformulier",
   "short_name": "EXTRA",
-  "description": "EXTRA Horecapersoneel beheersdashboard",
-  "start_url": "/dashboard-mockup",
+  "description": "EXTRA Horecapersoneel sollicitatieformulier",
+  "start_url": "/sollicitatieformulier",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#7c3aed",
