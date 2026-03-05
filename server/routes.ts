@@ -33,7 +33,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -3823,6 +3823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         functionType: validated.functionType,
         horecaExperience: validated.horecaExperience || null,
         needsTwv: validated.needsTwv || false,
+        twvStatus: validated.needsTwv ? 'twv_nodig' : null,
         interviewDate: validated.interviewDate || null,
         interviewTime: validated.interviewTime || null,
         sourceChannel: validated.sourceChannel || "Website",
@@ -4849,6 +4850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         birthDate: data.birthDate || null,
         nationality: data.nationality || null,
         needsTwv: data.needsWorkPermit === 'ja',
+        twvStatus: data.needsWorkPermit === 'ja' ? 'twv_nodig' : null,
         language: (data.languages || []).join(', '),
         
         // Experience
@@ -5007,6 +5009,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Er is iets misgegaan bij het opslaan van de aanvraag" });
     }
   });
+
+  // ─── TWV (Tewerkstellingsvergunning) routes ───────────────────────────────
+
+  // Get all TWV candidates (needsTwv = true)
+  app.get("/api/admin/twv", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const result = await storage.getCandidates();
+      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
+      const twvCandidates = allCandidates.filter((c: any) => c.needsTwv === true);
+      return res.json(twvCandidates);
+    } catch (error) {
+      console.error("Fout bij ophalen TWV kandidaten:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // Update TWV status + dates for a candidate
+  app.patch("/api/admin/twv/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const { twvStatus, twvStartDate, twvEndDate } = req.body;
+      const updateData: Record<string, any> = {};
+      if (twvStatus !== undefined) updateData.twvStatus = twvStatus;
+      if (twvStartDate !== undefined) updateData.twvStartDate = twvStartDate;
+      if (twvEndDate !== undefined) updateData.twvEndDate = twvEndDate;
+      const updated = await storage.updateCandidate(id, updateData as any);
+      if (!updated) return res.status(404).json({ message: "Kandidaat niet gevonden" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Fout bij updaten TWV status:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // Export TWV candidates as CSV for arbeidsinspectie
+  app.get("/api/admin/twv/export", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const result = await storage.getCandidates();
+      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
+      const twvCandidates = allCandidates.filter((c: any) => c.needsTwv === true);
+      const statusLabels: Record<string, string> = {
+        twv_nodig: 'TWV Nodig',
+        twv_aangevraagd: 'TWV Aangevraagd',
+        twv_verstrekt: 'TWV Verstrekt',
+        twv_verlopen: 'TWV Verlopen',
+      };
+      const rows = [
+        ['ID', 'Voornaam', 'Achternaam', 'Nationaliteit', 'Functie', 'TWV Status', 'Startdatum TWV', 'Einddatum TWV', 'Aangemeld op'],
+        ...twvCandidates.map((c: any) => [
+          c.id,
+          c.firstName,
+          c.lastName,
+          c.nationality || '',
+          c.functionType || '',
+          statusLabels[c.twvStatus] || c.twvStatus || 'Onbekend',
+          c.twvStartDate || '',
+          c.twvEndDate || '',
+          c.createdAt ? new Date(c.createdAt).toLocaleDateString('nl-NL') : '',
+        ]),
+      ];
+      const csv = rows.map(row => row.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="twv-export-${new Date().toISOString().slice(0,10)}.csv"`);
+      return res.send('\uFEFF' + csv); // BOM voor Excel
+    } catch (error) {
+      console.error("Fout bij TWV export:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij de export" });
+    }
+  });
+
+  // Manual trigger: check and send TWV reminders now
+  app.post("/api/admin/twv/check-reminders", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const count = await checkTwvReminders();
+      return res.json({ success: true, remindersSent: count });
+    } catch (error) {
+      console.error("Fout bij TWV reminder check:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // ─── TWV reminder scheduler (dagelijks om 9:00) ───────────────────────────
+  async function checkTwvReminders(): Promise<number> {
+    let remindersSent = 0;
+    try {
+      const result = await storage.getCandidates();
+      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
+      const twvCandidates = allCandidates.filter((c: any) => c.needsTwv === true && c.twvStatus === 'twv_verstrekt' && c.twvEndDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (const candidate of twvCandidates) {
+        const endDate = new Date(candidate.twvEndDate!);
+        endDate.setHours(0, 0, 0, 0);
+        const daysLeft = Math.round((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysLeft <= 30 && daysLeft > 0) {
+          // Check if reminder was already sent in the last 7 days
+          const lastSent = (candidate as any).twvReminderSentAt;
+          if (lastSent) {
+            const daysSinceSent = Math.round((today.getTime() - new Date(lastSent).getTime()) / (1000 * 60 * 60 * 24));
+            if (daysSinceSent < 7) continue; // Skip — already sent this week
+          }
+
+          console.log(`[TWV] Herinnering versturen voor ${candidate.firstName} ${candidate.lastName} (${daysLeft} dagen resterend)`);
+
+          // Send email
+          await sendTwvExpiryReminderEmail({
+            firstName: candidate.firstName,
+            lastName: candidate.lastName,
+            id: candidate.id,
+            twvEndDate: candidate.twvEndDate!,
+            daysLeft,
+          }).catch((e: Error) => console.error('[TWV] E-mail fout:', e));
+
+          // Send push notification to admins
+          const allUsers = await storage.getUsers();
+          const adminUserIds = allUsers.filter((u: any) => u.role === 'admin').map((u: any) => u.id);
+          const pushService = getPushNotificationService();
+          if (pushService && adminUserIds.length > 0) {
+            await pushService.sendTwvExpiryAlert(adminUserIds, `${candidate.firstName} ${candidate.lastName}`, daysLeft, candidate.id).catch((e: Error) => console.error('[TWV] Push fout:', e));
+          }
+
+          // Mark reminder as sent
+          await storage.updateCandidate(candidate.id, { twvReminderSentAt: new Date() } as any);
+          remindersSent++;
+        }
+      }
+    } catch (error) {
+      console.error('[TWV] Fout bij verwerken herinneringen:', error);
+    }
+    return remindersSent;
+  }
+
+  function scheduleTwvCheck() {
+    const now = new Date();
+    const next9am = new Date(now);
+    next9am.setHours(9, 0, 0, 0);
+    if (next9am <= now) next9am.setDate(next9am.getDate() + 1);
+    const msUntil = next9am.getTime() - now.getTime();
+    const minutesUntil = Math.round(msUntil / 60000);
+    console.log(`[TWV] Volgende reminder-check gepland om ${next9am.toLocaleString('nl-NL')} (over ${minutesUntil} minuten)`);
+    setTimeout(async () => {
+      const sent = await checkTwvReminders();
+      console.log(`[TWV] Reminder-check klaar — ${sent} herinneringen verstuurd`);
+      scheduleTwvCheck(); // Plan de volgende check
+    }, msUntil);
+  }
+
+  scheduleTwvCheck();
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;

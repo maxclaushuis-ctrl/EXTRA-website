@@ -1,0 +1,122 @@
+Je bent een product designer en developer die een dashboard uitbreidt voor een recruitment- en personeelsplatform.
+
+We willen een nieuw tabblad “TWV” toevoegen aan het dashboard, naast de bestaande tabbladen “Sollicitanten” en “Kandidaten”.
+
+Het doel van dit tabblad is om alle medewerkers die een tewerkstellingsvergunning (TWV) nodig hebben overzichtelijk te beheren en monitoren, inclusief status en vervaldatum.
+
+⸻
+
+1. Automatische koppeling met sollicitanten
+
+Het tabblad TWV moet gekoppeld zijn aan het tabblad “Sollicitanten”.
+
+Wanneer in het sollicitatieformulier bij het veld “TWV nodig?” → Ja wordt geselecteerd:
+	•	wordt de persoon automatisch toegevoegd aan het tabblad “TWV”
+	•	de medewerker komt automatisch in de eerste fase:
+“TWV nodig”
+
+De gegevens blijven gekoppeld aan het oorspronkelijke sollicitantenprofiel.
+
+⸻
+
+2. Kanban workflow (kolommen)
+
+Het TWV-tabblad werkt als een kanban board, vergelijkbaar met het bestaande kandidatenoverzicht.
+
+Kolommen:
+	1.	TWV nodig
+medewerker heeft TWV nodig maar aanvraag nog niet gestart
+	2.	TWV aangevraagd
+aanvraag is ingediend
+	3.	TWV verstrekt
+vergunning ontvangen
+	4.	TWV verlopen
+
+Medewerkers moeten met drag-and-drop tussen deze fases kunnen worden verplaatst.
+
+⸻
+
+3. Weergave per medewerker
+
+Elke medewerkerkaart moet minimaal de volgende informatie tonen:
+	•	Voornaam + achternaam
+	•	Uniek medewerker ID
+	•	Nationaliteit
+
+Wanneer een medewerker in de fase “TWV verstrekt” staat, moeten extra velden zichtbaar zijn:
+	•	Startdatum TWV
+	•	Einddatum TWV
+
+⸻
+
+4. Visuele status van de TWV
+
+Wanneer een TWV is verstrekt moet er een duidelijke visuele status zichtbaar zijn op basis van de einddatum.
+
+Gebruik kleurcodes:
+
+🟢 Groen
+TWV nog ruim geldig
+
+🟠 Oranje
+TWV verloopt binnenkort
+
+🔴 Rood
+TWV verlopen
+
+Wanneer de einddatum is verstreken moet de medewerker automatisch in de kolom “TWV verlopen” komen te staan.
+
+⸻
+
+5. Zoekfunctie
+
+Boven het TWV-overzicht moet een zoekbalk aanwezig zijn.
+
+Zoeken moet mogelijk zijn op:
+	•	voornaam
+	•	achternaam
+	•	medewerker ID
+
+⸻
+
+6. Document upload (optioneel maar wenselijk)
+
+Bij elke medewerker moet het mogelijk zijn om documenten te uploaden zoals:
+	•	TWV document
+	•	aanvraagbewijs
+
+De documenten moeten zichtbaar zijn in het medewerkerprofiel.
+
+⸻
+
+7. Notificatie bij verlopen TWV
+
+Wanneer een TWV verloopt of bijna verloopt moet dit visueel zichtbaar zijn in het overzicht via de kleurcodes.
+
+⸻
+
+8. Synchronisatie met andere tabbladen
+
+De medewerker blijft gekoppeld aan het originele profiel in:
+	•	Sollicitanten
+	•	Kandidaten
+
+Wijzigingen in naam of gegevens moeten automatisch worden gesynchroniseerd.
+
+⸻
+
+✅ Resultaat:
+Een overzichtelijk TWV-board waar we direct kunnen zien:
+	•	welke medewerkers een TWV nodig hebben
+	•	welke aangevraagd zijn
+	•	welke actief zijn
+	•	welke verlopen zijn
+
+⸻
+
+💡 Tip (optioneel om nog toe te voegen later)
+Als je het systeem later uitbreidt kan je toevoegen:
+	•	automatische herinneringen 30 dagen voor verlopen
+	•	exportfunctie voor inspecties
+
+Maar voor nu is dit de cleanste en meest praktische setup.

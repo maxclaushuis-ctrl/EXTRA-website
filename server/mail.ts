@@ -694,6 +694,72 @@ export async function sendCvReminderEmail(candidate: { firstName: string; email:
   });
 }
 
+export async function sendTwvExpiryReminderEmail(candidate: {
+  firstName: string;
+  lastName: string;
+  id: number;
+  twvEndDate: string;
+  daysLeft: number;
+}): Promise<boolean> {
+  const recipients = ['max@doehetextra.nl', 'eveline@doehetextra.nl'];
+  const fullName = `${candidate.firstName} ${candidate.lastName}`;
+  const endDateFormatted = new Date(candidate.twvEndDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TWV verloopt binnenkort</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#d97706,#b45309);padding:32px 28px;text-align:center;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:16px;">
+              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:1px;">EXTRA</span>
+            </div>
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">⚠️ TWV verloopt binnenkort</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Beste collega,</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">De tewerkstellingsvergunning (TWV) van <strong>${fullName}</strong> verloopt over <strong>${candidate.daysLeft} dagen</strong> op <strong>${endDateFormatted}</strong>.</p>
+            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin:20px 0;">
+              <p style="margin:0;font-size:14px;color:#92400e;font-weight:600;">Actie vereist</p>
+              <p style="margin:6px 0 0;font-size:14px;color:#78350f;line-height:1.5;">Vergeet niet op tijd een verlengingsaanvraag in te dienen bij het UWV om te voorkomen dat de medewerker zonder geldige vergunning werkt.</p>
+            </div>
+            <p style="margin:24px 0 0;font-size:15px;color:#374151;line-height:1.6;">Bekijk het TWV-overzicht in het dashboard voor meer details.</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="https://app.doehetextra.nl/dashboard-mockup" style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
+            </div>
+            <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA – Geautomatiseerde melding</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  let allOk = true;
+  for (const to of recipients) {
+    const ok = await sendEmail({
+      to,
+      from: 'EXTRA Systeem <max@doehetextra.nl>',
+      subject: `⚠️ TWV van ${fullName} verloopt over ${candidate.daysLeft} dagen`,
+      html,
+      text: `De TWV van ${fullName} verloopt over ${candidate.daysLeft} dagen op ${endDateFormatted}. Neem actie voor verlengingsaanvraag.`,
+    });
+    if (!ok) allOk = false;
+  }
+  return allOk;
+}
+
 // Helper functie om instellingen op te halen
 async function getSettingValue(key: string, defaultValue: string): Promise<string> {
   try {

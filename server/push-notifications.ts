@@ -414,6 +414,28 @@ class PushNotificationService {
   }
 
   /**
+   * Send TWV expiry reminder to admin users
+   */
+  async sendTwvExpiryAlert(adminUserIds: number[], candidateName: string, daysLeft: number, candidateId: number) {
+    const payload: NotificationPayload = {
+      title: '⚠️ TWV verloopt binnenkort',
+      body: `De TWV van ${candidateName} verloopt over ${daysLeft} dagen. Actie vereist.`,
+      tag: `twv-expiry-${candidateId}`,
+      data: {
+        type: 'candidate',
+        action: 'view_twv',
+        url: '/dashboard-mockup',
+        candidateId,
+      },
+      actions: [
+        { action: 'view_twv', title: 'Bekijk TWV overzicht' },
+        { action: 'dismiss', title: 'Sluiten' },
+      ],
+    };
+    await this.sendToUsers(adminUserIds, payload);
+  }
+
+  /**
    * Get VAPID public key for client-side subscription
    */
   getVapidPublicKey(): string {
