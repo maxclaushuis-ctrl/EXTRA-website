@@ -77,7 +77,7 @@ type TwvCandidate = {
   lastName: string;
   nationality?: string;
   functionType: string;
-  twvStatus?: 'twv_nodig' | 'twv_aangevraagd' | 'twv_verstrekt' | 'twv_verlopen' | null;
+  twvStatus?: 'twv_nodig' | 'twv_aangevraagd' | 'info_nodig' | 'twv_verstrekt' | 'twv_verlopen' | null;
   twvStartDate?: string | null;
   twvEndDate?: string | null;
   createdAt: string;
@@ -1936,6 +1936,7 @@ export default function DashboardMockup() {
                 const TWV_COLUMNS: { key: TwvCandidate['twvStatus']; label: string; color: string; bg: string; border: string }[] = [
                   { key: 'twv_nodig', label: 'TWV Nodig', color: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200' },
                   { key: 'twv_aangevraagd', label: 'TWV Aangevraagd', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
+                  { key: 'info_nodig', label: 'Info nodig', color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200' },
                   { key: 'twv_verstrekt', label: 'TWV Verstrekt', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
                   { key: 'twv_verlopen', label: 'TWV Verlopen', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
                 ];
@@ -2079,10 +2080,20 @@ export default function DashboardMockup() {
                                     </div>
                                   )}
 
-                                  {/* Quick move to verstrekt: show date button */}
+                                  {/* Quick move buttons */}
                                   {col.key === 'twv_aangevraagd' && (
                                     <button
-                                      className="text-xs text-blue-600 hover:underline mt-2 block"
+                                      className="text-xs text-orange-600 hover:underline mt-2 block"
+                                      onClick={() => {
+                                        updateTwvMutation.mutate({ id: c.id, twvStatus: 'info_nodig' });
+                                      }}
+                                    >
+                                      → Info nodig
+                                    </button>
+                                  )}
+                                  {col.key === 'info_nodig' && (
+                                    <button
+                                      className="text-xs text-green-600 hover:underline mt-2 block"
                                       onClick={() => {
                                         updateTwvMutation.mutate({ id: c.id, twvStatus: 'twv_verstrekt' });
                                       }}

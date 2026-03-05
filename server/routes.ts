@@ -5071,6 +5071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const statusLabels: Record<string, string> = {
         twv_nodig: 'TWV Nodig',
         twv_aangevraagd: 'TWV Aangevraagd',
+        info_nodig: 'Info nodig',
         twv_verstrekt: 'TWV Verstrekt',
         twv_verlopen: 'TWV Verlopen',
       };

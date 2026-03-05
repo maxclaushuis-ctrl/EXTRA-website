@@ -841,7 +841,7 @@ export const candidateFunctionEnum = pgEnum('candidate_function', ['housekeeping
 export const candidateAuditActionEnum = pgEnum('candidate_audit_action', ['created', 'updated', 'status_changed', 'imported', 'anonymized', 'deleted', 'photo_uploaded', 'interview_scheduled']);
 
 // TWV (Tewerkstellingsvergunning) status enum
-export const twvStatusEnum = pgEnum('twv_status', ['twv_nodig', 'twv_aangevraagd', 'twv_verstrekt', 'twv_verlopen']);
+export const twvStatusEnum = pgEnum('twv_status', ['twv_nodig', 'twv_aangevraagd', 'info_nodig', 'twv_verstrekt', 'twv_verlopen']);
 
 // Import status enum
 export const candidateImportStatusEnum = pgEnum('candidate_import_status', ['pending', 'processing', 'completed', 'failed']);
