@@ -324,7 +324,7 @@ export default function SollicitatieFormulier() {
         <Progress value={progress} className="h-2" />
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto px-4 py-6">
+      <form onSubmit={(e) => e.preventDefault()} className="max-w-2xl mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-purple-600 text-white px-6 py-4">
             <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -1499,7 +1499,8 @@ export default function SollicitatieFormulier() {
 
             {currentSection === sections.length - 1 ? (
               <Button
-                type="submit"
+                type="button"
+                onClick={() => handleSubmit(onSubmit)()}
                 disabled={isSubmitting}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
               >
