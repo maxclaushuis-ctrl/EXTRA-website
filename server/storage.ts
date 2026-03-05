@@ -3415,12 +3415,10 @@ export class MemStorage implements IStorage {
   }
 
   // ==========================================
-  // SOLLICITATIES (Applications) implementation
+  // SOLLICITATIES (Applications) implementation — backed by PostgreSQL
   // ==========================================
   async createApplication(app: InsertApplication): Promise<Application> {
-    const id = this.currentIds.applicationRecords++;
-    const record: Application = {
-      id,
+    const [record] = await db.insert(applicationsTable).values({
       candidateId: app.candidateId ?? null,
       functionType: app.functionType,
       interviewer: app.interviewer ?? null,
@@ -3433,9 +3431,11 @@ export class MemStorage implements IStorage {
       assessmentRating: app.assessmentRating ?? null,
       salaryScale: app.salaryScale ?? null,
       formData: app.formData ?? null,
-      createdAt: new Date(),
-    };
-    this.applicationRecords.set(id, record);
+      softskillsScore: app.softskillsScore ?? null,
+      barScore: app.barScore ?? null,
+      bedieningScore: app.bedieningScore ?? null,
+      dinerScore: app.dinerScore ?? null,
+    }).returning();
     return record;
   }
 
@@ -3449,9 +3449,8 @@ export class MemStorage implements IStorage {
     limit?: number;
     offset?: number;
   }): Promise<{ applications: Application[]; total: number }> {
-    let all = Array.from(this.applicationRecords.values()).sort(
-      (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-    );
+    let all = await db.select().from(applicationsTable).orderBy(desc(applicationsTable.createdAt));
+
     if (filters?.functionType && filters.functionType !== 'alle') {
       all = all.filter(a => a.functionType === filters.functionType);
     }
@@ -3484,14 +3483,16 @@ export class MemStorage implements IStorage {
   }
 
   async getApplicationById(id: number): Promise<Application | undefined> {
-    return this.applicationRecords.get(id);
+    const [record] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, id));
+    return record;
   }
 
   async updateApplicationStatus(id: number, status: string): Promise<Application | undefined> {
-    const app = this.applicationRecords.get(id);
-    if (!app) return undefined;
-    const updated = { ...app, status };
-    this.applicationRecords.set(id, updated);
+    const [updated] = await db
+      .update(applicationsTable)
+      .set({ status })
+      .where(eq(applicationsTable.id, id))
+      .returning();
     return updated;
   }
 
