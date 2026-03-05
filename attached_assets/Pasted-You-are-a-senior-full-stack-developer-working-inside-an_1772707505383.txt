@@ -1,0 +1,209 @@
+You are a senior full-stack developer working inside an existing Replit project.
+
+The project already contains:
+- a dashboard
+- a "Sollicitanten" page
+- a form that sends applicant data to the backend
+- applicants are already stored and shown in the dashboard
+
+Do NOT rebuild the dashboard or database structure from scratch.
+Only extend the existing functionality.
+
+GOAL
+Improve the Sollicitanten dashboard so the table layout changes depending on the selected role (function).
+
+--------------------------------------------------
+
+GENERAL DASHBOARD BEHAVIOR
+
+The page already has these tabs:
+
+- Alle
+- Horecamedewerker
+- Chef
+- Housekeeping
+- Front-office
+- Afgewezen
+
+Keep this structure.
+
+Each tab must display a table view with a specific column layout.
+
+--------------------------------------------------
+
+TAB: ALLE
+
+Show a general overview of ALL applicants with the following columns:
+
+1. Datum sollicitatie
+2. Naam (voor + achternaam)
+3. Functie
+4. Woonplaats
+5. E-mail
+6. Telefoonnummer
+7. Interviewer (wie de sollicitatie heeft afgenomen)
+
+Sorting:
+- newest first (default)
+
+The search bar must search in:
+- name
+- email
+- phone
+
+--------------------------------------------------
+
+TAB: ROLE TABS (Horecamedewerker / Chef / Housekeeping / Front-office)
+
+Each role tab shows only applicants for that role.
+
+The column layout can be different per role because the form questions differ.
+
+The system must therefore support:
+
+role_specific_column_mapping
+
+Example:
+
+HORECAMEDewerker table columns:
+
+1. Datum
+2. Wie (interviewer)
+3. Naam
+4. Softskills score
+5. Barscore
+6. Bedieningscore
+7. Dinerscore
+8. Telefoonnummer
+9. Taal
+10. TWV
+11. Woonplaats
+12. Leeftijd (calculated from birthdate)
+13. Nationaliteit
+14. Horeca ervaring
+15. Bediening vaardigheden
+16. Bar vaardigheden
+17. Diner vaardigheden
+18. 3 borden lopen
+19. Barista
+20. Cocktailshaker
+21. Afwas
+22. Promotiemedewerker
+23. Assistent chef
+24. Kanaal
+25. Enige bijbaan
+26. Relevante werkervaring
+27. Rijbewijs
+28. OV chipkaart
+29. Werkkleding
+30. Beschikbaarheid
+31. Voorkeur werkdagen
+32. Voorkeur moment van de dag
+33. Beoordeling
+34. Uiterlijke verzorging
+35. Houding
+36. Communicatieve vaardigheden
+37. Algehele indruk
+38. Salaris
+39. Overige opmerkingen
+40. Profielfoto
+
+--------------------------------------------------
+
+SCORING SYSTEM
+
+When form data is received, calculate scores automatically.
+
+Store scores in the database.
+
+Horeca scoring:
+
+Softskills score (0-100%)
+
+Inputs:
+- beoordeling
+- uiterlijke verzorging
+- houding
+- communicatieve vaardigheden
+- algehele indruk
+
+Weights:
+
+communicatieve vaardigheden = 30%
+houding = 25%
+uiterlijke verzorging = 15%
+beoordeling = 20%
+algehele indruk = 10%
+
+Formula:
+
+soft = 0.30*comm + 0.25*houding + 0.15*verzorging + 0.20*beoordeling + 0.10*indruk
+soft_pct = round(soft * 100)
+
+--------------------------------------------------
+
+BAR / BEDIENING / DINER SCORE
+
+Ratings 1-5 convert to:
+
+5 = 100
+4 = 80
+3 = 60
+2 = 40
+1 = 20
+
+Store these as integer percentages.
+
+--------------------------------------------------
+
+UI DISPLAY RULES
+
+Show scores like:
+
+80%
+
+If score == 100
+
+show
+
+⭐ 100%
+
+If Horeca Softskills < 40%
+
+highlight the entire row in light red.
+
+--------------------------------------------------
+
+DATA STORAGE
+
+Keep the existing applicant record.
+
+Add these fields if they do not yet exist:
+
+softskills_score
+bar_score
+bediening_score
+diner_score
+
+Also store the original form payload as JSON for flexibility.
+
+--------------------------------------------------
+
+UTILITY FUNCTIONS
+
+Create reusable helpers:
+
+normalizeHeader()
+calculateAge()
+computeSoftskills()
+computeHorecaSkillScore()
+
+--------------------------------------------------
+
+IMPORTANT
+
+Do NOT change existing form submission logic.
+
+Only extend processing so scores are calculated and role-specific tables can render correctly.
+
+Keep the UI styling consistent with the current dashboard.

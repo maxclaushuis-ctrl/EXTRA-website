@@ -1421,131 +1421,423 @@ export default function DashboardMockup() {
               </div>
 
               {/* Applications Table */}
-              <Card>
-                <CardContent className="p-0">
-                  {applicationsLoading ? (
-                    <div className="p-6 space-y-3">
-                      {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
-                    </div>
-                  ) : filteredApplications.length === 0 ? (
-                    <div className="p-12 text-center">
-                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-600 mb-2">Geen sollicitaties gevonden</h3>
-                      <p className="text-gray-400 text-sm">
-                        {appCounts.total === 0
-                          ? 'Er zijn nog geen HR-intakeformulieren ingevuld.'
-                          : 'Geen resultaten voor de huidige filters.'}
-                      </p>
-                      {appCounts.total === 0 && (
-                        <p className="text-xs text-gray-400 mt-2">
-                          Formulier: <a href="/sollicitatieformulier" target="_blank" className="font-mono underline">/sollicitatieformulier</a>
-                        </p>
+              {(() => {
+                const calculateAge = (birthDate: string | undefined): string => {
+                  if (!birthDate) return '—';
+                  const birth = new Date(birthDate);
+                  const today = new Date();
+                  let age = today.getFullYear() - birth.getFullYear();
+                  const m = today.getMonth() - birth.getMonth();
+                  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                  return isNaN(age) ? '—' : String(age);
+                };
+
+                const ScoreCell = ({ score }: { score: number | null | undefined }) => {
+                  if (score === null || score === undefined) return <span className="text-gray-300 text-xs">—</span>;
+                  if (score === 100) return <span className="text-xs font-bold text-yellow-600">⭐ 100%</span>;
+                  return <span className="text-xs font-semibold text-gray-700">{score}%</span>;
+                };
+
+                const boolCell = (v: any) => {
+                  const yes = v === true || v === 'true' || v === 'ja';
+                  return yes
+                    ? <span className="text-green-600 text-xs font-medium">Ja</span>
+                    : <span className="text-gray-300 text-xs">Nee</span>;
+                };
+
+                const fnLabels: Record<string, string> = {
+                  horecamedewerker: 'Horeca', housekeeping: 'Housekeeping', chef: 'Chef',
+                  frontoffice: 'Front-office', 'front-office': 'Front-office',
+                };
+
+                const ActionCell = ({ app }: { app: any }) => (
+                  <td className="px-2 py-2 sticky right-0 bg-white border-l" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-0.5">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                        <Eye className="h-3.5 w-3.5 text-purple-500" />
+                      </Button>
+                      {app.status !== 'afgewezen' && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-red-50" onClick={() => setAppRejectConfirmApp(app)} title="Afwijzen">
+                          <X className="h-3.5 w-3.5 text-red-400" />
+                        </Button>
                       )}
                     </div>
-                  ) : (
+                  </td>
+                );
+
+                const Th = ({ children }: { children: React.ReactNode }) => (
+                  <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50">{children}</th>
+                );
+                const Td = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+                  <td className={`px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap ${className}`}>{children}</td>
+                );
+
+                const rowClass = (app: any) => {
+                  const ss = app.softskillsScore;
+                  const base = 'border-b hover:bg-gray-50/60 cursor-pointer transition-colors';
+                  if (ss !== null && ss !== undefined && ss < 40) return `${base} bg-red-50 hover:bg-red-100/60`;
+                  return base;
+                };
+
+                const NameCell = ({ app }: { app: any }) => (
+                  <td className="px-3 py-2.5 sticky left-0 bg-white border-r z-10">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                        app.functionType === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
+                        app.functionType === 'chef' ? 'bg-gray-100 text-gray-600' :
+                        app.functionType === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {getInitials(app.firstName, app.lastName)}
+                      </div>
+                      <span className="font-medium text-gray-900 text-xs whitespace-nowrap">{app.firstName} {app.lastName}</span>
+                    </div>
+                  </td>
+                );
+
+                if (applicationsLoading) return (
+                  <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</CardContent></Card>
+                );
+
+                if (filteredApplications.length === 0) return (
+                  <Card><CardContent className="p-12 text-center">
+                    <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-600 mb-2">Geen sollicitaties gevonden</h3>
+                    <p className="text-gray-400 text-sm">{appCounts.total === 0 ? 'Er zijn nog geen HR-intakeformulieren ingevuld.' : 'Geen resultaten voor de huidige filters.'}</p>
+                    {appCounts.total === 0 && <p className="text-xs text-gray-400 mt-2">Formulier: <a href="/sollicitatieformulier" target="_blank" className="font-mono underline">/sollicitatieformulier</a></p>}
+                  </CardContent></Card>
+                );
+
+                /* ---- ALLE tab ---- */
+                if (appTab === 'alle' || appTab === 'afgewezen') return (
+                  <Card><CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b text-left">
                           <tr>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Naam</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Functie</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell">E-mail</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Interviewer</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Beoordeling</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Datum</th>
-                            <th className="px-3 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide"></th>
+                            <Th>Datum</Th>
+                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <Th>Functie</Th>
+                            <Th>Woonplaats</Th>
+                            <Th>E-mail</Th>
+                            <Th>Telefoonnummer</Th>
+                            <Th>Interviewer</Th>
+                            <Th></Th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {filteredApplications.map((app) => {
-                            const rating = parseInt(app.assessmentRating) || 0;
-                            const statusColors: Record<string, string> = {
-                              nieuw: 'bg-blue-100 text-blue-700',
-                              beoordeeld: 'bg-yellow-100 text-yellow-700',
-                              aangenomen: 'bg-green-100 text-green-700',
-                              afgewezen: 'bg-red-100 text-red-700',
-                            };
-                            const fnLabels: Record<string, string> = {
-                              horecamedewerker: 'Horeca',
-                              housekeeping: 'Housekeeping',
-                              chef: 'Chef',
-                              frontoffice: 'Front-office',
-                              'front-office': 'Front-office',
-                            };
+                        <tbody>
+                          {filteredApplications.map(app => (
+                            <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                              <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                              <NameCell app={app} />
+                              <Td><Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>{fnLabels[app.functionType] || app.functionType}</Badge></Td>
+                              <Td>{app.city || '—'}</Td>
+                              <Td>{app.email || '—'}</Td>
+                              <Td>{app.phone || '—'}</Td>
+                              <Td>{app.interviewer || '—'}</Td>
+                              <ActionCell app={app} />
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+
+                /* ---- HORECAMEDEWERKER tab ---- */
+                if (appTab === 'horecamedewerker') return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b text-left">
+                          <tr>
+                            <Th>Datum</Th>
+                            <Th>Wie</Th>
+                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <Th>Softskills</Th>
+                            <Th>Bar</Th>
+                            <Th>Bediening</Th>
+                            <Th>Diner</Th>
+                            <Th>Telefoon</Th>
+                            <Th>Taal</Th>
+                            <Th>TWV</Th>
+                            <Th>Woonplaats</Th>
+                            <Th>Leeftijd</Th>
+                            <Th>Nationaliteit</Th>
+                            <Th>Horeca erv.</Th>
+                            <Th>Bediening vaard.</Th>
+                            <Th>Bar vaard.</Th>
+                            <Th>Diner vaard.</Th>
+                            <Th>3 borden</Th>
+                            <Th>Barista</Th>
+                            <Th>Cocktail</Th>
+                            <Th>Afwas</Th>
+                            <Th>Promotie</Th>
+                            <Th>Ass. chef</Th>
+                            <Th>Kanaal</Th>
+                            <Th>Enige bijbaan</Th>
+                            <Th>Werkervaring</Th>
+                            <Th>Rijbewijs</Th>
+                            <Th>OV-chipkaart</Th>
+                            <Th>Werkkleding</Th>
+                            <Th>Beschikbaarheid</Th>
+                            <Th>Pref. dagen</Th>
+                            <Th>Pref. moment</Th>
+                            <Th>Beoordeling</Th>
+                            <Th>Uiterlijk</Th>
+                            <Th>Houding</Th>
+                            <Th>Communicatie</Th>
+                            <Th>Alg. indruk</Th>
+                            <Th>Salaris</Th>
+                            <Th>Opmerkingen</Th>
+                            <Th></Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredApplications.map(app => {
+                            const fd = (app.formData || {}) as any;
                             return (
-                              <tr key={app.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
-                                <td className="px-3 py-3">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                                      app.functionType === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
-                                      app.functionType === 'chef' ? 'bg-gray-100 text-gray-600' :
-                                      app.functionType === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
-                                      'bg-blue-100 text-blue-700'
-                                    }`}>
-                                      {getInitials(app.firstName, app.lastName)}
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-gray-900 text-sm">{app.firstName} {app.lastName}</p>
-                                      <p className="text-xs text-gray-400 sm:hidden">{fnLabels[app.functionType] || app.functionType}</p>
-                                      {app.city && <p className="text-xs text-gray-400 hidden sm:block">{app.city}</p>}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-3 py-3 hidden sm:table-cell">
-                                  <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>
-                                    {fnLabels[app.functionType] || app.functionType}
-                                  </Badge>
-                                </td>
-                                <td className="px-3 py-3 text-gray-600 text-xs hidden lg:table-cell">{app.email || '—'}</td>
-                                <td className="px-3 py-3 text-gray-600 text-xs hidden md:table-cell">{app.interviewer || '—'}</td>
-                                <td className="px-3 py-3 hidden md:table-cell">
-                                  <span className="flex gap-0.5">
-                                    {[1,2,3,4,5].map(i => (
-                                      <Star key={i} className={`h-3.5 w-3.5 ${i <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
-                                    ))}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-3 hidden sm:table-cell">
-                                  {app.status === 'afgewezen' ? (
-                                    <Badge className="text-xs bg-red-100 text-red-700">Afgewezen</Badge>
-                                  ) : (
-                                    <span className="text-xs text-gray-400">
-                                      {new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                                  <div className="flex items-center gap-0.5">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7"
-                                      onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}
-                                    >
-                                      <Eye className="h-3.5 w-3.5 text-purple-500" />
-                                    </Button>
-                                    {app.status !== 'afgewezen' && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 hover:bg-red-50"
-                                        onClick={() => setAppRejectConfirmApp(app)}
-                                        title="Afwijzen"
-                                      >
-                                        <X className="h-3.5 w-3.5 text-red-400" />
-                                      </Button>
-                                    )}
-                                  </div>
-                                </td>
+                              <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                                <Td>{app.interviewer || '—'}</Td>
+                                <NameCell app={app} />
+                                <Td><ScoreCell score={app.softskillsScore} /></Td>
+                                <Td><ScoreCell score={app.barScore} /></Td>
+                                <Td><ScoreCell score={app.bedieningScore} /></Td>
+                                <Td><ScoreCell score={app.dinerScore} /></Td>
+                                <Td>{app.phone || '—'}</Td>
+                                <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
+                                <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
+                                <Td>{app.city || '—'}</Td>
+                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{fd.nationality || '—'}</Td>
+                                <Td>{fd.horecaExperience || '—'}</Td>
+                                <Td>{fd.serviceSkills ? `${fd.serviceSkills}/5` : '—'}</Td>
+                                <Td>{fd.barSkills ? `${fd.barSkills}/5` : '—'}</Td>
+                                <Td>{fd.dinerSkills ? `${fd.dinerSkills}/5` : '—'}</Td>
+                                <Td>{boolCell(fd.canCarry3Plates)}</Td>
+                                <Td>{boolCell(fd.isBarista)}</Td>
+                                <Td>{boolCell(fd.canShakeCocktails)}</Td>
+                                <Td>{boolCell(fd.canWashDishes)}</Td>
+                                <Td>{boolCell(fd.isPromoWorker)}</Td>
+                                <Td>{boolCell(fd.isAssistantChef)}</Td>
+                                <Td>{fd.channel || '—'}</Td>
+                                <Td>{fd.otherJob ? 'Nee' : 'Ja'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.experienceTypes ? (Array.isArray(fd.experienceTypes) ? fd.experienceTypes.join(', ') : fd.experienceTypes) : '—'}</Td>
+                                <Td>{boolCell(fd.hasDriversLicense)}</Td>
+                                <Td>{boolCell(fd.hasStudentOV)}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.workClothing ? (Array.isArray(fd.workClothing) ? fd.workClothing.join(', ') : fd.workClothing) : '—'}</Td>
+                                <Td>{fd.availableHours || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.preferredDays ? (Array.isArray(fd.preferredDays) ? fd.preferredDays.join(', ') : fd.preferredDays) : '—'}</Td>
+                                <Td className="max-w-[100px] truncate">{fd.preferredTimes ? (Array.isArray(fd.preferredTimes) ? fd.preferredTimes.join(', ') : fd.preferredTimes) : '—'}</Td>
+                                <Td>{app.assessmentRating || '—'}</Td>
+                                <Td>{fd.appearance || '—'}</Td>
+                                <Td>{fd.attitude || '—'}</Td>
+                                <Td>{fd.communicationSkills ? `${fd.communicationSkills}/5` : '—'}</Td>
+                                <Td>{fd.overallImpression ? `${fd.overallImpression}/5` : '—'}</Td>
+                                <Td>{app.salaryScale || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.remarks || '—'}</Td>
+                                <ActionCell app={app} />
                               </tr>
                             );
                           })}
                         </tbody>
                       </table>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent></Card>
+                );
+
+                /* ---- CHEF tab ---- */
+                if (appTab === 'chef') return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b text-left">
+                          <tr>
+                            <Th>Datum</Th>
+                            <Th>Wie</Th>
+                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <Th>Softskills</Th>
+                            <Th>Telefoon</Th>
+                            <Th>Taal</Th>
+                            <Th>TWV</Th>
+                            <Th>Woonplaats</Th>
+                            <Th>Leeftijd</Th>
+                            <Th>Nationaliteit</Th>
+                            <Th>Keuken typen</Th>
+                            <Th>Diploma</Th>
+                            <Th>Uitstraling</Th>
+                            <Th>Communicatie</Th>
+                            <Th>Alg. indruk</Th>
+                            <Th>Beoordeling</Th>
+                            <Th>Werkkleding</Th>
+                            <Th>Salaris</Th>
+                            <Th>Opmerkingen</Th>
+                            <Th></Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredApplications.map(app => {
+                            const fd = (app.formData || {}) as any;
+                            return (
+                              <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                                <Td>{app.interviewer || '—'}</Td>
+                                <NameCell app={app} />
+                                <Td><ScoreCell score={app.softskillsScore} /></Td>
+                                <Td>{app.phone || '—'}</Td>
+                                <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
+                                <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
+                                <Td>{app.city || '—'}</Td>
+                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{fd.nationality || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.chefKitchenTypes ? (Array.isArray(fd.chefKitchenTypes) ? fd.chefKitchenTypes.join(', ') : fd.chefKitchenTypes) : '—'}</Td>
+                                <Td>{fd.chefDiploma || '—'}</Td>
+                                <Td>{fd.chefProfessioneleUitstraling ? `${fd.chefProfessioneleUitstraling}/5` : '—'}</Td>
+                                <Td>{fd.communicationSkills ? `${fd.communicationSkills}/5` : '—'}</Td>
+                                <Td>{fd.overallImpression ? `${fd.overallImpression}/5` : '—'}</Td>
+                                <Td>{app.assessmentRating || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.chefClothing ? (Array.isArray(fd.chefClothing) ? fd.chefClothing.join(', ') : fd.chefClothing) : '—'}</Td>
+                                <Td>{app.salaryScale || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.remarks || '—'}</Td>
+                                <ActionCell app={app} />
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+
+                /* ---- HOUSEKEEPING tab ---- */
+                if (appTab === 'housekeeping') return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b text-left">
+                          <tr>
+                            <Th>Datum</Th>
+                            <Th>Wie</Th>
+                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <Th>Softskills</Th>
+                            <Th>Telefoon</Th>
+                            <Th>Taal</Th>
+                            <Th>TWV</Th>
+                            <Th>Woonplaats</Th>
+                            <Th>Leeftijd</Th>
+                            <Th>Nationaliteit</Th>
+                            <Th>HK ervaring (jr)</Th>
+                            <Th>Hotel sterren</Th>
+                            <Th>Betrouwbaarheid</Th>
+                            <Th>Communicatie</Th>
+                            <Th>Representativiteit</Th>
+                            <Th>Beoordeling</Th>
+                            <Th>Salaris</Th>
+                            <Th>Opmerkingen</Th>
+                            <Th></Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredApplications.map(app => {
+                            const fd = (app.formData || {}) as any;
+                            return (
+                              <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                                <Td>{app.interviewer || '—'}</Td>
+                                <NameCell app={app} />
+                                <Td><ScoreCell score={app.softskillsScore} /></Td>
+                                <Td>{app.phone || '—'}</Td>
+                                <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
+                                <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
+                                <Td>{app.city || '—'}</Td>
+                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{fd.nationality || '—'}</Td>
+                                <Td>{fd.hkExperienceYears || '—'}</Td>
+                                <Td>{fd.hkHotelStars ? `${fd.hkHotelStars}★` : '—'}</Td>
+                                <Td>{fd.hkBetrouwbaarheid ? `${fd.hkBetrouwbaarheid}/5` : '—'}</Td>
+                                <Td>{fd.hkCommunicatie ? `${fd.hkCommunicatie}/5` : '—'}</Td>
+                                <Td>{fd.hkRepresentativiteit ? `${fd.hkRepresentativiteit}/5` : '—'}</Td>
+                                <Td>{app.assessmentRating || '—'}</Td>
+                                <Td>{app.salaryScale || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.remarks || '—'}</Td>
+                                <ActionCell app={app} />
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+
+                /* ---- FRONT-OFFICE tab ---- */
+                return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b text-left">
+                          <tr>
+                            <Th>Datum</Th>
+                            <Th>Wie</Th>
+                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <Th>Softskills</Th>
+                            <Th>Telefoon</Th>
+                            <Th>Taal</Th>
+                            <Th>TWV</Th>
+                            <Th>Woonplaats</Th>
+                            <Th>Leeftijd</Th>
+                            <Th>Nationaliteit</Th>
+                            <Th>Horeca erv.</Th>
+                            <Th>Beoordeling</Th>
+                            <Th>Uiterlijk</Th>
+                            <Th>Houding</Th>
+                            <Th>Communicatie</Th>
+                            <Th>Alg. indruk</Th>
+                            <Th>Rijbewijs</Th>
+                            <Th>OV-chipkaart</Th>
+                            <Th>Beschikbaarheid</Th>
+                            <Th>Salaris</Th>
+                            <Th>Opmerkingen</Th>
+                            <Th></Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredApplications.map(app => {
+                            const fd = (app.formData || {}) as any;
+                            return (
+                              <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                                <Td>{app.interviewer || '—'}</Td>
+                                <NameCell app={app} />
+                                <Td><ScoreCell score={app.softskillsScore} /></Td>
+                                <Td>{app.phone || '—'}</Td>
+                                <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
+                                <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
+                                <Td>{app.city || '—'}</Td>
+                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{fd.nationality || '—'}</Td>
+                                <Td>{fd.horecaExperience || '—'}</Td>
+                                <Td>{app.assessmentRating || '—'}</Td>
+                                <Td>{fd.appearance || '—'}</Td>
+                                <Td>{fd.attitude || '—'}</Td>
+                                <Td>{fd.communicationSkills ? `${fd.communicationSkills}/5` : '—'}</Td>
+                                <Td>{fd.overallImpression ? `${fd.overallImpression}/5` : '—'}</Td>
+                                <Td>{boolCell(fd.hasDriversLicense)}</Td>
+                                <Td>{boolCell(fd.hasStudentOV)}</Td>
+                                <Td>{fd.availableHours || '—'}</Td>
+                                <Td>{app.salaryScale || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.remarks || '—'}</Td>
+                                <ActionCell app={app} />
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+              })()}
             </div>
           ) : activeTab === 'twv' ? (
             /* TWV Tab — Tewerkstellingsvergunning Kanban */

@@ -1124,6 +1124,10 @@ export const applications = pgTable("applications", {
   assessmentRating: text("assessment_rating"),
   salaryScale: text("salary_scale"),
   formData: json("form_data"),
+  softskillsScore: integer("softskills_score"),
+  barScore: integer("bar_score"),
+  bedieningScore: integer("bediening_score"),
+  dinerScore: integer("diner_score"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

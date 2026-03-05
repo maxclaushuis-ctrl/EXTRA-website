@@ -4899,6 +4899,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const candidate = await storage.createCandidate(candidateData as any);
 
+      // Compute scores
+      const computeHorecaSkillScore = (rating: number | undefined): number | null => {
+        const r = parseInt(String(rating));
+        if (!r || r < 1 || r > 5) return null;
+        return r * 20;
+      };
+
+      const computeSoftskills = (d: any): number | null => {
+        const norm1to5 = (v: any): number | null => {
+          const n = parseInt(String(v));
+          if (!n || n < 1 || n > 5) return null;
+          return (n - 1) / 4;
+        };
+        const appearanceVal = d.appearance === 'verzorgd' ? 0.75 : d.appearance === 'onverzorgd' ? 0 : null;
+        const attitudeMap: Record<string, number> = { super_enthousiast: 1, spontaan: 0.75, verlegen: 0.5, ongeinteresseerd: 0 };
+        const attitudeVal = d.attitude ? (attitudeMap[d.attitude] ?? null) : null;
+        const ratingMap: Record<string, number> = { topper: 1, goede_indruk: 0.75, middelmatig: 0.25 };
+        const beoordelingVal = d.assessmentRating ? (ratingMap[d.assessmentRating] ?? null) : null;
+        const commVal = norm1to5(d.communicationSkills);
+        const indrukVal = norm1to5(d.overallImpression);
+
+        const inputs = [
+          { w: 0.30, v: commVal },
+          { w: 0.25, v: attitudeVal },
+          { w: 0.15, v: appearanceVal },
+          { w: 0.20, v: beoordelingVal },
+          { w: 0.10, v: indrukVal },
+        ];
+        const available = inputs.filter(x => x.v !== null);
+        if (available.length === 0) return null;
+        const totalWeight = available.reduce((s, x) => s + x.w, 0);
+        const weighted = available.reduce((s, x) => s + x.w * (x.v as number), 0);
+        return Math.round((weighted / totalWeight) * 100);
+      };
+
+      const softskillsScore = computeSoftskills(data);
+      const barScore = computeHorecaSkillScore(data.barSkills);
+      const bedieningScore = computeHorecaSkillScore(data.serviceSkills);
+      const dinerScore = computeHorecaSkillScore(data.dinerSkills);
+
       // Also save as an application record with full form data
       await storage.createApplication({
         candidateId: data.linkedCandidateId || candidate.id,
@@ -4913,6 +4953,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assessmentRating: data.assessmentRating || null,
         salaryScale: data.salaryScale || null,
         formData: data,
+        softskillsScore: softskillsScore ?? undefined,
+        barScore: barScore ?? undefined,
+        bedieningScore: bedieningScore ?? undefined,
+        dinerScore: dinerScore ?? undefined,
       });
 
       return res.status(201).json({ 
