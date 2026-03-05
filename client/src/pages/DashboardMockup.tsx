@@ -69,7 +69,6 @@ const sidebarItems = [
   { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
   { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
   { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
-  { icon: Users, label: 'Gebruikers', tab: 'gebruikers' },
 ];
 
 type TwvCandidate = {
