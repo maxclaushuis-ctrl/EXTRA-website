@@ -229,6 +229,7 @@ export default function DashboardMockup() {
   const [appTab, setAppTab] = useState('alle'); // 'alle' | 'horecamedewerker' | 'chef' | 'housekeeping' | 'frontoffice' | 'afgewezen'
   const [appInterviewerFilter, setAppInterviewerFilter] = useState('alle');
   const [appSortDesc, setAppSortDesc] = useState(true);
+  const [appSortField, setAppSortField] = useState<string>('date');
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [appDetailOpen, setAppDetailOpen] = useState(false);
   const [appRejectConfirmApp, setAppRejectConfirmApp] = useState<any | null>(null);
@@ -432,8 +433,16 @@ export default function DashboardMockup() {
     const matchesQ = (a: any) => !appSearch || `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q);
     base = base.filter(a => matchesIv(a) && matchesQ(a));
     return [...base].sort((a, b) => {
-      const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      return appSortDesc ? diff : -diff;
+      if (appSortField === 'date') {
+        const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return appSortDesc ? diff : -diff;
+      }
+      const av = (a as any)[appSortField] ?? null;
+      const bv = (b as any)[appSortField] ?? null;
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return appSortDesc ? bv - av : av - bv;
     });
   })();
 
@@ -1662,7 +1671,7 @@ export default function DashboardMockup() {
                 ].map(({ val, label, count, active, inactive }) => (
                   <button
                     key={val}
-                    onClick={() => setAppTab(val)}
+                    onClick={() => { setAppTab(val); setAppSortField('date'); setAppSortDesc(true); }}
                     className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${appTab === val ? active : inactive}`}
                   >
                     {label}
@@ -1757,6 +1766,26 @@ export default function DashboardMockup() {
                 const Th = ({ children }: { children: React.ReactNode }) => (
                   <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50">{children}</th>
                 );
+                const SortTh = ({ field, children }: { field: string; children: React.ReactNode }) => {
+                  const active = appSortField === field;
+                  return (
+                    <th
+                      className="px-3 py-2.5 font-medium text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 cursor-pointer select-none hover:bg-gray-100 transition-colors group"
+                      onClick={() => {
+                        if (appSortField === field) setAppSortDesc(d => !d);
+                        else { setAppSortField(field); setAppSortDesc(true); }
+                      }}
+                    >
+                      <span className={`flex items-center gap-1 ${active ? 'text-purple-600' : 'text-gray-500'}`}>
+                        {children}
+                        {active
+                          ? <span className="font-bold">{appSortDesc ? '↓' : '↑'}</span>
+                          : <span className="opacity-0 group-hover:opacity-40 text-gray-400">↕</span>
+                        }
+                      </span>
+                    </th>
+                  );
+                };
                 const Td = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
                   <td className={`px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap ${className}`}>{children}</td>
                 );
@@ -1843,10 +1872,10 @@ export default function DashboardMockup() {
                             <Th>Datum</Th>
                             <Th>Wie</Th>
                             <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
-                            <Th>Softskills</Th>
-                            <Th>Bar</Th>
-                            <Th>Bediening</Th>
-                            <Th>Diner</Th>
+                            <SortTh field="softskillsScore">Softskills</SortTh>
+                            <SortTh field="barScore">Bar</SortTh>
+                            <SortTh field="bedieningScore">Bediening</SortTh>
+                            <SortTh field="dinerScore">Diner</SortTh>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
                             <Th>TWV</Th>
@@ -1946,7 +1975,7 @@ export default function DashboardMockup() {
                             <Th>Datum</Th>
                             <Th>Wie</Th>
                             <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
-                            <Th>Softskills</Th>
+                            <SortTh field="softskillsScore">Score</SortTh>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
                             <Th>TWV</Th>
@@ -2009,7 +2038,7 @@ export default function DashboardMockup() {
                             <Th>Datum</Th>
                             <Th>Wie</Th>
                             <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
-                            <Th>Softskills</Th>
+                            <SortTh field="softskillsScore">Indruk</SortTh>
                             <Th>Telefoon</Th>
                             <Th>Taal</Th>
                             <Th>TWV</Th>
