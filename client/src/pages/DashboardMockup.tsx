@@ -1851,6 +1851,91 @@ export default function DashboardMockup() {
                   </td>
                 );
 
+                const avatarClass = (ft: string) =>
+                  ft === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
+                  ft === 'chef' ? 'bg-gray-100 text-gray-600' :
+                  ft === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
+                  'bg-blue-100 text-blue-700';
+
+                const MobileCard = ({ app }: { app: any }) => {
+                  const scores: [string, number | null | undefined][] = [
+                    ['SS', app.softskillsScore],
+                    ['Bar', app.barScore],
+                    ['Bed', app.bedieningScore],
+                    ['Din', app.dinerScore],
+                  ].filter(([, v]) => v !== null && v !== undefined) as [string, number][];
+
+                  return (
+                    <Card
+                      className="shadow-sm border border-gray-100 active:bg-gray-50 transition-colors"
+                      onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}
+                    >
+                      <CardContent className="p-3">
+                        {/* Name row */}
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarClass(app.functionType)}`}>
+                              {getInitials(app.firstName, app.lastName)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-sm text-gray-900 truncate">{app.firstName} {app.lastName}</div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${getFunctionBadgeColor(app.functionType)}`}>
+                                  {fnLabels[app.functionType] || app.functionType}
+                                </Badge>
+                                {app.interviewer && <span className="text-[10px] text-gray-400">{app.interviewer}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-gray-400 shrink-0 pt-0.5">
+                            {new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+
+                        {/* Scores */}
+                        {scores.length > 0 && (
+                          <div className="flex gap-1.5 mb-2 flex-wrap">
+                            {scores.map(([label, score]) => (
+                              <span key={label} className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
+                                (score as number) >= 70 ? 'bg-green-100 text-green-700' :
+                                (score as number) >= 50 ? 'bg-amber-100 text-amber-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {label}: {score}%
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Contact info */}
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-500 mb-2.5">
+                          {app.phone && <span>{app.phone}</span>}
+                          {app.city && <span>{app.city}</span>}
+                          {app.language && <span>{app.language}</span>}
+                          {app.email && <span className="truncate max-w-[180px]">{app.email}</span>}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between border-t border-gray-100 pt-2" onClick={(e) => e.stopPropagation()}>
+                          {app.needsWorkPermit === 'ja' || app.formData?.needsWorkPermit === 'ja' ? (
+                            <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">TWV nodig</span>
+                          ) : <span />}
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                              <Eye className="h-3.5 w-3.5 text-purple-500" />
+                            </Button>
+                            {app.status !== 'afgewezen' && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50" onClick={() => setAppRejectConfirmApp(app)}>
+                                <X className="h-3.5 w-3.5 text-red-400" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                };
+
                 if (applicationsLoading) return (
                   <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</CardContent></Card>
                 );
@@ -1866,43 +1951,57 @@ export default function DashboardMockup() {
 
                 /* ---- ALLE tab ---- */
                 if (appTab === 'alle' || appTab === 'afgewezen') return (
-                  <Card><CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b text-left">
-                          <tr>
-                            <Th>Datum</Th>
-                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
-                            <Th>Functie</Th>
-                            <Th>Woonplaats</Th>
-                            <Th>E-mail</Th>
-                            <Th>Telefoonnummer</Th>
-                            <Th>Interviewer</Th>
-                            <Th></Th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredApplications.map(app => (
-                            <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
-                              <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
-                              <NameCell app={app} />
-                              <Td><Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>{fnLabels[app.functionType] || app.functionType}</Badge></Td>
-                              <Td>{app.city || '—'}</Td>
-                              <Td>{app.email || '—'}</Td>
-                              <Td>{app.phone || '—'}</Td>
-                              <Td>{app.interviewer || '—'}</Td>
-                              <ActionCell app={app} />
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  <>
+                    {/* Mobile cards */}
+                    <div className="block md:hidden space-y-2">
+                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
-                  </CardContent></Card>
+                    {/* Desktop table */}
+                    <div className="hidden md:block">
+                      <Card><CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="bg-gray-50 border-b text-left">
+                              <tr>
+                                <Th>Datum</Th>
+                                <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                                <Th>Functie</Th>
+                                <Th>Woonplaats</Th>
+                                <Th>E-mail</Th>
+                                <Th>Telefoonnummer</Th>
+                                <Th>Interviewer</Th>
+                                <Th></Th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredApplications.map(app => (
+                                <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                  <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                                  <NameCell app={app} />
+                                  <Td><Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>{fnLabels[app.functionType] || app.functionType}</Badge></Td>
+                                  <Td>{app.city || '—'}</Td>
+                                  <Td>{app.email || '—'}</Td>
+                                  <Td>{app.phone || '—'}</Td>
+                                  <Td>{app.interviewer || '—'}</Td>
+                                  <ActionCell app={app} />
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent></Card>
+                    </div>
+                  </>
                 );
 
                 /* ---- HORECAMEDEWERKER tab ---- */
                 if (appTab === 'horecamedewerker') return (
-                  <Card><CardContent className="p-0">
+                  <>
+                    <div className="block md:hidden space-y-2">
+                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                    </div>
+                    <div className="hidden md:block">
+                    <Card><CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b text-left">
@@ -2001,10 +2100,17 @@ export default function DashboardMockup() {
                       </table>
                     </div>
                   </CardContent></Card>
+                    </div>
+                  </>
                 );
 
                 /* ---- CHEF tab ---- */
                 if (appTab === 'chef') return (
+                  <>
+                    <div className="block md:hidden space-y-2">
+                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                    </div>
+                    <div className="hidden md:block">
                   <Card><CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
@@ -2064,10 +2170,17 @@ export default function DashboardMockup() {
                       </table>
                     </div>
                   </CardContent></Card>
+                    </div>
+                  </>
                 );
 
                 /* ---- HOUSEKEEPING tab ---- */
                 if (appTab === 'housekeeping') return (
+                  <>
+                    <div className="block md:hidden space-y-2">
+                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                    </div>
+                    <div className="hidden md:block">
                   <Card><CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
@@ -2125,10 +2238,17 @@ export default function DashboardMockup() {
                       </table>
                     </div>
                   </CardContent></Card>
+                    </div>
+                  </>
                 );
 
                 /* ---- FRONT-OFFICE tab ---- */
                 return (
+                  <>
+                    <div className="block md:hidden space-y-2">
+                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                    </div>
+                    <div className="hidden md:block">
                   <Card><CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
@@ -2192,6 +2312,8 @@ export default function DashboardMockup() {
                       </table>
                     </div>
                   </CardContent></Card>
+                    </div>
+                  </>
                 );
               })()}
             </div>
