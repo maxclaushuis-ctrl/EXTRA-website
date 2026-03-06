@@ -1842,45 +1842,6 @@ export default function LandingPage() {
       <NewsSection />
 
       {/* ════════════════════════════════════════════════ */}
-      {/* 9c. INSTAGRAM FEED                              */}
-      {/* ════════════════════════════════════════════════ */}
-      <section className="relative py-20 sm:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-purple-50" />
-        <XPatternBg count={3} opacity={0.06} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-10 sm:mb-14">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
-                <Heart className="w-4 h-4" /> @doehetextra
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Volg ons op Instagram
-              </h2>
-              <p className="text-base sm:text-lg text-gray-500 mt-3 sm:mt-4 max-w-xl mx-auto">
-                Bekijk de laatste updates, behind-the-scenes en leuke momenten van het EXTRA team.
-              </p>
-            </div>
-          </RevealSection>
-
-          <InstagramFeed />
-
-          <RevealSection delay={200}>
-            <div className="text-center mt-10 sm:mt-14">
-              <a
-                href="https://instagram.com/doehetextra"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all hover:-translate-y-1"
-              >
-                Volg @doehetextra
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════ */}
       {/* 10. FINAL CTA — DARK PURPLE                    */}
       {/* ════════════════════════════════════════════════ */}
       <section id="final-cta" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
