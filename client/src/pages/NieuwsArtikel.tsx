@@ -260,7 +260,7 @@ export default function NieuwsArtikel() {
   const [scrolled, setScrolled] = useState(false);
 
   const { data: dbPost, isLoading: dbLoading } = useQuery<any>({
-    queryKey: ['/api/blog', slug],
+    queryKey: [`/api/blog/${slug}`],
     staleTime: 60000,
     retry: false,
   });
