@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, Tag } from "lucide-react";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
@@ -255,8 +256,14 @@ const articles: Article[] = [
 export default function NieuwsArtikel() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
-  const article = articles.find(a => a.slug === slug);
+  const staticArticle = articles.find(a => a.slug === slug);
   const [scrolled, setScrolled] = useState(false);
+
+  const { data: dbPost, isLoading: dbLoading } = useQuery<any>({
+    queryKey: ['/api/blog', slug],
+    staleTime: 60000,
+    retry: false,
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -265,7 +272,15 @@ export default function NieuwsArtikel() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [slug]);
 
-  if (!article) {
+  if (dbLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" />
+      </div>
+    );
+  }
+
+  if (!dbPost && !staticArticle) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white px-5">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Artikel niet gevonden</h1>
@@ -276,6 +291,120 @@ export default function NieuwsArtikel() {
     );
   }
 
+  // If DB post exists, render it as HTML
+  if (dbPost) {
+    const cat = categoryColors[dbPost.category] || { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" };
+    const pubDate = dbPost.publishedAt ? new Date(dbPost.publishedAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    const baseUrl = 'https://www.doehetextra.nl';
+
+    const articleJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": dbPost.title,
+      "description": dbPost.metaDescription || dbPost.excerpt,
+      "image": dbPost.imageUrl || `${baseUrl}/og-image.jpg`,
+      "datePublished": dbPost.publishedAt || dbPost.createdAt,
+      "dateModified": dbPost.updatedAt || dbPost.publishedAt || dbPost.createdAt,
+      "author": { "@type": "Organization", "name": dbPost.author || "EXTRA Redactie", "url": baseUrl },
+      "publisher": { "@type": "Organization", "name": "EXTRA", "url": baseUrl, "logo": { "@type": "ImageObject", "url": `${baseUrl}/logo.png` } },
+      "url": `${baseUrl}/nieuws/${dbPost.slug}`,
+      "keywords": dbPost.focusKeyword,
+    };
+
+    return (
+      <div className="min-h-screen bg-white font-sans antialiased" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+        {dbPost.metaTitle && <title>{dbPost.metaTitle}</title>}
+
+        {/* NAV */}
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
+          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-20">
+              <Link href="/landing">
+                <img src={extraLogoWit} alt="EXTRA" className={`h-8 sm:h-9 w-auto transition-all duration-300 ${scrolled ? "brightness-0" : ""}`} />
+              </Link>
+              <Link href="/nieuws" className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-all ${scrolled ? "text-purple-700 hover:bg-purple-50 border border-purple-200" : "text-white/80 hover:text-white hover:bg-white/10 border border-white/20"}`}>
+                <ArrowLeft className="w-4 h-4" /> Terug naar nieuws
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero */}
+        <div className="relative pt-16 sm:pt-20 overflow-hidden">
+          <div className="relative h-[260px] sm:h-[360px] lg:h-[440px] overflow-hidden">
+            {dbPost.imageUrl ? (
+              <img src={dbPost.imageUrl} alt={dbPost.imageAlt || dbPost.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-purple-900 to-indigo-900" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="relative bg-white overflow-hidden">
+          <XPatternBg count={4} opacity={0.04} color="rgba(139,92,246,1)" />
+          <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8 lg:px-6 py-10 sm:py-16">
+            <Link href="/nieuws" className="inline-flex items-center gap-1.5 text-sm text-purple-600 font-medium hover:text-purple-800 mb-6 sm:mb-8 group">
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" /> Alle artikelen
+            </Link>
+
+            <span className={`inline-block text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full mb-4 border ${cat.bg} ${cat.text} ${cat.border}`}>{dbPost.category}</span>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-tight mb-5 sm:mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>{dbPost.title}</h1>
+            {dbPost.metaDescription && <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 border-l-4 border-purple-200 pl-4 italic">{dbPost.metaDescription}</p>}
+
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-8 sm:mb-12 pb-8 sm:pb-10 border-b border-gray-100">
+              {pubDate && <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{pubDate}</span>}
+              {dbPost.readTime && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{dbPost.readTime} lezen</span>}
+              {dbPost.author && <span className="flex items-center gap-1.5 text-purple-600 font-medium">{dbPost.author}</span>}
+            </div>
+
+            <div
+              className="prose prose-lg prose-purple max-w-none
+                [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:pb-2 [&_h2]:border-b [&_h2]:border-gray-100
+                [&_p]:text-gray-700 [&_p]:leading-relaxed [&_p]:mb-5
+                [&_ul]:my-5 [&_ul]:space-y-2
+                [&_li]:text-gray-700 [&_li]:flex [&_li]:items-start [&_li]:gap-2 [&_li]:before:content-['→'] [&_li]:before:text-purple-400 [&_li]:before:font-bold [&_li]:before:mt-0.5 [&_li]:before:shrink-0
+                [&_blockquote]:border-l-4 [&_blockquote]:border-purple-300 [&_blockquote]:bg-purple-50 [&_blockquote]:px-5 [&_blockquote]:py-4 [&_blockquote]:rounded-r-xl [&_blockquote]:my-8 [&_blockquote]:text-purple-900 [&_blockquote]:italic [&_blockquote]:text-lg
+                [&_.tip]:bg-amber-50 [&_.tip]:border [&_.tip]:border-amber-200 [&_.tip]:rounded-xl [&_.tip]:px-5 [&_.tip]:py-4 [&_.tip]:my-6 [&_.tip]:text-amber-900 [&_.tip]:text-sm
+                [&_a]:text-purple-600 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-purple-800
+                [&_strong]:text-gray-900 [&_strong]:font-semibold"
+              dangerouslySetInnerHTML={{ __html: dbPost.content }}
+            />
+
+            {/* Internal links CTA */}
+            <div className="mt-12 pt-8 border-t border-gray-100">
+              <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-6 sm:p-8 text-white">
+                <h3 className="text-lg sm:text-xl font-bold mb-2">Horeca personeel nodig?</h3>
+                <p className="text-purple-200 text-sm sm:text-base mb-4">EXTRA is hét horeca uitzendbureau in Amsterdam. Flexibel, betrouwbaar en snel geschakeld.</p>
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/werkgevers" className="bg-white text-purple-700 font-semibold px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors">Personeel aanvragen</Link>
+                  <Link href="/ik-zoek-extra-werk" className="border border-white/30 text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-colors">Werk zoeken</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-[#0a0310] py-10">
+          <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Link href="/landing"><img src={extraLogoWit} alt="EXTRA" className="h-7" /></Link>
+            <div className="flex gap-6 text-sm">
+              <Link href="/nieuws" className="text-purple-300/60 hover:text-white transition-colors">Nieuws</Link>
+              <Link href="/werkgevers" className="text-purple-300/60 hover:text-white transition-colors">Werkgevers</Link>
+              <Link href="/aanmelden" className="text-purple-300/60 hover:text-white transition-colors">Aanmelden</Link>
+            </div>
+            <p className="text-purple-300/30 text-xs">&copy; {new Date().getFullYear()} EXTRA.</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // Fall back to static article
+  const article = staticArticle!;
   const cat = categoryColors[article.category] || { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" };
   const related = articles.filter(a => a.slug !== slug).slice(0, 3);
 

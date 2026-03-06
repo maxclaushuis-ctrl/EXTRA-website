@@ -20,7 +20,7 @@ import {
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
-  Upload, FileSpreadsheet, ChevronRight, Info
+  Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2
 } from 'lucide-react';
 
 type User = {
@@ -242,6 +242,26 @@ export default function DashboardMockup() {
   const [importResult, setImportResult] = useState<any | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
 
+  // Blog & SEO tab state
+  const [blogExpanded, setBlogExpanded] = useState(true);
+  const [blogSearch, setBlogSearch] = useState('');
+  const [blogStatusFilter, setBlogStatusFilter] = useState('alle');
+  const [blogCategoryFilter, setBlogCategoryFilter] = useState('alle');
+  const [blogEditOpen, setBlogEditOpen] = useState(false);
+  const [blogEditPost, setBlogEditPost] = useState<any | null>(null);
+  const [blogForm, setBlogForm] = useState<any>({});
+  const [blogSaving, setBlogSaving] = useState(false);
+  const [blogDeleteId, setBlogDeleteId] = useState<number | null>(null);
+  const [blogAiOpen, setBlogAiOpen] = useState(false);
+  const [blogAiTopic, setBlogAiTopic] = useState('');
+  const [blogAiKeyword, setBlogAiKeyword] = useState('');
+  const [blogAiCategory, setBlogAiCategory] = useState('Blog');
+  const [blogAiLoading, setBlogAiLoading] = useState(false);
+  const [blogAiError, setBlogAiError] = useState<string | null>(null);
+  const [blogAiResult, setBlogAiResult] = useState<any | null>(null);
+  const [blogPreviewPost, setBlogPreviewPost] = useState<any | null>(null);
+  const [blogPreviewOpen, setBlogPreviewOpen] = useState(false);
+
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
@@ -338,6 +358,14 @@ export default function DashboardMockup() {
     refetchOnWindowFocus: true,
     refetchInterval: 10000,
   });
+
+  const { data: blogData, isLoading: blogLoading, refetch: refetchBlog } = useQuery<{ posts: any[]; total: number }>({
+    queryKey: ['/api/admin/blog'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+  const blogPosts = blogData?.posts ?? [];
 
   if (authLoading) {
     return (
@@ -593,6 +621,42 @@ export default function DashboardMockup() {
               <Building2 className="h-4 w-4" />
               <span>Personeelsaanvragen</span>
             </button>
+          )}
+
+          {/* Group: Marketing & SEO */}
+          <button
+            onClick={() => setBlogExpanded(e => !e)}
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+          >
+            <span>Marketing & SEO</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${blogExpanded ? '' : '-rotate-90'}`} />
+          </button>
+          {blogExpanded && (
+            <>
+              <button
+                onClick={() => { setActiveTab('blog'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'blog' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <BookOpen className="h-4 w-4" />
+                <span>Blog & SEO</span>
+                {blogPosts.filter((p: any) => p.status === 'scheduled').length > 0 && (
+                  <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">
+                    {blogPosts.filter((p: any) => p.status === 'scheduled').length}
+                  </span>
+                )}
+              </button>
+              <a
+                href="/sitemap.xml"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm text-gray-600 hover:bg-gray-100"
+              >
+                <Globe className="h-4 w-4" />
+                <span>Sitemap</span>
+              </a>
+            </>
           )}
         </nav>
 
@@ -2713,6 +2777,577 @@ export default function DashboardMockup() {
                 );
               })()}
             </div>
+          ) : activeTab === 'blog' ? (
+            /* ─── BLOG & SEO tab ─── */
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                <div>
+                  <h1 className="text-xl font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-purple-600" /> Blog & SEO</h1>
+                  <p className="text-sm text-gray-500">Beheer SEO-artikelen, plan publicaties en genereer content met AI</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline" size="sm"
+                    className="gap-1.5 text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
+                    onClick={() => { setBlogAiResult(null); setBlogAiTopic(''); setBlogAiKeyword(''); setBlogAiError(null); setBlogAiOpen(true); }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" /> AI Genereren
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-700"
+                    onClick={() => {
+                      setBlogEditPost(null);
+                      setBlogForm({ title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', focusKeyword: '', category: 'Blog', status: 'draft', author: 'EXTRA Redactie', readTime: '5 min', imageUrl: '', imageAlt: '', tags: [] });
+                      setBlogEditOpen(true);
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Nieuw artikel
+                  </Button>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                {[
+                  { label: 'Totaal', value: blogPosts.length, color: 'text-gray-700', bg: 'bg-gray-50' },
+                  { label: 'Gepubliceerd', value: blogPosts.filter((p: any) => p.status === 'published').length, color: 'text-green-700', bg: 'bg-green-50' },
+                  { label: 'Ingepland', value: blogPosts.filter((p: any) => p.status === 'scheduled').length, color: 'text-amber-700', bg: 'bg-amber-50' },
+                  { label: 'Concept', value: blogPosts.filter((p: any) => p.status === 'draft').length, color: 'text-gray-500', bg: 'bg-gray-50' },
+                ].map(s => (
+                  <div key={s.label} className={`${s.bg} rounded-xl p-3 border border-gray-100`}>
+                    <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Zoek op titel, keyword…"
+                    value={blogSearch}
+                    onChange={e => setBlogSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                </div>
+                <select value={blogStatusFilter} onChange={e => setBlogStatusFilter(e.target.value)} className="h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                  <option value="alle">Alle statussen</option>
+                  <option value="published">Gepubliceerd</option>
+                  <option value="scheduled">Ingepland</option>
+                  <option value="draft">Concept</option>
+                </select>
+                <select value={blogCategoryFilter} onChange={e => setBlogCategoryFilter(e.target.value)} className="h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                  <option value="alle">Alle categorieën</option>
+                  <option value="Blog">Blog</option>
+                  <option value="Nieuws">Nieuws</option>
+                  <option value="Kennisbank">Kennisbank</option>
+                </select>
+                <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => refetchBlog()}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              {/* Blog post table */}
+              {blogLoading ? (
+                <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div>
+              ) : (() => {
+                const q = blogSearch.toLowerCase();
+                const filtered = blogPosts.filter((p: any) =>
+                  (blogStatusFilter === 'alle' || p.status === blogStatusFilter) &&
+                  (blogCategoryFilter === 'alle' || p.category === blogCategoryFilter) &&
+                  (!q || (p.title || '').toLowerCase().includes(q) || (p.focusKeyword || '').toLowerCase().includes(q) || (p.excerpt || '').toLowerCase().includes(q))
+                );
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-16">
+                      <BookOpen className="h-10 w-10 mx-auto mb-3 text-gray-200" />
+                      <p className="text-sm text-gray-400 mb-4">{blogSearch ? 'Geen resultaten gevonden' : 'Nog geen artikelen. Maak je eerste blog aan!'}</p>
+                      <Button size="sm" onClick={() => { setBlogEditPost(null); setBlogForm({ title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', focusKeyword: '', category: 'Blog', status: 'draft', author: 'EXTRA Redactie', readTime: '5 min', imageUrl: '', imageAlt: '', tags: [] }); setBlogEditOpen(true); }} className="bg-purple-600 hover:bg-purple-700">
+                        <Plus className="h-3.5 w-3.5 mr-1.5" /> Eerste artikel aanmaken
+                      </Button>
+                    </div>
+                  );
+                }
+
+                const statusBadge = (status: string) => {
+                  if (status === 'published') return <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Gepubliceerd</span>;
+                  if (status === 'scheduled') return <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Ingepland</span>;
+                  return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Concept</span>;
+                };
+
+                return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            {['Titel', 'Categorie', 'Focus keyword', 'Status', 'Auteur', 'Datum', ''].map(h => (
+                              <th key={h} className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map((post: any) => (
+                            <tr key={post.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                              <td className="px-3 py-3 max-w-[280px]">
+                                <div className="font-medium text-gray-900 truncate">{post.title}</div>
+                                <div className="text-xs text-gray-400 truncate">/nieuws/{post.slug}</div>
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100">{post.category}</span>
+                              </td>
+                              <td className="px-3 py-3 text-xs text-gray-500 max-w-[150px]">
+                                <span className="truncate block">{post.focusKeyword || '—'}</span>
+                              </td>
+                              <td className="px-3 py-3">{statusBadge(post.status)}</td>
+                              <td className="px-3 py-3 text-xs text-gray-500">{post.author || '—'}</td>
+                              <td className="px-3 py-3 text-xs text-gray-400 whitespace-nowrap">
+                                {post.status === 'scheduled' && post.scheduledAt
+                                  ? new Date(post.scheduledAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                  : post.publishedAt
+                                    ? new Date(post.publishedAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+                                    : new Date(post.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })
+                                }
+                              </td>
+                              <td className="px-3 py-3">
+                                <div className="flex items-center gap-1 justify-end">
+                                  {post.status === 'published' && (
+                                    <a href={`/nieuws/${post.slug}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-purple-600 transition-colors" title="Bekijk artikel">
+                                      <Eye className="h-3.5 w-3.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    onClick={() => { setBlogPreviewPost(post); setBlogPreviewOpen(true); }}
+                                    className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors" title="Preview"
+                                  >
+                                    <FileText className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setBlogEditPost(post);
+                                      setBlogForm({ ...post, scheduledAt: post.scheduledAt ? new Date(post.scheduledAt).toISOString().slice(0,16) : '' });
+                                      setBlogEditOpen(true);
+                                    }}
+                                    className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-amber-600 transition-colors" title="Bewerken"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  {post.status !== 'published' && (
+                                    <button
+                                      onClick={async () => {
+                                        await apiRequest('POST', `/api/admin/blog/${post.id}/publish`, {});
+                                        queryClient.invalidateQueries({ queryKey: ['/api/admin/blog'] });
+                                        toast({ title: 'Artikel gepubliceerd!' });
+                                      }}
+                                      className="p-1.5 rounded hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors" title="Nu publiceren"
+                                    >
+                                      <Send className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => setBlogDeleteId(post.id)}
+                                    className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Verwijderen"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+              })()}
+
+              {/* SEO tips banner */}
+              <div className="mt-5 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+                <div className="flex items-start gap-3">
+                  <Globe className="h-5 w-5 text-purple-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-purple-800 mb-1">SEO Strategie — Publicatieschema</p>
+                    <p className="text-xs text-purple-600 mb-2">Publiceer 3× per week (maandag, woensdag, vrijdag om 08:00) voor maximale SEO-groei. Plan artikelen in met status "Ingepland" + een datum/tijd.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['horeca uitzendbureau amsterdam', 'horeca personeel', 'flexibel horeca personeel', 'evenementen personeel', 'hotel personeel'].map(kw => (
+                        <span key={kw} className="text-xs bg-white text-purple-600 px-2 py-0.5 rounded-full border border-purple-200">{kw}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── AI Generate Modal ─── */}
+              <Dialog open={blogAiOpen} onOpenChange={setBlogAiOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-purple-600" /> AI Blog Generator</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {!blogAiResult ? (
+                      <>
+                        <p className="text-sm text-gray-500">Geef een onderwerp op en de AI genereert een volledig SEO-geoptimaliseerd artikel in het Nederlands (900–1300 woorden) met interne links en structured data.</p>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 mb-1 block">Onderwerp *</label>
+                          <input
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            placeholder="bijv. Hoe vind je snel horeca personeel in Amsterdam"
+                            value={blogAiTopic}
+                            onChange={e => setBlogAiTopic(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 mb-1 block">Focus keyword (optioneel)</label>
+                          <input
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            placeholder="bijv. horeca personeel amsterdam"
+                            value={blogAiKeyword}
+                            onChange={e => setBlogAiKeyword(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 mb-1 block">Categorie</label>
+                          <select
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            value={blogAiCategory}
+                            onChange={e => setBlogAiCategory(e.target.value)}
+                          >
+                            <option>Blog</option>
+                            <option>Nieuws</option>
+                            <option>Kennisbank</option>
+                          </select>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <p className="text-xs text-amber-700">
+                            <strong>Voorbeeldonderwerpen:</strong> "7 oplossingen voor personeelstekort in de horeca" · "Wat kost horeca personeel via een uitzendbureau" · "Waarom hotels werken met een flexpool" · "Hoe voorkom je no-shows van personeel"
+                          </p>
+                        </div>
+                        {blogAiError && (
+                          <div className="p-3 bg-red-50 rounded-lg border border-red-200 text-sm text-red-700 flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                            {blogAiError.includes('AI module') ? (
+                              <span>{blogAiError} Activeer de OpenAI integratie via de Replit console om AI-generatie in te schakelen.</span>
+                            ) : blogAiError}
+                          </div>
+                        )}
+                        <Button
+                          className="w-full bg-purple-600 hover:bg-purple-700"
+                          disabled={!blogAiTopic.trim() || blogAiLoading}
+                          onClick={async () => {
+                            setBlogAiLoading(true);
+                            setBlogAiError(null);
+                            try {
+                              const result = await apiRequest('POST', '/api/admin/blog/generate', { topic: blogAiTopic, focusKeyword: blogAiKeyword, category: blogAiCategory });
+                              setBlogAiResult(result);
+                            } catch (err: any) {
+                              setBlogAiError(err.message || 'Generatie mislukt');
+                            } finally {
+                              setBlogAiLoading(false);
+                            }
+                          }}
+                        >
+                          {blogAiLoading ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Artikel genereren...</span> : <><Sparkles className="h-4 w-4 mr-1.5" /> Genereer artikel</>}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-3 bg-green-50 rounded-lg border border-green-200 flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                          <span className="text-sm text-green-800 font-medium">Artikel gegenereerd! Controleer en sla op als concept.</span>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="text-xs text-gray-500">Titel</label>
+                            <div className="text-sm font-medium">{blogAiResult.title}</div>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500">Meta description</label>
+                            <div className="text-sm text-gray-600">{blogAiResult.metaDescription}</div>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500">Samenvatting</label>
+                            <div className="text-sm text-gray-600">{blogAiResult.excerpt}</div>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500">Content preview (eerste 300 tekens)</label>
+                            <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100 max-h-24 overflow-hidden">{blogAiResult.content?.replace(/<[^>]+>/g, ' ').slice(0, 300)}…</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" className="flex-1 text-sm" onClick={() => setBlogAiResult(null)}>
+                            Opnieuw genereren
+                          </Button>
+                          <Button
+                            className="flex-1 bg-purple-600 hover:bg-purple-700 text-sm"
+                            onClick={async () => {
+                              setBlogSaving(true);
+                              try {
+                                await apiRequest('POST', '/api/admin/blog', { ...blogAiResult, status: 'draft' });
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/blog'] });
+                                setBlogAiOpen(false);
+                                setBlogAiResult(null);
+                                toast({ title: 'Artikel opgeslagen als concept!' });
+                              } catch (err: any) {
+                                toast({ title: 'Fout bij opslaan', variant: 'destructive' });
+                              } finally {
+                                setBlogSaving(false);
+                              }
+                            }}
+                            disabled={blogSaving}
+                          >
+                            {blogSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Opslaan als concept'}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* ─── Create / Edit Modal ─── */}
+              <Dialog open={blogEditOpen} onOpenChange={setBlogEditOpen}>
+                <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{blogEditPost ? 'Artikel bewerken' : 'Nieuw artikel'}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Titel *</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={blogForm.title || ''}
+                          onChange={e => {
+                            const title = e.target.value;
+                            const slug = !blogEditPost ? title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60) : blogForm.slug;
+                            setBlogForm((f: any) => ({ ...f, title, slug }));
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Slug (URL)</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono"
+                          value={blogForm.slug || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, slug: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Focus keyword</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          placeholder="bijv. horeca personeel amsterdam"
+                          value={blogForm.focusKeyword || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, focusKeyword: e.target.value }))}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Samenvatting (excerpt) *</label>
+                        <textarea
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          rows={2}
+                          placeholder="Korte samenvatting die zichtbaar is op de blogoverzichtspagina"
+                          value={blogForm.excerpt || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, excerpt: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Meta titel (55-65 tekens)</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={blogForm.metaTitle || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, metaTitle: e.target.value }))}
+                        />
+                        <span className={`text-xs ${(blogForm.metaTitle || '').length > 65 ? 'text-red-500' : 'text-gray-400'}`}>{(blogForm.metaTitle || '').length}/65 tekens</span>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Meta description (150-160 tekens)</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={blogForm.metaDescription || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, metaDescription: e.target.value }))}
+                        />
+                        <span className={`text-xs ${(blogForm.metaDescription || '').length > 160 ? 'text-red-500' : 'text-gray-400'}`}>{(blogForm.metaDescription || '').length}/160 tekens</span>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Categorie</label>
+                        <select
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={blogForm.category || 'Blog'}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, category: e.target.value }))}
+                        >
+                          <option>Blog</option>
+                          <option>Nieuws</option>
+                          <option>Kennisbank</option>
+                          <option>Hospitality</option>
+                          <option>Events & Catering</option>
+                          <option>Horeca</option>
+                          <option>Housekeeping</option>
+                          <option>EXTRA Nieuws</option>
+                          <option>Branche</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Status</label>
+                        <select
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={blogForm.status || 'draft'}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, status: e.target.value }))}
+                        >
+                          <option value="draft">Concept</option>
+                          <option value="scheduled">Ingepland</option>
+                          <option value="published">Gepubliceerd</option>
+                        </select>
+                      </div>
+                      {blogForm.status === 'scheduled' && (
+                        <div className="col-span-2">
+                          <label className="text-xs font-medium text-gray-700 mb-1 block">Publicatiedatum &amp; tijd</label>
+                          <input
+                            type="datetime-local"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            value={blogForm.scheduledAt || ''}
+                            onChange={e => setBlogForm((f: any) => ({ ...f, scheduledAt: e.target.value }))}
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Auteur</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={blogForm.author || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, author: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Leestijd</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          placeholder="bijv. 5 min"
+                          value={blogForm.readTime || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, readTime: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Afbeelding URL</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          placeholder="https://..."
+                          value={blogForm.imageUrl || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, imageUrl: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Afbeelding alt-tekst</label>
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          placeholder="bijv. horeca personeel bediening restaurant"
+                          value={blogForm.imageAlt || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, imageAlt: e.target.value }))}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Content (HTML) *</label>
+                        <textarea
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono"
+                          rows={12}
+                          placeholder="<h2>Introductie</h2><p>...</p>"
+                          value={blogForm.content || ''}
+                          onChange={e => setBlogForm((f: any) => ({ ...f, content: e.target.value }))}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Gebruik HTML tags: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;blockquote&gt;, &lt;a href="..."&gt;</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="outline" className="flex-1" onClick={() => setBlogEditOpen(false)}>Annuleren</Button>
+                      <Button
+                        className="flex-1 bg-purple-600 hover:bg-purple-700"
+                        disabled={blogSaving || !blogForm.title || !blogForm.slug || !blogForm.content || !blogForm.excerpt}
+                        onClick={async () => {
+                          setBlogSaving(true);
+                          try {
+                            const payload = {
+                              ...blogForm,
+                              scheduledAt: blogForm.scheduledAt ? new Date(blogForm.scheduledAt).toISOString() : null,
+                              publishedAt: blogForm.status === 'published' && !blogForm.publishedAt ? new Date().toISOString() : blogForm.publishedAt || null,
+                            };
+                            if (blogEditPost) {
+                              await apiRequest('PUT', `/api/admin/blog/${blogEditPost.id}`, payload);
+                            } else {
+                              await apiRequest('POST', '/api/admin/blog', payload);
+                            }
+                            queryClient.invalidateQueries({ queryKey: ['/api/admin/blog'] });
+                            setBlogEditOpen(false);
+                            toast({ title: blogEditPost ? 'Artikel bijgewerkt!' : 'Artikel aangemaakt!' });
+                          } catch (err: any) {
+                            toast({ title: 'Fout bij opslaan: ' + err.message, variant: 'destructive' });
+                          } finally {
+                            setBlogSaving(false);
+                          }
+                        }}
+                      >
+                        {blogSaving ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Opslaan…</span> : blogEditPost ? 'Wijzigingen opslaan' : 'Artikel aanmaken'}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* ─── Preview Modal ─── */}
+              <Dialog open={blogPreviewOpen} onOpenChange={setBlogPreviewOpen}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" /> Preview: {blogPreviewPost?.title}
+                    </DialogTitle>
+                  </DialogHeader>
+                  {blogPreviewPost && (
+                    <div className="prose prose-sm max-w-none">
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4 space-y-1">
+                        <div className="text-xs text-gray-500">Meta titel: <span className="text-gray-700 font-medium">{blogPreviewPost.metaTitle || blogPreviewPost.title}</span></div>
+                        <div className="text-xs text-gray-500">Meta description: <span className="text-gray-700">{blogPreviewPost.metaDescription || '—'}</span></div>
+                        <div className="text-xs text-gray-500">Focus keyword: <span className="text-purple-600 font-medium">{blogPreviewPost.focusKeyword || '—'}</span></div>
+                        <div className="text-xs text-gray-500">URL: <span className="text-blue-600 font-mono">/nieuws/{blogPreviewPost.slug}</span></div>
+                      </div>
+                      <div
+                        className="blog-content text-sm leading-relaxed"
+                        style={{ fontFamily: 'inherit' }}
+                        dangerouslySetInnerHTML={{ __html: blogPreviewPost.content }}
+                      />
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              {/* ─── Delete Confirm ─── */}
+              <Dialog open={blogDeleteId !== null} onOpenChange={() => setBlogDeleteId(null)}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader><DialogTitle>Artikel verwijderen?</DialogTitle></DialogHeader>
+                  <p className="text-sm text-gray-500">Dit kan niet ongedaan worden gemaakt.</p>
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" className="flex-1" onClick={() => setBlogDeleteId(null)}>Annuleren</Button>
+                    <Button
+                      variant="destructive" className="flex-1"
+                      onClick={async () => {
+                        if (!blogDeleteId) return;
+                        await apiRequest('DELETE', `/api/admin/blog/${blogDeleteId}`, undefined);
+                        queryClient.invalidateQueries({ queryKey: ['/api/admin/blog'] });
+                        setBlogDeleteId(null);
+                        toast({ title: 'Artikel verwijderd' });
+                      }}
+                    >
+                      Verwijderen
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
           ) : (
             /* Dashboard / Gebruikers Tab */
             <>

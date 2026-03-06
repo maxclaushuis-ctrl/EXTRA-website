@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { ArrowRight, Sparkles, ChevronLeft, Phone, Menu, X, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import xPatroon from "@assets/X_patroon_1771260543289.png";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import blogHousekeeping from "../assets/images/blog-housekeeping.jpg";
@@ -147,9 +148,32 @@ export default function NieuwsPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const { data: apiData } = useQuery<{ posts: any[]; total: number }>({
+    queryKey: ['/api/blog'],
+    staleTime: 60000,
+  });
+
+  // Merge DB posts with static articles: DB posts first, then static ones not already in DB
+  const dbSlugs = new Set((apiData?.posts ?? []).map((p: any) => p.slug));
+  const dbArticles = (apiData?.posts ?? []).map((p: any) => ({
+    slug: p.slug,
+    image: p.imageUrl || blogHotel,
+    category: p.category,
+    title: p.title,
+    summary: p.excerpt,
+    date: new Date(p.publishedAt || p.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }),
+    readTime: p.readTime || '5 min',
+    fromDb: true,
+  }));
+  const staticFallbacks = allArticles.filter(a => !dbSlugs.has(a.slug));
+  const combined = [...dbArticles, ...staticFallbacks];
+
+  // Collect all categories from both sources
+  const allCategories = ["Alles", ...Array.from(new Set(combined.map(a => a.category)))];
+
   const filtered = activeCategory === "Alles"
-    ? allArticles
-    : allArticles.filter(a => a.category === activeCategory);
+    ? combined
+    : combined.filter(a => a.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-[#0a0310]">
@@ -210,7 +234,7 @@ export default function NieuwsPage() {
 
           <RevealSection delay={100}>
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-12 sm:mb-16">
-              {categories.map(cat => (
+              {allCategories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}

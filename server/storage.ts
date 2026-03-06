@@ -45,6 +45,8 @@ import {
   type CandidateWithDetails,
   applications as applicationsTable,
   type Application, type InsertApplication,
+  blogPosts as blogPostsTable,
+  type BlogPost, type InsertBlogPost,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -348,6 +350,15 @@ export interface IStorage {
   }): Promise<{ applications: Application[]; total: number }>;
   getApplicationById(id: number): Promise<Application | undefined>;
   updateApplicationStatus(id: number, status: string): Promise<Application | undefined>;
+
+  // Blog post methods
+  getBlogPosts(filters?: { status?: string; category?: string; limit?: number; offset?: number }): Promise<{ posts: BlogPost[]; total: number }>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  getBlogPostById(id: number): Promise<BlogPost | undefined>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: number): Promise<boolean>;
+  publishScheduledBlogPosts(): Promise<number>;
 }
 
 // In-memory storage implementation
@@ -3529,6 +3540,56 @@ export class MemStorage implements IStorage {
         });
       }
     }
+  }
+
+  // ==========================================
+  // BLOG POSTS — PostgreSQL backed
+  // ==========================================
+
+  async getBlogPosts(filters?: { status?: string; category?: string; limit?: number; offset?: number }): Promise<{ posts: BlogPost[]; total: number }> {
+    const conditions: any[] = [];
+    if (filters?.status) conditions.push(eq(blogPostsTable.status, filters.status));
+    if (filters?.category) conditions.push(eq(blogPostsTable.category, filters.category));
+    const all = conditions.length > 0
+      ? await db.select().from(blogPostsTable).where(and(...conditions)).orderBy(desc(blogPostsTable.publishedAt), desc(blogPostsTable.createdAt))
+      : await db.select().from(blogPostsTable).orderBy(desc(blogPostsTable.publishedAt), desc(blogPostsTable.createdAt));
+    const total = all.length;
+    const offset = filters?.offset ?? 0;
+    const limit = filters?.limit ?? 100;
+    return { posts: all.slice(offset, offset + limit), total };
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPostsTable).where(eq(blogPostsTable.slug, slug));
+    return post;
+  }
+
+  async getBlogPostById(id: number): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPostsTable).where(eq(blogPostsTable.id, id));
+    return post;
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const [created] = await db.insert(blogPostsTable).values({ ...post, updatedAt: new Date() }).returning();
+    return created;
+  }
+
+  async updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const [updated] = await db.update(blogPostsTable).set({ ...data, updatedAt: new Date() }).where(eq(blogPostsTable.id, id)).returning();
+    return updated;
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    const result = await db.delete(blogPostsTable).where(eq(blogPostsTable.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async publishScheduledBlogPosts(): Promise<number> {
+    const now = new Date();
+    const result = await db.update(blogPostsTable)
+      .set({ status: 'published', publishedAt: now, updatedAt: now })
+      .where(and(eq(blogPostsTable.status, 'scheduled'), sql`${blogPostsTable.scheduledAt} <= ${now}`));
+    return result.rowCount ?? 0;
   }
 }
 

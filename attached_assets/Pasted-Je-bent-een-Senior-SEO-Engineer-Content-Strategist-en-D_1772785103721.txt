@@ -1,0 +1,304 @@
+Je bent een Senior SEO Engineer, Content Strategist en Developer.
+
+Je gaat een automatisch SEO-content systeem bouwen voor de website van EXTRA, een horeca uitzendbureau uit Amsterdam dat personeel levert aan:
+	•	hotels
+	•	cateraars
+	•	evenementenlocaties
+	•	restaurants
+
+Het doel van dit systeem is om structureel hoger te ranken in Google voor zoekwoorden zoals:
+	•	horeca uitzendbureau amsterdam
+	•	horeca personeel
+	•	horeca personeel inhuren
+	•	flexibel horeca personeel
+	•	horeca personeel amsterdam
+	•	horeca uitzendbureau
+	•	evenementen personeel
+	•	hotel personeel
+	•	bediening personeel
+
+Het systeem moet automatisch SEO blogs publiceren en autoriteit opbouwen rondom deze zoekwoorden.
+
+⸻
+
+DOEL SEO STRATEGIE
+
+Het doel is om binnen 6-9 maanden topposities in Google te bereiken.
+
+Daarvoor moeten we:
+	1.	Autoriteit opbouwen rondom horeca personeel
+	2.	Veel relevante content publiceren
+	3.	Interne linkstructuur verbeteren
+	4.	Long-tail zoekwoorden targeten
+	5.	Content consistent publiceren
+
+⸻
+
+AUTOMATISCH CONTENT SYSTEEM
+
+Bouw een systeem dat:
+
+Elke week automatisch nieuwe blogs publiceert
+
+Frequentie:
+
+3 blogs per week
+
+Maandag
+Woensdag
+Vrijdag
+
+Dit komt neer op:
+
+156 artikelen per jaar
+
+Dit zorgt voor snelle SEO groei.
+
+⸻
+
+SEO CONTENT STRUCTUUR
+
+Elke blog moet automatisch deze structuur krijgen.
+
+Titel (55-65 karakters)
+
+Meta description (150-160 karakters)
+
+Slug
+
+Focus keyword
+
+Artikel lengte:
+
+900 – 1300 woorden
+
+⸻
+
+BLOG STRUCTUUR
+
+Elke blog moet deze structuur volgen:
+
+H1 titel
+
+Introductie (met focus keyword)
+
+H2 probleem of vraag
+
+H2 uitleg
+
+H2 tips of oplossingen
+
+H2 hoe EXTRA hierbij helpt
+
+H2 conclusie
+
+⸻
+
+SEO OPTIMALISATIE
+
+Elke blog moet automatisch bevatten:
+
+1️⃣ Focus keyword
+2️⃣ Variaties op het keyword
+3️⃣ Interne links
+4️⃣ Alt teksten
+5️⃣ SEO titel
+6️⃣ Meta description
+
+⸻
+
+INTERNE LINKS
+
+Elke blog moet automatisch linken naar belangrijke pagina’s:
+
+/horeca-personeel
+/horeca-uitzendbureau-amsterdam
+/werkgevers
+/werken-bij-extra
+
+Dit helpt SEO.
+
+⸻
+
+AFBEELDINGEN
+
+Elke blog moet minimaal 2 afbeeldingen bevatten.
+
+Alt tekst voorbeeld:
+
+horeca personeel bediening restaurant
+horeca uitzendbureau personeel hotel
+flexibel horeca personeel evenement
+
+⸻
+
+BLOG ONDERWERPEN DATABASE
+
+Het systeem moet automatisch blogs genereren rond deze thema’s:
+
+Horeca personeel vinden
+Personeelstekort horeca
+Flexibel personeel horeca
+Hotel personeel
+Evenementen personeel
+Horeca planning
+Horeca personeel management
+Werken in horeca
+Trends horeca personeel
+
+⸻
+
+VOORBEELD BLOG ONDERWERPEN
+
+Gebruik onderwerpen zoals:
+
+Hoe vind je snel horeca personeel in Amsterdam
+Waarom horeca ondernemers steeds vaker met flexibele teams werken
+7 oplossingen voor personeelstekort in de horeca
+Wat kost horeca personeel via een uitzendbureau
+Waarom hotels werken met een flexpool
+Hoe horeca ondernemers piekdrukte opvangen
+Evenementen personeel: waar moet je op letten
+Hoe voorkom je no-shows van personeel
+Waarom hospitality training belangrijk is
+Hoe bouw je een sterke flexpool in de horeca
+
+Maak daarnaast automatisch nieuwe variaties.
+
+⸻
+
+BELANGRIJKE SEO LANDINGSPAGINA’S
+
+Naast blogs moeten ook SEO landingspagina’s worden geoptimaliseerd of aangemaakt voor:
+
+/horeca-uitzendbureau-amsterdam
+/horeca-personeel-amsterdam
+/horeca-personeel
+/evenementen-personeel
+/hotel-personeel
+/flexibel-horeca-personeel
+
+Deze pagina’s moeten minimaal 1200 woorden bevatten.
+
+⸻
+
+CONTENT TONE OF VOICE
+
+Tone of voice moet passen bij EXTRA:
+	•	professioneel
+	•	modern
+	•	energiek
+	•	duidelijk
+	•	gericht op ondernemers
+
+Geen corporate taal.
+
+⸻
+
+CONTENT VOOR WERKGEVERS
+
+De artikelen moeten geschreven worden voor:
+	•	hotel managers
+	•	horeca ondernemers
+	•	HR managers
+	•	eventlocaties
+
+⸻
+
+SEO TECHNISCHE VEREISTEN
+
+Elke blog moet bevatten:
+
+SEO titel
+Meta description
+Slug
+Interne links
+Afbeeldingen met alt tekst
+
+⸻
+
+AUTOMATISCHE PUBLICATIE
+
+Bouw een systeem dat:
+
+Nieuwe blogs automatisch plant
+
+Publicatieschema:
+
+Maandag 08:00
+Woensdag 08:00
+Vrijdag 08:00
+
+⸻
+
+CMS STRUCTUUR
+
+Maak categorieën:
+
+Blog
+Nieuws
+Kennisbank
+
+⸻
+
+EXTRA SEO FEATURES
+
+Voeg toe:
+
+Sitemap auto update
+Structured data (article schema)
+Snelle laadtijd
+Mobile SEO
+Indexatie optimalisatie
+
+⸻
+
+RESULTAAT
+
+Het systeem moet automatisch:
+	•	SEO artikelen genereren
+	•	SEO optimaliseren
+	•	publiceren
+	•	interne links toevoegen
+
+zodat de website van EXTRA autoriteit opbouwt rondom horeca personeel en horeca uitzendbureau Amsterdam.
+
+⸻
+
+BELANGRIJKE SEO KPI
+
+Focus op rankings voor:
+
+horeca uitzendbureau amsterdam
+horeca personeel
+horeca personeel inhuren
+flexibel horeca personeel
+evenementen personeel
+
+⸻
+
+EXTRA SEO OPTIMALISATIE
+
+Zorg dat nieuwe blogs altijd linken naar:
+
+horeca uitzendbureau amsterdam pagina
+
+Dit is de belangrijkste pagina.
+
+⸻
+
+BELANGRIJK
+
+Het systeem moet zo gebouwd worden dat:
+
+Nieuwe blogs automatisch gegenereerd kunnen blijven worden zonder handmatige input.
+
+⸻
+
+RESULTAAT DOEL
+
+Binnen 6-9 maanden moet EXTRA zichtbaar worden op pagina 1 van Google voor:
+
+horeca uitzendbureau amsterdam
+horeca personeel amsterdam
+horeca personeel

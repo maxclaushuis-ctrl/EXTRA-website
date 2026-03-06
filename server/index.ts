@@ -133,6 +133,7 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
 
     scheduleDailyCvReminders();
+    scheduleBlogAutoPublish();
   });
 })();
 
@@ -175,4 +176,21 @@ function scheduleDailyCvReminders() {
     runDailyCvReminders();
     setInterval(runDailyCvReminders, MS_PER_DAY);
   }, msUntilFirst);
+}
+
+function scheduleBlogAutoPublish() {
+  const MS_PER_HOUR = 60 * 60 * 1000;
+
+  async function runPublishCheck() {
+    try {
+      const published = await storage.publishScheduledBlogPosts();
+      if (published > 0) log(`Blog auto-publish: ${published} artikel(en) gepubliceerd`);
+    } catch (err) {
+      console.error("Fout bij blog auto-publish:", err);
+    }
+  }
+
+  runPublishCheck();
+  setInterval(runPublishCheck, MS_PER_HOUR);
+  log("Blog auto-publish scheduler actief (elk uur)");
 }

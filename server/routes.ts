@@ -18,6 +18,7 @@ import {
   insertSettingsSchema,
   insertEmailTemplateSchema,
   insertCampaignSchema,
+  insertBlogPostSchema,
   insertDiscountSchema,
   insertChallengeSchema,
   insertMarketingTemplateSchema,
@@ -5225,6 +5226,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(result);
     } catch (err: any) {
       return res.status(500).json({ error: err.message || 'Import fout' });
+    }
+  });
+
+  // ==========================================
+  // BLOG API — SEO content systeem
+  // ==========================================
+
+  // Public: list published blog posts
+  app.get('/api/blog', async (req: Request, res: Response) => {
+    try {
+      const { category, limit, offset } = req.query;
+      const result = await storage.getBlogPosts({
+        status: 'published',
+        category: category as string | undefined,
+        limit: limit ? parseInt(limit as string) : 50,
+        offset: offset ? parseInt(offset as string) : 0,
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Public: single published blog post by slug
+  app.get('/api/blog/:slug', async (req: Request, res: Response) => {
+    try {
+      const post = await storage.getBlogPostBySlug(req.params.slug);
+      if (!post || post.status !== 'published') return res.status(404).json({ error: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: list all blog posts (all statuses)
+  app.get('/api/admin/blog', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { status, category, limit, offset } = req.query;
+      const result = await storage.getBlogPosts({
+        status: status as string | undefined,
+        category: category as string | undefined,
+        limit: limit ? parseInt(limit as string) : 200,
+        offset: offset ? parseInt(offset as string) : 0,
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: create blog post
+  app.post('/api/admin/blog', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const data = insertBlogPostSchema.parse(req.body);
+      const post = await storage.createBlogPost(data);
+      res.json(post);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Admin: update blog post
+  app.put('/api/admin/blog/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.updateBlogPost(id, req.body);
+      if (!post) return res.status(404).json({ error: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Admin: delete blog post
+  app.delete('/api/admin/blog/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const ok = await storage.deleteBlogPost(id);
+      res.json({ success: ok });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: publish a post immediately
+  app.post('/api/admin/blog/:id/publish', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.updateBlogPost(id, { status: 'published', publishedAt: new Date() });
+      if (!post) return res.status(404).json({ error: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: AI generate blog post content
+  app.post('/api/admin/blog/generate', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { topic, focusKeyword, category } = req.body;
+      if (!topic) return res.status(400).json({ error: 'Topic is verplicht' });
+
+      let OpenAI: any;
+      try {
+        OpenAI = (await import('openai')).default;
+      } catch {
+        return res.status(503).json({ error: 'AI module niet beschikbaar. Activeer de OpenAI integratie.' });
+      }
+
+      const client = new OpenAI({ baseURL: `https://${process.env.REPLIT_CONNECTORS_HOSTNAME}/v2/openai/v1`, apiKey: process.env.REPL_IDENTITY ?? 'unused' });
+
+      const slug = topic.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60);
+      const keyword = focusKeyword || topic;
+
+      const systemPrompt = `Je bent een SEO-content expert voor EXTRA, een horeca uitzendbureau uit Amsterdam. Schrijf professionele, energieke en duidelijke content gericht op hotel managers, horeca ondernemers en HR managers. Gebruik geen corporate taal.`;
+
+      const userPrompt = `Schrijf een SEO-geoptimaliseerd blog artikel in het Nederlands over: "${topic}"
+Focus keyword: "${keyword}"
+Categorie: ${category || 'Blog'}
+
+Vereisten:
+- Lengte: 900-1300 woorden
+- Schrijf de volledige HTML content (gebruik <h2>, <p>, <ul>, <li>, <strong> tags)
+- Beginnen met een sterke introductie met het focus keyword in de eerste zin
+- Structuur: intro, 4-5 H2 secties, conclusie
+- Elke H2 sectie: 150-250 woorden
+- Voeg minimaal 1 quote toe als <blockquote>
+- Voeg minimaal 1 tiptekst toe als <div class="tip">
+- Interne links toevoegen naar: <a href="/horeca-uitzendbureau-amsterdam">horeca uitzendbureau Amsterdam</a>, <a href="/werkgevers">werkgevers</a>, <a href="/ik-zoek-extra-werk">werken bij EXTRA</a>
+- Sluit af met een call-to-action naar EXTRA
+- Geef ALLEEN de HTML terug, geen markdown, geen uitleg
+
+Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, in formaat <!-- JSON: {...} -->):
+- title: SEO-titel (55-65 karakters)
+- metaTitle: identiek aan title
+- metaDescription: 150-160 karakters
+- excerpt: samenvatting van 1-2 zinnen
+- readTime: geschatte leestijd (bijv. "5 min")
+- imageAlt: alt tekst voor afbeelding`;
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-5-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 2500,
+      });
+
+      const raw = response.choices[0].message.content || '';
+      
+      // Parse JSON metadata from comment
+      let meta: any = { title: topic, metaTitle: topic, metaDescription: '', excerpt: '', readTime: '5 min', imageAlt: keyword };
+      const jsonMatch = raw.match(/<!--\s*JSON:\s*(\{[\s\S]*?\})\s*-->/);
+      if (jsonMatch) {
+        try { meta = { ...meta, ...JSON.parse(jsonMatch[1]) }; } catch {}
+      }
+      
+      // Extract clean HTML (everything after the comment)
+      const content = raw.replace(/<!--[\s\S]*?-->\s*/, '').trim();
+
+      res.json({
+        title: meta.title,
+        slug,
+        content,
+        excerpt: meta.excerpt || '',
+        metaTitle: meta.metaTitle || meta.title,
+        metaDescription: meta.metaDescription || '',
+        focusKeyword: keyword,
+        category: category || 'Blog',
+        readTime: meta.readTime || '5 min',
+        imageAlt: meta.imageAlt || keyword,
+        status: 'draft',
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Generatie mislukt' });
+    }
+  });
+
+  // Public: sitemap.xml
+  app.get('/sitemap.xml', async (_req: Request, res: Response) => {
+    try {
+      const { posts } = await storage.getBlogPosts({ status: 'published', limit: 500 });
+      const baseUrl = 'https://www.doehetextra.nl';
+      const staticPages = [
+        { url: '/', priority: '1.0', changefreq: 'weekly' },
+        { url: '/nieuws', priority: '0.9', changefreq: 'daily' },
+        { url: '/over-extra', priority: '0.8', changefreq: 'monthly' },
+        { url: '/over-extra/ons-team', priority: '0.7', changefreq: 'monthly' },
+        { url: '/hoe-extra-werkt', priority: '0.8', changefreq: 'monthly' },
+        { url: '/ik-zoek-extra-werk', priority: '0.8', changefreq: 'weekly' },
+        { url: '/aanmelden', priority: '0.9', changefreq: 'monthly' },
+        { url: '/horeca-uitzendbureau-amsterdam', priority: '1.0', changefreq: 'weekly' },
+        { url: '/horeca-personeel-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/horeca-personeel', priority: '0.9', changefreq: 'weekly' },
+        { url: '/evenementen-personeel', priority: '0.8', changefreq: 'weekly' },
+        { url: '/hotel-personeel', priority: '0.8', changefreq: 'weekly' },
+        { url: '/flexibel-horeca-personeel', priority: '0.8', changefreq: 'weekly' },
+        { url: '/werkgevers', priority: '0.9', changefreq: 'monthly' },
+      ];
+      const today = new Date().toISOString().split('T')[0];
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${staticPages.map(p => `  <url>
+    <loc>${baseUrl}${p.url}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`).join('\n')}
+${posts.map(p => `  <url>
+    <loc>${baseUrl}/nieuws/${p.slug}</loc>
+    <lastmod>${(p.publishedAt || p.createdAt)?.toISOString().split('T')[0] || today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`).join('\n')}
+</urlset>`;
+      res.set('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (err: any) {
+      res.status(500).send('Sitemap error');
     }
   });
 
