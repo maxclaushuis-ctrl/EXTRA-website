@@ -49,7 +49,7 @@ export default function KlantcasesHoreca() {
               className="text-center mb-16"
             >
               <h1 className="text-4xl md:text-6xl font-bold font-poppins mb-6">
-                Klantcases
+                Wat onze klanten <span className="text-purple-400">zeggen</span>
               </h1>
               <p className="text-xl text-purple-200/70 max-w-3xl mx-auto">
                 Ontdek hoe wij horecaondernemers in Amsterdam helpen met flexibele personeelsoplossingen van topkwaliteit.

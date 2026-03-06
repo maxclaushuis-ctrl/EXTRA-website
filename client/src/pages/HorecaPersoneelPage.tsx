@@ -25,7 +25,7 @@ export default function HorecaPersoneelPage() {
               </ol>
             </nav>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-              Horeca <span className="text-purple-300">personeel</span> voor elke gelegenheid
+              Goed horecapersoneel <span className="text-purple-300">maakt het verschil</span>
             </h1>
             <p className="text-xl text-purple-100/80 max-w-3xl mb-10 leading-relaxed">
               Van kleinschalige diners tot grootschalige evenementen. EXTRA levert het hospitality talent dat uw merk versterkt en uw gasten een onvergetelijke ervaring biedt.

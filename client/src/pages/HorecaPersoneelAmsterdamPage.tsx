@@ -25,7 +25,7 @@ export default function HorecaPersoneelAmsterdamPage() {
               </ol>
             </nav>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-              Horeca personeel <span className="text-purple-400">Amsterdam</span>
+              Amsterdam draait op <span className="text-purple-400">goed horecapersoneel</span>
             </h1>
             <p className="text-xl text-purple-100/80 max-w-3xl mb-10 leading-relaxed">
               Professioneel en getraind personeel voor de Amsterdamse hospitality sector. Ontdek hoe EXTRA de werving en selectie van uw horeca personeel in de hoofdstad professionaliseert.

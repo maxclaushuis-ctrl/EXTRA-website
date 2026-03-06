@@ -22,7 +22,7 @@ export default function CateringPersoneelAmsterdam() {
                   <UtensilsCrossed className="w-4 h-4" /> Catering Branche
                 </span>
                 <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Catering personeel <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Amsterdam</span>
+                  Catering die loopt — <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">van a tot z.</span>
                 </h1>
                 <p className="text-lg sm:text-xl text-purple-100/70 mb-10 leading-relaxed max-w-2xl">
                   Professioneel catering personeel voor de regio Amsterdam. Wij leveren zowel keukenondersteuning als gastvrije bediening voor elke gelegenheid.

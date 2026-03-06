@@ -18,7 +18,7 @@ import PublicNav from "@/components/PublicNav";
             <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
               <div className="max-w-3xl">
                 <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-[1.1]">
-                  Front office <span className="text-purple-500">vacatures Amsterdam</span>
+                  Het gezicht van het hotel — <span className="text-purple-400">dat ben jij</span>
                 </h1>
                 <p className="text-xl text-purple-100/80 mb-8 leading-relaxed">
                   Ben jij het gastvrije gezicht van het hotel? Word receptionist(e) bij de mooiste 4- en 5-sterrenhotels in Amsterdam.

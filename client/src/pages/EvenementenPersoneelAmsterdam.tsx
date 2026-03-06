@@ -22,7 +22,7 @@ export default function EvenementenPersoneelAmsterdam() {
                   <PartyPopper className="w-4 h-4" /> Events Branche
                 </span>
                 <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Evenementen personeel <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Amsterdam</span>
+                  Elk event. De juiste <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">mensen erbij.</span>
                 </h1>
                 <p className="text-lg sm:text-xl text-purple-100/70 mb-10 leading-relaxed max-w-2xl">
                   Professionele hosts, bediening en barpersoneel voor elk type event in Amsterdam. Van zakelijke congressen tot bruisende festivals.

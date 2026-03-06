@@ -56,7 +56,7 @@ export default function Contact() {
               className="text-center mb-16"
             >
               <h1 className="text-4xl md:text-6xl font-bold font-poppins mb-6">
-                Contact
+                Vertel ons <span className="text-purple-400">wat je nodig hebt</span>
               </h1>
               <p className="text-xl text-purple-200/70 max-w-2xl mx-auto">
                 Heb je een vraag of wil je meer weten over onze dienstverlening? Neem gerust contact met ons op.

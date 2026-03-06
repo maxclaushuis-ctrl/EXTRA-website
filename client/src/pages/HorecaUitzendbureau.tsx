@@ -70,7 +70,7 @@ export default function HorecaUitzendbureau() {
               </ol>
             </nav>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-              Horeca uitzendbureau <span className="text-purple-500">Amsterdam</span> – EXTRA
+              Dé horecapartner <span className="text-purple-400">van Amsterdam</span>
             </h1>
             <p className="text-xl text-purple-100/80 max-w-3xl mb-10 leading-relaxed">
               Bent u op zoek naar een betrouwbare partner die niet alleen handjes levert, maar echte gastvrijheid begrijpt? EXTRA is hét horeca uitzendbureau van Amsterdam, gespecialiseerd in het leveren van getraind personeel voor hotels, evenementen, cateraars en restaurants.

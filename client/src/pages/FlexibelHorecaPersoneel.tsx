@@ -25,7 +25,7 @@ export default function FlexibelHorecaPersoneel() {
               </ol>
             </nav>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-              Flexibel <span className="text-purple-500">horeca personeel</span> wanneer u het nodig heeft
+              Wanneer jij het nodig hebt, <span className="text-purple-400">zijn wij er</span>
             </h1>
             <p className="text-xl text-purple-100/80 max-w-3xl mb-10 leading-relaxed">
               Vang pieken op, vervang zieken direct en houd de controle over uw personeelskosten. Ontdek de kracht van flexibiliteit met de hospitality talenten van EXTRA.

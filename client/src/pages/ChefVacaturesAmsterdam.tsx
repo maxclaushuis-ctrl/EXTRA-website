@@ -18,7 +18,7 @@ import PublicNav from "@/components/PublicNav";
             <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
               <div className="max-w-3xl">
                 <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-[1.1]">
-                  Chef <span className="text-purple-500">vacatures Amsterdam</span>
+                  Koken is je ding. <span className="text-purple-400">Wij regelen de rest.</span>
                 </h1>
                 <p className="text-xl text-purple-100/80 mb-8 leading-relaxed">
                   Breng je passie voor koken naar de beste keukens van Amsterdam. Van hulpkok tot chef de partie, wij hebben de uitdaging die bij je past.

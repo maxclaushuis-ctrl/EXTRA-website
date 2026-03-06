@@ -22,7 +22,7 @@ export default function HotelPersoneelAmsterdam() {
                   <Hotel className="w-4 h-4" /> Hotel Branche
                 </span>
                 <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Hotel personeel <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Amsterdam</span>
+                  Jouw hotel verdient <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">het beste team</span>
                 </h1>
                 <p className="text-lg sm:text-xl text-purple-100/70 mb-10 leading-relaxed max-w-2xl">
                   Professioneel hotel personeel in Amsterdam. EXTRA levert housekeeping, receptie en F&B medewerkers voor hotels. Flexibel en betrouwbaar.
