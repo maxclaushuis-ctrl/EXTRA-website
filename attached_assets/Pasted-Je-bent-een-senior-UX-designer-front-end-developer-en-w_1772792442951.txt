@@ -1,0 +1,64 @@
+Je bent een senior UX-designer, front-end developer en website-architect.
+
+Momenteel zijn de nieuw aangemaakte pagina’s in een andere huisstijl gebouwd dan de rest van de website. Dit moet worden gecorrigeerd.
+
+OPDRACHT
+
+Zorg dat alle nieuw aangemaakte pagina’s volledig worden aangepast naar de bestaande huisstijl van de website, zodat de hele website één consistent geheel vormt.
+
+Let hierbij op:
+
+- dezelfde kleuren
+- dezelfde typografie
+- dezelfde spacing en grid
+- dezelfde knoppen en CTA-styling
+- dezelfde kaart- en sectiecomponenten
+- dezelfde hover-effecten en animaties
+- dezelfde header en footer
+- dezelfde iconstijl
+
+De nieuwe pagina’s mogen dus niet als een “los ontwerp” aanvoelen, maar moeten visueel en technisch volledig aansluiten op de bestaande website.
+
+STRUCTUUR EN LAYOUT
+
+Naast de visuele aanpassing wil ik samen met jou per pagina bepalen welke secties logisch zijn voor een optimale gebruikerservaring.
+
+Daarom wil ik dat je het volgende doet:
+
+1. Analyseer de huidige website en identificeer de bestaande designcomponenten en sectietypen (bijvoorbeeld hero, tekstblokken, cards, testimonials, CTA-secties, etc.).
+
+2. Gebruik deze bestaande componenten als basis voor alle nieuwe pagina’s zodat de website consistent blijft.
+
+3. Loop vervolgens pagina voor pagina door de nieuwe structuur heen en stel per pagina een logische indeling voor.
+
+Per pagina wil ik dat je voorstelt:
+
+- welke secties er op de pagina moeten komen
+- in welke volgorde deze secties het beste staan
+- welke bestaande componenten we daarvoor kunnen hergebruiken
+- waar call-to-actions geplaatst moeten worden
+- waar interne links logisch zijn
+
+Belangrijk: maak geen compleet nieuwe designstijl. Werk uitsluitend met de componenten en stijl die al op de website aanwezig zijn.
+
+CONSISTENTIE
+
+Controleer en corrigeer waar nodig:
+
+- het menu (moet overal hetzelfde zijn)
+- de pagina-opbouw
+- de spacing tussen secties
+- de uitlijning van content
+- de layout op desktop, tablet en mobiel
+
+Het doel is dat bezoekers niet kunnen zien welke pagina’s later zijn toegevoegd. Alles moet voelen als één geïntegreerde website.
+
+WERKWIJZE
+
+Werk gestructureerd:
+
+1. Geef eerst een overzicht van de bestaande designcomponenten op de website.
+2. Geef vervolgens een voorstel voor de standaard paginabouw (een soort template).
+3. Loop daarna pagina voor pagina door de website en stel de optimale sectie-indeling voor.
+
+Pas na mijn akkoord kunnen we de nieuwe structuur daadwerkelijk implementeren.
