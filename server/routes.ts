@@ -4992,7 +4992,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wantsCallback: !!body.wantsCallback,
         wantsFavoritePool: !!body.wantsFavoritePool,
       };
-      if (!data.companyName || !data.contactName || !data.email || !data.phone || !data.locationType || data.functions.length === 0) {
+      if (!data.companyName || !data.contactName || !data.email || !data.phone) {
         return res.status(400).json({ message: "Vul alle verplichte velden in." });
       }
       const [result] = await db.insert(staffingRequests).values(data).returning();

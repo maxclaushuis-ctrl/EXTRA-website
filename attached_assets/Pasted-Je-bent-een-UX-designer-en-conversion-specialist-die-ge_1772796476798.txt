@@ -1,0 +1,78 @@
+Je bent een UX designer en conversion specialist die gespecialiseerd is in het optimaliseren van B2B leadformulieren.
+Analyseer en optimaliseer de pagina “Doe direct een personeelsaanvraag” (zie screenshots). Het doel van deze pagina is zoveel mogelijk nieuwe aanvragen van bedrijven genereren met zo min mogelijk frictie.
+Belangrijk uitgangspunt:
+Dit formulier is geen volledig aanvraagformulier, maar een leadformulier.
+Wij nemen na het indienen altijd persoonlijk contact op om de aanvraag verder te bespreken.
+Daarom moet het formulier zo kort mogelijk zijn, zodat bedrijven hun aanvraag in maximaal 30 seconden kunnen indienen.
+1. Formulierstructuur aanpassen
+Verwijder de meeste velden uit het huidige formulier en houd alleen de velden die nodig zijn om contact op te nemen.
+Het formulier moet bestaan uit:
+Bedrijfsnaam
+placeholder: “Bijv. Hotel Amsterdam”
+Naam contactpersoon
+placeholder: “Je naam”
+Telefoonnummer
+placeholder: “06 12345678”
+E-mailadres
+placeholder: “naam@bedrijf.nl”
+Waar kunnen we je mee helpen? (optioneel)
+placeholder:
+“Bijv. bediening voor een event, housekeeping voor komende week, etc.”
+Dit veld is optioneel.
+2. Velden verwijderen
+De volgende velden mogen uit het formulier worden verwijderd omdat we deze informatie later telefonisch bespreken:
+Type locatie
+Functies
+Aantal medewerkers
+Datum / periode
+Locatie (adres/plaats)
+Locatienaam
+Flexibele of vaste inzet
+Urgentie
+Extra toelichting checkboxes
+Deze velden maken het formulier onnodig lang en verlagen de conversie.
+3. CTA verbeteren
+De knoptekst moet sterker worden.
+Vervang:
+“Aanvraag versturen”
+Door:
+“Bel mij terug →”
+Of:
+“Ontvang binnen 1 uur reactie →”
+4. Microcopy toevoegen
+Onder de knop een korte geruststellende tekst plaatsen:
+We nemen meestal binnen 1 uur contact op om je aanvraag door te spreken.
+Dit verhoogt vertrouwen en conversie.
+5. Trust elementen toevoegen
+Direct onder het formulier een kleine trust-sectie tonen met drie korte punten:
+✔ NEN 4400-1 gecertificeerd
+✔ Personeel in loondienst
+✔ Snel inzetbaar bij events, hotels en horeca
+6. Contact alternatieven tonen
+Onder het formulier een alternatief tonen voor mensen die direct contact willen.
+Bijvoorbeeld:
+Liever direct contact?
+📞 Bel 085 130 59 15
+💬 Of stuur ons een WhatsApp
+Maak deze klikbaar.
+7. Layout optimaliseren
+UX richtlijnen:
+maximale formulierbreedte 700px
+duidelijke spacing tussen velden
+mobiel geoptimaliseerd
+grote CTA knop
+formulier moet binnen 1 scroll zichtbaar zijn op mobiel
+8. Design
+De pagina moet visueel aansluiten bij de rest van de website:
+paarse gradient hero
+afgeronde inputvelden
+duidelijke CTA
+gebruik van subtiele EXTRA “X” achtergrond elementen
+Gebruik bestaande componenten waar mogelijk.
+9. Conversiedoel
+Het doel van deze pagina is:
+Zo snel mogelijk een aanvraag laten indienen zodat wij telefonisch contact kunnen opnemen.
+Minimaliseer daarom:
+aantal velden
+cognitieve belasting
+invultijd
