@@ -1,0 +1,303 @@
+Je bent een senior SEO-specialist, UX-architect en webdeveloper. Optimaliseer de websitestructuur van EXTRA, een horeca uitzendbureau uit Amsterdam.
+
+Het doel is een website te bouwen die:
+1. Goed vindbaar is in Google
+2. Een duidelijke en premium gebruikerservaring heeft
+3. Sterk converteert voor zowel opdrachtgevers als kandidaten
+4. Een goede balans heeft tussen design en SEO (dus niet te veel tekst op designpagina’s)
+
+Belangrijk:
+De menunamen “Ik zoek extra personeel” en “Ik zoek extra werk” moeten in het hoofdmenu blijven staan. Deze namen mogen niet worden aangepast.
+
+De URL-structuur (slugs) mag wel SEO-technisch worden geoptimaliseerd.
+
+Belangrijkste zoekwoorden waar de website op moet gaan ranken:
+
+horeca uitzendbureau amsterdam
+horeca personeel amsterdam
+horeca personeel
+horeca personeel inhuren
+flexibel horeca personeel
+hotel personeel
+evenementen personeel
+horeca werk amsterdam
+horeca vacatures amsterdam
+housekeeping vacatures
+chef vacatures
+front office vacatures
+
+--------------------------------------------------------------------
+
+HOOFDMENU STRUCTUUR
+
+Gebruik deze menustructuur:
+
+Home
+
+Ik zoek extra personeel
+(slug: /horeca-personeel-inhuren)
+
+Subpagina’s:
+Hotels
+/hotel-personeel-amsterdam
+
+Eventlocaties
+/evenementen-personeel-amsterdam
+
+Cateraars
+/catering-personeel-amsterdam
+
+Restaurants
+/restaurant-personeel-amsterdam
+
+Ik zoek extra werk
+(slug: /horeca-vacatures-amsterdam)
+
+Subpagina’s:
+Horeca
+/horeca-werk-amsterdam
+
+Housekeeping
+/housekeeping-vacatures-amsterdam
+
+Chefs
+/chef-vacatures-amsterdam
+
+Front-office
+/front-office-vacatures-amsterdam
+
+Over EXTRA
+/over-extra
+
+Subpagina’s:
+Onze werkwijze
+/onze-werkwijze
+
+Klantcases
+/klantcases-horeca
+
+Ons beloningssysteem
+/beloningssysteem
+
+Ons team
+/ons-team
+
+Nieuws & Blogs
+/blog
+
+Contact
+/contact
+
+--------------------------------------------------------------------
+
+EXTRA PAGINA’S (NIET IN HOOFDMENU, WEL SEO)
+
+Maak daarnaast belangrijke SEO-landingspagina’s die niet in het hoofdmenu hoeven te staan maar wel volledig bereikbaar moeten zijn:
+
+/horeca-uitzendbureau-amsterdam
+/horeca-personeel-amsterdam
+/horeca-personeel
+/flexibel-horeca-personeel
+
+Deze pagina’s zijn bedoeld om hoog te ranken in Google.
+
+Deze pagina’s moeten minimaal 900–1200 woorden bevatten.
+
+--------------------------------------------------------------------
+
+BELANGRIJKSTE SEO PILLAR PAGINA
+
+Maak een sterke SEO-pagina:
+
+/horeca-uitzendbureau-amsterdam
+
+Deze pagina moet:
+
+- uitleggen wat EXTRA doet
+- uitleggen hoe horeca personeel wordt geleverd
+- linken naar hotels, events, cateraars en restaurants
+- interne links bevatten naar alle belangrijke SEO pagina’s
+- minimaal 1200 woorden bevatten
+
+Deze pagina wordt de belangrijkste SEO-pagina van de site.
+
+--------------------------------------------------------------------
+
+INTERNE LINKSTRUCTUUR
+
+Geen enkele pagina mag een orphan page zijn.
+
+Elke SEO-landingspagina moet minimaal 3 tot 5 interne links ontvangen.
+
+Gebruik de volgende interne linkstructuur.
+
+HOME moet linken naar:
+
+/horeca-uitzendbureau-amsterdam
+/horeca-personeel-inhuren
+/horeca-vacatures-amsterdam
+
+PAGINA "IK ZOEK EXTRA PERSONEEL"
+
+Gebruik hier klikbare cards of secties voor:
+
+Hotels → /hotel-personeel-amsterdam
+Eventlocaties → /evenementen-personeel-amsterdam
+Cateraars → /catering-personeel-amsterdam
+Restaurants → /restaurant-personeel-amsterdam
+
+Voeg daarnaast tekstlinks toe naar:
+
+/horeca-personeel-amsterdam
+/flexibel-horeca-personeel
+/horeca-uitzendbureau-amsterdam
+
+BRANCHEPAGINA HOTELS moet linken naar:
+
+/hotel-personeel-amsterdam
+/flexibel-horeca-personeel
+/horeca-uitzendbureau-amsterdam
+
+BRANCHEPAGINA EVENTLOCATIES moet linken naar:
+
+/evenementen-personeel-amsterdam
+/flexibel-horeca-personeel
+/horeca-uitzendbureau-amsterdam
+
+BRANCHEPAGINA CATERAARS moet linken naar:
+
+/catering-personeel-amsterdam
+/flexibel-horeca-personeel
+/horeca-uitzendbureau-amsterdam
+
+BRANCHEPAGINA RESTAURANTS moet linken naar:
+
+/restaurant-personeel-amsterdam
+/flexibel-horeca-personeel
+/horeca-uitzendbureau-amsterdam
+
+--------------------------------------------------------------------
+
+PAGINA "IK ZOEK EXTRA WERK"
+
+Gebruik cards voor:
+
+Horeca werk
+/horeca-werk-amsterdam
+
+Housekeeping vacatures
+/housekeeping-vacatures-amsterdam
+
+Chef vacatures
+/chef-vacatures-amsterdam
+
+Front office vacatures
+/front-office-vacatures-amsterdam
+
+--------------------------------------------------------------------
+
+FOOTER STRUCTUUR
+
+Voeg een uitgebreide footer toe met interne links.
+
+Kolom: Voor opdrachtgevers
+
+Ik zoek extra personeel
+Horeca personeel Amsterdam
+/horeca-personeel-amsterdam
+
+Hotel personeel
+/hotel-personeel-amsterdam
+
+Evenementen personeel
+/evenementen-personeel-amsterdam
+
+Flexibel horeca personeel
+/flexibel-horeca-personeel
+
+Personeelsaanvraag
+/personeelsaanvraag
+
+Kolom: Voor kandidaten
+
+Horeca vacatures
+/horeca-vacatures-amsterdam
+
+Housekeeping vacatures
+/housekeeping-vacatures-amsterdam
+
+Chef vacatures
+/chef-vacatures-amsterdam
+
+Front office vacatures
+/front-office-vacatures-amsterdam
+
+Aanmelden
+/aanmelden
+
+--------------------------------------------------------------------
+
+BLOG STRATEGIE
+
+De blogpagina (/blog) moet SEO-verkeer genereren.
+
+Elke blog moet intern linken naar minimaal één van deze pagina’s:
+
+/horeca-uitzendbureau-amsterdam
+/horeca-personeel-amsterdam
+/hotel-personeel-amsterdam
+/evenementen-personeel-amsterdam
+/horeca-vacatures-amsterdam
+
+--------------------------------------------------------------------
+
+UX RICHTLIJNEN
+
+De website moet:
+
+- modern
+- strak
+- premium
+- visueel sterk
+
+zijn.
+
+Gebruik daarom:
+
+korte tekstblokken  
+duidelijke secties  
+cards voor branches  
+duidelijke CTA’s  
+
+Vermijd lange lappen tekst op designpagina’s.
+
+SEO teksten mogen op aparte SEO-pagina’s staan.
+
+--------------------------------------------------------------------
+
+SEO TECHNISCHE VEREISTEN
+
+Elke pagina moet bevatten:
+
+1 H1 titel  
+logische H2 structuur  
+SEO title  
+meta description  
+schone slug  
+interne links  
+structured data  
+canonical tags  
+breadcrumbs  
+automatische sitemap update  
+
+--------------------------------------------------------------------
+
+OP TE LEVEREN DOOR JOU
+
+1. Definitieve sitemap
+2. Nieuwe URL-structuur
+3. Interne linkstructuur
+4. Pagina hiërarchie
+5. Redirects van oude URLs
+6. Navigatie structuur
+7. SEO optimalisatie per pagina

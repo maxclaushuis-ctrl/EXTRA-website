@@ -2,7 +2,6 @@ import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
 
-// Pagina's
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
@@ -24,20 +23,42 @@ import HoeExtraWerkt from "@/pages/HoeExtraWerkt";
 import IkZoekExtraWerk from "@/pages/IkZoekExtraWerk";
 import HoeWerktDagbetaling from "@/pages/HoeWerktDagbetaling";
 
+// Werkgever pagina's
+import HorecaPersoneelInhuren from "@/pages/HorecaPersoneelInhuren";
+import HotelPersoneelAmsterdam from "@/pages/HotelPersoneelAmsterdam";
+import EvenementenPersoneelAmsterdam from "@/pages/EvenementenPersoneelAmsterdam";
+import CateringPersoneelAmsterdam from "@/pages/CateringPersoneelAmsterdam";
+import RestaurantPersoneelAmsterdam from "@/pages/RestaurantPersoneelAmsterdam";
+
+// Kandidaat pagina's
+import HorecaVacaturesAmsterdam from "@/pages/HorecaVacaturesAmsterdam";
+import HorecaWerkAmsterdam from "@/pages/HorecaWerkAmsterdam";
+import HousekeepingVacaturesAmsterdam from "@/pages/HousekeepingVacaturesAmsterdam";
+import ChefVacaturesAmsterdam from "@/pages/ChefVacaturesAmsterdam";
+import FrontOfficeVacaturesAmsterdam from "@/pages/FrontOfficeVacaturesAmsterdam";
+
+// SEO pillar & landingspagina's
+import HorecaUitzendbureau from "@/pages/HorecaUitzendbureau";
+import HorecaPersoneelAmsterdamPage from "@/pages/HorecaPersoneelAmsterdamPage";
+import HorecaPersoneelPage from "@/pages/HorecaPersoneelPage";
+import FlexibelHorecaPersoneel from "@/pages/FlexibelHorecaPersoneel";
+
+// Overige pagina's
+import KlantcasesHoreca from "@/pages/KlantcasesHoreca";
+import Contact from "@/pages/Contact";
+
 import UserProfile from "@/pages/user/Profile";
 import Rewards from "@/pages/user/Rewards";
 import RewardDetail from "@/pages/employee/RewardDetail";
 import History from "@/pages/user/History";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 
-
-
-// Contexts
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MilestoneProvider } from "@/contexts/MilestoneContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import NotificationToast from "@/components/NotificationToast";
+import { MainNav } from "@/components/MainNav";
 
-// Beschermde route component
 function ProtectedRoute({ component: Component, adminOnly = false, ...rest }: 
   { component: React.ComponentType<any>, adminOnly?: boolean, [key: string]: any }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -51,51 +72,50 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
     }
   }, [isAuthenticated, isLoading, adminOnly, user, navigate]);
 
-  if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Laden...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (adminOnly && user?.role !== "admin") {
-    return null;
-  }
+  if (isLoading) return <div className="flex h-screen items-center justify-center">Laden...</div>;
+  if (!isAuthenticated) return null;
+  if (adminOnly && user?.role !== "admin") return null;
 
   return <Component {...rest} />;
 }
 
-// Notificatie en navigatie componenten
-import NotificationToast from "@/components/NotificationToast";
-import { MainNav } from "@/components/MainNav";
-
+const PUBLIC_PATHS = [
+  '/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
+  '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
+  '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
+  '/hoe-werkt-dagbetaling',
+  // Nieuwe werkgever routes
+  '/horeca-personeel-inhuren', '/hotel-personeel-amsterdam',
+  '/evenementen-personeel-amsterdam', '/catering-personeel-amsterdam',
+  '/restaurant-personeel-amsterdam',
+  // Nieuwe kandidaat routes
+  '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
+  '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
+  '/front-office-vacatures-amsterdam',
+  // SEO routes
+  '/horeca-uitzendbureau-amsterdam', '/horeca-personeel-amsterdam',
+  '/horeca-personeel', '/flexibel-horeca-personeel',
+  // Alias routes
+  '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
+  // Overige
+  '/klantcases-horeca', '/contact',
+];
 
 function Router() {
   const { isAuthenticated, user } = useAuth();
   const [location] = useLocation();
-  
-  // Bepaal of we op de medewerker dashboard pagina zijn, daar willen we geen navigatie tonen
+
   const isEmployeeDashboard = location === '/dashboard' && user?.role !== 'admin';
-  
-  // Check of we op een planningspagina zijn
   const isPlanningPage = location.startsWith('/planning');
-
-  // Dashboard mockup heeft eigen navigatie
   const isDashboardMockup = location.startsWith('/dashboard-mockup');
+  const isPublicPage = PUBLIC_PATHS.some(p => location === p || location.startsWith(p + '/'));
 
-  // Publieke pagina's krijgen nooit de interne nav te zien
-  const isPublicPage = ['/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden', '/brochure', '/brochures', '/events', '/nieuws', '/extraatje', '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk', '/hoe-werkt-dagbetaling'].some(
-    p => location === p || location.startsWith(p + '/')
-  );
-  
   return (
     <>
-      {/* Notificatie toast, maar niet op employee dashboard, dashboard mockup of publieke pagina's */}
       {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && !isDashboardMockup && !isPublicPage && (
         <NotificationToast />
       )}
-      
+
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
@@ -103,39 +123,60 @@ function Router() {
         <Route path="/brochures" component={BrochureEN} />
         <Route path="/events" component={BrochureEvents} />
         <Route path="/landing" component={LandingPage} />
+
+        {/* Werkgever routes */}
+        <Route path="/horeca-personeel-inhuren" component={HorecaPersoneelInhuren} />
+        <Route path="/hotel-personeel-amsterdam" component={HotelPersoneelAmsterdam} />
+        <Route path="/evenementen-personeel-amsterdam" component={EvenementenPersoneelAmsterdam} />
+        <Route path="/catering-personeel-amsterdam" component={CateringPersoneelAmsterdam} />
+        <Route path="/restaurant-personeel-amsterdam" component={RestaurantPersoneelAmsterdam} />
+
+        {/* Kandidaat routes */}
+        <Route path="/horeca-vacatures-amsterdam" component={HorecaVacaturesAmsterdam} />
+        <Route path="/horeca-werk-amsterdam" component={HorecaWerkAmsterdam} />
+        <Route path="/housekeeping-vacatures-amsterdam" component={HousekeepingVacaturesAmsterdam} />
+        <Route path="/chef-vacatures-amsterdam" component={ChefVacaturesAmsterdam} />
+        <Route path="/front-office-vacatures-amsterdam" component={FrontOfficeVacaturesAmsterdam} />
+
+        {/* SEO pillar & landingspagina's */}
+        <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
+        <Route path="/horeca-personeel-amsterdam" component={HorecaPersoneelAmsterdamPage} />
+        <Route path="/horeca-personeel" component={HorecaPersoneelPage} />
+        <Route path="/flexibel-horeca-personeel" component={FlexibelHorecaPersoneel} />
+
+        {/* Blog - primair op /blog, ook /nieuws behouden */}
+        <Route path="/blog" component={NieuwsPage} />
+        <Route path="/blog/:slug" component={NieuwsArtikel} />
+        <Route path="/nieuws" component={NieuwsPage} />
+        <Route path="/nieuws/:slug" component={NieuwsArtikel} />
+
+        {/* Over EXTRA sub-routes */}
+        <Route path="/over-extra/ons-team" component={OnsTeam} />
+        <Route path="/over-extra" component={OverExtra} />
+        <Route path="/onze-werkwijze" component={HoeExtraWerkt} />
+        <Route path="/ons-team" component={OnsTeam} />
+        <Route path="/beloningssysteem" component={Extraatje} />
+        <Route path="/klantcases-horeca" component={KlantcasesHoreca} />
+
+        {/* Overige publieke routes */}
         <Route path="/personeel-gezocht" component={PersoneelGezocht} />
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
         <Route path="/aanmelden" component={Aanmelden} />
-        <Route path="/nieuws" component={NieuwsPage} />
-        <Route path="/nieuws/:slug" component={NieuwsArtikel} />
         <Route path="/extraatje" component={Extraatje} />
         <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
         <Route path="/ik-zoek-extra-werk" component={IkZoekExtraWerk} />
         <Route path="/hoe-werkt-dagbetaling" component={HoeWerktDagbetaling} />
-        <Route path="/over-extra/ons-team" component={OnsTeam} />
-        <Route path="/over-extra" component={OverExtra} />
+        <Route path="/contact" component={Contact} />
         <Route path="/dashboard-mockup" component={DashboardMockup} />
-        
-        {/* Gebruiker routes */}
-        <Route path="/dashboard">
-          {() => <ProtectedRoute component={Dashboard} />}
-        </Route>
-        <Route path="/profile">
-          {() => <ProtectedRoute component={UserProfile} />}
-        </Route>
-        <Route path="/rewards">
-          {() => <ProtectedRoute component={Rewards} />}
-        </Route>
-        <Route path="/employee/rewards/:id">
-          {() => <ProtectedRoute component={RewardDetail} />}
-        </Route>
-        <Route path="/history">
-          {() => <ProtectedRoute component={History} />}
-        </Route>
-        <Route path="/leaderboard">
-          {() => <ProtectedRoute component={LeaderboardPage} />}
-        </Route>
-        
+
+        {/* Beschermde routes */}
+        <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
+        <Route path="/profile">{() => <ProtectedRoute component={UserProfile} />}</Route>
+        <Route path="/rewards">{() => <ProtectedRoute component={Rewards} />}</Route>
+        <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>
+        <Route path="/history">{() => <ProtectedRoute component={History} />}</Route>
+        <Route path="/leaderboard">{() => <ProtectedRoute component={LeaderboardPage} />}</Route>
+
         <Route component={NotFound} />
       </Switch>
     </>

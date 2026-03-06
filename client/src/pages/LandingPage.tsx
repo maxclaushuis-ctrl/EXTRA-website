@@ -52,7 +52,7 @@ function useScrollReveal() {
   return { ref, isVisible };
 }
 
-function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+export function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const { ref, isVisible } = useScrollReveal();
   return (
     <div
@@ -83,7 +83,7 @@ function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suf
   return <span ref={ref}>{hasDecimal ? count.toFixed(1).replace('.', ',') : count.toLocaleString("nl-NL")}{suffix}</span>;
 }
 
-function XPatternBg({ className = "", count = 3, opacity = 0.12, color = "rgba(139,92,246,1)" }: { className?: string; count?: number; opacity?: number; color?: string }) {
+export function XPatternBg({ className = "", count = 3, opacity = 0.12, color = "rgba(139,92,246,1)" }: { className?: string; count?: number; opacity?: number; color?: string }) {
   const positions = [
     { left: "5%", top: "10%", size: 200, rotate: 15 },
     { left: "80%", top: "20%", size: 160, rotate: -25 },

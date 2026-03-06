@@ -1,0 +1,230 @@
+Je bent een senior SEO-specialist, UX-architect en front-end developer. Optimaliseer de menustructuur, URL-structuur en paginahiërarchie van de nieuwe website van EXTRA.
+
+BELANGRIJK:
+- De menunamen “Ik zoek extra personeel” en “Ik zoek extra werk” moeten in het hoofdmenu zichtbaar blijven.
+- De URL’s mogen wél SEO-technisch worden aangepast met de juiste zoekwoorden.
+- De website moet een goede balans houden tussen:
+  1. een strak, modern en overzichtelijk design
+  2. goede vindbaarheid in Google
+- De website moet logisch en duidelijk navigeerbaar blijven voor zowel opdrachtgevers als kandidaten.
+- Voeg niet onnodig veel tekst toe op de zichtbare designpagina’s; werk slim met aparte SEO-landingspagina’s waar nodig.
+
+DOEL:
+De website beter laten ranken op zoekwoorden zoals:
+- horeca uitzendbureau amsterdam
+- horeca personeel amsterdam
+- horeca personeel
+- flexibel horeca personeel
+- hotel personeel
+- evenementen personeel
+- horeca werk amsterdam
+- horeca vacatures amsterdam
+- housekeeping vacatures
+- chef vacatures
+- front office vacatures
+
+HUIDIGE PAGINA’S:
+- Home
+- Ik zoek extra personeel
+  - Hotels
+  - Eventlocaties
+  - Cateraars
+  - Restaurants
+- Ik zoek extra werk
+  - Horeca
+  - Housekeeping
+  - Chefs
+  - Front-office
+- Over EXTRA
+  - Onze werkwijze
+  - Klantcases
+  - Ons beloningssysteem
+  - Ons team
+- Personeelsaanvraag
+- Aanmelden
+- Nieuws / blogs
+- Reviews
+- FAQ
+
+OPDRACHT:
+Voer de volgende optimalisaties door:
+
+1. MENUSTRUCTUUR
+Behoud in het hoofdmenu exact deze benamingen:
+- Home
+- Ik zoek extra personeel
+- Ik zoek extra werk
+- Over EXTRA
+- Nieuws / blogs
+- Contact
+
+Onder “Ik zoek extra personeel” moeten de subpagina’s logisch blijven voor opdrachtgevers.
+Onder “Ik zoek extra werk” moeten de subpagina’s logisch blijven voor kandidaten.
+
+2. SEO-VRIENDELIJKE URL-STRUCTUUR
+Pas de URL’s aan zodat ze beter aansluiten op zoekgedrag, zonder de zichtbare menunamen te wijzigen.
+
+Gebruik bij voorkeur deze structuur:
+
+HOME
+/
+
+IK ZOEK EXTRA PERSONEEL
+Zichtbare menu naam:
+Ik zoek extra personeel
+SEO slug:
+/horeca-personeel-inhuren
+
+Subpagina’s:
+Hotels:
+/hotel-personeel-amsterdam
+Eventlocaties:
+/evenementen-personeel-amsterdam
+Cateraars:
+/catering-personeel-amsterdam
+Restaurants:
+/restaurant-personeel-amsterdam
+
+Voeg daarnaast SEO-landingspagina’s toe die niet per se in het hoofdmenu hoeven:
+- /horeca-uitzendbureau-amsterdam
+- /horeca-personeel-amsterdam
+- /flexibel-horeca-personeel
+- /horeca-personeel-inhuren
+
+IK ZOEK EXTRA WERK
+Zichtbare menu naam:
+Ik zoek extra werk
+SEO slug:
+/horeca-vacatures-amsterdam
+
+Subpagina’s:
+Horeca:
+/horeca-werk-amsterdam
+Housekeeping:
+/housekeeping-vacatures-amsterdam
+Chefs:
+/chef-vacatures-amsterdam
+Front-office:
+/front-office-vacatures-amsterdam
+
+Voeg daarnaast eventueel SEO-landingspagina’s toe die niet per se in het hoofdmenu hoeven:
+- /werken-in-de-horeca-amsterdam
+- /flexibel-horeca-werk-amsterdam
+
+OVER EXTRA
+Zichtbare menu naam:
+Over EXTRA
+SEO slug:
+/over-extra
+
+Subpagina’s:
+Onze werkwijze:
+/onze-werkwijze
+Klantcases:
+/klantcases-horeca
+Ons beloningssysteem:
+/beloningssysteem
+Ons team:
+/ons-team
+
+OVERIGE PAGINA’S
+Personeelsaanvraag:
+/personeelsaanvraag
+Aanmelden:
+/aanmelden
+Nieuws / blogs:
+/blog
+Reviews:
+/reviews
+FAQ:
+/faq
+Contact:
+/contact
+
+3. PAGINA-ARCHITECTUUR
+Zorg voor een duidelijke hiërarchie:
+- Designpagina’s blijven kort, visueel en conversiegericht
+- SEO-landingspagina’s mogen uitgebreider zijn en zijn bedoeld om via Google verkeer binnen te halen
+- SEO-landingspagina’s hoeven niet allemaal in het hoofdmenu te staan
+- Verbind designpagina’s en SEO-pagina’s slim met interne links
+
+4. INTERNE LINKSTRUCTUUR
+Zorg dat de belangrijkste pagina’s intern goed aan elkaar gekoppeld worden.
+
+Belangrijkste SEO-pillar pagina:
+- /horeca-uitzendbureau-amsterdam
+
+Deze pagina moet intern gelinkt worden vanaf:
+- Home
+- Ik zoek extra personeel
+- Hotels
+- Eventlocaties
+- Cateraars
+- Restaurants
+- relevante blogs
+
+Zorg ook voor interne links tussen:
+- /horeca-personeel-amsterdam
+- /horeca-personeel-inhuren
+- /flexibel-horeca-personeel
+- /hotel-personeel-amsterdam
+- /evenementen-personeel-amsterdam
+- /catering-personeel-amsterdam
+- /restaurant-personeel-amsterdam
+
+En aan kandidaatkant tussen:
+- /horeca-vacatures-amsterdam
+- /horeca-werk-amsterdam
+- /housekeeping-vacatures-amsterdam
+- /chef-vacatures-amsterdam
+- /front-office-vacatures-amsterdam
+
+5. UX-RICHTLIJNEN
+- Houd de zichtbare pagina’s clean en modern
+- Vermijd lange lappen tekst op hoofdpagina’s
+- Werk met duidelijke secties, cards en korte intro’s
+- Gebruik op designpagina’s korte SEO-intro’s van circa 80–150 woorden per sectie
+- Gebruik duidelijke CTA’s zoals:
+  - Personeel aanvragen
+  - Plan een kennismaking
+  - Meld je aan
+  - Bekijk vacatures
+
+6. SEO-RICHTLIJNEN
+- Zorg dat elke pagina een unieke title tag en meta description krijgt
+- Zorg voor 1 duidelijke H1 per pagina
+- Gebruik H2’s op basis van zoekintentie
+- Maak schone slugs zonder overbodige woorden
+- Voeg breadcrumb structuur toe
+- Zorg dat canonical tags goed staan
+- Update sitemap.xml automatisch
+- Gebruik structured data waar relevant
+- Zorg dat alle pagina’s technisch indexeerbaar zijn
+
+7. BLOG- EN CONTENTSTRATEGIE
+Richt de blogsectie zo in dat blogs intern linken naar de belangrijkste SEO-landingspagina’s.
+Focus vooral op artikelen die linken naar:
+- /horeca-uitzendbureau-amsterdam
+- /horeca-personeel-amsterdam
+- /horeca-personeel-inhuren
+- /hotel-personeel-amsterdam
+- /evenementen-personeel-amsterdam
+- /horeca-vacatures-amsterdam
+
+8. OPLEVERING
+Voer dit niet alleen conceptueel uit, maar werk het ook technisch uit in de website-structuur.
+
+Ik wil als output van jou:
+1. De definitieve sitemap
+2. De definitieve menu-opbouw
+3. De aangepaste slug-structuur per pagina
+4. Suggesties voor redirects van oude URL’s naar nieuwe URL’s
+5. Een voorstel voor interne links tussen de belangrijkste pagina’s
+6. Advies welke SEO-landingspagina’s zichtbaar in het menu moeten staan en welke niet
+7. Een implementatie die direct klaarstaat in Replit
+
+Belangrijk:
+- Geen overkill aan pagina’s in het menu
+- Wel maximale SEO-kansen onder de motorkap
+- Altijd vanuit de balans tussen conversie, design en ranking denken
+- De website moet premium, overzichtelijk en modern blijven aanvoelen

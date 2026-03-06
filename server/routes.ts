@@ -5411,20 +5411,37 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
       const { posts } = await storage.getBlogPosts({ status: 'published', limit: 500 });
       const baseUrl = 'https://www.doehetextra.nl';
       const staticPages = [
+        // Hoofdpagina's
         { url: '/', priority: '1.0', changefreq: 'weekly' },
-        { url: '/nieuws', priority: '0.9', changefreq: 'daily' },
-        { url: '/over-extra', priority: '0.8', changefreq: 'monthly' },
-        { url: '/over-extra/ons-team', priority: '0.7', changefreq: 'monthly' },
-        { url: '/hoe-extra-werkt', priority: '0.8', changefreq: 'monthly' },
-        { url: '/ik-zoek-extra-werk', priority: '0.8', changefreq: 'weekly' },
-        { url: '/aanmelden', priority: '0.9', changefreq: 'monthly' },
+        { url: '/landing', priority: '0.9', changefreq: 'weekly' },
+        // SEO pillar pagina's
         { url: '/horeca-uitzendbureau-amsterdam', priority: '1.0', changefreq: 'weekly' },
-        { url: '/horeca-personeel-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/horeca-personeel-amsterdam', priority: '0.95', changefreq: 'weekly' },
         { url: '/horeca-personeel', priority: '0.9', changefreq: 'weekly' },
-        { url: '/evenementen-personeel', priority: '0.8', changefreq: 'weekly' },
-        { url: '/hotel-personeel', priority: '0.8', changefreq: 'weekly' },
-        { url: '/flexibel-horeca-personeel', priority: '0.8', changefreq: 'weekly' },
-        { url: '/werkgevers', priority: '0.9', changefreq: 'monthly' },
+        { url: '/flexibel-horeca-personeel', priority: '0.9', changefreq: 'weekly' },
+        // Werkgever routes
+        { url: '/horeca-personeel-inhuren', priority: '0.95', changefreq: 'weekly' },
+        { url: '/hotel-personeel-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/evenementen-personeel-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/catering-personeel-amsterdam', priority: '0.85', changefreq: 'weekly' },
+        { url: '/restaurant-personeel-amsterdam', priority: '0.85', changefreq: 'weekly' },
+        { url: '/personeelsaanvraag', priority: '0.9', changefreq: 'monthly' },
+        // Kandidaat routes
+        { url: '/horeca-vacatures-amsterdam', priority: '0.95', changefreq: 'weekly' },
+        { url: '/horeca-werk-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/housekeeping-vacatures-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/chef-vacatures-amsterdam', priority: '0.85', changefreq: 'weekly' },
+        { url: '/front-office-vacatures-amsterdam', priority: '0.85', changefreq: 'weekly' },
+        { url: '/aanmelden', priority: '0.9', changefreq: 'monthly' },
+        // Over EXTRA
+        { url: '/over-extra', priority: '0.8', changefreq: 'monthly' },
+        { url: '/ons-team', priority: '0.7', changefreq: 'monthly' },
+        { url: '/onze-werkwijze', priority: '0.8', changefreq: 'monthly' },
+        { url: '/beloningssysteem', priority: '0.8', changefreq: 'monthly' },
+        { url: '/klantcases-horeca', priority: '0.75', changefreq: 'monthly' },
+        { url: '/contact', priority: '0.8', changefreq: 'monthly' },
+        // Blog
+        { url: '/blog', priority: '0.9', changefreq: 'daily' },
       ];
       const today = new Date().toISOString().split('T')[0];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -5436,7 +5453,7 @@ ${staticPages.map(p => `  <url>
     <priority>${p.priority}</priority>
   </url>`).join('\n')}
 ${posts.map(p => `  <url>
-    <loc>${baseUrl}/nieuws/${p.slug}</loc>
+    <loc>${baseUrl}/blog/${p.slug}</loc>
     <lastmod>${(p.publishedAt || p.createdAt)?.toISOString().split('T')[0] || today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
