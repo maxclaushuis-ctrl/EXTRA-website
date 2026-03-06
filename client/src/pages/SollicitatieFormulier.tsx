@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -309,9 +310,7 @@ export default function SollicitatieFormulier() {
       <div className="bg-purple-600 text-white py-4 px-6 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-white text-purple-600 font-bold text-xl px-3 py-1 rounded">
-              EXTRA
-            </div>
+            <img src={extraLogoWit} alt="EXTRA" className="h-7 w-auto" />
             <span className="text-lg font-medium">Sollicitatieformulier</span>
           </div>
           <span className="text-purple-200 text-sm">
