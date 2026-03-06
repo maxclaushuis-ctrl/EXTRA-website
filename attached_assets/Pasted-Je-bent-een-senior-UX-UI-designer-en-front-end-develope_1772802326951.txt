@@ -1,0 +1,121 @@
+Je bent een senior UX/UI designer en front-end developer. Optimaliseer de footer van de EXTRA website zodat deze visueel sterker, professioneler en conversiegerichter wordt, terwijl hij volledig past binnen de bestaande huisstijl van de site.
+
+Doel:
+- De footer moet beter aansluiten op de paarse sectie erboven
+- De footer moet meer vertrouwen uitstralen
+- De footer moet functioneel sterker worden voor zowel werkgevers als werkzoekenden
+- De footer moet beter bijdragen aan conversie, interne linking en merkbeleving
+- De footer moet één geheel vormen met de rest van de website
+
+Belangrijke uitgangspunten:
+- Behoud de bestaande EXTRA-stijl: modern, strak, energiek, jong, premium en duidelijk
+- Geen standaard of generieke SaaS-footer maken
+- Gebruik dezelfde vormentaal, spacing, kleuren en uitstraling als de rest van de website
+- De footer moet rustig ogen, maar wel duidelijk genoeg zijn om snel scanbaar te zijn
+- Werk desktop-first uit, maar zorg ook dat het goed responsive werkt op tablet en mobiel
+
+Design-aanpassingen:
+1. Maak de overgang tussen de paarse sectie en de footer vloeiender
+- De huidige zwarte footer voelt te hard afgesneden onder het paars
+- Gebruik daarom geen hard zwart vlak, maar een subtiele donkere overgang vanuit paars naar zeer donker paars / bijna zwart
+- Bijvoorbeeld via een gradient of een donkerpaarse achtergrondkleur die beter blendt met de vorige sectie
+- Zorg dat dit premium en rustig oogt
+
+2. Verbeter de visuele opbouw van de footer
+- Meer balans in witruimte, kolombreedtes en verticale spacing
+- Maak de footer overzichtelijker en sterker hiërarchisch opgebouwd
+- Gebruik duidelijke kolomtitels en consistente uitlijning
+- Zorg dat belangrijke onderdelen sneller scanbaar zijn
+- Houd voldoende padding boven en onder de footer zodat hij luchtiger en chiquer aanvoelt
+
+Inhoud van de footer:
+Behoud de footer als multi-column layout, maar optimaliseer de inhoud en volgorde.
+
+Kolom 1: EXTRA merkblok
+- EXTRA logo
+- Korte merkomschrijving die beter en scherper geformuleerd is dan de huidige tekst
+- Focus op horeca, hotels en events
+- Houd de tekst kort, krachtig en passend bij de tone of voice van EXTRA
+- Voeg social links/icons toe als die al beschikbaar zijn of logisch zijn binnen het ontwerp:
+  - Instagram
+  - LinkedIn
+  - eventueel TikTok als dit al past binnen de rest van de website
+
+Kolom 2: Werkgevers
+Neem hier logische links op voor werkgevers, zoals:
+- Personeel aanvragen
+- Hoe het werkt
+- Waarom EXTRA
+- eventueel relevante pagina’s voor werkgevers als die al bestaan
+
+Kolom 3: Werkzoekenden
+Neem hier logische links op voor werkzoekenden, zoals:
+- Solliciteren
+- Diensten
+- EXTRAATJE rewards
+- eventueel andere relevante kandidaatpagina’s als die al bestaan
+
+Kolom 4: Bedrijf / contact / vertrouwen
+Voeg hier onderdelen toe die vertrouwen geven en zakelijk sterker zijn:
+- Contact
+- E-mailadres
+- Locatie: Amsterdam, Nederland
+- Privacybeleid
+- Algemene voorwaarden
+- Cookiebeleid
+- eventueel “Over EXTRA” als die pagina bestaat
+
+Trust en credibility:
+- Verwerk de bestaande NEN 4400-1 vermelding netter en visueel sterker in de footer
+- Laat deze eruitzien als een trust-badge of nette certificering, niet als los element
+- Voeg ruimte toe voor extra trust-elementen of keurmerken indien relevant
+- Zorg dat dit geheel subtiel maar professioneel overkomt
+
+Conversie:
+- Voeg minimaal 1 subtiele maar duidelijke CTA toe in de footer
+- Bijvoorbeeld gericht op werkgevers:
+  “Personeel nodig?”
+  “Vraag extra personeel aan”
+- Of gericht op werkzoekenden:
+  “Op zoek naar extra werk?”
+  “Solliciteer direct”
+- Kies de CTA die het best past bij de huidige opbouw van de site
+- De CTA moet opvallen, maar niet schreeuwerig zijn
+- Gebruik dezelfde buttonstijl als de rest van de website
+
+Copy:
+- Herschrijf de bestaande footerteksten waar nodig zodat ze beter, scherper en professioneler zijn
+- Tone of voice moet passen bij EXTRA:
+  - jong en modern
+  - duidelijk
+  - niet te formeel
+  - wel professioneel
+  - geen standaard AI-copy
+- Houd de teksten compact
+
+SEO / structuur:
+- Gebruik semantisch nette footer-structuur
+- Zorg voor goede interne linking naar belangrijke pagina’s
+- Gebruik correcte headings / labels waar logisch
+- Footer moet functioneel bijdragen aan gebruiksvriendelijkheid en SEO
+
+Technisch:
+- Pas de bestaande footer aan, geen compleet los ontwerp dat niet aansluit op de rest van de site
+- Hergebruik waar mogelijk bestaande componenten, button styles, spacing system en kleuren
+- Zorg dat de footer responsive is:
+  - desktop: duidelijke kolommen
+  - tablet: logische herverdeling
+  - mobiel: nette stack zonder rommelig gevoel
+- Let op hover states van links en buttons
+- Houd contrast en leesbaarheid goed
+
+Belangrijk:
+- Maak het visueel mooier én inhoudelijk slimmer
+- Niet alleen “opvullen”, maar echt optimaliseren vanuit UX en conversie
+- Laat de footer voelen als een volwaardig, sterk onderdeel van de website
+- Geen andere delen van de website aanpassen, alleen de footer en de overgang ernaartoe
+
+Output:
+- Voer de aanpassingen direct door in de bestaande codebase
+- Laat zien welke onderdelen je hebt aangepast
+- Als bepaalde pagina’s of links nog niet bestaan, gebruik dan alleen links die al bestaan of zet nette placeholders klaar die later eenvoudig gekoppeld kunnen worden
