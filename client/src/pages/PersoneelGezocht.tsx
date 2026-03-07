@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import PublicFooter from "@/components/PublicFooter";
 import {
   Users, Gift, Star, ChevronDown, ChevronUp,
   TrendingUp, Shield, Clock, Trophy,
@@ -919,57 +920,7 @@ export default function PersoneelGezocht() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-gray-950 text-gray-400 py-14 sm:py-20">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-14">
-            <div className="col-span-2 md:col-span-1">
-              <a href="/landing" className="flex items-center mb-4 sm:mb-5">
-                <img src={extraLogoWit} alt="EXTRA Horecapersoneel" className="h-6 sm:h-7 w-auto" />
-              </a>
-              <p className="text-sm sm:text-base leading-relaxed">
-                Uitzendbureau voor horeca, hotels en evenementen. Met ons unieke EXTRAATje beloningssysteem.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Werkgevers</h4>
-              <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
-                <li><button onClick={() => scrollTo("cta")} className="hover:text-purple-400 transition-colors">Vraag EXTRA personeel aan</button></li>
-                <li><button onClick={() => scrollTo("werkwijze")} className="hover:text-purple-400 transition-colors">Hoe het werkt</button></li>
-                <li><button onClick={() => scrollTo("usp")} className="hover:text-purple-400 transition-colors">Waarom EXTRA</button></li>
-                <li><button onClick={() => scrollTo("cases")} className="hover:text-purple-400 transition-colors">Klantcases</button></li>
-                <li><a href="/landing" className="hover:text-purple-400 transition-colors">Homepage</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Werkzoekenden</h4>
-              <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
-                <li><a href="/aanmelden" className="hover:text-purple-400 transition-colors">Solliciteren</a></li>
-                <li><button onClick={() => scrollTo("rewards")} className="hover:text-purple-400 transition-colors">EXTRAATje Rewards</button></li>
-                <li><a href="/landing" className="hover:text-purple-400 transition-colors">Over EXTRA</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-bold text-base sm:text-lg mb-4 sm:mb-5">Contact</h4>
-              <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base">
-                <li>info@doehetextra.nl</li>
-                <li>Amsterdam, Nederland</li>
-                <li className="pt-2">
-                  <a href="https://instagram.com/doehetextra" target="_blank" rel="noopener noreferrer" className="hover:text-purple-400 transition-colors">
-                    Instagram @doehetextra
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm">&copy; 2026 EXTRA Uitzendbureau. Alle rechten voorbehouden.</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs bg-purple-900/50 text-purple-300 px-3 py-1 rounded-full border border-purple-800/30">NEN 4400-1</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",

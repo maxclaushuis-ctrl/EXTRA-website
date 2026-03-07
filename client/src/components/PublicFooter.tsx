@@ -115,7 +115,7 @@ export default function PublicFooter() {
               <ul className="space-y-3">
                 {[
                   { label: "Personeel aanvragen", href: "/personeelsaanvraag" },
-                  { label: "Hoe het werkt", href: "/onze-werkwijze" },
+                  { label: "Hoe het werkt", href: "/horeca-uitzendbureau-amsterdam-werkwijze" },
                   { label: "Waarom EXTRA", href: "/horeca-uitzendbureau-amsterdam" },
                   { label: "Horeca personeel", href: "/horeca-personeel-amsterdam" },
                   { label: "Hotel personeel", href: "/hotel-personeel-amsterdam" },

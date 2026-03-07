@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
+import PublicFooter from "@/components/PublicFooter";
 import {
   ArrowRight, ChevronDown, ChevronRight, Clock, Menu, X,
   Zap, Shield, Eye, CalendarCheck, CheckCircle2, Smartphone,
@@ -551,21 +552,7 @@ export default function HoeWerktDagbetaling() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-gray-950 text-white py-12">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <img src={extraLogoWit} alt="EXTRA" className="h-8 w-auto opacity-80" />
-            <div className="flex flex-wrap gap-6 text-sm text-gray-400">
-              <Link href="/ik-zoek-extra-werk" className="hover:text-purple-400 transition-colors">Ik zoek werk</Link>
-              <Link href="/extraatje" className="hover:text-purple-400 transition-colors">EXTRAATJE</Link>
-              <Link href="/hoe-extra-werkt" className="hover:text-purple-400 transition-colors">Werkwijze</Link>
-              <Link href="/over-extra/ons-team" className="hover:text-purple-400 transition-colors">Ons team</Link>
-              <Link href="/aanmelden" className="hover:text-purple-400 transition-colors">Aanmelden</Link>
-            </div>
-            <p className="text-xs text-gray-600">© {new Date().getFullYear()} EXTRA. Alle rechten voorbehouden.</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

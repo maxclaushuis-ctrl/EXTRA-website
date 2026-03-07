@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
+import PublicFooter from "@/components/PublicFooter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, Tag } from "lucide-react";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
@@ -387,18 +388,7 @@ export default function NieuwsArtikel() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-[#0a0310] py-10">
-          <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Link href="/landing"><img src={extraLogoWit} alt="EXTRA" className="h-7" /></Link>
-            <div className="flex gap-6 text-sm">
-              <Link href="/nieuws" className="text-purple-300/60 hover:text-white transition-colors">Nieuws</Link>
-              <Link href="/werkgevers" className="text-purple-300/60 hover:text-white transition-colors">Werkgevers</Link>
-              <Link href="/aanmelden" className="text-purple-300/60 hover:text-white transition-colors">Aanmelden</Link>
-            </div>
-            <p className="text-purple-300/30 text-xs">&copy; {new Date().getFullYear()} EXTRA.</p>
-          </div>
-        </footer>
+        <PublicFooter />
       </div>
     );
   }
@@ -633,21 +623,7 @@ export default function NieuwsArtikel() {
         </div>
       </div>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-[#0a0310] py-10 sm:py-14">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
-            <img src={extraLogoWit} alt="EXTRA" className="h-7" />
-            <div className="flex flex-wrap justify-center gap-5 text-sm">
-              <Link href="/landing" className="text-purple-300/60 hover:text-white transition-colors">Home</Link>
-              <Link href="/nieuws" className="text-purple-300/60 hover:text-white transition-colors">Nieuws</Link>
-              <Link href="/personeel-gezocht" className="text-purple-300/60 hover:text-white transition-colors">Personeel gezocht</Link>
-              <Link href="/aanmelden" className="text-purple-300/60 hover:text-white transition-colors">Aanmelden</Link>
-            </div>
-            <p className="text-purple-300/30 text-xs">&copy; {new Date().getFullYear()} EXTRA.</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

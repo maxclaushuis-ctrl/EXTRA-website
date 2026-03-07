@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
+import PublicFooter from "@/components/PublicFooter";
 import {
   Users, Heart, Zap, Star, ArrowRight, ChevronRight,
   Shield, TrendingUp, Sparkles, Award, Check, Gift
@@ -427,16 +428,7 @@ export default function OverExtra() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="py-8 border-t border-purple-100 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-center gap-6 text-xs text-gray-400 flex-wrap">
-          <Link href="/landing" className="hover:text-purple-600 transition-colors">Home</Link>
-          <Link href="/over-extra/ons-team" className="hover:text-purple-600 transition-colors">Ons team</Link>
-          <Link href="/extraatje" className="hover:text-purple-600 transition-colors">EXTRAATJE</Link>
-          <Link href="/aanmelden" className="hover:text-purple-600 transition-colors">Aanmelden</Link>
-          <span>© 2025 EXTRA Hospitality Staffing</span>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

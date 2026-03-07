@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
+import PublicFooter from "@/components/PublicFooter";
 import {
   ArrowRight, ChevronRight, Zap, Phone, UserCheck, Clock,
   TrendingUp, MessageCircle, Briefcase, Gift, Star,
@@ -543,17 +544,7 @@ export default function HoeExtraWerkt() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="py-8 border-t border-purple-100 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-center gap-6 text-xs text-gray-400 flex-wrap">
-          <Link href="/landing" className="hover:text-purple-600 transition-colors">Home</Link>
-          <Link href="/over-extra" className="hover:text-purple-600 transition-colors">Over EXTRA</Link>
-          <Link href="/extraatje" className="hover:text-purple-600 transition-colors">EXTRAATJE</Link>
-          <Link href="/aanmelden" className="hover:text-purple-600 transition-colors">Aanmelden</Link>
-          <Link href="/personeelsaanvraag" className="hover:text-purple-600 transition-colors">Personeel aanvragen</Link>
-          <span>© 2025 EXTRA Hospitality Staffing</span>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

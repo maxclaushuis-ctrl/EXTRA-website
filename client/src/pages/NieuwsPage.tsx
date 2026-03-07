@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
+import PublicFooter from "@/components/PublicFooter";
 import { ArrowRight, Sparkles, ChevronLeft, Phone, Menu, X, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
@@ -312,26 +313,7 @@ export default function NieuwsPage() {
         </div>
       </section>
 
-      <footer className="relative py-12 sm:py-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#12071f] to-[#0a0310]" />
-        <XPatternBg count={3} opacity={0.05} color="rgba(168,85,247,0.5)" />
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <Link href="/landing">
-              <img src={extraLogoWit} alt="EXTRA" className="h-8" />
-            </Link>
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
-              <Link href="/landing" className="text-purple-300/60 hover:text-white transition-colors">Home</Link>
-              <Link href="/personeel-gezocht" className="text-purple-300/60 hover:text-white transition-colors">Personeel gezocht</Link>
-              <Link href="/aanmelden" className="text-purple-300/60 hover:text-white transition-colors">Aanmelden</Link>
-              <Link href="/landing#contact" className="text-purple-300/60 hover:text-white transition-colors">Contact</Link>
-            </div>
-            <p className="text-purple-300/30 text-xs">
-              &copy; {new Date().getFullYear()} EXTRA. Alle rechten voorbehouden.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
