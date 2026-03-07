@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import compression from "compression";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { registerRoutes } from "./routes";
+import { registerRoutes, pingGoogleSitemap } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 import { sendCvReminderEmail } from "./mail";
@@ -197,7 +197,10 @@ function scheduleBlogAutoPublish() {
   async function runPublishCheck() {
     try {
       const published = await storage.publishScheduledBlogPosts();
-      if (published > 0) log(`Blog auto-publish: ${published} artikel(en) gepubliceerd`);
+      if (published > 0) {
+        log(`Blog auto-publish: ${published} artikel(en) gepubliceerd`);
+        pingGoogleSitemap();
+      }
     } catch (err) {
       console.error("Fout bij blog auto-publish:", err);
     }

@@ -239,6 +239,18 @@ async function scheduleBirthdayCheck() {
   }, timeUntilNextCheck);
 }
 
+async function pingGoogleSitemap() {
+  const sitemapUrl = 'https://www.doehetextra.nl/sitemap.xml';
+  try {
+    const res = await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`);
+    console.log(`Google sitemap ping: ${res.status}`);
+  } catch (err) {
+    console.warn('Google sitemap ping mislukt:', err);
+  }
+}
+
+export { pingGoogleSitemap };
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize mail service
   const mailServiceInitialized = initMailService();
@@ -5316,6 +5328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const post = await storage.updateBlogPost(id, { status: 'published', publishedAt: new Date() });
       if (!post) return res.status(404).json({ error: 'Niet gevonden' });
+      pingGoogleSitemap();
       res.json(post);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
