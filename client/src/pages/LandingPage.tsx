@@ -854,7 +854,7 @@ export default function LandingPage() {
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "over" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[260px]">
                     {[
-                      { label: "Onze werkwijze", action: () => scrollTo("how-it-works"), icon: Clock },
+                      { label: "Onze werkwijze", action: () => { window.location.href = "/horeca-uitzendbureau-amsterdam-werkwijze"; }, icon: Clock },
                       { label: "Klantcases", action: () => scrollTo("differentiators"), icon: Trophy },
                       { label: "Ons beloningssysteem", action: () => scrollTo("rewards"), icon: Gift },
                       { label: "Ons team", action: () => { window.location.href = "/over-extra/ons-team"; }, icon: Users },
@@ -870,13 +870,13 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Contact CTA */}
+              {/* CTA */}
               <a
                 href="/personeelsaanvraag"
-                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[18px] font-bold px-8 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2.5 border border-purple-500/20"
+                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[15px] font-bold px-7 py-3 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2 border border-purple-500/20"
               >
-                <Phone className="w-[18px] h-[18px]" />
-                Contact
+                <Phone className="w-[16px] h-[16px]" />
+                Personeel aanvragen
               </a>
             </div>
             <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -1397,7 +1397,7 @@ export default function LandingPage() {
           <RevealSection delay={300}>
             <div className="flex justify-center mt-10 sm:mt-12">
               <a
-                href="/hoe-extra-werkt"
+                href="/horeca-uitzendbureau-amsterdam-werkwijze"
                 className="inline-flex items-center gap-2 font-bold px-7 py-3.5 rounded-full text-white text-sm sm:text-base transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-500/25"
                 style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
               >
