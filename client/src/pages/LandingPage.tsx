@@ -1364,10 +1364,10 @@ export default function LandingPage() {
           <RevealSection delay={200}>
             {(() => {
               const steps = howItWorksTab === "werkgever" ? [
-                { icon: Phone, step: "1", title: "Neem contact op", desc: "Bel of stuur je aanvraag. Wij schakelen snel.", color: "from-purple-500 to-purple-700" },
-                { icon: UserCheck, step: "2", title: "Wij selecteren", desc: "Passend en beoordeeld personeel uit onze pool.", color: "from-indigo-500 to-purple-600" },
-                { icon: Clock, step: "3", title: "Planning & inzet", desc: "Op tijd geregeld. Ook last-minute als het moet.", color: "from-blue-500 to-indigo-600" },
-                { icon: TrendingUp, step: "4", title: "Evaluatie", desc: "Beoordeel en bouw een vaste poule op.", color: "from-emerald-500 to-teal-600" },
+                { icon: Phone, step: "1", title: "Neem contact op", desc: "Bel ons of stuur je aanvraag in.", color: "from-purple-500 to-purple-700" },
+                { icon: UserCheck, step: "2", title: "Kennismaking & behoefte", desc: "We bespreken je vraag en pijnpunten.", color: "from-indigo-500 to-purple-600" },
+                { icon: Clock, step: "3", title: "Selectie & inzet", desc: "Wij selecteren en plannen passend personeel.", color: "from-blue-500 to-indigo-600" },
+                { icon: TrendingUp, step: "4", title: "Evaluatie & vaste pool", desc: "We verwerken feedback en bouwen je favorietenpoule op.", color: "from-emerald-500 to-teal-600" },
               ] : [
                 { icon: UserCheck, step: "1", title: "Meld je aan", desc: "Schrijf je in via het formulier.", color: "from-purple-500 to-purple-700" },
                 { icon: MessageCircle, step: "2", title: "Kom op gesprek", desc: "We maken kennis en checken wat bij je past.", color: "from-violet-500 to-purple-600" },
