@@ -62,11 +62,21 @@ function RevealDiv({ children, delay = 0, className = "" }: { children: React.Re
   );
 }
 
+const FUNCTION_OPTIONS = [
+  "Bediening",
+  "Bar",
+  "Keuken / Chef",
+  "Housekeeping",
+  "Front Office",
+];
+
 const formSchema = z.object({
   companyName: z.string().min(1, "Bedrijfsnaam is verplicht"),
   contactName: z.string().min(1, "Naam is verplicht"),
   phone: z.string().min(8, "Voer een geldig telefoonnummer in"),
   email: z.string().email("Voer een geldig e-mailadres in"),
+  locationName: z.string().optional(),
+  functions: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
 });
 
@@ -103,7 +113,7 @@ export default function PersoneelsAanvraag() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { companyName: "", contactName: "", phone: "", email: "", notes: "" },
+    defaultValues: { companyName: "", contactName: "", phone: "", email: "", locationName: "", functions: [], notes: "" },
   });
 
   const mutation = useMutation({
@@ -112,8 +122,7 @@ export default function PersoneelsAanvraag() {
         method: "POST",
         body: JSON.stringify({
           ...data,
-          locationType: "Niet opgegeven",
-          functions: [],
+          locationType: data.locationName ? "Overig" : "Niet opgegeven",
         }),
       });
     },
@@ -261,17 +270,65 @@ export default function PersoneelsAanvraag() {
                       </div>
                     </div>
 
+                    {/* Stad / Locatienaam */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Stad of locatienaam{" "}
+                        <span className="text-gray-400 font-normal">(optioneel)</span>
+                      </label>
+                      <input
+                        {...form.register("locationName")}
+                        className={inputClass(false, form.formState.dirtyFields.locationName)}
+                        placeholder="Bijv. Amsterdam, Hotel V"
+                        autoComplete="address-level2"
+                      />
+                    </div>
+
+                    {/* Functies */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Welk type personeel zoek je?{" "}
+                        <span className="text-gray-400 font-normal">(optioneel, meerdere mogelijk)</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {FUNCTION_OPTIONS.map((fn) => {
+                          const selected = (form.watch("functions") ?? []).includes(fn);
+                          return (
+                            <button
+                              key={fn}
+                              type="button"
+                              onClick={() => {
+                                const current = form.getValues("functions") ?? [];
+                                form.setValue(
+                                  "functions",
+                                  selected ? current.filter((f) => f !== fn) : [...current, fn],
+                                  { shouldDirty: true }
+                                );
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                                selected
+                                  ? "bg-purple-600 border-purple-600 text-white shadow-sm"
+                                  : "bg-white border-gray-200 text-gray-600 hover:border-purple-400 hover:text-purple-600"
+                              }`}
+                            >
+                              {fn}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* Toelichting (optioneel) */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Waar kunnen we je mee helpen?{" "}
+                        Toelichting{" "}
                         <span className="text-gray-400 font-normal">(optioneel)</span>
                       </label>
                       <textarea
                         {...form.register("notes")}
                         rows={3}
                         className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-base resize-none"
-                        placeholder="Bijv. bediening voor een event, housekeeping voor komende week, etc."
+                        placeholder="Bijv. aantal personen, datum, specifieke wensen…"
                       />
                     </div>
                   </div>
@@ -368,7 +425,7 @@ export default function PersoneelsAanvraag() {
                   <div className="grid grid-cols-3 gap-3">
                     {clients.map((c, i) => (
                       <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center justify-center aspect-[3/2]">
-                        <img src={c.src} alt={c.alt} className="max-h-8 max-w-full object-contain grayscale opacity-50 hover:opacity-80 hover:grayscale-0 transition-all" />
+                        <img src={c.src} alt={c.alt} className="max-h-11 max-w-full object-contain opacity-70 hover:opacity-100 transition-all" />
                       </div>
                     ))}
                   </div>
