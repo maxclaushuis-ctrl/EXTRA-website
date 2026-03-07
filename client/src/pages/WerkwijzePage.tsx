@@ -27,48 +27,47 @@ const jsonLd = {
 
 function IpadMockup({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="relative mx-auto" style={{ maxWidth: 480 }}>
-      {/* iPad frame */}
+    <div className="relative mx-auto w-full" style={{ maxWidth: 580 }}>
+      {/* iPad landscape frame */}
       <div
-        className="relative rounded-[2.6rem] shadow-2xl shadow-purple-500/20"
+        className="relative rounded-[2rem] shadow-2xl shadow-purple-500/20"
         style={{
-          background: "linear-gradient(145deg, #2a2a2e, #1a1a1e)",
-          padding: "14px 14px 18px 14px",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "linear-gradient(145deg, #2e2e32, #1c1c20)",
+          padding: "14px 20px 14px 20px",
+          border: "1px solid rgba(255,255,255,0.09)",
         }}
       >
-        {/* Top bar: camera + speaker */}
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-          <div className="w-12 h-1 rounded-full bg-gray-700" />
-          <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+        {/* Left bar: camera (landscape = camera on the left side) */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+          <div className="w-1 h-1 rounded-full bg-gray-600" />
+          <div className="w-2 h-0.5 rounded-full bg-gray-700" />
         </div>
-        {/* Screen */}
-        <div className="rounded-[1.6rem] overflow-hidden bg-white" style={{ aspectRatio: "3/4" }}>
+        {/* Screen — landscape 4:3 */}
+        <div className="rounded-[1.2rem] overflow-hidden bg-white ml-2" style={{ aspectRatio: "4/3" }}>
           <img
             src={src}
             alt={alt}
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-contain object-top"
             loading="lazy"
             decoding="async"
           />
         </div>
-        {/* Home bar */}
-        <div className="flex justify-center mt-3">
-          <div className="w-24 h-1 rounded-full bg-gray-600" />
+        {/* Right home bar */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="w-1 h-10 rounded-full bg-gray-600" />
         </div>
-        {/* Side buttons */}
+        {/* Top buttons (volume / power in landscape = top edge) */}
         <div
-          className="absolute right-[-4px] top-24 w-1 h-10 rounded-r-sm"
-          style={{ background: "linear-gradient(145deg, #3a3a3e, #222226)" }}
+          className="absolute top-[-4px] left-[30%] h-1 w-8 rounded-t-sm"
+          style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }}
         />
         <div
-          className="absolute left-[-4px] top-20 w-1 h-7 rounded-l-sm"
-          style={{ background: "linear-gradient(145deg, #3a3a3e, #222226)" }}
+          className="absolute top-[-4px] left-[42%] h-1 w-8 rounded-t-sm"
+          style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }}
         />
         <div
-          className="absolute left-[-4px] top-32 w-1 h-7 rounded-l-sm"
-          style={{ background: "linear-gradient(145deg, #3a3a3e, #222226)" }}
+          className="absolute top-[-4px] right-[20%] h-1 w-6 rounded-t-sm"
+          style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }}
         />
       </div>
       {/* Reflection glow */}

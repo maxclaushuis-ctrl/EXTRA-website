@@ -1,0 +1,104 @@
+Je bent een senior UX designer en front-end developer.
+
+We moeten de header en navigatie van de website optimaliseren zodat deze overal consistent is en beter aansluit bij de bestaande EXTRA huisstijl.
+
+BELANGRIJK
+De header en het menu moeten op iedere pagina exact dezelfde layout gebruiken. Er mag geen enkele pagina zijn waar de navigatie er anders uitziet.
+
+Gebruik de header zoals in de bijlage "Menu" als standaard voor de hele website.
+
+---
+
+HEADER / NAVIGATIE STRUCTUUR
+
+Maak één globale header component die op alle pagina’s wordt gebruikt.
+
+De layout van het menu moet overal identiek zijn:
+
+- EXTRA logo links
+- navigatie items in het midden
+- CTA knop "Contact" rechts
+
+Gebruik exact dezelfde styling:
+- gradient achtergrond
+- spacing
+- iconen
+- hover effecten
+- knopstijl
+
+Dit moet de standaard navigatie worden voor de volledige website.
+
+---
+
+DYNAMISCHE MENU INHOUD
+
+De layout van het menu blijft overal hetzelfde.
+
+Alleen de inhoud van het menu mag per pagina verschillen.
+
+Voorbeeld:
+
+Pagina:
+ /ikzoekextrawerk
+
+Menu toont alleen items die relevant zijn voor werkzoekenden.
+
+Pagina:
+ /ikzoekextrapersoneel
+
+Menu toont alleen items voor werkgevers.
+
+Belangrijk:
+De structuur, styling en layout van het menu blijft exact hetzelfde.
+
+Alleen de links binnen de dropdown mogen verschillen.
+
+---
+
+IPAD VISUAL FIX
+
+Op de werkwijze pagina staat een iPad mockup met het sollicitatieformulier.
+
+Probleem:
+De iPad staat momenteel rechtop waardoor de afbeelding wordt afgesneden.
+
+Oplossing:
+
+1. Draai de iPad naar landscape (liggend).
+2. Zorg dat de screenshot "Sollicitatieformulier" volledig zichtbaar is.
+3. Zorg dat de screenshot correct geschaald wordt binnen het scherm van de iPad.
+4. De afbeelding mag niet worden afgesneden of buiten het device frame vallen.
+
+Technische instructie:
+
+- gebruik object-fit: contain
+- zorg dat de afbeelding responsive blijft
+- behoud het device frame van de iPad
+
+De mockup moet er professioneel uitzien zoals een echte tablet presentatie.
+
+---
+
+RESPONSIVE GEDRAG
+
+Controleer dat:
+
+Desktop:
+Header volledig zichtbaar is met dropdown menu.
+
+Tablet:
+Menu blijft netjes gecentreerd.
+
+Mobile:
+Gebruik een hamburger menu maar behoud dezelfde styling.
+
+---
+
+DOEL
+
+Na deze aanpassingen:
+
+- heeft elke pagina exact dezelfde header
+- ziet de navigatie er overal hetzelfde uit
+- blijft de UX consistent
+- wordt de iPad mockup correct weergegeven
