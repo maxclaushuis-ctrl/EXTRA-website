@@ -4,10 +4,10 @@ import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import { Link } from "wouter";
 import { ArrowRight, UtensilsCrossed, BedDouble, ChefHat, ConciergeBell, Zap, Trophy, Gift } from "lucide-react";
 import { useEffect } from "react";
-import horecaImg from "@assets/Horecamedewerker_1771836004844.png";
-import housekeepingImg from "@assets/Housekeeping_1771842919384.png";
-import chefImg from "@assets/Chef_1771833440047.png";
-import frontOfficeImg from "@assets/Front-office_1771842663934.png";
+import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
+import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
+import chefImg from "@assets/Chef_1771833440047.webp";
+import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">

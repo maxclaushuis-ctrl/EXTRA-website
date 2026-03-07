@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, X, ChevronDown } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 
 const navItems = [
   {

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Mail, MapPin, ArrowRight, Instagram, Linkedin, Shield, ExternalLink } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 
 export default function PublicFooter() {
   return (

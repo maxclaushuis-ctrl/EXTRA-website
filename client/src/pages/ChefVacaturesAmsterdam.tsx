@@ -4,7 +4,7 @@ import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import { Link } from "wouter";
 import { ArrowRight, ChefHat, Flame, Award } from "lucide-react";
 import { useEffect } from "react";
-import chefImg from "@assets/Chef_1771833440047.png";
+import chefImg from "@assets/Chef_1771833440047.webp";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">

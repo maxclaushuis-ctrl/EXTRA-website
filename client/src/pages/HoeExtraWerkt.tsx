@@ -6,8 +6,8 @@ import {
   Shield, CheckCircle2, Users, Building2, Sparkles,
   ThumbsUp, Target, Award, BarChart3, Heart, Flame
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
 
 /* ── ANIMATION ── */
 function useScrollReveal() {

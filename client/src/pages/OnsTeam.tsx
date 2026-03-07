@@ -4,8 +4,8 @@ import {
   Users, ArrowRight, ChevronRight, Zap, Heart,
   Star, Coffee, Trophy, Flame, Camera, Sparkles, Award
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
 
 /* ─────────────────────────────────────────────
    ANIMATION HELPERS

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";

@@ -4,7 +4,7 @@ import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import { Link } from "wouter";
 import { ArrowRight, ConciergeBell, Users, Globe, TrendingUp } from "lucide-react";
 import { useEffect } from "react";
-import frontOfficeImg from "@assets/Front-office_1771842663934.png";
+import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">

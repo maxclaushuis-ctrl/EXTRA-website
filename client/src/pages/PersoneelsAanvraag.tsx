@@ -5,14 +5,14 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowRight, ArrowLeft, Check, Phone, MessageCircle, Shield, Users, Zap } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
-import logoMarriott from "@assets/Logo_Marriott_1771267205959.png";
-import logoHilton from "@assets/Logo_Hilton_1771267205959.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
+import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
-import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.png";
-import logoAppel from "@assets/Logo-Appel_1771267205959.png";
-import logoAmrath from "@assets/Logo_amrath_1771267205959.png";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
+import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
+import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 
 function XPatternBg({ count = 3, opacity = 0.12, color = "rgba(139,92,246,1)" }: { count?: number; opacity?: number; color?: string }) {
   const positions = [

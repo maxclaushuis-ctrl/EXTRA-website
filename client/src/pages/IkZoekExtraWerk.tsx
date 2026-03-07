@@ -7,30 +7,30 @@ import {
   BedDouble, ChefHat, ConciergeBell, Sparkles, Heart, Target,
   BarChart3, Flame, Menu, X, UserCheck, Trophy
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
-import horecaImg from "@assets/Horecamedewerker_1771836004844.png";
-import housekeepingImg from "@assets/Housekeeping_1771842919384.png";
-import chefImg from "@assets/Chef_1771833440047.png";
-import frontOfficeImg from "@assets/Front-office_1771842663934.png";
-import padelImg from "@assets/Padelracket_1771872665358.png";
-import airpodsImg from "@assets/Airpods_1771872665358.png";
-import extraAppImg from "@assets/EXTRA_app_1772394156269.png";
-import marriottLogo from "@assets/Logo_Marriott_1771267205959.png";
-import amrathLogo from "@assets/Logo_amrath_1771267205959.png";
-import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.png";
-import hiltonLogo from "@assets/Logo_Hilton_1771267205959.png";
-import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
-import logoFunda from "@assets/Logo_funda_1771267205959.png";
-import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
-import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.png";
-import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.png";
-import logoAppel from "@assets/Logo-Appel_1771267205959.png";
-import imgDashboard from "@assets/IMG_8971_1772395165096.png";
-import imgBeloningen from "@assets/IMG_8973_1772396250204.png";
-import imgRanglijst from "@assets/IMG_8977_1772396250204.png";
-import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.png";
-import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
+import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
+import chefImg from "@assets/Chef_1771833440047.webp";
+import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
+import padelImg from "@assets/Padelracket_1771872665358.webp";
+import airpodsImg from "@assets/Airpods_1771872665358.webp";
+import extraAppImg from "@assets/EXTRA_app_1772394156269.webp";
+import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
+import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
+import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
+import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
+import logoFunda from "@assets/Logo_funda_1771267205959.webp";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
+import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
+import imgDashboard from "@assets/IMG_8971_1772395165096.webp";
+import imgBeloningen from "@assets/IMG_8973_1772396250204.webp";
+import imgRanglijst from "@assets/IMG_8977_1772396250204.webp";
+import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.webp";
+import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.webp";
 
 /* ── SCROLL REVEAL ── */
 function useScrollReveal() {

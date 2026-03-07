@@ -7,24 +7,24 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Tag, BookOpen, BarChart3, UserPlus, Search, CalendarCheck, ThumbsUp
 } from "lucide-react";
-import heroBgImage from "@assets/hero-background.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
+import heroBgImage from "@assets/hero-background.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8803_1770915286475.png";
 import screenRewards from "@assets/IMG_8805_1770915286475.png";
 import screenChallenges from "@assets/IMG_8807_1770915286475.png";
 import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
-import logoAmrath from "@assets/Logo_amrath_1771267205959.png";
-import logoHilton from "@assets/Logo_Hilton_1771267205959.png";
-import logoMarriott from "@assets/Logo_Marriott_1771267205959.png";
-import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.png";
-import logoAppel from "@assets/Logo-Appel_1771267205959.png";
+import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
+import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
+import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
-import logoFunda from "@assets/Logo_funda_1771267205959.png";
-import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.png";
-import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.png";
-import screenshotGebruikers from "@assets/Gebruikers_1772098047298.png";
-import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.png";
+import logoFunda from "@assets/Logo_funda_1771267205959.webp";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
+import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
 
 function useScrollReveal() {
   const ref = useRef<HTMLElement>(null);

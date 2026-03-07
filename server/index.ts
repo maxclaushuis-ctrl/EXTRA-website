@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
@@ -30,8 +31,20 @@ declare global {
 
 const app = express();
 app.set('trust proxy', 1);
+app.use(compression({ level: 6, threshold: 1024 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Cache-control headers for immutable hashed assets (Vite build output)
+app.use((req, res, next) => {
+  const url = req.path;
+  if (/\/assets\/.*\.(js|css|webp|png|jpg|jpeg|svg|woff2?|ttf|ico)(\?.*)?$/.test(url)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (/\.(webp|png|jpg|jpeg|svg|gif)$/.test(url)) {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+  }
+  next();
+});
 
 // Serve uploaded files (candidate photos, etc.)
 app.use('/uploads', express.static('uploads'));

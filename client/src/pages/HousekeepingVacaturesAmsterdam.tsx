@@ -4,7 +4,7 @@ import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import { Link } from "wouter";
 import { ArrowRight, BedDouble, Sparkles, CheckCircle } from "lucide-react";
 import { useEffect } from "react";
-import housekeepingImg from "@assets/Housekeeping_1771842919384.png";
+import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">

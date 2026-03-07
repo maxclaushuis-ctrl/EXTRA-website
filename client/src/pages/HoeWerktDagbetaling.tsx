@@ -5,10 +5,10 @@ import {
   Zap, Shield, Eye, CalendarCheck, CheckCircle2, Smartphone,
   Users, Trophy, Gift, Star, Banknote, TrendingUp
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
-import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.png";
-import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.webp";
+import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.webp";
 
 /* ── SCROLL REVEAL ── */
 function useScrollReveal() {

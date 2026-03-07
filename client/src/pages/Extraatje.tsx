@@ -5,13 +5,13 @@ import {
   ArrowRight, CheckCircle2, Users, Award, Flame,
   ChevronRight, Sparkles, Check
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.png";
-import xPatroon from "@assets/X_patroon_1771260543289.png";
-import imgDashboard from "@assets/IMG_8971_1772395165096.png";
-import imgBeloningen from "@assets/IMG_8973_1772396250204.png";
-import imgKortingen from "@assets/IMG_8974_1772396250204.png";
-import imgChallenges from "@assets/IMG_8975_1772396250204.png";
-import imgRanglijst from "@assets/IMG_8977_1772396250204.png";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import imgDashboard from "@assets/IMG_8971_1772395165096.webp";
+import imgBeloningen from "@assets/IMG_8973_1772396250204.webp";
+import imgKortingen from "@assets/IMG_8974_1772396250204.webp";
+import imgChallenges from "@assets/IMG_8975_1772396250204.webp";
+import imgRanglijst from "@assets/IMG_8977_1772396250204.webp";
 
 function PhoneMockup({ src, alt }: { src: string; alt: string }) {
   return (
