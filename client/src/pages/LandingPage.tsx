@@ -1369,16 +1369,15 @@ export default function LandingPage() {
                 { icon: Clock, step: "3", title: "Selectie & inzet", desc: "Wij selecteren en plannen passend personeel.", color: "from-blue-500 to-indigo-600" },
                 { icon: TrendingUp, step: "4", title: "Evaluatie & vaste pool", desc: "We verwerken feedback en bouwen je favorietenpoule op.", color: "from-emerald-500 to-teal-600" },
               ] : [
-                { icon: UserCheck, step: "1", title: "Meld je aan", desc: "Schrijf je in via het formulier.", color: "from-purple-500 to-purple-700" },
-                { icon: MessageCircle, step: "2", title: "Kom op gesprek", desc: "We maken kennis en checken wat bij je past.", color: "from-violet-500 to-purple-600" },
-                { icon: Briefcase, step: "3", title: "Kies je diensten", desc: "Bekijk en claim shifts in de app.", color: "from-indigo-500 to-purple-600" },
-                { icon: CreditCard, step: "4", title: "Werk & verdien", desc: "Direct uitbetaald, plus punten.", color: "from-blue-500 to-indigo-600" },
-                { icon: Gift, step: "5", title: "Claim rewards", desc: "Wissel punten in voor echte beloningen.", color: "from-emerald-500 to-teal-600" },
+                { icon: UserCheck, step: "1", title: "Solliciteer bij EXTRA", desc: "Meld je aan via het formulier.", color: "from-purple-500 to-purple-700" },
+                { icon: MessageCircle, step: "2", title: "Kennismaking", desc: "We bespreken je ervaring en voorkeuren.", color: "from-violet-500 to-purple-600" },
+                { icon: Briefcase, step: "3", title: "Planning & werk", desc: "Pak diensten op die bij je passen.", color: "from-indigo-500 to-purple-600" },
+                { icon: Gift, step: "4", title: "Beloningen & betaling", desc: "Verdien EXTRAATjes en krijg snel betaald.", color: "from-emerald-500 to-teal-600" },
               ];
               return (
-                <div className={`grid grid-cols-2 ${howItWorksTab === "werkgever" ? "lg:grid-cols-4" : "lg:grid-cols-5"} gap-4 sm:gap-6 auto-rows-fr`}>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 auto-rows-fr">
                   {steps.map((item, i) => (
-                    <div key={`${howItWorksTab}-${i}`} className={`relative group ${howItWorksTab === "medewerker" && i === 4 ? "col-span-2 lg:col-span-1 max-w-[calc(50%-0.5rem)] sm:max-w-[calc(50%-0.75rem)] lg:max-w-none mx-auto lg:mx-0" : ""}`}>
+                    <div key={`${howItWorksTab}-${i}`} className="relative group">
                       {i < steps.length - 1 && <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-3rem)] h-0.5 bg-gradient-to-r from-purple-200 to-transparent z-0" />}
                       <div className="relative bg-white rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-8 border border-gray-100 hover:border-purple-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-sm h-full flex flex-col">
                         <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
