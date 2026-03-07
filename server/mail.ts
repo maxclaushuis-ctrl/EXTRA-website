@@ -467,20 +467,21 @@ export async function sendCandidateConfirmationEmail(candidate: {
 
         <!-- ① HERO BANNER -->
         <tr>
-          <td style="padding:0;overflow:hidden;border-radius:16px 16px 0 0;background:#1a0a3e;">
-            <div style="position:relative;overflow:hidden;padding:48px 32px 44px;background:linear-gradient(135deg,#3b0764 0%,#1a0a3e 50%,#1e1b4b 100%);text-align:center;">
-              <span style="position:absolute;top:-30px;left:-20px;font-size:200px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-8px;">X</span>
-              <span style="position:absolute;bottom:-60px;right:-15px;font-size:220px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;letter-spacing:-8px;">X</span>
-              <span style="position:absolute;top:10px;right:80px;font-size:110px;font-weight:900;color:rgba(255,255,255,0.03);font-family:'Arial Black',Arial,sans-serif;line-height:1;">X</span>
-              <span style="position:absolute;bottom:10px;left:120px;font-size:90px;font-weight:900;color:rgba(255,255,255,0.03);font-family:'Arial Black',Arial,sans-serif;line-height:1;">X</span>
-              <div style="position:relative;z-index:1;">
-                <div style="font-size:52px;font-weight:900;color:#ffffff;letter-spacing:-2px;font-family:'Arial Black',Arial,sans-serif;line-height:1;margin-bottom:20px;">EXTRA</div>
-                <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:5px 18px;margin-bottom:16px;">
-                  <span style="font-size:12px;font-weight:700;color:rgba(233,213,255,0.9);letter-spacing:1px;text-transform:uppercase;">${useEnglish ? "New registration" : "Nieuwe aanmelding"}</span>
-                </div>
-                <div style="font-size:26px;font-weight:900;color:#ffffff;font-family:'Arial Black',Arial,sans-serif;line-height:1.2;margin-bottom:8px;">${useEnglish ? "Application in. Let's go! 🚀" : "Aangemeld bij EXTRA. Let's go! 🚀"}</div>
-                <div style="font-size:15px;color:rgba(233,213,255,0.75);line-height:1.5;">${useEnglish ? "Welcome to EXTRA. Time to meet." : "Welkom bij EXTRA. Tijd om kennis te maken."}</div>
-              </div>
+          <td style="padding:0;border-radius:16px 16px 0 0;overflow:hidden;background:#3b0764;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/extra_email_banner_bg.png"
+                 width="600" height="180"
+                 alt="EXTRA – Nieuwe aanmelding"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
+          </td>
+        </tr>
+        <!-- ① HERO GREETING -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#4f1a8f 0%,#2e1766 100%);padding:28px 32px 24px;text-align:center;">
+            <div style="font-size:22px;font-weight:900;color:#ffffff;font-family:'Arial Black',Arial,sans-serif;line-height:1.25;margin-bottom:6px;">
+              ${useEnglish ? "Application in. Let&#39;s go! 🚀" : "Aangemeld bij EXTRA. Let&#39;s go! 🚀"}
+            </div>
+            <div style="font-size:14px;color:rgba(233,213,255,0.80);line-height:1.5;">
+              ${useEnglish ? "Welcome to EXTRA. Time to meet." : "Welkom bij EXTRA. Tijd om kennis te maken."}
             </div>
           </td>
         </tr>

@@ -1,0 +1,102 @@
+Je bent een senior front-end developer en UI designer.
+Optimaliseer de e-mail banner zodat deze visueel bijna identiek wordt aan de banner van de pagina /personeelsaanvraag.
+Gebruik de bijgevoegde bestanden als referentie:
+"Banner replit" → huidige e-mail banner
+"Banner" → gewenste stijl (referentie van website)
+"IMG_9022" → label dat boven het logo moet komen
+Het doel is dat de e-mail banner veel dichter bij de website banner komt qua kleur, verloop en patroon.
+Aanpassingen die moeten gebeuren
+1. Gradient achtergrond verbeteren
+De huidige gradient in Banner replit is te vlak.
+Pas de gradient aan zodat deze sterk lijkt op de banner van de website.
+Kenmerken van de website gradient:
+links: diep paars
+midden: helderder paars
+rechts: donker paars / blauwpaars
+Gebruik een meer dynamische gradient zoals:
+background: linear-gradient(
+135deg,
+#4f1a8f 0%,
+#5c22a5 35%,
+#4a1d8a 65%,
+#2e1766 100%
+);
+De gradient moet meer diepte hebben, zoals in de screenshot Banner.
+2. X-patroon sterker zichtbaar maken
+In de huidige banner is het X-patroon te subtiel.
+Maak het patroon meer zichtbaar zoals in Banner:
+Aanpassingen:
+grotere X-vormen
+iets hogere opacity
+meerdere posities (links, rechts)
+gedeeltelijk buiten beeld laten vallen
+CSS voorbeeld:
+opacity: 0.08 – 0.12
+scale: 1.2 – 1.6
+Positionering:
+één grote X links
+één grote X rechts
+eventueel een subtiele derde X
+Belangrijk:
+Het patroon moet zichtbaar zijn maar nog steeds subtiel.
+3. Label toevoegen boven het logo
+Voeg het element uit IMG_9022 toe boven het EXTRA logo.
+Tekst:
+NIEUWE AANMELDING
+Stijl:
+pill shape
+semi transparant
+dunne border
+lichte blur look
+CSS richtlijn:
+background: rgba(255,255,255,0.08);
+border: 1px solid rgba(255,255,255,0.18);
+border-radius: 40px;
+padding: 8px 18px;
+font-size: 13px;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: rgba(255,255,255,0.85);
+Plaatsing:
+gecentreerd
+boven het logo
+ongeveer 20–24px ruimte
+4. Logo positionering
+Het EXTRA logo moet:
+exact gecentreerd staan
+iets meer ruimte krijgen
+visueel groter ogen
+Spacing:
+label
+↓ 20px
+logo
+5. Banner formaat (belangrijk voor e-mail)
+Gebruik dit formaat:
+Canvas:
+1200 x 360 px
+Maar tonen in email als:
+600 x 180 px
+Zodat de banner retina scherp blijft.
+6. Clean design houden
+De banner moet alleen bevatten:
+gradient achtergrond
+X patroon
+label "NIEUWE AANMELDING"
+EXTRA logo
+Verwijder alle andere teksten.
+Geen:
+headlines
+subtekst
+buttons
+7. Responsive gedrag
+De banner moet mobiel goed schalen.
+Gebruik:
+<img style="max-width:100%; height:auto;">
+Zodat de banner automatisch schaalt.
+8. Design doel
+De e-mail banner moet:
+bijna identiek ogen aan de website banner
+moderner aanvoelen
+cleaner zijn
+meer EXTRA branding hebben
+Het eindresultaat moet voelen als een native onderdeel van de website huisstijl.
