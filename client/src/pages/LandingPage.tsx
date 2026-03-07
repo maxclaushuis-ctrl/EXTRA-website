@@ -1015,16 +1015,16 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Horecapersoneel nodig?{" "}
+              Horeca draait op mensen,{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">EXTRA</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
-              {" "}regelt het!
+              {" "}levert ze!
             </h1>
 
             <p className="text-lg sm:text-xl md:text-2xl text-purple-100/90 max-w-lg mb-8 sm:mb-10 leading-relaxed font-medium">
-              Flexibel en representatief personeel voor hotels, events en cateraars. Snel geregeld.
+              Snel horecapersoneel inzetten of direct aan de slag? Bij EXTRA regelen we het.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 mb-8 sm:mb-12">
