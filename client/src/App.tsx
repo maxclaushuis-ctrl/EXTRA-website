@@ -42,6 +42,7 @@ import HorecaUitzendbureau from "@/pages/HorecaUitzendbureau";
 import HorecaPersoneelAmsterdamPage from "@/pages/HorecaPersoneelAmsterdamPage";
 import HorecaPersoneelPage from "@/pages/HorecaPersoneelPage";
 import FlexibelHorecaPersoneel from "@/pages/FlexibelHorecaPersoneel";
+import WerkwijzePage from "@/pages/WerkwijzePage";
 
 // Overige pagina's
 import KlantcasesHoreca from "@/pages/KlantcasesHoreca";
@@ -93,8 +94,8 @@ const PUBLIC_PATHS = [
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam',
   // SEO routes
-  '/horeca-uitzendbureau-amsterdam', '/horeca-personeel-amsterdam',
-  '/horeca-personeel', '/flexibel-horeca-personeel',
+  '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
+  '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
   // Alias routes
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
   // Overige
@@ -140,6 +141,7 @@ function Router() {
 
         {/* SEO pillar & landingspagina's */}
         <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
+        <Route path="/horeca-uitzendbureau-amsterdam-werkwijze" component={WerkwijzePage} />
         <Route path="/horeca-personeel-amsterdam" component={HorecaPersoneelAmsterdamPage} />
         <Route path="/horeca-personeel" component={HorecaPersoneelPage} />
         <Route path="/flexibel-horeca-personeel" component={FlexibelHorecaPersoneel} />

@@ -5416,6 +5416,7 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
         { url: '/landing', priority: '0.9', changefreq: 'weekly' },
         // SEO pillar pagina's
         { url: '/horeca-uitzendbureau-amsterdam', priority: '1.0', changefreq: 'weekly' },
+        { url: '/horeca-uitzendbureau-amsterdam-werkwijze', priority: '0.9', changefreq: 'monthly' },
         { url: '/horeca-personeel-amsterdam', priority: '0.95', changefreq: 'weekly' },
         { url: '/horeca-personeel', priority: '0.9', changefreq: 'weekly' },
         { url: '/flexibel-horeca-personeel', priority: '0.9', changefreq: 'weekly' },

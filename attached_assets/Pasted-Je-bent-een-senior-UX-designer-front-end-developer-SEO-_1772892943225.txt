@@ -1,0 +1,376 @@
+Je bent een senior UX designer, front-end developer, SEO specialist en conversion copywriter.
+
+We gaan een nieuwe pagina bouwen voor de website van EXTRA: "Werkwijze".
+
+Deze pagina moet:
+- volledig aansluiten op de bestaande stijl van de website
+- SEO geoptimaliseerd zijn
+- goed scanbaar zijn
+- werkgevers overtuigen om personeel aan te vragen
+- kandidaten overtuigen om te solliciteren
+- geschikt zijn voor Google en LLM’s (zoals ChatGPT)
+
+Gebruik dezelfde designstijl als de rest van de website:
+- fonts
+- kleuren
+- spacing
+- card components
+- buttons
+- icon stijl
+
+Gebruik moderne UX patronen met duidelijke secties en visuals.
+
+---
+
+SEO STRATEGIE
+
+Optimaliseer de pagina voor deze zoekwoorden:
+
+primair:
+horeca uitzendbureau Amsterdam
+
+secundair:
+horecapersoneel inhuren
+flexibel horecapersoneel
+horeca personeel Amsterdam
+horeca bijbaan Amsterdam
+werken in de horeca Amsterdam
+horeca uitzendbureau hotels
+horeca personeel evenementen
+
+Gebruik deze zoekwoorden op natuurlijke wijze in:
+- H1
+- H2
+- body tekst
+- alt teksten
+- meta tags
+
+---
+
+SEO INSTELLINGEN
+
+URL:
+
+/horeca-uitzendbureau-amsterdam-werkwijze
+
+Meta title:
+
+Werkwijze EXTRA | Horeca Uitzendbureau Amsterdam voor hotels en evenementen
+
+Meta description:
+
+Ontdek hoe EXTRA werkt. Horecauitzendbureau in Amsterdam voor hotels en evenementen. Flexibel horecapersoneel in loondienst met slimme selectie en vaste favorietenpoules.
+
+---
+
+UX WIREFRAME STRUCTUUR
+
+Maak de pagina volgens deze structuur.
+
+1️⃣ HERO
+
+H1:
+Hoe EXTRA werkt
+
+Subtekst:
+Het horeca uitzendbureau in Amsterdam voor hotels, evenementen en hospitality.
+
+CTA:
+Personeel aanvragen
+
+CTA 2:
+Solliciteren
+
+Visual:
+
+iPad mockup met het EXTRA sollicitatieformulier.
+
+Alt tekst:
+
+Sollicitatieformulier horeca uitzendbureau EXTRA Amsterdam
+
+---
+
+2️⃣ INTRO SECTIE
+
+Titel:
+
+Zo werkt samenwerken met EXTRA
+
+Tekst:
+
+EXTRA is het horeca uitzendbureau in Amsterdam voor hotels, evenementen en hospitality.
+
+Wij combineren persoonlijke selectie met slimme technologie.
+
+Hierdoor weten wij precies welk horecapersoneel bij welke opdrachtgever past.
+
+Van eerste aanvraag tot een vaste favorietenpoule.
+
+---
+
+3️⃣ WERKWIJZE VOOR WERKGEVERS
+
+Gebruik een 4 stappen card layout.
+
+Stap 1
+
+Titel:
+Neem contact op
+
+Tekst:
+Bel ons, stuur een WhatsApp of vul het aanvraagformulier in.
+
+Binnen 1 uur nemen wij contact op.
+
+CTA:
+Personeel aanvragen
+
+Visual suggestie:
+
+animatie contactformulier.
+
+---
+
+Stap 2
+
+Titel:
+Kennismaking op locatie
+
+Tekst:
+We bespreken jullie personeelsvraag, piekmomenten en gewenste vaardigheden.
+
+Zo selecteren wij het juiste horecapersoneel.
+
+---
+
+Stap 3
+
+Titel:
+Selectie van personeel
+
+Tekst:
+Wij selecteren medewerkers uit onze pool op basis van ervaring, houding en communicatieve vaardigheden.
+
+Iedere medewerker komt persoonlijk op gesprek.
+
+---
+
+Stap 4
+
+Titel:
+Planning en inzet
+
+Tekst:
+Via het klantportaal of accountmanager vraag je eenvoudig personeel aan.
+
+---
+
+4️⃣ SELECTIEPROCES
+
+Titel:
+
+Persoonlijke selectie van horecapersoneel
+
+Tekst:
+
+Iedere medewerker bij EXTRA wordt persoonlijk beoordeeld.
+
+Wij gebruiken digitale intakeformulieren per functie.
+
+Hierin beoordelen we kandidaten op:
+
+- houding
+- communicatie
+- representativiteit
+- horeca ervaring
+- vaardigheden zoals bar, bediening en diner
+
+Visual:
+
+iPad met sollicitatieformulier.
+
+Alt tekst:
+
+Digitale horeca sollicitatie beoordeling EXTRA
+
+---
+
+5️⃣ DATA & TECHNOLOGIE
+
+Titel:
+
+Slimme selectie met data
+
+Tekst:
+
+Alle sollicitaties worden opgeslagen in ons systeem.
+
+Hierdoor weten wij precies:
+
+- waar iemand ervaring heeft
+- hoe iemand wordt beoordeeld
+- welke opdrachtgever goed past
+
+Visual:
+
+Dashboard kandidaten overzicht.
+
+Alt tekst:
+
+Dashboard met beoordelingen horecapersoneel
+
+---
+
+6️⃣ FAVORIETENPOULE
+
+Titel:
+
+Bouw een vaste favorietenpoule op
+
+Tekst:
+
+Na iedere dienst kan de opdrachtgever medewerkers beoordelen.
+
+Beoordeling gebeurt op:
+
+- tijd
+- vaardigheden
+- houding
+- verzorging
+
+Bevalt een medewerker goed?
+
+Dan kan deze worden toegevoegd aan de favorietenpoule.
+
+Zo bouw je een vaste pool op van medewerkers die jouw organisatie kennen.
+
+---
+
+7️⃣ WETGEVING & BETROUWBAARHEID
+
+Titel:
+
+Volledig volgens de wetgeving
+
+Tekst:
+
+Alle medewerkers bij EXTRA werken in loondienst.
+
+Wij zijn NEN-4400-1 gecertificeerd.
+
+Voor medewerkers die een TWV nodig hebben hanteren wij aparte procedures.
+
+Voeg een interne link toe naar een toekomstige pagina:
+
+/nen-4400-1-certificering
+
+---
+
+8️⃣ WERKWIJZE VOOR MEDEWERKERS
+
+Gebruik opnieuw een stappen layout.
+
+Stap 1
+
+Titel:
+Solliciteer bij EXTRA
+
+Tekst:
+Meld je aan via het sollicitatieformulier.
+
+---
+
+Stap 2
+
+Titel:
+Kennismaking
+
+Tekst:
+We bespreken je ervaring en voorkeuren.
+
+---
+
+Stap 3
+
+Titel:
+Pak diensten op
+
+Tekst:
+Werk bij hotels, evenementen en horeca locaties.
+
+---
+
+Stap 4
+
+Titel:
+Verdien EXTRAATjes
+
+Tekst:
+Na iedere dienst word je beoordeeld en kun je punten verdienen.
+
+---
+
+9️⃣ SOCIAL PROOF
+
+Titel:
+
+Werk voor toonaangevende locaties
+
+Voeg ruimte toe voor logo’s van opdrachtgevers.
+
+---
+
+🔟 CTA SECTIE
+
+Titel:
+
+Personeel nodig?
+
+Tekst:
+
+Vraag vandaag nog flexibel horecapersoneel aan.
+
+CTA:
+
+Personeel aanvragen
+
+CTA 2:
+
+Solliciteren
+
+---
+
+DESIGN INSTRUCTIES
+
+Gebruik dezelfde componenten als de homepage:
+
+cards
+gradient buttons
+icon blocks
+sections
+containers
+
+Gebruik visuals naast tekst.
+
+Gebruik voldoende whitespace.
+
+De pagina moet:
+
+modern
+overzichtelijk
+scanbaar
+
+blijven.
+
+---
+
+RESULTAAT
+
+Bouw een complete pagina die:
+
+- SEO geoptimaliseerd is
+- UX vriendelijk is
+- volledig past bij de EXTRA huisstijl
+- werkgevers overtuigt
+- kandidaten overtuigt
