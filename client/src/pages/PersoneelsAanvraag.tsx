@@ -140,7 +140,7 @@ export default function PersoneelsAanvraag() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             <a href="/landing" className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA" className={`h-7 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
+              <img src={extraLogoWit} alt="EXTRA" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
             </a>
             <div className="flex items-center gap-6">
               <a href="/horeca-personeel-inhuren" className={`hidden sm:flex items-center gap-1.5 text-sm font-semibold transition-colors ${scrolled ? "text-gray-600 hover:text-purple-600" : "text-white/80 hover:text-white"}`}>
