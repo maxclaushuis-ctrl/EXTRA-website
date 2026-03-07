@@ -5335,7 +5335,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(503).json({ error: 'AI module niet beschikbaar. Activeer de OpenAI integratie.' });
       }
 
-      const client = new OpenAI({ baseURL: `https://${process.env.REPLIT_CONNECTORS_HOSTNAME}/v2/openai/v1`, apiKey: process.env.REPL_IDENTITY ?? 'unused' });
+      const client = new OpenAI({
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? 'unused',
+      });
 
       const slug = topic.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60);
       const keyword = focusKeyword || topic;
@@ -5372,7 +5375,7 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        max_tokens: 2500,
+        max_completion_tokens: 8192,
       });
 
       const raw = response.choices[0].message.content || '';
