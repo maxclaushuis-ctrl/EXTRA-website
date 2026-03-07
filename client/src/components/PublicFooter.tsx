@@ -66,7 +66,7 @@ export default function PublicFooter() {
                 <img src={extraLogoWit} alt="EXTRA Horecapersoneel Amsterdam" className="h-8 w-auto mb-5" />
               </Link>
               <p className="text-sm leading-relaxed text-purple-200/65 mb-6 max-w-xs">
-                Hét uitzendbureau voor horeca, hotels en events in Amsterdam. Flexibel inzetbaar, altijd in loondienst — met het unieke EXTRAATje beloningssysteem.
+                Hét horecauitzendbureau in Amsterdam voor hotels en evenementen. Flexibel horecapersoneel in loondienst, met het unieke beloningssysteem <span className="text-purple-300 font-semibold">EXTRAATje</span>.
               </p>
 
               {/* Contact info */}
@@ -205,7 +205,7 @@ export default function PublicFooter() {
             style={{ borderColor: "rgba(255,255,255,0.07)" }}
           >
             <p className="text-xs text-purple-300/35 text-center sm:text-left">
-              © {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · KvK 12345678 · Amsterdam
+              © {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · KvK 91860903 · Amsterdam
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-purple-300/40">
               <Link href="/privacybeleid" className="hover:text-white transition-colors">

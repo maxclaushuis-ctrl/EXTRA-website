@@ -1923,7 +1923,7 @@ export default function LandingPage() {
                   <img src={extraLogoWit} alt="EXTRA Horecapersoneel Amsterdam" className="h-8 w-auto mb-5" />
                 </Link>
                 <p className="text-sm leading-relaxed text-purple-200/65 mb-6 max-w-xs">
-                  Hét uitzendbureau voor horeca, hotels en events in Amsterdam. Flexibel inzetbaar, altijd in loondienst — met het unieke EXTRAATje beloningssysteem.
+                  Hét horecauitzendbureau in Amsterdam voor hotels en evenementen. Flexibel horecapersoneel in loondienst, met het unieke beloningssysteem <span className="text-purple-300 font-semibold">EXTRAATje</span>.
                 </p>
                 <div className="space-y-2.5 text-sm text-purple-300/60 mb-6">
                   <a href="mailto:info@doehetextra.nl" className="flex items-center gap-2.5 hover:text-white transition-colors group">
@@ -2038,7 +2038,7 @@ export default function LandingPage() {
             {/* Bottom bar */}
             <div className="border-t pt-7 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
               <p className="text-xs text-purple-300/35 text-center sm:text-left">
-                © {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · KvK 12345678 · Amsterdam
+                © {new Date().getFullYear()} EXTRA Uitzendbureau B.V. · KvK 91860903 · Amsterdam
               </p>
               <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-purple-300/40">
                 <a href="/privacybeleid" className="hover:text-white transition-colors">Privacybeleid</a>
