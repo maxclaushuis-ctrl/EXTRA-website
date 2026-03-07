@@ -139,7 +139,7 @@ export default function PersoneelsAanvraag() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg border-b border-purple-100/50" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
-            <a href="/" className="flex items-center">
+            <a href="/landing" className="flex items-center">
               <img src={extraLogoWit} alt="EXTRA" className={`h-7 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
             </a>
             <div className="flex items-center gap-6">
