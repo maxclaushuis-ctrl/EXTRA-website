@@ -1,0 +1,239 @@
+Je bent een senior email UX designer, front-end developer en copywriter.
+
+We gaan een automatische e-mail ontwerpen voor EXTRA die kandidaten ontvangen nadat zij zich hebben aangemeld via de website.
+
+Onderwerp van de mail:
+
+Je aanmelding is binnen, let's go! 🚀
+
+De huidige e-mail is te simpel en sluit visueel niet goed aan op de huidige EXTRA huisstijl.
+
+De nieuwe e-mail moet:
+• modern zijn
+• energiek zijn
+• aansluiten op de website
+• visueel sterk zijn
+• conversiegericht zijn
+• voelen als een verlengstuk van de website
+
+Gebruik de meegestuurde banner als visuele referentie.
+
+Kenmerken van de EXTRA huisstijl:
+
+• paarse gradient achtergrond
+• subtiel X patroon in de achtergrond
+• modern en strak
+• duidelijke CTA knoppen
+• energieke uitstraling
+• veel whitespace
+• afgeronde cards
+• lichte schaduwen
+
+Gebruik ook moderne email UX patronen zoals:
+
+• cards
+• icon blokken
+• visuele hiërarchie
+• duidelijke CTA zones
+
+BELANGRIJK
+
+Gebruik in teksten niet het leesteken "-" of "–".
+
+Gebruik in plaats daarvan:
+— (em dash)
+of :
+of een nieuwe zin.
+
+Dit geldt ook voor toekomstige teksten.
+
+---
+
+EMAIL STRUCTUUR
+
+Max breedte email:
+
+600px
+
+Responsive voor:
+
+• Gmail
+• Apple Mail
+• Outlook
+• mobiel
+
+Gebruik inline CSS voor maximale compatibiliteit.
+
+---
+
+1 HERO BANNER
+
+Hero banner bovenaan.
+
+Design:
+
+• paarse gradient
+• subtiel X patroon
+• EXTRA logo gecentreerd
+
+Titel:
+
+Aangemeld bij EXTRA. Let's go! 🚀
+
+Subtekst:
+
+Welkom bij EXTRA. Tijd om kennis te maken.
+
+---
+
+2 INTRO BLOK
+
+Witte card onder de hero banner.
+
+Tekst:
+
+Hi [Naam],
+
+Top dat je je hebt aangemeld bij EXTRA ⚡
+
+We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker aan de slag te gaan.
+
+---
+
+3 AFSPRAAK BLOK (BELANGRIJKSTE CTA)
+
+Design:
+
+lichte paarse card
+
+Titel:
+
+Nog geen kennismaking ingepland?
+
+Tekst:
+
+Plan hier direct een moment in.  
+Het duurt maar een paar seconden.
+
+Primaire knop:
+
+Afspraak inplannen →
+
+Secundaire knop:
+
+WhatsApp
+
+Gebruik een groene WhatsApp knop.
+
+---
+
+4 VISUAL BLOK
+
+Voeg een visual toe van het plannen van een afspraak.
+
+Gebruik een screenshot of mockup van de agenda / Calendly planner.
+
+Titel:
+
+Zo plan je je afspraak
+
+Tekst:
+
+Kies een moment dat voor jou werkt en klaar.
+
+Alt tekst:
+
+Kennismakingsgesprek plannen bij EXTRA
+
+Dit verhoogt de conversie omdat kandidaten direct zien hoe eenvoudig het plannen is.
+
+---
+
+5 LOCATIE BLOK
+
+Icon + tekst.
+
+Titel:
+
+Kennismaking bij EXTRA
+
+Tekst:
+
+Je bent welkom bij ons op:
+
+Herengracht 372  
+Amsterdam
+
+---
+
+6 EXTRA BLOK (EXTRA BRANDING)
+
+Maak een klein visueel blok dat EXTRA laat zien.
+
+Titel:
+
+Waarom werken bij EXTRA?
+
+Gebruik 3 korte punten met iconen:
+
+⚡ Flexibele diensten  
+💸 Snel uitbetaald  
+🎉 EXTRAATje beloningen
+
+---
+
+7 AFSLUITING
+
+Tekst:
+
+Kun je toch niet op het geplande moment?
+
+Pas je afspraak gewoon even aan zodat we iemand anders kunnen inplannen.
+
+We kijken ernaar uit om je te ontmoeten 🙌
+
+Groet,
+
+Team EXTRA
+
+---
+
+8 FOOTER
+
+Subtiele footer met:
+
+Dit is een automatisch bericht.
+
+Vragen?
+
+info@doehetextra.nl
+
+---
+
+DESIGN DETAILS
+
+Gebruik:
+
+• rounded cards
+• subtiele schaduw
+• gradient knoppen
+• veel witruimte
+• moderne iconen
+
+Gebruik dezelfde kleuren als op de website.
+
+De mail moet voelen als een moderne startup email.
+
+Geen standaard template uitstraling.
+
+---
+
+DOEL
+
+De email moet:
+
+• meer vertrouwen geven
+• meer afspraken opleveren
+• visueel aansluiten op de website
+• modern en professioneel ogen
+• duidelijk EXTRA branding laten zien
