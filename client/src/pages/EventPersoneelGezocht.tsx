@@ -14,16 +14,16 @@ import {
   UserCheck,
   ShieldCheck,
   MessageSquare,
-  ChevronRight,
   Star,
   GlassWater,
   Utensils,
-  LayoutDashboard,
-  Award
+  Award,
+  Clock,
+  Trophy,
+  Sparkles
 } from "lucide-react";
 import heroBgImage from "@assets/hero-background.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import sollicitatieImg from "@assets/Sollicitatieformulier_1772893764120.png";
 
 function useScrollReveal() {
@@ -133,11 +133,86 @@ function GrainOverlay() {
 
 export default function EventPersoneelGezocht() {
   useEffect(() => {
-    document.title = "Eventpersoneel inzetten | EXTRA Uitzendbureau Amsterdam";
+    document.title = "Eventpersoneel Gezocht? EXTRA Levert Direct";
+
+    const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
+      el.setAttribute('href', href);
+    };
+    const addSchema = (id: string, data: object) => {
+      document.getElementById(id)?.remove();
+      const s = document.createElement('script');
+      s.id = id;
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(data);
+      document.head.appendChild(s);
+    };
+
+    setMeta('description', 'Bediening, hosts en runners nodig voor jouw event? EXTRA levert snel en flexibel eventpersoneel voor festivals, galas en bedrijfsevents in Amsterdam.');
+    setLink('canonical', 'https://www.doehetextra.nl/event-personeel-gezocht');
+
+    setMeta('og:title', 'Eventpersoneel Gezocht? EXTRA Levert Direct', 'property');
+    setMeta('og:description', 'Bediening, hosts en runners nodig voor jouw event? EXTRA levert snel en flexibel eventpersoneel voor festivals, galas en bedrijfsevents in Amsterdam.', 'property');
+    setMeta('og:url', 'https://www.doehetextra.nl/event-personeel-gezocht', 'property');
+    setMeta('og:type', 'website', 'property');
+    setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
+
+    addSchema('local-business-schema', {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "EXTRA",
+      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "telephone": "+31851305915",
+      "url": "https://www.doehetextra.nl",
+      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "sameAs": ["https://www.doehetextra.nl"]
+    });
+
+    addSchema('faq-schema', {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Kan EXTRA last-minute eventpersoneel leveren?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja, onze pool van getrainde medewerkers staat klaar voor last-minute inzet. Neem contact op en we schakelen direct."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Welke rollen levert EXTRA voor events?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Bediening, barmedewerkers, dinerlopers, hosts, eventmedewerkers en supervisors."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Hoe werkt de kwaliteitsselectie bij EXTRA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Elke medewerker doorloopt een persoonlijk intakegesprek waarbij we beoordelen op houding, communicatie en ervaring."
+          }
+        }
+      ]
+    });
+
+    return () => {
+      document.getElementById('local-business-schema')?.remove();
+      document.getElementById('faq-schema')?.remove();
+    };
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden relative">
+    <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden relative text-gray-900">
       <GrainOverlay />
       <PublicNav />
 
@@ -150,7 +225,7 @@ export default function EventPersoneelGezocht() {
         }}
       >
         <div className="absolute inset-0 opacity-40">
-          <img src={heroBgImage} alt="" className="w-full h-full object-cover" />
+          <img src={heroBgImage} alt="Eventpersoneel in actie" className="w-full h-full object-cover" />
         </div>
         <XPatternBg
           count={4}
@@ -174,7 +249,7 @@ export default function EventPersoneelGezocht() {
                 Jouw event, onze mensen
               </h1>
               <p className="text-lg sm:text-xl text-purple-100/80 mb-10 leading-relaxed font-medium max-w-2xl">
-                Bediening, runners en hosts — EXTRA regelt de bezetting zodat jij je focust op het event.
+                Bediening, runners en hosts — EXTRA regelt de bezetting zodat jij je focust op het event. Professionele hosts en barpersoneel voor elk type event in Amsterdam.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
@@ -224,8 +299,9 @@ export default function EventPersoneelGezocht() {
               <p className="text-lg text-gray-600 leading-relaxed mb-8">
                 Events zijn onvoorspelbaar. De drukte piek je pas op het moment
                 zelf. EXTRA heeft een pool van getrainde medewerkers klaar die
-                direct kunnen schakelen. Of het nu gaat om een zakelijk diner
-                voor 50 personen of een festival voor 5.000 gasten.
+                direct kunnen schakelen. Of het nu gaat om een zakelijk congres, 
+                een exclusief gala of een grootschalig festival. Wij zorgen voor 
+                representatief personeel dat uw huisstijl begrijpt.
               </p>
               <div className="grid sm:grid-cols-2 gap-6">
                 {[
@@ -251,7 +327,7 @@ export default function EventPersoneelGezocht() {
               </div>
             </RevealSection>
             <RevealSection delay={200}>
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-8 sm:p-12 rounded-3xl border border-purple-100 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-8 sm:p-12 rounded-3xl border border-purple-100 relative overflow-hidden text-gray-900">
                 <XPatternBg count={2} opacity={0.05} />
                 <div className="relative z-10">
                   <div className="flex items-center gap-4 mb-8">
@@ -268,6 +344,7 @@ export default function EventPersoneelGezocht() {
                       "Kennis van etiquette en service",
                       "Flexibel inzetbaar (ook last-minute)",
                       "Gemotiveerd door ons EXTRAATje systeem",
+                      "Topkwaliteit personeel voor een vlekkeloos verloop"
                     ].map((text, i) => (
                       <li key={i} className="flex items-center gap-3">
                         <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
@@ -292,7 +369,7 @@ export default function EventPersoneelGezocht() {
             >
               Onbeperkt opschalen
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto font-medium">
               Van één extra handje tot een compleet team van 50+ medewerkers.
               Wij groeien mee met jouw event.
             </p>
@@ -330,10 +407,10 @@ export default function EventPersoneelGezocht() {
                 <div className="text-4xl font-black text-purple-600 mb-2">
                   {item.count}
                 </div>
-                <div className="text-xl font-bold text-gray-900 mb-4">
+                <div className="text-xl font-bold text-gray-900 mb-4 font-poppins">
                   {item.label}
                 </div>
-                <p className="text-gray-500">{item.desc}</p>
+                <p className="text-gray-500 font-medium">{item.desc}</p>
               </RevealSection>
             ))}
           </div>
@@ -348,21 +425,21 @@ export default function EventPersoneelGezocht() {
               className="text-3xl sm:text-5xl font-black text-gray-900 mb-6"
               style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              Rollen die EXTRA levert voor events
+              Wat wij leveren voor <span className="text-purple-600">events</span>
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl">
-              Ons team bestaat uit allround horecatalent en specialisten.
+            <p className="text-lg text-gray-600 max-w-2xl font-medium">
+              Onze medewerkers maken het verschil op uw evenement. Van hosts tot barpersoneel.
             </p>
           </RevealSection>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {[
-              { title: "Bediening", icon: Utensils },
-              { title: "Barmedewerker", icon: GlassWater },
-              { title: "Dinerlopers", icon: Utensils },
-              { title: "Eventmedewerker", icon: PartyPopper },
-              { title: "Cateringmedewerker", icon: Utensils },
-              { title: "Supervisor", icon: UserCheck },
+              { title: "Hostesses & Hosts", icon: Star, desc: "Een warm en representatief welkom voor al uw gasten." },
+              { title: "Bediening & Runners", icon: Clock, desc: "Snelle en professionele service, ook bij grote groepen." },
+              { title: "Barmedewerker", icon: GlassWater, desc: "Ervaren barkeepers die onder druk kunnen presteren." },
+              { title: "Eventmedewerker", icon: PartyPopper, desc: "Allround ondersteuning voor een vlekkeloos verloop." },
+              { title: "Dinerlopers", icon: Utensils, desc: "Efficiënte uitservering voor galas en diners." },
+              { title: "Supervisor", icon: UserCheck, desc: "Aanspreekpunt op locatie voor personele zaken." },
             ].map((role, i) => (
               <RevealSection
                 key={i}
@@ -372,9 +449,14 @@ export default function EventPersoneelGezocht() {
                 <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                   <role.icon className="w-6 h-6 text-purple-600" />
                 </div>
-                <h3 className="font-bold text-gray-900 group-hover:text-white transition-colors">
+                <h3 className="font-bold text-gray-900 group-hover:text-white transition-colors mb-2">
                   {role.title}
                 </h3>
+                {role.desc && (
+                   <p className="text-sm text-gray-500 group-hover:text-purple-100 transition-colors font-medium">
+                     {role.desc}
+                   </p>
+                )}
               </RevealSection>
             ))}
           </div>
@@ -393,7 +475,7 @@ export default function EventPersoneelGezocht() {
               >
                 Zo selecteert EXTRA medewerkers
               </h2>
-              <p className="text-lg text-gray-600 mb-10">
+              <p className="text-lg text-gray-600 mb-10 font-medium">
                 Kwaliteit is bij events geen optie, maar een vereiste. Wij
                 hanteren een streng selectieproces waarbij we niet alleen kijken
                 naar ervaring, maar vooral naar instelling en uitstraling.
@@ -403,27 +485,27 @@ export default function EventPersoneelGezocht() {
                 {[
                   {
                     title: "Strenge beoordeling",
-                    desc: "Elke sollicitant doorloopt een uitgebreid assessment.",
+                    desc: "Elke sollicitant doorloopt een uitgebreid assessment en persoonlijk gesprek.",
                     icon: Award,
                   },
                   {
                     title: "Focus op houding",
-                    desc: "Wij selecteren op gastvrijheid en pro-activiteit.",
-                    icon: Star,
+                    desc: "Wij selecteren op gastvrijheid, pro-activiteit en enthousiasme.",
+                    icon: Sparkles,
                   },
                   {
                     title: "Duidelijke communicatie",
-                    desc: "Vloeiend Nederlands en representatief voorkomen.",
+                    desc: "Vloeiend Nederlands en representatief voorkomen voor elk event.",
                     icon: MessageSquare,
                   },
                 ].map((item, i) => (
-                  <div key={i} className="flex gap-4 p-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
+                  <div key={i} className="flex gap-4 p-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm text-gray-900">
                     <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
                       <item.icon className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-900">{item.title}</h4>
-                      <p className="text-sm text-gray-500">{item.desc}</p>
+                      <p className="text-sm text-gray-500 font-medium">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -438,7 +520,7 @@ export default function EventPersoneelGezocht() {
                   <div className="bg-white rounded-[1.8rem] overflow-hidden aspect-[4/5] relative">
                     <img
                       src={sollicitatieImg}
-                      alt="EXTRA Sollicitatieformulier"
+                      alt="EXTRA Sollicitatieformulier voor eventpersoneel"
                       className="w-full h-full object-cover object-top"
                     />
                     <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent" />
@@ -482,12 +564,12 @@ export default function EventPersoneelGezocht() {
               },
               {
                 title: "Kwaliteit gegarandeerd",
-                desc: "Onze mensen zijn getraind in hospitality en representativiteit.",
+                desc: "Onze mensen zijn getraind in hospitality, etiquette en representativiteit.",
                 icon: ShieldCheck,
               },
               {
                 title: "Gemotiveerde mensen",
-                desc: "Door ons beloningssysteem gaan medewerkers altijd voor die 10.",
+                desc: "Door ons beloningssysteem gaan medewerkers altijd voor die 10 op uw event.",
                 icon: Trophy,
               },
             ].map((usp, i) => (
@@ -495,10 +577,10 @@ export default function EventPersoneelGezocht() {
                 <div className="w-20 h-20 rounded-[2rem] bg-purple-50 flex items-center justify-center mx-auto mb-8 group-hover:bg-purple-600 group-hover:rotate-6 transition-all duration-300 shadow-sm group-hover:shadow-xl group-hover:shadow-purple-200">
                   <usp.icon className="w-10 h-10 text-purple-600 group-hover:text-white transition-colors" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4 font-poppins">
                   {usp.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">{usp.desc}</p>
+                <p className="text-gray-600 leading-relaxed font-medium">{usp.desc}</p>
               </RevealSection>
             ))}
           </div>
@@ -522,9 +604,9 @@ export default function EventPersoneelGezocht() {
               >
                 Klaar voor een geslaagd event?
               </h2>
-              <p className="text-xl text-purple-100/70 mb-12 max-w-2xl mx-auto">
+              <p className="text-xl text-purple-100/70 mb-12 max-w-2xl mx-auto font-medium">
                 Laat ons de personele zorg uit handen nemen, zodat jij je kunt
-                focussen op de gasten.
+                focussen op de gasten en de beleving.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
                 <Link
@@ -546,6 +628,22 @@ export default function EventPersoneelGezocht() {
         </div>
       </section>
 
+      {/* Internal Link Section */}
+      <section className="py-16 bg-[#faf8f5]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm text-gray-400 mb-8 uppercase tracking-widest font-bold">Bekijk ook onze andere diensten:</p>
+          <div className="flex flex-wrap justify-center gap-6">
+            <Link href="/personeel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Alle sectoren</Link>
+            <span className="text-gray-200">•</span>
+            <Link href="/hotel-personeel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Hotelpersoneel gezocht</Link>
+            <span className="text-gray-200">•</span>
+            <Link href="/cateringpersoneel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Cateringpersoneel gezocht</Link>
+            <span className="text-gray-200">•</span>
+            <Link href="/horecapersoneel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Horeca & Restaurants</Link>
+          </div>
+        </div>
+      </section>
+
       <PublicFooter />
 
       <style>{`
@@ -558,29 +656,5 @@ export default function EventPersoneelGezocht() {
         }
       `}</style>
     </div>
-  );
-}
-
-function Trophy(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
   );
 }

@@ -1,0 +1,133 @@
+Je bent een senior full-stack developer, SEO specialist en conversion expert in één.
+Je gaat de werkgeverspagina's van EXTRA optimaliseren en samenvoegen.
+
+REPLIT IS AL BEKEND MET EXTRA — geen uitleg nodig over het bedrijf.
+Gebruik de bestaande kennis over het merk, de tone of voice en de USP's.
+
+═══════════════════════════════════════════════════════════
+VISUELE LEIDRAAD
+═══════════════════════════════════════════════════════════
+
+De pagina /landing is de visuele en stilistische leidraad voor alle pagina's.
+Zorg dat alle samengevoegde pagina's exact aansluiten op de stijl van /landing.
+
+Inconsistente pagina's moeten worden bijgewerkt zodat de hele website
+één consistente uitstraling heeft — van typografie tot spacing tot kleurgebruik.
+
+Binnen de stijl van /landing mag je creatief zijn met:
+- Scroll-animaties en entrance effects
+- Parallax effecten waar passend
+- Hover states op kaarten, knoppen en iconen
+- Subtle micro-interacties die de beleving versterken
+- Moderne layout variaties per sectie (bv. alternerende content blokken)
+
+Alle effecten moeten passen bij het merk EXTRA: jong, energiek en onderscheidend.
+Geen generieke of corporate uitstraling.
+
+═══════════════════════════════════════════════════════════
+STAP 1 — SAMENVOEGEN EN OPSCHONEN
+═══════════════════════════════════════════════════════════
+
+De huidige sitemap bevat dubbele pagina's. Voer de volgende samenvoegingen uit.
+De website is nog niet live — verwijder dubbele pagina's na het samenvoegen.
+
+SAMENVOEGEN:
+- /hotel-personeel-gezocht + /hotel-personeel-amsterdam → wordt: /hotel-personeel-gezocht
+- /event-personeel-gezocht + /evenementen-personeel-amsterdam → wordt: /event-personeel-gezocht
+- /cateringpersoneel-gezocht + /catering-personeel-amsterdam → wordt: /cateringpersoneel-gezocht
+- /restaurant-personeel-gezocht + /restaurant-personeel-amsterdam → wordt: /horecapersoneel-gezocht
+  (restaurant valt onder horeca — samenvoegen tot bredere pagina)
+- /horeca-personeel-inhuren → samenvoegen met /horecapersoneel-gezocht, daarna verwijderen
+
+EINDRESULTAAT PAGINA'S:
+1. /personeel-gezocht — Algemene hub
+2. /hotel-personeel-gezocht — Hotels
+3. /event-personeel-gezocht — Evenementen
+4. /cateringpersoneel-gezocht — Catering
+5. /horecapersoneel-gezocht — Horeca & restaurants (samengevoegd)
+6. /personeelsaanvraag — Aanvraagformulier (blijft bestaan)
+
+Bij het samenvoegen: bepaal zelf de ideale sectievolgorde met als doel
+conversie en vertrouwen wekken — gebaseerd op conversion best practices.
+
+═══════════════════════════════════════════════════════════
+STAP 2 — SEO PER PAGINA
+═══════════════════════════════════════════════════════════
+
+Implementeer de volgende meta-tags exact zoals hieronder per pagina:
+
+── /personeel-gezocht ──────────────────────────────────────
+<title>Personeel Gezocht? EXTRA Levert Snel & Flexibel</title>
+<meta name="description" content="Op zoek naar flexibel personeel voor jouw locatie? EXTRA levert snel horecapersoneel voor hotels, events, cateraars en restaurants. Direct geregeld.">
+<link rel="canonical" href="https://www.extra.nl/personeel-gezocht">
+
+── /hotel-personeel-gezocht ────────────────────────────────
+<title>Hotelpersoneel Gezocht? Snel Geregeld via EXTRA</title>
+<meta name="description" content="Snel hotelpersoneel nodig? EXTRA levert front-office, housekeeping en bediening voor hotels in Amsterdam. Flexibel inzetbaar, direct beschikbaar.">
+<link rel="canonical" href="https://www.extra.nl/hotel-personeel-gezocht">
+
+── /event-personeel-gezocht ────────────────────────────────
+<title>Eventpersoneel Gezocht? EXTRA Levert Direct</title>
+<meta name="description" content="Bediening, hosts en runners nodig voor jouw event? EXTRA levert snel en flexibel eventpersoneel voor festivals, galas en bedrijfsevents in Amsterdam.">
+<link rel="canonical" href="https://www.extra.nl/event-personeel-gezocht">
+
+── /cateringpersoneel-gezocht ──────────────────────────────
+<title>Cateringpersoneel Gezocht? Direct via EXTRA</title>
+<meta name="description" content="Ervaren cateringpersoneel nodig? EXTRA levert snel koks en bediening voor grote en kleine cateringopdrachten in Amsterdam en omgeving.">
+<link rel="canonical" href="https://www.extra.nl/cateringpersoneel-gezocht">
+
+── /horecapersoneel-gezocht ────────────────────────────────
+<title>Horecapersoneel Gezocht? Flexibel via EXTRA Amsterdam</title>
+<meta name="description" content="Horecapersoneel inhuren voor jouw restaurant of locatie? EXTRA levert snel bediening, chefs en keukenmedewerkers. Flexibel, betrouwbaar, direct inzetbaar.">
+<link rel="canonical" href="https://www.extra.nl/horecapersoneel-gezocht">
+
+── /personeelsaanvraag ─────────────────────────────────────
+<title>Personeel Aanvragen — EXTRA Uitzendbureau</title>
+<meta name="description" content="Vraag snel flexibel horecapersoneel aan via EXTRA. Vul het formulier in en wij nemen binnen één werkdag contact op.">
+<link rel="canonical" href="https://www.extra.nl/personeelsaanvraag">
+
+Voeg daarnaast toe aan elke pagina:
+- Open Graph tags (og:title, og:description, og:url, og:type)
+- LocalBusiness schema markup met NAW-gegevens van EXTRA
+- FAQ schema markup waar van toepassing
+
+═══════════════════════════════════════════════════════════
+STAP 3 — INTERNE LINKSTRUCTUUR
+═══════════════════════════════════════════════════════════
+
+/personeel-gezocht linkt naar:
+→ /hotel-personeel-gezocht (ankertekst: "hotelpersoneel")
+→ /event-personeel-gezocht (ankertekst: "eventpersoneel")
+→ /cateringpersoneel-gezocht (ankertekst: "cateringpersoneel")
+→ /horecapersoneel-gezocht (ankertekst: "horecapersoneel")
+→ /personeelsaanvraag (ankertekst: "personeel aanvragen")
+
+Elke sectorpagina linkt naar:
+→ /personeel-gezocht (ankertekst: "alle sectoren")
+→ /personeelsaanvraag (ankertekst: "personeel aanvragen")
+→ Minimaal 1 andere sectorpagina als kruisverwijzing
+
+═══════════════════════════════════════════════════════════
+STAP 4 — TECHNISCHE SEO CHECKLIST
+═══════════════════════════════════════════════════════════
+
+Zorg dat op alle pagina's het volgende aanwezig is:
+
+□ Canonical tag per pagina (zie STAP 2)
+□ Open Graph tags (title, description, url, image, type)
+□ LocalBusiness schema markup met NAW EXTRA
+□ FAQ schema markup waar van toepassing
+□ Alt-teksten op alle afbeeldingen — beschrijvend en relevant
+□ Sitemap.xml bijgewerkt met de definitieve URL's
+□ Paginasnelheid — afbeeldingen geoptimaliseerd, lazy loading actief
+□ Mobile-first — test alle pagina's op 375px breedte
+
+═══════════════════════════════════════════════════════════
+BELANGRIJK
+═══════════════════════════════════════════════════════════
+
+- /landing is de visuele leidraad — alle pagina's moeten hierop aansluiten
+- Inconsistente pagina's bijwerken naar de stijl van /landing
+- Voeg geen nieuwe dependencies toe tenzij noodzakelijk
+- Houd de codebase schoon en gestructureerd
+- Lever een overzicht op van alle wijzigingen die zijn doorgevoerd

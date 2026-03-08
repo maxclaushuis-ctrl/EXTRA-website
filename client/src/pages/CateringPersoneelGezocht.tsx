@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import {
   Users, Gift, Star, ChevronDown, 
@@ -94,34 +95,92 @@ export default function CateringPersoneelGezocht() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    document.title = "Cateringpersoneel inzetten | EXTRA Uitzendbureau Amsterdam";
+    document.title = "Cateringpersoneel Gezocht? Direct via EXTRA";
+
+    const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
+      el.setAttribute('href', href);
+    };
+    const addSchema = (id: string, data: object) => {
+      document.getElementById(id)?.remove();
+      const s = document.createElement('script');
+      s.id = id;
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(data);
+      document.head.appendChild(s);
+    };
+
+    setMeta('description', 'Ervaren cateringpersoneel nodig? EXTRA levert snel koks en bediening voor grote en kleine cateringopdrachten in Amsterdam en omgeving.');
+    setLink('canonical', 'https://www.doehetextra.nl/cateringpersoneel-gezocht');
+
+    setMeta('og:title', 'Cateringpersoneel Gezocht? Direct via EXTRA', 'property');
+    setMeta('og:description', 'Ervaren cateringpersoneel nodig? EXTRA levert snel koks en bediening voor grote en kleine cateringopdrachten in Amsterdam en omgeving.', 'property');
+    setMeta('og:url', 'https://www.doehetextra.nl/cateringpersoneel-gezocht', 'property');
+    setMeta('og:type', 'website', 'property');
+    setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
+
+    addSchema('local-business-schema', {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "EXTRA",
+      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "telephone": "+31851305915",
+      "url": "https://www.doehetextra.nl",
+      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "sameAs": ["https://www.doehetextra.nl"]
+    });
+
+    addSchema('faq-schema', {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Hoe flexibel is EXTRA bij catering?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Wij kunnen opschalen van 2 tot 50+ medewerkers per dag. Pieken en dalen in de planning zijn geen probleem."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Voor welke cateringopdrachten levert EXTRA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Recepties, galadiners, bedrijfsevents, beurzen en grootschalige cateringactiviteiten."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Zijn de medewerkers ervaren in catering?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja, onze cateringmedewerkers hebben aantoonbare horeca-ervaring en zijn getraind op hospitality en servicenormen."
+          }
+        }
+      ]
+    });
+
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.getElementById('local-business-schema')?.remove();
+      document.getElementById('faq-schema')?.remove();
+    };
   }, []);
 
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative bg-white" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <GrainOverlay />
 
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg border-b border-purple-100/50" : "bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <a href="/landing" className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
-            </a>
-            <div className="hidden lg:flex items-center gap-6">
-              <a href="/personeel-gezocht" className={`text-sm font-bold flex items-center gap-2 transition-colors ${scrolled ? "text-gray-800 hover:text-purple-600" : "text-white/90 hover:text-white"}`}>
-                <ArrowLeft className="w-4 h-4" /> Personeel gezocht
-              </a>
-              <a href="/personeelsaanvraag" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-bold px-6 py-2.5 rounded-full transition-all shadow-lg shadow-purple-500/20">
-                Vraag personeel aan
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNav forceDark={false} />
 
       {/* 1. HERO */}
       <section className="relative min-h-[85svh] flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #0a0310 0%, #1a0a3e 50%, #1e1b4b 100%)" }}>
@@ -133,12 +192,15 @@ export default function CateringPersoneelGezocht() {
         <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 w-full pt-32 pb-20">
           <div className="max-w-3xl">
             <RevealSection>
+              <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
+                <UtensilsCrossed className="w-4 h-4" /> Catering Branche
+              </span>
               <h1 className="text-4xl sm:text-5xl lg:text-7xl text-white leading-[1.1] mb-6 font-black" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Cateringpersoneel nodig? <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">EXTRA levert snel.</span>
               </h1>
               <p className="text-lg sm:text-xl text-purple-100/80 mb-10 leading-relaxed font-medium max-w-2xl">
-                Van recepties tot grote events — representatieve medewerkers die hospitality snappen. Wij leveren de extra handen die je morgen nodig hebt.
+                Professioneel catering personeel voor de regio Amsterdam. Wij leveren zowel keukenondersteuning als gastvrije bediening voor elke gelegenheid.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a href="/personeelsaanvraag" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold px-8 py-4 rounded-full text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
@@ -253,11 +315,11 @@ export default function CateringPersoneelGezocht() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: "Bediening", desc: "Representatieve medewerkers voor uitserveren en gastontvangst.", icon: Users },
+              { title: "Service Medewerkers", desc: "Snel en effectief personeel voor buffetten, diners en borrels.", icon: Clock },
               { title: "Barmedewerker", desc: "Vlotte barman/vrouw voor drankjes, cocktails en tapwerk.", icon: Wine },
               { title: "Dinerlopers", desc: "Snel en efficiënt personeel voor buffetten en grote groepen.", icon: Zap },
-              { title: "Keukenmedewerker", desc: "Mise-en-place, assistentie bij de chef en koude kant.", icon: UtensilsCrossed },
-              { title: "Cateringassistent", desc: "Hulp bij opbouw, uitgifte en algemene ondersteuning.", icon: Handshake },
+              { title: "Keuken Personeel", desc: "Hulpkoks, basiskoks en afwasmedewerkers die direct mee kunnen draaien.", icon: UtensilsCrossed },
+              { title: "Partymanagers", desc: "Ervaren krachten die de leiding nemen op locatie voor een perfecte uitvoering.", icon: Shield },
               { title: "Leidinggevende catering", desc: "Ervaren krachten die uw team op locatie aansturen.", icon: Award },
             ].map((role, i) => (
               <RevealSection key={i} delay={i * 50} className="group p-8 rounded-3xl border border-gray-100 hover:border-purple-200 hover:bg-purple-50/30 transition-all">
@@ -392,6 +454,20 @@ export default function CateringPersoneelGezocht() {
               </div>
             </div>
           </RevealSection>
+        </div>
+      </section>
+
+      {/* Internal Link Section */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+          <p className="text-sm text-gray-400 mb-8 uppercase tracking-widest font-bold">Gerelateerde pagina's</p>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+            <a href="/personeel-gezocht" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Alle sectoren</a>
+            <span className="text-gray-200 hidden sm:block">•</span>
+            <a href="/personeelsaanvraag" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Personeel aanvragen</a>
+            <span className="text-gray-200 hidden sm:block">•</span>
+            <a href="/event-personeel-gezocht" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Eventpersoneel</a>
+          </div>
         </div>
       </section>
 

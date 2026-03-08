@@ -96,17 +96,93 @@ function GrainOverlay() {
 
 export default function HotelPersoneelGezocht() {
   useEffect(() => {
-    document.title = "Hotelpersoneel inzetten | EXTRA Uitzendbureau Amsterdam";
+    document.title = "Hotelpersoneel Gezocht? Snel Geregeld via EXTRA";
+
+    const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
+      el.setAttribute('href', href);
+    };
+    const addSchema = (id: string, data: object) => {
+      document.getElementById(id)?.remove();
+      const s = document.createElement('script');
+      s.id = id;
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(data);
+      document.head.appendChild(s);
+    };
+
+    setMeta('description', 'Snel hotelpersoneel nodig? EXTRA levert front-office, housekeeping en bediening voor hotels in Amsterdam. Flexibel inzetbaar, direct beschikbaar.');
+    setLink('canonical', 'https://www.doehetextra.nl/hotel-personeel-gezocht');
+
+    setMeta('og:title', 'Hotelpersoneel Gezocht? Snel Geregeld via EXTRA', 'property');
+    setMeta('og:description', 'Snel hotelpersoneel nodig? EXTRA levert front-office, housekeeping en bediening voor hotels in Amsterdam. Flexibel inzetbaar, direct beschikbaar.', 'property');
+    setMeta('og:url', 'https://www.doehetextra.nl/hotel-personeel-gezocht', 'property');
+    setMeta('og:type', 'website', 'property');
+    setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
+
+    addSchema('local-business-schema', {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "EXTRA",
+      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "telephone": "+31851305915",
+      "url": "https://www.doehetextra.nl",
+      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "sameAs": ["https://www.doehetextra.nl"]
+    });
+
+    addSchema('faq-schema', {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Hoe snel kan EXTRA hotelpersoneel leveren?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Wij kunnen in de meeste gevallen binnen 24 uur hotelpersoneel leveren. Voor grotere bezettingen hanteren we 48-72 uur."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Voor welke hotelafdelingen levert EXTRA personeel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "EXTRA levert voor housekeeping, front-office, receptie, banqueting, F&B en conferentiediensten."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Zijn medewerkers van EXTRA getraind en gecheckt?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja, alle medewerkers doorlopen een persoonlijk intakegesprek en selectieproces. EXTRA is NEN-4400-1 gecertificeerd."
+          }
+        }
+      ]
+    });
+
     window.scrollTo(0, 0);
+
+    return () => {
+      document.getElementById('local-business-schema')?.remove();
+      document.getElementById('faq-schema')?.remove();
+    };
   }, []);
 
   const roles = [
     { title: "Front-office medewerker", icon: Building2, desc: "Het visitekaartje van uw hotel bij de check-in." },
     { title: "Housekeeping", icon: Bed, desc: "Zorgvuldige schoonmaak voor een perfecte gastervaring." },
+    { title: "Receptie & Front Office", icon: UserCheck, desc: "Gastvrije en meertalige receptionisten die uw gasten een warm welkom bieden." },
+    { title: "F&B Medewerkers", icon: Utensils, desc: "Ervaren ontbijt-, bar- en bedieningsmedewerkers voor uw hotelrestaurant en roomservice." },
     { title: "Banqueting medewerker", icon: Utensils, desc: "Ondersteuning bij congressen, vergaderingen en feesten." },
     { title: "Barmedewerker", icon: GlassWater, desc: "Ervaren barpersoneel voor uw hotelbar of lounge." },
-    { title: "Ober/bedienend personeel", icon: Utensils, desc: "Representatieve bediening voor uw hotelrestaurant." },
-    { title: "Receptionist", icon: UserCheck, desc: "Professionele ontvangst en administratieve afhandeling." },
   ];
 
   const painPoints = [
@@ -343,6 +419,19 @@ export default function HotelPersoneelGezocht() {
               </a>
             </div>
           </RevealSection>
+        </div>
+      </section>
+
+      {/* Internal Link Section */}
+      <section className="py-16 bg-[#faf8f5]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm text-gray-400 mb-8 uppercase tracking-widest font-bold">Gerelateerde pagina's</p>
+          <div className="flex flex-wrap justify-center gap-y-4 gap-x-8">
+            <Link href="/personeel-gezocht" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Alle sectoren</Link>
+            <Link href="/personeelsaanvraag" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Personeel aanvragen</Link>
+            <Link href="/event-personeel-gezocht" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Eventpersoneel</Link>
+            <Link href="/cateringpersoneel-gezocht" className="text-purple-600 hover:text-purple-700 font-bold transition-colors">Cateringpersoneel</Link>
+          </div>
         </div>
       </section>
 

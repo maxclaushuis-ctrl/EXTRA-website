@@ -135,17 +135,82 @@ export default function PersoneelGezocht() {
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    document.title = "Op zoek naar extra horecapersoneel? | EXTRA Uitzendbureau";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute("content", "EXTRA levert snel, betrouwbaar horecapersoneel in loondienst. NEN-4400-1 gecertificeerd. Hotels, restaurants, events en catering. 800+ medewerkers actief.");
-    } else {
-      const newMeta = document.createElement("meta");
-      newMeta.name = "description";
-      newMeta.content = "EXTRA levert snel, betrouwbaar horecapersoneel in loondienst. NEN-4400-1 gecertificeerd. Hotels, restaurants, events en catering. 800+ medewerkers actief.";
-      document.head.appendChild(newMeta);
-    }
-    return () => { document.title = "EXTRA"; };
+    document.title = "Personeel Gezocht? EXTRA Levert Snel & Flexibel";
+    
+    const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
+      el.setAttribute('href', href);
+    };
+    const addSchema = (id: string, data: object) => {
+      document.getElementById(id)?.remove();
+      const s = document.createElement('script');
+      s.id = id;
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(data);
+      document.head.appendChild(s);
+    };
+
+    setMeta('description', 'Op zoek naar flexibel personeel voor jouw locatie? EXTRA levert snel horecapersoneel voor hotels, events, cateraars en restaurants. Direct geregeld.');
+    setLink('canonical', 'https://www.doehetextra.nl/personeel-gezocht');
+
+    setMeta('og:title', 'Personeel Gezocht? EXTRA Levert Snel & Flexibel', 'property');
+    setMeta('og:description', 'Op zoek naar flexibel personeel voor jouw locatie? EXTRA levert snel horecapersoneel voor hotels, events, cateraars en restaurants. Direct geregeld.', 'property');
+    setMeta('og:url', 'https://www.doehetextra.nl/personeel-gezocht', 'property');
+    setMeta('og:type', 'website', 'property');
+    setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
+
+    addSchema('local-business-schema', {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "EXTRA",
+      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "telephone": "+31851305915",
+      "url": "https://www.doehetextra.nl",
+      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "sameAs": ["https://www.doehetextra.nl"]
+    });
+
+    addSchema('faq-schema', {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Wat kost het inhuren van personeel via EXTRA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "De tarieven zijn afhankelijk van het type medewerker en de duur van de inzet. Neem contact op voor een vrijblijvende offerte."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Hoe snel kan EXTRA personeel leveren?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In de meeste gevallen kunnen wij binnen 24-48 uur personeel leveren. Voor grotere groepen plannen wij samen vooruit."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Voor welke sectoren levert EXTRA horecapersoneel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Hotels, eventlocaties, cateraars, restaurants en eetcafés in Amsterdam en omgeving."
+          }
+        }
+      ]
+    });
+
+    return () => {
+      document.getElementById('local-business-schema')?.remove();
+      document.getElementById('faq-schema')?.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -194,7 +259,7 @@ export default function PersoneelGezocht() {
                       { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Building2 },
                       { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
                       { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
-                      { label: "Restaurants", href: "/restaurant-personeel-gezocht", icon: Wine },
+                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht", icon: UtensilsCrossed },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
@@ -289,7 +354,7 @@ export default function PersoneelGezocht() {
                       { label: "Hotels", href: "/hotel-personeel-gezocht" },
                       { label: "Eventlocaties", href: "/event-personeel-gezocht" },
                       { label: "Cateraars", href: "/cateringpersoneel-gezocht" },
-                      { label: "Restaurants", href: "/restaurant-personeel-gezocht" },
+                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht" },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
                     ))}
@@ -430,10 +495,10 @@ export default function PersoneelGezocht() {
                 color: "bg-orange-50 text-orange-600"
               },
               {
-                title: "Restaurants",
+                title: "Horeca & Restaurants",
                 desc: "Bediening, runners en bar voor drukte en uitval",
-                icon: Wine,
-                href: "/restaurant-personeel-gezocht",
+                icon: UtensilsCrossed,
+                href: "/horecapersoneel-gezocht",
                 color: "bg-red-50 text-red-600"
               }
             ].map((branch, idx) => (
@@ -668,7 +733,7 @@ export default function PersoneelGezocht() {
               { icon: Building2, title: "Hotels", desc: "Housekeeping, banqueting, front office, keuken — flexibel op- en afschalen.", color: "from-purple-600 to-purple-800", border: "border-purple-100", link: "/personeel-gezocht/hotels" },
               { icon: PartyPopper, title: "Eventlocaties", desc: "Grote en kleine events met representatief personeel. Van 5 tot 60+ medewerkers.", color: "from-pink-500 to-purple-600", border: "border-pink-100", link: "/personeel-gezocht/evenementenlocaties" },
               { icon: UtensilsCrossed, title: "Cateraars", desc: "Chefs, bediening en keukenmedewerkers voor catering op locatie.", color: "from-indigo-500 to-purple-600", border: "border-indigo-100", link: "/personeel-gezocht/cateraars" },
-              { icon: Wine, title: "Restaurants", desc: "Runners, bar, bediening, chefs en afwas — wanneer je ze nodig hebt.", color: "from-blue-500 to-indigo-600", border: "border-blue-100", link: "/personeel-gezocht/restaurants" },
+              { icon: UtensilsCrossed, title: "Horeca & Restaurants", desc: "Bediening, keuken en bar voor restaurants, eetcafés en horecalocaties.", color: "from-blue-500 to-indigo-600", border: "border-blue-100", link: "/horecapersoneel-gezocht" },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 100}>
                 <a href={item.link} className={`group block relative bg-gradient-to-br from-white to-gray-50 rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 ${item.border} p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden`}>

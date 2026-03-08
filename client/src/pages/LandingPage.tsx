@@ -799,7 +799,7 @@ export default function LandingPage() {
                       { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Building2 },
                       { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
                       { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
-                      { label: "Restaurants", href: "/restaurant-personeel-gezocht", icon: Wine },
+                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht", icon: UtensilsCrossed },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
@@ -915,7 +915,7 @@ export default function LandingPage() {
                       { label: "Hotels", href: "/hotel-personeel-gezocht" },
                       { label: "Eventlocaties", href: "/event-personeel-gezocht" },
                       { label: "Cateraars", href: "/cateringpersoneel-gezocht" },
-                      { label: "Restaurants", href: "/restaurant-personeel-gezocht" },
+                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht" },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
                     ))}

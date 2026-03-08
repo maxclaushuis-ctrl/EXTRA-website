@@ -105,10 +105,53 @@ export default function PersoneelsAanvraag() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    document.title = "Personeelsaanvraag | EXTRA Uitzendbureau";
+    document.title = "Personeel Aanvragen — EXTRA Uitzendbureau";
+
+    const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
+      el.setAttribute('href', href);
+    };
+    const addSchema = (id: string, data: object) => {
+      document.getElementById(id)?.remove();
+      const s = document.createElement('script');
+      s.id = id;
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(data);
+      document.head.appendChild(s);
+    };
+
+    setMeta('description', 'Vraag snel flexibel horecapersoneel aan via EXTRA. Vul het formulier in en wij nemen binnen één werkdag contact op.');
+    setLink('canonical', 'https://www.doehetextra.nl/personeelsaanvraag');
+
+    setMeta('og:title', 'Personeel Aanvragen — EXTRA Uitzendbureau', 'property');
+    setMeta('og:description', 'Vraag snel flexibel horecapersoneel aan via EXTRA. Vul het formulier in en wij nemen binnen één werkdag contact op.', 'property');
+    setMeta('og:url', 'https://www.doehetextra.nl/personeelsaanvraag', 'property');
+    setMeta('og:type', 'website', 'property');
+    setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
+
+    addSchema('local-business-schema', {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "EXTRA",
+      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "telephone": "+31851305915",
+      "url": "https://www.doehetextra.nl",
+      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "sameAs": ["https://www.doehetextra.nl"]
+    });
+
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
-    return () => { window.removeEventListener("scroll", handleScroll); document.title = "EXTRA"; };
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.getElementById('local-business-schema')?.remove();
+    };
   }, []);
 
   const form = useForm<FormValues>({

@@ -15,7 +15,6 @@ import PersoneelGezocht from "@/pages/PersoneelGezocht";
 import HotelPersoneelGezocht from "@/pages/HotelPersoneelGezocht";
 import EventPersoneelGezocht from "@/pages/EventPersoneelGezocht";
 import CateringPersoneelGezocht from "@/pages/CateringPersoneelGezocht";
-import RestaurantPersoneelGezocht from "@/pages/RestaurantPersoneelGezocht";
 import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
 import Aanmelden from "@/pages/Aanmelden";
 import NieuwsPage from "@/pages/NieuwsPage";
@@ -27,12 +26,7 @@ import HoeExtraWerkt from "@/pages/HoeExtraWerkt";
 import IkZoekExtraWerk from "@/pages/IkZoekExtraWerk";
 import HoeWerktDagbetaling from "@/pages/HoeWerktDagbetaling";
 
-// Werkgever pagina's
-import HorecaPersoneelInhuren from "@/pages/HorecaPersoneelInhuren";
-import HotelPersoneelAmsterdam from "@/pages/HotelPersoneelAmsterdam";
-import EvenementenPersoneelAmsterdam from "@/pages/EvenementenPersoneelAmsterdam";
-import CateringPersoneelAmsterdam from "@/pages/CateringPersoneelAmsterdam";
-import RestaurantPersoneelAmsterdam from "@/pages/RestaurantPersoneelAmsterdam";
+import HorecaPersoneelGezocht from "@/pages/HorecaPersoneelGezocht";
 
 // Kandidaat pagina's
 import HorecaVacaturesAmsterdam from "@/pages/HorecaVacaturesAmsterdam";
@@ -86,18 +80,14 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 
 const PUBLIC_PATHS = [
   '/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
-  '/hotel-personeel-gezocht', '/event-personeel-gezocht', '/cateringpersoneel-gezocht', '/restaurant-personeel-gezocht',
+  '/hotel-personeel-gezocht', '/event-personeel-gezocht', '/cateringpersoneel-gezocht', '/horecapersoneel-gezocht',
   '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
-  // Nieuwe werkgever routes
-  '/horeca-personeel-inhuren', '/hotel-personeel-amsterdam',
-  '/evenementen-personeel-amsterdam', '/catering-personeel-amsterdam',
-  '/restaurant-personeel-amsterdam',
-  // Nieuwe kandidaat routes
+  // Kandidaat routes
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
-  '/front-office-vacatures-amsterdam',
+  '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
   // SEO routes
   '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
@@ -131,11 +121,13 @@ function Router() {
         <Route path="/landing" component={LandingPage} />
 
         {/* Werkgever routes */}
-        <Route path="/horeca-personeel-inhuren" component={HorecaPersoneelInhuren} />
-        <Route path="/hotel-personeel-amsterdam" component={HotelPersoneelAmsterdam} />
-        <Route path="/evenementen-personeel-amsterdam" component={EvenementenPersoneelAmsterdam} />
-        <Route path="/catering-personeel-amsterdam" component={CateringPersoneelAmsterdam} />
-        <Route path="/restaurant-personeel-amsterdam" component={RestaurantPersoneelAmsterdam} />
+        <Route path="/horecapersoneel-gezocht" component={HorecaPersoneelGezocht} />
+        <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
+        <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotel-personeel-gezocht'); return null; }}</Route>
+        <Route path="/evenementen-personeel-amsterdam">{() => { window.location.replace('/event-personeel-gezocht'); return null; }}</Route>
+        <Route path="/catering-personeel-amsterdam">{() => { window.location.replace('/cateringpersoneel-gezocht'); return null; }}</Route>
+        <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
+        <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
 
         {/* Kandidaat routes */}
         <Route path="/horeca-vacatures-amsterdam" component={HorecaVacaturesAmsterdam} />
@@ -170,7 +162,6 @@ function Router() {
         <Route path="/hotel-personeel-gezocht" component={HotelPersoneelGezocht} />
         <Route path="/event-personeel-gezocht" component={EventPersoneelGezocht} />
         <Route path="/cateringpersoneel-gezocht" component={CateringPersoneelGezocht} />
-        <Route path="/restaurant-personeel-gezocht" component={RestaurantPersoneelGezocht} />
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
         <Route path="/aanmelden" component={Aanmelden} />
         <Route path="/extraatje" component={Extraatje} />
