@@ -171,15 +171,10 @@ export default function EventPersoneelGezocht() {
                 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.1] mb-8"
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                Eventpersoneel op afroep?{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300">
-                  EXTRA levert.
-                </span>
+                Jouw event, onze mensen
               </h1>
               <p className="text-lg sm:text-xl text-purple-100/80 mb-10 leading-relaxed font-medium max-w-2xl">
-                Getraind horecapersoneel voor elk event — last-minute of gepland,
-                altijd klaar om te schakelen. Representatief, gemotiveerd en
-                direct inzetbaar.
+                Bediening, runners en hosts — EXTRA regelt de bezetting zodat jij je focust op het event.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link

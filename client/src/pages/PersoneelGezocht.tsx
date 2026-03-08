@@ -371,15 +371,10 @@ export default function PersoneelGezocht() {
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.12] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Extra personeel nodig?{" "}
-              <span className="relative inline-block">
-                <span className="relative z-10">EXTRA</span>
-                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
-              </span>
-              {" "}regelt het.
+              Vol rooster, te weinig mensen?
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              Flexibel horecapersoneel voor hotels, events, cateraars en restaurants. Snel geregeld, altijd in loondienst.
+              EXTRA levert snel en flexibel personeel voor hotels, events en horeca.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">

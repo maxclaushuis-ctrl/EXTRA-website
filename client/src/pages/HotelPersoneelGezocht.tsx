@@ -140,11 +140,10 @@ export default function HotelPersoneelGezocht() {
               <Sparkles className="w-4 h-4" /> Voor Hotels
             </div>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Hotelpersoneel nodig? <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">EXTRA levert de juiste mensen.</span>
+              Vol hotel, te kort aan personeel?
             </h1>
             <p className="text-lg sm:text-xl text-purple-100/70 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Van front-office tot housekeeping — representatief, geselecteerd en direct inzetbaar. Wij vullen uw team aan met gemotiveerde hospitality professionals.
+              EXTRA schakelt snel bij met gecheckt horecapersoneel dat meteen inzetbaar is.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link href="/personeelsaanvraag" className="group inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/20 hover:scale-105">
