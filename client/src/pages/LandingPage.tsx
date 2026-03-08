@@ -788,18 +788,18 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("personeel"); }}
               >
-                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                <a href="/personeel-gezocht" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
                   <Briefcase className="w-5 h-5" />
                   Ik zoek extra personeel
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "personeel" ? "rotate-180" : ""}`} />
-                </button>
+                </a>
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "personeel" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
                     {[
-                      { label: "Hotels", href: "/personeel-gezocht", icon: Building2 },
-                      { label: "Eventlocaties", href: "/personeel-gezocht", icon: PartyPopper },
-                      { label: "Cateraars", href: "/personeel-gezocht", icon: UtensilsCrossed },
-                      { label: "Restaurants", href: "/personeel-gezocht", icon: Wine },
+                      { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Building2 },
+                      { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
+                      { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
+                      { label: "Restaurants", href: "/restaurant-personeel-gezocht", icon: Wine },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
@@ -817,11 +817,11 @@ export default function LandingPage() {
                 className="relative"
                 onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("werk"); }}
               >
-                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                <a href="/horeca-vacatures-amsterdam" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
                   <UserCheck className="w-5 h-5" />
                   Ik zoek extra werk
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
-                </button>
+                </a>
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "werk" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
                     {[
@@ -891,22 +891,33 @@ export default function LandingPage() {
             <div className="px-5 py-5 space-y-1">
               {/* Ik zoek personeel */}
               <div>
-                <button
-                  onClick={() => setMobileExpanded(mobileExpanded === "personeel" ? null : "personeel")}
-                  className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors"
-                >
-                  <span className="flex items-center gap-3">
+                <div className="flex items-center justify-between rounded-xl hover:bg-purple-50 transition-colors">
+                  <a
+                    href="/personeel-gezocht"
+                    className="flex items-center gap-3 flex-1 px-4 py-3.5 text-gray-800 font-bold text-base"
+                  >
                     <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Briefcase className="w-4.5 h-4.5 text-purple-600" />
+                      <Briefcase className="w-4 h-4 text-purple-600" />
                     </div>
-                    Ik zoek personeel
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileExpanded === "personeel" ? "rotate-180" : ""}`} />
-                </button>
+                    Ik zoek extra personeel
+                  </a>
+                  <button
+                    onClick={() => setMobileExpanded(mobileExpanded === "personeel" ? null : "personeel")}
+                    className="p-3 text-gray-400"
+                    aria-label="Submenu openen"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === "personeel" ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
                 <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "personeel" ? "max-h-60" : "max-h-0"}`}>
                   <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    {["Hotels", "Eventlocaties", "Cateraars", "Restaurants"].map((item) => (
-                      <a key={item} href="/personeel-gezocht" className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item}</a>
+                    {[
+                      { label: "Hotels", href: "/hotel-personeel-gezocht" },
+                      { label: "Eventlocaties", href: "/event-personeel-gezocht" },
+                      { label: "Cateraars", href: "/cateringpersoneel-gezocht" },
+                      { label: "Restaurants", href: "/restaurant-personeel-gezocht" },
+                    ].map((item) => (
+                      <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
                     ))}
                   </div>
                 </div>
@@ -914,18 +925,24 @@ export default function LandingPage() {
 
               {/* Ik zoek werk */}
               <div>
-                <button
-                  onClick={() => setMobileExpanded(mobileExpanded === "werk" ? null : "werk")}
-                  className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors"
-                >
-                  <span className="flex items-center gap-3">
+                <div className="flex items-center justify-between rounded-xl hover:bg-purple-50 transition-colors">
+                  <a
+                    href="/horeca-vacatures-amsterdam"
+                    className="flex items-center gap-3 flex-1 px-4 py-3.5 text-gray-800 font-bold text-base"
+                  >
                     <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                      <UserCheck className="w-4.5 h-4.5 text-indigo-600" />
+                      <UserCheck className="w-4 h-4 text-indigo-600" />
                     </div>
-                    Ik zoek werk
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileExpanded === "werk" ? "rotate-180" : ""}`} />
-                </button>
+                    Ik zoek extra werk
+                  </a>
+                  <button
+                    onClick={() => setMobileExpanded(mobileExpanded === "werk" ? null : "werk")}
+                    className="p-3 text-gray-400"
+                    aria-label="Submenu openen"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === "werk" ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
                 <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "werk" ? "max-h-60" : "max-h-0"}`}>
                   <div className="pl-16 pr-4 pb-2 space-y-0.5">
                     {["Horeca", "Housekeeping", "Chefs", "Front Office"].map((item) => (
