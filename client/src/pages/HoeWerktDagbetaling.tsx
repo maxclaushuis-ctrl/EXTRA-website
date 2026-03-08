@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
+import PublicNav from "@/components/PublicNav";
 import {
-  ArrowRight, ChevronDown, ChevronRight, Clock, Menu, X,
+  ArrowRight, ChevronDown, ChevronRight, Clock,
   Zap, Shield, Eye, CalendarCheck, CheckCircle2, Smartphone,
   Users, Trophy, Gift, Star, Banknote, TrendingUp
 } from "lucide-react";
@@ -97,16 +98,6 @@ function PushNotification({ title, body, time, emoji }: { title: string; body: s
 }
 
 export default function HoeWerktDagbetaling() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   useEffect(() => {
     document.title = "Dagbetaling: direct grip op je inkomsten | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
@@ -123,51 +114,7 @@ export default function HoeWerktDagbetaling() {
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── NAV ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <Link href="/landing">
-              <img src={extraLogoWit} alt="EXTRA logo" className={`h-9 sm:h-10 w-auto cursor-pointer transition-all ${scrolled ? "brightness-0" : ""}`} />
-            </Link>
-            <div className="hidden lg:flex items-center gap-6">
-              {[
-                { label: "Ik zoek extra werk", href: "/ik-zoek-extra-werk" },
-                { label: "EXTRAATJE", href: "/extraatje" },
-                { label: "Werkwijze", href: "/hoe-extra-werkt" },
-                { label: "Ons Team", href: "/over-extra/ons-team" },
-              ].map(({ label, href }) => (
-                <a key={label} href={href} className={`text-[16px] font-bold transition-colors ${scrolled ? "text-gray-700 hover:text-purple-600" : "text-white/90 hover:text-white"}`}>
-                  {label}
-                </a>
-              ))}
-              <a href="/aanmelden" className={`ml-2 text-[16px] font-black px-7 py-3 rounded-full transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 ${scrolled ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white" : "bg-white text-purple-700 border-2 border-white"}`}>
-                Aanmelden <ArrowRight className="w-4 h-4" />
-              </a>
-            </div>
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className={scrolled ? "text-gray-900" : "text-white"} size={28} /> : <Menu className={scrolled ? "text-gray-900" : "text-white"} size={28} />}
-            </button>
-          </div>
-        </div>
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
-          <div className="bg-white border-t border-gray-100 shadow-xl px-5 py-4 space-y-1">
-            {[
-              { label: "Ik zoek extra werk", href: "/ik-zoek-extra-werk" },
-              { label: "EXTRAATJE", href: "/extraatje" },
-              { label: "Werkwijze", href: "/hoe-extra-werkt" },
-              { label: "Ons Team", href: "/over-extra/ons-team" },
-            ].map(({ label, href }) => (
-              <a key={label} href={href} className="block px-4 py-3 rounded-xl text-gray-800 font-bold hover:bg-purple-50 transition-colors">{label}</a>
-            ))}
-            <div className="pt-2 border-t border-gray-100">
-              <a href="/aanmelden" className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold px-6 py-3.5 rounded-2xl">
-                <ArrowRight className="w-4 h-4" /> Aanmelden
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNav forceDark={false} />
 
       {/* ══════════════════════════════════════════════
           1. HERO

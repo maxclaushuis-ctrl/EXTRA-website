@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
+import PublicNav from "@/components/PublicNav";
 import {
   Users, Heart, Zap, Star, ArrowRight, ChevronRight,
   Shield, TrendingUp, Sparkles, Award, Check, Gift
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 
 function useScrollReveal() {
@@ -90,14 +90,6 @@ const NAV_LINKS = [
 ];
 
 export default function OverExtra() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     document.title = "Over EXTRA – Wie zijn wij? | EXTRA Hospitality Staffing";
@@ -119,33 +111,7 @@ export default function OverExtra() {
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── NAV ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <Link href="/landing">
-            <img
-              src={extraLogoWit}
-              alt="EXTRA logo"
-              className={`h-8 sm:h-9 w-auto cursor-pointer transition-all ${scrolled ? "brightness-0" : ""}`}
-            />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/over-extra/ons-team"
-              className={`text-sm font-semibold transition-colors hidden sm:block ${scrolled ? "text-gray-700 hover:text-purple-600" : "text-white/90 hover:text-white"}`}
-            >
-              Ons team
-            </Link>
-            <a
-              href="/aanmelden"
-              className="inline-flex items-center gap-2 font-bold text-sm px-5 py-2.5 rounded-full text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
-            >
-              Aanmelden <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* ── HERO ── */}
       <section

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowRight, ArrowLeft, Check, Phone, MessageCircle, Shield, Users, Zap } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import PublicNav from "@/components/PublicNav";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
@@ -102,7 +102,6 @@ const clients = [
 
 export default function PersoneelsAanvraag() {
   const [submitted, setSubmitted] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     document.title = "Personeel Aanvragen — EXTRA Uitzendbureau";
@@ -146,10 +145,7 @@ export default function PersoneelsAanvraag() {
       "sameAs": ["https://www.doehetextra.nl"]
     });
 
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
       document.getElementById('local-business-schema')?.remove();
     };
   }, []);
@@ -178,24 +174,7 @@ export default function PersoneelsAanvraag() {
     <div className="min-h-screen font-sans antialiased overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {/* NAV */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg border-b border-purple-100/50" : "bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-20">
-            <a href="/landing" className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
-            </a>
-            <div className="flex items-center gap-6">
-              <a href="/horeca-personeel-inhuren" className={`hidden sm:flex items-center gap-1.5 text-sm font-semibold transition-colors ${scrolled ? "text-gray-600 hover:text-purple-600" : "text-white/80 hover:text-white"}`}>
-                <ArrowLeft className="w-4 h-4" /> Terug
-              </a>
-              <a href="tel:0851305915" className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${scrolled ? "text-gray-700 hover:text-purple-600" : "text-white hover:text-purple-200"}`}>
-                <Phone className="w-4 h-4" /> 085 130 59 15
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNav forceDark={false} />
 
       {/* HERO */}
       <section className="relative pt-28 pb-16 overflow-hidden">

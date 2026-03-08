@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import {
   Users, Gift, Star, ChevronDown, ChevronUp,
   TrendingUp, Shield, Clock, Trophy,
-  ArrowRight, Check, Menu, X, Briefcase, UserCheck,
+  ArrowRight, Check, Briefcase, UserCheck,
   Award, Handshake, Phone, Sparkles, Heart, Zap,
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Tag, BookOpen, BarChart3, UserPlus, Search, CalendarCheck, ThumbsUp
@@ -126,13 +127,8 @@ const appScreens = [
 ];
 
 export default function PersoneelGezocht() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [activeScreen, setActiveScreen] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     document.title = "Personeel Gezocht? EXTRA Levert Snel & Flexibel";
@@ -213,205 +209,14 @@ export default function PersoneelGezocht() {
     };
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const scrollTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setMobileMenuOpen(false);
   }, []);
 
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <GrainOverlay />
-
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}
-        onMouseLeave={() => {
-          dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 200);
-        }}
-        onMouseEnter={() => {
-          if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <a href="/landing" className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA – Horecapersoneel uitzendbureau Amsterdam" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
-            </a>
-            <div className="hidden lg:flex items-center gap-2">
-              {/* Ik zoek personeel */}
-              <div
-                className="relative"
-                onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("personeel"); }}
-              >
-                <a href="/personeel-gezocht" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
-                  <Briefcase className="w-5 h-5" />
-                  Ik zoek extra personeel
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "personeel" ? "rotate-180" : ""}`} />
-                </a>
-                <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "personeel" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
-                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
-                    {[
-                      { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Building2 },
-                      { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
-                      { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
-                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht", icon: UtensilsCrossed },
-                    ].map((item) => (
-                      <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
-                          <item.icon className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <span className="text-sm font-semibold">{item.label}</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Klantcases */}
-              <button
-                onClick={() => scrollTo("cases")}
-                className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}
-              >
-                <Trophy className="w-5 h-5" />
-                Klantcases
-              </button>
-
-              {/* Over EXTRA */}
-              <div
-                className="relative"
-                onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("over"); }}
-              >
-                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "over" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
-                  <Star className="w-5 h-5" />
-                  Over EXTRA
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "over" ? "rotate-180" : ""}`} />
-                </button>
-                <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "over" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
-                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[260px]">
-                    {[
-                      { label: "Onze werkwijze", action: () => scrollTo("werkwijze"), icon: Clock },
-                      { label: "Waarom EXTRA", action: () => scrollTo("usp"), icon: Shield },
-                      { label: "Ons beloningssysteem", action: () => scrollTo("rewards"), icon: Gift },
-                    ].map((item) => (
-                      <button key={item.label} onClick={() => { item.action(); setActiveDropdown(null); }} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group w-full text-left">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
-                          <item.icon className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <span className="text-sm font-semibold">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Vraag personeel aan CTA */}
-              <a
-                href="/personeelsaanvraag"
-                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[18px] font-bold px-8 py-3.5 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2.5 border border-purple-500/20"
-              >
-                <UserPlus className="w-[18px] h-[18px]" />
-                Vraag personeel aan
-              </a>
-            </div>
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className={scrolled ? "text-gray-900" : "text-white"} size={28} /> : <Menu className={scrolled ? "text-gray-900" : "text-white"} size={28} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"}`}>
-          <div className="bg-white border-t border-gray-100 shadow-2xl overflow-y-auto max-h-[80vh]">
-            <div className="px-5 py-5 space-y-1">
-              {/* Ik zoek personeel */}
-              <div>
-                <div className="flex items-center justify-between rounded-xl hover:bg-purple-50 transition-colors">
-                  <a
-                    href="/personeel-gezocht"
-                    className="flex items-center gap-3 flex-1 px-4 py-3.5 text-gray-800 font-bold text-base"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Briefcase className="w-4 h-4 text-purple-600" />
-                    </div>
-                    Ik zoek extra personeel
-                  </a>
-                  <button
-                    onClick={() => setMobileExpanded(mobileExpanded === "personeel" ? null : "personeel")}
-                    className="p-3 text-gray-400"
-                    aria-label="Submenu openen"
-                  >
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === "personeel" ? "rotate-180" : ""}`} />
-                  </button>
-                </div>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "personeel" ? "max-h-60" : "max-h-0"}`}>
-                  <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    {[
-                      { label: "Hotels", href: "/hotel-personeel-gezocht" },
-                      { label: "Eventlocaties", href: "/event-personeel-gezocht" },
-                      { label: "Cateraars", href: "/cateringpersoneel-gezocht" },
-                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht" },
-                    ].map((item) => (
-                      <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Klantcases */}
-              <button
-                onClick={() => { scrollTo("cases"); setMobileMenuOpen(false); }}
-                className="flex items-center w-full px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors"
-              >
-                <span className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <Trophy className="w-4.5 h-4.5 text-purple-600" />
-                  </div>
-                  Klantcases
-                </span>
-              </button>
-
-              {/* Over EXTRA */}
-              <div>
-                <button
-                  onClick={() => setMobileExpanded(mobileExpanded === "over" ? null : "over")}
-                  className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors"
-                >
-                  <span className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Star className="w-4.5 h-4.5 text-purple-600" />
-                    </div>
-                    Over EXTRA
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileExpanded === "over" ? "rotate-180" : ""}`} />
-                </button>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "over" ? "max-h-60" : "max-h-0"}`}>
-                  <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    <button onClick={() => { scrollTo("werkwijze"); setMobileMenuOpen(false); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Onze werkwijze</button>
-                    <button onClick={() => { scrollTo("usp"); setMobileMenuOpen(false); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Waarom EXTRA</button>
-                    <button onClick={() => { scrollTo("rewards"); setMobileMenuOpen(false); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Ons beloningssysteem</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Vraag personeel aan CTA */}
-              <div className="pt-3 px-2">
-                <a
-                  href="/personeelsaanvraag"
-                  className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold text-base py-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg shadow-purple-500/20"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  Vraag personeel aan
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* 1. HERO                                            */}
@@ -724,34 +529,34 @@ export default function PersoneelGezocht() {
                 <Briefcase className="w-4 h-4" /> Branches
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waar heb je extra personeel voor nodig?
-              </h2>
-            </div>
-          </RevealSection>
-          <div className="grid sm:grid-cols-2 gap-5 sm:gap-8">
-            {[
-              { icon: Building2, title: "Hotels", desc: "Housekeeping, banqueting, front office, keuken — flexibel op- en afschalen.", color: "from-purple-600 to-purple-800", border: "border-purple-100", link: "/personeel-gezocht/hotels" },
-              { icon: PartyPopper, title: "Eventlocaties", desc: "Grote en kleine events met representatief personeel. Van 5 tot 60+ medewerkers.", color: "from-pink-500 to-purple-600", border: "border-pink-100", link: "/personeel-gezocht/evenementenlocaties" },
-              { icon: UtensilsCrossed, title: "Cateraars", desc: "Chefs, bediening en keukenmedewerkers voor catering op locatie.", color: "from-indigo-500 to-purple-600", border: "border-indigo-100", link: "/personeel-gezocht/cateraars" },
-              { icon: UtensilsCrossed, title: "Horeca & Restaurants", desc: "Bediening, keuken en bar voor restaurants, eetcafés en horecalocaties.", color: "from-blue-500 to-indigo-600", border: "border-blue-100", link: "/horecapersoneel-gezocht" },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <a href={item.link} className={`group block relative bg-gradient-to-br from-white to-gray-50 rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 ${item.border} p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden`}>
-                  <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-purple-50 to-transparent rounded-bl-[100%] opacity-60" />
-                  <div className="relative">
-                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                      <item.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-3 sm:mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>{item.title}</h3>
-                    <p className="text-sm sm:text-base text-gray-500 leading-relaxed mb-6">{item.desc}</p>
-                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-sm group-hover:gap-4 transition-all">
-                      Bekijk mogelijkheden <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </div>
-                </a>
-              </RevealSection>
-            ))}
+              Waar heb je extra personeel voor nodig?
+            </h2>
           </div>
+        </RevealSection>
+        <div className="grid sm:grid-cols-2 gap-5 sm:gap-8">
+          {[
+            { icon: Building2, title: "Hotels", desc: "Housekeeping, banqueting, front office, keuken — flexibel op- en afschalen.", color: "from-purple-600 to-purple-800", border: "border-purple-100", link: "/hotel-personeel-gezocht" },
+            { icon: PartyPopper, title: "Eventlocaties", desc: "Grote en kleine events met representatief personeel. Van 5 tot 60+ medewerkers.", color: "from-pink-500 to-purple-600", border: "border-pink-100", link: "/event-personeel-gezocht" },
+            { icon: UtensilsCrossed, title: "Cateraars", desc: "Chefs, bediening en keukenmedewerkers voor catering op locatie.", color: "from-indigo-500 to-purple-600", border: "border-indigo-100", link: "/cateringpersoneel-gezocht" },
+            { icon: UtensilsCrossed, title: "Horeca & Restaurants", desc: "Bediening, keuken en bar voor restaurants, eetcafés en horecalocaties.", color: "from-blue-500 to-indigo-600", border: "border-blue-100", link: "/horecapersoneel-gezocht" },
+          ].map((item, i) => (
+            <RevealSection key={i} delay={i * 100}>
+              <a href={item.link} className={`group block relative bg-gradient-to-br from-white to-gray-50 rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 ${item.border} p-7 sm:p-10 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden`}>
+                <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-purple-50 to-transparent rounded-bl-[100%] opacity-60" />
+                <div className="relative">
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                    <item.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 sm:mb-4">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-6">{item.desc}</p>
+                  <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-sm group-hover:gap-4 transition-all">
+                    Bekijk mogelijkheden <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </a>
+            </RevealSection>
+          ))}
+        </div>
         </div>
       </section>
 

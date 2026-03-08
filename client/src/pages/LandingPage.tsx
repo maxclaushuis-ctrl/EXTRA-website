@@ -1,9 +1,10 @@
+import PublicNav from "@/components/PublicNav";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import {
   Users, Trophy, Gift, Star, ChevronDown, ChevronUp,
   TrendingUp, Shield, Clock,
-  ArrowRight, Check, Menu, X, Briefcase, UserCheck, CreditCard,
+  ArrowRight, Check, Briefcase, UserCheck, CreditCard,
   Award, Handshake, Phone, Sparkles, Heart, Zap,
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin, Instagram, Linkedin
@@ -40,7 +41,7 @@ import rewardAirpods from "@assets/Airpods_1771872665358.webp";
 import rewardGig from "@assets/Gig_1771872665358.webp";
 
 function useScrollReveal() {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -266,14 +267,14 @@ function NewsSection() {
             <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-500/10 px-4 sm:px-5 py-2 rounded-full border border-purple-500/20">
               <Sparkles className="w-4 h-4" /> Nieuws & Blogs
             </span>
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h2 className="text-3xl sm:text-5xl font-black text-white leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Laatste nieuws uit{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">de branche</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
               </span>
             </h2>
-            <p className="text-base sm:text-lg text-gray-400 mt-4 max-w-2xl">
+            <p className="text-base sm:text-lg text-purple-100/70 leading-relaxed mt-4 max-w-2xl">
               Tips, verhalen en trends uit de horeca- en hotelwereld. Ontdek wat er speelt.
             </p>
           </div>
@@ -492,12 +493,12 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
                 {d.label}
               </div>
 
-              <h3 className="relative text-4xl lg:text-5xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h3 className="relative text-2xl font-bold text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 {d.title}
                 <span className="absolute -bottom-1 left-0 h-1.5 rounded-full bg-gradient-to-r from-orange-400 via-amber-400 to-transparent" style={{ width: "60%" }} />
               </h3>
 
-              <p className="text-lg text-purple-200/80 mb-6">{d.subtitle}</p>
+              <p className="text-sm sm:text-base text-purple-100/70 leading-relaxed mb-6">{d.subtitle}</p>
 
               <div className="space-y-3 mb-8">
                 {d.usps.map((usp, i) => (
@@ -684,11 +685,6 @@ function DienstenMobiel({ diensten }: { diensten: DienstItem[] }) {
 }
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [howItWorksTab, setHowItWorksTab] = useState<"werkgever" | "medewerker">("werkgever");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeNotification, setActiveNotification] = useState(0);
@@ -740,15 +736,8 @@ export default function LandingPage() {
     return () => { document.getElementById(styleId)?.remove(); };
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const scrollTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setMobileMenuOpen(false);
   }, []);
 
   const [reviewTab, setReviewTab] = useState<"medewerkers" | "klanten">("medewerkers");
@@ -766,230 +755,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <GrainOverlay />
+      <PublicNav />
 
-      {/* ── NAVIGATION ── */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}
-        onMouseLeave={() => {
-          dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 200);
-        }}
-        onMouseEnter={() => {
-          if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
-              <img src={extraLogoWit} alt="EXTRA – Horecapersoneel uitzendbureau Amsterdam" className={`h-9 sm:h-10 w-auto transition-all ${scrolled ? "brightness-0" : ""}`} />
-            </div>
-            <div className="hidden lg:flex items-center gap-2">
-              {/* Ik zoek personeel */}
-              <div
-                className="relative"
-                onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("personeel"); }}
-              >
-                <a href="/personeel-gezocht" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "personeel" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
-                  <Briefcase className="w-5 h-5" />
-                  Ik zoek extra personeel
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "personeel" ? "rotate-180" : ""}`} />
-                </a>
-                <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "personeel" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
-                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
-                    {[
-                      { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Building2 },
-                      { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
-                      { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
-                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht", icon: UtensilsCrossed },
-                    ].map((item) => (
-                      <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
-                          <item.icon className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <span className="text-sm font-semibold">{item.label}</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Ik zoek werk */}
-              <div
-                className="relative"
-                onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("werk"); }}
-              >
-                <a href="/horeca-vacatures-amsterdam" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
-                  <UserCheck className="w-5 h-5" />
-                  Ik zoek extra werk
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
-                </a>
-                <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "werk" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
-                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
-                    {[
-                      { label: "Horeca", href: "/aanmelden", icon: UtensilsCrossed },
-                      { label: "Housekeeping", href: "/aanmelden", icon: Heart },
-                      { label: "Chefs", href: "/aanmelden", icon: Award },
-                      { label: "Front Office", href: "/aanmelden", icon: Handshake },
-                    ].map((item) => (
-                      <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 flex items-center justify-center transition-colors">
-                          <item.icon className="w-4 h-4 text-indigo-600" />
-                        </div>
-                        <span className="text-sm font-semibold">{item.label}</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Over EXTRA */}
-              <div
-                className="relative"
-                onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("over"); }}
-              >
-                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "over" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
-                  <Star className="w-5 h-5" />
-                  Over EXTRA
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "over" ? "rotate-180" : ""}`} />
-                </button>
-                <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "over" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
-                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[260px]">
-                    {[
-                      { label: "Onze werkwijze", action: () => { window.location.href = "/horeca-uitzendbureau-amsterdam-werkwijze"; }, icon: Clock },
-                      { label: "Klantcases", action: () => scrollTo("differentiators"), icon: Trophy },
-                      { label: "Ons beloningssysteem", action: () => scrollTo("rewards"), icon: Gift },
-                      { label: "Ons team", action: () => { window.location.href = "/over-extra/ons-team"; }, icon: Users },
-                    ].map((item) => (
-                      <button key={item.label} onClick={() => { item.action(); setActiveDropdown(null); }} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group w-full text-left">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
-                          <item.icon className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <span className="text-sm font-semibold">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* CTA */}
-              <a
-                href="/personeelsaanvraag"
-                className="ml-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[15px] font-bold px-7 py-3 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 flex items-center gap-2 border border-purple-500/20"
-              >
-                <Phone className="w-[16px] h-[16px]" />
-                Personeel aanvragen
-              </a>
-            </div>
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className={scrolled ? "text-gray-900" : "text-white"} size={28} /> : <Menu className={scrolled ? "text-gray-900" : "text-white"} size={28} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"}`}>
-          <div className="bg-white border-t border-gray-100 shadow-2xl overflow-y-auto max-h-[80vh]">
-            <div className="px-5 py-5 space-y-1">
-              {/* Ik zoek personeel */}
-              <div>
-                <div className="flex items-center justify-between rounded-xl hover:bg-purple-50 transition-colors">
-                  <a
-                    href="/personeel-gezocht"
-                    className="flex items-center gap-3 flex-1 px-4 py-3.5 text-gray-800 font-bold text-base"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Briefcase className="w-4 h-4 text-purple-600" />
-                    </div>
-                    Ik zoek extra personeel
-                  </a>
-                  <button
-                    onClick={() => setMobileExpanded(mobileExpanded === "personeel" ? null : "personeel")}
-                    className="p-3 text-gray-400"
-                    aria-label="Submenu openen"
-                  >
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === "personeel" ? "rotate-180" : ""}`} />
-                  </button>
-                </div>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "personeel" ? "max-h-60" : "max-h-0"}`}>
-                  <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    {[
-                      { label: "Hotels", href: "/hotel-personeel-gezocht" },
-                      { label: "Eventlocaties", href: "/event-personeel-gezocht" },
-                      { label: "Cateraars", href: "/cateringpersoneel-gezocht" },
-                      { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht" },
-                    ].map((item) => (
-                      <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Ik zoek werk */}
-              <div>
-                <div className="flex items-center justify-between rounded-xl hover:bg-purple-50 transition-colors">
-                  <a
-                    href="/horeca-vacatures-amsterdam"
-                    className="flex items-center gap-3 flex-1 px-4 py-3.5 text-gray-800 font-bold text-base"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                      <UserCheck className="w-4 h-4 text-indigo-600" />
-                    </div>
-                    Ik zoek extra werk
-                  </a>
-                  <button
-                    onClick={() => setMobileExpanded(mobileExpanded === "werk" ? null : "werk")}
-                    className="p-3 text-gray-400"
-                    aria-label="Submenu openen"
-                  >
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === "werk" ? "rotate-180" : ""}`} />
-                  </button>
-                </div>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "werk" ? "max-h-60" : "max-h-0"}`}>
-                  <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    {["Horeca", "Housekeeping", "Chefs", "Front Office"].map((item) => (
-                      <a key={item} href="/aanmelden" className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item}</a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Over EXTRA */}
-              <div>
-                <button
-                  onClick={() => setMobileExpanded(mobileExpanded === "over" ? null : "over")}
-                  className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors"
-                >
-                  <span className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Star className="w-4.5 h-4.5 text-purple-600" />
-                    </div>
-                    Over EXTRA
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileExpanded === "over" ? "rotate-180" : ""}`} />
-                </button>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "over" ? "max-h-60" : "max-h-0"}`}>
-                  <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    <button onClick={() => { scrollTo("how-it-works"); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Onze werkwijze</button>
-                    <button onClick={() => { scrollTo("differentiators"); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Klantcases</button>
-                    <button onClick={() => { scrollTo("rewards"); }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Ons beloningssysteem</button>
-                    <button onClick={() => { window.location.href = "/over-extra/ons-team"; }} className="block w-full text-left py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Ons team</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact CTA */}
-              <div className="pt-3 px-2">
-                <a
-                  href="/personeelsaanvraag"
-                  className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold text-base py-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg shadow-purple-500/20"
-                >
-                  <Phone className="w-5 h-5" />
-                  Contact
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
 
       {/* ════════════════════════════════════════════════ */}
       {/* 1. HERO                                          */}
@@ -1002,7 +769,7 @@ export default function LandingPage() {
             className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
             style={{ filter: "contrast(1.03) saturate(1.02)" }}
             loading="eager"
-            fetchpriority="high"
+            {...{ fetchpriority: "high" } as any}
             decoding="async"
           />
           <div
@@ -1031,7 +798,7 @@ export default function LandingPage() {
               <span className="text-white/90 text-xs sm:text-sm font-semibold">800+ medewerkers actief</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.08] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Horeca draait op mensen,{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">EXTRA</span>
@@ -1040,7 +807,7 @@ export default function LandingPage() {
               {" "}levert ze!
             </h1>
 
-            <p className="text-lg sm:text-xl md:text-2xl text-purple-100/90 max-w-lg mb-8 sm:mb-10 leading-relaxed font-medium">
+            <p className="text-lg sm:text-xl text-purple-100/75 leading-relaxed max-w-lg mb-8 sm:mb-10 font-medium">
               Snel horecapersoneel inzetten of direct aan de slag? Bij EXTRA regelen we het.
             </p>
 
@@ -1293,10 +1060,10 @@ export default function LandingPage() {
               <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
                 <Sparkles className="w-4 h-4" /> Onze diensten
               </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-4 sm:mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 sm:mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Welke EXTRA's heb je nodig?
               </h2>
-              <p className="text-base sm:text-lg text-purple-200/80 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg text-purple-100/70 leading-relaxed max-w-2xl mx-auto">
                 Kies het team dat bij jouw past, van keuken tot front-office, altijd representatief en in loondienst.
               </p>
             </div>

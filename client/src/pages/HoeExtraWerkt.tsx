@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
+import PublicNav from "@/components/PublicNav";
 import {
   ArrowRight, ChevronRight, Zap, Phone, UserCheck, Clock,
   TrendingUp, MessageCircle, Briefcase, Gift, Star,
@@ -117,15 +118,7 @@ function StepCard({ step, icon: Icon, title, desc, color, delay, isLast = false 
 
 /* ── PAGE ── */
 export default function HoeExtraWerkt() {
-  const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState<"werkgever" | "medewerker">("werkgever");
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     document.title = "Hoe EXTRA werkt – Werkwijze voor werkgevers & medewerkers | EXTRA";
@@ -236,22 +229,7 @@ export default function HoeExtraWerkt() {
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── NAV ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <Link href="/landing">
-            <img src={extraLogoWit} alt="EXTRA logo" className={`h-8 sm:h-9 w-auto cursor-pointer transition-all ${scrolled ? "brightness-0" : ""}`} />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/over-extra" className={`text-sm font-semibold transition-colors hidden sm:block ${scrolled ? "text-gray-700 hover:text-purple-600" : "text-white/90 hover:text-white"}`}>
-              Over EXTRA
-            </Link>
-            <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold text-sm px-5 py-2.5 rounded-full text-white transition-all hover:-translate-y-0.5 hover:shadow-lg" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
-              Aanmelden <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
+import PublicNav from "@/components/PublicNav";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, Tag } from "lucide-react";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
@@ -258,7 +259,6 @@ export default function NieuwsArtikel() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
   const staticArticle = articles.find(a => a.slug === slug);
-  const [scrolled, setScrolled] = useState(false);
 
   const { data: dbPost, isLoading: dbLoading } = useQuery<any>({
     queryKey: [`/api/blog/${slug}`],
@@ -268,9 +268,6 @@ export default function NieuwsArtikel() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, [slug]);
 
   if (dbLoading) {
@@ -317,19 +314,7 @@ export default function NieuwsArtikel() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
         {dbPost.metaTitle && <title>{dbPost.metaTitle}</title>}
 
-        {/* NAV */}
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 sm:h-20">
-              <Link href="/landing">
-                <img src={extraLogoWit} alt="EXTRA" className={`h-8 sm:h-9 w-auto transition-all duration-300 ${scrolled ? "brightness-0" : ""}`} />
-              </Link>
-              <Link href="/nieuws" className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-all ${scrolled ? "text-purple-700 hover:bg-purple-50 border border-purple-200" : "text-white/80 hover:text-white hover:bg-white/10 border border-white/20"}`}>
-                <ArrowLeft className="w-4 h-4" /> Terug naar nieuws
-              </Link>
-            </div>
-          </div>
-        </nav>
+        <PublicNav />
 
         {/* Hero */}
         <div className="relative pt-16 sm:pt-20 overflow-hidden">
@@ -402,30 +387,7 @@ export default function NieuwsArtikel() {
     <div className="min-h-screen bg-white font-sans antialiased" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {/* ── NAV ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            <Link href="/landing">
-              <img
-                src={extraLogoWit}
-                alt="EXTRA"
-                className={`h-8 sm:h-9 w-auto transition-all duration-300 ${scrolled ? "brightness-0" : ""}`}
-              />
-            </Link>
-            <Link
-              href="/nieuws"
-              className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-all ${
-                scrolled
-                  ? "text-purple-700 hover:bg-purple-50 border border-purple-200"
-                  : "text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
-              }`}
-            >
-              <ArrowLeft className="w-4 h-4" /> Terug naar nieuws
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* ── HERO / HEADER ── */}
       <div className="relative pt-16 sm:pt-20 overflow-hidden">
