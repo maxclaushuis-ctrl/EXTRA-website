@@ -45,12 +45,12 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
       key: "personeel",
       label: "Ik zoek extra personeel",
       icon: Briefcase,
-      href: "/horeca-personeel-inhuren",
+      href: "/personeel-gezocht",
       items: [
-        { label: "Hotels", href: "/hotel-personeel-amsterdam", icon: Hotel },
-        { label: "Eventlocaties", href: "/evenementen-personeel-amsterdam", icon: PartyPopper },
-        { label: "Cateraars", href: "/catering-personeel-amsterdam", icon: UtensilsCrossed },
-        { label: "Restaurants", href: "/restaurant-personeel-amsterdam", icon: Wine },
+        { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Hotel },
+        { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
+        { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
+        { label: "Restaurants", href: "/restaurant-personeel-gezocht", icon: Wine },
       ],
     },
     {

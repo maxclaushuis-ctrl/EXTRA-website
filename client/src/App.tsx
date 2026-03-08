@@ -12,6 +12,10 @@ import BrochureEN from "@/pages/BrochureEN";
 import BrochureEvents from "@/pages/BrochureEvents";
 import LandingPage from "@/pages/LandingPage";
 import PersoneelGezocht from "@/pages/PersoneelGezocht";
+import HotelPersoneelGezocht from "@/pages/HotelPersoneelGezocht";
+import EventPersoneelGezocht from "@/pages/EventPersoneelGezocht";
+import CateringPersoneelGezocht from "@/pages/CateringPersoneelGezocht";
+import RestaurantPersoneelGezocht from "@/pages/RestaurantPersoneelGezocht";
 import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
 import Aanmelden from "@/pages/Aanmelden";
 import NieuwsPage from "@/pages/NieuwsPage";
@@ -82,6 +86,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 
 const PUBLIC_PATHS = [
   '/landing', '/personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
+  '/hotel-personeel-gezocht', '/event-personeel-gezocht', '/cateringpersoneel-gezocht', '/restaurant-personeel-gezocht',
   '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
@@ -162,6 +167,10 @@ function Router() {
 
         {/* Overige publieke routes */}
         <Route path="/personeel-gezocht" component={PersoneelGezocht} />
+        <Route path="/hotel-personeel-gezocht" component={HotelPersoneelGezocht} />
+        <Route path="/event-personeel-gezocht" component={EventPersoneelGezocht} />
+        <Route path="/cateringpersoneel-gezocht" component={CateringPersoneelGezocht} />
+        <Route path="/restaurant-personeel-gezocht" component={RestaurantPersoneelGezocht} />
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
         <Route path="/aanmelden" component={Aanmelden} />
         <Route path="/extraatje" component={Extraatje} />

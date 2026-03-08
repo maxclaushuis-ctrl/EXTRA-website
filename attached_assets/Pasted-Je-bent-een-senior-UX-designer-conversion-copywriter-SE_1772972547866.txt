@@ -1,0 +1,312 @@
+Je bent een senior UX-designer, conversion copywriter, SEO-specialist en front-end developer.
+
+We gaan de pagina-structuur voor “Ik zoek extra personeel” verder uitwerken op de website van EXTRA.
+
+BELANGRIJK:
+Op dit moment bestaat alleen de algemene landingspagina “personeel-gezocht”. Die moet blijven bestaan, maar moet algemener worden ingestoken. Daarnaast moeten er 4 aparte branchespecifieke landingspagina’s bijkomen.
+
+Het totaal moet dus bestaan uit 5 verschillende pagina’s:
+
+1. Algemene pagina:
+- personeel-gezocht
+
+2. Branchespecifieke pagina’s:
+- hotel-personeel-gezocht
+- event-personeel-gezocht
+- cateringpersoneel-gezocht
+- restaurant-personeel-gezocht
+
+DOEL
+De algemene pagina moet dienen als centrale pagina voor opdrachtgevers die op zoek zijn naar extra personeel, zonder direct al een specifieke branche te kiezen.
+
+De branchepagina’s moeten juist veel specifieker worden ingestoken, met eigen teksten, eigen focus, eigen pijnpunten en eigen secties die passen bij die branche.
+
+BELANGRIJKE NAVIGATIELOGICA
+Als een bezoeker klikt op:
+- “Ik zoek extra personeel” in het hoofdmenu
+- de knop “Ik zoek extra personeel” op de homepage
+
+dan moet de bezoeker altijd naar de algemene pagina:
+- /personeel-gezocht
+
+Alleen als een bezoeker vanuit de subnavigatie of via cards/tegels op een branche klikt, gaat hij door naar de onderliggende branchepagina.
+
+Dus:
+- “Ik zoek extra personeel” = algemene pagina
+- subpagina’s/tegels = specifieke branchepagina’s
+
+HUISSTIJL EN CONSISTENTIE
+Alle 5 pagina’s moeten volledig in dezelfde huisstijl worden gemaakt als de rest van de website van EXTRA.
+
+Let op:
+- dezelfde kleuren
+- dezelfde typografie
+- dezelfde spacing
+- dezelfde buttons
+- dezelfde CTA-stijl
+- dezelfde cards / componenten
+- dezelfde header/footer
+- dezelfde stijl van iconen en visuals
+
+De pagina’s mogen niet aanvoelen als losse templates, maar moeten één geheel vormen met de rest van de website.
+
+OPDRACHT
+Maak dus 5 pagina’s binnen dezelfde designstructuur, maar met inhoudelijk verschillende insteken:
+
+======================================================================
+1. ALGEMENE PAGINA – PERSONEEL-GEZOCHT
+======================================================================
+
+Slug:
+- /personeel-gezocht
+
+Doel:
+Deze pagina is de algemene instappagina voor opdrachtgevers die extra personeel zoeken.
+
+Deze pagina moet:
+- algemener ingestoken zijn
+- duidelijk maken dat EXTRA personeel levert voor verschillende branches
+- de bezoeker helpen kiezen tussen de verschillende branches
+- doorlinken naar:
+  - Hotels
+  - Eventlocaties
+  - Cateraars
+  - Restaurants
+
+De copy op deze pagina moet dus niet te specifiek over één branche gaan, maar breder over:
+- flexibel horecapersoneel
+- snel op- en afschalen
+- kwaliteit
+- representatief personeel
+- verschillende functies en inzetmogelijkheden
+
+De pagina moet visueel duidelijke cards / tegels / blokken bevatten waarmee de gebruiker door kan klikken naar de juiste branchepagina.
+
+Voorbeeld pagina-opbouw:
+1. Hero
+2. Korte algemene intro
+3. Branch cards / tegels
+4. Waarom EXTRA
+5. Hoe het werkt
+6. Reviews / social proof
+7. CTA-sectie
+
+======================================================================
+2. HOTEL-PERSONEEL-GEZOCHT
+======================================================================
+
+Slug:
+- /hotel-personeel-gezocht
+
+Doel:
+Landingspagina specifiek voor hotels.
+
+Deze pagina moet inhoudelijk focussen op de functies en uitdagingen die relevant zijn voor hotels.
+
+Belangrijke focuspunten:
+- front-office
+- housekeeping
+- chefs
+- banqueting
+- representativiteit
+- kwaliteit en betrouwbaarheid
+- snel schakelen bij bezettingsdrukte
+- personeel dat past bij de uitstraling van het hotel
+
+De teksten moeten inspelen op de pijnpunten van hotels, zoals:
+- snel opschalen bij hoge bezetting
+- kwaliteitsbewaking
+- representatieve medewerkers
+- personeel voor verschillende afdelingen
+- continuïteit en flexibiliteit
+
+Voorbeeld secties:
+1. Hero
+2. Intro gericht op hotelpersoneel
+3. Voor welke functies EXTRA levert
+4. Pijnpunten in hotels + oplossing
+5. Waarom EXTRA voor hotels
+6. Social proof / cases / reviews
+7. CTA
+
+======================================================================
+3. EVENT-PERSONEEL-GEZOCHT
+======================================================================
+
+Slug:
+- /event-personeel-gezocht
+
+Doel:
+Landingspagina specifiek voor eventlocaties / evenementen.
+
+Belangrijke focuspunten:
+- flexibel op- en afschalen
+- getraind horecapersoneel
+- bediening
+- bar
+- dinerlopers
+- personeel dat piekmomenten aankan
+- snel kunnen schakelen bij wisselende groepsgroottes
+
+De teksten moeten inspelen op pijnpunten zoals:
+- last-minute drukte
+- snel veel personeel nodig
+- verschillende soorten horeca-rollen
+- kwaliteit ondanks tempo
+- personeel dat al getraind is
+
+Belangrijk:
+Gebruik op deze pagina ook screenshots uit het sollicitatieformulier van de rol “horecamedewerker”, zodat zichtbaar wordt waarop kandidaten worden gescoord. Verwerk dit als visuele onderbouwing van kwaliteit/selectie.
+
+Voorbeeld secties:
+1. Hero
+2. Intro gericht op events
+3. Flexibel op- en afschalen
+4. Voor welke rollen EXTRA levert
+5. Kwaliteitsselectie met screenshots uit het sollicitatieformulier
+6. Waarom EXTRA voor events
+7. CTA
+
+======================================================================
+4. CATERINGPERSONEEL-GEZOCHT
+======================================================================
+
+Slug:
+- /cateringpersoneel-gezocht
+
+Doel:
+Landingspagina specifiek voor cateraars.
+
+Belangrijke focuspunten:
+- flexibel op- en afschalen
+- getraind horecapersoneel
+- bediening
+- bar
+- dinerlopers
+- personeel voor piekmomenten
+- personeel dat hospitality snapt
+- snel inzetbare mensen
+
+De teksten moeten inspelen op pijnpunten zoals:
+- onvoorspelbare drukte
+- opschalen rondom events en piekmomenten
+- behoefte aan representatief en getraind personeel
+- snelheid zonder kwaliteitsverlies
+
+Belangrijk:
+Gebruik ook hier screenshots uit het sollicitatieformulier van “horecamedewerker”, zodat zichtbaar wordt waarop medewerkers beoordeeld of geselecteerd worden. Dit versterkt vertrouwen.
+
+Voorbeeld secties:
+1. Hero
+2. Intro gericht op cateraars
+3. Snel op- en afschalen
+4. Rollen die EXTRA levert
+5. Kwaliteitsselectie met screenshots uit sollicitatieformulier
+6. Waarom EXTRA voor cateraars
+7. CTA
+
+======================================================================
+5. RESTAURANT-PERSONEEL-GEZOCHT
+======================================================================
+
+Slug:
+- /restaurant-personeel-gezocht
+
+Doel:
+Landingspagina specifiek voor restaurants.
+
+Focus:
+- extra handen tijdens drukte
+- bediening
+- runners
+- bar
+- chefs indien relevant
+- snel personeel bij uitval of piek
+- mensen die direct mee kunnen draaien
+- representativiteit en gastvrijheid
+
+Pijnpunten:
+- onverwachte drukte
+- personeelstekort op piekdagen
+- last-minute gaten in de planning
+- behoefte aan personeel dat snel inzetbaar is
+
+Voorbeeld secties:
+1. Hero
+2. Intro gericht op restaurants
+3. Voor welke rollen EXTRA levert
+4. Veelvoorkomende uitdagingen in restaurants
+5. Waarom EXTRA voor restaurants
+6. Reviews / vertrouwen
+7. CTA
+
+======================================================================
+BELANGRIJKE UX-RICHTLIJNEN
+======================================================================
+
+Voor alle 5 pagina’s geldt:
+- Geen lange lappen tekst
+- Werk met scanbare secties
+- Gebruik duidelijke tussenkoppen
+- Gebruik cards, iconen en visuele blokken
+- Zorg voor een premium uitstraling
+- Maak de pagina’s conversiegericht
+- CTA’s moeten duidelijk aanwezig zijn
+
+Voorbeeld CTA’s:
+- Personeel aanvragen
+- Plan een kennismaking
+- Bekijk de mogelijkheden
+- Neem contact op
+
+======================================================================
+SEO-RICHTLIJNEN
+======================================================================
+
+Elke pagina moet:
+- een eigen H1 hebben
+- een eigen focus en eigen copy hebben
+- uniek zijn qua inhoud
+- inspelen op de branche-specifieke zoekintentie
+- intern goed gelinkt zijn
+- niet voelen als duplicate content
+
+De algemene pagina “personeel-gezocht” moet meer algemeen zijn.
+De 4 branchepagina’s moeten juist inhoudelijk onderscheidend zijn.
+
+======================================================================
+INTERNE LINKSTRUCTUUR
+======================================================================
+
+Zorg dat:
+- /personeel-gezocht linkt naar alle 4 branchepagina’s
+- de 4 branchepagina’s ook subtiel terug kunnen linken naar de algemene pagina
+- de branchepagina’s eventueel onderling gelinkt kunnen worden als dit logisch is
+- er duidelijke breadcrumbs zijn
+- de bezoeker altijd logisch terug of door kan navigeren
+
+======================================================================
+BELANGRIJKE FUNCTIONELE INSTRUCTIE
+======================================================================
+
+Pas de routing en navigatie aan zodat:
+
+- Klik op “Ik zoek extra personeel” in het hoofdmenu → /personeel-gezocht
+- Klik op knop “Ik zoek extra personeel” op home → /personeel-gezocht
+- Klik op branche-card “Hotels” → /hotel-personeel-gezocht
+- Klik op branche-card “Eventlocaties” → /event-personeel-gezocht
+- Klik op branche-card “Cateraars” → /cateringpersoneel-gezocht
+- Klik op branche-card “Restaurants” → /restaurant-personeel-gezocht
+
+======================================================================
+OUTPUT DIE IK VAN JOU WIL
+======================================================================
+
+1. Maak alle 5 pagina’s aan
+2. Werk per pagina een logische sectie-opbouw uit
+3. Schrijf per pagina unieke copy die past bij de doelgroep en branche
+4. Zorg dat de algemene pagina algemener blijft en de branchepagina’s echt specifiek zijn
+5. Gebruik voor event en catering de screenshots uit het sollicitatieformulier van horecamedewerker als visueel bewijs van selectie/kwaliteit
+6. Pas de navigatie en routing aan zoals hierboven beschreven
+7. Zorg dat alles volledig in de bestaande huisstijl van EXTRA blijft
+8. Laat de pagina’s inhoudelijk, visueel en strategisch één geheel vormen

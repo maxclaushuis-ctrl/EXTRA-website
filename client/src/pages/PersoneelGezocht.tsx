@@ -191,10 +191,10 @@ export default function PersoneelGezocht() {
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "personeel" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
                     {[
-                      { label: "Hotels", href: "/personeel-gezocht", icon: Building2 },
-                      { label: "Eventlocaties", href: "/personeel-gezocht", icon: PartyPopper },
-                      { label: "Cateraars", href: "/personeel-gezocht", icon: UtensilsCrossed },
-                      { label: "Restaurants", href: "/personeel-gezocht", icon: Wine },
+                      { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Building2 },
+                      { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
+                      { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
+                      { label: "Restaurants", href: "/restaurant-personeel-gezocht", icon: Wine },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
@@ -279,8 +279,13 @@ export default function PersoneelGezocht() {
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "personeel" ? "max-h-60" : "max-h-0"}`}>
                   <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    {["Hotels", "Eventlocaties", "Cateraars", "Restaurants"].map((item) => (
-                      <a key={item} href="/personeel-gezocht" className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item}</a>
+                    {[
+                      { label: "Hotels", href: "/hotel-personeel-gezocht" },
+                      { label: "Eventlocaties", href: "/event-personeel-gezocht" },
+                      { label: "Cateraars", href: "/cateringpersoneel-gezocht" },
+                      { label: "Restaurants", href: "/restaurant-personeel-gezocht" },
+                    ].map((item) => (
+                      <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
                     ))}
                   </div>
                 </div>
@@ -342,7 +347,7 @@ export default function PersoneelGezocht() {
       {/* ═══════════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroBgImage} alt="" className="absolute inset-0 w-full h-full object-cover object-right sm:object-center" style={{ filter: "contrast(1.03) saturate(1.02)" }} loading="eager" fetchpriority="high" decoding="async" />
+          <img src={heroBgImage} alt="" className="absolute inset-0 w-full h-full object-cover object-right sm:object-center" style={{ filter: "contrast(1.03) saturate(1.02)" }} loading="eager" fetchPriority="high" decoding="async" />
           <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(88,22,164,0.92) 0%, rgba(88,22,164,0.88) 40%, rgba(88,22,164,0.70) 65%, rgba(88,22,164,0.35) 82%, rgba(88,22,164,0.10) 100%)` }} />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
@@ -360,15 +365,15 @@ export default function PersoneelGezocht() {
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.12] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Op zoek naar extra horecapersoneel?{" "}
+              Extra personeel nodig?{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">EXTRA</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
-              {" "}regelt het — snel, betrouwbaar en volledig in loondienst.
+              {" "}regelt het.
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              Van hotels tot restaurants, events en cateraars: wij leveren representatieve medewerkers die écht bij jouw locatie passen — zorgvuldig geselecteerd, hoog beoordeeld en gemotiveerd door ons EXTRAATje beloningssysteem.
+              Flexibel horecapersoneel voor hotels, events, cateraars en restaurants. Snel geregeld, altijd in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
@@ -380,6 +385,76 @@ export default function PersoneelGezocht() {
                 Direct contact
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 1.5 BRANCH SELECTION                                */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="py-20 bg-[#faf8f5] relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Kies je branche
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Ontdek hoe EXTRA jouw specifieke sector ondersteunt met kwalitatief personeel.
+              </p>
+            </div>
+          </RevealSection>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                title: "Hotels",
+                desc: "Front-office, housekeeping, banqueting en chefs",
+                icon: Building2,
+                href: "/hotel-personeel-gezocht",
+                color: "bg-blue-50 text-blue-600"
+              },
+              {
+                title: "Evenementen & Events",
+                desc: "Bediening, bar, dinerlopers voor piekmomenten",
+                icon: PartyPopper,
+                href: "/event-personeel-gezocht",
+                color: "bg-purple-50 text-purple-600"
+              },
+              {
+                title: "Cateraars",
+                desc: "Horecamedewerkers voor catering en recepties",
+                icon: UtensilsCrossed,
+                href: "/cateringpersoneel-gezocht",
+                color: "bg-orange-50 text-orange-600"
+              },
+              {
+                title: "Restaurants",
+                desc: "Bediening, runners en bar voor drukte en uitval",
+                icon: Wine,
+                href: "/restaurant-personeel-gezocht",
+                color: "bg-red-50 text-red-600"
+              }
+            ].map((branch, idx) => (
+              <RevealSection key={branch.title} delay={idx * 100}>
+                <a
+                  href={branch.href}
+                  className="group bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex items-start gap-6 hover:-translate-y-1"
+                >
+                  <div className={`w-14 h-14 rounded-2xl ${branch.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                    <branch.icon className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">{branch.title}</h3>
+                    <p className="text-gray-600 leading-relaxed mb-4">{branch.desc}</p>
+                    <div className="flex items-center gap-2 text-purple-600 font-bold text-sm">
+                      Lees meer
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </a>
+              </RevealSection>
+            ))}
           </div>
         </div>
       </section>
