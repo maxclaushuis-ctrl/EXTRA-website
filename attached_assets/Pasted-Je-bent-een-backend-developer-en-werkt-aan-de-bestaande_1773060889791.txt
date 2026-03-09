@@ -1,0 +1,90 @@
+Je bent een backend developer en werkt aan de bestaande aanmeldflow.
+
+BELANGRIJK
+De huidige flow werkt al grotendeels goed. Pas alleen onderstaande punten aan en wijzig verder niets aan de bestaande logica.
+
+-------------------------------------
+1. DASHBOARD LINK CORRIGEREN
+-------------------------------------
+
+De knop/link "Bekijk in dashboard" in de interne e-mail verwijst momenteel naar een verkeerde pagina.
+
+Wanneer er op deze link wordt geklikt moet deze altijd openen:
+
+https://brochure.doehetextra.nl/dashboard-mockup
+
+Controleer dat deze link correct werkt in alle interne mails.
+
+-------------------------------------
+2. ACTIE BIJ ACCEPTEREN
+-------------------------------------
+
+Wanneer een interne medewerker op "Accepteren" klikt:
+
+- De kandidaat ontvangt automatisch een e-mail.
+- In deze e-mail staat een link naar Calendly zodat de kandidaat zelf een gesprek kan inplannen.
+
+Gebruik de onderstaande e-mailtekst en tone of voice.
+
+Tone of voice:
+jong, vriendelijk, professioneel, licht speels (passend bij EXTRA).
+
+Onderwerp:
+Leuk dat je je hebt aangemeld bij EXTRA
+
+Mailtekst:
+
+Hi [voornaam],
+
+Wat leuk dat je je bij ons hebt aangemeld!
+
+Op basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.
+
+Plan hier eenvoudig een moment dat voor jou uitkomt:
+
+[Calendly link]
+
+We spreken je snel!
+
+Groet,  
+Team EXTRA
+
+-------------------------------------
+3. ACTIE BIJ AFWIJZEN
+-------------------------------------
+
+Wanneer een interne medewerker op "Afwijzen" klikt:
+
+- De kandidaat ontvangt automatisch een nette en vriendelijke afwijzingsmail.
+
+Belangrijk:
+De mail moet neutraal zijn en geen discriminatie bevatten.
+
+Gebruik onderstaande tekst.
+
+Onderwerp:
+Bedankt voor je aanmelding bij EXTRA
+
+Mailtekst:
+
+Hi [voornaam],
+
+Bedankt voor je aanmelding bij EXTRA en voor het opsturen van je CV.
+
+Op basis van de informatie die we nu hebben denken we dat we op dit moment helaas niet voldoende passende opdrachten voor je kunnen bieden.
+
+Daarom hebben we besloten om je aanmelding op dit moment niet verder in behandeling te nemen.
+
+We wensen je veel succes met je verdere zoektocht naar een leuke baan in de horeca.
+
+Groet,  
+Team EXTRA
+
+-------------------------------------
+4. TECHNISCHE RANDVOORWAARDEN
+-------------------------------------
+
+- Zorg dat de Calendly link dynamisch kan worden ingevuld.
+- Zorg dat [voornaam] automatisch wordt gevuld met de voornaam van de kandidaat.
+- Controleer dat de e-mail goed werkt op mobiel en desktop.
+- De bestaande aanmeldflow moet verder ongewijzigd blijven.

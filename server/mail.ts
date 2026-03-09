@@ -622,7 +622,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   };
   const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
 
-  const baseUrl = 'https://www.doehetextra.nl';
+  const baseUrl = 'https://brochure.doehetextra.nl';
   const acceptUrl = candidate.reviewToken
     ? `${baseUrl}/api/candidates/${candidate.id}/accept?token=${candidate.reviewToken}`
     : `${baseUrl}/dashboard-mockup`;
@@ -764,15 +764,20 @@ export async function sendCalendlyInviteEmail(candidate: {
           </td>
         </tr>
         <tr>
-          <td style="padding:28px;">
+          <td style="padding:28px 28px 24px;">
             <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Goed nieuws! We hebben je aanmelding bekeken en we nodigen je graag uit voor een kort kennismakingsgesprek. 🎉</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Plan via onderstaande knop een moment dat voor jou uitkomt:</p>
-            <div style="text-align:center;margin-bottom:24px;">
-              <a href="${calendlyUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;">📅 Plan je gesprek</a>
-            </div>
-            <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Of kopieer deze link: <a href="${calendlyUrl}" style="color:#7c3aed;">${calendlyUrl}</a></p>
-            <p style="margin:16px 0 0;font-size:15px;color:#374151;">Tot snel,<br><strong>Team EXTRA</strong></p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Wat leuk dat je je bij ons hebt aangemeld!</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Op basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Plan hier eenvoudig een moment dat voor jou uitkomt:</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              <tr>
+                <td>
+                  <a href="${calendlyUrl}" style="display:block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">📅 Plan een gesprek in</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 4px;font-size:13px;color:#9ca3af;">Of kopieer de link: <a href="${calendlyUrl}" style="color:#7c3aed;word-break:break-all;">${calendlyUrl}</a></p>
+            <p style="margin:20px 0 0;font-size:15px;color:#374151;">We spreken je snel!<br><br>Groet,<br><strong>Team EXTRA</strong></p>
           </td>
         </tr>
         <tr>
@@ -786,12 +791,12 @@ export async function sendCalendlyInviteEmail(candidate: {
 </body>
 </html>`;
 
-  const text = `Hi ${candidate.firstName},\n\nGoed nieuws! We hebben je aanmelding bekeken en nodigen je graag uit voor een kort kennismakingsgesprek.\n\nPlan via deze link een moment: ${calendlyUrl}\n\nTot snel,\nTeam EXTRA`;
+  const text = `Hi ${candidate.firstName},\n\nWat leuk dat je je bij ons hebt aangemeld!\n\nOp basis van je aanmelding en CV nodigen we je graag uit voor een kort kennismakingsgesprek. Tijdens dit gesprek vertellen we je meer over EXTRA en kijken we samen welke opdrachten goed bij je passen.\n\nPlan hier eenvoudig een moment dat voor jou uitkomt:\n${calendlyUrl}\n\nWe spreken je snel!\n\nGroet,\nTeam EXTRA`;
 
   return await sendEmail({
     to: candidate.email,
     from: 'EXTRA <max@doehetextra.nl>',
-    subject: 'Gefeliciteerd! Plan je kennismakingsgesprek bij EXTRA',
+    subject: 'Leuk dat je je hebt aangemeld bij EXTRA',
     html,
     text,
   });
@@ -862,17 +867,17 @@ export async function sendCandidateRejectionEmailDiensten(candidate: {
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:#7c3aed;padding:24px 28px;">
+          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:24px 28px;">
             <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
           </td>
         </tr>
         <tr>
-          <td style="padding:28px;">
+          <td style="padding:28px 28px 24px;">
             <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je aanmelding en het gesprek bij EXTRA.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Op dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat momenteel beschikbaar is in verhouding tot het aantal mensen in onze poule.</p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Dat zegt dus niet per se iets over jou, maar meer over de planning en beschikbare plekken.</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je veel succes en wie weet kruisen onze paden in de toekomst nog eens.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Bedankt voor je aanmelding bij EXTRA en voor het opsturen van je CV.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Op basis van de informatie die we nu hebben denken we dat we op dit moment helaas niet voldoende passende opdrachten voor je kunnen bieden.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Daarom hebben we besloten om je aanmelding op dit moment niet verder in behandeling te nemen.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">We wensen je veel succes met je verdere zoektocht naar een leuke baan in de horeca.</p>
             <p style="margin:0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA</strong></p>
           </td>
         </tr>
@@ -887,12 +892,12 @@ export async function sendCandidateRejectionEmailDiensten(candidate: {
 </body>
 </html>`;
 
-  const text = `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding en het gesprek bij EXTRA.\n\nOp dit moment hebben we helaas besloten om niet met je verder te gaan. Dit heeft vooral te maken met het aantal diensten dat momenteel beschikbaar is in verhouding tot het aantal mensen in onze poule.\n\nDat zegt dus niet per se iets over jou, maar meer over de planning en beschikbare plekken.\n\nWe wensen je veel succes en wie weet kruisen onze paden in de toekomst nog eens.\n\nGroet,\nTeam EXTRA`;
+  const text = `Hi ${candidate.firstName},\n\nBedankt voor je aanmelding bij EXTRA en voor het opsturen van je CV.\n\nOp basis van de informatie die we nu hebben denken we dat we op dit moment helaas niet voldoende passende opdrachten voor je kunnen bieden.\n\nDaarom hebben we besloten om je aanmelding op dit moment niet verder in behandeling te nemen.\n\nWe wensen je veel succes met je verdere zoektocht naar een leuke baan in de horeca.\n\nGroet,\nTeam EXTRA`;
 
   return await sendEmail({
     to: candidate.email,
     from: 'EXTRA <max@doehetextra.nl>',
-    subject: 'Bedankt voor je sollicitatie bij EXTRA',
+    subject: 'Bedankt voor je aanmelding bij EXTRA',
     html,
     text,
   });
