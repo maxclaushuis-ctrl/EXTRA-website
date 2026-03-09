@@ -180,14 +180,15 @@ export default function EventPersoneelGezocht() {
               </div>
             </div>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Eventpersoneel nodig?{" "}
+              Jouw event verdient{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">EXTRA regelt het.</span>
+                <span className="relative z-10">het beste personeel.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-70 rounded-sm" />
               </span>
+              {" "}Wij leveren het.
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              Van kleine borrels tot grote gala-avonden. EXTRA levert snel en flexibel bediening, bar, hosts, runners en supervisors voor elk evenement. Representatief, betrouwbaar en volledig in loondienst.
+              Druk event, weinig tijd, hoge verwachtingen. EXTRA levert binnen 48 uur representatief personeel dat gewend is aan volle zalen en hoog tempo — bediening, bar, hosts, runners, supervisors. Altijd in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
@@ -218,6 +219,28 @@ export default function EventPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
+      {/* STATS STRIP                                        */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="relative py-0 bg-gradient-to-r from-purple-950 to-indigo-950 overflow-hidden border-b border-purple-800/40">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-purple-700/30">
+            {[
+              { number: "800+", label: "Actieve medewerkers", icon: Users },
+              { number: "500+", label: "Events per jaar", icon: PartyPopper },
+              { number: "48u", label: "Gemiddelde levertijd", icon: Clock },
+              { number: "24/7", label: "Bereikbaar voor spoed", icon: Zap },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center justify-center py-7 sm:py-9 px-4 sm:px-8 text-center gap-1 group hover:bg-white/5 transition-colors duration-300">
+                <stat.icon className="w-4 h-4 text-purple-400 mb-1 group-hover:text-yellow-400 transition-colors" />
+                <span className="text-2xl sm:text-4xl font-black text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>{stat.number}</span>
+                <span className="text-xs sm:text-sm text-purple-300/80 font-medium">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
       {/* 2. FUNCTIES VOOR EVENTS                            */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="functies" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
@@ -229,10 +252,14 @@ export default function EventPersoneelGezocht() {
                 <Users className="w-4 h-4" /> Functies voor events
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Voor elke eventrol de juiste mensen
+                Elk soort event.{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10">Elke rol gevuld.</span>
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2 sm:h-3.5 bg-gradient-to-r from-yellow-300 to-orange-400 -skew-x-3 z-0 opacity-50 rounded-sm" />
+                </span>
               </h2>
-              <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Een succesvol event staat of valt met het personeel. EXTRA levert voor elke rol ervaren medewerkers die gewend zijn aan drukke omgevingen en hoge serviceverwachtingen.
+              <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
+                Van de eerste gast die binnenkomt tot het laatste glas dat wordt opgeruimd. EXTRA levert voor elke rol de juiste mensen — ervaren, representatief en klaar voor het tempo van jouw event.
               </p>
             </div>
           </RevealSection>
@@ -318,29 +345,76 @@ export default function EventPersoneelGezocht() {
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
               <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
-                <Shield className="w-4 h-4" /> Waarom EXTRA
+                <Zap className="w-4 h-4" /> Waarom EXTRA
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom eventlocaties voor EXTRA kiezen
+                Geen tweede kans.<br className="hidden sm:block" />
+                <span className="text-purple-600">Wij snappen dat.</span>
               </h2>
-              <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Bij een event is er geen tweede kans. De service staat in de spotlight, de gasten letten op alles. EXTRA levert personeel dat weet wat dat betekent.
+              <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
+                Bij een event staat alles in de spotlight. De service, de sfeer, de eerste indruk. EXTRA levert personeel dat weet hoe groot die druk is — en er niet van schrikt.
               </p>
             </div>
           </RevealSection>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {[
-              { emoji: "⚡", title: "Snel opschalen bij piekdrukte", desc: "Van 5 naar 80 medewerkers: we kunnen snel op- en afschalen afhankelijk van de omvang van jouw event. Flexibiliteit is onze standaard." },
-              { emoji: "🎩", title: "Representatief en gastgericht", desc: "Eventpersoneel staat in het middelpunt van de beleving. Iedereen die via EXTRA werkt is geselecteerd op presentatie, houding en service." },
-              { emoji: "🎪", title: "Ervaring met drukke events", desc: "Onze medewerkers kennen het tempo van een event: veel gasten, weinig tijd en toch professionele service. Ze worden niet zenuwachtig van een volle zaal." },
-              { emoji: "📞", title: "Last-minute aanvragen welkom", desc: "Uitval daags voor een event? Meer gasten dan verwacht? We zijn 24/7 bereikbaar en lossen het op. Jij staat nooit alleen voor een leeg rooster." },
-              { emoji: "📊", title: "Na elk event gemeten en beoordeeld", desc: "Na elk event verzamelen we feedback. Wie goed presteert staat bovenaan voor het volgende event. Zo bouw je een vaste poule van bewezen toppers op." },
-              { emoji: "🛡️", title: "Volledig in loondienst", desc: "NEN-4400-1 gecertificeerd en conform arbeidswetgeving 2026. Geen zzp-risico's, geen administratieve rompslomp. Jij organiseert het event, wij regelen het personeel." },
+              {
+                stat: "80+",
+                statLabel: "medewerkers, binnen 24 uur",
+                title: "Opschalen op het laatste moment",
+                desc: "Van 5 naar 80 man: we schalen snel op en af. Meer gasten dan verwacht? Uitval de avond van tevoren? Bel ons. We lossen het op.",
+                accent: "from-purple-500 to-purple-700",
+              },
+              {
+                stat: "100%",
+                statLabel: "persoonlijk geselecteerd",
+                title: "Representatief — geen concessies",
+                desc: "Eventpersoneel staat in het middelpunt. Iedereen die via EXTRA werkt heeft een persoonlijk gesprek gehad op kantoor. Presentatie, houding, service — dat controleren wij.",
+                accent: "from-indigo-500 to-purple-600",
+              },
+              {
+                stat: "500+",
+                statLabel: "events per jaar verzorgd",
+                title: "Gewend aan volle zalen en hoog tempo",
+                desc: "Onze medewerkers kennen de druk van een vol evenement. Ze raken niet in de stress van 300 gasten tegelijk. Ze floreren erin.",
+                accent: "from-pink-500 to-rose-600",
+              },
+              {
+                stat: "24/7",
+                statLabel: "bereikbaar, ook voor spoed",
+                title: "Last-minute? Geen probleem",
+                desc: "Uitval daags voor het event? We zijn altijd bereikbaar. Jij staat nooit met een leeg rooster voor een volle zaal.",
+                accent: "from-blue-500 to-indigo-600",
+              },
+              {
+                stat: "★ 4.8",
+                statLabel: "gemiddelde beoordeling",
+                title: "Na elk event gemeten op kwaliteit",
+                desc: "Na elk event verzamelen we scores. Wie structureel hoog scoort wordt prioritair ingezet. Zo bouw je een poule van bewezen toppers op.",
+                accent: "from-amber-500 to-orange-500",
+              },
+              {
+                stat: "0%",
+                statLabel: "ZZP-risico voor jou",
+                title: "Volledig in loondienst — punt",
+                desc: "NEN-4400-1 gecertificeerd. Iedereen in loondienst. Geen schijnzelfstandigheid, geen losse contractjes. Jij organiseert het event, wij regelen de rest.",
+                accent: "from-green-500 to-emerald-600",
+              },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 80}>
-                <div className="group bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">
-                  <div className="text-3xl sm:text-4xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">{item.emoji}</div>
-                  <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-2 sm:mb-3">{item.title}</h3>
+                <div className="group relative bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border-2 border-gray-100 hover:border-purple-200 hover:shadow-2xl hover:shadow-purple-500/8 hover:-translate-y-1.5 transition-all duration-300 h-full shadow-sm overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity duration-300"
+                    style={{
+                      background: `radial-gradient(circle, rgb(139,92,246) 0%, transparent 70%)`,
+                    }}
+                  />
+                  <div className={`inline-flex items-baseline gap-1.5 mb-1`}>
+                    <span className={`text-3xl sm:text-4xl font-black bg-gradient-to-br ${item.accent} bg-clip-text text-transparent`} style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {item.stat}
+                    </span>
+                  </div>
+                  <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{item.statLabel}</p>
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 mb-2 sm:mb-3 leading-snug">{item.title}</h3>
                   <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
               </RevealSection>
