@@ -1,0 +1,204 @@
+Je bent een senior UX designer, front-end developer en SEO specialist.
+
+We willen een vacaturepagina bouwen voor de website van EXTRA.  
+Het doel van deze pagina is primair SEO: we willen beter ranken op zoektermen rondom horeca vacatures en tegelijkertijd laten zien met welke opdrachtgevers wij werken.
+
+De vacaturepagina hoeft niet prominent zichtbaar te zijn op de website, maar moet wel toegankelijk zijn via:
+
+- de footer (link: Vacatures)
+- de pagina /ik-zoek-extra-werk
+
+De vacatures moeten dus indexeerbaar zijn door zoekmachines.
+
+------------------------------------------------
+
+1. Pagina structuur
+
+Maak een nieuwe pagina:
+
+/vacatures
+
+Deze pagina moet functioneren als een vacature overzicht.
+
+Doel:
+- SEO verkeer aantrekken
+- bezoekers vacatures laten bekijken
+- kandidaten doorsturen naar het sollicitatieformulier
+
+------------------------------------------------
+
+2. Vacature overzicht
+
+De pagina moet een overzicht bevatten van vacatures in kaartvorm (cards).
+
+Elke vacature card bevat:
+
+- functietitel
+- locatie / regio
+- type functie
+- korte beschrijving (max 2 regels)
+- opdrachtgever (bijv. hotelnaam of eventlocatie)
+- CTA knop: Bekijk vacature
+
+Bij klikken opent een individuele vacaturepagina.
+
+------------------------------------------------
+
+3. Individuele vacaturepagina’s
+
+Voor SEO is het belangrijk dat elke vacature een eigen URL krijgt.
+
+Bijvoorbeeld:
+
+/vacatures/bediening-amsterdam  
+/vacatures/horeca-medewerker-amsterdam  
+/vacatures/chef-amsterdam  
+/vacatures/bartender-amsterdam
+
+Elke vacaturepagina moet bevatten:
+
+- SEO titel
+- H1 titel
+- introductietekst
+- beschrijving van de werkzaamheden
+- wat wij bieden
+- wat wij zoeken
+- locatie
+- opdrachtgever (indien mogelijk)
+
+CTA:
+
+Solliciteer direct
+
+Deze knop moet linken naar het bestaande sollicitatieformulier.
+
+------------------------------------------------
+
+4. Filters (linkerkant)
+
+Links op de pagina moet een filter sidebar komen.
+
+Bezoekers moeten kunnen filteren op:
+
+Locatie / Regio
+- Amsterdam
+- Utrecht
+- Het Gooi
+- Randstad
+
+Functie
+- Bediening
+- Bartender
+- Chef
+- Banqueting
+- Housekeeping
+- Front office
+
+Type dienst
+- Fulltime
+- Parttime
+- Bijbaan
+- Oproep
+
+Werkplek
+- Hotel
+- Eventlocatie
+- Catering
+- Restaurant
+
+Filters moeten dynamisch werken zonder dat de pagina volledig herlaadt.
+
+------------------------------------------------
+
+5. SEO optimalisatie
+
+De pagina moet SEO vriendelijk worden gebouwd.
+
+Belangrijk:
+
+- indexeerbare HTML structuur
+- H1, H2, H3 correct gebruiken
+- duidelijke tekstblokken
+- semantische HTML
+
+Gebruik deze structuur:
+
+H1:
+Horeca vacatures in Amsterdam
+
+H2:
+Vacatures bij hotels, events en restaurants
+
+H2:
+Actuele horeca vacatures
+
+H2:
+Waarom werken via EXTRA
+
+------------------------------------------------
+
+6. Structured data (belangrijk)
+
+Gebruik JobPosting structured data zodat Google de vacatures beter kan indexeren.
+
+Gebruik schema.org JobPosting markup.
+
+Velden:
+
+- jobTitle
+- description
+- employmentType
+- hiringOrganization
+- jobLocation
+- datePosted
+
+------------------------------------------------
+
+7. Design
+
+De pagina moet volledig in de stijl van de EXTRA website worden gebouwd.
+
+Gebruik:
+
+- paarse gradient achtergronden
+- subtiele X patronen
+- dezelfde typografie
+- dezelfde buttons
+- dezelfde kaartstijl
+
+De vacature cards moeten modern ogen en consistent zijn met de rest van de site.
+
+------------------------------------------------
+
+8. Interne linking
+
+Vanaf deze pagina moeten duidelijke interne links komen naar:
+
+/ik-zoek-extra-werk
+
+En vanaf die pagina moet ook een link komen naar:
+
+/vacatures
+
+------------------------------------------------
+
+9. Footer link
+
+Voeg in de footer een nieuwe link toe:
+
+Vacatures
+
+Deze link moet verwijzen naar:
+
+/vacatures
+
+------------------------------------------------
+
+10. Doel
+
+De vacaturepagina moet:
+
+- SEO verkeer aantrekken
+- ranken op horeca vacature zoektermen
+- kandidaten naar het sollicitatieformulier sturen
+- laten zien dat EXTRA werkt met hotels, cateraars en eventlocaties

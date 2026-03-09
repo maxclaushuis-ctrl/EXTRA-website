@@ -25,6 +25,8 @@ import OnsTeam from "@/pages/OnsTeam";
 import HoeExtraWerkt from "@/pages/HoeExtraWerkt";
 import IkZoekExtraWerk from "@/pages/IkZoekExtraWerk";
 import HoeWerktDagbetaling from "@/pages/HoeWerktDagbetaling";
+import Vacatures from "@/pages/Vacatures";
+import VacatureDetail from "@/pages/VacatureDetail";
 
 import HorecaPersoneelGezocht from "@/pages/HorecaPersoneelGezocht";
 
@@ -95,6 +97,8 @@ const PUBLIC_PATHS = [
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
   // Overige
   '/klantcases-horeca', '/contact',
+  // Vacatures
+  '/vacatures',
 ];
 
 function Router() {
@@ -168,6 +172,8 @@ function Router() {
         <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
         <Route path="/ik-zoek-extra-werk" component={IkZoekExtraWerk} />
         <Route path="/hoe-werkt-dagbetaling" component={HoeWerktDagbetaling} />
+        <Route path="/vacatures" component={Vacatures} />
+        <Route path="/vacatures/:slug" component={VacatureDetail} />
         <Route path="/contact" component={Contact} />
         <Route path="/dashboard-mockup" component={DashboardMockup} />
 

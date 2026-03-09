@@ -140,6 +140,7 @@ export default function PublicFooter() {
               <ul className="space-y-3">
                 {[
                   { label: "Solliciteer direct", href: "/aanmelden" },
+                  { label: "Vacatures", href: "/vacatures" },
                   { label: "Horeca vacatures Amsterdam", href: "/horeca-vacatures-amsterdam" },
                   { label: "Horeca werk Amsterdam", href: "/horeca-werk-amsterdam" },
                   { label: "Housekeeping vacatures", href: "/housekeeping-vacatures-amsterdam" },

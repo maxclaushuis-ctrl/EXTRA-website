@@ -1043,6 +1043,17 @@ export default function IkZoekExtraWerk() {
               </RevealSection>
             ))}
           </div>
+          <RevealSection>
+            <div className="text-center mt-10">
+              <Link
+                href="/vacatures"
+                className="inline-flex items-center gap-2.5 font-bold px-8 py-3.5 rounded-full text-white text-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }}
+              >
+                Bekijk alle vacatures <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </RevealSection>
         </div>
       </section>
 
