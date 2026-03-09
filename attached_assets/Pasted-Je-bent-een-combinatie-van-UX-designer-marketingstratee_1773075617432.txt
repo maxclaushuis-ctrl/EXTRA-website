@@ -1,0 +1,199 @@
+Je bent een combinatie van:
+- UX designer
+- marketingstrateeg
+- SEO specialist
+- copywriter
+
+Ik wil dat je de sectie "Waarom EXTRA" op de branchepagina voor Eventlocaties verbetert.
+
+Problemen met de huidige sectie:
+
+1. De titel "Geen tweede kans. Wij snappen dat." is niet duidelijk genoeg voor bezoekers.
+2. Sommige claims zijn te extreem of niet realistisch (bijvoorbeeld 80 medewerkers last-minute).
+3. De teksten kunnen sterker en concreter.
+4. De sectie voelt nog niet sterk genoeg als "bewijs" waarom EXTRA beter is.
+5. De sectie "Zo selecteert EXTRA het beste personeel" is verwijderd maar moet juist terugkomen.
+
+Doel van deze sectie:
+
+- vertrouwen opbouwen
+- laten zien waarom EXTRA anders is
+- pijnpunten van eventlocaties oplossen
+- concrete voordelen laten zien
+
+====================================================================
+
+VERVANG DE HUIDIGE TITEL
+
+Huidige titel:
+Geen tweede kans. Wij snappen dat.
+
+Vervang deze door een duidelijkere en sterkere titel.
+
+Gebruik bijvoorbeeld:
+
+Events draaien om details.  
+Daarom vertrouwen locaties op EXTRA.
+
+Of:
+
+Bij events telt alles.  
+Daarom kiezen locaties voor EXTRA.
+
+De titel moet:
+- professioneel
+- krachtig
+- duidelijk
+- hospitality-gericht
+
+====================================================================
+
+VERBETER DE CARDS
+
+Pas de teksten van de cards aan zodat ze realistischer en scherper zijn.
+
+CARD 1
+
+Titel:
+Flexibel opschalen wanneer nodig
+
+Beschrijving:
+Van kleine events tot volle zalen. EXTRA helpt locaties snel opschalen met ervaren horecapersoneel dat gewend is aan drukte.
+
+====================================================================
+
+CARD 2
+
+Titel:
+Persoonlijk geselecteerd personeel
+
+Beschrijving:
+Iedere medewerker wordt persoonlijk gesproken voordat hij of zij bij EXTRA werkt. We selecteren op houding, service en representativiteit.
+
+====================================================================
+
+CARD 3
+
+Titel:
+Ervaren met grote events
+
+Beschrijving:
+Onze medewerkers zijn gewend aan volle zalen, strakke planningen en hoge verwachtingen van gasten.
+
+====================================================================
+
+CARD 4
+
+Titel:
+Altijd bereikbaar
+
+Beschrijving:
+Ook buiten kantooruren. Onze planners staan klaar wanneer je snel moet schakelen.
+
+====================================================================
+
+CARD 5
+
+Titel:
+Continu beoordeeld op kwaliteit
+
+Beschrijving:
+Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die goed presteren komen terug.
+
+====================================================================
+
+CARD 6
+
+Titel:
+Geen zzp-risico
+
+Beschrijving:
+Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400-1 norm. Geen risico voor jouw organisatie.
+
+====================================================================
+
+BELANGRIJK
+
+Verwijder claims zoals:
+"80 medewerkers binnen 24 uur"
+
+Dit kan onrealistische verwachtingen creëren.
+
+Formuleer het realistischer zoals:
+"snel opschalen wanneer nodig"
+
+====================================================================
+
+PLAATS DEZE SECTIE TERUG
+
+De sectie:
+
+"Zo selecteert EXTRA het beste personeel"
+
+is verwijderd maar moet juist terugkomen.
+
+Deze sectie is belangrijk omdat:
+
+- het vertrouwen geeft
+- het laat zien dat kwaliteit niet toevallig is
+- het een uniek proces laat zien
+
+====================================================================
+
+VERBETER DEZE SECTIE
+
+Titel:
+
+Zo selecteert EXTRA de juiste mensen
+
+of
+
+Hoe EXTRA kwaliteit selecteert
+
+Inhoud (stappen):
+
+1. Persoonlijke intake
+Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan.
+
+2. Beoordeling na iedere dienst
+Opdrachtgevers geven feedback. Alleen de beste medewerkers blijven actief.
+
+3. Representativiteit
+Onze medewerkers zijn verzorgd, gastvrij en gewend aan hospitality-omgevingen.
+
+4. Ervaring en houding
+Wij kijken verder dan een CV. Service, houding en werkmentaliteit zijn minstens zo belangrijk.
+
+====================================================================
+
+DESIGN VERBETERING
+
+Maak deze sectie visueel sterker dan nu.
+
+Verbeteringen:
+
+- Gebruik een duidelijke stappenlayout
+- Maak de checkmarks visueel sterker
+- Geef het screenshot meer nadruk
+- Gebruik een modern device frame
+- subtiele scroll animatie
+
+Het moet voelen als een premium productfeature.
+
+====================================================================
+
+BELANGRIJK
+
+De stijl moet volledig aansluiten bij de rest van de website:
+
+- dezelfde typografie
+- dezelfde kleuren
+- dezelfde card-stijl
+- dezelfde spacing
+- dezelfde icon-stijl
+
+Voeg subtiele moderne effecten toe:
+
+- hover effects op cards
+- zachte shadow
+- lichte reveal animaties bij scroll

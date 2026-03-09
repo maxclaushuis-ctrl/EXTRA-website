@@ -19,6 +19,7 @@ import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
+import sollicitatieImg from "@assets/Sollicitatieformulier_1772893764120.png";
 import screenDashboard from "@assets/IMG_8803_1770915286475.png";
 import screenRewards from "@assets/IMG_8805_1770915286475.png";
 import screenChallenges from "@assets/IMG_8807_1770915286475.png";
@@ -348,67 +349,65 @@ export default function EventPersoneelGezocht() {
                 <Zap className="w-4 h-4" /> Waarom EXTRA
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Geen tweede kans.<br className="hidden sm:block" />
-                <span className="text-purple-600">Wij snappen dat.</span>
+                Bij events telt alles.<br className="hidden sm:block" />
+                <span className="text-purple-600">Daarom kiezen locaties voor EXTRA.</span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Bij een event staat alles in de spotlight. De service, de sfeer, de eerste indruk. EXTRA levert personeel dat weet hoe groot die druk is — en er niet van schrikt.
+                Elke gast, elke dienst, elk moment. Eventlocaties die structureel goed personeel willen, kiezen voor EXTRA. Betrouwbaar, representatief en op tijd.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {[
               {
-                stat: "80+",
-                statLabel: "medewerkers, binnen 24 uur",
-                title: "Opschalen op het laatste moment",
-                desc: "Van 5 naar 80 man: we schalen snel op en af. Meer gasten dan verwacht? Uitval de avond van tevoren? Bel ons. We lossen het op.",
+                stat: "Flexibel",
+                statLabel: "opschalen op aanvraag",
+                title: "Flexibel opschalen wanneer nodig",
+                desc: "Van kleine events tot volle zalen. EXTRA helpt locaties snel opschalen met ervaren horecapersoneel dat gewend is aan drukte.",
                 accent: "from-purple-500 to-purple-700",
               },
               {
                 stat: "100%",
                 statLabel: "persoonlijk geselecteerd",
-                title: "Representatief — geen concessies",
-                desc: "Eventpersoneel staat in het middelpunt. Iedereen die via EXTRA werkt heeft een persoonlijk gesprek gehad op kantoor. Presentatie, houding, service — dat controleren wij.",
+                title: "Persoonlijk geselecteerd personeel",
+                desc: "Iedere medewerker wordt persoonlijk gesproken voordat hij of zij bij EXTRA werkt. We selecteren op houding, service en representativiteit.",
                 accent: "from-indigo-500 to-purple-600",
               },
               {
                 stat: "500+",
                 statLabel: "events per jaar verzorgd",
-                title: "Gewend aan volle zalen en hoog tempo",
-                desc: "Onze medewerkers kennen de druk van een vol evenement. Ze raken niet in de stress van 300 gasten tegelijk. Ze floreren erin.",
+                title: "Ervaren met grote events",
+                desc: "Onze medewerkers zijn gewend aan volle zalen, strakke planningen en hoge verwachtingen van gasten.",
                 accent: "from-pink-500 to-rose-600",
               },
               {
                 stat: "24/7",
-                statLabel: "bereikbaar, ook voor spoed",
-                title: "Last-minute? Geen probleem",
-                desc: "Uitval daags voor het event? We zijn altijd bereikbaar. Jij staat nooit met een leeg rooster voor een volle zaal.",
+                statLabel: "bereikbaar voor planners",
+                title: "Altijd bereikbaar",
+                desc: "Ook buiten kantooruren. Onze planners staan klaar wanneer je snel moet schakelen — voor, tijdens en na het event.",
                 accent: "from-blue-500 to-indigo-600",
               },
               {
                 stat: "★ 4.8",
                 statLabel: "gemiddelde beoordeling",
-                title: "Na elk event gemeten op kwaliteit",
-                desc: "Na elk event verzamelen we scores. Wie structureel hoog scoort wordt prioritair ingezet. Zo bouw je een poule van bewezen toppers op.",
+                title: "Continu beoordeeld op kwaliteit",
+                desc: "Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die goed presteren komen terug.",
                 accent: "from-amber-500 to-orange-500",
               },
               {
                 stat: "0%",
                 statLabel: "ZZP-risico voor jou",
-                title: "Volledig in loondienst — punt",
-                desc: "NEN-4400-1 gecertificeerd. Iedereen in loondienst. Geen schijnzelfstandigheid, geen losse contractjes. Jij organiseert het event, wij regelen de rest.",
+                title: "Geen zzp-risico",
+                desc: "Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400-1 norm. Geen risico voor jouw organisatie.",
                 accent: "from-green-500 to-emerald-600",
               },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 80}>
                 <div className="group relative bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border-2 border-gray-100 hover:border-purple-200 hover:shadow-2xl hover:shadow-purple-500/8 hover:-translate-y-1.5 transition-all duration-300 h-full shadow-sm overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity duration-300"
-                    style={{
-                      background: `radial-gradient(circle, rgb(139,92,246) 0%, transparent 70%)`,
-                    }}
+                    style={{ background: `radial-gradient(circle, rgb(139,92,246) 0%, transparent 70%)` }}
                   />
-                  <div className={`inline-flex items-baseline gap-1.5 mb-1`}>
+                  <div className="inline-flex items-baseline gap-1.5 mb-1">
                     <span className={`text-3xl sm:text-4xl font-black bg-gradient-to-br ${item.accent} bg-clip-text text-transparent`} style={{ fontFamily: "'Poppins', sans-serif" }}>
                       {item.stat}
                     </span>
@@ -424,55 +423,87 @@ export default function EventPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 4. HOE WIJ EVENTPERSONEEL SELECTEREN               */}
+      {/* 4. ZO SELECTEERT EXTRA DE JUISTE MENSEN            */}
       {/* ═══════════════════════════════════════════════════ */}
-      <section id="selectie" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-        <XPatternBg count={5} opacity={0.12} color="rgba(255,255,255,0.8)" />
+      <section id="selectie" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#f3f0fa" }}>
+        <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-12 sm:mb-20">
-              <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
-                <UserCheck className="w-4 h-4" /> Ons selectieproces
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Hoe wij eventpersoneel selecteren
-              </h2>
-              <p className="text-base sm:text-lg text-purple-200/70 mt-4 max-w-2xl mx-auto">
-                Bij een event is er geen ruimte voor twijfel. Iedereen die via EXTRA werkt heeft bewezen dat ze kunnen presteren onder druk. Dat testen we voor we iemand inzetten.
-              </p>
-            </div>
-          </RevealSection>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              { step: "1", icon: Users, title: "Persoonlijk gesprek op kantoor", desc: "Elke kandidaat komt langs. We beoordelen presentatie, tempo en de mindset die nodig is om een druk event goed door te komen." },
-              { step: "2", icon: Star, title: "Selectie op houding en service", desc: "Technische vaardigheden zijn basis. We selecteren zwaarder op service-instelling, stressbestendigheid en werkhouding bij events." },
-              { step: "3", icon: BookOpen, title: "Eventervaring als prioriteit", desc: "Medewerkers met bewezen eventervaring gaan voor bij plaatsingen. Eerdere opdrachten bij gala's, congressen en grote borrels tellen mee." },
-              { step: "4", icon: ThumbsUp, title: "Beoordeling na elk event", desc: "Na elk event een score. Medewerkers die keer op keer goed presteren bij events worden prioritair ingezet voor jouw volgende opdracht." },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="group bg-white/[0.06] backdrop-blur-sm rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-white/[0.08] hover:border-purple-400/30 hover:bg-white/[0.10] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                    <item.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                  </div>
-                  <div className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
-                  <h3 className="text-lg sm:text-xl font-black text-white mb-2 sm:mb-3">{item.title}</h3>
-                  <p className="text-sm sm:text-base text-purple-200/70 leading-relaxed">{item.desc}</p>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-          <RevealSection delay={400}>
-            <div className="mt-12 sm:mt-16 text-center">
-              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/15 text-white px-6 sm:px-8 py-4 sm:py-5 rounded-2xl">
-                <Shield className="w-5 h-5 text-purple-300 flex-shrink-0" />
-                <p className="text-sm sm:text-base font-semibold leading-snug text-left">
-                  Geen enkele medewerker gaat naar een event zonder persoonlijk gesprek te hebben gehad.{" "}
-                  <span className="text-purple-300">Dat is onze standaard, geen uitzondering.</span>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <RevealSection>
+              <div>
+                <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/80 px-4 sm:px-5 py-2 rounded-full">
+                  <UserCheck className="w-4 h-4" /> Selectieproces
+                </span>
+                <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Zo selecteert EXTRA{" "}
+                  <span className="text-purple-600">de juiste mensen</span>
+                </h2>
+                <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-10">
+                  Kwaliteit bij events is geen toeval. Het is het resultaat van een selectieproces waarbij we verder kijken dan een CV. Service, houding en werkmentaliteit zijn minstens zo belangrijk.
                 </p>
+                <ul className="space-y-6">
+                  {[
+                    {
+                      icon: Users,
+                      title: "Persoonlijke intake",
+                      desc: "Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan. Geen uitzonderingen.",
+                    },
+                    {
+                      icon: Star,
+                      title: "Beoordeling na iedere dienst",
+                      desc: "Opdrachtgevers geven feedback na elk event. Alleen medewerkers die structureel goed presteren blijven actief.",
+                    },
+                    {
+                      icon: Sparkles,
+                      title: "Representativiteit",
+                      desc: "Onze medewerkers zien er verzorgd uit en spreken de taal van hospitality. Dat is een vereiste, geen bonus.",
+                    },
+                    {
+                      icon: ThumbsUp,
+                      title: "Ervaring en houding",
+                      desc: "Wij kijken verder dan een CV. Service, houding en werkmentaliteit zijn bij ons minstens zo belangrijk als werkervaring.",
+                    },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-4 group">
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:scale-105 group-hover:bg-purple-700 transition-all duration-300 shadow-md shadow-purple-500/20">
+                        <item.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-base sm:text-lg font-black text-gray-900 mb-1">{item.title}</h4>
+                        <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          </RevealSection>
+            </RevealSection>
+            <RevealSection delay={150}>
+              <div className="relative flex justify-center lg:justify-end">
+                <div className="relative">
+                  <div className="absolute -inset-6 bg-gradient-to-br from-purple-300/20 to-indigo-300/20 rounded-[2rem] blur-3xl" />
+                  <div className="relative bg-white rounded-[1.5rem] shadow-2xl shadow-purple-500/15 overflow-hidden border border-purple-100/60 max-w-[480px] w-full">
+                    <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-5 py-3 flex items-center gap-3">
+                      <div className="flex gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-white/25" />
+                        <div className="w-3 h-3 rounded-full bg-white/25" />
+                        <div className="w-3 h-3 rounded-full bg-white/25" />
+                      </div>
+                      <span className="text-white/80 text-xs font-semibold ml-1">EXTRA Sollicitatieformulier</span>
+                    </div>
+                    <img
+                      src={sollicitatieImg}
+                      alt="EXTRA beoordelingsformulier — zo meten we kwaliteit van eventpersoneel"
+                      className="w-full object-cover"
+                    />
+                    <div className="absolute bottom-5 right-5 bg-purple-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      9.2 Gemiddeld
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </RevealSection>
+          </div>
         </div>
       </section>
 
