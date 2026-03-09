@@ -669,20 +669,24 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
                 ${cell('Nationaliteit', candidate.nationality)}
               </tr>
             </table>
-            ${candidate.cvFilename ? `<div style="margin:16px 0 4px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 4px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
-            <div style="margin-top:20px;padding-bottom:16px;display:flex;gap:12px;text-align:center;">
-              <table width="100%" cellpadding="0" cellspacing="0"><tr>
-                <td style="padding:0 6px 0 0;" width="50%">
-                  <a href="${acceptUrl}" style="display:block;background:#16a34a;color:#ffffff;text-decoration:none;padding:13px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">✅ Accepteren + Calendly sturen</a>
+            ${candidate.cvFilename ? `<div style="margin:16px 0 8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:8px;">
+              <tr>
+                <td style="padding:0 0 8px 0;">
+                  <a href="${acceptUrl}" style="display:block;background:#16a34a;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">✅ Accepteren</a>
                 </td>
-                <td style="padding:0 0 0 6px;" width="50%">
-                  <a href="${rejectUrl}" style="display:block;background:#dc2626;color:#ffffff;text-decoration:none;padding:13px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">❌ Afwijzen</a>
+              </tr>
+              <tr>
+                <td style="padding:0 0 12px 0;">
+                  <a href="${rejectUrl}" style="display:block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">❌ Afwijzen</a>
                 </td>
-              </tr></table>
-            </div>
-            <div style="text-align:center;padding-bottom:12px;">
-              <a href="${baseUrl}/dashboard-mockup" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;">Bekijk in dashboard</a>
-            </div>
+              </tr>
+              <tr>
+                <td style="text-align:center;padding-bottom:4px;">
+                  <a href="${baseUrl}/dashboard-mockup" style="display:inline-block;color:#7c3aed;text-decoration:underline;font-size:13px;">Bekijk in dashboard</a>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
         <tr>

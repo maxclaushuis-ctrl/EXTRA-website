@@ -779,8 +779,17 @@ export default function Aanmelden() {
         interviewDate: null,
         interviewTime: null,
         sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
-        notes: [cvFile ? `CV: ${cvFile.name}` : null, "Gesprek ingepland via Calendly", formData.channel ? `Gevonden via: ${formData.channel}` : null].filter(Boolean).join(" | "),
+        notes: [cvFile ? `CV: ${cvFile.name}` : null, formData.channel ? `Gevonden via: ${formData.channel}` : null].filter(Boolean).join(" | "),
       };
+
+      // Upload CV eerst zodat het beschikbaar is als de admin-notificatiemail wordt verstuurd
+      if (savedCandidateId && cvFile) {
+        const fd = new FormData();
+        fd.append("cv", cvFile);
+        fd.append("email", formData.email);
+        fd.append("candidateId", String(savedCandidateId));
+        await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+      }
 
       if (savedCandidateId) {
         await apiRequest(`/api/aanmelden/${savedCandidateId}`, {
@@ -799,14 +808,13 @@ export default function Aanmelden() {
           method: "POST",
           body: JSON.stringify(payload),
         });
-      }
-
-      if (cvFile) {
-        const fd = new FormData();
-        fd.append("cv", cvFile);
-        fd.append("email", formData.email);
-        if (savedCandidateId) fd.append("candidateId", String(savedCandidateId));
-        await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+        // CV upload na POST als er geen savedCandidateId was
+        if (cvFile) {
+          const fd = new FormData();
+          fd.append("cv", cvFile);
+          fd.append("email", formData.email);
+          await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+        }
       }
 
       setStep("success");
