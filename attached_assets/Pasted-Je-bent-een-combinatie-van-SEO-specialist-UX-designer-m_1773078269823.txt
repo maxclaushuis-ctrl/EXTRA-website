@@ -1,0 +1,264 @@
+Je bent een combinatie van:
+- SEO specialist
+- UX designer
+- marketingstrateeg
+- front-end developer
+
+Context
+
+We bouwen branche-specifieke landingspagina’s voor opdrachtgevers die personeel zoeken.
+
+De website heeft al pagina’s voor:
+- Hotels
+- Eventlocaties
+- Cateraars
+
+Nu willen we een pagina maken voor:
+
+RESTAURANTS
+
+Belangrijk:
+Gebruik niet de naam “Horeca & Restaurants”.
+
+De pagina moet "Restaurants" heten zodat:
+
+- de pagina duidelijker is voor Google
+- de pagina duidelijker is voor LLM zoekmachines
+- de pagina een sterke SEO-focus krijgt
+
+In de tekst mag wel het woord “horeca” gebruikt worden.
+
+====================================================================
+
+BELANGRIJK
+
+De layout en structuur van deze pagina moeten exact hetzelfde zijn als:
+
+- Hotels pagina
+- Eventlocaties pagina
+- Cateraars pagina
+
+Dus:
+
+- dezelfde secties
+- dezelfde componenten
+- dezelfde spacing
+- dezelfde typografie
+- dezelfde CTA’s
+- dezelfde card layouts
+
+Alleen de inhoud moet specifiek worden gemaakt voor restaurants.
+
+====================================================================
+
+SEO DOEL VAN DE PAGINA
+
+De pagina moet kunnen ranken op:
+
+- restaurant personeel inhuren
+- personeel voor restaurants
+- horeca personeel restaurant
+- bediening restaurant personeel
+- flexibel horecapersoneel
+- restaurant uitzendbureau
+
+Google en LLM's moeten duidelijk begrijpen dat deze pagina over personeel voor restaurants gaat.
+
+====================================================================
+
+DESIGN RICHTLIJNEN
+
+Gebruik exact dezelfde stijl als de andere branchepagina’s:
+
+- dezelfde typografie
+- dezelfde kleuren
+- dezelfde card layouts
+- dezelfde CTA styling
+- dezelfde icon stijl
+- dezelfde spacing
+- dezelfde component structuur
+
+Gebruik waar mogelijk dezelfde componenten.
+
+Voeg subtiele moderne effecten toe zoals:
+
+- hover effects
+- scroll reveal animaties
+- micro-interactions
+
+Maar blijf volledig binnen de bestaande designstijl.
+
+====================================================================
+
+STRUCTUUR VAN DE RESTAURANT PAGINA
+
+Gebruik exact dezelfde structuur als de andere branchepagina’s.
+
+====================================================================
+
+1 HERO
+
+Maak een hero specifiek voor restaurants.
+
+Focus op problemen die spelen bij restaurants:
+
+- personeelstekort
+- ziekte of uitval
+- piekdrukte in het weekend
+- vakantieperiodes
+- onverwachte drukte
+
+Titel voorbeeld richting:
+
+Restaurantpersoneel nodig? EXTRA regelt het.
+
+Subheader:
+
+EXTRA levert flexibel horecapersoneel voor restaurants — van bediening tot keukenondersteuning.
+
+CTA:
+
+Vraag restaurantpersoneel aan
+
+====================================================================
+
+2 FUNCTIES VOOR RESTAURANTS
+
+Maak een sectie met functies specifiek voor restaurants.
+
+Gebruik cards.
+
+Functies zoals:
+
+- Bedieningsmedewerkers
+- Runners
+- Barpersoneel
+- Zelfstandig werkend kok
+- Sous-chef
+- Afwassers
+- Keukenhulpen
+
+Elke card krijgt:
+
+- functietitel
+- korte uitleg
+- icon
+
+====================================================================
+
+3 WAAROM RESTAURANTS VOOR EXTRA KIEZEN
+
+Herbruik deze sectie maar maak de tekst restaurantspecifiek.
+
+Focus op:
+
+- personeel dat gewend is aan horeca tempo
+- representatief personeel
+- flexibiliteit bij drukte
+- vaste gezichten via favorietenpoules
+- personeel dat gastvrijheid begrijpt
+
+====================================================================
+
+4 HOE WIJ HORECAPERSONEEL SELECTEREN
+
+Leg uit dat personeel:
+
+- persoonlijk wordt geselecteerd
+- hospitality ervaring heeft
+- wordt beoordeeld op houding en service
+- wordt geselecteerd op soft skills en hard skills
+- referenties heeft
+
+====================================================================
+
+5 CONTINUE KWALITEITSMETING
+
+Herbruik deze sectie.
+
+Leg uit dat:
+
+- medewerkers na iedere dienst worden beoordeeld
+- alleen de beste medewerkers terugkomen
+- kwaliteit continu wordt bewaakt
+
+====================================================================
+
+6 FAVORIETENPOULES VOOR RESTAURANTS
+
+Leg uit dat restaurants met vaste teams kunnen werken.
+
+Voordelen:
+
+- personeel kent het restaurant
+- minder uitleg nodig
+- efficiëntere samenwerking
+- hogere kwaliteit
+
+====================================================================
+
+7 EXTRAATJE BELONINGSSYSTEEM
+
+Herbruik deze sectie.
+
+Leg uit wat het voordeel is voor restaurants:
+
+- hogere motivatie
+- medewerkers willen vaker terugkomen
+- minder uitval
+- sterkere teams
+
+====================================================================
+
+8 LOGO’S VAN RESTAURANTKLANTEN
+
+Toon alleen logo’s van restaurants of horeca-opdrachtgevers.
+
+Niet van hotels of events.
+
+====================================================================
+
+9 KLANTCASE RESTAURANT
+
+Gebruik een case van een restaurant.
+
+Bijvoorbeeld:
+
+- druk weekend
+- personeelstekort
+- snel opschalen van bediening
+
+Focus op resultaat.
+
+====================================================================
+
+10 FAQ VOOR RESTAURANTS
+
+Maak een restaurantspecifieke FAQ.
+
+Bijvoorbeeld:
+
+- Kunnen jullie snel horecapersoneel leveren?
+- Hebben jullie ervaren bediening?
+- Kunnen jullie ook keukenpersoneel leveren?
+- Kunnen we werken met vaste medewerkers?
+
+====================================================================
+
+11 CTA
+
+Eindig met een duidelijke CTA.
+
+Bijvoorbeeld:
+
+Restaurantpersoneel nodig?
+Vraag direct EXTRA personeel aan.
+
+====================================================================
+
+BELANGRIJK
+
+- gebruik dezelfde component structuur als andere branchepagina’s
+- vermijd duplicate content
+- maak alle teksten restaurantspecifiek
+- behoud de visuele consistentie van de website

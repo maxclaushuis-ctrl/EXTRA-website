@@ -312,11 +312,11 @@ export default function PersoneelGezocht() {
               },
               {
                 icon: Wine,
-                title: "Horeca & Restaurants",
-                desc: "Bediening, keuken en bar voor restaurants, eetcafés en horecalocaties bij drukte en uitval.",
+                title: "Restaurants",
+                desc: "Bediening, koks en barpersoneel voor restaurants bij drukte, uitval en piekperiodes.",
                 color: "from-blue-500 to-indigo-600",
                 border: "border-blue-100",
-                link: "/horecapersoneel-gezocht",
+                link: "/restaurant-personeel-gezocht",
                 tags: ["Bediening", "Bar", "Keuken", "Runners"],
               },
             ].map((item, i) => (
