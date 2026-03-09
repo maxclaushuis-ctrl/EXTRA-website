@@ -413,7 +413,7 @@ export default function HorecaPersoneelGezocht() {
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
             <Link href="/personeel-gezocht" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Alle sectoren</Link>
             <Link href="/personeelsaanvraag" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Personeel aanvragen</Link>
-            <Link href="/hotel-personeel-gezocht" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Hotelpersoneel</Link>
+            <Link href="/hotelpersoneel-inhuren" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Hotelpersoneel</Link>
             <Link href="/event-personeel-gezocht" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Eventpersoneel</Link>
           </div>
         </div>

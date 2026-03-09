@@ -83,7 +83,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 
 const PUBLIC_PATHS = [
   '/landing', '/personeel-gezocht', '/horeca-personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
-  '/hotel-personeel-gezocht', '/event-personeel-gezocht', '/cateringpersoneel-gezocht', '/horecapersoneel-gezocht', '/restaurant-personeel-gezocht',
+  '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/event-personeel-gezocht', '/cateringpersoneel-gezocht', '/horecapersoneel-gezocht', '/restaurant-personeel-gezocht',
   '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
@@ -130,7 +130,9 @@ function Router() {
         <Route path="/horeca-personeel-gezocht" component={PersoneelGezocht} />
         <Route path="/personeel-gezocht">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
         <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
-        <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotel-personeel-gezocht'); return null; }}</Route>
+        <Route path="/hotelpersoneel-inhuren" component={HotelPersoneelGezocht} />
+        <Route path="/hotel-personeel-gezocht">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
+        <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
         <Route path="/evenementen-personeel-amsterdam">{() => { window.location.replace('/event-personeel-gezocht'); return null; }}</Route>
         <Route path="/catering-personeel-amsterdam">{() => { window.location.replace('/cateringpersoneel-gezocht'); return null; }}</Route>
         <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/restaurant-personeel-gezocht'); return null; }}</Route>
@@ -165,7 +167,6 @@ function Router() {
         <Route path="/klantcases-horeca" component={KlantcasesHoreca} />
 
         {/* Overige publieke routes */}
-        <Route path="/hotel-personeel-gezocht" component={HotelPersoneelGezocht} />
         <Route path="/event-personeel-gezocht" component={EventPersoneelGezocht} />
         <Route path="/cateringpersoneel-gezocht" component={CateringPersoneelGezocht} />
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />

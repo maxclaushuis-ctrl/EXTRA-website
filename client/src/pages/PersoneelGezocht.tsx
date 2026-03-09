@@ -289,7 +289,7 @@ export default function PersoneelGezocht() {
                 desc: "Housekeeping, banqueting, front office en keukenpersoneel voor hotels. Flexibel opschalen tijdens drukte, evenementen en seizoenen.",
                 color: "from-purple-600 to-purple-800",
                 border: "border-purple-100",
-                link: "/hotel-personeel-gezocht",
+                link: "/hotelpersoneel-inhuren",
                 tags: ["Housekeeping", "Front office", "Banqueting", "Keuken"],
               },
               {

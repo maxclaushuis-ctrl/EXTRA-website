@@ -106,7 +106,7 @@ export default function HotelPersoneelGezocht() {
   const [activeScreen, setActiveScreen] = useState(0);
 
   useEffect(() => {
-    document.title = "Hotelpersoneel Nodig? EXTRA Levert Snel & Betrouwbaar | Hotel Uitzendbureau Amsterdam";
+    document.title = "Hotelpersoneel inhuren | Housekeeping, F&B en Front Office | EXTRA";
 
     const setMeta = (nameOrProp: string, content: string, attr = "name") => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -125,11 +125,11 @@ export default function HotelPersoneelGezocht() {
       document.head.appendChild(s);
     };
 
-    setMeta("description", "Hotelpersoneel nodig? EXTRA levert snel en betrouwbaar personeel voor hotels in Amsterdam: housekeeping, front office, F&B, banqueting en chefs. NEN-4400-1 gecertificeerd.");
-    setLink("canonical", "https://www.doehetextra.nl/hotel-personeel-gezocht");
-    setMeta("og:title", "Hotelpersoneel Nodig? EXTRA Levert Snel & Betrouwbaar", "property");
-    setMeta("og:description", "Hotelpersoneel nodig? EXTRA levert housekeeping, front office, F&B en banqueting medewerkers voor hotels. Persoonlijk geselecteerd, iedereen in loondienst.", "property");
-    setMeta("og:url", "https://www.doehetextra.nl/hotel-personeel-gezocht", "property");
+    setMeta("description", "Hotelpersoneel nodig? EXTRA levert ervaren medewerkers voor housekeeping, front office, banqueting en F&B. Gescreend personeel dat hotelstandaarden begrijpt.");
+    setLink("canonical", "https://www.doehetextra.nl/hotelpersoneel-inhuren");
+    setMeta("og:title", "Hotelpersoneel inhuren | Housekeeping, F&B en Front Office | EXTRA", "property");
+    setMeta("og:description", "Hotelpersoneel nodig? EXTRA levert ervaren medewerkers voor housekeeping, front office, banqueting en F&B. Gescreend personeel dat hotelstandaarden begrijpt.", "property");
+    setMeta("og:url", "https://www.doehetextra.nl/hotelpersoneel-inhuren", "property");
     setMeta("og:type", "website", "property");
 
     addSchema("hotel-faq-schema", {
@@ -186,7 +186,7 @@ export default function HotelPersoneelGezocht() {
               </span>
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              Van housekeeping tot banqueting, van front office tot F&B. EXTRA levert snel en betrouwbaar horecapersoneel dat hotelstandaarden begrijpt. Iedereen persoonlijk geselecteerd, iedereen in loondienst.
+              Van housekeeping tot banqueting, van front office tot F&B. EXTRA levert flexibel hotelpersoneel dat hotelstandaarden begrijpt. Iedere medewerker persoonlijk geselecteerd en volledig in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
@@ -231,7 +231,7 @@ export default function HotelPersoneelGezocht() {
                 Voor elke hotelfunctie de juiste mensen
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Of het nu gaat om dagelijkse bezetting of piekdrukte: EXTRA heeft ervaren medewerkers voor elke rol in jouw hotel.
+                Of het nu gaat om dagelijkse bezetting of piekdrukte. EXTRA levert ervaren hotelpersoneel voor iedere rol binnen jouw hotel.
               </p>
             </div>
           </RevealSection>
@@ -240,14 +240,14 @@ export default function HotelPersoneelGezocht() {
               {
                 icon: BedDouble,
                 title: "Housekeeping",
-                desc: "Ervaren kamermeisjes en room attendants die werken conform jouw SOP's en kwaliteitsstandaard.",
+                desc: "Ervaren kamermeisjes en room attendants die werken volgens jouw SOP's en kwaliteitsstandaarden.",
                 tags: ["Kamerreiniging", "Badkamers", "Linnengoed", "Inspectie"],
                 color: "from-purple-600 to-purple-800",
               },
               {
                 icon: Building2,
                 title: "Front Office",
-                desc: "Representatieve medewerkers voor receptie, check-in/check-out en guestrelations. Altijd professioneel en gastvriendelijk.",
+                desc: "Representatieve medewerkers voor receptie, check in, check out en guestrelations. Professioneel, gastvrij en gewend aan hotelprocessen.",
                 tags: ["Receptie", "Check-in/out", "Guestrelations", "Conciërge"],
                 color: "from-blue-500 to-indigo-600",
               },
@@ -261,21 +261,21 @@ export default function HotelPersoneelGezocht() {
               {
                 icon: GlassWater,
                 title: "Banqueting",
-                desc: "Professionele bediening voor conferenties, gala-diners, meetings en events. Van 10 tot 300+ gasten.",
+                desc: "Professionele bediening voor conferenties, gala diners, meetings en events. Ervaring met grotere groepen en hotelservice.",
                 tags: ["Conferenties", "Gala-diners", "Boardroom", "Events"],
                 color: "from-pink-500 to-purple-600",
               },
               {
                 icon: ChefHat,
-                title: "Chefs & Keukenpersoneel",
-                desc: "Ervaren chefs, sous-chefs en koks voor à la carte service, banqueting en ontbijtservice in hotels.",
+                title: "Chefs en Keukenpersoneel",
+                desc: "Ervaren chefs, sous chefs en koks voor à la carte service, banqueting en ontbijtservice in hotels.",
                 tags: ["Chef de partie", "Sous-chef", "Zelfstandig werkend kok", "Commis"],
                 color: "from-orange-500 to-pink-600",
               },
               {
                 icon: CookingPot,
-                title: "Afwassers & Keukenondersteuning",
-                desc: "Betrouwbare ondersteuning voor drukke hotelkeukens: afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.",
+                title: "Afwassers en Keukenondersteuning",
+                desc: "Betrouwbare ondersteuning voor drukke hotelkeukens. Afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.",
                 tags: ["Afwasser", "Keukenhulp", "Spoelkeuken medewerker"],
                 color: "from-green-500 to-emerald-600",
               },
@@ -323,18 +323,18 @@ export default function HotelPersoneelGezocht() {
                 Waarom hotels voor EXTRA kiezen
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Hotelpersoneel is anders dan gewoon horecapersoneel. Gastvrijheid, representativiteit en consistentie zijn non-negotiable. EXTRA begrijpt dat.
+                Hotelpersoneel vraagt om meer dan alleen ervaring. Gastvrijheid, representativiteit en consistentie zijn essentieel. EXTRA begrijpt dat.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
-              { emoji: "🏨", title: "Vertrouwd met hotelstandaarden", desc: "Onze medewerkers kennen het verschil tussen een 3- en 5-sterrenstandaard. Ze werken conform SOP's, dresscodes en guestrelations protocollen." },
-              { emoji: "🤝", title: "Vaste gezichten per hotel", desc: "Via favorietenpoules bouwen we per hotel een vaste poule op. Dezelfde mensen die jouw procedures kennen en direct inzetbaar zijn." },
-              { emoji: "⭐", title: "Geselecteerd op gastvrijheid", desc: "Representativiteit en glimlach zijn doorslaggevend bij onze selectie. Iedereen die bij een hotel werkt is persoonlijk op kantoor geweest." },
-              { emoji: "📞", title: "Snel schakelen bij uitval", desc: "Ziekte, last-minute aanvragen, piekdrukte: we zijn 24/7 bereikbaar en kunnen snel schakelen. Jij staat nooit met een leeg rooster." },
-              { emoji: "📊", title: "Data per medewerker, per hotel", desc: "We meten prestaties na elke dienst. Zo weten we precies wie op welke hotellocatie het best presteert en wie jij in jouw favorietenpoule wilt." },
-              { emoji: "🛡️", title: "Volledig in loondienst", desc: "NEN-4400-1 gecertificeerd en conform arbeidswetgeving 2026. Geen zzp-risico's. Alle administratie geregeld, jij hoeft alleen goed personeel te ontvangen." },
+              { emoji: "🏨", title: "Vertrouwd met hotelstandaarden", desc: "Onze medewerkers kennen het verschil tussen drie en vijf sterren service. Ze werken volgens SOP's, dresscodes en guestrelations protocollen." },
+              { emoji: "🤝", title: "Vaste gezichten per hotel", desc: "Via favorietenpoules bouwen we per hotel een vaste poule op. Medewerkers die jouw procedures kennen en direct inzetbaar zijn." },
+              { emoji: "⭐", title: "Geselecteerd op gastvrijheid", desc: "Representativiteit en gastvrijheid zijn doorslaggevend in onze selectie. Iedereen heeft eerst een persoonlijk gesprek gehad." },
+              { emoji: "📞", title: "Snel schakelen bij uitval", desc: "Ziekte of last minute aanvragen? EXTRA is 24 uur per dag bereikbaar en kan snel schakelen." },
+              { emoji: "📊", title: "Data per medewerker per hotel", desc: "Na iedere dienst meten we prestaties. Zo weten we precies wie op jouw locatie het beste presteert." },
+              { emoji: "🛡️", title: "Volledig in loondienst", desc: "NEN 4400 1 gecertificeerd en conform arbeidswetgeving. Geen zzp risico's voor hotels." },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 80}>
                 <div className="group bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">
@@ -364,16 +364,16 @@ export default function HotelPersoneelGezocht() {
                 Hoe wij hotelpersoneel selecteren
               </h2>
               <p className="text-base sm:text-lg text-purple-200/70 mt-4 max-w-2xl mx-auto">
-                Hotelpersoneel vraagt om meer dan vakkennis. Presentatie, houding en gastvrijheid bepalen de gastbeleving. Wij selecteren op alles.
+                Hotelpersoneel vraagt om meer dan vakkennis. Presentatie, houding en gastvrijheid bepalen de gastbeleving. Daarom selecteren wij op alle drie.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { step: "1", icon: Users, title: "Persoonlijk gesprek op kantoor", desc: "Elke kandidaat komt langs. We beoordelen presentatie, communicatie en hospitality-mindset voordat iemand bij een hotel komt." },
-              { step: "2", icon: Star, title: "Selectie op soft & hard skills", desc: "Vakkennis is basis. Gastvrijheid, nauwkeurigheid en representativiteit zijn doorslaggevend bij hotelplaatsingen." },
-              { step: "3", icon: BookOpen, title: "Hospitality-ervaring verifiëren", desc: "We controleren eerdere hotelervaring en referenties. Wie eerder bij een hotel heeft gewerkt en goed is beoordeeld, gaat voor." },
-              { step: "4", icon: ThumbsUp, title: "Beoordeling na elke hotelplaatsing", desc: "Na elke dienst een score. Zo bouwen we per hotel een poule van bewezen toppers die jij vertrouwt." },
+              { step: "1", icon: Users, title: "Persoonlijk gesprek op kantoor", desc: "Iedere kandidaat komt langs. We beoordelen presentatie, communicatie en hospitality mindset." },
+              { step: "2", icon: Star, title: "Selectie op soft en hard skills", desc: "Vakkennis is belangrijk, maar gastvrijheid, representativiteit en nauwkeurigheid zijn doorslaggevend bij hotelplaatsingen." },
+              { step: "3", icon: BookOpen, title: "Hospitality ervaring verifiëren", desc: "We controleren eerdere hotelervaring en referenties voordat iemand bij een hotel wordt geplaatst." },
+              { step: "4", icon: ThumbsUp, title: "Beoordeling na elke hotelplaatsing", desc: "Na iedere dienst meten we prestaties en bouwen we per hotel een poule van bewezen medewerkers." },
             ].map((item, i) => (
               <RevealSection key={i} delay={i * 100}>
                 <div className="group bg-white/[0.06] backdrop-blur-sm rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-white/[0.08] hover:border-purple-400/30 hover:bg-white/[0.10] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full">
@@ -416,18 +416,18 @@ export default function HotelPersoneelGezocht() {
                 Gastbeleving begint bij<br className="hidden sm:block" /> betrouwbaar personeel
               </h2>
               <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                In een hotel is elke medewerker het gezicht van het merk. EXTRA meet na elke dienst hoe iemand presteert op jouw locatie. Zo garanderen we constante kwaliteit.
+                In een hotel is iedere medewerker onderdeel van de merkbeleving. EXTRA meet na iedere dienst prestaties zodat kwaliteit structureel gewaarborgd blijft.
               </p>
             </div>
           </RevealSection>
           <RevealSection delay={100}>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-14 max-w-4xl mx-auto">
               {[
-                { text: "Na elke dienst een beoordeling op gastvrijheid en uitvoering" },
-                { text: "No-shows en klachten direct geregistreerd en verwerkt" },
-                { text: "Consistentie per medewerker zichtbaar over tijd" },
-                { text: "Kwaliteitsdalingen direct gesignaleerd, actie volgt direct" },
-                { text: "Vaste poule van toppers voor jouw hotellocatie" },
+                { text: "Na iedere dienst beoordeling op gastvrijheid en uitvoering" },
+                { text: "No shows en klachten direct geregistreerd" },
+                { text: "Consistentie per medewerker inzichtelijk" },
+                { text: "Kwaliteitsdalingen snel gesignaleerd" },
+                { text: "Vaste poules van bewezen medewerkers" },
                 { text: "Diensthistorie en scores per medewerker inzichtelijk" },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm">
@@ -492,15 +492,15 @@ export default function HotelPersoneelGezocht() {
                   Vaste teams die<br /> jouw hotel kennen
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8">
-                  In een hotel draait alles om consistentie. Gasten verwachten dezelfde kwaliteit bij elke kamer, elk ontbijt en elk banqueting-moment. Met een vaste favorietenpoule hoef jij niet steeds opnieuw uit te leggen hoe het bij jullie gaat.
+                  In hotels draait alles om consistentie. Met een vaste favorietenpoule hoef je niet steeds opnieuw uit te leggen hoe jouw hotel werkt.
                 </p>
                 <ul className="space-y-4 mb-8">
                   {[
-                    { icon: Users, text: "Vaste poule per afdeling: housekeeping, F&B, banqueting, front office" },
-                    { icon: Heart, text: "Medewerkers kennen jouw hotel, procedures en hotelstandaard" },
-                    { icon: TrendingUp, text: "Sneller schakelen bij last-minute aanvragen en uitval" },
-                    { icon: Star, text: "Hogere gastbeleving door continuïteit en vertrouwde gezichten" },
-                    { icon: Tag, text: "Tags per medewerker: Housekeeping topper, Banqueting pro, F&B ervaren" },
+                    { icon: Users, text: "Vaste poules per afdeling zoals housekeeping, F&B, banqueting en front office" },
+                    { icon: Heart, text: "Medewerkers kennen jouw hotel en procedures" },
+                    { icon: TrendingUp, text: "Sneller schakelen bij last minute aanvragen" },
+                    { icon: Star, text: "Hogere gastbeleving door vaste gezichten" },
+                    { icon: Tag, text: "Tags per medewerker zoals housekeeping topper of F&B ervaren" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -556,16 +556,16 @@ export default function HotelPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Voor hotels is motivatie extra belangrijk. Een ongemotiveerde medewerker ruikt een gast. Met het EXTRAATje beloningssysteem zorgen wij dat medewerkers gemotiveerd zijn en graag terugkomen naar jouw hotel.
+                Voor hotels is motivatie essentieel. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers gemotiveerd blijven en graag terugkomen naar jouw hotel.
               </p>
             </div>
           </RevealSection>
           <RevealSection delay={100}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-4xl mx-auto">
               {[
-                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per dienst in jouw hotel. Goed presteren? Bonus-punten.", icon: "🏃" },
-                { step: "2", title: "Status stijgt, binding groeit", desc: "Punten opbouwen op jouw hotellocatie is een reden om terug te komen. Van Bronze naar Diamond.", icon: "💎" },
-                { step: "3", title: "Minder wisselende gezichten", desc: "Medewerkers die punten opbouwen op jouw locatie willen daar blijven presteren. Continuïteit voor jouw hotel.", icon: "🎁" },
+                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per dienst. Goed presteren levert bonuspunten op.", icon: "🏃" },
+                { step: "2", title: "Status stijgt, binding groeit", desc: "Door punten op te bouwen bij jouw hotel groeit betrokkenheid en motivatie.", icon: "💎" },
+                { step: "3", title: "Minder wisselende gezichten", desc: "Medewerkers blijven graag werken op locaties waar zij punten opbouwen.", icon: "🎁" },
               ].map((item, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-purple-100 p-6 sm:p-8 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">
                   <div className="text-4xl sm:text-5xl mb-4 sm:mb-5">{item.icon}</div>
@@ -751,7 +751,7 @@ export default function HotelPersoneelGezocht() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
-              Of je nu structurele ondersteuning zoekt voor housekeeping, tijdelijke versterking bij een event of een vaste poule wilt opbouwen: EXTRA regelt het. Snel, betrouwbaar en volledig in loondienst.
+              Of je nu structurele ondersteuning zoekt voor housekeeping, tijdelijke versterking bij een event of een vaste poule wilt opbouwen. EXTRA regelt het. Snel, betrouwbaar en volledig in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-14">
               <a

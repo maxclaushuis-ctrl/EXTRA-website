@@ -47,7 +47,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
       icon: Briefcase,
       href: "/personeel-gezocht",
       items: [
-        { label: "Hotels", href: "/hotel-personeel-gezocht", icon: Hotel },
+        { label: "Hotels", href: "/hotelpersoneel-inhuren", icon: Hotel },
         { label: "Eventlocaties", href: "/event-personeel-gezocht", icon: PartyPopper },
         { label: "Cateraars", href: "/cateringpersoneel-gezocht", icon: UtensilsCrossed },
         { label: "Horeca & Restaurants", href: "/horecapersoneel-gezocht", icon: UtensilsCrossed },
