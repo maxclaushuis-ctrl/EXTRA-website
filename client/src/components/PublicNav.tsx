@@ -19,7 +19,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -83,8 +83,8 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isDark
-          ? "bg-white/97 backdrop-blur-xl shadow-md border-b border-gray-100"
-          : "bg-transparent"
+          ? "bg-white backdrop-blur-xl shadow-lg border-b border-gray-100/80"
+          : "bg-gradient-to-b from-black/35 via-black/15 to-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
@@ -99,8 +99,8 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
             />
           </Link>
 
-          {/* Desktop nav — 3 dropdown groups centered */}
-          <div className="hidden lg:flex items-center gap-1">
+          {/* Desktop nav */}
+          <div className="hidden lg:flex items-center gap-0.5">
             {navGroups.map((group) => (
               <div
                 key={group.key}
@@ -110,18 +110,20 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
               >
                 <Link
                   href={group.href}
-                  className={`flex items-center gap-1.5 text-[15px] font-bold px-4 py-3 rounded-lg transition-all ${
+                  className={`flex items-center gap-1.5 text-[16px] font-bold px-4 py-3 rounded-lg transition-all duration-200 ${
                     activeDropdown === group.key
-                      ? isDark ? "text-purple-700 bg-purple-50" : "text-white bg-white/10"
+                      ? isDark
+                        ? "text-purple-700 bg-purple-50"
+                        : "text-white bg-white/15"
                       : isDark
-                        ? "text-gray-800 hover:text-purple-700 hover:bg-purple-50/50"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
+                        ? "text-gray-800 hover:text-purple-700 hover:bg-purple-50/60"
+                        : "text-white hover:text-white hover:bg-white/15"
                   }`}
                 >
-                  <group.icon className="w-4 h-4 shrink-0" />
+                  <group.icon className="w-4 h-4 shrink-0 opacity-80" />
                   {group.label}
                   <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    className={`w-3.5 h-3.5 opacity-70 transition-transform duration-200 ${
                       activeDropdown === group.key ? "rotate-180" : ""
                     }`}
                   />
@@ -135,7 +137,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                       : "opacity-0 -translate-y-2 pointer-events-none"
                   }`}
                 >
-                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
+                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/15 border border-purple-100/60 p-2 min-w-[220px]">
                     {group.items.map((item) => (
                       <Link
                         key={item.href}
@@ -145,7 +147,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                         <div className="w-8 h-8 rounded-lg bg-purple-100 group-hover/item:bg-purple-200 flex items-center justify-center transition-colors shrink-0">
                           <item.icon className="w-4 h-4 text-purple-600" />
                         </div>
-                        <span className="text-sm font-semibold">{item.label}</span>
+                        <span className="text-[15px] font-semibold">{item.label}</span>
                       </Link>
                     ))}
                   </div>
@@ -158,7 +160,11 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           <div className="hidden lg:block">
             <Link
               href="/personeelsaanvraag"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-[15px] font-bold px-7 py-3 rounded-full transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 border border-purple-500/20"
+              className={`inline-flex items-center gap-2 text-[16px] font-bold px-6 py-2.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 ${
+                isDark
+                  ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg hover:shadow-purple-500/30 border border-purple-500/20"
+                  : "bg-white text-purple-700 hover:bg-purple-50 shadow-lg shadow-black/20 hover:shadow-black/30"
+              }`}
             >
               <Phone className="w-4 h-4" />
               Personeel aanvragen
@@ -168,7 +174,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           {/* Mobile hamburger */}
           <button
             className={`lg:hidden p-2 rounded-lg transition-colors ${
-              isDark ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"
+              isDark ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/15"
             }`}
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Menu openen"
@@ -187,30 +193,30 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                 <div className="flex items-center justify-between">
                   <Link
                     href={group.href}
-                    className="flex items-center gap-2 flex-1 py-2.5 text-sm font-bold text-gray-800 hover:text-purple-700"
+                    className="flex items-center gap-2 flex-1 py-3 text-[15px] font-bold text-gray-800 hover:text-purple-700"
                   >
                     <group.icon className="w-4 h-4 text-purple-500" />
                     {group.label}
                   </Link>
                   <button
                     onClick={() => setActiveDropdown(activeDropdown === group.key ? null : group.key)}
-                    className="p-2 text-gray-500"
+                    className="p-2 text-gray-500 hover:text-purple-600"
                     aria-label="Submenu openen"
                   >
                     <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
+                      className={`w-4 h-4 transition-transform duration-200 ${
                         activeDropdown === group.key ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                 </div>
                 {activeDropdown === group.key && (
-                  <div className="ml-6 mt-1 space-y-1 border-l-2 border-purple-100 pl-3 pb-2">
+                  <div className="ml-6 mt-1 space-y-0.5 border-l-2 border-purple-100 pl-3 pb-3">
                     {group.items.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className="flex items-center gap-2 py-2 text-sm text-gray-600 hover:text-purple-700"
+                        className="flex items-center gap-2 py-2.5 text-[14px] font-semibold text-gray-600 hover:text-purple-700"
                       >
                         <item.icon className="w-3.5 h-3.5 text-purple-400" />
                         {item.label}
@@ -223,7 +229,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
             <div className="pt-3 border-t border-gray-100">
               <Link
                 href="/personeelsaanvraag"
-                className="flex items-center justify-center gap-2 py-3 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-full"
+                className="flex items-center justify-center gap-2 py-3.5 text-[15px] font-bold text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-full shadow-md"
               >
                 <Phone className="w-4 h-4" />
                 Personeel aanvragen

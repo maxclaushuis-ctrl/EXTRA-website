@@ -1,0 +1,82 @@
+Je bent een senior UX designer en front-end developer.
+
+Optimaliseer de globale navigatie / header van de volledige website zodat deze overal beter leesbaar, consistenter en sterker in de EXTRA-stijl wordt.
+
+Belangrijk:
+Deze aanpassingen moeten voor de gehele website worden doorgevoerd. Dus niet alleen op één pagina, maar op alle pagina’s en in alle scroll states.
+
+1. Lettertype in het menu vergroten
+Vergroot het lettertype van alle menu-items met 1 punt ten opzichte van de huidige situatie.
+
+Doel:
+- betere leesbaarheid
+- iets krachtigere uitstraling
+- meer in balans met de rest van de header
+
+Belangrijk:
+- behoud hetzelfde lettertype als nu
+- pas alleen de grootte subtiel aan
+- houd de spacing en uitlijning netjes in balans
+- voorkom dat het menu te vol of te dicht op elkaar komt te staan
+
+2. Leesbaarheid van het menu verbeteren bij scrollen
+Op bepaalde pagina’s en secties is het menu door het verloop in de header of achtergrond tijdens het scrollen niet goed zichtbaar.
+
+Los dit sitebreed op.
+
+Doel:
+- het menu moet in elke scroll state goed leesbaar blijven
+- voldoende contrast tussen tekst, iconen en achtergrond
+- de navigatie moet altijd duidelijk zichtbaar zijn, ongeacht de onderliggende sectie of achtergrond
+
+Pas dit aan:
+- verbeter de achtergrond van de sticky header / navigatie zodat deze consistenter contrasteert
+- zorg dat het verloop of de transparantie van de header niet ten koste gaat van de leesbaarheid
+- gebruik een donkerdere, stabielere overlay of een meer egale achtergrond wanneer nodig
+- behoud wel de premium paarse EXTRA-uitstraling
+
+3. Sticky header optimaliseren
+Als de gebruiker scrollt, moet de header visueel sterk blijven en niet wegvallen tegen de content.
+
+Zorg daarom voor:
+- een consistente sticky state
+- voldoende contrast
+- een subtiele blur, overlay of achtergrondlaag als dat helpt
+- duidelijke scheiding tussen header en paginacontent
+
+De sticky header moet:
+- modern ogen
+- rustig blijven
+- goed leesbaar zijn
+- passen bij de rest van de site
+
+4. Menu en CTA consistent houden
+Controleer dat alle onderdelen van de header in balans blijven:
+- logo
+- menu-items
+- dropdowns
+- iconen
+- CTA knop
+
+De CTA knop “Personeel aanvragen” moet ook in alle states goed zichtbaar blijven en niet visueel wegvallen tegen de achtergrond.
+
+5. Responsive gedrag
+Controleer en optimaliseer dit voor:
+- desktop
+- tablet
+- mobiel
+
+Specifiek:
+- grotere menutekst moet ook op kleinere schermen netjes blijven passen
+- de header mag niet breken of verspringen
+- dropdowns en mobiele navigatie moeten dezelfde verbeterde leesbaarheid krijgen
+
+6. Designdoel
+Het eindresultaat moet:
+- beter leesbaar zijn
+- consistenter ogen op de hele website
+- sterker aansluiten op de EXTRA huisstijl
+- premium en rustig blijven
+- ook tijdens scrollen goed zichtbaar zijn
+
+Voer deze wijzigingen direct door in de globale header / navigatiecomponent zodat het overal op de website wordt toegepast.
