@@ -1592,12 +1592,36 @@ export default function LandingPage() {
 
           <div className="space-y-3 sm:space-y-4">
             {[
-              { q: "Werken jullie met zzp?", a: "Nee, iedereen werkt via ons in loondienst. Wij regelen loon, belasting en verzekeringen. Geen gedoe met zzp-constructies." },
-              { q: "Welke functies leveren jullie?", a: "Hotels, catering, events en restaurants — housekeeping, front office, chefs, bediening, host/hostess, afwas en meer." },
-              { q: "Hoe snel kunnen jullie leveren?", a: "Afhankelijk van locatie en moment. Vaak snel schakelen, soms dezelfde week. Bij grote events plannen we ruim vooruit." },
-              { q: "Hoe werkt EXTRAATje?", a: "Je verdient punten per gewerkte shift en wisselt die in voor echte beloningen zoals AirPods, sportabonnementen en meer. Hoe meer je werkt, hoe hoger je status." },
+              {
+                q: "Hoe snel kunnen jullie horecapersoneel leveren?",
+                a: "Bij EXTRA begrijpen we dat drukte vaak onverwacht ontstaat. Dankzij onze grote pool met ervaren horecamedewerkers kunnen we vaak snel personeel inzetten. In veel gevallen kunnen wij binnen 48 uur geschikte medewerkers voorstellen voor hotels, restaurants, events of cateringopdrachten."
+              },
+              {
+                q: "Voor welke functies kan ik horecapersoneel inhuren?",
+                a: "Via EXTRA kun je personeel inhuren voor verschillende functies binnen de horeca en hospitality. Denk aan bediening, barpersoneel, runners, chefs, front-office medewerkers en housekeeping. We kijken altijd welke medewerkers het beste passen bij de opdracht en locatie."
+              },
+              {
+                q: "Wat kost horecapersoneel via een uitzendbureau?",
+                a: "De kosten voor horecapersoneel via een uitzendbureau hangen af van verschillende factoren zoals de functie, ervaring en duur van de inzet. Bij EXTRA werken we met transparante tarieven en denken we graag mee over een passende oplossing voor jouw situatie."
+              },
+              {
+                q: "Waarom kiezen bedrijven voor een horeca uitzendbureau?",
+                a: "Veel bedrijven kiezen voor een horeca uitzendbureau omdat het flexibiliteit biedt. Je kunt snel personeel inzetten bij drukte, evenementen of ziekte. Daarnaast neemt een uitzendbureau de werving, selectie en administratie uit handen."
+              },
+              {
+                q: "Kunnen jullie flexibel opschalen bij drukte of evenementen?",
+                a: "Ja. Flexibiliteit is één van de belangrijkste voordelen van werken met EXTRA. Of het nu gaat om een groot evenement, een druk weekend of tijdelijke piek in bezetting: we kunnen snel op- en afschalen met ervaren horecapersoneel."
+              },
+              {
+                q: "Voor wat voor soort bedrijven levert EXTRA personeel?",
+                a: "EXTRA levert horecapersoneel aan verschillende bedrijven binnen de hospitalitysector, zoals hotels, eventlocaties, cateraars en restaurants. Hierdoor hebben we veel ervaring met uiteenlopende opdrachten en werkomgevingen."
+              },
+              {
+                q: "Hoe kan ik personeel aanvragen bij EXTRA?",
+                a: "Je kunt eenvoudig personeel aanvragen via het aanvraagformulier op onze website. Nadat we de aanvraag hebben ontvangen nemen we contact op om de wensen en planning te bespreken."
+              },
             ].map((faq, i) => (
-              <RevealSection key={i} delay={i * 80}>
+              <RevealSection key={i} delay={i * 60}>
                 <div className="bg-white rounded-2xl border border-gray-100 hover:border-purple-200 transition-all duration-300 overflow-hidden shadow-sm">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -1610,7 +1634,7 @@ export default function LandingPage() {
                       <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     )}
                   </button>
-                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-5 sm:pb-7" : "max-h-0"}`}>
+                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-72 pb-5 sm:pb-7" : "max-h-0"}`}>
                     <p className="px-5 sm:px-7 text-sm sm:text-base text-gray-500 leading-relaxed">{faq.a}</p>
                   </div>
                 </div>
@@ -1834,6 +1858,20 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Hoe snel kunnen jullie horecapersoneel leveren?", "acceptedAnswer": { "@type": "Answer", "text": "Bij EXTRA begrijpen we dat drukte vaak onverwacht ontstaat. Dankzij onze grote pool met ervaren horecamedewerkers kunnen we vaak snel personeel inzetten. In veel gevallen kunnen wij binnen 48 uur geschikte medewerkers voorstellen voor hotels, restaurants, events of cateringopdrachten." } },
+          { "@type": "Question", "name": "Voor welke functies kan ik horecapersoneel inhuren?", "acceptedAnswer": { "@type": "Answer", "text": "Via EXTRA kun je personeel inhuren voor verschillende functies binnen de horeca en hospitality. Denk aan bediening, barpersoneel, runners, chefs, front-office medewerkers en housekeeping. We kijken altijd welke medewerkers het beste passen bij de opdracht en locatie." } },
+          { "@type": "Question", "name": "Wat kost horecapersoneel via een uitzendbureau?", "acceptedAnswer": { "@type": "Answer", "text": "De kosten voor horecapersoneel via een uitzendbureau hangen af van verschillende factoren zoals de functie, ervaring en duur van de inzet. Bij EXTRA werken we met transparante tarieven en denken we graag mee over een passende oplossing voor jouw situatie." } },
+          { "@type": "Question", "name": "Waarom kiezen bedrijven voor een horeca uitzendbureau?", "acceptedAnswer": { "@type": "Answer", "text": "Veel bedrijven kiezen voor een horeca uitzendbureau omdat het flexibiliteit biedt. Je kunt snel personeel inzetten bij drukte, evenementen of ziekte. Daarnaast neemt een uitzendbureau de werving, selectie en administratie uit handen." } },
+          { "@type": "Question", "name": "Kunnen jullie flexibel opschalen bij drukte of evenementen?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Flexibiliteit is één van de belangrijkste voordelen van werken met EXTRA. Of het nu gaat om een groot evenement, een druk weekend of tijdelijke piek in bezetting: we kunnen snel op- en afschalen met ervaren horecapersoneel." } },
+          { "@type": "Question", "name": "Voor wat voor soort bedrijven levert EXTRA personeel?", "acceptedAnswer": { "@type": "Answer", "text": "EXTRA levert horecapersoneel aan verschillende bedrijven binnen de hospitalitysector, zoals hotels, eventlocaties, cateraars en restaurants. Hierdoor hebben we veel ervaring met uiteenlopende opdrachten en werkomgevingen." } },
+          { "@type": "Question", "name": "Hoe kan ik personeel aanvragen bij EXTRA?", "acceptedAnswer": { "@type": "Answer", "text": "Je kunt eenvoudig personeel aanvragen via het aanvraagformulier op onze website. Nadat we de aanvraag hebben ontvangen nemen we contact op om de wensen en planning te bespreken." } },
+        ]
+      }) }} />
     </div>
   );
 }
