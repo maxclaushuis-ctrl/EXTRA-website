@@ -1,0 +1,251 @@
+Je bent een combinatie van:
+- SEO specialist
+- UX designer
+- marketingstrateeg
+- front-end developer
+
+Context:
+We hebben een algemene landingspagina voor opdrachtgevers die personeel zoeken.
+
+Vanuit deze pagina verwijzen we naar specifieke branchepagina’s.
+
+Nu wil ik dat je de eerste branchepagina uitwerkt:
+
+HOTELS
+
+Het doel van deze pagina is:
+1. SEO-ranking op hotel gerelateerde zoektermen
+2. Bezoekers uit de hotelbranche laten converteren
+3. Vertrouwen opbouwen bij hotelmanagers en operations managers
+4. Laten zien dat EXTRA de juiste partner is voor hotelpersoneel
+
+BELANGRIJK
+Deze pagina moet niet simpelweg een kopie zijn van de algemene pagina.
+
+We willen duplicate content voorkomen omdat dit:
+- SEO negatief beïnvloedt
+- LLM zoekmachines minder duidelijk maakt waar de pagina over gaat
+
+Daarom moet je:
+
+- Bepaalde secties hergebruiken
+- Bepaalde secties herschrijven
+- Bepaalde secties volledig hotelspecifiek maken
+
+Denk hierbij als SEO specialist.
+
+====================================================================
+
+SEO DOEL VAN DE PAGINA
+
+De pagina moet duidelijk ranken op onderwerpen zoals:
+
+- hotel personeel inhuren
+- personeel voor hotels
+- housekeeping personeel
+- front office personeel
+- F&B personeel hotel
+- hotel uitzendbureau
+- flexibel hotelpersoneel
+
+Google en LLM's moeten duidelijk begrijpen dat deze pagina specifiek over hotelpersoneel gaat.
+
+====================================================================
+
+DESIGN RICHTLIJNEN
+
+De pagina moet volledig in dezelfde stijl blijven als de andere pagina’s.
+
+Gebruik exact dezelfde:
+- typografie
+- kleuren
+- CTA-stijl
+- cards
+- icon stijl
+- spacing
+- layout grid
+- component structuur
+
+De pagina moet aanvoelen als een natuurlijke uitbreiding van de website.
+
+Voeg wel subtiele moderne effecten toe zoals:
+- scroll animations
+- hover effects
+- micro-interactions
+
+Maar blijf binnen de bestaande stijl.
+
+====================================================================
+
+STRUCTUUR VAN DE HOTEL PAGINA
+
+Gebruik de structuur van de algemene pagina als basis, maar optimaliseer deze voor hotels.
+
+1. HERO
+
+Maak een hotelspecifieke hero.
+
+Focus op de problemen van hotels:
+
+- personeelstekort
+- housekeeping bezetting
+- piekdrukte
+- banqueting
+- ziekte of uitval
+- events in hotels
+
+De header moet duidelijk maken dat EXTRA personeel levert voor hotels.
+
+Bijvoorbeeld in de richting van:
+Hotelpersoneel nodig? EXTRA regelt het.
+
+De subheader moet uitleggen dat EXTRA snel betrouwbaar personeel levert voor hotels.
+
+CTA:
+Vraag hotelpersoneel aan
+
+====================================================================
+
+2. FUNCTIES VOOR HOTELS
+
+Maak een duidelijke sectie met functies specifiek voor hotels.
+
+Gebruik cards.
+
+Functies zoals:
+
+- Front-office medewerkers
+- Housekeeping medewerkers
+- F&B medewerkers
+- Banqueting medewerkers
+- Chefs
+- Afwassers
+
+Elke card krijgt:
+- functietitel
+- korte uitleg
+- visuele icon
+
+====================================================================
+
+3. WAAROM HOTELS VOOR EXTRA KIEZEN
+
+Herbruik de bestaande sectie maar maak de tekst hotelspecifiek.
+
+Focus op:
+
+- representatief personeel
+- ervaring met hotelstandaarden
+- gastvrijheid
+- flexibiliteit bij piekdrukte
+- vaste gezichten via favorietenpoules
+
+====================================================================
+
+4. HOE WIJ HOTELPERSONEEL SELECTEREN
+
+Leg uit dat personeel:
+
+- persoonlijk wordt geselecteerd
+- wordt beoordeeld op soft skills
+- hospitality ervaring heeft
+- referenties heeft
+
+Maak dit hotelspecifiek.
+
+====================================================================
+
+5. CONTINUE KWALITEITSMETING
+
+Herbruik de bestaande sectie maar leg uit waarom dit belangrijk is voor hotels.
+
+Bijvoorbeeld:
+
+- gastbeleving
+- servicekwaliteit
+- consistentie
+- betrouwbaarheid
+
+====================================================================
+
+6. FAVORIETENPOULES VOOR HOTELS
+
+Leg uit dat hotels kunnen werken met vaste teams.
+
+Voordelen:
+
+- vaste gezichten
+- personeel kent het hotel
+- minder uitleg nodig
+- hogere kwaliteit
+
+====================================================================
+
+7. EXTRAATJE BELONINGSSYSTEEM
+
+Herbruik deze sectie maar leg uit wat dit betekent voor hotels.
+
+Bijvoorbeeld:
+
+- minder no-shows
+- hogere motivatie
+- medewerkers willen vaker terugkomen naar dezelfde locatie
+
+====================================================================
+
+8. LOGO’S VAN HOTELKLANTEN
+
+Belangrijk:
+
+Op deze pagina mogen alleen logo’s van hotels worden getoond.
+
+Niet van restaurants of events.
+
+====================================================================
+
+9. KLANTCASE HOTEL
+
+Gebruik een case van een hotel.
+
+Bijvoorbeeld:
+
+- housekeeping ondersteuning
+- banqueting ondersteuning
+- piekdrukte
+
+====================================================================
+
+10. FAQ VOOR HOTELS
+
+Maak een hotelspecifieke FAQ.
+
+Bijvoorbeeld vragen zoals:
+
+- Hoe snel kunnen jullie hotelpersoneel leveren?
+- Kunnen jullie housekeeping personeel leveren?
+- Kunnen jullie personeel leveren voor banqueting?
+- Hoe werkt het met vaste teams?
+
+====================================================================
+
+11. CTA
+
+Eindig met een duidelijke CTA.
+
+Bijvoorbeeld:
+
+Hotelpersoneel nodig?
+Vraag direct EXTRA personeel aan.
+
+====================================================================
+
+BELANGRIJK
+
+Let op:
+
+- Voorkom duplicate content
+- Maak de teksten hotelspecifiek
+- Hergebruik bestaande componenten waar mogelijk
+- Houd de pagina consistent met de rest van de website
+
+Werk deze pagina volledig uit en implementeer hem in dezelfde stijl als de andere pagina’s.
