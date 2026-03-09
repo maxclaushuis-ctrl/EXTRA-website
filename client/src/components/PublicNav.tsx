@@ -88,19 +88,19 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
           <Link href="/landing">
             <img
               src={extraLogoWit}
               alt="EXTRA"
-              className={`h-8 sm:h-9 w-auto transition-all duration-300 ${isDark ? "brightness-0" : ""}`}
+              className={`h-9 sm:h-10 w-auto transition-all duration-300 ${isDark ? "brightness-0" : ""}`}
             />
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-0.5">
+          <div className="hidden lg:flex items-center gap-2">
             {navGroups.map((group) => (
               <div
                 key={group.key}
@@ -110,7 +110,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
               >
                 <Link
                   href={group.href}
-                  className={`flex items-center gap-1.5 text-[16px] font-bold px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all duration-200 ${
                     activeDropdown === group.key
                       ? isDark
                         ? "text-purple-700 bg-purple-50"
@@ -120,10 +120,10 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                         : "text-white hover:text-white hover:bg-white/15"
                   }`}
                 >
-                  <group.icon className="w-4 h-4 shrink-0 opacity-80" />
+                  <group.icon className="w-5 h-5 shrink-0 opacity-80" />
                   {group.label}
                   <ChevronDown
-                    className={`w-3.5 h-3.5 opacity-70 transition-transform duration-200 ${
+                    className={`w-4 h-4 opacity-70 transition-transform duration-200 ${
                       activeDropdown === group.key ? "rotate-180" : ""
                     }`}
                   />
@@ -160,13 +160,13 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           <div className="hidden lg:block">
             <Link
               href="/personeelsaanvraag"
-              className={`inline-flex items-center gap-2 text-[16px] font-bold px-6 py-2.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 ${
+              className={`inline-flex items-center gap-2.5 text-[18px] font-black px-8 py-3.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl ${
                 isDark
-                  ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg hover:shadow-purple-500/30 border border-purple-500/20"
-                  : "bg-white text-purple-700 hover:bg-purple-50 shadow-lg shadow-black/20 hover:shadow-black/30"
+                  ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30"
+                  : "bg-white text-purple-700 border-2 border-white hover:shadow-white/30"
               }`}
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-[18px] h-[18px]" />
               Personeel aanvragen
             </Link>
           </div>
@@ -193,9 +193,11 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                 <div className="flex items-center justify-between">
                   <Link
                     href={group.href}
-                    className="flex items-center gap-2 flex-1 py-3 text-[15px] font-bold text-gray-800 hover:text-purple-700"
+                    className="flex items-center gap-3 flex-1 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 hover:text-purple-700 transition-colors"
                   >
-                    <group.icon className="w-4 h-4 text-purple-500" />
+                    <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                      <group.icon className="w-5 h-5 text-purple-600" />
+                    </div>
                     {group.label}
                   </Link>
                   <button
@@ -229,9 +231,9 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
             <div className="pt-3 border-t border-gray-100">
               <Link
                 href="/personeelsaanvraag"
-                className="flex items-center justify-center gap-2 py-3.5 text-[15px] font-bold text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-full shadow-md"
+                className="flex items-center justify-center gap-2.5 w-full py-4 text-base font-black text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-full shadow-md hover:from-purple-700 hover:to-purple-800 transition-all"
               >
-                <Phone className="w-4 h-4" />
+                <Phone className="w-[18px] h-[18px]" />
                 Personeel aanvragen
               </Link>
             </div>
