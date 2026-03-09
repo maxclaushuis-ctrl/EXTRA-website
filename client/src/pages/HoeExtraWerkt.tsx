@@ -121,15 +121,15 @@ export default function HoeExtraWerkt() {
   const [activeTab, setActiveTab] = useState<"werkgever" | "medewerker">("werkgever");
 
   useEffect(() => {
-    document.title = "Hoe EXTRA werkt – Werkwijze voor werkgevers & medewerkers | EXTRA";
+    document.title = "Hoe EXTRA werkt: Werkwijze voor werkgevers & medewerkers | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Ontdek hoe EXTRA werkt — van eerste contact tot vaste poule. Duidelijke stappen voor werkgevers en medewerkers. Snel, menselijk en resultaatgericht.");
-    setMeta("og:title", "Hoe EXTRA werkt – Werkwijze voor werkgevers & medewerkers", true);
+    setMeta("description", "Ontdek hoe EXTRA werkt, van eerste contact tot vaste poule. Duidelijke stappen voor werkgevers en medewerkers. Snel, menselijk en resultaatgericht.");
+    setMeta("og:title", "Hoe EXTRA werkt: Werkwijze voor werkgevers & medewerkers", true);
     setMeta("og:description", "EXTRA verbindt het beste horecapersoneel met de mooiste opdrachtgevers. Bekijk onze werkwijze stap voor stap.", true);
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
@@ -142,13 +142,13 @@ export default function HoeExtraWerkt() {
     {
       icon: Phone,
       title: "We komen persoonlijk langs",
-      desc: "Samen inventariseren we jouw behoeften, doelstellingen en piekmomenten. We kijken naar wat er nodig is aan flexibele én vaste ondersteuning — op jouw locatie en in jouw tempo.",
+      desc: "Samen inventariseren we jouw behoeften, doelstellingen en piekmomenten. We kijken naar wat er nodig is aan flexibele én vaste ondersteuning, op jouw locatie en in jouw tempo.",
       color: "from-purple-500 to-violet-600",
     },
     {
       icon: Shield,
       title: "Raamovereenkomst & onboarding",
-      desc: "Voordat we starten ontvang je een raamovereenkomst die voldoet aan alle wet- & regelgeving — inclusief ABU, Wet DBA, StiPP, NEN en identiteitscontroles. Pas daarna gaan we live.",
+      desc: "Voordat we starten ontvang je een raamovereenkomst die voldoet aan alle wet- & regelgeving, inclusief ABU, Wet DBA, StiPP, NEN en identiteitscontroles. Pas daarna gaan we live.",
       color: "from-indigo-500 to-purple-600",
     },
     {
@@ -172,7 +172,7 @@ export default function HoeExtraWerkt() {
     {
       icon: Clock,
       title: "Planning & communicatie",
-      desc: "Je maakt diensten aan via het portaal of direct via je accountmanager. Wij verzorgen de volledige planning — altijd de best scorende kandidaten, altijd op tijd.",
+      desc: "Je maakt diensten aan via het portaal of direct via je accountmanager. Wij verzorgen de volledige planning, altijd de best scorende kandidaten, altijd op tijd.",
       color: "from-emerald-500 to-teal-600",
     },
     {
@@ -184,7 +184,7 @@ export default function HoeExtraWerkt() {
     {
       icon: Sparkles,
       title: "Continu verbeteren via EXTRAATJE",
-      desc: "Medewerkers worden beloond via ons puntensysteem EXTRAATJE — voor microprestaties als op tijd komen, hoge beoordelingen, juiste houding en extra inzet. Dit geeft EXTRA unieke inzichten in kwaliteit en motivatie.",
+      desc: "Medewerkers worden beloond via ons puntensysteem EXTRAATJE, voor microprestaties als op tijd komen, hoge beoordelingen, juiste houding en extra inzet. Dit geeft EXTRA unieke inzichten in kwaliteit en motivatie.",
       color: "from-orange-500 to-amber-500",
       highlight: true,
     },
@@ -200,7 +200,7 @@ export default function HoeExtraWerkt() {
     {
       icon: MessageCircle,
       title: "Sollicitatiegesprek bij EXTRA",
-      desc: "We leren elkaar kennen op kantoor. We bespreken jouw skills, ervaring, beschikbaarheid en voorkeuren — zodat we je echt goed kunnen inzetten.",
+      desc: "We leren elkaar kennen op kantoor. We bespreken jouw skills, ervaring, beschikbaarheid en voorkeuren, zodat we je echt goed kunnen inzetten.",
       color: "from-indigo-500 to-purple-600",
     },
     {
@@ -212,12 +212,12 @@ export default function HoeExtraWerkt() {
     {
       icon: Briefcase,
       title: "Werken via EXTRA",
-      desc: "Via het portaal of via de planning krijg je shifts aangeboden — snel, duidelijk en flexibel. Jij kiest wat bij je past, wij regelen de rest.",
+      desc: "Via het portaal of via de planning krijg je shifts aangeboden: snel, duidelijk en flexibel. Jij kiest wat bij je past, wij regelen de rest.",
       color: "from-teal-500 to-cyan-600",
     },
     {
       icon: Gift,
-      title: "EXTRAATJE – punten verdienen",
+      title: "EXTRAATJE: punten verdienen",
       desc: "Bij elke shift verdien je automatisch punten via EXTRAATJE. Voor microprestaties als op tijd komen, hoge beoordelingen en extra inzet krijg je bonuspunten. Ruil ze in voor echte beloningen.",
       color: "from-orange-500 to-amber-500",
       highlight: true,
@@ -247,7 +247,7 @@ export default function HoeExtraWerkt() {
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-purple-100/90 max-w-2xl mx-auto mb-8 leading-relaxed font-medium">
-            EXTRA verbindt het beste horecapersoneel met de mooiste opdrachtgevers. Een geautomatiseerde én mensgerichte aanpak — transparant, betrouwbaar en razendsnel.
+            EXTRA verbindt het beste horecapersoneel met de mooiste opdrachtgevers. Een geautomatiseerde én mensgerichte aanpak, transparant, betrouwbaar en razendsnel.
           </p>
           {/* Tab switcher in hero */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -445,7 +445,7 @@ export default function HoeExtraWerkt() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {[
               { icon: Heart, title: "Menselijk contact", desc: "Geen chatbot, maar een vast contactpersoon die jou en jouw situatie kent.", color: "from-pink-500 to-rose-500" },
-              { icon: Zap, title: "Razendsnel schakelen", desc: "Last-minute krapte? Wij reageren snel — ook 's avonds en in het weekend.", color: "from-purple-500 to-violet-600" },
+              { icon: Zap, title: "Razendsnel schakelen", desc: "Last-minute krapte? Wij reageren snel, ook 's avonds en in het weekend.", color: "from-purple-500 to-violet-600" },
               { icon: Shield, title: "Compliance & zekerheid", desc: "Volledig ABU-gecertificeerd. Geen juridische verrassingen, wel volledige bescherming.", color: "from-indigo-500 to-blue-600" },
               { icon: Star, title: "Kwaliteitsscores", desc: "Elk gesprek, elke shift, elke beoordeling. Wij meten kwaliteit van begin tot eind.", color: "from-amber-500 to-orange-500" },
               { icon: Sparkles, title: "EXTRAATJE puntensysteem", desc: "Gemotiveerde medewerkers presteren beter. Ons beloningssysteem zorgt voor dat extraatje.", color: "from-green-500 to-emerald-500" },
@@ -508,7 +508,7 @@ export default function HoeExtraWerkt() {
               Klaar om samen te werken?
             </h2>
             <p className="text-purple-200/80 text-base sm:text-lg mb-8 leading-relaxed">
-              Of je nu op zoek bent naar top horecapersoneel of zelf wilt werken — EXTRA heeft de aanpak, de mensen en het systeem.
+              Of je nu op zoek bent naar top horecapersoneel of zelf wilt werken: EXTRA heeft de aanpak, de mensen en het systeem.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2">

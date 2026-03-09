@@ -37,7 +37,7 @@ export default function VacatureDetail() {
 
   useEffect(() => {
     if (vacature) {
-      document.title = `${vacature.title} — Horeca vacature Amsterdam | EXTRA`;
+      document.title = `${vacature.title} | Horeca vacature Amsterdam | EXTRA`;
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) {
         metaDesc.setAttribute("content", vacature.metaDescription);

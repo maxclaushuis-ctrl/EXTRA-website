@@ -104,7 +104,7 @@ export default function PersoneelsAanvraag() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    document.title = "Personeel Aanvragen — EXTRA Uitzendbureau";
+    document.title = "Personeel Aanvragen bij EXTRA Uitzendbureau";
 
     const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -128,7 +128,7 @@ export default function PersoneelsAanvraag() {
     setMeta('description', 'Vraag snel flexibel horecapersoneel aan via EXTRA. Vul het formulier in en wij nemen binnen één werkdag contact op.');
     setLink('canonical', 'https://www.doehetextra.nl/personeelsaanvraag');
 
-    setMeta('og:title', 'Personeel Aanvragen — EXTRA Uitzendbureau', 'property');
+    setMeta('og:title', 'Personeel Aanvragen bij EXTRA Uitzendbureau', 'property');
     setMeta('og:description', 'Vraag snel flexibel horecapersoneel aan via EXTRA. Vul het formulier in en wij nemen binnen één werkdag contact op.', 'property');
     setMeta('og:url', 'https://www.doehetextra.nl/personeelsaanvraag', 'property');
     setMeta('og:type', 'website', 'property');
@@ -138,7 +138,7 @@ export default function PersoneelsAanvraag() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
       "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
@@ -190,7 +190,7 @@ export default function PersoneelsAanvraag() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">Wij bellen je terug.</span>
             </h1>
             <p className="text-lg text-purple-200/80 max-w-lg mx-auto leading-relaxed">
-              Laat je gegevens achter — in 30 seconden klaar. We nemen persoonlijk contact op om alles door te spreken.
+              Laat je gegevens achter, in 30 seconden klaar. We nemen persoonlijk contact op om alles door te spreken.
             </p>
           </RevealDiv>
         </div>
@@ -212,7 +212,7 @@ export default function PersoneelsAanvraag() {
                     Aanvraag ontvangen!
                   </h2>
                   <p className="text-lg text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
-                    We nemen zo snel mogelijk contact met je op — tijdens kantooruren meestal binnen 1 uur.
+                    We nemen zo snel mogelijk contact met je op, tijdens kantooruren meestal binnen 1 uur.
                   </p>
                   <a href="/horeca-personeel-inhuren" className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-8 py-4 rounded-full hover:bg-purple-700 transition-all hover:scale-105">
                     <ArrowLeft className="w-4 h-4" /> Terug naar overzicht

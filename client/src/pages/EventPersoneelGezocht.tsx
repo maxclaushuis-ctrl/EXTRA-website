@@ -167,7 +167,7 @@ export default function EventPersoneelGezocht() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
       "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
@@ -249,7 +249,7 @@ export default function EventPersoneelGezocht() {
                 Jouw event, onze mensen
               </h1>
               <p className="text-lg sm:text-xl text-purple-100/80 mb-10 leading-relaxed font-medium max-w-2xl">
-                Bediening, runners en hosts — EXTRA regelt de bezetting zodat jij je focust op het event. Professionele hosts en barpersoneel voor elk type event in Amsterdam.
+                Bediening, runners en hosts: EXTRA regelt de bezetting zodat jij je focust op het event. Professionele hosts en barpersoneel voor elk type event in Amsterdam.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link

@@ -156,7 +156,7 @@ const team: Member[] = [
     initials: "JA",
     color: "from-blue-500 via-cyan-500 to-sky-400",
     shadowColor: "shadow-blue-500/25",
-    bio: "Jayden plant niet alleen mensen in — hij plant chaos uit. Als iemand last-minute uitvalt, heeft hij al een oplossing voordat jij 'no-show' kunt zeggen.",
+    bio: "Jayden plant niet alleen mensen in, hij plant chaos uit. Als iemand last-minute uitvalt, heeft hij al een oplossing voordat jij 'no-show' kunt zeggen.",
     badge: "Last-minute held",
     badgeIcon: Zap,
     badgeBg: "bg-blue-100",
@@ -171,7 +171,7 @@ const team: Member[] = [
     initials: "LO",
     color: "from-pink-500 via-rose-500 to-red-400",
     shadowColor: "shadow-pink-500/25",
-    bio: "Lotte spot talent van drie kilometer afstand. Ze weet precies wie waar past. Haar motto: 'Iedereen heeft een EXTRAatje — je moet 'm alleen even vinden.'",
+    bio: "Lotte spot talent van drie kilometer afstand. Ze weet precies wie waar past. Haar motto: 'Iedereen heeft een EXTRAatje, je moet 'm alleen even vinden.'",
     badge: "Talentspotter",
     badgeIcon: Star,
     badgeBg: "bg-pink-100",
@@ -186,7 +186,7 @@ const team: Member[] = [
     initials: "MI",
     color: "from-emerald-500 via-green-500 to-teal-400",
     shadowColor: "shadow-emerald-500/25",
-    bio: "Milan is de brug tussen klanten en medewerkers. Altijd positief, altijd strak geregeld. Hij kent onze klanten bij naam — en soms ook hun honden.",
+    bio: "Milan is de brug tussen klanten en medewerkers. Altijd positief, altijd strak geregeld. Hij kent onze klanten bij naam, en soms ook hun honden.",
     badge: "Klantkampioen",
     badgeIcon: Trophy,
     badgeBg: "bg-green-100",
@@ -231,7 +231,7 @@ const team: Member[] = [
     initials: "YA",
     color: "from-fuchsia-500 via-pink-500 to-rose-400",
     shadowColor: "shadow-fuchsia-500/25",
-    bio: "Yara maakt van EXTRA een merk dat je voelt. Van social media tot campagnes — zij geeft EXTRA haar stem en een gave voor verhalen die echt raken.",
+    bio: "Yara maakt van EXTRA een merk dat je voelt. Van social media tot campagnes, zij geeft EXTRA haar stem en een gave voor verhalen die echt raken.",
     badge: "Storyteller",
     badgeIcon: Sparkles,
     badgeBg: "bg-fuchsia-100",
@@ -261,7 +261,7 @@ const team: Member[] = [
     initials: "NI",
     color: "from-orange-500 via-red-500 to-rose-500",
     shadowColor: "shadow-orange-500/25",
-    bio: "Nina zorgt dat nieuwe medewerkers van dag één het gevoel hebben dat ze thuis zijn. Ze traint, begeleidt en motiveert — met een energie die aanstekelijk is.",
+    bio: "Nina zorgt dat nieuwe medewerkers van dag één het gevoel hebben dat ze thuis zijn. Ze traint, begeleidt en motiveert, met een energie die aanstekelijk is.",
     badge: "Coach",
     badgeIcon: Coffee,
     badgeBg: "bg-orange-100",
@@ -326,15 +326,15 @@ function TeamCard({ m, delay, size = "md" }: { m: Member; delay: number; size?: 
 ───────────────────────────────────────────── */
 export default function OnsTeam() {
   useEffect(() => {
-    document.title = "Ons Team – De mensen achter EXTRA | EXTRA Hospitality Staffing";
+    document.title = "Ons Team: De mensen achter EXTRA | EXTRA Hospitality Staffing";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Maak kennis met het team achter EXTRA – jong, energiek en gedreven. Ontdek wie elke dag zorgt dat de beste medewerkers matchen met de mooiste opdrachtgevers.");
-    setMeta("og:title", "Ons Team – De mensen achter EXTRA", true);
+    setMeta("description", "Maak kennis met het team achter EXTRA, jong, energiek en gedreven. Ontdek wie elke dag zorgt dat de beste medewerkers matchen met de mooiste opdrachtgevers.");
+    setMeta("og:title", "Ons Team: De mensen achter EXTRA", true);
     setMeta("og:description", "Jong horeca team met grote energie. Planners, recruiters, klantenmanagers en trainers die werken met passie voor hospitality.", true);
 
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
@@ -375,7 +375,7 @@ export default function OnsTeam() {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Jong, energiek en een tikje eigenwijs — dit zijn de {team.length} mensen die elke dag zorgen dat alles loopt zoals het moet lopen, en soms net een beetje EXTRA.
+              Jong, energiek en een tikje eigenwijs. Dit zijn de {team.length} mensen die elke dag zorgen dat alles loopt zoals het moet lopen, en soms net een beetje EXTRA.
             </p>
             <div className="flex flex-wrap gap-3">
               {["Operations", "Planning", "Recruitment", "HR", "Marketing", "Finance"].map(d => (
@@ -400,7 +400,7 @@ export default function OnsTeam() {
                   Bij EXTRA draait alles om mensen
                 </h2>
                 <p className="text-gray-600 leading-relaxed text-base sm:text-lg mb-6">
-                  Wij zijn geen anoniem bureau. Elk vraagstuk, elke planning en elke medewerker krijgt een menselijk gezicht. Snel schakelen, direct contact, oprechte aandacht — dat is hoe wij werken.
+                  Wij zijn geen anoniem bureau. Elk vraagstuk, elke planning en elke medewerker krijgt een menselijk gezicht. Snel schakelen, direct contact, oprechte aandacht. Dat is hoe wij werken.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   {[
@@ -421,7 +421,7 @@ export default function OnsTeam() {
                   <XPatternBgDark />
                   <span className="text-6xl font-black text-white/20 leading-none absolute top-4 left-6">"</span>
                   <p className="relative z-10 text-lg sm:text-xl font-bold leading-relaxed mt-4">
-                    Iedereen heeft een EXTRAatje — je moet 'm alleen even vinden.
+                    Iedereen heeft een EXTRAatje, je moet 'm alleen even vinden.
                   </p>
                   <p className="relative z-10 text-white/70 text-sm mt-4 font-semibold">— Lotte, Recruiter</p>
                 </div>
@@ -477,7 +477,7 @@ export default function OnsTeam() {
             <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base">
               <p>Het EXTRA team bestaat uit een mix van jonge professionals met één gemeenschappelijk doel: de beste medewerkers koppelen aan de mooiste opdrachtgevers in de hospitality. We werken snel, denken vooruit en communiceren helder.</p>
               <p>Flexibiliteit zit in ons DNA. Onze planners denken in oplossingen, onze recruiters denken in mensen en onze klantenmanagers denken in relaties.</p>
-              <p>Wat ons echt uniek maakt? We geloven dat motivatie van binnenuit komt. Daarom bouwen we het EXTRAATJE puntensysteem — medewerkers belonen voor wie ze zijn en wat ze bijdragen.</p>
+              <p>Wat ons echt uniek maakt? We geloven dat motivatie van binnenuit komt. Daarom bouwen we het EXTRAATJE puntensysteem, om medewerkers te belonen voor wie ze zijn en wat ze bijdragen.</p>
             </div>
             <div className="mt-8 flex flex-wrap gap-2.5">
               {["Jong team", "Hospitality specialist", "Snel schakelen", "Medewerkersgericht", "EXTRAATJE systeem"].map(tag => (
@@ -500,7 +500,7 @@ export default function OnsTeam() {
               Onderdeel worden van dit team?
             </h2>
             <p className="text-purple-200/80 text-base sm:text-lg mb-8 leading-relaxed">
-              Meld je aan als medewerker en begin vandaag nog — of vraag personeel aan voor jouw locatie.
+              Meld je aan als medewerker en begin vandaag nog, of vraag personeel aan voor jouw locatie.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2">

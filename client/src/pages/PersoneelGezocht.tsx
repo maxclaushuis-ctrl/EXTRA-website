@@ -165,7 +165,7 @@ export default function PersoneelGezocht() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
       "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
@@ -398,7 +398,7 @@ export default function PersoneelGezocht() {
                 Altijd de beste mensen dankzij<br className="hidden sm:block" /> continue kwaliteitsmeting
               </h2>
               <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                Bij EXTRA meten we elke dienst, elke prestatie en elke medewerker met ons eigen systeem. Niet één keer per maand, maar continu — zodat jij alleen medewerkers krijgt die bewezen goed presteren.
+                Bij EXTRA meten we elke dienst, elke prestatie en elke medewerker met ons eigen systeem. Niet één keer per maand, maar continu, zodat jij alleen medewerkers krijgt die bewezen goed presteren.
               </p>
             </div>
           </RevealSection>
@@ -546,7 +546,7 @@ export default function PersoneelGezocht() {
         </RevealSection>
         <div className="grid sm:grid-cols-2 gap-5 sm:gap-8">
           {[
-            { icon: Building2, title: "Hotels", desc: "Housekeeping, banqueting, front office, keuken — flexibel op- en afschalen.", color: "from-purple-600 to-purple-800", border: "border-purple-100", link: "/hotel-personeel-gezocht" },
+            { icon: Building2, title: "Hotels", desc: "Housekeeping, banqueting, front office, keuken, flexibel op- en afschalen.", color: "from-purple-600 to-purple-800", border: "border-purple-100", link: "/hotel-personeel-gezocht" },
             { icon: PartyPopper, title: "Eventlocaties", desc: "Grote en kleine events met representatief personeel. Van 5 tot 60+ medewerkers.", color: "from-pink-500 to-purple-600", border: "border-pink-100", link: "/event-personeel-gezocht" },
             { icon: UtensilsCrossed, title: "Cateraars", desc: "Chefs, bediening en keukenmedewerkers voor catering op locatie.", color: "from-indigo-500 to-purple-600", border: "border-indigo-100", link: "/cateringpersoneel-gezocht" },
             { icon: UtensilsCrossed, title: "Horeca & Restaurants", desc: "Bediening, keuken en bar voor restaurants, eetcafés en horecalocaties.", color: "from-blue-500 to-indigo-600", border: "border-blue-100", link: "/horecapersoneel-gezocht" },
@@ -680,9 +680,9 @@ export default function PersoneelGezocht() {
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>Wat jij als opdrachtgever merkt</h3>
                 <ul className="space-y-4">
                   {[
-                    { icon: TrendingUp, text: "Hogere motivatie — medewerkers willen punten verdienen" },
-                    { icon: Check, text: "Minder uitval — betrouwbare medewerkers die komen opdagen" },
-                    { icon: Users, text: "Meer continuïteit — vaste teams die je locatie kennen" },
+                    { icon: TrendingUp, text: "Hogere motivatie, want medewerkers willen punten verdienen" },
+                    { icon: Check, text: "Minder uitval, betrouwbare medewerkers die komen opdagen" },
+                    { icon: Users, text: "Meer continuïteit, vaste teams die je locatie kennen" },
                     { icon: Heart, text: "Medewerkers die graag terugkomen naar jouw locatie" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
@@ -718,7 +718,7 @@ export default function PersoneelGezocht() {
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { icon: Tag, title: "Tags & profielen", desc: "Topper, Chef ervaren, Bar expert, Representatief — elke medewerker is getagd.", emoji: "🏷️" },
+              { icon: Tag, title: "Tags & profielen", desc: "Topper, Chef ervaren, Bar expert, Representatief, elke medewerker is getagd.", emoji: "🏷️" },
               { icon: Heart, title: "Favorietenpoule", desc: "Vaste teams per locatie. Medewerkers die je locatie kennen en waar je op kunt bouwen.", emoji: "⭐" },
               { icon: Star, title: "Beoordelingen", desc: "Na elke dienst een ster-score. Alleen de best beoordeelde medewerkers komen terug.", emoji: "📊" },
               { icon: BookOpen, title: "Skill-profielen", desc: "Hard skills én soft skills uitgesplitst. Vakkennis, houding, flexibiliteit en meer.", emoji: "📋" },
@@ -762,7 +762,7 @@ export default function PersoneelGezocht() {
               },
               {
                 company: "Scheepvaartmuseum",
-                quote: "Voor onze grote events hebben we soms 30 tot 60 medewerkers nodig. EXTRA levert altijd — representatief, op tijd en goed geïnstrueerd.",
+                quote: "Voor onze grote events hebben we soms 30 tot 60 medewerkers nodig. EXTRA levert altijd: representatief, op tijd en goed geïnstrueerd.",
                 name: "Lisa Jansen",
                 role: "Event Manager",
                 results: ["Events tot 60 medewerkers gefaciliteerd", "Dezelfde vaste gezichten bij elk event"]

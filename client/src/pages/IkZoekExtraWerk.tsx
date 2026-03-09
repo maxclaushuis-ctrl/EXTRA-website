@@ -151,7 +151,7 @@ export default function IkZoekExtraWerk() {
   }, []);
 
   useEffect(() => {
-    document.title = "Flexibel werk in de horeca & hospitality — wanneer het jou uitkomt | EXTRA";
+    document.title = "Flexibel werk in de horeca & hospitality, wanneer het jou uitkomt | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
@@ -159,7 +159,7 @@ export default function IkZoekExtraWerk() {
       el.setAttribute("content", content);
     };
     setMeta("description", "Werken in de horeca op jouw voorwaarden. Kies je eigen flexibele diensten bij hotels, events & restaurants. Dagbetaling na elke shift, EXTRAATJE rewards en iedereen in loondienst. Meld je aan in 2 minuten.");
-    setMeta("og:title", "Flexibel werk in de horeca & hospitality — EXTRA", true);
+    setMeta("og:title", "Flexibel werk in de horeca & hospitality bij EXTRA", true);
     setMeta("og:description", "Werken bij Marriott, Amrath, NH Hotels en meer. Dagbetaling via Jixbee, EXTRAATJE rewards en échte doorgroeimogelijkheden.", true);
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
@@ -191,7 +191,7 @@ export default function IkZoekExtraWerk() {
       title: "Chef & Keuken",
       sub: "Diverse niveaus · Culinair",
       img: chefImg,
-      desc: "Van sous-chef tot entremetier — werk in keukens waar kwaliteit centraal staat.",
+      desc: "Van sous-chef tot entremetier, werk in keukens waar kwaliteit centraal staat.",
       bullets: ["Fine dining & catering", "Culinaire toplocaties", "Doorgroei naar vast"],
       color: "from-orange-500 to-amber-600",
       href: "/aanmelden",
@@ -209,11 +209,11 @@ export default function IkZoekExtraWerk() {
 
   const vacatures = [
     { title: "Banqueting medewerker Amsterdam (flexibel)", bullets: ["Evenementenlocaties & gala's", "Dag- en avonddiensten beschikbaar"], hrs: "Parttime / flexibel" },
-    { title: "Front Office medewerker – hotel Utrecht", bullets: ["4-sterrenhotel, centrumlocatie", "Weekenden & doordeweeks"], hrs: "Parttime / fulltime" },
-    { title: "Zelfstandig werkend kok – Randstad", bullets: ["Culinaire locaties in Amsterdam & Utrecht", "Basis- t/m senior niveau"], hrs: "Flexibel / losse diensten" },
-    { title: "Housekeeping medewerker – NH Hotels", bullets: ["Vaste poule bij NH Hotels Nederland", "Dagdiensten maandag t/m zondag"], hrs: "Parttime" },
-    { title: "Receptionist – boutique hotel Amsterdam", bullets: ["Internationaal team, Engelstalig", "Ochtend- en middagdiensten"], hrs: "Flexibel" },
-    { title: "Barista / Bediening – grand café", bullets: ["Bruisende locatie, vaste kern", "Service met karakter"], hrs: "Parttime / flexibel" },
+    { title: "Front Office medewerker bij hotel Utrecht", bullets: ["4-sterrenhotel, centrumlocatie", "Weekenden & doordeweeks"], hrs: "Parttime / fulltime" },
+    { title: "Zelfstandig werkend kok, Randstad", bullets: ["Culinaire locaties in Amsterdam & Utrecht", "Basis- t/m senior niveau"], hrs: "Flexibel / losse diensten" },
+    { title: "Housekeeping medewerker bij NH Hotels", bullets: ["Vaste poule bij NH Hotels Nederland", "Dagdiensten maandag t/m zondag"], hrs: "Parttime" },
+    { title: "Receptionist bij boutique hotel Amsterdam", bullets: ["Internationaal team, Engelstalig", "Ochtend- en middagdiensten"], hrs: "Flexibel" },
+    { title: "Barista / Bediening bij grand café", bullets: ["Bruisende locatie, vaste kern", "Service met karakter"], hrs: "Parttime / flexibel" },
   ];
 
   const reviews = [
@@ -511,7 +511,7 @@ export default function IkZoekExtraWerk() {
                 Waarom werken via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                Professioneel, flexibel én eerlijk. EXTRA is het hospitality-bureau voor young professionals die kwaliteit leveren — en daar ook voor beloond worden.
+                Professioneel, flexibel én eerlijk. EXTRA is het hospitality-bureau voor young professionals die kwaliteit leveren en daar ook voor beloond worden.
               </p>
             </div>
           </RevealSection>
@@ -559,7 +559,7 @@ export default function IkZoekExtraWerk() {
                 icon: Gift,
                 badge: "Exclusief beloningssysteem",
                 title: "EXTRAATJE rewards",
-                desc: "Jouw inzet telt. Met ons puntensysteem spaar je automatisch voor cadeaus, uitjes en voordelen — gewoon door te werken.",
+                desc: "Jouw inzet telt. Met ons puntensysteem spaar je automatisch voor cadeaus, uitjes en voordelen, gewoon door te werken.",
                 gradient: "from-orange-500 to-amber-500",
                 bg: "from-orange-50 to-amber-50",
                 border: "border-orange-200",
@@ -689,7 +689,7 @@ export default function IkZoekExtraWerk() {
               <div className="order-1 lg:order-2">
                 <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Professionele erkenning</span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  EXTRAATJE — voordelen die passen bij ambitie
+                  EXTRAATJE: voordelen die passen bij ambitie
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
                   Iedere shift levert punten op. Die punten spaar je in voor sport, lifestyle en tech. Exclusieve deals van onze partners, zichtbaar in de EXTRA app.
@@ -728,7 +728,7 @@ export default function IkZoekExtraWerk() {
                 Kies je richting
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Van banqueting tot receptie — we matchen je aan de opdrachten die bij jouw ervaring en ambitie passen.
+                Van banqueting tot receptie, we matchen je aan de opdrachten die bij jouw ervaring en ambitie passen.
               </p>
             </div>
           </RevealSection>
@@ -881,14 +881,14 @@ export default function IkZoekExtraWerk() {
                   Presteren wordt erkend en beloond
                 </h2>
                 <p className="text-purple-200/80 leading-relaxed mb-6 text-base sm:text-lg">
-                  Na elke shift krijg je feedback op zowel soft- als hardskills. Zo bouwen we topteams — en weet jij precies waar je staat en wat je waard bent.
+                  Na elke shift krijg je feedback op zowel soft- als hardskills. Zo bouwen we topteams, en weet jij precies waar je staat en wat je waard bent.
                 </p>
                 <div className="space-y-3 mb-6">
                   {[
                     { icon: Flame, label: "Hoge score? Eerder gebeld voor nieuwe shifts" },
                     { icon: Award, label: "Consistente kwaliteit? Snellere doorgroei" },
                     { icon: Gift, label: "Microprestaties leveren automatisch EXTRAATJE-punten op" },
-                    { icon: TrendingUp, label: "Transparant profiel — jij bepaalt je eigen reputatie" },
+                    { icon: TrendingUp, label: "Transparant profiel, jij bepaalt je eigen reputatie" },
                   ].map(({ icon: Icon, label }) => (
                     <div key={label} className="flex items-start gap-3">
                       <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -992,9 +992,9 @@ export default function IkZoekExtraWerk() {
             <div className="space-y-3">
               {[
                 { q: "Hoe werkt dagbetaling precies?", a: "Na elke gewerkte shift verwerken wij je uren. De volgende ochtend staat je salaris op je rekening. Dit geldt ook voor weekenden en feestdagen. Geen wachttijden, geen maandelijkse salarisrondes." },
-                { q: "Hoe ziet het kennismakingsgesprek eruit?", a: "Het gesprek duurt ongeveer 30-45 minuten op ons kantoor. We bespreken je ervaring, voorkeuren, beschikbaarheid en persoonlijkheid. Het is informeel, maar professioneel — we willen echt weten wie jij bent." },
+                { q: "Hoe ziet het kennismakingsgesprek eruit?", a: "Het gesprek duurt ongeveer 30-45 minuten op ons kantoor. We bespreken je ervaring, voorkeuren, beschikbaarheid en persoonlijkheid. Het is informeel, maar professioneel. We willen echt weten wie jij bent." },
                 { q: "Moet ik ervaring hebben in de hospitality?", a: "Niet per se. We werken met medewerkers van diverse niveaus. Wat wij zoeken is de juiste houding, representativiteit en motivatie. Ervaring helpt, maar je drive is minstens zo belangrijk." },
-                { q: "Hoe flexibel kan ik werken?", a: "Volledig flexibel. Jij bepaalt je beschikbaarheid en kiest welke shifts je wil pakken. Er is geen minimumvereiste qua uren — al raden we aan om actief te blijven voor de beste matching." },
+                { q: "Hoe flexibel kan ik werken?", a: "Volledig flexibel. Jij bepaalt je beschikbaarheid en kiest welke shifts je wil pakken. Er is geen minimumvereiste qua uren, al raden we aan om actief te blijven voor de beste matching." },
                 { q: "Wat zijn de doorgroeimogelijkheden?", a: "Via EXTRA kun je groeien van losse shifts naar een vaste opdracht bij een opdrachtgever. Medewerkers met hoge scores en sterke reviews worden als eerste benaderd voor exclusieve projecten en vaste rollen." },
               ].map(item => (
                 <FaqItem key={item.q} {...item} />

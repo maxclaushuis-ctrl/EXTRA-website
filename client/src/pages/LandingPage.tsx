@@ -167,7 +167,7 @@ const blogArticles = [
     image: blogHousekeeping,
     category: "Hospitality",
     title: "Vijf tips voor een onvergetelijke gastervaring in je hotel",
-    summary: "Van persoonlijke welkomstmomenten tot kleine verrassingen op de kamer — ontdek hoe tophotels het verschil maken.",
+    summary: "Van persoonlijke welkomstmomenten tot kleine verrassingen op de kamer. Ontdek hoe tophotels het verschil maken.",
     date: "18 feb 2026",
   },
   {

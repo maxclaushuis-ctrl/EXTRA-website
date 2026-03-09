@@ -79,7 +79,7 @@ export default function HorecaUitzendbureau() {
             <RevealSection>
               <h2 className="text-3xl sm:text-4xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>De nieuwe standaard in horeca-uitzending</h2>
               <p className="text-white/60 max-w-2xl mb-12 leading-relaxed">
-                De Amsterdamse horeca is dynamisch, veeleisend en altijd in beweging. Bij EXTRA hebben we een unieke aanpak ontwikkeld die focust op kwaliteit, betrokkenheid en continuïteit. Wij werken uitsluitend met personeel in loondienst — zekerheid voor u, loyaliteit van onze medewerkers.
+                De Amsterdamse horeca is dynamisch, veeleisend en altijd in beweging. Bij EXTRA hebben we een unieke aanpak ontwikkeld die focust op kwaliteit, betrokkenheid en continuïteit. Wij werken uitsluitend met personeel in loondienst, wat zekerheid geeft voor u en loyaliteit van onze medewerkers.
               </p>
               <h3 className="text-xl font-bold text-white/80 mb-8">Gespecialiseerd in diverse branches</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

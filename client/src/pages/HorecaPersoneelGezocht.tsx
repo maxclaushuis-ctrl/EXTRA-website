@@ -118,7 +118,7 @@ export default function HorecaPersoneelGezocht() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
       "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
@@ -180,7 +180,7 @@ export default function HorecaPersoneelGezocht() {
               Horecapersoneel tekort? <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">EXTRA levert.</span>
             </h1>
             <p className="text-lg sm:text-xl text-purple-100/90 mb-10 leading-relaxed font-medium">
-              Van bediening tot keuken — flexibel en direct inzetbaar horecapersoneel voor restaurants, eetcafés en horecalocaties in Amsterdam.
+              Van bediening tot keuken, flexibel en direct inzetbaar horecapersoneel voor restaurants, eetcafés en horecalocaties in Amsterdam.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/personeelsaanvraag" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold px-8 py-4 rounded-full text-lg shadow-xl shadow-purple-500/25 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
@@ -216,7 +216,7 @@ export default function HorecaPersoneelGezocht() {
                 Dé partner voor Amsterdamse horeca
               </h2>
               <p className="text-lg text-purple-100/70 leading-relaxed mb-6">
-                Amsterdam heeft de drukste horecascene van Nederland. Onverwachte drukte, ziekmeldingen, piekdagen — EXTRA heeft altijd mensen klaar die weten van aanpakken.
+                Amsterdam heeft de drukste horecascene van Nederland. Onverwachte drukte, ziekmeldingen, piekdagen. EXTRA heeft altijd mensen klaar die weten van aanpakken.
               </p>
               <p className="text-lg text-purple-100/70 leading-relaxed">
                 Wij leveren geen 'handjes', maar horeca-professionals die begrijpen wat gastvrijheid betekent. Onze pool van medewerkers is zorgvuldig geselecteerd en getraind om direct mee te draaien in jouw team.
@@ -305,7 +305,7 @@ export default function HorecaPersoneelGezocht() {
                   { title: "Onverwachte drukte", desc: "Vol geboekt restaurant, te weinig handen. EXTRA levert zelfde dag." },
                   { title: "Ziekmeldingen", desc: "Iemand uitgevallen? Wij vullen de plek met een gemotiveerde vervanger." },
                   { title: "Piekdagen", desc: "Vrijdag en zaterdag altijd bomvol? Plan vooruit met de vaste pool van EXTRA." },
-                  { title: "Kwaliteit", desc: "Geen gehaaste inhuurders — iedereen is gecheckt en getraind op gastvrijheid." },
+                  { title: "Kwaliteit", desc: "Geen gehaaste inhuurders, iedereen is gecheckt en getraind op gastvrijheid." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-5">
                     <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30">
@@ -348,7 +348,7 @@ export default function HorecaPersoneelGezocht() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { title: "Eigen pool", desc: "800+ actieve medewerkers in Amsterdam, direct beschikbaar voor jouw locatie.", icon: Star },
-              { title: "Loondienst", desc: "Alle medewerkers in loondienst — geen gedoe met ZZP-risico's of administratie.", icon: Shield },
+              { title: "Loondienst", desc: "Alle medewerkers in loondienst, geen gedoe met ZZP-risico's of administratie.", icon: Shield },
               { title: "NEN-gecertificeerd", desc: "EXTRA is NEN-4400-1 gecertificeerd, zodat je altijd compliant inhuurt.", icon: Check },
             ].map((usp, i) => (
               <RevealSection key={i} delay={i * 100} className="bg-white/5 p-10 rounded-3xl border border-white/10">

@@ -216,7 +216,7 @@ export default function WerkwijzePage() {
                 Zo werkt samenwerken met EXTRA
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed max-w-3xl mx-auto">
-                EXTRA is het horeca uitzendbureau in Amsterdam voor hotels, evenementen en hospitality. Wij combineren persoonlijke selectie met slimme technologie — zodat wij precies weten welk horecapersoneel bij jouw organisatie past.
+                EXTRA is het horeca uitzendbureau in Amsterdam voor hotels, evenementen en hospitality. Wij combineren persoonlijke selectie met slimme technologie, zodat wij precies weten welk horecapersoneel bij jouw organisatie past.
               </p>
             </RevealSection>
           </div>
@@ -234,7 +234,7 @@ export default function WerkwijzePage() {
                   Horecapersoneel inhuren in 4 stappen
                 </h2>
                 <p className="text-gray-500 mt-4 text-lg max-w-xl mx-auto">
-                  Flexibel horecapersoneel in Amsterdam — snel en persoonlijk geregeld.
+                  Flexibel horecapersoneel in Amsterdam, snel en persoonlijk geregeld.
                 </p>
               </div>
             </RevealSection>
@@ -321,7 +321,7 @@ export default function WerkwijzePage() {
                   Slimme selectie met data
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                  Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner — zodat wij precies de juiste match kunnen maken.
+                  Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner, zodat wij precies de juiste match kunnen maken.
                 </p>
                 <div className="space-y-4">
                   {[
@@ -354,7 +354,7 @@ export default function WerkwijzePage() {
                   Bouw een vaste favorietenpoule op
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                  Na iedere dienst kan de opdrachtgever medewerkers beoordelen. Bevalt iemand goed? Dan wordt deze toegevoegd aan jouw favorietenpoule — een vaste pool van mensen die jouw organisatie al kennen.
+                  Na iedere dienst kan de opdrachtgever medewerkers beoordelen. Bevalt iemand goed? Dan wordt deze toegevoegd aan jouw favorietenpoule, een vaste pool van mensen die jouw organisatie al kennen.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {["Tijd & punctualiteit", "Vaardigheden", "Houding", "Verzorging"].map((c, i) => (
@@ -453,7 +453,7 @@ export default function WerkwijzePage() {
                   Horeca bijbaan Amsterdam?<br className="hidden sm:block" /> Zo ga je van start
                 </h2>
                 <p className="text-gray-500 mt-4 text-lg max-w-xl mx-auto">
-                  Werken in de horeca in Amsterdam via EXTRA — in loondienst, met beloningen.
+                  Werken in de horeca in Amsterdam via EXTRA, in loondienst, met beloningen.
                 </p>
               </div>
             </RevealSection>

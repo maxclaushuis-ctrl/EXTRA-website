@@ -129,7 +129,7 @@ export default function CateringPersoneelGezocht() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
       "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },

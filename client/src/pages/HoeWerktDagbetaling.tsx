@@ -107,7 +107,7 @@ export default function HoeWerktDagbetaling() {
       el.setAttribute("content", content);
     };
     setMeta("description", "Ontdek hoe dagbetaling werkt bij EXTRA. Na elke shift staat je salaris de volgende ochtend klaar in Jixbee. Transparant, veilig en volledig inzichtelijk via de app.");
-    setMeta("og:title", "Dagbetaling bij EXTRA — direct grip op je inkomsten", true);
+    setMeta("og:title", "Dagbetaling bij EXTRA, direct grip op je inkomsten", true);
     setMeta("og:description", "Geen einde-van-de-maand wachten. Werk een shift, en je voorschot staat direct klaar. Lees hoe dagbetaling via Jixbee werkt.", true);
   }, []);
 
@@ -193,7 +193,7 @@ export default function HoeWerktDagbetaling() {
                 Hoe werkt dagbetaling?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto text-base sm:text-lg">
-                Van shift tot geld op je rekening — in drie simpele stappen.
+                Van shift naar geld op je rekening, in drie simpele stappen.
               </p>
             </div>
           </RevealSection>
@@ -215,7 +215,7 @@ export default function HoeWerktDagbetaling() {
                   num: "02",
                   icon: Clock,
                   title: "Wij keuren je uren goed",
-                  desc: "De uren komen bij ons binnen. EXTRA HQ keurt ze handmatig goed — snel, zorgvuldig en transparant.",
+                  desc: "De uren komen bij ons binnen. EXTRA HQ keurt ze handmatig goed, snel, zorgvuldig en transparant.",
                   color: "from-blue-500 to-indigo-600",
                   bg: "from-blue-50 to-indigo-50",
                   border: "border-blue-200",
@@ -313,7 +313,7 @@ export default function HoeWerktDagbetaling() {
                     <div className="bg-gradient-to-b from-gray-100 to-gray-200 px-3 pb-6 pt-2 space-y-2 min-h-[320px]">
                       <p className="text-center text-xs text-gray-500 font-medium mb-3">Vandaag</p>
                       <PushNotification emoji="✔️" title="Je uren bij Marriott zijn goedgekeurd" body="30 uur · Week 2 · €450,- verdiend" time="Nu" />
-                      <PushNotification emoji="💸" title="€150,- staat klaar in je Jixbee account" body="Voorschot beschikbaar — open Jixbee om op te nemen" time="2 min" />
+                      <PushNotification emoji="💸" title="€150,- staat klaar in je Jixbee account" body="Voorschot beschikbaar, open Jixbee om op te nemen" time="2 min" />
                       <PushNotification emoji="🚀" title="Voorschot uitbetaald" body="Check je Jixbee app voor het overzicht" time="5 min" />
                     </div>
                   </div>
@@ -386,7 +386,7 @@ export default function HoeWerktDagbetaling() {
               {
                 icon: Shield,
                 title: "100% veilig payroll systeem",
-                desc: "Alles via gecertificeerde payroll — geen verrassingen achteraf. Volledig conform wetgeving.",
+                desc: "Alles via gecertificeerde payroll, geen verrassingen achteraf. Volledig conform wetgeving.",
                 bg: "from-green-50 to-emerald-50",
                 border: "border-green-200",
                 iconBg: "bg-green-100",
@@ -453,11 +453,11 @@ export default function HoeWerktDagbetaling() {
               },
               {
                 q: "Hoe snel staat het voorschot op mijn rekening?",
-                a: "Zodra EXTRA HQ jouw uren heeft goedgekeurd, staat het voorschot direct klaar in je Jixbee-wallet. Vanaf daar kun je het direct opnemen naar je bankrekening — dit duurt meestal enkele minuten.",
+                a: "Zodra EXTRA HQ jouw uren heeft goedgekeurd, staat het voorschot direct klaar in je Jixbee-wallet. Vanaf daar kun je het direct opnemen naar je bankrekening; dit duurt meestal enkele minuten.",
               },
               {
                 q: "Moet ik iets doen om dagbetaling te activeren?",
-                a: "Nee — dagbetaling is standaard actief via Jixbee zodra je bij EXTRA werkt. Je ontvangt bij onboarding een uitleg en toegang tot de Jixbee-app. Daarna werkt alles automatisch.",
+                a: "Dagbetaling is standaard actief via Jixbee zodra je bij EXTRA werkt. Je ontvangt bij onboarding een uitleg en toegang tot de Jixbee-app. Daarna werkt alles automatisch.",
               },
             ].map(({ q, a }) => (
               <RevealSection key={q}>
@@ -484,7 +484,7 @@ export default function HoeWerktDagbetaling() {
               Klaar om direct voor je werk betaald te worden?
             </h2>
             <p className="text-purple-200 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-              Meld je aan in 2 minuten en start met werken op de mooiste hotellocaties — met dagbetaling via Jixbee.
+              Meld je aan in 2 minuten en start met werken op de mooiste hotellocaties, met dagbetaling via Jixbee.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center justify-center gap-2">

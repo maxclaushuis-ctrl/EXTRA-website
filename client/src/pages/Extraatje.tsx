@@ -134,7 +134,7 @@ const kortingen = [
 
 export default function Extraatje() {
   useEffect(() => {
-    document.title = "EXTRAATJE – Het beloningssysteem dat jouw werk beloont | EXTRA";
+    document.title = "EXTRAATJE: Het beloningssysteem dat jouw werk beloont | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
@@ -142,7 +142,7 @@ export default function Extraatje() {
       el.setAttribute("content", content);
     };
     setMeta("description", "EXTRAATJE is het unieke puntensysteem van EXTRA waarmee medewerkers automatisch punten verdienen voor elke gewerkte shift, challenge en micro-prestatie.");
-    setMeta("og:title", "EXTRAATJE – Het beloningssysteem dat jouw werk beloont", true);
+    setMeta("og:title", "EXTRAATJE: Het beloningssysteem dat jouw werk beloont", true);
     setMeta("og:description", "Verdien punten, behaal challenges en wissel ze in voor beloningen, kortingen en deals. Werken bij EXTRA loont letterlijk.", true);
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
@@ -181,7 +181,7 @@ export default function Extraatje() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-            EXTRAATJE –{" "}
+            EXTRAATJE
             <span className="relative inline-block">
               <span className="relative z-10">het beloningssysteem</span>
               <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
@@ -239,7 +239,7 @@ export default function Extraatje() {
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-5 text-base sm:text-lg">
                   Zodra je een dienst draait bij EXTRA, begint je puntenbalans te groeien.
-                  Het systeem registreert automatisch jouw inzet, prestaties en gedrag — zonder dat jij er iets voor hoeft te doen.
+                  Het systeem registreert automatisch jouw inzet, prestaties en gedrag, zonder dat jij er iets voor hoeft te doen.
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
                   Hoe meer je werkt, hoe hoger je score. Van <strong className="text-gray-900">BRONS</strong> naar <strong className="text-gray-900">ZILVER</strong> naar <strong className="text-gray-900">GOUD</strong> naar <strong className="text-gray-900">DIAMANT</strong>.
@@ -249,7 +249,7 @@ export default function Extraatje() {
                     "Automatisch punten bij elke gewerkte shift",
                     "Statusniveaus: Brons → Zilver → Goud → Diamant",
                     "Real-time inzicht via de EXTRA app",
-                    "Punten verlopen niet — ze bouwen op",
+                    "Punten verlopen niet, ze bouwen op",
                   ].map(item => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -361,7 +361,7 @@ export default function Extraatje() {
                   Beloningen die je kunt verdienen
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
-                  Je punten zijn geen punten op papier — ze zijn echte waarde. Wissel ze in
+                  Je punten zijn geen punten op papier, ze zijn echte waarde. Wissel ze in
                   voor gadgets, cadeaubonnen, ervaringen of merchandise. Jij kiest.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -428,11 +428,11 @@ export default function Extraatje() {
                   <Trophy className="w-4 h-4" /> Competitie & status
                 </span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mt-0 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  De ranglijst — wie staat er bovenaan?
+                  De ranglijst: wie staat er bovenaan?
                 </h2>
                 <p className="text-purple-200/80 leading-relaxed mb-8 text-base sm:text-lg">
                   In de EXTRA app zie je maandelijks wie de meeste punten heeft verdiend.
-                  Sta je in de top 3? Dan wacht er een extra beloning — eerlijk en motiverend.
+                  Sta je in de top 3? Dan wacht er een extra beloning, eerlijk en motiverend.
                 </p>
                 <div className="space-y-3">
                   {[

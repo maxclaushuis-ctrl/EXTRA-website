@@ -77,7 +77,7 @@ const allArticles = [
     image: blogHousekeeping,
     category: "Hospitality",
     title: "Vijf tips voor een onvergetelijke gastervaring in je hotel",
-    summary: "Van persoonlijke welkomstmomenten tot kleine verrassingen op de kamer — ontdek hoe tophotels het verschil maken en gasten keer op keer terug laten komen.",
+    summary: "Van persoonlijke welkomstmomenten tot kleine verrassingen op de kamer. Ontdek hoe tophotels het verschil maken en gasten keer op keer terug laten komen.",
     date: "18 feb 2026",
     readTime: "4 min",
   },

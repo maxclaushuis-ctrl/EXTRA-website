@@ -130,7 +130,7 @@ export default function HotelPersoneelGezocht() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA — NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
+      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
       "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
@@ -254,7 +254,7 @@ export default function HotelPersoneelGezocht() {
                 Kwaliteit staat centraal in uw hotel. <span className="text-purple-600">Bij ons ook.</span>
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                Hotels draaien op mensen. Bij EXTRA leveren wij horecamedewerkers die passen bij de uitstraling van jouw hotel — verzorgd, representatief en direct inzetbaar. Of het nu gaat om het opvangen van ziekteverzuim, vakantiepieken of extra ondersteuning bij evenementen.
+                Hotels draaien op mensen. Bij EXTRA leveren wij horecamedewerkers die passen bij de uitstraling van jouw hotel: verzorgd, representatief en direct inzetbaar. Of het nu gaat om het opvangen van ziekteverzuim, vakantiepieken of extra ondersteuning bij evenementen.
               </p>
               <div className="space-y-4">
                 {["Gespecialiseerd in hotel-hospitality", "Representatieve uitstraling", "Nederlands & Engels sprekend"].map((item, i) => (

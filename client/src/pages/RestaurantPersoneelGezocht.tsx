@@ -105,7 +105,7 @@ export default function RestaurantPersoneelGezocht() {
               Restaurantpersoneel tekort? <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">EXTRA vult het op.</span>
             </h1>
             <p className="text-lg sm:text-xl text-purple-100/90 mb-10 leading-relaxed font-medium">
-              Extra handen tijdens drukte, bij uitval of op piekdagen — direct inzetbaar personeel dat snel meteen mee kan draaien.
+              Extra handen tijdens drukte, bij uitval of op piekdagen, direct inzetbaar personeel dat snel meteen mee kan draaien.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/personeelsaanvraag" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold px-8 py-4 rounded-full text-lg shadow-xl shadow-purple-500/25 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">

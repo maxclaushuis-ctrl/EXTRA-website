@@ -70,9 +70,9 @@ function XPatternBg() {
 }
 
 const values = [
-  { icon: Zap, title: "Snel schakelen", desc: "Of het nu gaat om een last-minute verzoek of een urgente invaller — EXTRA staat klaar. Razendsnel.", color: "from-purple-600 to-purple-800", bg: "bg-purple-50", accent: "text-purple-600" },
+  { icon: Zap, title: "Snel schakelen", desc: "Of het nu gaat om een last-minute verzoek of een urgente invaller, EXTRA staat klaar. Razendsnel.", color: "from-purple-600 to-purple-800", bg: "bg-purple-50", accent: "text-purple-600" },
   { icon: Heart, title: "Mensen eerst", desc: "Of je nu medewerker of klant bent: bij EXTRA staat jij centraal. Dat is geen slogan, dat is hoe we werken.", color: "from-pink-500 to-rose-600", bg: "bg-pink-50", accent: "text-pink-600" },
-  { icon: Shield, title: "Betrouwbaar", desc: "Afspraken zijn afspraken. Wij leveren wat we beloven — en anders hoor je het meteen van ons.", color: "from-blue-500 to-indigo-600", bg: "bg-blue-50", accent: "text-blue-600" },
+  { icon: Shield, title: "Betrouwbaar", desc: "Afspraken zijn afspraken. Wij leveren wat we beloven. En anders hoor je het meteen van ons.", color: "from-blue-500 to-indigo-600", bg: "bg-blue-50", accent: "text-blue-600" },
   { icon: Sparkles, title: "Net dat EXTRA", desc: "We doen altijd net iets meer dan gevraagd. In service, in aandacht en in resultaat.", color: "from-amber-500 to-orange-500", bg: "bg-amber-50", accent: "text-amber-600" },
 ];
 
@@ -92,7 +92,7 @@ const NAV_LINKS = [
 export default function OverExtra() {
 
   useEffect(() => {
-    document.title = "Over EXTRA – Wie zijn wij? | EXTRA Hospitality Staffing";
+    document.title = "Over EXTRA: Wie zijn wij? | EXTRA Hospitality Staffing";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
@@ -100,7 +100,7 @@ export default function OverExtra() {
       el.setAttribute("content", content);
     };
     setMeta("description", "EXTRA is een jong, energiek hospitality staffing bureau. Wij matchen de beste horecamedewerkers, housekeeping en front-office talenten met toonaangevende opdrachtgevers.");
-    setMeta("og:title", "Over EXTRA – Wie zijn wij?", true);
+    setMeta("og:title", "Over EXTRA: Wie zijn wij?", true);
     setMeta("og:description", "Leer ons kennen: jong team, grote energie, sterke resultaten. EXTRA levert de beste hospitality medewerkers.", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
@@ -228,10 +228,10 @@ export default function OverExtra() {
               <div>
                 <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Onze missie</span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Werken moet lonen — letterlijk
+                  Werken moet lonen. Letterlijk.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-5 text-base sm:text-lg">
-                  EXTRA is meer dan een uitzendbureau. We zijn een beweging voor een eerlijkere, leukere manier van werken in de hospitality. Medewerkers die zich inzetten, verdienen meer — niet alleen in salaris, maar ook in erkenning en beloningen.
+                  EXTRA is meer dan een uitzendbureau. We zijn een beweging voor een eerlijkere, leukere manier van werken in de hospitality. Medewerkers die zich inzetten, verdienen meer, niet alleen in salaris, maar ook in erkenning en beloningen.
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-8 text-base sm:text-lg">
                   Met ons EXTRAATJE puntensysteem belonen we medewerkers automatisch voor elke shift, elke uitdaging en elk moment dat ze net dat beetje extra geven.
@@ -334,7 +334,7 @@ export default function OverExtra() {
                   De mensen achter EXTRA
                 </h2>
                 <p className="text-purple-200/80 mt-3 text-base sm:text-lg max-w-xl">
-                  Jong, energiek en een tikje eigenwijs — precies zoals we het leuk vinden.
+                  Jong, energiek en een tikje eigenwijs, precies zoals we het leuk vinden.
                 </p>
               </div>
               <Link href="/over-extra/ons-team" className="inline-flex items-center gap-2 text-purple-300 hover:text-white font-semibold text-sm transition-colors">
