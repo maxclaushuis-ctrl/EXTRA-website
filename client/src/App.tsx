@@ -126,13 +126,13 @@ function Router() {
         <Route path="/landing" component={LandingPage} />
 
         {/* Werkgever routes */}
-        <Route path="/horecapersoneel-gezocht" component={HorecaPersoneelGezocht} />
+        <Route path="/horecapersoneel-gezocht" component={RestaurantPersoneelGezocht} />
         <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
         <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotel-personeel-gezocht'); return null; }}</Route>
         <Route path="/evenementen-personeel-amsterdam">{() => { window.location.replace('/event-personeel-gezocht'); return null; }}</Route>
         <Route path="/catering-personeel-amsterdam">{() => { window.location.replace('/cateringpersoneel-gezocht'); return null; }}</Route>
         <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/restaurant-personeel-gezocht'); return null; }}</Route>
-        <Route path="/restaurant-personeel-gezocht" component={RestaurantPersoneelGezocht} />
+        <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
 
         {/* Kandidaat routes */}
         <Route path="/horeca-vacatures-amsterdam" component={HorecaVacaturesAmsterdam} />

@@ -124,10 +124,10 @@ export default function RestaurantPersoneelGezocht() {
     };
 
     setMeta("description", "Restaurantpersoneel nodig? EXTRA levert flexibel horecapersoneel voor restaurants — van bediening tot keukenondersteuning. Persoonlijk geselecteerd, iedereen in loondienst. NEN-4400-1 gecertificeerd.");
-    setLink("canonical", "https://www.doehetextra.nl/restaurant-personeel-gezocht");
+    setLink("canonical", "https://www.doehetextra.nl/horecapersoneel-gezocht");
     setMeta("og:title", "Restaurantpersoneel Nodig? EXTRA Levert Flexibel Horecapersoneel", "property");
     setMeta("og:description", "Restaurantpersoneel nodig? EXTRA levert bediening, keukenondersteuning en barpersoneel voor restaurants. Persoonlijk geselecteerd, iedereen in loondienst.", "property");
-    setMeta("og:url", "https://www.doehetextra.nl/restaurant-personeel-gezocht", "property");
+    setMeta("og:url", "https://www.doehetextra.nl/horecapersoneel-gezocht", "property");
     setMeta("og:type", "website", "property");
 
     addSchema("restaurant-faq-schema", {
