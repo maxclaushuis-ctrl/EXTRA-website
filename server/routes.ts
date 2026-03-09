@@ -3875,6 +3875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         (async () => {
           try {
+            const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
             const token = randomUUID();
             await storage.updateCandidate(candidate.id, { reviewToken: token } as any);
             const sent = await sendAdminCandidateNotificationEmail({
@@ -3889,6 +3890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               nationality: candidate.nationality,
               cvFilename: candidate.cvFilename,
               reviewToken: token,
+              baseUrl: requestBaseUrl,
             });
             console.log(`Admin-notificatiemail (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
           } catch (err) {
@@ -4002,6 +4004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         (async () => {
           try {
+            const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
             let token = (updated as any).reviewToken;
             if (!token) {
               token = randomUUID();
@@ -4019,6 +4022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               nationality: updated.nationality,
               cvFilename: (updated as any).cvFilename,
               reviewToken: token,
+              baseUrl: requestBaseUrl,
             });
             console.log(`Admin-notificatiemail (PATCH) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
           } catch (err) {
@@ -4467,7 +4471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (candidate.email && candidate.firstName) {
         await sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email });
       }
-      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} geaccepteerd!</h2><p>Een Calendly-uitnodiging is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="https://brochure.doehetextra.nl/dashboard-mockup" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
+      const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard-mockup`;
+      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} geaccepteerd!</h2><p>Een Calendly-uitnodiging is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="${dashboardUrl}" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
     } catch (err) {
       console.error('Accept kandidaat fout:', err);
       return res.status(500).send('Er is iets misgegaan');
@@ -4491,7 +4496,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Fout bij versturen afwijzingsmail:', err)
         );
       }
-      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#dc2626;">❌ ${candidate.firstName} ${candidate.lastName} afgewezen.</h2><p>Een afwijzingsmail is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="https://brochure.doehetextra.nl/dashboard-mockup" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
+      const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard-mockup`;
+      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#dc2626;">❌ ${candidate.firstName} ${candidate.lastName} afgewezen.</h2><p>Een afwijzingsmail is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="${dashboardUrl}" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
     } catch (err) {
       console.error('Reject kandidaat fout:', err);
       return res.status(500).send('Er is iets misgegaan');

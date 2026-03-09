@@ -613,6 +613,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   nationality?: string | null;
   cvFilename?: string | null;
   reviewToken?: string | null;
+  baseUrl?: string | null;
 }): Promise<boolean> {
   const functionLabels: Record<string, string> = {
     housekeeping: 'Housekeeping medewerker',
@@ -622,7 +623,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   };
   const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
 
-  const baseUrl = 'https://brochure.doehetextra.nl';
+  const baseUrl = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
   const acceptUrl = candidate.reviewToken
     ? `${baseUrl}/api/candidates/${candidate.id}/accept?token=${candidate.reviewToken}`
     : `${baseUrl}/dashboard-mockup`;
