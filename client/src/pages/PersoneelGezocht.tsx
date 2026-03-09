@@ -135,7 +135,7 @@ export default function PersoneelGezocht() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    document.title = "Personeel Gezocht? EXTRA Levert Snel & Flexibel | Horeca Uitzendbureau Amsterdam";
+    document.title = "Horeca personeel gezocht | flexibel horecapersoneel | EXTRA";
 
     const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -156,11 +156,11 @@ export default function PersoneelGezocht() {
       document.head.appendChild(s);
     };
 
-    setMeta('description', 'Op zoek naar flexibel horecapersoneel? EXTRA levert snel en betrouwbaar personeel voor hotels, events, cateraars en restaurants in Amsterdam. NEN-4400-1 gecertificeerd.');
-    setLink('canonical', 'https://www.doehetextra.nl/personeel-gezocht');
-    setMeta('og:title', 'Personeel Gezocht? EXTRA Levert Snel & Flexibel', 'property');
-    setMeta('og:description', 'Op zoek naar flexibel horecapersoneel? EXTRA levert snel personeel voor hotels, events, cateraars en restaurants. Direct geregeld.', 'property');
-    setMeta('og:url', 'https://www.doehetextra.nl/personeel-gezocht', 'property');
+    setMeta('description', 'Horeca personeel nodig? EXTRA levert flexibel horecapersoneel voor hotels, restaurants, cateraars en events. Gescreend, betrouwbaar en direct inzetbaar.');
+    setLink('canonical', 'https://www.doehetextra.nl/horeca-personeel-gezocht');
+    setMeta('og:title', 'Horeca personeel gezocht | flexibel horecapersoneel | EXTRA', 'property');
+    setMeta('og:description', 'Horeca personeel nodig? EXTRA levert flexibel horecapersoneel voor hotels, restaurants, cateraars en events. Gescreend, betrouwbaar en direct inzetbaar.', 'property');
+    setMeta('og:url', 'https://www.doehetextra.nl/horeca-personeel-gezocht', 'property');
     setMeta('og:type', 'website', 'property');
     setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
 
@@ -274,10 +274,10 @@ export default function PersoneelGezocht() {
                 <Briefcase className="w-4 h-4" /> Branches
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waar heb je extra personeel voor nodig?
+                Waar heb je extra horecapersoneel voor nodig?
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Van grote hotelketens tot drukke eventlocaties. We kennen jouw sector en weten wie er bij jou past.
+                Van grote hotelketens tot drukke eventlocaties. EXTRA levert flexibel horecapersoneel dat past bij jouw locatie. Gescreend, representatief en direct inzetbaar.
               </p>
             </div>
           </RevealSection>
@@ -286,7 +286,7 @@ export default function PersoneelGezocht() {
               {
                 icon: Building2,
                 title: "Hotels",
-                desc: "Housekeeping, banqueting, front office en keuken. Flexibel op- en afschalen voor elk seizoen.",
+                desc: "Housekeeping, banqueting, front office en keukenpersoneel voor hotels. Flexibel opschalen tijdens drukte, evenementen en seizoenen.",
                 color: "from-purple-600 to-purple-800",
                 border: "border-purple-100",
                 link: "/hotel-personeel-gezocht",
@@ -295,7 +295,7 @@ export default function PersoneelGezocht() {
               {
                 icon: PartyPopper,
                 title: "Eventlocaties",
-                desc: "Grote en kleine events met representatief personeel. Van 5 tot 60+ medewerkers voor elk evenement.",
+                desc: "Representatief personeel voor grote en kleine evenementen. Van bediening tot runners en barpersoneel. Teams van 5 tot 60 medewerkers.",
                 color: "from-pink-500 to-purple-600",
                 border: "border-pink-100",
                 link: "/event-personeel-gezocht",
@@ -304,7 +304,7 @@ export default function PersoneelGezocht() {
               {
                 icon: UtensilsCrossed,
                 title: "Cateraars",
-                desc: "Chefs, bediening en keukenmedewerkers voor catering en recepties op elke locatie.",
+                desc: "Chefs, bediening en keukenmedewerkers voor catering en evenementen op iedere locatie.",
                 color: "from-indigo-500 to-purple-600",
                 border: "border-indigo-100",
                 link: "/cateringpersoneel-gezocht",
@@ -313,7 +313,7 @@ export default function PersoneelGezocht() {
               {
                 icon: Wine,
                 title: "Restaurants",
-                desc: "Bediening, koks en barpersoneel voor restaurants bij drukte, uitval en piekperiodes.",
+                desc: "Bediening, koks en barpersoneel voor restaurants bij drukte, uitval en piekmomenten.",
                 color: "from-blue-500 to-indigo-600",
                 border: "border-blue-100",
                 link: "/horecapersoneel-gezocht",
@@ -357,10 +357,10 @@ export default function PersoneelGezocht() {
                 <Shield className="w-4 h-4" /> Waarom EXTRA
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom opdrachtgevers voor EXTRA kiezen
+                Waarom horecabedrijven voor EXTRA kiezen
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Geen standaard uitzendbureau. EXTRA werkt anders.
+                Geen standaard uitzendbureau. EXTRA werkt anders. Wij bouwen vaste teams, selecteren streng en meten continu kwaliteit.
               </p>
             </div>
           </RevealSection>
