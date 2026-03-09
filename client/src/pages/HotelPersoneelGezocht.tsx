@@ -198,7 +198,7 @@ export default function HotelPersoneelGezocht() {
                 Direct contact
               </a>
             </div>
-            <div className="flex flex-wrap gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-xl">
               {[
                 { icon: Check, text: "Iedereen in loondienst" },
                 { icon: Star, text: "Ervaring met hotelstandaarden" },
