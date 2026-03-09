@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
 import { storage } from "./storage";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { 
   insertApplicantSchema, 
   insertUserSchema, 
@@ -34,7 +34,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -3873,20 +3873,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Fout bij versturen bevestigingsmail:", err);
         });
 
-        sendAdminCandidateNotificationEmail({
-          firstName: candidate.firstName,
-          lastName: candidate.lastName,
-          functionType: candidate.functionType,
-          city: candidate.city,
-          email: candidate.email,
-          birthDate: candidate.birthDate,
-          phone: candidate.phone,
-          nationality: candidate.nationality,
-        }).then((sent) => {
-          console.log(`Admin-notificatiemail (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
-        }).catch((err) => {
-          console.error("Fout bij versturen admin-notificatiemail:", err);
-        });
+        (async () => {
+          try {
+            const token = randomUUID();
+            await storage.updateCandidate(candidate.id, { reviewToken: token } as any);
+            const sent = await sendAdminCandidateNotificationEmail({
+              id: candidate.id,
+              firstName: candidate.firstName,
+              lastName: candidate.lastName,
+              functionType: candidate.functionType,
+              city: candidate.city,
+              email: candidate.email,
+              birthDate: candidate.birthDate,
+              phone: candidate.phone,
+              nationality: candidate.nationality,
+              cvFilename: candidate.cvFilename,
+              reviewToken: token,
+            });
+            console.log(`Admin-notificatiemail (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+          } catch (err) {
+            console.error("Fout bij versturen admin-notificatiemail:", err);
+          }
+        })();
       }
 
       // Notify admins on complete submission (not partial)
@@ -3992,20 +4000,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           interviewTime: updated.interviewTime,
         }).catch((err) => console.error("Fout bij versturen bevestigingsmail:", err));
 
-        sendAdminCandidateNotificationEmail({
-          firstName: updated.firstName,
-          lastName: updated.lastName,
-          functionType: updated.functionType,
-          city: updated.city,
-          email: updated.email,
-          birthDate: updated.birthDate,
-          phone: updated.phone,
-          nationality: updated.nationality,
-        }).then((sent) => {
-          console.log(`Admin-notificatiemail (PATCH) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
-        }).catch((err) => {
-          console.error("Fout bij versturen admin-notificatiemail:", err);
-        });
+        (async () => {
+          try {
+            let token = (updated as any).reviewToken;
+            if (!token) {
+              token = randomUUID();
+              await storage.updateCandidate(updated.id, { reviewToken: token } as any);
+            }
+            const sent = await sendAdminCandidateNotificationEmail({
+              id: updated.id,
+              firstName: updated.firstName,
+              lastName: updated.lastName,
+              functionType: updated.functionType,
+              city: updated.city,
+              email: updated.email,
+              birthDate: updated.birthDate,
+              phone: updated.phone,
+              nationality: updated.nationality,
+              cvFilename: (updated as any).cvFilename,
+              reviewToken: token,
+            });
+            console.log(`Admin-notificatiemail (PATCH) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+          } catch (err) {
+            console.error("Fout bij versturen admin-notificatiemail:", err);
+          }
+        })();
 
         // Push notification to admins
         try {
@@ -4429,6 +4448,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating candidate status:", error);
       return res.status(500).json({ message: "Er is iets misgegaan bij het bijwerken van de status" });
+    }
+  });
+
+  // Token-gebaseerde accept/reject links voor in de interne notificatiemail
+  app.get("/api/candidates/:id/accept", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.query.token as string;
+      if (!token) return res.status(400).send('Token ontbreekt');
+      const candidate = await storage.getCandidate(id);
+      if (!candidate) return res.status(404).send('Kandidaat niet gevonden');
+      if ((candidate as any).reviewToken !== token) return res.status(403).send('Ongeldig token');
+      if (candidate.status === 'aangenomen') {
+        return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} was al geaccepteerd.</h2><p>Er is al een Calendly-link verstuurd.</p></body></html>`);
+      }
+      await storage.updateCandidateStatus(id, 'aangenomen', undefined);
+      if (candidate.email && candidate.firstName) {
+        await sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email });
+      }
+      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} geaccepteerd!</h2><p>Een Calendly-uitnodiging is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="https://www.doehetextra.nl/dashboard-mockup" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
+    } catch (err) {
+      console.error('Accept kandidaat fout:', err);
+      return res.status(500).send('Er is iets misgegaan');
+    }
+  });
+
+  app.get("/api/candidates/:id/reject", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.query.token as string;
+      if (!token) return res.status(400).send('Token ontbreekt');
+      const candidate = await storage.getCandidate(id);
+      if (!candidate) return res.status(404).send('Kandidaat niet gevonden');
+      if ((candidate as any).reviewToken !== token) return res.status(403).send('Ongeldig token');
+      if (candidate.status === 'afgewezen') {
+        return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#dc2626;">❌ ${candidate.firstName} ${candidate.lastName} was al afgewezen.</h2></body></html>`);
+      }
+      await storage.updateCandidateStatus(id, 'afgewezen', undefined);
+      if (candidate.email && candidate.firstName) {
+        sendCandidateRejectionEmailDiensten({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
+          console.error('Fout bij versturen afwijzingsmail:', err)
+        );
+      }
+      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#dc2626;">❌ ${candidate.firstName} ${candidate.lastName} afgewezen.</h2><p>Een afwijzingsmail is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="https://www.doehetextra.nl/dashboard-mockup" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
+    } catch (err) {
+      console.error('Reject kandidaat fout:', err);
+      return res.status(500).send('Er is iets misgegaan');
     }
   });
 

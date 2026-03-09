@@ -476,7 +476,6 @@ export default function Aanmelden() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvUploaded, setCvUploaded] = useState(false);
-  const [calendlyScheduled, setCalendlyScheduled] = useState(false);
   const [showCvBlocker, setShowCvBlocker] = useState(false);
   const [savedCandidateId, setSavedCandidateId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -494,15 +493,6 @@ export default function Aanmelden() {
     }
   }, [step]);
 
-  useEffect(() => {
-    function handleCalendlyEvent(e: MessageEvent) {
-      if (e.data?.event === "calendly.event_scheduled") {
-        setCalendlyScheduled(true);
-      }
-    }
-    window.addEventListener("message", handleCalendlyEvent);
-    return () => window.removeEventListener("message", handleCalendlyEvent);
-  }, []);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -1190,45 +1180,32 @@ export default function Aanmelden() {
                     <CheckCircle2 className="w-5 h-5" />
                     {lang === "NL" ? "CV geüpload" : "CV uploaded"}
                   </div>
-                  <div className={`flex items-center gap-2.5 text-sm font-semibold ${calendlyScheduled ? "text-green-600" : "text-gray-400"}`}>
-                    {calendlyScheduled ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
-                    {lang === "NL" ? "Gesprek ingepland" : "Interview scheduled"}
+                  <div className="flex items-center gap-2.5 text-sm font-semibold text-green-600">
+                    <CheckCircle2 className="w-5 h-5" />
+                    {lang === "NL" ? "Aanmelding compleet" : "Registration complete"}
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    {t.scheduleTitle} <span className="text-red-500">*</span>
+                {/* What happens next */}
+                <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-6 mb-2">
+                  <h3 className="text-base font-bold text-purple-900 mb-3 flex items-center gap-2">
+                    <span className="text-lg">📬</span>
+                    {lang === "NL" ? "Wat gebeurt er nu?" : "What happens next?"}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-5 leading-relaxed">{t.scheduleDesc}</p>
-                  {calendlyScheduled ? (
-                    <div className="rounded-xl border-2 border-green-400 bg-green-50/50 p-8 text-center">
-                      <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                      <p className="text-lg font-bold text-green-700 mb-1">
-                        {lang === "NL" ? "Gesprek ingepland!" : "Interview scheduled!"}
-                      </p>
-                      <p className="text-sm text-green-600">
-                        {lang === "NL" ? "Je ontvangt een bevestiging per e-mail van Calendly." : "You'll receive a confirmation email from Calendly."}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: "400px" }}>
-                      <iframe
-                        src={`https://calendly.com/max-_zs/30min?hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=7c3aed${formData.firstName ? `&name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}` : ''}${formData.email ? `&email=${encodeURIComponent(formData.email)}` : ''}`}
-                        width="100%"
-                        height="500"
-                        frameBorder="0"
-                        title={lang === "NL" ? "Plan je gesprek" : "Schedule your interview"}
-                        className="rounded-xl"
-                      />
-                    </div>
-                  )}
-                  {!calendlyScheduled && (
-                    <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {lang === "NL" ? "Plan eerst je gesprek via de kalender hierboven" : "Please schedule your interview using the calendar above first"}
-                    </p>
-                  )}
+                  <ol className="space-y-3">
+                    <li className="flex gap-3 text-sm text-purple-800">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">1</span>
+                      <span>{lang === "NL" ? "Ons team bekijkt je aanmelding en CV — dit duurt meestal 1–2 werkdagen." : "Our team reviews your application and CV — this usually takes 1–2 business days."}</span>
+                    </li>
+                    <li className="flex gap-3 text-sm text-purple-800">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">2</span>
+                      <span>{lang === "NL" ? "Als je profiel past, sturen we je een e-mail met een link om direct een gesprekstijd te kiezen." : "If your profile is a match, we'll send you an email with a link to pick an interview time."}</span>
+                    </li>
+                    <li className="flex gap-3 text-sm text-purple-800">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">3</span>
+                      <span>{lang === "NL" ? "Na het gesprek hoor je snel of je welkom bent bij EXTRA!" : "After the interview you'll quickly hear if you're welcome at EXTRA!"}</span>
+                    </li>
+                  </ol>
                 </div>
               </div>
 
@@ -1239,11 +1216,6 @@ export default function Aanmelden() {
                 </Button>
 
                 <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
-                  {!calendlyScheduled && (
-                    <p className="text-xs text-gray-400 text-center sm:text-right">
-                      {lang === "NL" ? "Plan een gesprek in via de kalender hierboven" : "Schedule an interview via the calendar above"}
-                    </p>
-                  )}
                   <Button
                     onClick={() => handleSubmit()}
                     disabled={isSubmitting}

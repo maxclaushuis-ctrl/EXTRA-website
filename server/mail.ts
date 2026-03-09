@@ -1,6 +1,8 @@
 import { MailService } from '@sendgrid/mail';
 import { storage } from './storage';
 import { EmailTemplate, User } from '@shared/schema';
+import fs from 'fs';
+import path from 'path';
 
 // Configuratie voor de mail service
 let mailService: MailService | null = null;
@@ -32,12 +34,20 @@ export function initMailService(): boolean {
 }
 
 // Interface voor e-mail parameters
+interface EmailAttachment {
+  content: string;
+  filename: string;
+  type: string;
+  disposition?: string;
+}
+
 interface EmailParams {
-  to: string;
+  to: string | string[];
   from: string;
   subject: string;
   html?: string;
   text?: string;
+  attachments?: EmailAttachment[];
 }
 
 // Verzend een e-mail met opgegeven parameters
@@ -51,6 +61,7 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       subject: params.subject,
       text: params.text?.substring(0, 200) + (params.text && params.text.length > 200 ? '...' : ''),
       html: params.html?.substring(0, 200) + (params.html && params.html.length > 200 ? '...' : ''),
+      attachments: params.attachments?.map(a => a.filename),
       timestamp: new Date().toISOString()
     };
     
@@ -67,14 +78,23 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   }
   
   try {
-    await mailService.send({
+    const msg: any = {
       to: params.to,
       from: params.from,
       subject: params.subject,
       text: params.text,
       html: params.html,
-    });
-    console.log(`✅ E-mail succesvol verzonden naar ${params.to} (onderwerp: ${params.subject})`);
+    };
+    if (params.attachments && params.attachments.length > 0) {
+      msg.attachments = params.attachments.map(a => ({
+        content: a.content,
+        filename: a.filename,
+        type: a.type,
+        disposition: a.disposition || 'attachment',
+      }));
+    }
+    await mailService.send(msg);
+    console.log(`✅ E-mail succesvol verzonden naar ${Array.isArray(params.to) ? params.to.join(', ') : params.to} (onderwerp: ${params.subject})`);
     return true;
   } catch (error: any) {
     console.error('❌ Fout bij verzenden van e-mail via SendGrid:');
@@ -571,8 +591,18 @@ Vragen? info@doehetextra.nl`;
   });
 }
 
+// Bepaal ontvangers op basis van functietype
+function getAdminRecipientsForFunction(functionType: string): string[] {
+  if (functionType === 'housekeeping') {
+    return ['eveline@doehetextra.nl', 'charlotte@doehetextra.nl', 'max@doehetextra.nl'];
+  }
+  // horecamedewerker, chef, frontoffice en overige
+  return ['lea@doehetextra.nl', 'eveline@doehetextra.nl', 'max@doehetextra.nl'];
+}
+
 // Stuur admin-notificatiemail bij nieuwe voltooide aanmelding
 export async function sendAdminCandidateNotificationEmail(candidate: {
+  id: number;
   firstName: string;
   lastName: string;
   functionType: string;
@@ -581,6 +611,8 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   birthDate?: string | null;
   phone?: string | null;
   nationality?: string | null;
+  cvFilename?: string | null;
+  reviewToken?: string | null;
 }): Promise<boolean> {
   const functionLabels: Record<string, string> = {
     housekeeping: 'Housekeeping medewerker',
@@ -589,6 +621,14 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
     frontoffice: 'Front office medewerker',
   };
   const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
+
+  const baseUrl = 'https://www.doehetextra.nl';
+  const acceptUrl = candidate.reviewToken
+    ? `${baseUrl}/api/candidates/${candidate.id}/accept?token=${candidate.reviewToken}`
+    : `${baseUrl}/dashboard-mockup`;
+  const rejectUrl = candidate.reviewToken
+    ? `${baseUrl}/api/candidates/${candidate.id}/reject?token=${candidate.reviewToken}`
+    : `${baseUrl}/dashboard-mockup`;
 
   const cell = (label: string, value: string | null | undefined) =>
     `<td style="padding:10px 14px;vertical-align:top;width:50%;border-bottom:1px solid #f3f4f6;">
@@ -629,8 +669,19 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
                 ${cell('Nationaliteit', candidate.nationality)}
               </tr>
             </table>
-            <div style="margin-top:20px;text-align:center;padding-bottom:12px;">
-              <a href="https://www.doehetextra.nl/dashboard-mockup" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:600;">Bekijk in dashboard</a>
+            ${candidate.cvFilename ? `<div style="margin:16px 0 4px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 4px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
+            <div style="margin-top:20px;padding-bottom:16px;display:flex;gap:12px;text-align:center;">
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="padding:0 6px 0 0;" width="50%">
+                  <a href="${acceptUrl}" style="display:block;background:#16a34a;color:#ffffff;text-decoration:none;padding:13px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">✅ Accepteren + Calendly sturen</a>
+                </td>
+                <td style="padding:0 0 0 6px;" width="50%">
+                  <a href="${rejectUrl}" style="display:block;background:#dc2626;color:#ffffff;text-decoration:none;padding:13px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">❌ Afwijzen</a>
+                </td>
+              </tr></table>
+            </div>
+            <div style="text-align:center;padding-bottom:12px;">
+              <a href="${baseUrl}/dashboard-mockup" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;">Bekijk in dashboard</a>
             </div>
           </td>
         </tr>
@@ -645,12 +696,98 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
 </body>
 </html>`;
 
-  const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}`;
+  const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\n\n✅ Accepteren: ${acceptUrl}\n❌ Afwijzen: ${rejectUrl}`;
+
+  const recipients = getAdminRecipientsForFunction(candidate.functionType);
+
+  // Laad CV bijlage als beschikbaar
+  const attachments: EmailAttachment[] = [];
+  if (candidate.cvFilename) {
+    const cvPath = path.join(process.cwd(), 'uploads', 'cv', candidate.cvFilename);
+    if (fs.existsSync(cvPath)) {
+      try {
+        const cvBuffer = fs.readFileSync(cvPath);
+        const ext = path.extname(candidate.cvFilename).toLowerCase();
+        const mimeType = ext === '.pdf' ? 'application/pdf'
+          : ext === '.doc' ? 'application/msword'
+          : ext === '.docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/octet-stream';
+        attachments.push({
+          content: cvBuffer.toString('base64'),
+          filename: `CV_${candidate.firstName}_${candidate.lastName}${ext}`,
+          type: mimeType,
+          disposition: 'attachment',
+        });
+      } catch (err) {
+        console.warn('Kon CV niet bijvoegen:', err);
+      }
+    }
+  }
+
+  // Stuur naar elke ontvanger afzonderlijk (SendGrid vereist dit voor attachments bij meerdere ontvangers)
+  const results = await Promise.all(recipients.map(to =>
+    sendEmail({
+      to,
+      from: 'EXTRA 🚀 <max@doehetextra.nl>',
+      subject: `Nieuwe aanmelding – ${candidate.firstName} ${candidate.lastName} (${functionLabel})`,
+      html,
+      text,
+      attachments,
+    })
+  ));
+  return results.every(Boolean);
+}
+
+// Stuur Calendly-uitnodiging naar geaccepteerde kandidaat
+export async function sendCalendlyInviteEmail(candidate: {
+  firstName: string;
+  email: string;
+}): Promise<boolean> {
+  if (!candidate.email) return false;
+
+  const calendlyUrl = 'https://calendly.com/max-_zs/30min';
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:24px 28px;">
+            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#111827;">Hi ${candidate.firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Goed nieuws! We hebben je aanmelding bekeken en we nodigen je graag uit voor een kort kennismakingsgesprek. 🎉</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Plan via onderstaande knop een moment dat voor jou uitkomt:</p>
+            <div style="text-align:center;margin-bottom:24px;">
+              <a href="${calendlyUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;">📅 Plan je gesprek</a>
+            </div>
+            <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Of kopieer deze link: <a href="${calendlyUrl}" style="color:#7c3aed;">${calendlyUrl}</a></p>
+            <p style="margin:16px 0 0;font-size:15px;color:#374151;">Tot snel,<br><strong>Team EXTRA</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${candidate.firstName},\n\nGoed nieuws! We hebben je aanmelding bekeken en nodigen je graag uit voor een kort kennismakingsgesprek.\n\nPlan via deze link een moment: ${calendlyUrl}\n\nTot snel,\nTeam EXTRA`;
 
   return await sendEmail({
-    to: 'max@doehetextra.nl',
-    from: 'EXTRA 🚀 <max@doehetextra.nl>',
-    subject: 'Nieuwe aanmelding',
+    to: candidate.email,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: 'Gefeliciteerd! Plan je kennismakingsgesprek bij EXTRA',
     html,
     text,
   });

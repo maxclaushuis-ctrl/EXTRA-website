@@ -1,0 +1,79 @@
+Je bent een backend developer en werkt aan de bestaande aanmeldflow van de website.
+
+BELANGRIJK
+De huidige flow werkt al correct en moet NIET opnieuw gebouwd worden. Er wordt bij een aanmelding al een interne e-mail gestuurd. Pas daarom alleen onderstaande uitbreidingen toe op de bestaande flow.
+
+DOEL VAN DE AANPASSING
+We willen dat interne medewerkers eerst een kandidaat beoordelen voordat deze een gesprek kan inplannen via Calendly.
+
+Daarom moeten we de bestaande interne e-mail uitbreiden.
+
+AANPASSINGEN
+
+1. Interne mail uitbreiden
+
+De bestaande interne mail die wordt verstuurd bij een nieuwe aanmelding moet worden uitgebreid met:
+
+- Het CV van de kandidaat als bijlage.
+- Twee actieknoppen in de mail:
+  • "Accepteren"
+  • "Afwijzen"
+
+Deze knoppen moeten backend acties triggeren.
+
+2. Actie bij "Accepteren"
+
+Wanneer een interne medewerker op "Accepteren" klikt:
+
+- De kandidaat ontvangt automatisch een e-mail.
+- In deze e-mail staat een link naar Calendly zodat de kandidaat een gesprek kan inplannen.
+- Gebruik hiervoor dezelfde Calendly link die eerder in de flow werd gebruikt.
+
+3. Actie bij "Afwijzen"
+
+Wanneer een interne medewerker op "Afwijzen" klikt:
+
+- De kandidaat ontvangt automatisch een nette afwijzingsmail.
+
+4. CV meesturen
+
+Het CV dat de kandidaat uploadt bij de aanmelding moet automatisch als bijlage worden meegestuurd in de interne e-mail.
+
+5. Ontvangers interne mail
+
+Bij elke aanmelding moet mijn e-mailadres altijd worden toegevoegd aan de interne mail:
+
+max@doehetextra.nl
+
+Daarnaast gelden de volgende ontvangers per functie:
+
+Functie: Horecamedewerker
+- lea@doehetextra.nl
+- eveline@doehetextra.nl
+- max@doehetextra.nl
+
+Functie: Chef
+- lea@doehetextra.nl
+- eveline@doehetextra.nl
+- max@doehetextra.nl
+
+Functie: Housekeeping
+- eveline@doehetextra.nl
+- charlotte@doehetextra.nl
+- max@doehetextra.nl
+
+6. Calendly link verwijderen uit formulier
+
+De Calendly link moet uit het aanmeldformulier worden verwijderd zodat kandidaten niet meer direct zelf een gesprek kunnen plannen.
+
+Alleen na interne goedkeuring ontvangen zij de Calendly link via e-mail.
+
+TECHNISCHE RANDVOORWAARDEN
+
+- Zorg dat de actieknoppen in de e-mail veilig een backend actie triggeren.
+- Voorkom dat een kandidaat meerdere keren geaccepteerd of afgewezen kan worden.
+- Update de status van de kandidaat in het systeem naar:
+  • Geaccepteerd
+  • Afgewezen
+
+De rest van de bestaande aanmeldflow moet volledig ongewijzigd blijven.
