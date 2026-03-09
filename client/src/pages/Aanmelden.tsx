@@ -452,6 +452,18 @@ export default function Aanmelden() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (step === "success") {
+      try {
+        const w = window as any;
+        if (!w.jobster) w.jobster = [];
+        w.jobster.push(function() {
+          w.jobster.conversion("1a0c9513-ffae-436e-b8cc-2945905f1e5c", "customer");
+        });
+      } catch (_) {}
+    }
+  }, [step]);
+
+  useEffect(() => {
     function handleCalendlyEvent(e: MessageEvent) {
       if (e.data?.event === "calendly.event_scheduled") {
         setCalendlyScheduled(true);
