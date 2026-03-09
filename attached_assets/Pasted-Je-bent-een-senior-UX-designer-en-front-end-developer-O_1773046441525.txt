@@ -1,0 +1,70 @@
+Je bent een senior UX designer en front-end developer.
+
+Optimaliseer de aanmeldpagina en het formulier visueel én functioneel, volledig in de stijl van de rest van de EXTRA website.
+
+1. Nieuw veld toevoegen aan het formulier
+Voeg een extra open vraag toe aan het formulier:
+
+Label:
+Via welk kanaal ben je bij EXTRA terechtgekomen?
+
+Type veld:
+Open tekstveld
+
+Plaatsing:
+Voeg dit veld logisch toe binnen stap 1 van het formulier, bij de overige basisgegevens. Zorg dat het netjes uitlijnt met de rest van de velden en ook op mobiel goed werkt.
+
+2. Pagina visueel aantrekkelijker maken
+De pagina oogt nu te vlak en te wit. Maak de volledige pagina visueel sterker en meer in lijn met de rest van de website.
+
+Pas dit aan:
+- Geef de volledige pagina een achtergrond met een subtiel paars verloop
+- Voeg een decoratief X-patroon toe, vergelijkbaar met de stijl van de header op /personeelsaanvraag
+- Zorg dat dit patroon subtiel blijft en niet ten koste gaat van de leesbaarheid van het formulier
+- Laat de achtergrond premium, rustig en branded aanvoelen
+- Niet alleen de header, maar de gehele pagina moet deze EXTRA uitstraling krijgen
+
+Belangrijk:
+- Gebruik exact dezelfde stijlrichting als de header van /personeelsaanvraag
+- Denk aan dezelfde paarstinten, hetzelfde verloop en een vergelijkbaar patroon
+- Houd voldoende contrast tussen achtergrond en formulierkaart
+
+3. Formulierkaart verbeteren
+Het formulier zelf moet duidelijk loskomen van de achtergrond en moderner ogen.
+
+Pas dit aan:
+- Behoud de witte formulierkaart als basis
+- Geef de kaart meer diepte met een subtiele shadow
+- Zorg voor nette afgeronde hoeken
+- Verbeter de witruimte en spacing tussen secties en velden
+- Laat het formulier meer premium en gebruiksvriendelijk aanvoelen
+
+4. Logo aanpassen
+Het logo op de aanmeldpagina moet worden aangepast naar het originele witte EXTRA logo.
+
+Belangrijk:
+- Gebruik het originele witte logo, niet de paarse variant
+- Zorg dat dit logo goed zichtbaar is op de nieuwe achtergrond
+- Houd de plaatsing van het logo consistent met de rest van de pagina
+
+5. Responsive gedrag
+Controleer dat alles goed werkt op:
+- desktop
+- tablet
+- mobiel
+
+Specifiek:
+- het nieuwe veld moet netjes meeschalen
+- de achtergrond moet ook op mobiel goed ogen
+- het patroon mag mobiel subtieler zijn zodat het niet te druk wordt
+- de formulierkaart moet altijd goed leesbaar blijven
+
+6. Designdoel
+Het eindresultaat moet:
+- duidelijk meer in de stijl van EXTRA zijn
+- beter aansluiten op /personeelsaanvraag
+- moderner en aantrekkelijker ogen
+- gebruiksvriendelijk blijven
+- meer branded en minder generiek aanvoelen
+
+Voer deze wijzigingen direct door in de bestaande pagina en behoud de huidige formulierstructuur en functionaliteit.

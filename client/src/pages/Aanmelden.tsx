@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   User, Briefcase, FileText, Check, ChevronRight, ChevronLeft,
   MapPin, Phone, Mail, Calendar, Globe, Upload, Clock,
-  AlertCircle, CheckCircle2, XCircle, Info, ArrowRight
+  AlertCircle, CheckCircle2, XCircle, Info, ArrowRight, MessageCircle
 } from "lucide-react";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,6 +151,31 @@ const NON_EU_THRESHOLDS: ExperienceThresholds = {
   chef: ["1to3", "3plus"],
 };
 
+function XPatternBg({ count = 4, opacity = 0.08 }: { count?: number; opacity?: number }) {
+  const positions = [
+    { left: "5%", top: "8%", size: 180, rotate: 15 },
+    { left: "78%", top: "15%", size: 150, rotate: -20 },
+    { left: "45%", top: "55%", size: 220, rotate: 30 },
+    { left: "12%", top: "72%", size: 160, rotate: -8 },
+    { left: "88%", top: "75%", size: 130, rotate: 40 },
+  ];
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {positions.slice(0, count).map((pos, i) => (
+        <div key={i} className="absolute" style={{
+          left: pos.left, top: pos.top, width: pos.size, height: pos.size,
+          transform: `rotate(${pos.rotate}deg)`, opacity,
+          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: "rgba(255,255,255,0.9)",
+        }} />
+      ))}
+    </div>
+  );
+}
+
 const COPY = {
   NL: {
     step1Title: "Eerst wat basics",
@@ -205,6 +232,8 @@ const COPY = {
     stoppedTitle: "Bedankt voor je interesse!",
     stoppedDesc: "Fijn dat je het overwoog. Je bent altijd later welkom om je opnieuw aan te melden bij EXTRA.",
     backToHome: "Terug naar de homepage",
+    channelLabel: "Via welk kanaal ben je bij EXTRA terechtgekomen?",
+    channelPlaceholder: "Bijv. Instagram, Indeed, via een vriend...",
   },
   EN: {
     step1Title: "Let's start with the basics",
@@ -261,6 +290,8 @@ const COPY = {
     stoppedTitle: "Thank you for your interest!",
     stoppedDesc: "We appreciate you considering us. You're always welcome to reapply with EXTRA later.",
     backToHome: "Back to homepage",
+    channelLabel: "How did you find EXTRA?",
+    channelPlaceholder: "E.g. Instagram, Indeed, via a friend...",
   }
 };
 
@@ -279,13 +310,13 @@ function ProgressBarComponent({ stepNumber, t }: { stepNumber: number; t: CopyTy
         return (
           <div key={i} className="flex items-center flex-1">
             <div className="flex flex-col items-center flex-1">
-              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${isDone ? "bg-green-500 text-white" : isActive ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30" : "bg-gray-200 text-gray-500"}`}>
+              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${isDone ? "bg-green-500 text-white" : isActive ? "bg-white text-purple-700 shadow-lg shadow-white/20" : "bg-white/10 text-white/40"}`}>
                 {isDone ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : num}
               </div>
-              <span className={`text-[10px] sm:text-xs font-semibold mt-1.5 ${isActive ? "text-purple-600" : isDone ? "text-green-600" : "text-gray-400"}`}>{label}</span>
+              <span className={`text-[10px] sm:text-xs font-semibold mt-1.5 ${isActive ? "text-white" : isDone ? "text-green-400" : "text-white/40"}`}>{label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`h-0.5 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-300 ${isDone ? "bg-green-400" : "bg-gray-200"}`} />
+              <div className={`h-0.5 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-300 ${isDone ? "bg-green-400" : "bg-white/20"}`} />
             )}
           </div>
         );
@@ -492,6 +523,7 @@ export default function Aanmelden() {
     willingToStopTwv: "",
     preferredDate: "",
     preferredTime: "",
+    channel: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -583,7 +615,7 @@ export default function Aanmelden() {
         nationality: formData.nationality,
         city: formData.city,
         functionType: formData.preferredFunction,
-        sourceChannel: "Website aanmeldflow",
+        sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
         status,
         partial,
         notes: rejReason ? `Afgewezen reden: ${rejReason}` : undefined,
@@ -756,8 +788,8 @@ export default function Aanmelden() {
         needsTwv: flow === "NON_EU" && formData.twvNeeded === "yes",
         interviewDate: null,
         interviewTime: null,
-        sourceChannel: "Website aanmeldflow",
-        notes: cvFile ? `CV: ${cvFile.name} | Gesprek ingepland via Calendly` : "Gesprek ingepland via Calendly",
+        sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
+        notes: [cvFile ? `CV: ${cvFile.name}` : null, "Gesprek ingepland via Calendly", formData.channel ? `Gevonden via: ${formData.channel}` : null].filter(Boolean).join(" | "),
       };
 
       if (savedCandidateId) {
@@ -800,21 +832,20 @@ export default function Aanmelden() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-gray-50" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+    <div className="relative min-h-screen" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 text-[200px] sm:text-[350px] font-black text-purple-100/30 select-none leading-none" style={{ fontFamily: "'Poppins', sans-serif" }}>X</div>
-        <div className="absolute bottom-20 left-10 text-[150px] sm:text-[250px] font-black text-purple-100/20 select-none leading-none rotate-12" style={{ fontFamily: "'Poppins', sans-serif" }}>X</div>
-      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950" />
+      <XPatternBg count={4} opacity={0.07} />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-purple-950/60 pointer-events-none" />
 
       <div className="relative z-10">
         <header className="py-5 sm:py-6 px-5 sm:px-8">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <a href="/landing" className="text-2xl sm:text-3xl font-black tracking-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              <span className="bg-gradient-to-r from-purple-700 to-purple-500 bg-clip-text text-transparent">EXTRA</span>
+            <a href="/landing">
+              <img src={extraLogoWit} alt="EXTRA" className="h-8 sm:h-9 w-auto" />
             </a>
-            <a href="/landing" className="text-sm text-gray-500 hover:text-purple-600 transition-colors font-medium">
+            <a href="/landing" className="text-sm text-white/60 hover:text-white transition-colors font-medium">
               {t.backToHome}
             </a>
           </div>
@@ -824,7 +855,7 @@ export default function Aanmelden() {
           {step !== "success" && step !== "rejected" && <ProgressBarComponent stepNumber={stepNumber} t={t} />}
 
           {step === "basics" && (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 lg:p-12">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 lg:p-12">
               <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
@@ -886,6 +917,22 @@ export default function Aanmelden() {
                   </Select>
                   {errors.preferredFunction && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.preferredFunction}</p>}
                 </div>
+
+                <div className="sm:col-span-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+                    <span className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-purple-500" />
+                      {t.channelLabel}
+                    </span>
+                  </Label>
+                  <Input
+                    type="text"
+                    value={formData.channel}
+                    onChange={(e) => updateField("channel", e.target.value)}
+                    placeholder={t.channelPlaceholder}
+                    className="h-12 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500/20"
+                  />
+                </div>
               </div>
 
               <div className="mt-8 flex justify-end">
@@ -897,7 +944,7 @@ export default function Aanmelden() {
           )}
 
           {step === "distance_check" && (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 lg:p-12 max-w-2xl mx-auto text-center">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 lg:p-12 max-w-2xl mx-auto text-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6">
                 <MapPin className="w-8 h-8 text-white" />
               </div>
@@ -920,7 +967,7 @@ export default function Aanmelden() {
 
           {step === "skills" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10">
+              <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10">
                 <div className="flex items-center gap-3 mb-6 sm:mb-8">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-white" />
@@ -1057,7 +1104,7 @@ export default function Aanmelden() {
           )}
 
           {step === "twv" && (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 max-w-2xl mx-auto">
               <div className="flex items-center gap-3 mb-6 sm:mb-8">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                   <Globe className="w-5 h-5 text-white" />
@@ -1129,7 +1176,7 @@ export default function Aanmelden() {
 
           {step === "cv_schedule" && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-6 sm:p-10 lg:p-12">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 lg:p-12">
                 <div className="flex items-center gap-3 mb-6 sm:mb-8">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                     <FileText className="w-5 h-5 text-white" />
@@ -1186,7 +1233,7 @@ export default function Aanmelden() {
               </div>
 
               {/* Submit bar */}
-              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <Button onClick={() => setStep(flow === "NON_EU" ? "twv" : "skills")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300 w-full sm:w-auto">
                   <ChevronLeft className="w-5 h-5 mr-1" /> {t.back}
                 </Button>
@@ -1217,7 +1264,7 @@ export default function Aanmelden() {
           )}
 
           {step === "success" && (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-8 sm:p-12 lg:p-16 max-w-2xl mx-auto text-center">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-8 sm:p-12 lg:p-16 max-w-2xl mx-auto text-center">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/20">
                 <CheckCircle2 className="w-10 h-10 text-white" />
               </div>
@@ -1230,7 +1277,7 @@ export default function Aanmelden() {
           )}
 
           {step === "rejected" && (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-500/5 border border-gray-100 p-8 sm:p-12 lg:p-16 max-w-2xl mx-auto text-center">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-8 sm:p-12 lg:p-16 max-w-2xl mx-auto text-center">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-orange-500/20">
                 <XCircle className="w-10 h-10 text-white" />
               </div>
