@@ -1,0 +1,444 @@
+Je bent een combinatie van:
+- senior marketingstrateeg
+- CRO specialist
+- SEO specialist
+- UX designer
+- front-end developer
+
+Je gaat de landingspagina van “Ik zoek extra personeel” herstructureren en verbeteren.
+
+BELANGRIJK
+- Werk binnen de bestaande huisstijl van de pagina /landing.
+- De nieuwe secties moeten visueel volledig aansluiten op de huidige stijl van /landing:
+  - dezelfde kleuren
+  - dezelfde typografie
+  - dezelfde CTA-stijl
+  - dezelfde spacing-principes
+  - dezelfde visuele taal
+  - dezelfde premium uitstraling
+- Voeg wel moderne effecten toe die passen bij een website anno 2026:
+  - subtiele scroll-animaties
+  - zachte hover-effecten
+  - lichte parallax waar passend
+  - micro-interacties op cards en CTA’s
+  - zachte gradients / glows waar dat al in de stijl past
+  - subtiele motion bij binnenkomst van secties
+- Overdrijf niet: het moet premium, snel en clean blijven.
+- De pagina moet één geheel vormen met /landing en mag niet aanvoelen als een los ontwerp.
+
+DOEL VAN DE PAGINA
+Dit is de algemene landingspagina voor opdrachtgevers die personeel zoeken.
+
+De pagina moet:
+1. Converteren op personeelsaanvragen
+2. Vertrouwen opbouwen
+3. Duidelijk maken wat EXTRA uniek maakt
+4. Inspelen op de pijnpunten van opdrachtgevers
+5. Bezoekers doorverwijzen naar de juiste branches
+
+BRANCHES
+Op deze algemene pagina moeten bezoekers makkelijk kunnen doorklikken naar:
+- Hotels
+- Eventlocaties
+- Cateraars
+- Horeca & Restaurants
+
+BELANGRIJKE PIJNPUNTEN WAAR DE PAGINA OP MOET INSPELEN
+- personeelstekort
+- last-minute uitval
+- no-shows
+- slechte kwaliteit van personeel
+- gebrek aan representativiteit
+- moeilijk opschalen bij piekmomenten
+- niet weten wie je inhuurt
+- onbetrouwbare flexkrachten
+- weinig continuïteit
+- geen vaste poule per locatie
+
+UNIEKE ONDERDELEN DIE DUIDELIJKER NAAR VOREN MOETEN KOMEN
+- verschillende branches
+- waarom opdrachtgevers voor EXTRA kiezen
+- persoonlijk sollicitatieproces
+- selectie op soft skills en hard skills
+- referentiechecks bij eerdere opdrachtgevers
+- logo’s van opdrachtgevers
+- klantreviews / klantcases
+- werkwijze
+- EXTRAATJE beloningssysteem
+- favorietenpoules
+- continu beoordelen van personeel na elke dienst
+- strikt afmeldprotocol
+- iedereen in loondienst
+- NEN 4400-1
+- 24/7 bereikbaarheid
+- FAQ
+- sterke CTA’s
+
+BELANGRIJK
+Maak niet alleen kleine copy-aanpassingen. Ik wil dat je de hele paginavolgorde en opbouw optimaliseert op basis van conversie, vertrouwen en UX.
+
+======================================================================
+GEWENSTE NIEUWE PAGINASTRUCTUUR
+======================================================================
+
+Gebruik onderstaande structuur en werk deze volledig uit in de bestaande stijl van /landing.
+
+-------------------------
+1. HERO
+-------------------------
+
+Doel:
+Direct het probleem benoemen, vertrouwen geven en de bezoeker laten doorklikken of aanvragen.
+
+Inhoud:
+- Een sterkere header die inspeelt op drukte / personeelsprobleem / oplossing
+- Korte subheader die duidelijk maakt wat EXTRA levert
+- CTA 1: Vraag EXTRA personeel aan
+- CTA 2: Direct contact / plan gesprek
+- Vertrouwensbadges of mini social proof boven de header
+- Visueel in dezelfde stijl als huidige hero
+
+Richtlijnen:
+- Header moet kort en krachtig zijn
+- Speels, maar duidelijk
+- Niet te hard SEO-achtig
+- Wel duidelijk voor opdrachtgevers
+
+Voorbeeld insteek:
+“Vol rooster, te weinig mensen?”
+of iets beter in die richting, maar optimaliseer dit.
+
+Voeg subtiele motion toe aan de hero:
+- floating achtergrondvormen
+- lichte parallax in de X-elementen
+- zachte fade/slide-in van tekst en CTA’s
+
+-------------------------
+2. BRANCHES / KIES JE BRANCHE
+-------------------------
+
+Doel:
+De bezoeker snel laten kiezen waar hij personeel voor zoekt.
+
+Inhoud:
+- 4 duidelijke branche cards:
+  - Hotels
+  - Eventlocaties
+  - Cateraars
+  - Horeca & Restaurants
+- Elke card krijgt:
+  - titel
+  - korte uitleg
+  - visuele icon
+  - CTA / lees meer
+- Deze cards moeten converteren naar de onderliggende branchepagina’s
+
+UX:
+- Maak deze cards sterker en klikwaardiger
+- Meer onderscheid tussen branches
+- Sterke hover states
+- subtiele tilt / shadow / glow bij hover
+- cards moeten modern en premium aanvoelen
+
+-------------------------
+3. WAAROM OPDRACHTGEVERS VOOR EXTRA KIEZEN
+-------------------------
+
+Doel:
+Duidelijk maken waarom EXTRA anders is dan standaard uitzendbureaus.
+
+Belangrijke inhoud die hier in terug moet komen:
+- iedereen in loondienst
+- NEN 4400-1
+- persoonlijke selectie
+- hogere betrouwbaarheid
+- 24/7 bereikbaarheid
+
+Belangrijk:
+Gebruik hier niet het woord “compliant”.
+
+Maak hier geen losse algemene voordelen van, maar een sterke trust sectie.
+
+Bijvoorbeeld in cards of value blocks.
+
+-------------------------
+4. HOE WIJ SELECTEREN
+-------------------------
+
+Doel:
+Vertrouwen geven in de kwaliteit van het personeel.
+
+Deze sectie gaat over het sollicitatie- en selectieproces, niet over de klantwerkwijze.
+
+Inhoud:
+- iedere medewerker komt persoonlijk op gesprek
+- selectie op soft skills en hard skills
+- referenties worden gecheckt bij eerdere opdrachtgevers waar relevant
+- representativiteit en houding tellen mee
+- geen anonieme doorplaatsing van mensen
+
+Visual:
+- Gebruik een duidelijke stappenstructuur of een processectie
+- Eventueel met 3 of 4 stappen
+- Moderne iconen, subtiele animaties
+
+-------------------------
+5. CONTINUE KWALITEITSMETING
+-------------------------
+
+Doel:
+Uitleggen dat kwaliteit niet alleen vooraf wordt bepaald, maar continu bewaakt wordt.
+
+Belangrijke inhoud:
+- personeel wordt na elke dienst beoordeeld
+- soft skills en hard skills worden gemeten
+- scores per dienst worden opgeslagen
+- no-shows, complimenten en klachten worden inzichtelijk
+- kwaliteitsdalingen worden snel gesignaleerd
+- hierdoor weet EXTRA precies wie teruggestuurd kan worden
+
+Belangrijk:
+Deze sectie mag sterker als “unique mechanism” van EXTRA worden gepositioneerd.
+Niet alleen: wij meten kwaliteit.
+Maar: wij sturen op data, zodat jij niet hoeft te gokken.
+
+Visual:
+- gebruik screenshots van dashboard / medewerkersoverzicht / profiel
+- maak het moderner, strakker en beter gestructureerd dan nu
+- screenshots mogen in nette mockups / panelen
+- subtiele reveal animaties bij scroll
+
+-------------------------
+6. FAVORIETENPOULES
+-------------------------
+
+Doel:
+Laten zien dat opdrachtgevers niet elke keer met nieuwe gezichten hoeven te werken.
+
+Maak dit een aparte sectie.
+
+Inhoud:
+- vaste poules per opdrachtgever
+- bekende gezichten op locatie
+- sneller schakelen
+- meer continuïteit
+- personeel dat jouw locatie kent
+- minder uitleg en hogere kwaliteit
+
+UX:
+- visueel sterke sectie
+- mag als split-section met tekst + illustratie / visual
+- mag subtiele motion hebben
+
+-------------------------
+7. EXTRAATJE BELONINGSSYSTEEM
+-------------------------
+
+Doel:
+Uitleggen wat het beloningssysteem de opdrachtgever oplevert.
+
+Belangrijk:
+Niet alleen uitleggen wat het systeem is, maar vooral wat het effect is voor de klant.
+
+Inhoud:
+- hogere motivatie
+- minder uitval
+- medewerkers willen terugkomen
+- meer continuïteit
+- medewerkers bouwen iets op en zijn daardoor gemotiveerder
+- sterkere vaste teams
+
+Visual:
+- gebruik bestaande app beelden / telefoonscherm / slider indien passend
+- laat het er visueel modern uitzien
+- geef vooral de voordelen voor de opdrachtgever helder weer
+
+-------------------------
+8. STRIKT AFMELDPROTOCOL & BETROUWBAARHEID
+-------------------------
+
+Doel:
+Een belangrijk bezwaar van opdrachtgevers wegnemen: uitval en slechte communicatie.
+
+Maak hier een aparte vertrouwenssectie van.
+
+Inhoud:
+- medewerkers moeten altijd bellen bij afmelding
+- verkeerd afmelden leidt tot €50 boete
+- na 2x onjuiste afmelding worden medewerkers op non-actief gezet
+- betrouwbaarheid wordt serieus bewaakt
+- dit helpt no-shows en onduidelijkheid te beperken
+
+Belangrijk:
+Formuleer dit professioneel en sterk, niet te hard of negatief.
+Het moet vertrouwen geven, niet afschrikken.
+
+-------------------------
+9. WERKWIJZE VOOR OPDRACHTGEVERS
+-------------------------
+
+Doel:
+Laten zien hoe samenwerken met EXTRA werkt.
+
+Dit is dus NIET het sollicitatieproces.
+
+Inhoud:
+Bijvoorbeeld 4 stappen:
+1. Jij vertelt wat je zoekt
+2. Wij selecteren de juiste mensen
+3. Planning en inzet
+4. Evalueren en favorietenpoule opbouwen
+
+Deze sectie mag blijven bestaan, maar scherper en sterker.
+
+-------------------------
+10. LOGO’S VAN OPDRACHTGEVERS
+-------------------------
+
+Doel:
+Social proof en vertrouwen.
+
+Inhoud:
+- logo’s van bekende opdrachtgevers
+- liefst iets sterker gepresenteerd dan nu
+- eventueel met heading die meer vertrouwen oproept
+
+Bijvoorbeeld:
+“Vertrouwd door hotels, cateraars en eventlocaties”
+
+-------------------------
+11. KLANTREVIEWS / KLANTCASES
+-------------------------
+
+Doel:
+Bewijs leveren dat EXTRA in de praktijk werkt.
+
+Inhoud:
+- 3 sterke klantreviews of cases
+- focus op resultaat:
+  - minder uitval
+  - snel opschalen
+  - vaste gezichten
+  - kwaliteit
+- visueel sterker maken
+- eventueel slider of cards, zolang het premium blijft
+
+-------------------------
+12. FAQ
+-------------------------
+
+Doel:
+Laatste twijfels wegnemen + SEO + LLM vindbaarheid.
+
+Gebruik de bestaande FAQ, maar zorg dat deze netjes in de nieuwe structuur past.
+
+De FAQ moet:
+- visueel cleaner
+- beter gespaced
+- makkelijker scanbaar
+- in accordion stijl
+- met structured data / FAQ schema als dat al niet goed staat
+
+Houd de 7 geselecteerde vragen aan die eerder zijn bepaald.
+
+-------------------------
+13. STERKE EINDE CTA
+-------------------------
+
+Doel:
+De bezoeker omzetten naar actie.
+
+Inhoud:
+- krachtige afsluitende titel
+- korte tekst
+- CTA naar personeelsaanvraag
+- secundaire CTA naar gesprek / contact
+
+Visual:
+- in de paarse / gradient stijl van de pagina
+- sterk, opvallend en premium
+- met subtiele motion
+
+======================================================================
+SECTIES DIE MOETEN WORDEN SAMENGEVOEGD OF AANGESCHERPT
+======================================================================
+
+- “Waarom opdrachtgevers voor EXTRA kiezen” moet scherper en minder algemeen
+- “Continu kwaliteitsmeting” en “We weten precies wie we uitzenden” mogen strategisch sterker op elkaar aansluiten
+- “EXTRAATJE” moet meer vanuit opdrachtgevervoordeel worden geschreven
+- “Werkwijze” en “Selectieproces” moeten twee duidelijk verschillende secties blijven
+- “Favorietenpoules” moet een losse sectie worden
+- “Strikt afmeldprotocol” moet expliciet terugkomen als trust element
+- “Iedereen in loondienst”, “NEN 4400-1” en “24/7 bereikbaarheid” mogen slim in trust/value secties verwerkt worden
+
+======================================================================
+SEO / CONTENT RICHTLIJNEN
+======================================================================
+
+De pagina moet ook SEO-technisch sterk blijven.
+
+Verwerk subtiel en natuurlijk relevante termen zoals:
+- horeca personeel
+- horeca personeel inhuren
+- flexibel horecapersoneel
+- personeel voor hotels
+- personeel voor events
+- catering personeel
+- horecapersoneel voor restaurants
+- horeca uitzendbureau amsterdam
+
+Niet forceren. Het moet menselijk blijven en passen bij EXTRA.
+
+De content moet ook goed werken voor LLM’s zoals ChatGPT, Gemini en Perplexity:
+- duidelijke semantische structuur
+- heldere sectietitels
+- duidelijke uitleg
+- concrete antwoorden op bezwaren
+- sterke topical authority rondom horecapersoneel
+
+======================================================================
+DESIGN RICHTLIJNEN
+======================================================================
+
+Belangrijk:
+Design alle nieuwe of aangepaste secties volledig in de huidige huisstijl van /landing.
+
+Dat betekent:
+- dezelfde visuele basis
+- dezelfde kleuren en gradients
+- dezelfde rounded cards
+- dezelfde button styling
+- dezelfde typografie
+- dezelfde spacing-systematiek
+- dezelfde visuele hiërarchie
+
+Maar:
+voeg wel moderne 2026-effecten toe waar passend:
+- scroll reveal animations
+- subtiele parallax
+- soft glows
+- elegante hover effecten
+- zachte transitions
+- lichte motion op cards, CTA’s en visuals
+
+Geen drukke of schreeuwerige effecten.
+Geen nieuwe stijl introduceren.
+Alles moet voelen als een verbeterde versie van de huidige /landing.
+
+======================================================================
+WAT IK VAN JOU WIL
+======================================================================
+
+Pas de landingspagina “Ik zoek extra personeel” aan op basis van bovenstaande structuur.
+
+Ik wil concreet dat je:
+1. de huidige paginavolgorde herstructureert
+2. de nieuwe secties toevoegt
+3. bestaande secties aanscherpt of samenvoegt
+4. de copy per sectie verbetert
+5. de visuele opbouw per sectie ontwerpt in de huidige stijl van /landing
+6. moderne maar subtiele 2026-effecten toevoegt
+7. de branche cards sterker maakt
+8. de pagina duidelijker laat converteren naar personeelsaanvraag én branche-doorkliks
+
+Werk dit volledig door in de front-end en zorg dat de pagina logisch, modern, conversiegericht en premium aanvoelt.
