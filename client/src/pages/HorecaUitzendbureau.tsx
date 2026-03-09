@@ -1,7 +1,8 @@
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
+import FAQSection from "@/components/FAQSection";
 import { RevealSection, XPatternBg } from "@/pages/LandingPage";
-import { Check, HelpCircle, ChevronRight, Building2, ArrowRight, Star } from "lucide-react";
+import { Check, ChevronRight, Building2, ArrowRight, Star } from "lucide-react";
 import { Link } from "wouter";
 import { useEffect } from "react";
 
@@ -175,24 +176,10 @@ export default function HorecaUitzendbureau() {
         </section>
 
         {/* FAQ */}
-        <section className="py-24 bg-[#0a0310]">
-          <div className="max-w-4xl mx-auto px-5">
-            <RevealSection>
-              <h2 className="text-3xl font-black text-white mb-12" style={{ fontFamily: "'Poppins', sans-serif" }}>Veelgestelde vragen over ons horeca uitzendbureau</h2>
-              <div className="space-y-4">
-                {faqs.map((faq, i) => (
-                  <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition-colors">
-                    <h4 className="flex items-start gap-3 text-lg font-bold text-white mb-3">
-                      <HelpCircle className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-                      {faq.q}
-                    </h4>
-                    <p className="text-white/60 ml-8 leading-relaxed">{faq.a}</p>
-                  </div>
-                ))}
-              </div>
-            </RevealSection>
-          </div>
-        </section>
+        <FAQSection
+          heading="Veelgestelde vragen"
+          faqs={faqs}
+        />
 
         {/* Link Cloud */}
         <section className="py-12 bg-[#0a0310] border-t border-white/5">

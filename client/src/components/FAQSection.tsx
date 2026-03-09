@@ -1,77 +1,116 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import { useAnalytics } from "@/hooks/use-analytics";
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 
-const faqs = [
-  {
-    question: "Hoe word ik uitbetaald?",
-    answer: "Na elke shift wordt je direct uitbetaald via de EXTRA app. Het geld staat binnen enkele minuten op je rekening dankzij ons Payday systeem van ABN-AMRO."
-  },
-  {
-    question: "Kan ik zelf mijn werkdagen kiezen?",
-    answer: "Ja! Bij EXTRA bepaal jij zelf wanneer en waar je werkt. Je kiest zelf de shifts die bij jouw agenda passen via de app."
-  },
-  {
-    question: "Hoe spaar ik voor EXTRAatjes?",
-    answer: "Voor elke gewerkte shift ontvang je EXTRA punten. Extra punten krijg je als je goed presteert of vrienden aanmeldt. In de app kun je deze punten inwisselen voor toffe rewards!"
-  },
-  {
-    question: "Moet ik horeca ervaring hebben?",
-    answer: "Nee, dat is niet nodig! We bieden verschillende soorten werk aan, ook voor beginners. Je krijgt altijd een korte training op locatie."
-  }
-];
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, isVisible };
+}
 
-export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const { trackEvent } = useAnalytics();
-  
-  const toggleFaq = (index: number) => {
-    trackEvent({
-      name: "faq_toggle",
-      properties: {
-        question: faqs[index].question,
-        action: openIndex === index ? "close" : "open"
-      }
-    });
-    
-    setOpenIndex(openIndex === index ? null : index);
-  };
-  
+function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const { ref, isVisible } = useScrollReveal();
   return (
-    <section className="py-6 px-4 bg-white">
-      <div className="container mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function XPatternBg({ count = 2, opacity = 0.06, color = "rgba(139,92,246,1)" }: { count?: number; opacity?: number; color?: string }) {
+  const positions = [
+    { left: "5%", top: "10%", size: 200, rotate: 15 },
+    { left: "80%", top: "20%", size: 160, rotate: -25 },
+    { left: "50%", top: "60%", size: 240, rotate: 35 },
+    { left: "15%", top: "75%", size: 180, rotate: -10 },
+    { left: "90%", top: "80%", size: 140, rotate: 45 },
+  ];
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {positions.slice(0, count).map((pos, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: pos.left,
+            top: pos.top,
+            width: pos.size,
+            height: pos.size,
+            transform: `rotate(${pos.rotate}deg)`,
+            opacity,
+          }}
         >
-          <h2 className="font-poppins font-bold text-2xl mb-6 text-center">Veelgestelde vragen</h2>
-          
-          {faqs.map((faq, index) => (
-            <div key={index} className="border-b border-gray-200 py-3">
-              <button 
-                className="flex justify-between items-center w-full text-left font-medium"
-                onClick={() => toggleFaq(index)}
-              >
-                <span>{faq.question}</span>
-                <ChevronDown className={`h-5 w-5 transform transition-transform ${openIndex === index ? 'rotate-180' : ''}`} />
-              </button>
-              <motion.div 
-                className="mt-2 overflow-hidden"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ 
-                  height: openIndex === index ? 'auto' : 0,
-                  opacity: openIndex === index ? 1 : 0
-                }}
-                transition={{ duration: 0.3 }}
-              >
-                <p className="text-sm text-gray-600 pb-2">{faq.answer}</p>
-              </motion.div>
-            </div>
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="0" x2="100" y2="100" stroke={color} strokeWidth="8" strokeLinecap="round" />
+            <line x1="100" y1="0" x2="0" y2="100" stroke={color} strokeWidth="8" strokeLinecap="round" />
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+interface FAQSectionProps {
+  heading: string;
+  faqs: FaqItem[];
+}
+
+export default function FAQSection({ heading, faqs }: FAQSectionProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  return (
+    <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-gray-50">
+      <XPatternBg />
+      <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+        <RevealSection>
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+              <MessageCircle className="w-4 h-4" /> FAQ
+            </span>
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              {heading}
+            </h2>
+          </div>
+        </RevealSection>
+
+        <div className="space-y-3 sm:space-y-4">
+          {faqs.map((faq, i) => (
+            <RevealSection key={i} delay={i * 60}>
+              <div className="bg-white rounded-2xl border border-gray-100 hover:border-purple-200 transition-all duration-300 overflow-hidden shadow-sm">
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between p-5 sm:p-7 text-left"
+                >
+                  <span className="text-base sm:text-lg font-bold text-gray-900 pr-4">{faq.q}</span>
+                  {openFaq === i ? (
+                    <ChevronUp className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  )}
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-96 pb-5 sm:pb-7" : "max-h-0"}`}>
+                  <p className="px-5 sm:px-7 text-sm sm:text-base text-gray-500 leading-relaxed">{faq.a}</p>
+                </div>
+              </div>
+            </RevealSection>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

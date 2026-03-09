@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
 import PublicNav from "@/components/PublicNav";
+import FAQSection from "@/components/FAQSection";
 import {
   Gift, Star, Trophy, Zap, Clock, ThumbsUp, Shield, TrendingUp,
   ArrowRight, CheckCircle2, Users, Award, Flame,
@@ -457,32 +458,16 @@ export default function Extraatje() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
-        <div className="max-w-3xl mx-auto px-5 sm:px-8">
-          <RevealSection>
-            <div className="text-center mb-10 sm:mb-14">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Veelgestelde vragen</span>
-              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Alles over EXTRAATJE
-              </h2>
-            </div>
-            <div className="space-y-4">
-              {[
-                { q: "Hoe snel zie ik mijn punten?", a: "Na elke verwerkte dienst worden jouw punten automatisch bijgeschreven in de EXTRA app. Dit duurt maximaal 24 uur." },
-                { q: "Verlopen mijn punten?", a: "Nee. Jouw punten verlopen niet en bouwen op. Je kunt op elk moment inwisselen wanneer jij dat wilt." },
-                { q: "Kan ik punten overdragen aan iemand anders?", a: "Nee, punten zijn persoonlijk en gekoppeld aan jouw account. Ze zijn niet overdraagbaar." },
-                { q: "Hoe werken de statusniveaus?", a: "Je begint als BRONS-medewerker. Naarmate je meer punten verdient, stijg je naar ZILVER (10.000 ptn), GOUD (15.000 ptn) en DIAMANT (25.000 ptn). Hogere niveaus geven toegang tot exclusievere beloningen." },
-                { q: "Kan ik meedoen als ik niet bij EXTRA werk?", a: "Het EXTRAATJE systeem is exclusief voor medewerkers van EXTRA. Nog niet aangemeld? Doe dat dan via onze aanmeldpagina." },
-              ].map(({ q, a }) => (
-                <div key={q} className="bg-white rounded-2xl p-5 sm:p-6 border-2 border-purple-100 shadow-sm hover:border-purple-200 transition-all">
-                  <h3 className="text-sm sm:text-base font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>{q}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{a}</p>
-                </div>
-              ))}
-            </div>
-          </RevealSection>
-        </div>
-      </section>
+      <FAQSection
+        heading="Alles over EXTRAATJE"
+        faqs={[
+          { q: "Hoe snel zie ik mijn punten?", a: "Na elke verwerkte dienst worden jouw punten automatisch bijgeschreven in de EXTRA app. Dit duurt maximaal 24 uur." },
+          { q: "Verlopen mijn punten?", a: "Nee. Jouw punten verlopen niet en bouwen op. Je kunt op elk moment inwisselen wanneer jij dat wilt." },
+          { q: "Kan ik punten overdragen aan iemand anders?", a: "Nee, punten zijn persoonlijk en gekoppeld aan jouw account. Ze zijn niet overdraagbaar." },
+          { q: "Hoe werken de statusniveaus?", a: "Je begint als BRONS-medewerker. Naarmate je meer punten verdient, stijg je naar ZILVER (10.000 ptn), GOUD (15.000 ptn) en DIAMANT (25.000 ptn). Hogere niveaus geven toegang tot exclusievere beloningen." },
+          { q: "Kan ik meedoen als ik niet bij EXTRA werk?", a: "Het EXTRAATJE systeem is exclusief voor medewerkers van EXTRA. Nog niet aangemeld? Doe dat dan via onze aanmeldpagina." },
+        ]}
+      />
 
       {/* ── CTA ── */}
       <section className="relative bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950 py-16 sm:py-24 overflow-hidden">

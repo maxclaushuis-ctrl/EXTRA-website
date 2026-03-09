@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
+import FAQSection from "@/components/FAQSection";
 import {
   ArrowRight, ChevronRight, ChevronDown, Zap, Star, Clock, MapPin,
   Shield, TrendingUp, Gift, Award, Users, Briefcase,
@@ -113,24 +114,6 @@ function PhoneMockup({ src, alt, className = "" }: { src: string; alt: string; c
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[18px] bg-gray-900 rounded-b-xl z-20" />
         <img src={src} alt={alt} className="w-full relative z-10" loading="lazy" decoding="async" />
       </div>
-    </div>
-  );
-}
-
-/* ── FAQ ITEM ── */
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border-2 border-purple-100 rounded-2xl overflow-hidden hover:border-purple-200 transition-colors bg-white">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-4 text-left">
-        <span className="text-sm sm:text-base font-black text-gray-900 pr-4" style={{ fontFamily: "'Poppins', sans-serif" }}>{q}</span>
-        <ChevronDown className={`w-4 h-4 text-purple-600 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="px-5 pb-4">
-          <p className="text-sm text-gray-500 leading-relaxed">{a}</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -978,31 +961,16 @@ export default function IkZoekExtraWerk() {
       {/* ══════════════════════════════════════════════
           12. FAQ
       ══════════════════════════════════════════════ */}
-      <section id="faq" className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
-        <div className="max-w-3xl mx-auto px-5 sm:px-8">
-          <RevealSection>
-            <div className="text-center mb-10">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Veelgestelde vragen</span>
-              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Alles wat je wil weten
-              </h2>
-            </div>
-          </RevealSection>
-          <RevealSection delay={100}>
-            <div className="space-y-3">
-              {[
-                { q: "Hoe werkt dagbetaling precies?", a: "Na elke gewerkte shift verwerken wij je uren. De volgende ochtend staat je salaris op je rekening. Dit geldt ook voor weekenden en feestdagen. Geen wachttijden, geen maandelijkse salarisrondes." },
-                { q: "Hoe ziet het kennismakingsgesprek eruit?", a: "Het gesprek duurt ongeveer 30-45 minuten op ons kantoor. We bespreken je ervaring, voorkeuren, beschikbaarheid en persoonlijkheid. Het is informeel, maar professioneel. We willen echt weten wie jij bent." },
-                { q: "Moet ik ervaring hebben in de hospitality?", a: "Niet per se. We werken met medewerkers van diverse niveaus. Wat wij zoeken is de juiste houding, representativiteit en motivatie. Ervaring helpt, maar je drive is minstens zo belangrijk." },
-                { q: "Hoe flexibel kan ik werken?", a: "Volledig flexibel. Jij bepaalt je beschikbaarheid en kiest welke shifts je wil pakken. Er is geen minimumvereiste qua uren, al raden we aan om actief te blijven voor de beste matching." },
-                { q: "Wat zijn de doorgroeimogelijkheden?", a: "Via EXTRA kun je groeien van losse shifts naar een vaste opdracht bij een opdrachtgever. Medewerkers met hoge scores en sterke reviews worden als eerste benaderd voor exclusieve projecten en vaste rollen." },
-              ].map(item => (
-                <FaqItem key={item.q} {...item} />
-              ))}
-            </div>
-          </RevealSection>
-        </div>
-      </section>
+      <FAQSection
+        heading="Alles wat je wil weten"
+        faqs={[
+          { q: "Hoe werkt dagbetaling precies?", a: "Na elke gewerkte shift verwerken wij je uren. De volgende ochtend staat je salaris op je rekening. Dit geldt ook voor weekenden en feestdagen. Geen wachttijden, geen maandelijkse salarisrondes." },
+          { q: "Hoe ziet het kennismakingsgesprek eruit?", a: "Het gesprek duurt ongeveer 30-45 minuten op ons kantoor. We bespreken je ervaring, voorkeuren, beschikbaarheid en persoonlijkheid. Het is informeel, maar professioneel. We willen echt weten wie jij bent." },
+          { q: "Moet ik ervaring hebben in de hospitality?", a: "Niet per se. We werken met medewerkers van diverse niveaus. Wat wij zoeken is de juiste houding, representativiteit en motivatie. Ervaring helpt, maar je drive is minstens zo belangrijk." },
+          { q: "Hoe flexibel kan ik werken?", a: "Volledig flexibel. Jij bepaalt je beschikbaarheid en kiest welke shifts je wil pakken. Er is geen minimumvereiste qua uren, al raden we aan om actief te blijven voor de beste matching." },
+          { q: "Wat zijn de doorgroeimogelijkheden?", a: "Via EXTRA kun je groeien van losse shifts naar een vaste opdracht bij een opdrachtgever. Medewerkers met hoge scores en sterke reviews worden als eerste benaderd voor exclusieve projecten en vaste rollen." },
+        ]}
+      />
 
       {/* ══════════════════════════════════════════════
           13. SEO VACATURES

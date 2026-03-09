@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
 import PublicNav from "@/components/PublicNav";
+import FAQSection from "@/components/FAQSection";
 import {
   ArrowRight, ChevronDown, ChevronRight, Clock,
   Zap, Shield, Eye, CalendarCheck, CheckCircle2, Smartphone,
@@ -53,27 +54,6 @@ function XPatternBg() {
         <img key={i} src={xPatroon} alt="" className="absolute w-40 sm:w-56 opacity-60"
           style={{ top: `${[5, 25, 55, 70, 10, 80][i]}%`, left: `${[5, 70, 15, 80, 45, 50][i]}%`, transform: `rotate(${[0, 15, -10, 5, -20, 10][i]}deg)` }} />
       ))}
-    </div>
-  );
-}
-
-/* ── FAQ ITEM ── */
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className={`rounded-2xl border-2 transition-all duration-200 overflow-hidden ${open ? "border-purple-200 shadow-md" : "border-gray-100 hover:border-purple-100"}`}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
-      >
-        <span className="font-bold text-gray-900 text-sm sm:text-base">{q}</span>
-        <ChevronDown className={`w-5 h-5 text-purple-500 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="px-6 pb-5">
-          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{a}</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -424,49 +404,16 @@ export default function HoeWerktDagbetaling() {
       {/* ══════════════════════════════════════════════
           5. FAQ
       ══════════════════════════════════════════════ */}
-      <section id="faq" className="py-20 sm:py-28 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #f0ebff 100%)" }}>
-        <XPatternBg />
-        <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8">
-          <RevealSection>
-            <div className="text-center mb-12">
-              <span className="inline-block bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
-                Veelgestelde vragen
-              </span>
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Alles wat je wil weten
-              </h2>
-            </div>
-          </RevealSection>
-          <div className="space-y-3">
-            {[
-              {
-                q: "Hoe werkt dagbetaling met loonheffing aan of uit?",
-                a: "Als je loonheffingskorting aan hebt staan, wordt er €75 als voorschot beschikbaar gesteld. Heb je loonheffing uit? Dan ontvang je 50% van de verdiende shift als voorschot. Het resterende bedrag wordt verwerkt in je reguliere maandloon.",
-              },
-              {
-                q: "Wat gebeurt er als er onduidelijkheid is over mijn uren?",
-                a: "Bij onduidelijkheid neemt EXTRA contact met je op voordat de uren worden goedgekeurd. Jij wordt altijd op de hoogte gesteld via de app en e-mail. Jouw uren worden pas uitbetaald na bevestiging.",
-              },
-              {
-                q: "Kan het voorschot lager of hoger zijn dan verwacht?",
-                a: "Het voorschotbedrag is afhankelijk van je loonheffingssituatie en de gewerkte uren. Bij loonheffing aan is het altijd €75. Bij loonheffing uit is het 50% van de shift. Het exacte bedrag zie je altijd terug in de EXTRA app.",
-              },
-              {
-                q: "Hoe snel staat het voorschot op mijn rekening?",
-                a: "Zodra EXTRA HQ jouw uren heeft goedgekeurd, staat het voorschot direct klaar in je Jixbee-wallet. Vanaf daar kun je het direct opnemen naar je bankrekening; dit duurt meestal enkele minuten.",
-              },
-              {
-                q: "Moet ik iets doen om dagbetaling te activeren?",
-                a: "Dagbetaling is standaard actief via Jixbee zodra je bij EXTRA werkt. Je ontvangt bij onboarding een uitleg en toegang tot de Jixbee-app. Daarna werkt alles automatisch.",
-              },
-            ].map(({ q, a }) => (
-              <RevealSection key={q}>
-                <FaqItem q={q} a={a} />
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FAQSection
+        heading="Alles wat je wil weten"
+        faqs={[
+          { q: "Hoe werkt dagbetaling met loonheffing aan of uit?", a: "Als je loonheffingskorting aan hebt staan, wordt er €75 als voorschot beschikbaar gesteld. Heb je loonheffing uit? Dan ontvang je 50% van de verdiende shift als voorschot. Het resterende bedrag wordt verwerkt in je reguliere maandloon." },
+          { q: "Wat gebeurt er als er onduidelijkheid is over mijn uren?", a: "Bij onduidelijkheid neemt EXTRA contact met je op voordat de uren worden goedgekeurd. Jij wordt altijd op de hoogte gesteld via de app en e-mail. Jouw uren worden pas uitbetaald na bevestiging." },
+          { q: "Kan het voorschot lager of hoger zijn dan verwacht?", a: "Het voorschotbedrag is afhankelijk van je loonheffingssituatie en de gewerkte uren. Bij loonheffing aan is het altijd €75. Bij loonheffing uit is het 50% van de shift. Het exacte bedrag zie je altijd terug in de EXTRA app." },
+          { q: "Hoe snel staat het voorschot op mijn rekening?", a: "Zodra EXTRA HQ jouw uren heeft goedgekeurd, staat het voorschot direct klaar in je Jixbee-wallet. Vanaf daar kun je het direct opnemen naar je bankrekening; dit duurt meestal enkele minuten." },
+          { q: "Moet ik iets doen om dagbetaling te activeren?", a: "Dagbetaling is standaard actief via Jixbee zodra je bij EXTRA werkt. Je ontvangt bij onboarding een uitleg en toegang tot de Jixbee-app. Daarna werkt alles automatisch." },
+        ]}
+      />
 
       {/* ══════════════════════════════════════════════
           6. CTA AFSLUITER
