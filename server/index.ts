@@ -153,23 +153,44 @@ app.use((req, res, next) => {
 function scheduleDailyCvReminders() {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+  // Reminder schema: max 3 reminders
+  // Reminder 1: 1 day after registration
+  // Reminder 2: 3 days after reminder 1
+  // Reminder 3: 7 days after reminder 2
+  const REMINDER_INTERVALS = [1, 3, 7];
+
   async function runDailyCvReminders() {
     try {
       const result = await storage.getCandidates({ status: 'in_behandeling', page: 1, limit: 500 });
       const now = new Date();
       for (const candidate of result.candidates) {
         if (candidate.hasCv || !candidate.email) continue;
-        const created = new Date(candidate.createdAt);
-        const daysSinceCreated = (now.getTime() - created.getTime()) / MS_PER_DAY;
-        if (daysSinceCreated < 1) continue;
+
+        const reminderCount = candidate.cvReminderCount ?? 0;
+        if (reminderCount >= 3) continue;
 
         const lastReminder = candidate.cvReminderSentAt ? new Date(candidate.cvReminderSentAt) : null;
-        const daysSinceReminder = lastReminder ? (now.getTime() - lastReminder.getTime()) / MS_PER_DAY : Infinity;
+        const created = new Date(candidate.createdAt);
 
-        if (daysSinceReminder >= 1) {
+        let shouldSend = false;
+
+        if (reminderCount === 0) {
+          // First reminder: 1 day after registration
+          const daysSinceCreated = (now.getTime() - created.getTime()) / MS_PER_DAY;
+          shouldSend = daysSinceCreated >= REMINDER_INTERVALS[0];
+        } else if (lastReminder) {
+          // Subsequent reminders: based on interval since last reminder
+          const daysSinceLastReminder = (now.getTime() - lastReminder.getTime()) / MS_PER_DAY;
+          shouldSend = daysSinceLastReminder >= REMINDER_INTERVALS[reminderCount];
+        }
+
+        if (shouldSend) {
           await sendCvReminderEmail({ firstName: candidate.firstName, email: candidate.email, id: candidate.id });
-          await storage.updateCandidate(candidate.id, { cvReminderSentAt: now });
-          log(`Cv-reminder verstuurd naar ${candidate.email}`);
+          await storage.updateCandidate(candidate.id, {
+            cvReminderSentAt: now,
+            cvReminderCount: reminderCount + 1,
+          });
+          log(`Cv-reminder ${reminderCount + 1}/3 verstuurd naar ${candidate.email}`);
         }
       }
     } catch (err) {
