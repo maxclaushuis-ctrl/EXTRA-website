@@ -108,7 +108,7 @@ export default function EventPersoneelGezocht() {
   const [activeScreen, setActiveScreen] = useState(0);
 
   useEffect(() => {
-    document.title = "Eventpersoneel Nodig? EXTRA Levert Snel & Flexibel | Personeel voor Evenementen Amsterdam";
+    document.title = "Eventpersoneel inhuren | bediening, bar en hosts | EXTRA";
 
     const setMeta = (nameOrProp: string, content: string, attr = "name") => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -127,11 +127,11 @@ export default function EventPersoneelGezocht() {
       document.head.appendChild(s);
     };
 
-    setMeta("description", "Eventpersoneel nodig? EXTRA levert snel en flexibel personeel voor evenementen, eventlocaties en productiebedrijven in Amsterdam: bediening, bar, hosts, dinerlopers en runners.");
-    setLink("canonical", "https://www.doehetextra.nl/event-personeel-gezocht");
-    setMeta("og:title", "Eventpersoneel Nodig? EXTRA Levert Snel & Flexibel", "property");
-    setMeta("og:description", "Eventpersoneel nodig? EXTRA levert bediening, barpersoneel, hosts en runners voor events. Van 5 tot 100+ medewerkers, altijd representatief en op tijd.", "property");
-    setMeta("og:url", "https://www.doehetextra.nl/event-personeel-gezocht", "property");
+    setMeta("description", "Eventpersoneel nodig? EXTRA levert ervaren bediening, bartenders, runners en hosts voor events. Representatief personeel dat gewend is aan tempo.");
+    setLink("canonical", "https://www.doehetextra.nl/eventpersoneel-inhuren");
+    setMeta("og:title", "Eventpersoneel inhuren | bediening, bar en hosts | EXTRA", "property");
+    setMeta("og:description", "Eventpersoneel nodig? EXTRA levert ervaren bediening, bartenders, runners en hosts voor events. Representatief personeel dat gewend is aan tempo.", "property");
+    setMeta("og:url", "https://www.doehetextra.nl/eventpersoneel-inhuren", "property");
     setMeta("og:type", "website", "property");
 
     addSchema("event-faq-schema", {
@@ -189,7 +189,7 @@ export default function EventPersoneelGezocht() {
               {" "}Wij leveren het.
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              Druk event, weinig tijd, hoge verwachtingen. EXTRA levert binnen 48 uur representatief personeel dat gewend is aan volle zalen en hoog tempo — bediening, bar, hosts, runners, supervisors. Altijd in loondienst.
+              Druk event, weinig tijd, hoge verwachtingen. EXTRA levert binnen 48 uur representatief eventpersoneel dat gewend is aan volle zalen en hoog tempo. Van bediening tot bar, hosts, runners en supervisors. Altijd in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
@@ -260,7 +260,7 @@ export default function EventPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Van de eerste gast die binnenkomt tot het laatste glas dat wordt opgeruimd. EXTRA levert voor elke rol de juiste mensen — ervaren, representatief en klaar voor het tempo van jouw event.
+                Van de eerste gast die binnenkomt tot het laatste glas dat wordt opgeruimd. EXTRA levert voor iedere rol de juiste mensen. Ervaren, representatief en gewend aan het tempo van events.
               </p>
             </div>
           </RevealSection>
@@ -269,42 +269,42 @@ export default function EventPersoneelGezocht() {
               {
                 icon: Utensils,
                 title: "Bediening",
-                desc: "Ervaren bedienend personeel voor diner, borrel en recepties. Professioneel, snel en gastgericht bij elk soort evenement.",
+                desc: "Ervaren bedienend personeel voor diners, borrels en recepties. Professioneel, snel en gastgericht bij ieder type event.",
                 tags: ["Dinerservice", "Borrel", "Receptie", "Buffet"],
                 color: "from-purple-600 to-purple-800",
               },
               {
                 icon: GlassWater,
                 title: "Barpersoneel",
-                desc: "Barkeepers en bartenders met eventervaring. Snel, representatief en in staat om onder druk hoge volumes te serveren.",
+                desc: "Bartenders en barkeepers met eventervaring. Representatief, snel en gewend om hoge volumes te draaien.",
                 tags: ["Cocktails", "Wine service", "Drankservice", "Hoog tempo"],
                 color: "from-pink-500 to-purple-600",
               },
               {
                 icon: Users,
                 title: "Dinerlopers",
-                desc: "Vlotte dinerlopers die schalen aanvullen, gerechten uitserveren en zorgen dat de flow van een diner soepel verloopt.",
+                desc: "Snelle en efficiënte diner runners die schalen uitserveren, tafels ondersteunen en zorgen dat het diner soepel verloopt.",
                 tags: ["Uitserveren", "Schalen aanvullen", "Doorloop", "Assist"],
                 color: "from-indigo-500 to-purple-600",
               },
               {
                 icon: Zap,
                 title: "Runners",
-                desc: "Snelle en energieke runners voor logistieke ondersteuning tijdens events. Van keuken naar zaal, altijd in beweging.",
+                desc: "Energieke runners voor logistieke ondersteuning tijdens events. Van keuken naar zaal en altijd in beweging.",
                 tags: ["Keuken-zaal", "Transport", "Ondersteuning", "Tempo"],
                 color: "from-blue-500 to-indigo-600",
               },
               {
                 icon: Sparkles,
-                title: "Hosts & Hostesses",
-                desc: "Representatieve en communicatief sterke hosts voor ontvangst, registratie, coatcheck en begeleiding van gasten.",
+                title: "Hosts en Hostesses",
+                desc: "Gastvrije hosts voor ontvangst, registratie, garderobe en begeleiding van gasten.",
                 tags: ["Ontvangst", "Coatcheck", "Registratie", "Begeleiding"],
                 color: "from-orange-500 to-pink-600",
               },
               {
                 icon: Award,
                 title: "Event Supervisors",
-                desc: "Ervaren supervisors die een team aansturen op locatie, communiceren met de opdrachtgever en kwaliteit bewaken.",
+                desc: "Ervaren supervisors die teams aansturen op locatie, communiceren met planners en kwaliteit bewaken.",
                 tags: ["Teamleiding", "Kwaliteitsbewaking", "On-site regie"],
                 color: "from-green-500 to-emerald-600",
               },
@@ -353,7 +353,7 @@ export default function EventPersoneelGezocht() {
                 <span className="text-purple-600">Daarom kiezen locaties voor EXTRA.</span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Elke gast, elke dienst, elk moment. Eventlocaties die structureel goed personeel willen, kiezen voor EXTRA. Betrouwbaar, representatief en op tijd.
+                Elke gast, elke dienst, elk moment. Eventlocaties die structureel goed personeel willen kiezen voor EXTRA. Betrouwbaar, representatief en op tijd.
               </p>
             </div>
           </RevealSection>
@@ -362,43 +362,43 @@ export default function EventPersoneelGezocht() {
               {
                 stat: "Flexibel",
                 statLabel: "opschalen op aanvraag",
-                title: "Flexibel opschalen wanneer nodig",
-                desc: "Van kleine events tot volle zalen. EXTRA helpt locaties snel opschalen met ervaren horecapersoneel dat gewend is aan drukte.",
+                title: "Flexibel opschalen",
+                desc: "Van kleine events tot volle zalen. EXTRA helpt locaties snel opschalen met ervaren personeel dat gewend is aan drukte.",
                 accent: "from-purple-500 to-purple-700",
               },
               {
                 stat: "100%",
                 statLabel: "persoonlijk geselecteerd",
-                title: "Persoonlijk geselecteerd personeel",
-                desc: "Iedere medewerker wordt persoonlijk gesproken voordat hij of zij bij EXTRA werkt. We selecteren op houding, service en representativiteit.",
+                title: "100 procent persoonlijk geselecteerd",
+                desc: "Iedere medewerker heeft eerst een persoonlijk gesprek gehad voordat hij of zij via EXTRA werkt.",
                 accent: "from-indigo-500 to-purple-600",
               },
               {
                 stat: "500+",
                 statLabel: "events per jaar verzorgd",
-                title: "Ervaren met grote events",
+                title: "Ervaring met grote events",
                 desc: "Onze medewerkers zijn gewend aan volle zalen, strakke planningen en hoge verwachtingen van gasten.",
                 accent: "from-pink-500 to-rose-600",
               },
               {
                 stat: "24/7",
                 statLabel: "bereikbaar voor planners",
-                title: "Altijd bereikbaar",
-                desc: "Ook buiten kantooruren. Onze planners staan klaar wanneer je snel moet schakelen — voor, tijdens en na het event.",
+                title: "24 uur per dag bereikbaar",
+                desc: "Ook buiten kantooruren staan onze planners klaar wanneer je snel moet schakelen.",
                 accent: "from-blue-500 to-indigo-600",
               },
               {
                 stat: "★ 4.8",
                 statLabel: "gemiddelde beoordeling",
                 title: "Continu beoordeeld op kwaliteit",
-                desc: "Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die goed presteren komen terug.",
+                desc: "Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die goed presteren blijven actief.",
                 accent: "from-amber-500 to-orange-500",
               },
               {
                 stat: "0%",
                 statLabel: "ZZP-risico voor jou",
-                title: "Geen zzp-risico",
-                desc: "Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400-1 norm. Geen risico voor jouw organisatie.",
+                title: "Geen zzp risico",
+                desc: "Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400 1 norm.",
                 accent: "from-green-500 to-emerald-600",
               },
             ].map((item, i) => (
@@ -439,14 +439,14 @@ export default function EventPersoneelGezocht() {
                   <span className="text-purple-600">de juiste mensen</span>
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-10">
-                  Kwaliteit bij events is geen toeval. Het is het resultaat van een selectieproces waarbij we verder kijken dan een CV. Service, houding en werkmentaliteit zijn minstens zo belangrijk.
+                  Kwaliteit bij events ontstaat niet vanzelf. Het is het resultaat van een selectieproces waarbij we verder kijken dan alleen een CV.
                 </p>
                 <ul className="space-y-6">
                   {[
                     {
                       icon: Users,
                       title: "Persoonlijke intake",
-                      desc: "Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan. Geen uitzonderingen.",
+                      desc: "Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan.",
                     },
                     {
                       icon: Star,
@@ -456,12 +456,12 @@ export default function EventPersoneelGezocht() {
                     {
                       icon: Sparkles,
                       title: "Representativiteit",
-                      desc: "Onze medewerkers zien er verzorgd uit en spreken de taal van hospitality. Dat is een vereiste, geen bonus.",
+                      desc: "Onze medewerkers zien er verzorgd uit en spreken de taal van hospitality.",
                     },
                     {
                       icon: ThumbsUp,
                       title: "Ervaring en houding",
-                      desc: "Wij kijken verder dan een CV. Service, houding en werkmentaliteit zijn bij ons minstens zo belangrijk als werkervaring.",
+                      desc: "We kijken verder dan werkervaring. Service, houding en werkmentaliteit zijn net zo belangrijk.",
                     },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-4 group">
@@ -522,19 +522,19 @@ export default function EventPersoneelGezocht() {
                 Elk event beter dan<br className="hidden sm:block" /> het vorige
               </h2>
               <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                Na elk event meten we hoe het personeel gepresteerd heeft. Zo leren we wie er echt goed is bij jouw type event en wie we volgende keer prioritair inzetten. Geen giswerk, maar data.
+                Na elk event meten we hoe het personeel gepresteerd heeft. Zo leren we wie het beste past bij jouw type event en wie we de volgende keer prioriteit geven. Geen giswerk. Data.
               </p>
             </div>
           </RevealSection>
           <RevealSection delay={100}>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-14 max-w-4xl mx-auto">
               {[
-                { text: "Na elk event een beoordeling op servicekwaliteit en gedrag" },
+                { text: "Na elk event beoordeling op servicekwaliteit en gedrag" },
                 { text: "Betrouwbaarheid en punctualiteit worden bijgehouden" },
-                { text: "No-shows direct geregistreerd met consequenties" },
-                { text: "Wie structureel goed presteert bij events wordt prioritair ingezet" },
-                { text: "Vaste poule van event-toppers opbouwen per locatie" },
-                { text: "Diensthistorie en scores per medewerker altijd inzichtelijk" },
+                { text: "No shows worden direct geregistreerd" },
+                { text: "Top performers krijgen prioriteit bij nieuwe events" },
+                { text: "Vaste poules per locatie" },
+                { text: "Diensthistorie per medewerker inzichtelijk" },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm">
                   <div className="mt-0.5 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -598,15 +598,15 @@ export default function EventPersoneelGezocht() {
                   Vaste teams die<br /> jouw event kennen
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8">
-                  Voor terugkerende events of vaste locaties bouwt EXTRA een favorietenpoule op. Dezelfde medewerkers die jouw locatie, jouw setup en jouw verwachtingen kennen. Minder briefing, snellere inzet en een sterkere samenwerking.
+                  Voor terugkerende events of vaste locaties bouwt EXTRA een favorietenpoule op. Dezelfde medewerkers die jouw locatie, setup en verwachtingen kennen.
                 </p>
                 <ul className="space-y-4 mb-8">
                   {[
-                    { icon: Users, text: "Vaste eventploeg per locatie, opgebouwd op basis van bewezen prestaties" },
-                    { icon: Heart, text: "Medewerkers kennen de indeling, de flow en de standaard van jouw events" },
-                    { icon: TrendingUp, text: "Minder briefing nodig, directe inzetbaarheid bij elk volgend event" },
-                    { icon: Star, text: "Hogere servicekwaliteit door vertrouwdheid en continuïteit" },
-                    { icon: Tag, text: "Tags per medewerker: Gala specialist, Bartopper, Borrel ervaren, Rustig onder druk" },
+                    { icon: Users, text: "Vaste eventteams per locatie opgebouwd op basis van prestaties" },
+                    { icon: Heart, text: "Medewerkers kennen de indeling en flow van jouw event" },
+                    { icon: TrendingUp, text: "Sneller inzetbaar bij nieuwe events" },
+                    { icon: Star, text: "Meer kwaliteit door vertrouwdheid en continuiteit" },
+                    { icon: Tag, text: "Tags per medewerker zoals gala specialist of bartopper" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -662,16 +662,16 @@ export default function EventPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Hoe gemotiveerder de medewerker, hoe beter de gastbeleving. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers energy en drive hebben bij elk event.
+                Hoe gemotiveerder de medewerker, hoe beter de gastbeleving. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers energie en drive hebben bij ieder event.
               </p>
             </div>
           </RevealSection>
           <RevealSection delay={100}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-4xl mx-auto">
               {[
-                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per event. Goed presteren bij een druk gala? Bonus-punten. Zo wordt inzet direct beloond.", icon: "🏃" },
-                { step: "2", title: "Vaker werken, hogere status", desc: "Wie regelmatig events doet bij jouw locatie bouwt status op. Van Bronze naar Diamond. Hogere status = meer binding.", icon: "💎" },
-                { step: "3", title: "Minder uitval, sterkere teams", desc: "Medewerkers die punten opbouwen op jouw locatie willen terugkomen. Dat betekent minder no-shows en een sterker eventteam.", icon: "🎁" },
+                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per event. Goed presteren levert bonuspunten op.", icon: "🏃" },
+                { step: "2", title: "Vaker werken hogere status", desc: "Van Bronze naar Diamond. Meer status betekent meer betrokkenheid.", icon: "💎" },
+                { step: "3", title: "Sterkere teams", desc: "Medewerkers die punten opbouwen bij jouw locatie komen graag terug.", icon: "🎁" },
               ].map((item, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-purple-100 p-6 sm:p-8 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">
                   <div className="text-4xl sm:text-5xl mb-4 sm:mb-5">{item.icon}</div>
@@ -706,10 +706,10 @@ export default function EventPersoneelGezocht() {
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>Wat jouw eventlocatie hiervan merkt</h3>
                 <ul className="space-y-4">
                   {[
-                    { icon: TrendingUp, text: "Hogere motivatie: medewerkers presteren beter als er iets op het spel staat" },
-                    { icon: Check, text: "Minder no-shows: wie punten opbouwt, komt opdagen" },
-                    { icon: Users, text: "Sterkere teams: dezelfde gemotiveerde mensen bij elk event" },
-                    { icon: Heart, text: "Betere gastbeleving: enthousiast personeel straalt af op jouw event" },
+                    { icon: TrendingUp, text: "Hogere motivatie omdat medewerkers ergens voor werken" },
+                    { icon: Check, text: "Minder no shows doordat medewerkers punten opbouwen" },
+                    { icon: Users, text: "Sterkere teams door vaste gezichten" },
+                    { icon: Heart, text: "Betere gastbeleving door gemotiveerd personeel" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -858,7 +858,7 @@ export default function EventPersoneelGezocht() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
-              Of je nu een eenmalig event hebt of vaste eventlocatie bent: EXTRA levert snel, flexibel en betrouwbaar personeel. Van 5 tot 100+ medewerkers. Iedereen representatief, iedereen in loondienst.
+              Of je nu een eenmalig event organiseert of een vaste eventlocatie runt. EXTRA levert snel, flexibel en betrouwbaar eventpersoneel. Van 5 tot 100 plus medewerkers.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-14">
               <a

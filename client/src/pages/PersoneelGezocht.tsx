@@ -298,7 +298,7 @@ export default function PersoneelGezocht() {
                 desc: "Representatief personeel voor grote en kleine evenementen. Van bediening tot runners en barpersoneel. Teams van 5 tot 60 medewerkers.",
                 color: "from-pink-500 to-purple-600",
                 border: "border-pink-100",
-                link: "/event-personeel-gezocht",
+                link: "/eventpersoneel-inhuren",
                 tags: ["Bediening", "Bar", "Runners", "Coatcheck"],
               },
               {
