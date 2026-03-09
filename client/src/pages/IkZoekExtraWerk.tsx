@@ -134,16 +134,16 @@ export default function IkZoekExtraWerk() {
   }, []);
 
   useEffect(() => {
-    document.title = "Flexibel werk in de horeca & hospitality, wanneer het jou uitkomt | EXTRA";
+    document.title = "Extra werk in de horeca, wanneer het jou uitkomt | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Werken in de horeca op jouw voorwaarden. Kies je eigen flexibele diensten bij hotels, events & restaurants. Dagbetaling na elke shift, EXTRAATJE rewards en iedereen in loondienst. Meld je aan in 2 minuten.");
-    setMeta("og:title", "Flexibel werk in de horeca & hospitality bij EXTRA", true);
-    setMeta("og:description", "Werken bij Marriott, Amrath, NH Hotels en meer. Dagbetaling via Jixbee, EXTRAATJE rewards en échte doorgroeimogelijkheden.", true);
+    setMeta("description", "Via EXTRA werk je bij hotels, restaurants en events in Amsterdam, Utrecht en Den Haag. Dagbetaling mogelijk, iedereen in loondienst en werk wanneer het jou uitkomt. Schrijf je vandaag in.");
+    setMeta("og:title", "Extra werk in de horeca, wanneer het jou uitkomt | EXTRA", true);
+    setMeta("og:description", "Schrijf je in bij EXTRA en werk bij hotels, restaurants en events. Dagbetaling mogelijk, EXTRAATJE beloningen en persoonlijk contact.", true);
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
@@ -153,40 +153,40 @@ export default function IkZoekExtraWerk() {
 
   const functies = [
     {
-      title: "Horeca",
-      sub: "Banqueting · Bediening · Events",
+      title: "Horecamedewerker",
+      sub: "Bediening · Bar · Events",
       img: horecaImg,
-      desc: "Van exclusieve banqueting-diensten tot levendige restaurantshifts op toplocaties.",
-      bullets: ["Flexibele dag- en avonddiensten", "Werken bij evenementen & gala's", "Professionele brigades"],
+      desc: "Werk als bediening, barmedewerker of runner bij restaurants, hotels en events.",
+      bullets: ["Flexibele dag- en avonddiensten", "Hotels, restaurants en events", "Professionele brigades"],
       color: "from-purple-600 to-violet-700",
-      href: "/aanmelden",
+      href: "/horeca-vacatures-amsterdam",
+    },
+    {
+      title: "Chef",
+      sub: "Keuken · Culinair · Diverse niveaus",
+      img: chefImg,
+      desc: "Van keukenhulp tot zelfstandig werkend kok. Werk in keukens waar kwaliteit centraal staat.",
+      bullets: ["Fine dining en catering", "Culinaire toplocaties", "Alle niveaus welkom"],
+      color: "from-orange-500 to-amber-600",
+      href: "/chef-vacatures-amsterdam",
     },
     {
       title: "Housekeeping",
       sub: "Hotels · Resorts · Boutique",
       img: housekeepingImg,
-      desc: "Kwaliteits-housekeeping voor de mooiste hotelketens in Nederland.",
-      bullets: ["Vaste poule bij tophotels", "Dagdiensten met structuur", "Professioneel team"],
+      desc: "Zorg voor een onberispelijke gastervaring bij de mooiste hotels in Nederland.",
+      bullets: ["Vaste poule bij tophotels", "Dagdiensten met structuur", "Gezellig team"],
       color: "from-blue-600 to-indigo-700",
-      href: "/aanmelden",
-    },
-    {
-      title: "Chef & Keuken",
-      sub: "Diverse niveaus · Culinair",
-      img: chefImg,
-      desc: "Van sous-chef tot entremetier, werk in keukens waar kwaliteit centraal staat.",
-      bullets: ["Fine dining & catering", "Culinaire toplocaties", "Doorgroei naar vast"],
-      color: "from-orange-500 to-amber-600",
-      href: "/aanmelden",
+      href: "/housekeeping-vacatures-amsterdam",
     },
     {
       title: "Front Office",
       sub: "Receptie · Guest Relations",
       img: frontOfficeImg,
-      desc: "De professionele eerste indruk van hotels. Representatief, scherp en servicegericht.",
-      bullets: ["4- en 5-sterrenshotels", "Sterke communicatieve skills", "Internationale gasten"],
+      desc: "Wees het gezicht van het hotel. Representatief, servicegericht en klantgericht.",
+      bullets: ["4 en 5 sterrenhotels", "Internationale gasten", "Sterke communicatie"],
       color: "from-emerald-500 to-teal-600",
-      href: "/aanmelden",
+      href: "/front-office-vacatures-amsterdam",
     },
   ];
 
@@ -366,37 +366,32 @@ export default function IkZoekExtraWerk() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Flexibel werk<br />
-              <span className="whitespace-nowrap">in de{" "}
+              Extra werk in de horeca.<br />
               <span className="relative inline-block">
-                <span className="relative z-10">hospitality</span>
+                <span className="relative z-10">Wanneer het jou uitkomt.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
-              ,</span><br />
-              wanneer jij<br />
-              wilt!
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Werken in de horeca op jouw voorwaarden. Kies zelf je flexibele diensten bij hotels, events & restaurants en word <strong className="text-white">dagelijks uitbetaald</strong> via de EXTRA app.
+              Via EXTRA werk je bij hotels, restaurants en events in Amsterdam, Utrecht en Den Haag. Jij kiest wanneer je werkt. Wij regelen de rest.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Meld je aan in 2 minuten <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Schrijf je in <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="#functies" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Bekijk functies <ChevronRight className="w-5 h-5" />
+              <a href="#hoe-het-werkt" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+                Bekijk hoe het werkt <ChevronRight className="w-5 h-5" />
               </a>
             </div>
 
             {/* Micro badges */}
             <div className="mt-8 flex flex-wrap gap-2.5">
               {[
-                { emoji: "⚡", label: "Dagbetaling na elke shift" },
-                { emoji: "🏨", label: "Hotels, events & restaurants" },
-                { emoji: "🎁", label: "EXTRAATJE: spaar punten" },
+                { emoji: "⚡", label: "Dagbetaling mogelijk" },
                 { emoji: "✅", label: "Iedereen in loondienst" },
+                { emoji: "📅", label: "Werk wanneer het jou uitkomt" },
               ].map(({ emoji, label }) => (
                 <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
                   {emoji} {label}
@@ -491,34 +486,46 @@ export default function IkZoekExtraWerk() {
                 Waarom EXTRA?
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom werken via EXTRA?
+                Waarom medewerkers voor EXTRA kiezen
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                Professioneel, flexibel én eerlijk. EXTRA is het hospitality-bureau voor young professionals die kwaliteit leveren en daar ook voor beloond worden.
+                Flexibel werken. Leuke locaties. En altijd goed geregeld.
               </p>
             </div>
           </RevealSection>
 
-          {/* ── 4 Cards 2×2 ── */}
-          <div className="grid sm:grid-cols-2 gap-5 sm:gap-7">
+          {/* ── 5 Cards ── */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
             {[
               {
-                icon: Zap,
-                badge: "Financiële vrijheid",
-                title: "Direct salaris",
-                desc: "Na elke gewerkte shift staat jouw salaris direct op je rekening via Jixbee. Geen weken wachten, maar direct controle over je geld.",
+                icon: Clock,
+                badge: "Eigen planning",
+                title: "Werk wanneer je wilt",
+                desc: "Kies zelf je diensten en werk wanneer het jou uitkomt. Geen vaste roosters, geen verplichtingen.",
                 gradient: "from-violet-500 to-purple-600",
                 bg: "from-violet-50 to-purple-50",
                 border: "border-violet-200",
                 iconBg: "bg-violet-100",
                 iconColor: "text-violet-600",
+                tag: "📅 Volledig flexibel",
+              },
+              {
+                icon: Zap,
+                badge: "Financiële vrijheid",
+                title: "Dagbetaling mogelijk",
+                desc: "Werk vandaag en ontvang je geld sneller. Zo hoef je niet te wachten tot het einde van de maand.",
+                gradient: "from-yellow-500 to-orange-500",
+                bg: "from-yellow-50 to-orange-50",
+                border: "border-yellow-200",
+                iconBg: "bg-yellow-100",
+                iconColor: "text-yellow-600",
                 tag: "⚡ Dagbetaling",
               },
               {
                 icon: MapPin,
                 badge: "Premium werkomgeving",
-                title: "Werken op mooie locaties",
-                desc: "Hotels, events en restaurants in o.a. Amsterdam, Utrecht en Den Haag. Je werkt op plekken waar jij energie van krijgt.",
+                title: "Werk bij mooie locaties",
+                desc: "Van hotels tot grote events. Geen dag is hetzelfde. Je werkt op plekken waar jij trots op bent.",
                 gradient: "from-blue-500 to-indigo-600",
                 bg: "from-blue-50 to-indigo-50",
                 border: "border-blue-200",
@@ -527,28 +534,28 @@ export default function IkZoekExtraWerk() {
                 tag: "🏨 Amsterdam · Utrecht · Den Haag",
               },
               {
-                icon: Target,
-                badge: "Passende matches",
-                title: "Altijd passende diensten",
-                desc: "Van bediening tot housekeeping, chefs en front office. Wij matchen je alleen op diensten die bij jouw niveau en ervaring passen.",
-                gradient: "from-teal-500 to-cyan-600",
-                bg: "from-teal-50 to-cyan-50",
-                border: "border-teal-200",
-                iconBg: "bg-teal-100",
-                iconColor: "text-teal-600",
-                tag: "✅ Match op maat",
-              },
-              {
                 icon: Gift,
                 badge: "Exclusief beloningssysteem",
-                title: "EXTRAATJE rewards",
-                desc: "Jouw inzet telt. Met ons puntensysteem spaar je automatisch voor cadeaus, uitjes en voordelen, gewoon door te werken.",
+                title: "EXTRAATJE beloningen",
+                desc: "Werk, spaar punten en wissel ze in voor leuke extra's. Van cadeaubonnen tot gadgets en sportspullen.",
                 gradient: "from-orange-500 to-amber-500",
                 bg: "from-orange-50 to-amber-50",
                 border: "border-orange-200",
                 iconBg: "bg-orange-100",
                 iconColor: "text-orange-600",
                 tag: "🎁 Punten sparen",
+              },
+              {
+                icon: Phone,
+                badge: "Persoonlijke aanpak",
+                title: "Persoonlijk contact",
+                desc: "Onze planners kennen je en helpen je snel verder. Altijd bereikbaar en altijd eerlijk.",
+                gradient: "from-teal-500 to-cyan-600",
+                bg: "from-teal-50 to-cyan-50",
+                border: "border-teal-200",
+                iconBg: "bg-teal-100",
+                iconColor: "text-teal-600",
+                tag: "💬 Direct bereikbaar",
               },
             ].map(({ icon: Icon, badge, title, desc, bg, border, iconBg, iconColor, tag }, i) => (
               <RevealSection key={title} delay={i * 80}>
@@ -597,10 +604,10 @@ export default function IkZoekExtraWerk() {
               <div>
                 <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Financiële vrijheid</span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Direct uitbetaald na elke gewerkte shift 💸
+                  Vandaag gewerkt. Morgen op je rekening.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Bij EXTRA hoef je nooit te wachten op je geld. Werk je een shift? Dan staat je salaris de volgende ochtend al op je rekening, transparant, snel en volledig inzichtelijk in de EXTRA-app.
+                  Via EXTRA kun je kiezen voor dagbetaling. Zo hoef je niet te wachten tot het einde van de maand en heb je sneller toegang tot je geld.
                 </p>
                 <div className="space-y-3 mb-8">
                   {[
@@ -670,12 +677,12 @@ export default function IkZoekExtraWerk() {
 
               {/* Text */}
               <div className="order-1 lg:order-2">
-                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Professionele erkenning</span>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Beloningssysteem</span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  EXTRAATJE: voordelen die passen bij ambitie
+                  Werk harder. Verdien EXTRA.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Iedere shift levert punten op. Die punten spaar je in voor sport, lifestyle en tech. Exclusieve deals van onze partners, zichtbaar in de EXTRA app.
+                  Via het EXTRAATJE systeem spaar je punten wanneer je werkt. Deze punten kun je inwisselen voor leuke beloningen zoals cadeaubonnen, gadgets en andere extra's.
                 </p>
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   {[
@@ -708,10 +715,10 @@ export default function IkZoekExtraWerk() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Jouw vakgebied</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Kies je richting
+                Welke functies kun je via EXTRA doen
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Van banqueting tot receptie, we matchen je aan de opdrachten die bij jouw ervaring en ambitie passen.
+                We matchen je aan opdrachten die passen bij jouw ervaring en beschikbaarheid.
               </p>
             </div>
           </RevealSection>
@@ -752,23 +759,27 @@ export default function IkZoekExtraWerk() {
       {/* ══════════════════════════════════════════════
           7. HOE HET WERKT
       ══════════════════════════════════════════════ */}
-      <section className="relative bg-white py-16 sm:py-24 overflow-hidden">
+      <section id="hoe-het-werkt" className="relative bg-white py-16 sm:py-24 overflow-hidden">
         <XPatternBg />
         <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 4 stappen</span>
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 5 stappen</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Van aanmelding tot eerste shift
+                Zo ziet werken via EXTRA eruit
               </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Aanmelden, werken en verdienen. Simpeler kan bijna niet.
+              </p>
             </div>
           </RevealSection>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {[
-              { step: "01", icon: MessageCircle, title: "Aanmelden", desc: "Meld je in 2 minuten aan via de website, WhatsApp of Indeed.", color: "from-purple-500 to-violet-600" },
-              { step: "02", icon: Users, title: "Kennismaking", desc: "We leren je kennen op kantoor. Jouw skills, wensen en niveau bepalen de match.", color: "from-indigo-500 to-blue-600" },
-              { step: "03", icon: Target, title: "Match & poule", desc: "Wij plaatsen je in de juiste poule op basis van ervaring, persoonlijkheid en beschikbaarheid.", color: "from-teal-500 to-cyan-600" },
-              { step: "04", icon: Zap, title: "Werken & groeien", desc: "Kies shifts, word dagelijks betaald, verdien punten en bouw aan je professionele reputatie.", color: "from-orange-500 to-amber-500" },
+              { step: "01", icon: MessageCircle, title: "Schrijf je in", desc: "Meld je aan via het formulier en upload je cv.", color: "from-purple-500 to-violet-600" },
+              { step: "02", icon: Users, title: "Kennismaking", desc: "We plannen een kort gesprek om je beter te leren kennen.", color: "from-indigo-500 to-blue-600" },
+              { step: "03", icon: Target, title: "Kies je diensten", desc: "Via ons systeem kies je zelf wanneer je werkt.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Building2, title: "Werk op mooie locaties", desc: "Van hotels en restaurants tot grote events.", color: "from-emerald-500 to-green-600" },
+              { step: "05", icon: Zap, title: "Verdien EXTRA", desc: "Je krijgt snel betaald en spaart punten via EXTRAATJE.", color: "from-orange-500 to-amber-500" },
             ].map(({ step, icon: Icon, title, desc, color }, i) => (
               <RevealSection key={step} delay={i * 80}>
                 <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
@@ -785,7 +796,7 @@ export default function IkZoekExtraWerk() {
           <RevealSection delay={300}>
             <div className="flex justify-center mt-10">
               <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
-                Start je aanmelding <ArrowRight className="w-5 h-5" />
+                Schrijf je in <ArrowRight className="w-5 h-5" />
               </a>
             </div>
           </RevealSection>
@@ -801,7 +812,7 @@ export default function IkZoekExtraWerk() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Ervaringen</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Wat zeggen professionals over EXTRA?
+                Wat zeggen medewerkers over EXTRA
               </h2>
             </div>
           </RevealSection>
@@ -832,7 +843,7 @@ export default function IkZoekExtraWerk() {
           {/* Partner logos */}
           <RevealSection delay={200}>
             <div className="text-center">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Onze opdrachtgevers</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Werk bij de mooiste locaties</p>
               <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
                 {[
                   { src: marriottLogo, alt: "Marriott" },
@@ -982,10 +993,10 @@ export default function IkZoekExtraWerk() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Beschikbare opdrachten</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Actuele vacatures
+                Bekijk vacatures
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Dagelijks nieuwe opdrachten in de hospitality. Meld je aan en word gematcht.
+                Omdat veel opdrachten event gebaseerd zijn verschilt het aanbod per periode.
               </p>
             </div>
           </RevealSection>
@@ -1036,20 +1047,20 @@ export default function IkZoekExtraWerk() {
               <Zap className="w-4 h-4" /> Klaar om te starten?
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Klaar om{" "}
+              Klaar om te{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">EXTRA te gaan verdienen?</span>
+                <span className="relative z-10">beginnen?</span>
                 <span className="absolute bottom-0.5 left-0 right-0 h-2 sm:h-3 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-70 rounded-sm" />
               </span>
             </h2>
             <p className="text-purple-200/80 text-base sm:text-lg mb-8 leading-relaxed">
-              Aanmelden duurt 2 minuten. Daarna ben je onderdeel van een professioneel netwerk van medewerkers die dagelijks werken op de mooiste locaties.
+              Schrijf je vandaag nog in en ontdek hoe leuk werken via EXTRA kan zijn.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2">
-                Meld je nu aan <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Schrijf je in bij EXTRA <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="https://wa.me/31000000000" className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2">
+              <a href="https://wa.me/31851305915" className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2">
                 Stel een vraag via WhatsApp <ChevronRight className="w-5 h-5" />
               </a>
             </div>

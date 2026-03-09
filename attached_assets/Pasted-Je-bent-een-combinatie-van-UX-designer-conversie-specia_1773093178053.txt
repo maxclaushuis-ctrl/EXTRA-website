@@ -1,0 +1,339 @@
+Je bent een combinatie van:
+
+- UX designer
+- conversie specialist
+- SEO copywriter
+- employer branding specialist
+
+Context
+
+We bouwen de pagina:
+
+/ik-zoek-extra-werk
+
+Deze pagina is gericht op kandidaten die willen werken via EXTRA.
+
+Het doel van de pagina is conversie: bezoekers moeten zich aanmelden als medewerker.
+
+De pagina moet:
+
+- vertrouwen wekken
+- laten zien wat EXTRA anders maakt
+- duidelijk maken wat de voordelen zijn
+- bezoekers overtuigen zich in te schrijven
+
+Tone of voice EXTRA:
+
+- informeel
+- energiek
+- duidelijk
+- speels maar professioneel
+- korte krachtige zinnen
+- niet standaard uitzendbureau taal
+
+Belangrijk:
+
+Gebruik geen "-" leestekens in zinnen.
+
+Gebruik duidelijke en natuurlijke Nederlandse zinnen.
+
+================================================================
+
+DESIGN RICHTLIJNEN
+
+Gebruik exact dezelfde designstijl als de rest van de website.
+
+Dus:
+
+- dezelfde typografie
+- dezelfde kleuren
+- dezelfde CTA knoppen
+- dezelfde spacing
+- dezelfde card layouts
+- dezelfde component structuur
+
+Gebruik subtiele moderne effecten zoals:
+
+- hover effecten
+- scroll animaties
+- micro interactions
+
+De pagina moet visueel volledig aansluiten op de bestaande website.
+
+================================================================
+
+STRUCTUUR VAN DE PAGINA
+
+Gebruik onderstaande secties in deze volgorde.
+
+================================================================
+
+1 HERO
+
+Titel
+
+Extra werk in de horeca  
+Werk wanneer het jou uitkomt
+
+Subtitel
+
+Via EXTRA werk je bij hotels, restaurants en events in Amsterdam, Utrecht en Den Haag. Jij kiest wanneer je werkt. Wij regelen de rest.
+
+Badges onder titel
+
+Dagbetaling mogelijk  
+Iedereen in loondienst  
+Werk wanneer het jou uitkomt
+
+CTA knop
+
+Schrijf je in
+
+Tweede CTA
+
+Bekijk hoe het werkt
+
+================================================================
+
+2 DAGBETALING
+
+Titel
+
+Vandaag gewerkt. Morgen op je rekening.
+
+Tekst
+
+Via EXTRA kun je kiezen voor dagbetaling. Zo hoef je niet te wachten tot het einde van de maand en heb je sneller toegang tot je geld.
+
+================================================================
+
+3 EXTRAATJE
+
+Titel
+
+Werk harder. Verdien EXTRA.
+
+Tekst
+
+Via het EXTRAATJE systeem spaar je punten wanneer je werkt. Deze punten kun je inwisselen voor leuke beloningen zoals cadeaubonnen, gadgets en andere extra’s.
+
+================================================================
+
+4 FUNCTIES
+
+Titel
+
+Welke functies kun je via EXTRA doen
+
+Maak kaarten met functies.
+
+Elke kaart moet doorklikken naar een specifieke functiepagina.
+
+Functies:
+
+Horecamedewerker  
+Chef  
+Housekeeping  
+Front office
+
+Korte beschrijving per functie.
+
+================================================================
+
+5 ZO ZIET WERKEN VIA EXTRA ERUIT
+
+Titel
+
+Zo ziet werken via EXTRA eruit
+
+Subtekst
+
+Aanmelden, werken en verdienen. Simpeler kan bijna niet.
+
+Maak een visuele stappen sectie met 5 stappen.
+
+Stap 1  
+Schrijf je in  
+Meld je aan via het formulier en upload je cv.
+
+Stap 2  
+Kennismaking  
+We plannen een kort gesprek om je beter te leren kennen.
+
+Stap 3  
+Kies je diensten  
+Via ons systeem kies je zelf wanneer je werkt.
+
+Stap 4  
+Werk op mooie locaties  
+Van hotels en restaurants tot grote events.
+
+Stap 5  
+Verdien EXTRA  
+Je krijgt snel betaald en spaart punten via EXTRAATJE.
+
+Gebruik iconen bij elke stap.
+
+================================================================
+
+6 WAAROM MEDEWERKERS VOOR EXTRA KIEZEN
+
+Titel
+
+Waarom medewerkers voor EXTRA kiezen
+
+Subtekst
+
+Flexibel werken. Leuke locaties. En altijd goed geregeld.
+
+Gebruik cards.
+
+Card 1
+
+Werk wanneer je wilt  
+Kies zelf je diensten en werk wanneer het jou uitkomt.
+
+Card 2
+
+Dagbetaling mogelijk  
+Werk vandaag en ontvang je geld sneller.
+
+Card 3
+
+Werk bij mooie locaties  
+Van hotels tot grote events. Geen dag is hetzelfde.
+
+Card 4
+
+EXTRAATJE beloningen  
+Werk, spaar punten en wissel ze in voor leuke extra’s.
+
+Card 5
+
+Persoonlijk contact  
+Onze planners kennen je en helpen je snel verder.
+
+================================================================
+
+7 REFERENTIES
+
+Titel
+
+Wat zeggen medewerkers over EXTRA
+
+Gebruik testimonials van medewerkers.
+
+Focus op:
+
+flexibiliteit  
+leuke opdrachten  
+snelle betaling  
+goede communicatie
+
+================================================================
+
+8 OPDRACHTGEVERS
+
+Titel
+
+Werk bij de mooiste locaties
+
+Toon logo's of namen van opdrachtgevers.
+
+Focus op:
+
+hotels  
+restaurants  
+events  
+cateraars
+
+================================================================
+
+9 REGIO'S
+
+Titel
+
+Werk in jouw regio
+
+Tekst
+
+EXTRA is actief in:
+
+Amsterdam  
+Utrecht  
+Den Haag
+
+================================================================
+
+10 WERKWIJZE
+
+Titel
+
+Zo werkt werken via EXTRA
+
+Leg het proces uit in vier stappen:
+
+1 Aanmelden  
+2 Kennismaken  
+3 Dienst kiezen  
+4 Werken en punten verdienen
+
+================================================================
+
+11 IEDEREEN IN LOONDIENST
+
+Titel
+
+Gewoon in loondienst
+
+Tekst
+
+Bij EXTRA werk je in loondienst. Zo weet je precies waar je aan toe bent en is alles netjes geregeld.
+
+================================================================
+
+12 KORTINGSACTIES
+
+Titel
+
+Meer dan alleen werk
+
+Tekst
+
+Via EXTRA kun je soms profiteren van acties, voordelen en extra’s voor medewerkers.
+
+================================================================
+
+13 BEKIJK VACATURES
+
+Belangrijk:
+
+Deze sectie moet lager op de pagina staan.
+
+Titel
+
+Bekijk vacatures
+
+Tekst
+
+Omdat veel opdrachten event gebaseerd zijn verschilt het aanbod per periode.
+
+Toon hier een overzicht van voorbeeld vacatures.
+
+Deze sectie is vooral bedoeld voor SEO.
+
+================================================================
+
+14 CTA EINDE PAGINA
+
+Titel
+
+Klaar om te beginnen
+
+Tekst
+
+Schrijf je vandaag nog in en ontdek hoe leuk werken via EXTRA kan zijn.
+
+CTA knop
+
+Schrijf je in bij EXTRA
