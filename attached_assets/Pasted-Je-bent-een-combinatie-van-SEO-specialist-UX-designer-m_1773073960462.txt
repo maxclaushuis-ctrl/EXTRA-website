@@ -1,0 +1,271 @@
+Je bent een combinatie van:
+- SEO specialist
+- UX designer
+- marketingstrateeg
+- front-end developer
+
+Context:
+We bouwen branche-specifieke landingspagina’s voor opdrachtgevers die personeel zoeken.
+
+De algemene pagina verwijst door naar specifieke branches.
+
+De structuur van deze pagina moet identiek blijven aan de andere branchepagina’s (zoals Hotels), zodat:
+
+- de website consistent blijft
+- componenten hergebruikt kunnen worden
+- onderhoud eenvoudiger wordt
+- UX herkenbaar blijft
+
+De inhoud moet echter volledig specifiek zijn voor deze branche.
+
+Nu wil ik dat je de branchepagina maakt voor:
+
+EVENTLOCATIES
+
+Het doel van deze pagina is:
+
+1. SEO-ranking op event gerelateerde zoektermen
+2. Eventlocaties laten converteren naar personeelsaanvragen
+3. Vertrouwen opbouwen bij eventmanagers, venue managers en productiebedrijven
+4. Laten zien dat EXTRA gespecialiseerd personeel levert voor events
+
+BELANGRIJK
+
+Deze pagina mag geen kopie zijn van andere branchepagina’s.
+
+We willen duplicate content voorkomen omdat dat:
+- SEO negatief beïnvloedt
+- LLM zoekmachines minder duidelijk maakt waar de pagina over gaat
+
+Gebruik daarom dezelfde structuur maar herschrijf de inhoud volledig voor events.
+
+====================================================================
+
+SEO DOEL VAN DE PAGINA
+
+De pagina moet duidelijk ranken op onderwerpen zoals:
+
+- event personeel inhuren
+- personeel voor evenementen
+- bediening voor events
+- barpersoneel voor events
+- horecapersoneel voor evenementen
+- personeel voor eventlocaties
+- flexibel personeel events
+
+Google en LLM's moeten duidelijk begrijpen dat deze pagina specifiek over personeel voor events gaat.
+
+====================================================================
+
+DESIGN RICHTLIJNEN
+
+De pagina moet volledig dezelfde stijl gebruiken als:
+
+- de algemene landingspagina
+- de hotel pagina
+- andere branchepagina’s
+
+Gebruik exact dezelfde:
+
+- typografie
+- kleuren
+- CTA styling
+- card layouts
+- icon stijl
+- spacing
+- grid structuur
+- componenten
+
+De pagina moet aanvoelen als een natuurlijke uitbreiding van de website.
+
+Gebruik dezelfde componenten waar mogelijk.
+
+Voeg subtiele moderne effecten toe zoals:
+
+- scroll animations
+- hover effects
+- micro-interactions op cards
+- zachte reveal animaties
+
+Maar blijf volledig binnen de bestaande stijl.
+
+====================================================================
+
+STRUCTUUR VAN DE EVENTLOCATIES PAGINA
+
+Gebruik exact dezelfde sectiestructuur als de Hotels pagina.
+
+====================================================================
+
+1. HERO
+
+Maak een hero specifiek voor eventlocaties.
+
+Focus op problemen die spelen bij events:
+
+- piekdrukte tijdens evenementen
+- snel opschalen van personeel
+- grote groepen gasten
+- representatief personeel nodig
+- last minute personeel nodig
+
+De header moet duidelijk maken dat EXTRA personeel levert voor events.
+
+Bijvoorbeeld in de richting van:
+
+Eventpersoneel nodig? EXTRA regelt het.
+
+Subheader moet uitleggen dat EXTRA snel en flexibel personeel levert voor events en eventlocaties.
+
+CTA:
+Vraag eventpersoneel aan
+
+====================================================================
+
+2. FUNCTIES VOOR EVENTS
+
+Maak een sectie met functies specifiek voor events.
+
+Gebruik cards.
+
+Functies zoals:
+
+- Bediening
+- Barpersoneel
+- Dinerlopers
+- Runners
+- Host / Hostesses
+- Event supervisors
+
+Elke card krijgt:
+
+- functietitel
+- korte uitleg
+- icon
+
+====================================================================
+
+3. WAAROM EVENTLOCATIES VOOR EXTRA KIEZEN
+
+Herbruik deze sectie maar maak de tekst eventspecifiek.
+
+Focus op:
+
+- snel opschalen
+- representatief personeel
+- ervaring met evenementen
+- piekdrukte aankunnen
+- flexibiliteit
+
+====================================================================
+
+4. HOE WIJ EVENTPERSONEEL SELECTEREN
+
+Leg uit dat personeel:
+
+- persoonlijk wordt geselecteerd
+- hospitality ervaring heeft
+- wordt beoordeeld op houding en service
+- wordt geselecteerd op soft skills en hard skills
+- referenties heeft
+
+Maak duidelijk dat personeel gewend is aan drukke events.
+
+====================================================================
+
+5. CONTINUE KWALITEITSMETING
+
+Herbruik de bestaande sectie maar leg uit waarom dit belangrijk is voor events.
+
+Bijvoorbeeld:
+
+- kwaliteit van service
+- betrouwbaarheid tijdens drukke events
+- inzicht in prestaties
+- personeel dat bewezen goed presteert komt terug
+
+====================================================================
+
+6. FAVORIETENPOULES VOOR EVENTS
+
+Leg uit dat eventlocaties met vaste teams kunnen werken.
+
+Voordelen:
+
+- personeel kent het evenement
+- vaste gezichten
+- efficiëntere samenwerking
+- minder briefing nodig
+
+====================================================================
+
+7. EXTRAATJE BELONINGSSYSTEEM
+
+Herbruik deze sectie maar leg uit wat dit betekent voor events.
+
+Bijvoorbeeld:
+
+- hogere motivatie
+- medewerkers willen vaker terugkomen
+- minder uitval
+- sterkere teams
+
+====================================================================
+
+8. LOGO’S VAN EVENTKLANTEN
+
+Belangrijk:
+
+Op deze pagina mogen alleen logo’s van eventlocaties of eventorganisaties worden getoond.
+
+Niet van hotels of restaurants.
+
+====================================================================
+
+9. KLANTCASE EVENTLOCATIE
+
+Gebruik een case van een eventlocatie.
+
+Bijvoorbeeld:
+
+- groot evenement
+- opschalen naar 50+ medewerkers
+- piekdrukte
+
+Focus op resultaat.
+
+====================================================================
+
+10. FAQ VOOR EVENTS
+
+Maak een eventspecifieke FAQ.
+
+Bijvoorbeeld vragen zoals:
+
+- Kunnen jullie snel opschalen voor evenementen?
+- Hoeveel personeel kunnen jullie leveren voor een event?
+- Hebben jullie personeel met eventervaring?
+- Kunnen jullie barpersoneel en bediening leveren?
+
+====================================================================
+
+11. CTA
+
+Eindig met een sterke CTA.
+
+Bijvoorbeeld:
+
+Eventpersoneel nodig?
+Vraag direct EXTRA personeel aan.
+
+====================================================================
+
+BELANGRIJK
+
+Let op:
+
+- Gebruik dezelfde component structuur als andere branchepagina’s
+- Vermijd duplicate content
+- Maak alle teksten eventspecifiek
+- Houd de stijl volledig consistent met de rest van de website
+- Zorg dat de pagina logisch en conversiegericht blijft

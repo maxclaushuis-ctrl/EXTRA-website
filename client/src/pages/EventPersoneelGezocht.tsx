@@ -1,43 +1,36 @@
-import { useEffect, useState, useRef } from "react";
-import { Link } from "wouter";
+import { useEffect, useRef, useState } from "react";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
+import FAQSection from "@/components/FAQSection";
 import {
-  ArrowRight,
-  PartyPopper,
-  Check,
-  Phone,
-  ArrowLeft,
-  Users,
-  Zap,
-  BarChart3,
-  UserCheck,
-  ShieldCheck,
-  MessageSquare,
-  Star,
-  GlassWater,
-  Utensils,
-  Award,
-  Clock,
-  Trophy,
-  Sparkles
+  ArrowRight, Check, Phone, Shield, Clock, Star, Heart,
+  TrendingUp, Users, Zap, Gift, Building2, UserCheck,
+  BookOpen, Tag, Lock, CheckCircle2,
+  CalendarCheck, ThumbsUp, MessageCircle,
+  PartyPopper, GlassWater, Utensils, Mic2, PersonStanding,
+  BarChart3, Award, Sparkles
 } from "lucide-react";
 import heroBgImage from "@assets/hero-background.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
-import sollicitatieImg from "@assets/Sollicitatieformulier_1772893764120.png";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
+import logoFunda from "@assets/Logo_funda_1771267205959.webp";
+import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
+import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
+import screenDashboard from "@assets/IMG_8803_1770915286475.png";
+import screenRewards from "@assets/IMG_8805_1770915286475.png";
+import screenChallenges from "@assets/IMG_8807_1770915286475.png";
+import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
 
 function useScrollReveal() {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 }
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
@@ -45,40 +38,20 @@ function useScrollReveal() {
   return { ref, isVisible };
 }
 
-function RevealSection({
-  children,
-  delay = 0,
-  className = "",
-}: {
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}) {
+function RevealSection({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const { ref, isVisible } = useScrollReveal();
   return (
-    <section
+    <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      } ${className}`}
+      className={`transition-all duration-700 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
-    </section>
+    </div>
   );
 }
 
-function XPatternBg({
-  className = "",
-  count = 3,
-  opacity = 0.12,
-  color = "rgba(139,92,246,1)",
-}: {
-  className?: string;
-  count?: number;
-  opacity?: number;
-  color?: string;
-}) {
+function XPatternBg({ className = "", count = 3, opacity = 0.08, color = "rgba(139,92,246,1)" }: { className?: string; count?: number; opacity?: number; color?: string }) {
   const positions = [
     { left: "5%", top: "10%", size: 200, rotate: 15 },
     { left: "80%", top: "20%", size: 160, rotate: -25 },
@@ -88,28 +61,20 @@ function XPatternBg({
     { left: "35%", top: "30%", size: 120, rotate: -30 },
   ];
   return (
-    <div
-      className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
-    >
+    <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}>
       {positions.slice(0, count).map((pos, i) => (
         <div
           key={i}
           className="absolute"
           style={{
-            left: pos.left,
-            top: pos.top,
-            width: pos.size,
-            height: pos.size,
+            left: pos.left, top: pos.top,
+            width: pos.size, height: pos.size,
             transform: `rotate(${pos.rotate}deg)`,
             opacity,
-            WebkitMaskImage: `url(${xPatroon})`,
-            maskImage: `url(${xPatroon})`,
-            WebkitMaskSize: "contain",
-            maskSize: "contain",
-            WebkitMaskRepeat: "no-repeat",
-            maskRepeat: "no-repeat",
-            WebkitMaskPosition: "center",
-            maskPosition: "center",
+            WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+            WebkitMaskSize: "contain", maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center", maskPosition: "center",
             backgroundColor: color,
           }}
         />
@@ -124,537 +89,703 @@ function GrainOverlay() {
       className="fixed inset-0 pointer-events-none z-[100]"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "repeat",
-        backgroundSize: "256px 256px",
+        backgroundRepeat: "repeat", backgroundSize: "256px 256px",
+        opacity: 0.4, mixBlendMode: "overlay",
       }}
     />
   );
 }
 
-export default function EventPersoneelGezocht() {
-  useEffect(() => {
-    document.title = "Eventpersoneel Gezocht? EXTRA Levert Direct";
+const appScreens = [
+  { key: "dashboard", img: screenDashboard, label: "Dashboard" },
+  { key: "rewards", img: screenRewards, label: "Rewards" },
+  { key: "challenges", img: screenChallenges, label: "Challenges" },
+  { key: "ranglijst", img: screenRanglijst, label: "Ranglijst" },
+];
 
-    const setMeta = (nameOrProp: string, content: string, attr = 'name') => {
+export default function EventPersoneelGezocht() {
+  const [activeScreen, setActiveScreen] = useState(0);
+
+  useEffect(() => {
+    document.title = "Eventpersoneel Nodig? EXTRA Levert Snel & Flexibel | Personeel voor Evenementen Amsterdam";
+
+    const setMeta = (nameOrProp: string, content: string, attr = "name") => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
-      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
-      el.setAttribute('content', content);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, nameOrProp); document.head.appendChild(el); }
+      el.setAttribute("content", content);
     };
     const setLink = (rel: string, href: string) => {
       let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
-      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
-      el.setAttribute('href', href);
+      if (!el) { el = document.createElement("link"); el.setAttribute("rel", rel); document.head.appendChild(el); }
+      el.setAttribute("href", href);
     };
     const addSchema = (id: string, data: object) => {
       document.getElementById(id)?.remove();
-      const s = document.createElement('script');
-      s.id = id;
-      s.type = 'application/ld+json';
-      s.text = JSON.stringify(data);
+      const s = document.createElement("script");
+      s.id = id; s.type = "application/ld+json"; s.text = JSON.stringify(data);
       document.head.appendChild(s);
     };
 
-    setMeta('description', 'Bediening, hosts en runners nodig voor jouw event? EXTRA levert snel en flexibel eventpersoneel voor festivals, galas en bedrijfsevents in Amsterdam.');
-    setLink('canonical', 'https://www.doehetextra.nl/event-personeel-gezocht');
+    setMeta("description", "Eventpersoneel nodig? EXTRA levert snel en flexibel personeel voor evenementen, eventlocaties en productiebedrijven in Amsterdam: bediening, bar, hosts, dinerlopers en runners.");
+    setLink("canonical", "https://www.doehetextra.nl/event-personeel-gezocht");
+    setMeta("og:title", "Eventpersoneel Nodig? EXTRA Levert Snel & Flexibel", "property");
+    setMeta("og:description", "Eventpersoneel nodig? EXTRA levert bediening, barpersoneel, hosts en runners voor events. Van 5 tot 100+ medewerkers, altijd representatief en op tijd.", "property");
+    setMeta("og:url", "https://www.doehetextra.nl/event-personeel-gezocht", "property");
+    setMeta("og:type", "website", "property");
 
-    setMeta('og:title', 'Eventpersoneel Gezocht? EXTRA Levert Direct', 'property');
-    setMeta('og:description', 'Bediening, hosts en runners nodig voor jouw event? EXTRA levert snel en flexibel eventpersoneel voor festivals, galas en bedrijfsevents in Amsterdam.', 'property');
-    setMeta('og:url', 'https://www.doehetextra.nl/event-personeel-gezocht', 'property');
-    setMeta('og:type', 'website', 'property');
-    setMeta('og:image', 'https://www.doehetextra.nl/extra_email_banner_bg.png', 'property');
-
-    addSchema('local-business-schema', {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "EXTRA",
-      "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
-      "telephone": "+31851305915",
-      "url": "https://www.doehetextra.nl",
-      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
-      "sameAs": ["https://www.doehetextra.nl"]
-    });
-
-    addSchema('faq-schema', {
+    addSchema("event-faq-schema", {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Kan EXTRA last-minute eventpersoneel leveren?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja, onze pool van getrainde medewerkers staat klaar voor last-minute inzet. Neem contact op en we schakelen direct."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Welke rollen levert EXTRA voor events?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Bediening, barmedewerkers, dinerlopers, hosts, eventmedewerkers en supervisors."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Hoe werkt de kwaliteitsselectie bij EXTRA?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Elke medewerker doorloopt een persoonlijk intakegesprek waarbij we beoordelen op houding, communicatie en ervaring."
-          }
-        }
+        { "@type": "Question", "name": "Kunnen jullie snel opschalen voor evenementen?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Flexibel opschalen is waar EXTRA sterk in is. Of je nu 5 of 80 medewerkers nodig hebt: we leveren snel en betrouwbaar personeel voor elk event, ook bij last-minute aanvragen." } },
+        { "@type": "Question", "name": "Hoeveel personeel kunnen jullie leveren voor een event?", "acceptedAnswer": { "@type": "Answer", "text": "We hebben een pool van 800+ actieve medewerkers. Voor grote events kunnen we tientallen tot honderd+ medewerkers leveren, afhankelijk van de beschikbaarheid en functies die je nodig hebt." } },
+        { "@type": "Question", "name": "Hebben jullie personeel met eventervaring?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Veel van onze medewerkers werken regelmatig bij events en eventlocaties. Ze zijn gewend aan drukke omgevingen, snelle service en grote aantallen gasten." } },
+        { "@type": "Question", "name": "Kunnen jullie barpersoneel en bediening leveren voor events?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. We leveren ervaren barpersoneel, bediening, runners en dinerlopers voor events van elke omvang. Van borrel met 50 man tot gala met 500 gasten." } },
+        { "@type": "Question", "name": "Kunnen jullie hosts en hostesses leveren voor evenementen?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Onze hosts en hostesses zijn representatief, communicatief sterk en gewend aan gastgerichte rollen bij ontvangst, coatcheck, registratie en begeleiding." } },
       ]
     });
 
+    const interval = setInterval(() => setActiveScreen(p => (p + 1) % appScreens.length), 3500);
     return () => {
-      document.getElementById('local-business-schema')?.remove();
-      document.getElementById('faq-schema')?.remove();
+      clearInterval(interval);
+      document.getElementById("event-faq-schema")?.remove();
     };
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden relative text-gray-900">
+    <div className="min-h-screen font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <GrainOverlay />
       <PublicNav />
 
-      {/* 1. HERO */}
-      <section
-        className="relative min-h-[80svh] flex items-center overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg, #0a0310 0%, #1a0a3e 50%, #1e1b4b 100%)",
-        }}
-      >
-        <div className="absolute inset-0 opacity-40">
-          <img src={heroBgImage} alt="Eventpersoneel in actie" className="w-full h-full object-cover" />
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 1. HERO                                            */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="relative min-h-[100svh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={heroBgImage} alt="" className="absolute inset-0 w-full h-full object-cover object-right sm:object-center" style={{ filter: "contrast(1.03) saturate(1.02)" }} loading="eager" fetchPriority="high" decoding="async" />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(88,22,164,0.92) 0%, rgba(88,22,164,0.88) 40%, rgba(88,22,164,0.70) 65%, rgba(88,22,164,0.35) 82%, rgba(88,22,164,0.10) 100%)` }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
-        <XPatternBg
-          count={4}
-          opacity={0.15}
-          color="rgba(255,255,255,0.9)"
-          className="z-10"
-        />
-        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-32 pb-20">
-          <div className="max-w-3xl">
-            <RevealSection>
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 mb-8">
-                <PartyPopper className="w-4 h-4 text-purple-400" />
-                <span className="text-white/90 text-sm font-semibold tracking-wide uppercase">
-                  Events & Festivals
-                </span>
+        <XPatternBg count={4} opacity={0.12} color="rgba(255,255,255,0.9)" className="z-10" />
+        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
+          <div className="max-w-2xl">
+            <div className="flex flex-wrap gap-3 mb-6 sm:mb-10">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 border border-white/20">
+                <PartyPopper className="w-3.5 h-3.5 text-purple-300" />
+                <span className="text-white/90 text-xs sm:text-sm font-semibold">Specialist in eventpersoneel</span>
               </div>
-              <h1
-                className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.1] mb-8"
-                style={{ fontFamily: "'Poppins', sans-serif" }}
-              >
-                Jouw event, onze mensen
-              </h1>
-              <p className="text-lg sm:text-xl text-purple-100/80 mb-10 leading-relaxed font-medium max-w-2xl">
-                Bediening, runners en hosts: EXTRA regelt de bezetting zodat jij je focust op het event. Professionele hosts en barpersoneel voor elk type event in Amsterdam.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/personeelsaanvraag"
-                  className="group bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold px-8 py-4 rounded-full text-lg hover:shadow-2xl hover:shadow-purple-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
-                  Personeel aanvragen
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <a
-                  href="tel:0851305915"
-                  className="group border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-5 h-5" />
-                  085 130 59 15
-                </a>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 border border-white/20">
+                <Shield className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-white/90 text-xs sm:text-sm font-semibold">Van 5 tot 100+ medewerkers</span>
               </div>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. BREADCRUMB */}
-      <div className="bg-[#faf8f5] border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-4">
-          <Link
-            href="/personeel-gezocht"
-            className="inline-flex items-center gap-2 text-gray-500 hover:text-purple-600 font-semibold transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Personeel gezocht
-          </Link>
-        </div>
-      </div>
-
-      {/* 3. INTRO */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <RevealSection>
-              <h2
-                className="text-3xl sm:text-4xl font-black text-gray-900 mb-6"
-                style={{ fontFamily: "'Poppins', sans-serif" }}
-              >
-                Snel schakelen bij events
-              </h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                Events zijn onvoorspelbaar. De drukte piek je pas op het moment
-                zelf. EXTRA heeft een pool van getrainde medewerkers klaar die
-                direct kunnen schakelen. Of het nu gaat om een zakelijk congres, 
-                een exclusief gala of een grootschalig festival. Wij zorgen voor 
-                representatief personeel dat uw huisstijl begrijpt.
-              </p>
-              <div className="grid sm:grid-cols-2 gap-6">
-                {[
-                  {
-                    title: "Direct inzetbaar",
-                    desc: "Binnen no-time de juiste mensen op locatie.",
-                  },
-                  {
-                    title: "Getraind team",
-                    desc: "Medewerkers die weten hoe ze moeten aanpakken.",
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="mt-1 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3 h-3 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900">{item.title}</h4>
-                      <p className="text-sm text-gray-500">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </RevealSection>
-            <RevealSection delay={200}>
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-8 sm:p-12 rounded-3xl border border-purple-100 relative overflow-hidden text-gray-900">
-                <XPatternBg count={2} opacity={0.05} />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Onze belofte
-                    </h3>
-                  </div>
-                  <ul className="space-y-4">
-                    {[
-                      "Altijd representatief en verzorgd",
-                      "Kennis van etiquette en service",
-                      "Flexibel inzetbaar (ook last-minute)",
-                      "Gemotiveerd door ons EXTRAATje systeem",
-                      "Topkwaliteit personeel voor een vlekkeloos verloop"
-                    ].map((text, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                        <span className="text-gray-700 font-medium">{text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. FLEXIBEL OPSCHALEN */}
-      <section className="py-24 bg-[#faf8f5]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection className="text-center mb-16">
-            <h2
-              className="text-3xl sm:text-5xl font-black text-gray-900 mb-6"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              Onbeperkt opschalen
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto font-medium">
-              Van één extra handje tot een compleet team van 50+ medewerkers.
-              Wij groeien mee met jouw event.
+            </div>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              Eventpersoneel nodig?{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">EXTRA regelt het.</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-70 rounded-sm" />
+              </span>
+            </h1>
+            <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
+              Van kleine borrels tot grote gala-avonden. EXTRA levert snel en flexibel bediening, bar, hosts, runners en supervisors voor elk evenement. Representatief, betrouwbaar en volledig in loondienst.
             </p>
-          </RevealSection>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
+              <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+                Vraag eventpersoneel aan
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a href="tel:0851305915" className="group border-2 border-white/30 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
+                <Phone className="w-5 h-5" />
+                Direct contact
+              </a>
+            </div>
+            <div className="flex flex-wrap gap-4 sm:gap-6">
+              {[
+                { icon: Check, text: "Iedereen in loondienst" },
+                { icon: Star, text: "Ervaring met grote events" },
+                { icon: Zap, text: "Snel opschalen mogelijk" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-white/80">
+                  <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-3 h-3 text-green-400" />
+                  </div>
+                  <span className="text-sm font-medium">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 2. FUNCTIES VOOR EVENTS                            */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="functies" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                <Users className="w-4 h-4" /> Functies voor events
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Voor elke eventrol de juiste mensen
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                Een succesvol event staat of valt met het personeel. EXTRA levert voor elke rol ervaren medewerkers die gewend zijn aan drukke omgevingen en hoge serviceverwachtingen.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
-                count: "1-5",
-                label: "Mensen",
-                desc: "Voor kleine borrels of intieme diners.",
-                icon: Users,
+                icon: Utensils,
+                title: "Bediening",
+                desc: "Ervaren bedienend personeel voor diner, borrel en recepties. Professioneel, snel en gastgericht bij elk soort evenement.",
+                tags: ["Dinerservice", "Borrel", "Receptie", "Buffet"],
+                color: "from-purple-600 to-purple-800",
               },
               {
-                count: "10-25",
-                label: "Mensen",
-                desc: "Voor bedrijfsfeesten en middelgrote events.",
-                icon: Users,
+                icon: GlassWater,
+                title: "Barpersoneel",
+                desc: "Barkeepers en bartenders met eventervaring. Snel, representatief en in staat om onder druk hoge volumes te serveren.",
+                tags: ["Cocktails", "Wine service", "Drankservice", "Hoog tempo"],
+                color: "from-pink-500 to-purple-600",
               },
               {
-                count: "50+",
-                label: "Mensen",
-                desc: "Voor grootschalige producties en festivals.",
                 icon: Users,
+                title: "Dinerlopers",
+                desc: "Vlotte dinerlopers die schalen aanvullen, gerechten uitserveren en zorgen dat de flow van een diner soepel verloopt.",
+                tags: ["Uitserveren", "Schalen aanvullen", "Doorloop", "Assist"],
+                color: "from-indigo-500 to-purple-600",
+              },
+              {
+                icon: Zap,
+                title: "Runners",
+                desc: "Snelle en energieke runners voor logistieke ondersteuning tijdens events. Van keuken naar zaal, altijd in beweging.",
+                tags: ["Keuken-zaal", "Transport", "Ondersteuning", "Tempo"],
+                color: "from-blue-500 to-indigo-600",
+              },
+              {
+                icon: Sparkles,
+                title: "Hosts & Hostesses",
+                desc: "Representatieve en communicatief sterke hosts voor ontvangst, registratie, coatcheck en begeleiding van gasten.",
+                tags: ["Ontvangst", "Coatcheck", "Registratie", "Begeleiding"],
+                color: "from-orange-500 to-pink-600",
+              },
+              {
+                icon: Award,
+                title: "Event Supervisors",
+                desc: "Ervaren supervisors die een team aansturen op locatie, communiceren met de opdrachtgever en kwaliteit bewaken.",
+                tags: ["Teamleiding", "Kwaliteitsbewaking", "On-site regie"],
+                color: "from-green-500 to-emerald-600",
               },
             ].map((item, i) => (
-              <RevealSection
-                key={i}
-                delay={i * 100}
-                className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm text-center group hover:shadow-xl transition-all"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <item.icon className="w-8 h-8 text-purple-600" />
+              <RevealSection key={i} delay={i * 80}>
+                <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-7 sm:p-8 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-purple-50 to-transparent rounded-bl-[100%] opacity-60" />
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                    <item.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5">{item.desc}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {item.tags.map((tag, j) => (
+                      <span key={j} className="text-xs font-semibold bg-purple-50 text-purple-700 px-3 py-1 rounded-full border border-purple-100">{tag}</span>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-4xl font-black text-purple-600 mb-2">
-                  {item.count}
-                </div>
-                <div className="text-xl font-bold text-gray-900 mb-4 font-poppins">
-                  {item.label}
-                </div>
-                <p className="text-gray-500 font-medium">{item.desc}</p>
               </RevealSection>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* 5. ROLLEN SECTIE */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection className="mb-16">
-            <h2
-              className="text-3xl sm:text-5xl font-black text-gray-900 mb-6"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              Wat wij leveren voor <span className="text-purple-600">events</span>
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl font-medium">
-              Onze medewerkers maken het verschil op uw evenement. Van hosts tot barpersoneel.
-            </p>
+          <RevealSection delay={500}>
+            <div className="text-center mt-10 sm:mt-14">
+              <a href="/personeelsaanvraag" className="group inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-8 py-4 rounded-full hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/25 transition-all hover:-translate-y-0.5 text-base">
+                Vraag eventpersoneel aan
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </div>
           </RevealSection>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 3. WAAROM EVENTLOCATIES VOOR EXTRA KIEZEN          */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="waarom-extra" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-white">
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                <Shield className="w-4 h-4" /> Waarom EXTRA
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Waarom eventlocaties voor EXTRA kiezen
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                Bij een event is er geen tweede kans. De service staat in de spotlight, de gasten letten op alles. EXTRA levert personeel dat weet wat dat betekent.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
-              { title: "Hostesses & Hosts", icon: Star, desc: "Een warm en representatief welkom voor al uw gasten." },
-              { title: "Bediening & Runners", icon: Clock, desc: "Snelle en professionele service, ook bij grote groepen." },
-              { title: "Barmedewerker", icon: GlassWater, desc: "Ervaren barkeepers die onder druk kunnen presteren." },
-              { title: "Eventmedewerker", icon: PartyPopper, desc: "Allround ondersteuning voor een vlekkeloos verloop." },
-              { title: "Dinerlopers", icon: Utensils, desc: "Efficiënte uitservering voor galas en diners." },
-              { title: "Supervisor", icon: UserCheck, desc: "Aanspreekpunt op locatie voor personele zaken." },
-            ].map((role, i) => (
-              <RevealSection
-                key={i}
-                delay={i * 50}
-                className="bg-[#faf8f5] p-6 sm:p-8 rounded-2xl border border-gray-100 flex flex-col items-center text-center group hover:bg-purple-600 transition-colors"
-              >
-                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                  <role.icon className="w-6 h-6 text-purple-600" />
+              { emoji: "⚡", title: "Snel opschalen bij piekdrukte", desc: "Van 5 naar 80 medewerkers: we kunnen snel op- en afschalen afhankelijk van de omvang van jouw event. Flexibiliteit is onze standaard." },
+              { emoji: "🎩", title: "Representatief en gastgericht", desc: "Eventpersoneel staat in het middelpunt van de beleving. Iedereen die via EXTRA werkt is geselecteerd op presentatie, houding en service." },
+              { emoji: "🎪", title: "Ervaring met drukke events", desc: "Onze medewerkers kennen het tempo van een event: veel gasten, weinig tijd en toch professionele service. Ze worden niet zenuwachtig van een volle zaal." },
+              { emoji: "📞", title: "Last-minute aanvragen welkom", desc: "Uitval daags voor een event? Meer gasten dan verwacht? We zijn 24/7 bereikbaar en lossen het op. Jij staat nooit alleen voor een leeg rooster." },
+              { emoji: "📊", title: "Na elk event gemeten en beoordeeld", desc: "Na elk event verzamelen we feedback. Wie goed presteert staat bovenaan voor het volgende event. Zo bouw je een vaste poule van bewezen toppers op." },
+              { emoji: "🛡️", title: "Volledig in loondienst", desc: "NEN-4400-1 gecertificeerd en conform arbeidswetgeving 2026. Geen zzp-risico's, geen administratieve rompslomp. Jij organiseert het event, wij regelen het personeel." },
+            ].map((item, i) => (
+              <RevealSection key={i} delay={i * 80}>
+                <div className="group bg-gradient-to-br from-purple-50 to-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">
+                  <div className="text-3xl sm:text-4xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">{item.emoji}</div>
+                  <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-2 sm:mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
-                <h3 className="font-bold text-gray-900 group-hover:text-white transition-colors mb-2">
-                  {role.title}
-                </h3>
-                {role.desc && (
-                   <p className="text-sm text-gray-500 group-hover:text-purple-100 transition-colors font-medium">
-                     {role.desc}
-                   </p>
-                )}
               </RevealSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 6. KWALITEITSSELECTIE SECTIE */}
-      <section className="py-24 bg-gradient-to-br from-purple-50 via-purple-50 to-indigo-50 overflow-hidden relative">
-        <XPatternBg count={3} opacity={0.05} />
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <RevealSection>
-              <h2
-                className="text-3xl sm:text-5xl font-black text-gray-900 mb-8"
-                style={{ fontFamily: "'Poppins', sans-serif" }}
-              >
-                Zo selecteert EXTRA medewerkers
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 4. HOE WIJ EVENTPERSONEEL SELECTEREN               */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="selectie" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
+        <XPatternBg count={5} opacity={0.12} color="rgba(255,255,255,0.8)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-12 sm:mb-20">
+              <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
+                <UserCheck className="w-4 h-4" /> Ons selectieproces
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Hoe wij eventpersoneel selecteren
               </h2>
-              <p className="text-lg text-gray-600 mb-10 font-medium">
-                Kwaliteit is bij events geen optie, maar een vereiste. Wij
-                hanteren een streng selectieproces waarbij we niet alleen kijken
-                naar ervaring, maar vooral naar instelling en uitstraling.
+              <p className="text-base sm:text-lg text-purple-200/70 mt-4 max-w-2xl mx-auto">
+                Bij een event is er geen ruimte voor twijfel. Iedereen die via EXTRA werkt heeft bewezen dat ze kunnen presteren onder druk. Dat testen we voor we iemand inzetten.
               </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[
+              { step: "1", icon: Users, title: "Persoonlijk gesprek op kantoor", desc: "Elke kandidaat komt langs. We beoordelen presentatie, tempo en de mindset die nodig is om een druk event goed door te komen." },
+              { step: "2", icon: Star, title: "Selectie op houding en service", desc: "Technische vaardigheden zijn basis. We selecteren zwaarder op service-instelling, stressbestendigheid en werkhouding bij events." },
+              { step: "3", icon: BookOpen, title: "Eventervaring als prioriteit", desc: "Medewerkers met bewezen eventervaring gaan voor bij plaatsingen. Eerdere opdrachten bij gala's, congressen en grote borrels tellen mee." },
+              { step: "4", icon: ThumbsUp, title: "Beoordeling na elk event", desc: "Na elk event een score. Medewerkers die keer op keer goed presteren bij events worden prioritair ingezet voor jouw volgende opdracht." },
+            ].map((item, i) => (
+              <RevealSection key={i} delay={i * 100}>
+                <div className="group bg-white/[0.06] backdrop-blur-sm rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-white/[0.08] hover:border-purple-400/30 hover:bg-white/[0.10] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                    <item.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  </div>
+                  <div className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
+                  <h3 className="text-lg sm:text-xl font-black text-white mb-2 sm:mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-purple-200/70 leading-relaxed">{item.desc}</p>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={400}>
+            <div className="mt-12 sm:mt-16 text-center">
+              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/15 text-white px-6 sm:px-8 py-4 sm:py-5 rounded-2xl">
+                <Shield className="w-5 h-5 text-purple-300 flex-shrink-0" />
+                <p className="text-sm sm:text-base font-semibold leading-snug text-left">
+                  Geen enkele medewerker gaat naar een event zonder persoonlijk gesprek te hebben gehad.{" "}
+                  <span className="text-purple-300">Dat is onze standaard, geen uitzondering.</span>
+                </p>
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
 
-              <div className="space-y-6">
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5. CONTINUE KWALITEITSMETING                       */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="kwaliteit" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-white">
+        <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-12">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                <BarChart3 className="w-4 h-4" /> Continue kwaliteitsmeting
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Elk event beter dan<br className="hidden sm:block" /> het vorige
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                Na elk event meten we hoe het personeel gepresteerd heeft. Zo leren we wie er echt goed is bij jouw type event en wie we volgende keer prioritair inzetten. Geen giswerk, maar data.
+              </p>
+            </div>
+          </RevealSection>
+          <RevealSection delay={100}>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-14 max-w-4xl mx-auto">
+              {[
+                { text: "Na elk event een beoordeling op servicekwaliteit en gedrag" },
+                { text: "Betrouwbaarheid en punctualiteit worden bijgehouden" },
+                { text: "No-shows direct geregistreerd met consequenties" },
+                { text: "Wie structureel goed presteert bij events wordt prioritair ingezet" },
+                { text: "Vaste poule van event-toppers opbouwen per locatie" },
+                { text: "Diensthistorie en scores per medewerker altijd inzichtelijk" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm">
+                  <div className="mt-0.5 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                  </div>
+                  <span className="text-sm sm:text-base font-semibold text-gray-800 leading-snug">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </RevealSection>
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+            <RevealSection delay={150}>
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-br from-purple-200 to-indigo-200 rounded-2xl sm:rounded-3xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100">
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-5 sm:px-6 py-3 sm:py-4 border-b border-purple-100/60">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-purple-600" />
+                      <span className="text-xs sm:text-sm font-bold text-purple-800 uppercase tracking-wide">Medewerkers overzicht</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">Real-time data van alle medewerkers — inclusief eventplaatsingen</p>
+                  </div>
+                  <img src={screenshotGebruikers} alt="Dashboard medewerkers overzicht met ratings" className="w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" />
+                </div>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-4 text-center">We weten precies wie goed presteert bij welk type event</p>
+              </div>
+            </RevealSection>
+            <RevealSection delay={250}>
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-br from-green-200 to-emerald-200 rounded-2xl sm:rounded-3xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 sm:px-6 py-3 sm:py-4 border-b border-green-100/60">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-green-600" />
+                      <span className="text-xs sm:text-sm font-bold text-green-800 uppercase tracking-wide">Individueel medewerkersprofiel</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">Scores, complimenten, no-shows en diensthistorie per persoon</p>
+                  </div>
+                  <img src={screenshotProfiel} alt="Individueel medewerkersprofiel met beoordelingen" className="w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" />
+                </div>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-4 text-center">Zo selecteren we op bewezen kwaliteit per eventlocatie</p>
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 6. FAVORIETENPOULES VOOR EVENTS                    */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="favorietenpoule" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <RevealSection>
+              <div>
+                <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                  <Heart className="w-4 h-4" /> Favorietenpoules voor events
+                </span>
+                <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Vaste teams die<br /> jouw event kennen
+                </h2>
+                <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8">
+                  Voor terugkerende events of vaste locaties bouwt EXTRA een favorietenpoule op. Dezelfde medewerkers die jouw locatie, jouw setup en jouw verwachtingen kennen. Minder briefing, snellere inzet en een sterkere samenwerking.
+                </p>
+                <ul className="space-y-4 mb-8">
+                  {[
+                    { icon: Users, text: "Vaste eventploeg per locatie, opgebouwd op basis van bewezen prestaties" },
+                    { icon: Heart, text: "Medewerkers kennen de indeling, de flow en de standaard van jouw events" },
+                    { icon: TrendingUp, text: "Minder briefing nodig, directe inzetbaarheid bij elk volgend event" },
+                    { icon: Star, text: "Hogere servicekwaliteit door vertrouwdheid en continuïteit" },
+                    { icon: Tag, text: "Tags per medewerker: Gala specialist, Bartopper, Borrel ervaren, Rustig onder druk" },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <item.icon className="w-4 h-4 text-purple-700" />
+                      </div>
+                      <span className="text-gray-700 font-medium text-sm sm:text-base">{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="/personeelsaanvraag" className="group inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-7 py-3.5 rounded-full hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/25 transition-all hover:-translate-y-0.5">
+                  Bouw jouw eventpoule op <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </div>
+            </RevealSection>
+            <RevealSection delay={150}>
+              <div className="grid grid-cols-2 gap-4">
                 {[
-                  {
-                    title: "Strenge beoordeling",
-                    desc: "Elke sollicitant doorloopt een uitgebreid assessment en persoonlijk gesprek.",
-                    icon: Award,
-                  },
-                  {
-                    title: "Focus op houding",
-                    desc: "Wij selecteren op gastvrijheid, pro-activiteit en enthousiasme.",
-                    icon: Sparkles,
-                  },
-                  {
-                    title: "Duidelijke communicatie",
-                    desc: "Vloeiend Nederlands en representatief voorkomen voor elk event.",
-                    icon: MessageSquare,
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 p-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm text-gray-900">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900">{item.title}</h4>
-                      <p className="text-sm text-gray-500 font-medium">{item.desc}</p>
-                    </div>
+                  { icon: "🥂", title: "Vaste gala-ploeg", desc: "Dezelfde bediening bij elk gala-diner op jouw locatie. Ze kennen de opstelling, de service en jouw standaard.", tag: "Gala & Diner" },
+                  { icon: "🍸", title: "Vaste bartenders", desc: "Barteam dat jouw bar, jouw drankenkaart en jouw tempo kent. Geen introductie nodig, direct productief.", tag: "Bar" },
+                  { icon: "⚡", title: "Vaste runners", desc: "Runners die de indeling van jouw locatie kennen en precies weten hoe de logistiek in elkaar zit.", tag: "Logistiek" },
+                  { icon: "🎤", title: "Vaste host-ploeg", desc: "Gastvrije hosts die elke keer de entree van jouw locatie vertegenwoordigen zoals jij dat wilt.", tag: "Ontvangst" },
+                ].map((card, i) => (
+                  <div key={i} className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300">
+                    <div className="text-3xl mb-3">{card.icon}</div>
+                    <div className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-2">{card.tag}</div>
+                    <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-2">{card.title}</h4>
+                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{card.desc}</p>
                   </div>
                 ))}
               </div>
             </RevealSection>
-
-            <RevealSection delay={300} className="relative">
-              {/* Device Mockup */}
-              <div className="relative mx-auto w-full max-w-[500px]">
-                <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-2xl rounded-[3rem]" />
-                <div className="relative bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl border-4 border-gray-800">
-                  <div className="bg-white rounded-[1.8rem] overflow-hidden aspect-[4/5] relative">
-                    <img
-                      src={sollicitatieImg}
-                      alt="EXTRA Sollicitatieformulier voor eventpersoneel"
-                      className="w-full h-full object-cover object-top"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent" />
-                  </div>
-                </div>
-                {/* Floating Tags */}
-                <div className="absolute -right-4 top-1/4 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 animate-bounce-slow">
-                  <div className="flex items-center gap-2 text-green-600 font-bold text-sm">
-                    <UserCheck className="w-4 h-4" /> Geselecteerd
-                  </div>
-                </div>
-                <div className="absolute -left-4 bottom-1/4 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 animate-bounce-slow delay-700">
-                  <div className="flex items-center gap-2 text-purple-600 font-bold text-sm">
-                    <BarChart3 className="w-4 h-4" /> 9.2 Score
-                  </div>
-                </div>
-              </div>
-            </RevealSection>
           </div>
         </div>
       </section>
 
-      {/* 7. WAAROM EXTRA VOOR EVENTS */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection className="text-center mb-16">
-            <h2
-              className="text-3xl sm:text-5xl font-black text-gray-900 mb-6"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              Waarom EXTRA voor events
-            </h2>
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 7. EXTRAATJE BELONINGSSYSTEEM                      */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="extraatje" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
+        <XPatternBg count={4} opacity={0.1} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-12 sm:mb-20">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/70 px-4 sm:px-5 py-2 rounded-full">
+                <Gift className="w-4 h-4" /> EXTRAATje beloningssysteem
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Gemotiveerd personeel maakt{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10">het event</span>
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+                </span>
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                Hoe gemotiveerder de medewerker, hoe beter de gastbeleving. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers energy en drive hebben bij elk event.
+              </p>
+            </div>
           </RevealSection>
+          <RevealSection delay={100}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-4xl mx-auto">
+              {[
+                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per event. Goed presteren bij een druk gala? Bonus-punten. Zo wordt inzet direct beloond.", icon: "🏃" },
+                { step: "2", title: "Vaker werken, hogere status", desc: "Wie regelmatig events doet bij jouw locatie bouwt status op. Van Bronze naar Diamond. Hogere status = meer binding.", icon: "💎" },
+                { step: "3", title: "Minder uitval, sterkere teams", desc: "Medewerkers die punten opbouwen op jouw locatie willen terugkomen. Dat betekent minder no-shows en een sterker eventteam.", icon: "🎁" },
+              ].map((item, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-purple-100 p-6 sm:p-8 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">
+                  <div className="text-4xl sm:text-5xl mb-4 sm:mb-5">{item.icon}</div>
+                  <div className="text-[10px] sm:text-xs font-black text-purple-500 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
+                  <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{item.title}</h4>
+                  <p className="text-gray-500 text-sm sm:text-base leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </RevealSection>
+          <RevealSection delay={200}>
+            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 max-w-5xl mx-auto">
+              <div className="relative flex-shrink-0">
+                <div className="relative w-[220px] sm:w-[280px]">
+                  <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-500/20 border-[5px] border-gray-700 bg-gray-900">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-gray-900 rounded-b-xl z-20" />
+                    <div className="relative">
+                      {appScreens.map((screen, i) => (
+                        <img key={screen.key} src={screen.img} alt={screen.label} className={`w-full transition-opacity duration-500 ${activeScreen === i ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-[3rem] blur-3xl -z-10" />
+                </div>
+                <div className="flex gap-2 mt-4 justify-center">
+                  {appScreens.map((_, i) => (
+                    <button key={i} onClick={() => setActiveScreen(i)} className={`h-2.5 rounded-full transition-all duration-300 ${activeScreen === i ? "bg-purple-500 w-10" : "bg-purple-200 w-2.5 hover:bg-purple-300"}`} />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>Wat jouw eventlocatie hiervan merkt</h3>
+                <ul className="space-y-4">
+                  {[
+                    { icon: TrendingUp, text: "Hogere motivatie: medewerkers presteren beter als er iets op het spel staat" },
+                    { icon: Check, text: "Minder no-shows: wie punten opbouwt, komt opdagen" },
+                    { icon: Users, text: "Sterkere teams: dezelfde gemotiveerde mensen bij elk event" },
+                    { icon: Heart, text: "Betere gastbeleving: enthousiast personeel straalt af op jouw event" },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <item.icon className="w-4 h-4 text-purple-700" />
+                      </div>
+                      <span className="text-gray-700 font-medium text-sm sm:text-base">{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 8. LOGO'S VAN EVENTKLANTEN                         */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
+              Vertrouwd door toonaangevende eventlocaties en -organisaties
+            </p>
+          </RevealSection>
+          <RevealSection delay={100}>
+            <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 lg:gap-20">
+              {[
+                { src: logoHartMuseum, alt: "H'art Museum Amsterdam" },
+                { src: logoFcUtrecht, alt: "FC Utrecht" },
+                { src: logoAppel, alt: "Appèl" },
+                { src: logoFunda, alt: "Funda" },
+                { src: logoHetePeper, alt: "Hete Peper" },
+              ].map((logo, i) => (
+                <div key={i} className="hover:scale-105 transition-transform duration-300">
+                  <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 9. KLANTCASE EVENTLOCATIE                          */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="klantcase" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
+                <MessageCircle className="w-4 h-4" /> Klantcases
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Hoe eventlocaties EXTRA ervaren
+              </h2>
+            </div>
+          </RevealSection>
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
-                title: "Maximale flexibiliteit",
-                desc: "Last-minute wijzigingen in het draaiboek? Wij schakelen moeiteloos mee.",
-                icon: Zap,
+                company: "H'art Museum Amsterdam",
+                quote: "Voor onze grote events hebben we soms 40 tot 60 medewerkers nodig. EXTRA levert altijd: representatief, op tijd en goed geïnstrueerd. Dat geeft rust.",
+                name: "Lisa Jansen",
+                role: "Event Manager",
+                results: ["Events tot 60 medewerkers volledig bezet", "Dezelfde vaste gezichten bij elk event"],
               },
               {
-                title: "Kwaliteit gegarandeerd",
-                desc: "Onze mensen zijn getraind in hospitality, etiquette en representativiteit.",
-                icon: ShieldCheck,
+                company: "FC Utrecht",
+                quote: "Bij thuiswedstrijden en corporate events hebben we snel veel personeel nodig. EXTRA schakelt razendsnel en levert medewerkers die weten wat het betekent om onder druk te presteren.",
+                name: "Joost van der Berg",
+                role: "Hospitality Manager",
+                results: ["Snel opgeschaald van 20 naar 80 medewerkers", "Consistente kwaliteit over meerdere evenementen"],
               },
               {
-                title: "Gemotiveerde mensen",
-                desc: "Door ons beloningssysteem gaan medewerkers altijd voor die 10 op uw event.",
-                icon: Trophy,
+                company: "Appèl Amsterdam",
+                quote: "We werken regelmatig met EXTRA voor onze borrels en diners. De medewerkers kennen de locatie inmiddels door en door. Minder uitleg, hogere kwaliteit.",
+                name: "Sophie de Vries",
+                role: "Operations Manager",
+                results: ["Vaste eventpoule opgebouwd in 3 maanden", "30% minder briefingstijd per event"],
               },
-            ].map((usp, i) => (
-              <RevealSection key={i} delay={i * 100} className="text-center group">
-                <div className="w-20 h-20 rounded-[2rem] bg-purple-50 flex items-center justify-center mx-auto mb-8 group-hover:bg-purple-600 group-hover:rotate-6 transition-all duration-300 shadow-sm group-hover:shadow-xl group-hover:shadow-purple-200">
-                  <usp.icon className="w-10 h-10 text-purple-600 group-hover:text-white transition-colors" />
+            ].map((item, i) => (
+              <RevealSection key={i} delay={i * 100}>
+                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-xl transition-all duration-300 h-full shadow-sm flex flex-col">
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <PartyPopper className="w-4 h-4 text-purple-500" />
+                    <span className="font-bold text-purple-700 text-sm">{item.company}</span>
+                  </div>
+                  <p className="text-gray-600 italic text-sm sm:text-base leading-relaxed mb-6 flex-1">"{item.quote}"</p>
+                  <div className="border-t border-gray-100 pt-4 mb-4">
+                    <p className="font-bold text-gray-900 text-sm">{item.name}</p>
+                    <p className="text-gray-400 text-xs">{item.role}</p>
+                  </div>
+                  <div className="space-y-2">
+                    {item.results.map((r, j) => (
+                      <div key={j} className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                        <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                        {r}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 font-poppins">
-                  {usp.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed font-medium">{usp.desc}</p>
               </RevealSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 8. CTA SECTION */}
-      <section className="py-24">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div
-            className="relative rounded-[3rem] overflow-hidden p-8 sm:p-20 text-center"
-            style={{
-              background: "linear-gradient(135deg, #0a0310 0%, #1a0a3e 100%)",
-            }}
-          >
-            <XPatternBg count={3} opacity={0.1} color="white" />
-            <RevealSection className="relative z-10">
-              <h2
-                className="text-3xl sm:text-5xl font-black text-white mb-8"
-                style={{ fontFamily: "'Poppins', sans-serif" }}
-              >
-                Klaar voor een geslaagd event?
-              </h2>
-              <p className="text-xl text-purple-100/70 mb-12 max-w-2xl mx-auto font-medium">
-                Laat ons de personele zorg uit handen nemen, zodat jij je kunt
-                focussen op de gasten en de beleving.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Link
-                  href="/personeelsaanvraag"
-                  className="bg-white text-purple-900 font-black px-10 py-5 rounded-full text-xl hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1"
-                >
-                  Personeel aanvragen
-                </Link>
-                <a
-                  href="tel:0851305915"
-                  className="flex items-center justify-center gap-3 text-white font-bold text-xl px-10 py-5 rounded-full border-2 border-white/20 hover:bg-white/10 transition-all"
-                >
-                  <Phone className="w-6 h-6" />
-                  085 130 59 15
-                </a>
-              </div>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 10. FAQ VOOR EVENTS                                */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <FAQSection
+        heading="Veelgestelde vragen over eventpersoneel"
+        faqs={[
+          { q: "Kunnen jullie snel opschalen voor evenementen?", a: "Ja. Flexibel opschalen is één van de kernsterkten van EXTRA. Of je nu 5 of 80 medewerkers nodig hebt: we leveren snel en betrouwbaar, ook bij last-minute aanvragen. Neem contact op en we bespreken direct de mogelijkheden." },
+          { q: "Hoeveel personeel kunnen jullie leveren voor een event?", a: "We hebben een pool van 800+ actieve medewerkers. Voor grote events kunnen we tientallen tot honderd+ medewerkers leveren, afhankelijk van beschikbaarheid en functies. We hebben ervaring met events van 10 tot 300+ gasten." },
+          { q: "Hebben jullie personeel met eventervaring?", a: "Ja. Veel van onze medewerkers werken regelmatig bij events en eventlocaties. Ze zijn gewend aan drukke omgevingen, snelle service en grote aantallen gasten. Eventervaring weegt mee bij de matching." },
+          { q: "Kunnen jullie barpersoneel en bediening leveren voor events?", a: "Ja. We leveren ervaren barpersoneel, bediening, dinerlopers en runners voor events van elke omvang. Van borrel met 50 man tot gala met 500 gasten. Iedereen is geselecteerd op eventervaring en werkhouding." },
+          { q: "Kunnen jullie hosts en hostesses leveren voor evenementen?", a: "Ja. Onze hosts en hostesses zijn representatief, communicatief sterk en gewend aan gastgerichte rollen: ontvangst, coatcheck, registratie en begeleiding. Ze kennen het belang van een professionele eerste indruk." },
+          { q: "Hoe snel kunnen jullie eventpersoneel leveren?", a: "Bij EXTRA kunnen we in veel gevallen binnen 48 uur geschikt eventpersoneel leveren. Dankzij onze grote pool van ervaren medewerkers kunnen we snel schakelen, ook bij last-minute aanvragen." },
+        ]}
+      />
 
-      {/* Internal Link Section */}
-      <section className="py-16 bg-[#faf8f5]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-gray-400 mb-8 uppercase tracking-widest font-bold">Bekijk ook onze andere diensten:</p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/personeel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Alle sectoren</Link>
-            <span className="text-gray-200">•</span>
-            <Link href="/hotel-personeel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Hotelpersoneel gezocht</Link>
-            <span className="text-gray-200">•</span>
-            <Link href="/cateringpersoneel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Cateringpersoneel gezocht</Link>
-            <span className="text-gray-200">•</span>
-            <Link href="/horecapersoneel-gezocht" className="text-purple-600 hover:text-purple-700 transition-colors font-bold">Horeca & Restaurants</Link>
-          </div>
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 11. STERKE EINDE CTA                               */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="cta" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
+        <XPatternBg count={4} opacity={0.12} color="rgba(255,255,255,0.8)" />
+        <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
+          <RevealSection>
+            <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
+              <PartyPopper className="w-4 h-4" /> Eventpersoneel nodig?
+            </span>
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 sm:mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Vraag direct{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">EXTRA personeel aan</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+              </span>
+            </h2>
+            <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
+              Of je nu een eenmalig event hebt of vaste eventlocatie bent: EXTRA levert snel, flexibel en betrouwbaar personeel. Van 5 tot 100+ medewerkers. Iedereen representatief, iedereen in loondienst.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-14">
+              <a
+                href="/personeelsaanvraag"
+                className="group bg-white text-purple-900 font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3"
+                style={{ boxShadow: "0 0 30px rgba(168,85,247,0.3), 0 8px 32px rgba(0,0,0,0.2)" }}
+              >
+                Vraag eventpersoneel aan
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a href="tel:0851305915" className="group border-2 border-white/25 text-white font-bold px-7 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3">
+                <Phone className="w-5 h-5" />
+                Plan een gesprek op kantoor
+              </a>
+            </div>
+            <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
+              {[
+                { icon: Shield, text: "NEN-4400-1 gecertificeerd" },
+                { icon: Users, text: "800+ actieve medewerkers" },
+                { icon: Zap, text: "Snel opschalen mogelijk" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-white/60">
+                  <item.icon className="w-4 h-4 text-purple-400" />
+                  <span className="text-sm font-medium">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </RevealSection>
         </div>
       </section>
 
       <PublicFooter />
-
-      <style>{`
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 4s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
