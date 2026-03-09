@@ -1,0 +1,102 @@
+Je bent een UX writer, SEO specialist en front-end developer.
+
+Optimaliseer de functiecategorie cards op de pagina voor hotelpersoneel.
+
+Problemen in de huidige cards:
+- Er zit overlap tussen functies
+- Sommige termen zijn onduidelijk (bijvoorbeeld “plongeur”)
+- Teksten zijn niet optimaal geformuleerd
+- Sommige woorden zijn incorrect (bijv. “restauranten”)
+- SEO kan sterker door duidelijke functietermen te gebruiken
+
+Doel:
+- duidelijke functiegroepen
+- geen overlap tussen rollen
+- begrijpelijke taal voor opdrachtgevers
+- SEO duidelijke functietitels
+- korte en scanbare teksten
+
+Gebruik onderstaande verbeterde structuur.
+
+---------------------------------------------------------------------
+
+CARD 1
+
+Titel:
+Chefs & Keukenpersoneel
+
+Beschrijving:
+Ervaren chefs, sous-chefs en koks voor à la carte service, banqueting en ontbijtservice in hotels.
+
+Functietags:
+Chef de partie  
+Sous-chef  
+Zelfstandig werkend kok  
+Commis
+
+---------------------------------------------------------------------
+
+CARD 2
+
+Titel:
+Afwassers & Keukenondersteuning
+
+Beschrijving:
+Betrouwbare ondersteuning voor drukke hotelkeukens: afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.
+
+Functietags:
+Afwasser  
+Keukenhulp  
+Spoelkeuken medewerker
+
+Belangrijk:
+Gebruik het woord "plongeur" niet meer in de interface, omdat veel opdrachtgevers dit woord niet kennen. Gebruik in plaats daarvan "afwasser" of "spoelkeuken medewerker".
+
+---------------------------------------------------------------------
+
+CARD 3 (AANPASSEN)
+
+Titel:
+F&B Medewerkers
+
+Beschrijving:
+Gastvrije F&B medewerkers voor hotelrestaurants, ontbijtservice, roomservice en banqueting.
+
+Functietags:
+Bediening  
+Restaurantmedewerker  
+Ontbijtmedewerker  
+Banqueting medewerker  
+Runner
+
+Belangrijk:
+Gebruik altijd het woord “restaurants” en niet “restauranten”.
+
+---------------------------------------------------------------------
+
+UX RICHTLIJNEN
+
+- Behoud dezelfde card layout als de rest van de website
+- Gebruik dezelfde icon-stijl
+- Behoud dezelfde spacing en typografie
+- Zorg dat de functietags kleine pill-badges blijven zoals in het huidige design
+
+Micro-interactions:
+- subtiele hover lift op cards
+- lichte shadow bij hover
+- zachte highlight van functietags bij hover
+
+---------------------------------------------------------------------
+
+SEO RICHTLIJNEN
+
+Gebruik termen die opdrachtgevers zoeken, zoals:
+
+- hotel personeel
+- chefs
+- keukenpersoneel
+- afwassers
+- F&B medewerkers
+- restaurant personeel
+
+De functietitels moeten duidelijk zijn voor zowel Google als LLM zoekmachines.

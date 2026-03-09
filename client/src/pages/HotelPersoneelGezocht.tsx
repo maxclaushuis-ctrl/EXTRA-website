@@ -254,8 +254,8 @@ export default function HotelPersoneelGezocht() {
               {
                 icon: Utensils,
                 title: "F&B Medewerkers",
-                desc: "Bediening en barpersoneel voor restauranten, roomservice, ontbijtservice en lounges in hotels.",
-                tags: ["Bediening", "Bar", "Roomservice", "Ontbijt"],
+                desc: "Gastvrije F&B medewerkers voor hotelrestaurants, ontbijtservice, roomservice en banqueting.",
+                tags: ["Bediening", "Restaurantmedewerker", "Ontbijtmedewerker", "Banqueting medewerker", "Runner"],
                 color: "from-indigo-500 to-purple-600",
               },
               {
@@ -267,16 +267,16 @@ export default function HotelPersoneelGezocht() {
               },
               {
                 icon: ChefHat,
-                title: "Chefs & Keuken",
-                desc: "Ervaren chefs, sous-chefs en keukenmedewerkers voor à la carte, ontbijtservice en banqueting.",
-                tags: ["Chef de partie", "Sous-chef", "Kok", "Commis"],
+                title: "Chefs & Keukenpersoneel",
+                desc: "Ervaren chefs, sous-chefs en koks voor à la carte service, banqueting en ontbijtservice in hotels.",
+                tags: ["Chef de partie", "Sous-chef", "Zelfstandig werkend kok", "Commis"],
                 color: "from-orange-500 to-pink-600",
               },
               {
                 icon: CookingPot,
                 title: "Afwassers & Keukenondersteuning",
-                desc: "Betrouwbare keukenondersteuning: afwassers, keukenhulpen en plongeurs voor drukke hotelkeukens.",
-                tags: ["Afwasser", "Plongeur", "Keukenhulp", "Ondersteuning"],
+                desc: "Betrouwbare ondersteuning voor drukke hotelkeukens: afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.",
+                tags: ["Afwasser", "Keukenhulp", "Spoelkeuken medewerker"],
                 color: "from-green-500 to-emerald-600",
               },
             ].map((item, i) => (
