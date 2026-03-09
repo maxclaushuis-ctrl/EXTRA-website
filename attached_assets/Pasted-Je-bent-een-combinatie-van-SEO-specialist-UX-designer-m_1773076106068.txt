@@ -1,0 +1,273 @@
+Je bent een combinatie van:
+- SEO specialist
+- UX designer
+- marketingstrateeg
+- front-end developer
+
+Context:
+
+We bouwen branche-specifieke landingspagina’s voor opdrachtgevers die personeel zoeken.
+
+De algemene pagina verwijst door naar specifieke branches.
+
+We hebben al pagina’s gemaakt voor:
+- Hotels
+- Eventlocaties
+
+Nu wil ik dat je een branchepagina maakt voor:
+
+CATERAARS
+
+BELANGRIJK
+
+De layout en structuur van deze pagina moeten identiek zijn aan de andere branchepagina’s.
+
+Dus:
+
+- dezelfde secties
+- dezelfde componenten
+- dezelfde spacing
+- dezelfde typografie
+- dezelfde CTA’s
+- dezelfde visuele structuur
+
+Alleen de inhoud moet worden aangepast zodat deze volledig gericht is op cateraars.
+
+De pagina moet voelen als een natuurlijke uitbreiding van de website.
+
+====================================================================
+
+DOEL VAN DE PAGINA
+
+Deze pagina moet:
+
+1. SEO verkeer aantrekken van cateraars
+2. Cateraars laten converteren naar personeelsaanvragen
+3. Vertrouwen opbouwen bij cateraars en cateringbedrijven
+4. Laten zien dat EXTRA ervaring heeft met catering events
+
+====================================================================
+
+SEO DOEL VAN DE PAGINA
+
+De pagina moet duidelijk ranken op zoektermen zoals:
+
+- catering personeel inhuren
+- personeel voor cateraars
+- catering bediening personeel
+- flexibel catering personeel
+- horeca personeel catering
+- catering uitzendbureau
+
+Google en LLM's moeten duidelijk begrijpen dat deze pagina specifiek over personeel voor cateraars gaat.
+
+====================================================================
+
+DESIGN RICHTLIJNEN
+
+Gebruik exact dezelfde designstijl als de andere branchepagina’s.
+
+Dus:
+
+- dezelfde typografie
+- dezelfde kleuren
+- dezelfde card layout
+- dezelfde icon stijl
+- dezelfde CTA styling
+- dezelfde spacing
+- dezelfde component structuur
+
+Gebruik waar mogelijk dezelfde componenten.
+
+Voeg subtiele moderne effecten toe zoals:
+
+- scroll reveal animaties
+- hover effects op cards
+- micro-interactions
+
+Maar blijf volledig binnen de bestaande stijl.
+
+====================================================================
+
+STRUCTUUR VAN DE CATERAARS PAGINA
+
+Gebruik exact dezelfde secties als de andere branchepagina’s.
+
+====================================================================
+
+1. HERO
+
+Maak een hero specifiek voor cateraars.
+
+Focus op de uitdagingen van cateringbedrijven:
+
+- piekdrukte tijdens events
+- snel opschalen van personeel
+- grote groepen gasten bedienen
+- representatief personeel
+- personeel dat gewend is aan verschillende locaties
+
+Titel voorbeeld richting:
+
+Cateringpersoneel nodig? EXTRA regelt het.
+
+Subheader:
+
+EXTRA levert ervaren horecapersoneel voor cateraars en grote events — flexibel inzetbaar en gewend aan drukke services.
+
+CTA:
+
+Vraag cateringpersoneel aan
+
+====================================================================
+
+2. FUNCTIES VOOR CATERAARS
+
+Maak een sectie met functies specifiek voor catering.
+
+Gebruik cards.
+
+Functies zoals:
+
+- Bediening
+- Dinerlopers
+- Barpersoneel
+- Runners
+- Eventmedewerkers
+- Keukenondersteuning
+
+Elke card krijgt:
+
+- functietitel
+- korte uitleg
+- icon
+
+====================================================================
+
+3. WAAROM CATERAARS VOOR EXTRA KIEZEN
+
+Herbruik deze sectie maar maak de tekst cateringspecifiek.
+
+Focus op:
+
+- flexibiliteit bij grote events
+- personeel dat gewend is aan verschillende locaties
+- representatief personeel
+- snelle opschaling bij drukte
+- ervaring met grote groepen gasten
+
+====================================================================
+
+4. HOE WIJ CATERINGPERSONEEL SELECTEREN
+
+Leg uit dat personeel:
+
+- persoonlijk wordt geselecteerd
+- wordt beoordeeld op service en houding
+- hospitality ervaring heeft
+- wordt geselecteerd op soft skills en hard skills
+- referenties heeft
+
+Focus op:
+
+- servicegerichtheid
+- representativiteit
+- ervaring met events
+
+====================================================================
+
+5. CONTINUE KWALITEITSMETING
+
+Herbruik de bestaande sectie.
+
+Leg uit dat:
+
+- medewerkers na iedere dienst worden beoordeeld
+- alleen de beste medewerkers terugkomen
+- kwaliteit continu wordt gemonitord
+
+====================================================================
+
+6. FAVORIETENPOULES VOOR CATERAARS
+
+Leg uit dat cateraars kunnen werken met vaste teams.
+
+Voordelen:
+
+- personeel kent het cateringbedrijf
+- minder uitleg nodig
+- efficiënter samenwerken
+- hogere kwaliteit
+
+====================================================================
+
+7. EXTRAATJE BELONINGSSYSTEEM
+
+Herbruik deze sectie.
+
+Leg uit wat het voordeel is voor cateraars:
+
+- hogere motivatie
+- medewerkers willen vaker terugkomen
+- minder uitval
+- sterkere teams
+
+====================================================================
+
+8. LOGO’S VAN CATERINGKLANTEN
+
+Belangrijk:
+
+Toon alleen logo’s van cateringbedrijven of cateringopdrachtgevers.
+
+Niet van hotels of restaurants.
+
+====================================================================
+
+9. KLANTCASE CATERING
+
+Gebruik een case van een cateringbedrijf.
+
+Bijvoorbeeld:
+
+- groot event
+- catering voor honderden gasten
+- snel opschalen van personeel
+
+Focus op het resultaat.
+
+====================================================================
+
+10. FAQ VOOR CATERAARS
+
+Maak een cateringspecifieke FAQ.
+
+Bijvoorbeeld vragen zoals:
+
+- Kunnen jullie personeel leveren voor grote catering events?
+- Hoe snel kunnen jullie catering personeel leveren?
+- Hebben jullie personeel met catering ervaring?
+- Kunnen jullie bediening en runners leveren?
+
+====================================================================
+
+11. CTA
+
+Eindig met een duidelijke CTA.
+
+Bijvoorbeeld:
+
+Cateringpersoneel nodig?
+Vraag direct EXTRA personeel aan.
+
+====================================================================
+
+BELANGRIJK
+
+Let op:
+
+- gebruik dezelfde componenten als andere branchepagina’s
+- vermijd duplicate content
+- maak alle teksten specifiek voor cateraars
+- zorg dat de pagina SEO en LLM-vriendelijk blijft
+- behoud de visuele consistentie van de website
