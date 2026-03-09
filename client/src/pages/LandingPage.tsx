@@ -848,9 +848,9 @@ export default function LandingPage() {
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-900/15 p-6 sm:p-8 lg:p-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10">
             {[
               { value: 800, suffix: "+", label: "Actieve medewerkers", icon: Users, color: "text-purple-600" },
-              { value: 150, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
-              { value: 50, suffix: ".000+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
-              { value: 98, suffix: "%", label: "Tevredenheidsscore", icon: TrendingUp, color: "text-green-500" },
+              { value: 90, suffix: "+", label: "Tevreden opdrachtgevers", icon: Heart, color: "text-pink-500" },
+              { value: 500, suffix: "k+", label: "Punten verdiend", icon: Sparkles, color: "text-yellow-500" },
+              { value: 4.8, suffix: "/5", label: "234 Google reviews", icon: Star, color: "text-amber-400 fill-amber-400" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mx-auto mb-2 sm:mb-3`} />
