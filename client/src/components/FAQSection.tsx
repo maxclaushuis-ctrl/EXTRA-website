@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -49,13 +50,17 @@ function XPatternBg({ count = 2, opacity = 0.06, color = "rgba(139,92,246,1)" }:
             height: pos.size,
             transform: `rotate(${pos.rotate}deg)`,
             opacity,
+            WebkitMaskImage: `url(${xPatroon})`,
+            maskImage: `url(${xPatroon})`,
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center",
+            maskPosition: "center",
+            backgroundColor: color,
           }}
-        >
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="0" y1="0" x2="100" y2="100" stroke={color} strokeWidth="8" strokeLinecap="round" />
-            <line x1="100" y1="0" x2="0" y2="100" stroke={color} strokeWidth="8" strokeLinecap="round" />
-          </svg>
-        </div>
+        />
       ))}
     </div>
   );
