@@ -704,6 +704,11 @@ export default function Aanmelden() {
         fetch(`/api/aanmelden/${candidateId}/cv-reminder`, { method: "POST" }).catch(() => {});
       }
       setShowCvBlocker(true);
+      if (flow === "NON_EU") {
+        setStep("twv");
+      } else {
+        setStep("cv_schedule");
+      }
       return;
     }
 
@@ -1182,15 +1187,31 @@ export default function Aanmelden() {
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{t.step3Title}</h2>
                 </div>
 
+                {/* CV ontbreekt melding */}
+                {showCvBlocker && !cvUploaded && (
+                  <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800 leading-relaxed font-medium">
+                      {lang === "NL"
+                        ? "Je kunt pas verder in het aanmeldproces als we je cv hebben ontvangen."
+                        : "You can only proceed in the registration process once we have received your CV."}
+                    </p>
+                  </div>
+                )}
+
                 {/* Checklist */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-8 p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-2.5 text-sm font-semibold text-green-600">
-                    <CheckCircle2 className="w-5 h-5" />
-                    {lang === "NL" ? "CV geüpload" : "CV uploaded"}
+                  <div className={`flex items-center gap-2.5 text-sm font-semibold ${cvUploaded ? "text-green-600" : "text-amber-600"}`}>
+                    {cvUploaded
+                      ? <CheckCircle2 className="w-5 h-5" />
+                      : <AlertCircle className="w-5 h-5" />}
+                    {lang === "NL"
+                      ? (cvUploaded ? "CV geüpload" : "CV nog niet ontvangen")
+                      : (cvUploaded ? "CV uploaded" : "CV not yet received")}
                   </div>
                   <div className="flex items-center gap-2.5 text-sm font-semibold text-green-600">
                     <CheckCircle2 className="w-5 h-5" />
-                    {lang === "NL" ? "Aanmelding compleet" : "Registration complete"}
+                    {lang === "NL" ? "Aanmelding ontvangen" : "Registration received"}
                   </div>
                 </div>
 
