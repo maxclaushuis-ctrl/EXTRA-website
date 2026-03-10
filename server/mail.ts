@@ -9,6 +9,37 @@ let mailService: MailService | null = null;
 let useMockService = false;
 let mockMailLog: any[] = [];
 
+// Banner als base64 data URI — laad eenmalig bij eerste gebruik
+let _emailBannerDataUri = '';
+function getEmailBannerSrc(): string {
+  if (!_emailBannerDataUri) {
+    try {
+      const p = path.join(process.cwd(), 'client', 'public', 'email-banner-extra.jpg');
+      if (fs.existsSync(p)) {
+        _emailBannerDataUri = `data:image/jpeg;base64,${fs.readFileSync(p).toString('base64')}`;
+      }
+    } catch {}
+  }
+  return _emailBannerDataUri || 'https://www.doehetextra.nl/email-banner-extra.png';
+}
+
+// Gedeelde responsive CSS voor alle e-mails
+function emailMobileCss(): string {
+  return `<style type="text/css">
+    body { margin:0 !important; padding:0 !important; }
+    img { max-width:100% !important; height:auto !important; }
+    table { border-collapse:collapse; }
+    @media screen and (max-width:640px) {
+      .ew { width:100% !important; max-width:100% !important; }
+      .ep { padding:20px 16px !important; }
+      .ep-sm { padding:14px 16px !important; }
+      .ef { font-size:16px !important; }
+      .eb { display:block !important; width:100% !important; box-sizing:border-box !important; }
+      .outer-pad { padding:16px 8px !important; }
+    }
+  </style>`;
+}
+
 // Initialiseer de mail service als de API key beschikbaar is
 export function initMailService(): boolean {
   const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
@@ -479,7 +510,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>${useEnglish ? "Your application is in – EXTRA" : "Je aanmelding is binnen – EXTRA"}</title>
-</head>
+${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f0eff5;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eff5;padding:32px 16px;">
     <tr><td align="center">
@@ -488,7 +519,7 @@ export async function sendCandidateConfirmationEmail(candidate: {
         <!-- ① HERO BANNER -->
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -639,14 +670,14 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 12px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -762,14 +793,14 @@ export async function sendCalendlyInviteEmail(candidate: {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -823,14 +854,14 @@ export async function sendApplicationRejectionEmail(applicant: {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -876,14 +907,14 @@ export async function sendCandidateRejectionEmailDiensten(candidate: {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -929,14 +960,14 @@ export async function sendCandidateRejectionEmailCv(candidate: {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -978,14 +1009,14 @@ export async function sendCvUploadFirstEmail(candidate: { firstName: string; ema
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Upload je cv bij EXTRA</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Upload je cv bij EXTRA</title>${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -1029,14 +1060,14 @@ export async function sendCvReminderEmail(candidate: { firstName: string; email:
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reminder: upload je cv bij EXTRA</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reminder: upload je cv bij EXTRA</title>${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
@@ -1087,14 +1118,14 @@ export async function sendTwvExpiryReminderEmail(candidate: {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TWV verloopt binnenkort</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TWV verloopt binnenkort</title>${emailMobileCss()}</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+            <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
