@@ -1,0 +1,138 @@
+Analyseer de huidige pagina /dashboard-mockup → Marketing & SEO → Website statistieken.
+De huidige versie bevat veel goede data, maar de pagina is te druk en moeilijk scanbaar. Het doel is om deze pagina overzichtelijker, beter geordend en visueel rustiger te maken.
+Gebruik hierbij tabbladen, grotere typografie en een logische informatiehiërarchie.
+1. Gebruik tabbladen voor structuur
+In plaats van alles op één lange pagina te tonen, verdeel de statistieken in 4 duidelijke tabs.
+Tab 1 — Overzicht
+Dit is het managementoverzicht met alleen de belangrijkste KPI’s.
+Toon hier:
+KPI Cards
+Totale bezoekers
+Unieke bezoekers
+Gem. tijd op site
+Paginaweergaven
+Bounce rate
+Conversieratio aanmelden
+Ingediende formulieren
+WhatsApp klikken
+Telefoon klikken
+Organisch verkeer
+Social verkeer
+Direct verkeer
+Onder de KPI cards:
+Grafieken
+Bezoekers over tijd
+Verkeersbronnen (donut chart)
+Desktop vs mobiel
+Deze tab moet in 5 seconden te scannen zijn.
+Tab 2 — Formulier conversies
+Alle data rondom werkzoekenden en werkgevers funnels.
+Toon hier:
+Funnel werkzoekenden
+pagina bezocht
+formulier gestart
+stap 2 bereikt
+CV geüpload
+gesprek ingepland
+Funnel werkgevers
+pagina bezocht
+formulier gestart
+formulier verzonden
+WhatsApp / bellen
+Daaronder:
+Conversie grafieken
+conversie per formulierstap
+drop-off per stap
+Belangrijk:
+toon duidelijke insight cards, bijvoorbeeld:
+"34% verlaat formulier bij stap 2"
+"Werkgevers gebruiken vaker WhatsApp dan formulier"
+Tab 3 — Pagina prestaties
+Hier tonen we alle websitepagina’s en hun prestaties.
+Tabel met:
+Pagina
+Views
+Unieke bezoekers
+Gemiddelde tijd
+Bounce rate
+Type pagina (landing / blog / SEO / formulier)
+Doelgroep (werkzoekenden / werkgevers)
+Voeg filters toe:
+periode
+paginatype
+doelgroep
+Belangrijke pagina’s:
+homepage
+/ik-zoek-extra-werk
+/aanmelden
+/personeel-gezocht
+blogs
+SEO landingspagina’s
+Tab 4 — SEO & Content
+Alles rondom blogs en zoekwoorden.
+Meest bezochte blogs
+views
+leestijd
+% organisch verkeer
+conversie
+Top zoekwoorden
+zoekwoord
+positie
+impressies
+klikken
+CTR
+Voeg hier ook een blok toe met:
+SEO inzichten
+bijvoorbeeld:
+“Blog X genereert veel verkeer maar lage conversie”
+“Keyword ‘horeca uitzendbureau amsterdam’ stijgt naar positie 4”
+2. Verbeter typografie
+Maak de pagina beter leesbaar door:
+Groter lettertype voor koppen
+Grotere cijfers in KPI cards
+Meer witruimte tussen secties
+Minder tekst per kaart
+Gebruik bijvoorbeeld:
+Koppen:
+18–20px
+Subtitels:
+14–16px
+KPI cijfers:
+28–36px
+3. Betere visuele hiërarchie
+Zorg dat het dashboard makkelijker scanbaar wordt:
+Maximaal 6 KPI cards per rij
+Meer witruimte tussen secties
+Gebruik duidelijke sectiekoppen
+Gebruik consistente kleuren voor:
+Paars → werkzoekenden
+Blauw → werkgevers
+Groen → positieve metrics
+Oranje → aandachtspunt
+4. Gebruik echte data in plaats van voorbeelddata
+Op dit moment staat er voorbeelddata.
+Vervang dit waar mogelijk door echte data uit:
+Google Analytics 4
+Google Search Console
+interne database (aanmeldingen / CV uploads / gesprekken)
+Als live data nog niet gekoppeld is:
+voeg duidelijke labels toe zoals
+“Live data vereist GA4 koppeling”
+maar bouw alvast de integratie-ready structuur.
+5. Performance & UX optimalisatie
+Zorg dat de pagina:
+sneller laadt
+niet alle grafieken tegelijk rendert
+alleen data laadt van de actieve tab
+Gebruik lazy loading voor grafieken.
+6. Einddoel
+Het dashboard moet:
+rustiger ogen
+sneller scanbaar zijn
+duidelijker geordend zijn
+geschikt zijn voor dagelijks gebruik
+Een gebruiker moet binnen 10 seconden kunnen zien:
+hoe de website presteert
+waar verkeer vandaan komt
+waar formulieren afhaken
+welke pagina’s goed werken
