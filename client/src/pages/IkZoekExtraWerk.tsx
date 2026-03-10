@@ -242,10 +242,10 @@ export default function IkZoekExtraWerk() {
                 <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "werk" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                   <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
                     {[
-                      { label: "Horeca", href: "/aanmelden", icon: UtensilsCrossed },
-                      { label: "Housekeeping", href: "/aanmelden", icon: BedDouble },
-                      { label: "Chef & Keuken", href: "/aanmelden", icon: ChefHat },
-                      { label: "Front Office", href: "/aanmelden", icon: ConciergeBell },
+                      { label: "Horeca", href: "/horeca-werk", icon: UtensilsCrossed },
+                      { label: "Housekeeping", href: "/housekeeping-werk", icon: BedDouble },
+                      { label: "Chef & Keuken", href: "/chef-vacatures-amsterdam", icon: ChefHat },
+                      { label: "Front Office", href: "/front-office-vacatures-amsterdam", icon: ConciergeBell },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
                         <div className="w-8 h-8 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 flex items-center justify-center transition-colors">
@@ -309,8 +309,13 @@ export default function IkZoekExtraWerk() {
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "werk" ? "max-h-60" : "max-h-0"}`}>
                   <div className="pl-16 pr-4 pb-2 space-y-0.5">
-                    {["Horeca", "Housekeeping", "Chef & Keuken", "Front Office"].map((item) => (
-                      <a key={item} href="/aanmelden" className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item}</a>
+                    {[
+                      { label: "Horeca", href: "/horeca-werk" },
+                      { label: "Housekeeping", href: "/housekeeping-werk" },
+                      { label: "Chef & Keuken", href: "/chef-vacatures-amsterdam" },
+                      { label: "Front Office", href: "/front-office-vacatures-amsterdam" },
+                    ].map((item) => (
+                      <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
                     ))}
                   </div>
                 </div>
