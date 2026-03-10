@@ -169,7 +169,15 @@ export default function HorecaWerk() {
   }, []);
 
   useEffect(() => {
-    document.title = "Horeca Werk via EXTRA | Flexibel Werken in de Horeca Amsterdam";
+    document.title = "Horeca werk in Amsterdam | Flexibele horeca vacatures | EXTRA";
+    const setMeta = (name: string, content: string, prop = false) => {
+      const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+      let el = document.querySelector(sel) as HTMLMetaElement;
+      if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("description", "Op zoek naar horeca werk in Amsterdam? Werk wanneer jij wilt bij hotels, restaurants en events. Flexibele horeca vacatures met dagbetaling via EXTRA.");
+    setMeta("og:title", "Horeca werk in Amsterdam | Flexibele horeca vacatures | EXTRA", true);
   }, []);
 
   return (
@@ -295,7 +303,7 @@ export default function HorecaWerk() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Flexibel horecawerk{" "}
+              Horeca werk{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">dat bij jou past.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
@@ -303,7 +311,7 @@ export default function HorecaWerk() {
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Werk in bediening, bar, banqueting of events bij de mooiste hotels, restaurants en events van Amsterdam. Jij bepaalt wanneer je werkt.
+              Werk in de horeca bij hotels, restaurants en events in Amsterdam. Via EXTRA kies je zelf wanneer je werkt. Flexibele horeca vacatures met dagbetaling en werken op toplocaties.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -394,10 +402,13 @@ export default function HorecaWerk() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Jouw vakgebied</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Wat voor horecawerk kun je doen?
+                Welke horeca functies kun je doen?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Via EXTRA werk je in verschillende horecafuncties. Van bediening tot bar en van events tot banqueting.
+                Via EXTRA kun je werken in verschillende horeca functies. Naast bediening, bar en events kun je ook terecht voor{" "}
+                <a href="/front-office-vacatures-amsterdam" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">front office werk in Amsterdam</a>,{" "}
+                <a href="/housekeeping-werk" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">housekeeping werk in hotels</a> of{" "}
+                <a href="/chef-vacatures-amsterdam" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef vacatures</a>. Jij kiest de diensten die bij jouw agenda passen.
               </p>
             </div>
           </RevealSection>
@@ -453,10 +464,10 @@ export default function HorecaWerk() {
                 Waarom EXTRA?
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Waarom horeca via EXTRA?
+                Waarom horeca werk via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                EXTRA is meer dan zomaar een uitzendbureau. We werken anders — en dat merk je direct.
+                EXTRA geeft horecamedewerkers de vrijheid om flexibel te werken bij professionele hotels, restaurants en hospitality locaties. Jij bepaalt wanneer je werkt en ontvangt snel je betaling.
               </p>
             </div>
           </RevealSection>
@@ -524,7 +535,7 @@ export default function HorecaWerk() {
                 Werken op locaties waar jij trots op kunt zijn
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Via EXTRA werk je bij gerenommeerde hotels, restaurants en events. Geen doorsnee horecabijbaan.
+                Via EXTRA werk je bij bekende hotels en hospitality locaties in Amsterdam. Je ontmoet internationale gasten, werkt in professionele teams en bouwt snel ervaring op in de horeca.
               </p>
             </div>
           </RevealSection>
@@ -577,7 +588,7 @@ export default function HorecaWerk() {
                 Zo ziet werken via EXTRA eruit
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Aanmelden, werken en verdienen. Simpeler kan bijna niet.
+                Van aanmelding tot je eerste horecadienst. Simpel, snel en duidelijk.
               </p>
             </div>
           </RevealSection>
@@ -621,7 +632,7 @@ export default function HorecaWerk() {
                   Geld op je rekening, dezelfde dag nog.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Na je dienst word je uitbetaald via Jixbee. Geen wachten op het einde van de maand — gewoon direct je verdiende geld. Transparant, snel en betrouwbaar.
+                  Na je horecadienst wordt je uitbetaald via Jixbee. Geen wachttijden, geen onduidelijkheid. Je ziet direct wat je hebt verdiend.
                 </p>
                 <div className="space-y-3 mb-8">
                   {[
@@ -711,9 +722,9 @@ export default function HorecaWerk() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Meld je aan en begin met werken bij de mooiste horecalocaties.
+              Begin vandaag met horeca werk via EXTRA
             </p>
-            <p className="text-purple-200 text-sm mt-0.5">Geen kosten. Geen verplichtingen. Jij beslist wanneer je werkt.</p>
+            <p className="text-purple-200 text-sm mt-0.5">Wil je flexibel werken in de horeca en zelf bepalen wanneer je werkt? Meld je aan bij EXTRA en start snel met horeca diensten bij hotels, restaurants en events.</p>
           </div>
           <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start je aanmelding <ArrowRight className="w-4 h-4" />

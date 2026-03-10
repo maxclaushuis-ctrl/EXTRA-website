@@ -1,0 +1,130 @@
+e bent een ervaren SEO specialist en copywriter.
+Optimaliseer de pagina Horeca werk (onder het menu: Ik zoek extra werk).
+Deze pagina is gericht op kandidaten die via EXTRA horeca werk zoeken.
+Het doel van deze optimalisatie is:
+beter ranken op horeca werk zoekwoorden
+interne SEO structuur versterken
+bestaande pagina behouden
+BELANGRIJK
+Verander NIETS aan:
+layout
+design
+secties
+componenten
+kaarten
+FAQ
+reviews
+statistieken
+volgorde van de pagina
+Je mag alleen aanpassen:
+headers
+body teksten
+interne links
+meta title
+meta description
+URL structuur
+De huidige pagina moet volledig intact blijven.
+Voeg geen nieuwe secties toe.
+SEO DOEL
+Deze pagina moet beter ranken op:
+horeca werk
+horeca vacatures
+werken in de horeca
+horeca baan
+horeca bijbaan
+URL STRUCTUUR
+Gebruik de volgende URL:
+/horeca-werk-amsterdam
+Als deze al bestaat laat hem staan.
+META TITLE
+Horeca werk in Amsterdam | Flexibele horeca vacatures | EXTRA
+Maximaal 60 karakters.
+META DESCRIPTION
+Op zoek naar horeca werk in Amsterdam? Werk wanneer jij wilt bij hotels, restaurants en events. Flexibele horeca vacatures met dagbetaling via EXTRA.
+150 tot 160 karakters.
+HERO SECTIE
+H1
+Horeca werk dat bij jou past
+Body tekst aanpassen naar:
+Werk in de horeca bij hotels, restaurants en events in Amsterdam. Via EXTRA kies je zelf wanneer je werkt. Flexibele horeca vacatures met dagbetaling en werken op toplocaties.
+CTA knoppen blijven hetzelfde.
+SECTIE
+WELKE FUNCTIES KUN JE DOEN
+Titel aanpassen naar:
+Welke horeca functies kun je doen?
+Body tekst aanpassen naar:
+Via EXTRA kun je werken in verschillende horeca functies. Van hotel receptie tot hospitality rollen en guest service functies. Jij kiest de diensten die bij jouw agenda passen.
+SEO INTERNE LINKS TOEVOEGEN
+Gebruik bestaande links onder Gerelateerde pagina's om interne SEO te versterken.
+Gebruik de volgende logica:
+Front office vacatures Amsterdam
+linktekst in tekst verwerken als
+front office werk in Amsterdam
+Receptionist vacatures hotel
+linktekst gebruiken als
+hotel receptionist werk
+Chef vacatures
+linktekst gebruiken als
+chef werk of chef vacatures
+Housekeeping werk
+linktekst gebruiken als
+housekeeping werk in hotels
+Horeca werk
+dit is de huidige pagina
+PLAATS INTERNE LINKS IN DE BODY TEKST
+In de sectie waarin functies worden uitgelegd moet subtiel verwezen worden naar:
+front office werk
+housekeeping werk
+chef vacatures
+Bijvoorbeeld in tekstvorm:
+Via EXTRA kun je bijvoorbeeld werken in front office werk bij hotels, housekeeping werk of hospitality functies.
+Gebruik hiervoor de bestaande pagina links.
+Maak geen nieuwe pagina's.
+SECTIE
+WAAROM EXTRA
+Titel
+Waarom horeca werk via EXTRA?
+Body tekst aanpassen naar:
+EXTRA geeft horecamedewerkers de vrijheid om flexibel te werken bij professionele hotels, restaurants en hospitality locaties. Jij bepaalt wanneer je werkt en ontvangt snel je betaling.
+SECTIE
+TOPLOCATIES
+Titel laten staan.
+Body tekst aanpassen naar:
+Via EXTRA werk je bij bekende hotels en hospitality locaties in Amsterdam. Je ontmoet internationale gasten, werkt in professionele teams en bouwt snel ervaring op in de horeca.
+SECTIE
+AANMELDPROCES
+Titel laten staan.
+Body tekst aanpassen naar:
+Van aanmelding tot je eerste horecadienst. Simpel, snel en duidelijk.
+Stap teksten licht optimaliseren maar structuur behouden.
+SECTIE
+DAGBETALING
+Titel laten staan.
+Body tekst aanpassen naar:
+Na je horecadienst wordt je uitbetaald via Jixbee. Geen wachttijden, geen onduidelijkheid. Je ziet direct wat je hebt verdiend.
+FAQ
+Laat alle vragen exact hetzelfde.
+Deze helpen bij SEO.
+CTA ONDERAAN PAGINA
+Titel aanpassen naar:
+Begin vandaag met horeca werk via EXTRA
+Body tekst:
+Wil je flexibel werken in de horeca en zelf bepalen wanneer je werkt? Meld je aan bij EXTRA en start snel met horeca diensten bij hotels, restaurants en events.
+CTA knoppen blijven hetzelfde.
+BELANGRIJK
+Gebruik het zoekwoord horeca werk meerdere keren natuurlijk in de tekst.
+Gebruik daarnaast ook:
+horeca vacatures
+werken in de horeca
+horeca baan
+Maar voorkom keyword spam.
+De pagina moet natuurlijk blijven lezen.
+INTERNE SEO STRUCTUUR
+Gebruik bestaande gerelateerde pagina’s als interne links om een SEO cluster te vormen tussen:
+horeca werk
+front office vacatures
+housekeeping werk
+chef vacatures
+Gebruik natuurlijke anchor teksten.
+Maak geen nieuwe pagina’s.
+Pas alleen tekst aan.
