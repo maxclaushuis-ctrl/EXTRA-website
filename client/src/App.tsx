@@ -95,6 +95,7 @@ const PUBLIC_PATHS = [
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
+  '/ik-zoek-extra-werk/horeca', '/horeca-werk', '/housekeeping-werk',
   // SEO routes
   '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
@@ -148,6 +149,7 @@ function Router() {
         <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
 
         {/* Kandidaat routes */}
+        <Route path="/ik-zoek-extra-werk/horeca" component={IkZoekExtraWerkHoreca} />
         <Route path="/horeca-vacatures-amsterdam" component={IkZoekExtraWerk} />
         <Route path="/horeca-werk-amsterdam" component={HorecaWerkAmsterdam} />
         <Route path="/housekeeping-vacatures-amsterdam" component={HousekeepingVacaturesAmsterdam} />
@@ -181,7 +183,6 @@ function Router() {
         <Route path="/cv-upload" component={CvUpload} />
         <Route path="/horeca-werk" component={HorecaWerk} />
         <Route path="/housekeeping-werk" component={HousekeepingWerk} />
-        <Route path="/ik-zoek-extra-werk/horeca" component={IkZoekExtraWerkHoreca} />
         <Route path="/extraatje" component={Extraatje} />
         <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
         <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
