@@ -1,0 +1,261 @@
+Je bent een combinatie van:
+
+UX designer  
+marketingstrateeg  
+SEO specialist  
+conversion copywriter
+
+We gaan een nieuwe pagina maken voor de website van EXTRA.
+
+Pagina:
+
+/housekeeping-werk
+
+Dit is een subpagina van de hoofdpagina:
+
+/ik-zoek-extra-werk
+
+De pagina richt zich volledig op kandidaten die willen werken in housekeeping via EXTRA.
+
+================================================================
+
+BELANGRIJK
+
+De pagina moet volledig aansluiten op de bestaande website.
+
+Gebruik exact dezelfde:
+
+typografie  
+spacing  
+component structuur  
+CTA styling  
+kleuren  
+card layouts  
+animaties  
+
+De layout moet identiek zijn aan de andere functiepagina’s zoals Horeca.
+
+================================================================
+
+SEO DOEL
+
+Google en AI zoekmachines moeten duidelijk begrijpen dat deze pagina gaat over housekeeping werk.
+
+Gebruik op natuurlijke wijze zoektermen zoals:
+
+housekeeping werk  
+werken in housekeeping  
+housekeeping bijbaan  
+kamermeisje werk  
+housekeeping hotel baan  
+
+Vermijd duplicate content van andere pagina’s.
+
+De tekst moet specifiek zijn voor housekeeping.
+
+================================================================
+
+TONE OF VOICE
+
+De tone of voice moet passen bij EXTRA:
+
+energiek  
+duidelijk  
+toegankelijk  
+jong maar professioneel  
+
+Gebruik korte zinnen.
+
+Gebruik geen "-" leestekens.
+
+Vermijd standaard uitzendbureau taal.
+
+================================================================
+
+STRUCTUUR VAN DE PAGINA
+
+Gebruik onderstaande secties.
+
+================================================================
+
+1 HERO
+
+Titel:
+
+Werken in housekeeping via EXTRA
+
+Subtitel:
+
+Werk in hotels in Amsterdam, Utrecht en Den Haag. Jij kiest wanneer je werkt.
+
+Badges onder titel:
+
+Dagbetaling mogelijk  
+Werk wanneer het jou uitkomt  
+Iedereen in loondienst  
+
+CTA knop:
+
+Schrijf je in
+
+Tweede CTA:
+
+Bekijk hoe het werkt
+
+Hero afbeelding:
+
+Housekeeping medewerker die een hotelkamer schoonmaakt.
+
+================================================================
+
+2 WAT HOUDT HOUSEKEEPING WERK IN
+
+Titel:
+
+Wat doe je in housekeeping
+
+Tekst:
+
+Als housekeeping medewerker zorg je ervoor dat hotelkamers en hotelruimtes er netjes en verzorgd uitzien.
+
+Werkzaamheden kunnen zijn:
+
+schoonmaken van hotelkamers  
+opmaken van bedden  
+aanvullen van handdoeken en amenities  
+controleren van kamers  
+zorgen voor een nette uitstraling van het hotel
+
+Maak dit visueel met kaarten of een lijst.
+
+================================================================
+
+3 WAAR KUN JE WERKEN
+
+Titel:
+
+Werk in mooie hotels
+
+Tekst:
+
+Via EXTRA werk je bij verschillende hotels en hospitality locaties.
+
+Je werkt bijvoorbeeld bij:
+
+grote hotels  
+boutique hotels  
+luxe hotels  
+hotelketens  
+
+Gebruik logo’s van hotelopdrachtgevers.
+
+================================================================
+
+4 ZO WERKT WERKEN VIA EXTRA
+
+Titel:
+
+Zo werkt werken via EXTRA
+
+Stap 1  
+Schrijf je in
+
+Stap 2  
+Kennismaking
+
+Stap 3  
+Kies je diensten
+
+Stap 4  
+Werk in hotels
+
+Stap 5  
+Verdien EXTRA
+
+Gebruik een visuele stappenlijn.
+
+================================================================
+
+5 WAAROM WERKEN VIA EXTRA
+
+Titel:
+
+Waarom werken via EXTRA
+
+Cards:
+
+Werk wanneer je wilt  
+Kies zelf wanneer je werkt.
+
+Dagbetaling mogelijk  
+Ontvang je geld sneller.
+
+Werk in mooie hotels  
+Werk op locaties waar hospitality centraal staat.
+
+EXTRAATJE beloningen  
+Verdien punten en wissel ze in voor leuke extra’s.
+
+Persoonlijk contact  
+Onze planners helpen je snel verder.
+
+================================================================
+
+6 REGIO'S
+
+Titel:
+
+Werk in jouw regio
+
+Tekst:
+
+EXTRA is actief in:
+
+Amsterdam  
+Utrecht  
+Den Haag  
+
+================================================================
+
+7 REFERENTIES
+
+Titel:
+
+Wat zeggen medewerkers over EXTRA
+
+Gebruik korte testimonials van medewerkers.
+
+Focus op:
+
+flexibiliteit  
+goede communicatie  
+fijne werkomgeving  
+snelle betaling  
+
+================================================================
+
+8 FAQ VOOR HOUSEKEEPING WERK
+
+Voorbeeldvragen:
+
+Heb ik ervaring nodig om in housekeeping te werken  
+Kan ik housekeeping combineren met mijn studie  
+Hoe snel kan ik beginnen  
+Bij wat voor hotels werk ik  
+Hoe vaak kan ik werken  
+
+================================================================
+
+9 CTA EINDE PAGINA
+
+Titel:
+
+Klaar om te beginnen
+
+Tekst:
+
+Schrijf je vandaag nog in en ontdek hoe leuk werken via EXTRA kan zijn.
+
+CTA knop:
+
+Schrijf je in bij EXTRA
