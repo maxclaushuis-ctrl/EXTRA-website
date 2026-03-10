@@ -1,0 +1,195 @@
+You are a senior UX designer, SEO strategist, marketing strategist and front-end developer working on the EXTRA website.
+Your task is to create the subpage “Housekeeping” within the job-seeker section of the website.
+The page must be built in the same visual style and UX structure as the existing pages, especially:
+/horeca-vacatures-amsterdam
+and
+/ik-zoek-extra-werk/horeca
+These pages serve as the design and UX reference.
+Important guiding principle
+Earlier subpages did not match the design quality of the website.
+Therefore this rule is strict:
+The entire visual design, layout, spacing, component structure, typography hierarchy, button style, cards, section rhythm and UX patterns must be based on:
+/horeca-vacatures-amsterdam
+This means:
+same visual quality
+same premium and modern feeling
+same scanability
+same white space usage
+same section rhythm
+same hierarchy
+same CTA structure
+same card layout
+same mobile behavior
+The page should feel like it is built within the exact same design system.
+Page to create
+Create the page:
+/ik-zoek-extra-werk/housekeeping
+This page is aimed at job seekers looking for housekeeping work via EXTRA, particularly in hotels and hospitality environments.
+Main objective of the page
+The goal of the page is conversion.
+Visitors should feel confident and motivated to sign up for housekeeping work through EXTRA.
+The page should:
+build trust
+clearly explain the type of work
+highlight benefits of working through EXTRA
+remove doubts
+guide visitors toward the signup page
+All main CTA buttons should link to:
+/aanmelden
+Tone of voice
+Use the tone of voice of EXTRA.
+The tone should be:
+modern
+energetic
+professional
+approachable
+clear
+not overly salesy
+not too student-like
+Target audience:
+young professionals and motivated job seekers looking for flexible work in hospitality.
+UX principles
+The UX must feel just as strong and polished as /horeca-vacatures-amsterdam.
+Focus on:
+strong hero section
+clear visual hierarchy
+mobile-first design
+clear scanning
+logical vertical flow
+well placed CTA’s
+balanced use of text and visual elements
+cards and benefit blocks
+Avoid:
+long dense text blocks
+inconsistent spacing
+generic templates
+cluttered layouts
+SEO requirement (very important)
+This page must be clearly about housekeeping work.
+Both Google and LLM-based search engines must easily understand that this page is about housekeeping jobs in hospitality.
+Naturally incorporate keywords such as:
+housekeeping werk
+housekeeping vacatures
+housekeeping hotel werk
+hotel schoonmaak werk
+housekeeping vacatures Amsterdam
+werken in housekeeping
+housekeeping hotel vacatures
+schoonmaak werk hotel
+Use them naturally in headings and paragraphs.
+Avoid keyword stuffing.
+Maintain natural language.
+Page structure
+Use the same visual structure and rhythm as the Horeca page, but adapt the content to housekeeping work.
+1 Hero section
+Build a strong hero that clearly communicates the purpose of the page.
+Include:
+H1 focused on housekeeping work via EXTRA
+Example direction (improve this):
+“Housekeeping werk dat bij jou past”
+Supporting text explaining the type of work.
+Primary CTA:
+Meld je aan
+Secondary CTA:
+Bekijk hoe het werkt
+Ensure the hero visually matches the style of /horeca-vacatures-amsterdam.
+2 What kind of housekeeping work can you do?
+Create a visually attractive card-based section showing different housekeeping roles.
+Examples:
+Housekeeping medewerker
+Room attendant
+Hotel schoonmaak
+Public area cleaning
+Linnen service
+Housekeeping support
+Each card should contain:
+role name
+short explanation
+small visual icon
+The section should feel dynamic and appealing, not like a boring job list.
+3 Why work in housekeeping via EXTRA?
+Create a benefits section.
+Highlight advantages that match EXTRA.
+Examples:
+Dagbetaling via Jixbee
+Werken in mooie hotels
+Flexibele diensten
+Duidelijke planning
+Betrouwbare opdrachtgever
+EXTRAATJE rewards systeem
+Use cards or benefit blocks similar to the Horeca page.
+4 Work in hotels you can be proud of
+Build a section that strengthens trust.
+Show that candidates work in high-quality hotels and hospitality environments.
+This section should feel:
+premium
+aspirational
+professional
+Focus on atmosphere rather than listing specific hotels if logos are not available.
+5 How it works
+Create a step-by-step section explaining the process.
+Example:
+Meld je aan
+Kennismaking met EXTRA
+Kies diensten die bij je passen
+Werk en ontvang je betaling
+Keep it very clear and visually structured.
+6 Fast payment / financial advantage
+Explain the daily payment system.
+Clarify:
+how fast people get paid
+that payments run via Jixbee
+that it is transparent and flexible
+Use visual emphasis similar to other benefit sections.
+7 Social proof / reviews
+Add testimonials from people who worked in housekeeping via EXTRA.
+Each testimonial should include:
+short quote
+role description
+optional star rating
+Goal: increase trust and relatability.
+8 FAQ
+Create a FAQ section specifically for housekeeping candidates.
+Examples:
+Heb ik ervaring nodig voor housekeeping werk?
+Werk ik altijd in hetzelfde hotel?
+Kan ik zelf mijn diensten kiezen?
+Hoe werkt de betaling?
+Hoe snel kan ik beginnen?
+Use expandable FAQ blocks if available in the design system.
+9 Final CTA section
+End the page with a strong conversion block.
+Include:
+headline encouraging people to start working in housekeeping
+short reassuring line
+CTA button to /aanmelden
+This section must stand out visually.
+Design requirements
+The design must clearly match the existing site.
+Use the same style as:
+/horeca-vacatures-amsterdam
+Pay attention to:
+container width
+section spacing
+typography hierarchy
+card design
+button style
+icon usage
+visual balance between text and image
+The page must look like it belongs to the same design family.
+Technical requirements
+Build the page:
+component-based
+fully responsive
+mobile-first
+using existing design tokens where possible
+Ensure:
+clean semantic HTML structure
+proper heading hierarchy (H1, H2, H3)
+fast loading layout
+Final instruction
+Create the complete Housekeeping page based on these instructions.
+The highest priority is:
+Matching the UX and visual quality of /horeca-vacatures-amsterdam
+Clearly communicating housekeeping work via EXTRA
+Maximizing conversion to the signup page
