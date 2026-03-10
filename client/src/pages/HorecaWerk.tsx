@@ -5,9 +5,9 @@ import { Link } from "wouter";
 import { ArrowRight, UtensilsCrossed, Beer, PartyPopper, Sparkles, Zap, Trophy, Gift } from "lucide-react";
 import { useEffect } from "react";
 import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
-import baristaImg from "@assets/images/blog-barista.jpg";
-import cateringImg from "@assets/images/blog-catering.jpg";
-import hotelImg from "@assets/images/blog-hotel.jpg";
+import baristaImg from "../assets/images/blog-barista.jpg";
+import cateringImg from "../assets/images/blog-catering.jpg";
+import hotelImg from "../assets/images/blog-hotel.jpg";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">
