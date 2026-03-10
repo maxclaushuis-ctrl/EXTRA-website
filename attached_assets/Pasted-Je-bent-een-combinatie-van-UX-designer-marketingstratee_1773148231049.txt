@@ -1,0 +1,261 @@
+Je bent een combinatie van:
+
+- UX designer
+- marketingstrateeg
+- SEO specialist
+- conversion copywriter
+
+We gaan een nieuwe pagina maken voor de website van EXTRA.
+
+Pagina:
+
+/horeca-werk
+
+Dit is een subpagina van de hoofdpagina:
+
+/ik-zoek-extra-werk
+
+De pagina richt zich volledig op kandidaten die horeca werk zoeken via EXTRA.
+
+================================================================
+
+BELANGRIJK
+
+De pagina moet volledig aansluiten op de bestaande website.
+
+Gebruik exact dezelfde:
+
+- typografie
+- spacing
+- component structuur
+- CTA styling
+- kleuren
+- card layouts
+- animaties
+
+De layout moet dus identiek zijn aan de andere pagina's.
+
+Gebruik dezelfde sectiestructuur als de andere functiepagina's.
+
+================================================================
+
+SEO DOEL
+
+De pagina moet duidelijk maken dat deze pagina gaat over werken in de horeca.
+
+Google en AI zoekmachines moeten begrijpen dat deze pagina gaat over:
+
+horeca werk  
+horeca bijbaan  
+werken in de horeca  
+horecamedewerker werk  
+bijbaan horeca
+
+Gebruik deze termen op natuurlijke wijze.
+
+Gebruik geen duplicaatteksten van andere pagina’s.
+
+De inhoud moet volledig gericht zijn op horeca werk.
+
+================================================================
+
+TONE OF VOICE
+
+De tone of voice moet passen bij EXTRA:
+
+- energiek
+- jong
+- duidelijk
+- speels maar professioneel
+- korte zinnen
+- geen standaard uitzendbureau taal
+
+Gebruik geen "-" leestekens in zinnen.
+
+================================================================
+
+STRUCTUUR VAN DE PAGINA
+
+Gebruik onderstaande secties.
+
+================================================================
+
+1 HERO
+
+Titel:
+
+Werken in de horeca via EXTRA
+
+Subtitel:
+
+Werk bij restaurants, hotels en events in Amsterdam, Utrecht en Den Haag. Kies zelf wanneer je werkt.
+
+Badges onder titel:
+
+Dagbetaling mogelijk  
+Werk wanneer het jou uitkomt  
+Iedereen in loondienst
+
+CTA knop:
+
+Schrijf je in
+
+Tweede CTA:
+
+Bekijk hoe het werkt
+
+Hero afbeelding:
+
+Horecamedewerkers die werken op een event of in een restaurant.
+
+================================================================
+
+2 WAT HOUDT HORECA WERK IN
+
+Titel:
+
+Wat doe je als horecamedewerker
+
+Tekst:
+
+Als horecamedewerker werk je op verschillende locaties zoals restaurants, hotels en events.
+
+Je werkzaamheden kunnen bijvoorbeeld zijn:
+
+serveren van drankjes  
+opnemen van bestellingen  
+werken achter de bar  
+helpen bij events  
+opbouwen of afruimen van tafels
+
+Maak hier een visuele lijst of kaarten.
+
+================================================================
+
+3 WAAR KUN JE WERKEN
+
+Titel:
+
+Werk bij de mooiste locaties
+
+Tekst:
+
+Via EXTRA werk je bij verschillende horecalocaties zoals:
+
+restaurants  
+hotels  
+evenementenlocaties  
+cateraars
+
+Gebruik hier logo’s van opdrachtgevers.
+
+================================================================
+
+4 ZO WERKT WERKEN VIA EXTRA
+
+Titel:
+
+Zo werkt werken via EXTRA
+
+Stap 1  
+Schrijf je in
+
+Stap 2  
+Kennismaking
+
+Stap 3  
+Kies je diensten
+
+Stap 4  
+Werk op mooie locaties
+
+Stap 5  
+Verdien EXTRA
+
+Gebruik een visuele stappenlijn.
+
+================================================================
+
+5 WAAROM WERKEN VIA EXTRA
+
+Titel:
+
+Waarom werken via EXTRA
+
+Cards:
+
+Werk wanneer je wilt  
+Kies zelf je diensten.
+
+Dagbetaling mogelijk  
+Ontvang je geld sneller.
+
+Werk bij mooie locaties  
+Hotels, restaurants en events.
+
+EXTRAATJE beloningen  
+Spaar punten en verdien extra’s.
+
+Persoonlijk contact  
+Onze planners kennen je.
+
+================================================================
+
+6 REGIO'S
+
+Titel:
+
+Werk in jouw regio
+
+Tekst:
+
+EXTRA is actief in:
+
+Amsterdam  
+Utrecht  
+Den Haag
+
+================================================================
+
+7 REFERENTIES
+
+Titel:
+
+Wat zeggen medewerkers over EXTRA
+
+Gebruik korte testimonials van medewerkers.
+
+Focus op:
+
+flexibiliteit  
+leuke opdrachten  
+snelle betaling  
+goede communicatie
+
+================================================================
+
+8 FAQ VOOR HORECA WERK
+
+Voorbeeldvragen:
+
+Kan ik horeca werk combineren met mijn studie  
+Heb ik horeca ervaring nodig  
+Hoe snel kan ik beginnen  
+Waar werk ik als horecamedewerker  
+Hoe vaak kan ik werken
+
+================================================================
+
+9 CTA EINDE PAGINA
+
+Titel:
+
+Klaar om te beginnen
+
+Tekst:
+
+Schrijf je vandaag nog in en ontdek hoe leuk werken via EXTRA kan zijn.
+
+CTA knop:
+
+Schrijf je in bij EXTRA
