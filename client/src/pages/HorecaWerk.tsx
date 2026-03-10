@@ -1,485 +1,753 @@
-import PublicNav from "@/components/PublicNav";
-import PublicFooter from "@/components/PublicFooter";
-import { RevealSection, XPatternBg } from "@/pages/LandingPage";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
+import PublicFooter from "@/components/PublicFooter";
+import FAQSection from "@/components/FAQSection";
 import {
-  ArrowRight, UtensilsCrossed, Beer, PartyPopper, Layers,
-  Zap, Gift, MapPin, Star, CheckCircle,
-  CalendarCheck, Handshake, ChevronRight
+  ArrowRight, ChevronRight, ChevronDown, Zap, Star, Clock,
+  MapPin, Gift, Users, CheckCircle2, MessageCircle, Building2,
+  UtensilsCrossed, BedDouble, ChefHat, ConciergeBell, Menu, X,
+  UserCheck, Trophy, Beer, PartyPopper, Layers, Banknote,
+  CalendarCheck, Handshake
 } from "lucide-react";
-import { useEffect } from "react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
+import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
+import chefImg from "@assets/Chef_1771833440047.webp";
+import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
+import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
+import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
+import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
+import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
+import logoFunda from "@assets/Logo_funda_1771267205959.webp";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
+import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
+import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.webp";
+import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.webp";
 import baristaImg from "@/assets/images/blog-barista.jpg";
 import cateringImg from "@/assets/images/blog-catering.jpg";
 import hotelImg from "@/assets/images/blog-hotel.jpg";
 
-const XDivider = () => (
-  <div className="relative h-16 overflow-hidden">
-    <svg viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-      <path d="M0 64L720 0L1440 64H0Z" fill="#0d0415" />
-    </svg>
-  </div>
-);
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.07, rootMargin: "0px 0px -40px 0px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return { ref, visible };
+}
 
-const XDividerReverse = () => (
-  <div className="relative h-16 overflow-hidden">
-    <svg viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-      <path d="M0 0L720 64L1440 0H0Z" fill="#0d0415" />
-    </svg>
-  </div>
-);
+function RevealSection({ children, className = "", delay = 0 }: {
+  children: React.ReactNode; className?: string; delay?: number;
+}) {
+  const { ref, visible } = useScrollReveal();
+  return (
+    <div ref={ref} className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
 
-const jobTypes = [
+function XPatternBg() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[
+        { left: "4%", top: "10%", w: 180, rot: 15, op: 0.07 },
+        { left: "76%", top: "14%", w: 140, rot: -8, op: 0.05 },
+        { left: "47%", top: "70%", w: 160, rot: 25, op: 0.06 },
+      ].map((x, i) => (
+        <div key={i} className="absolute" style={{
+          left: x.left, top: x.top, width: x.w, height: x.w,
+          transform: `rotate(${x.rot}deg)`, opacity: x.op,
+          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: "rgba(139,92,246,1)",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function XPatternBgDark() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[
+        { left: "5%", top: "8%", w: 220, rot: 15, op: 0.1 },
+        { left: "78%", top: "52%", w: 260, rot: -20, op: 0.08 },
+      ].map((x, i) => (
+        <div key={i} className="absolute" style={{
+          left: x.left, top: x.top, width: x.w, height: x.w,
+          transform: `rotate(${x.rot}deg)`, opacity: x.op,
+          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: "rgba(255,255,255,0.9)",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+const functies = [
   {
     title: "Bediening",
+    sub: "Restaurants · Hotels · Events",
     img: horecaImg,
-    icon: UtensilsCrossed,
     desc: "Serveren in restaurants, hotel-dining en bij zakelijke diners. Jij bent het gezicht van de avond.",
+    bullets: ["Dag- en avonddiensten", "Hotels, restaurants en events", "Professionele brigades"],
+    color: "from-purple-600 to-violet-700",
+    href: "/aanmelden",
   },
   {
     title: "Bar",
+    sub: "Barista · Cocktails · Bier",
     img: baristaImg,
-    icon: Beer,
     desc: "Tap bier, mix cocktails of zet koffie op toplocaties. Van bruine kroeg tot rooftop bar.",
+    bullets: ["Creatief en afwisselend", "Top horecalocaties", "Alle niveaus welkom"],
+    color: "from-amber-500 to-orange-600",
+    href: "/aanmelden",
   },
   {
     title: "Events en catering",
+    sub: "Gala · Festivals · Beurzen",
     img: cateringImg,
-    icon: PartyPopper,
     desc: "Werk bij gala-diners, festivals en zakelijke events. Nooit hetzelfde, altijd de moeite waard.",
+    bullets: ["Unieke locaties en sfeer", "Dag en avond beschikbaar", "Van klein tot grootschalig"],
+    color: "from-blue-600 to-indigo-700",
+    href: "/aanmelden",
   },
   {
     title: "Banqueting",
+    sub: "Hotels · Opbouw · Precisie",
     img: hotelImg,
-    icon: Layers,
     desc: "Opbouwen, serveren en afruimen bij hotel-events. Structuur, samenwerken en precisie.",
+    bullets: ["Vijfsterren hotelgroepen", "Team-georiënteerd werk", "Goede begeleiding"],
+    color: "from-emerald-500 to-teal-600",
+    href: "/aanmelden",
   },
-];
-
-const usps = [
-  {
-    Icon: Zap,
-    title: "Dagbetaling via Jixbee",
-    desc: "Na je dienst staat je geld dezelfde dag nog op je rekening. Geen wachten tot het einde van de maand.",
-  },
-  {
-    Icon: CalendarCheck,
-    title: "Werk wanneer jij wilt",
-    desc: "Jij kiest je eigen diensten via de EXTRA app. Passend bij je studie, sport of andere bezigheden.",
-  },
-  {
-    Icon: Gift,
-    title: "EXTRAATje beloningen",
-    desc: "Spaar punten voor elke dienst en wissel ze in voor beloningen. Hoe meer je werkt, hoe meer je verdient.",
-  },
-];
-
-const steps = [
-  { number: "1", title: "Schrijf je in", desc: "Vul het aanmeldformulier in. Duurt minder dan 5 minuten." },
-  { number: "2", title: "Kennismaking", desc: "We plannen een korte kennismaking. Dan weten we bij welke locaties je past." },
-  { number: "3", title: "Kies je diensten", desc: "Via de EXTRA app zie je beschikbare diensten en kies je zelf wanneer je werkt." },
-  { number: "4", title: "Werk en word uitbetaald", desc: "Draai je dienst, ontvang dezelfde dag je betaling via Jixbee." },
 ];
 
 const reviews = [
-  {
-    quote: "Via EXTRA werk ik bij mooie locaties en bepaal ik zelf mijn planning. Precies wat ik zocht naast mijn studie.",
-    name: "Sophie",
-    role: "Barmedewerker",
-    stars: 5,
-  },
-  {
-    quote: "Dagbetaling via Jixbee is echt een gamechanger. Het geld staat er meteen op, dat voelt gewoon goed.",
-    name: "Daan",
-    role: "Bediening",
-    stars: 5,
-  },
-  {
-    quote: "Ik werk nu al bijna een jaar via EXTRA. De locaties zijn top en het team is goed bereikbaar als er vragen zijn.",
-    name: "Lena",
-    role: "Events en catering",
-    stars: 5,
-  },
+  { name: "Sophie B.", functie: "Barmedewerker", tekst: "Via EXTRA werk ik bij mooie locaties en bepaal ik zelf mijn planning. Precies wat ik zocht naast mijn studie.", rating: 5 },
+  { name: "Daan V.", functie: "Bediening", tekst: "Dagbetaling via Jixbee is echt een gamechanger. Het geld staat er meteen op, dat voelt gewoon goed.", rating: 5 },
+  { name: "Lena K.", functie: "Events en catering", tekst: "Ik werk nu al bijna een jaar via EXTRA. De locaties zijn top en het team is goed bereikbaar als er vragen zijn.", rating: 5 },
 ];
 
 const faqs = [
-  {
-    q: "Heb ik horecaervaring nodig?",
-    a: "Niet altijd. Voor ondersteunende functies zoals runner of afwas is geen ervaring vereist. Voor bediening en bar is basishervaring een pre, maar wij kijken vooral naar je instelling en motivatie.",
-  },
-  {
-    q: "Kan ik zelf mijn diensten kiezen?",
-    a: "Ja. Via de EXTRA app zie je welke diensten beschikbaar zijn en kies je zelf wat bij je past. Jij beslist wanneer je werkt.",
-  },
-  {
-    q: "Hoe werkt dagbetaling via Jixbee?",
-    a: "Na afloop van je dienst word je uitbetaald via Jixbee. Het bedrag staat doorgaans dezelfde dag nog op je rekening. Je hoeft nergens apart voor te registreren.",
-  },
-  {
-    q: "Op welke locaties kan ik werken?",
-    a: "Via EXTRA werk je bij hotels, restaurants en events in Amsterdam, Utrecht en Den Haag. Denk aan Hilton, Marriott, NH Hotels en diverse evenementenlocaties.",
-  },
-  {
-    q: "Hoe snel kan ik beginnen met werken?",
-    a: "Na je aanmelding en een korte kennismaking kun je al snel je eerste diensten pakken. In de meeste gevallen ben je binnen een week aan de slag.",
-  },
+  { q: "Heb ik horecaervaring nodig?", a: "Niet altijd. Voor ondersteunende functies zoals runner of afwas is geen ervaring vereist. Voor bediening en bar is basiservaring een pre, maar wij kijken vooral naar je instelling en motivatie." },
+  { q: "Kan ik zelf mijn diensten kiezen?", a: "Ja. Via de EXTRA app zie je welke diensten beschikbaar zijn en kies je zelf wat bij je past. Jij beslist wanneer je werkt." },
+  { q: "Hoe werkt dagbetaling via Jixbee?", a: "Na afloop van je dienst word je uitbetaald via Jixbee. Het bedrag staat doorgaans dezelfde dag nog op je rekening. Je hoeft nergens apart voor te registreren." },
+  { q: "Op welke locaties kan ik werken?", a: "Via EXTRA werk je bij hotels, restaurants en events in Amsterdam, Utrecht en Den Haag. Denk aan Hilton, Marriott, NH Hotels en diverse evenementenlocaties." },
+  { q: "Hoe snel kan ik beginnen met werken?", a: "Na je aanmelding en een korte kennismaking kun je al snel je eerste diensten pakken. In de meeste gevallen ben je binnen een week aan de slag." },
 ];
 
-const locations = ["Hilton", "Marriott", "NH Hotels", "Amrâth", "Radisson", "InterContinental", "Mövenpick", "Park Plaza"];
-
 export default function HorecaWerk() {
+  const [scrolled, setScrolled] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     document.title = "Horeca Werk via EXTRA | Flexibel Werken in de Horeca Amsterdam";
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0310] text-white font-sans selection:bg-purple-500/30">
-      <PublicNav forceDark={false} />
+    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      <main>
+      {/* ══ NAV ══ */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-purple-500/5 border-b border-purple-100/50" : "bg-transparent"}`}
+        onMouseLeave={() => { dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 200); }}
+        onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); }}
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <Link href="/landing">
+              <img src={extraLogoWit} alt="EXTRA logo" className={`h-9 sm:h-10 w-auto cursor-pointer transition-all ${scrolled ? "brightness-0" : ""}`} />
+            </Link>
 
-        {/* ── 1. HERO ── */}
-        <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-[#0a0310] to-[#0a0310]" />
-          <XPatternBg count={3} opacity={0.1} color="rgba(168,85,247,0.5)" />
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-            <RevealSection>
-              <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-widest mb-6 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
-                <UtensilsCrossed className="w-4 h-4" /> Horecawerk via EXTRA
-              </span>
-              <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-[1.1]" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Flexibel horecawerk{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                  dat bij jou past
-                </span>
-              </h1>
-              <p className="text-xl text-purple-100/70 mb-10 leading-relaxed max-w-2xl">
-                Werk in bediening, bar, banqueting of events bij de mooiste hotels, restaurants en events van Amsterdam. Jij bepaalt wanneer je werkt.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/aanmelden" className="group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/20 hover:scale-105">
-                  Schrijf je in <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link href="/horeca-vacatures-amsterdam" className="group inline-flex items-center gap-2.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300">
-                  Bekijk open functies <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </div>
-            </RevealSection>
-          </div>
-        </section>
-
-        {/* ── 2. WAT VOOR HORECAWERK ── */}
-        <section className="py-24 bg-[#0d0415]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Wat voor horecawerk kun je doen?
-                </h2>
-                <p className="text-white/60 max-w-2xl mx-auto">
-                  Via EXTRA werk je in verschillende horecafuncties. Van bediening tot bar en van events tot banqueting. Kies wat bij jou past.
-                </p>
-              </div>
-            </RevealSection>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {jobTypes.map((job, i) => (
-                <RevealSection key={job.title} delay={i * 100}>
-                  <Link href="/aanmelden" className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-purple-500/40 transition-all duration-300 flex flex-col h-full">
-                    <div className="aspect-[4/3] overflow-hidden relative">
-                      <img src={job.img} alt={job.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0310]/80 to-transparent" />
-                    </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-purple-500/20 rounded-lg group-hover:bg-purple-600 transition-colors">
-                          <job.icon className="w-5 h-5 text-purple-400 group-hover:text-white transition-colors" />
+            <div className="hidden lg:flex items-center gap-2">
+              <div className="relative" onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("werk"); }}>
+                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                  <UserCheck className="w-5 h-5" />
+                  Ik zoek extra werk
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
+                </button>
+                <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "werk" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
+                  <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/10 border border-purple-100/60 p-2 min-w-[220px]">
+                    {[
+                      { label: "Horeca", href: "/horeca-werk", icon: UtensilsCrossed },
+                      { label: "Housekeeping", href: "/housekeeping-werk", icon: BedDouble },
+                      { label: "Chef & Keuken", href: "/chef-vacatures-amsterdam", icon: ChefHat },
+                      { label: "Front Office", href: "/front-office-vacatures-amsterdam", icon: ConciergeBell },
+                    ].map((item) => (
+                      <a key={item.label} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${item.href === "/horeca-werk" ? "bg-purple-50 text-purple-700" : "text-gray-700 hover:bg-purple-50 hover:text-purple-700"}`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${item.href === "/horeca-werk" ? "bg-indigo-200" : "bg-indigo-100 group-hover:bg-indigo-200"}`}>
+                          <item.icon className="w-4 h-4 text-indigo-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-white">{job.title}</h3>
-                      </div>
-                      <p className="text-white/50 text-sm mb-4 flex-grow">{job.desc}</p>
-                      <div className="flex items-center text-purple-400 font-bold text-sm gap-1 group-hover:gap-2 transition-all">
-                        Schrijf je in <ArrowRight className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </Link>
-                </RevealSection>
-              ))}
+                        <span className="text-sm font-semibold">{item.label}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <a href="/extraatje" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+                <Trophy className="w-5 h-5" /> EXTRAATJE
+              </a>
+              <a href="/hoe-extra-werkt" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+                <Clock className="w-5 h-5" /> Werkwijze
+              </a>
+              <a href="/over-extra/ons-team" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+                <Users className="w-5 h-5" /> Ons Team
+              </a>
+              <a href="/aanmelden" className={`ml-4 text-[18px] font-black px-8 py-3.5 rounded-full transition-all hover:shadow-2xl hover:-translate-y-0.5 flex items-center gap-2.5 ${scrolled ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30" : "bg-white text-purple-700 hover:shadow-white/30 border-2 border-white"}`}>
+                Aanmelden <ArrowRight className="w-[18px] h-[18px]" />
+              </a>
             </div>
 
-            {/* Extra functies row */}
-            <RevealSection delay={500}>
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
-                {["Runner", "Host / Hostess", "Afwas en ondersteunend", "Roomservice"].map((fn) => (
-                  <span key={fn} className="bg-white/5 border border-white/10 px-5 py-2.5 rounded-full text-sm text-white/60 font-medium">
-                    {fn}
+            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className={scrolled ? "text-gray-900" : "text-white"} size={28} /> : <Menu className={scrolled ? "text-gray-900" : "text-white"} size={28} />}
+            </button>
+          </div>
+        </div>
+
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"}`}>
+          <div className="bg-white border-t border-gray-100 shadow-2xl overflow-y-auto max-h-[80vh]">
+            <div className="px-5 py-5 space-y-1">
+              <div>
+                <button onClick={() => setMobileExpanded(mobileExpanded === "werk" ? null : "werk")} className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
+                  <span className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <UserCheck className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    Ik zoek extra werk
                   </span>
-                ))}
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileExpanded === "werk" ? "rotate-180" : ""}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${mobileExpanded === "werk" ? "max-h-60" : "max-h-0"}`}>
+                  <div className="pl-16 pr-4 pb-2 space-y-0.5">
+                    {[
+                      { label: "Horeca", href: "/horeca-werk" },
+                      { label: "Housekeeping", href: "/housekeeping-werk" },
+                      { label: "Chef & Keuken", href: "/chef-vacatures-amsterdam" },
+                      { label: "Front Office", href: "/front-office-vacatures-amsterdam" },
+                    ].map((item) => (
+                      <a key={item.label} href={item.href} className={`block py-2.5 text-sm font-medium transition-colors ${item.href === "/horeca-werk" ? "text-purple-600 font-bold" : "text-gray-600 hover:text-purple-600"}`}>{item.label}</a>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </RevealSection>
+              <a href="/extraatje" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
+                <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center"><Trophy className="w-4 h-4 text-purple-600" /></div>
+                EXTRAATJE
+              </a>
+              <a href="/hoe-extra-werkt" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
+                <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center"><Clock className="w-4 h-4 text-purple-600" /></div>
+                Werkwijze
+              </a>
+              <a href="/over-extra/ons-team" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
+                <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center"><Users className="w-4 h-4 text-purple-600" /></div>
+                Ons Team
+              </a>
+              <div className="pt-3 border-t border-gray-100">
+                <a href="/aanmelden" className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold text-base px-6 py-4 rounded-2xl hover:from-purple-700 hover:to-purple-800 transition-all">
+                  <ArrowRight className="w-4 h-4" /> Aanmelden
+                </a>
+              </div>
+            </div>
           </div>
-        </section>
+        </div>
+      </nav>
 
-        <XDivider />
+      {/* ══ 1. HERO ══ */}
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
+        <XPatternBgDark />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-fuchsia-400/15 rounded-full blur-3xl pointer-events-none" />
 
-        {/* ── 3. WAAROM HORECA VIA EXTRA ── */}
-        <section className="py-24 bg-[#0a0310]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Waarom horeca via EXTRA?
-                </h2>
-                <p className="text-white/60 max-w-2xl mx-auto">
-                  EXTRA is meer dan zomaar een uitzendbureau. We werken anders — en dat merk je direct.
-                </p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-8">
-                {usps.map(({ Icon, title, desc }, i) => (
-                  <RevealSection key={i} delay={i * 120}>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
-                      <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/30 transition-colors">
-                        <Icon className="w-8 h-8 text-purple-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
-                      <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
-                    </div>
-                  </RevealSection>
-                ))}
-              </div>
-            </RevealSection>
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
+          <div>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
+              <UtensilsCrossed className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-white/90 text-xs font-semibold">Horecawerk via EXTRA</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              Flexibel horecawerk{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">dat bij jou past.</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+              </span>
+            </h1>
+
+            <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
+              Werk in bediening, bar, banqueting of events bij de mooiste hotels, restaurants en events van Amsterdam. Jij bepaalt wanneer je werkt.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+                Schrijf je in <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a href="#functies" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+                Bekijk horecafuncties <ChevronRight className="w-5 h-5" />
+              </a>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-2.5">
+              {[
+                { emoji: "⚡", label: "Dagbetaling via Jixbee" },
+                { emoji: "📅", label: "Werk wanneer het jou uitkomt" },
+                { emoji: "🏨", label: "Toplocaties in Amsterdam" },
+              ].map(({ emoji, label }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  {emoji} {label}
+                </span>
+              ))}
+            </div>
           </div>
-        </section>
 
-        {/* ── 4. LOCATIES ── */}
-        <section className="py-24 bg-[#0d0415]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Werken op locaties waar jij trots op kunt zijn
-                </h2>
-                <p className="text-white/60 max-w-2xl mx-auto">
-                  Via EXTRA werk je bij gerenommeerde hotels, restaurants en evenementenlocaties. Geen doorsnee horecabijbaan, maar een plek om echt iets te leren.
-                </p>
+          {/* Right – horeca photo card */}
+          <div className="relative flex justify-center items-center">
+            <div className="relative w-full max-w-sm">
+              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/40 border-4 border-white/20">
+                <img src={horecaImg} alt="Horecamedewerker via EXTRA" className="w-full h-[380px] sm:h-[440px] object-cover" loading="eager" />
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent rounded-3xl" />
               </div>
-            </RevealSection>
-            <RevealSection delay={200}>
-              <div className="grid md:grid-cols-3 gap-8 mb-12">
-                {[
-                  { Icon: MapPin, title: "Hotels", desc: "Werk bij vijfsterren hotels in Amsterdam, Utrecht en Den Haag. Denk aan internationale ketens en boutique hotels." },
-                  { Icon: UtensilsCrossed, title: "Restaurants", desc: "Van bruisende restaurants tot rustige fine dining. Horeca werk Amsterdam is afwisselend en altijd interessant." },
-                  { Icon: PartyPopper, title: "Events", desc: "Festivals, gala-diners, personeelsfeesten en beurzen. Werk op unieke locaties bij bijzondere gelegenheden." },
-                ].map(({ Icon, title, desc }, i) => (
-                  <RevealSection key={i} delay={i * 100}>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
-                      <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/30 transition-colors">
-                        <Icon className="w-8 h-8 text-purple-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
-                      <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
-                    </div>
-                  </RevealSection>
-                ))}
+              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-purple-100">
+                💰 Dagbetaling actief
               </div>
-            </RevealSection>
-            <RevealSection delay={400}>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-5 text-center">Locaties waar je kunt werken</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                {locations.map((loc) => (
-                  <span key={loc} className="bg-white/5 border border-white/10 px-5 py-2.5 rounded-full text-sm font-medium text-white/50">
-                    {loc}
-                  </span>
-                ))}
+              <div className="absolute -bottom-3 -left-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-green-100">
+                ✅ Iedereen in loondienst
               </div>
-            </RevealSection>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <XDivider />
-
-        {/* ── 5. HOE HET WERKT ── */}
-        <section className="py-24 bg-[#0a0310]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Hoe het werkt
-                </h2>
-                <p className="text-white/60 max-w-2xl mx-auto">
-                  In vier stappen van aanmelding tot je eerste uitbetaling.
-                </p>
-              </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {steps.map(({ number, title, desc }, i) => (
-                  <RevealSection key={i} delay={i * 100}>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
-                      <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/30 transition-colors">
-                        <span className="text-2xl font-black text-purple-400">{number}</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-white mb-3">{title}</h3>
-                      <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
+      {/* ══ 2. TRUST STRIP ══ */}
+      <section className="py-10 sm:py-14 bg-white border-b border-gray-100 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Werk op locaties waar jij trots op kunt zijn</p>
+          <div className="relative overflow-hidden group">
+            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
+            <div className="flex animate-marquee-hw group-hover:[animation-play-state:paused]">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                  {[
+                    { src: amrathLogo, alt: "Amrâth Hotels" },
+                    { src: logoFcUtrecht, alt: "FC Utrecht" },
+                    { src: logoFunda, alt: "Funda" },
+                    { src: logoHartMuseum, alt: "H'art Museum" },
+                    { src: logoHetePeper, alt: "Hete Peper" },
+                    { src: hiltonLogo, alt: "Hilton" },
+                    { src: marriottLogo, alt: "Marriott" },
+                    { src: logoSelectCatering, alt: "Select Catering" },
+                    { src: logoAppel, alt: "Appèl" },
+                  ].map((logo) => (
+                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
                     </div>
-                  </RevealSection>
-                ))}
-              </div>
-            </RevealSection>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
+        </div>
+        <style>{`
+          @keyframes marquee-hw {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee-hw {
+            animation: marquee-hw 40s linear infinite;
+          }
+        `}</style>
+      </section>
 
-        {/* ── 6. DAGBETALING ── */}
-        <section className="py-24 bg-[#0d0415]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Geld op je rekening, dezelfde dag nog
-                </h2>
-                <p className="text-white/60 max-w-2xl mx-auto">
-                  Na je dienst word je uitbetaald via Jixbee. Geen wachten op het einde van de maand — gewoon direct je verdiende geld.
-                </p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-8 mb-12">
-                {[
-                  { Icon: Zap, title: "Zelfde dag betaald", desc: "Na je dienst staat het geld doorgaans dezelfde dag op je rekening. Via Jixbee, automatisch en zonder gedoe." },
-                  { Icon: CheckCircle, title: "Transparant overzicht", desc: "Je ziet precies wat je verdient, wanneer en waarvoor. Geen verrassingen op je loonstrook." },
-                  { Icon: Handshake, title: "Geen extra stappen", desc: "Zodra je aangemeld bent bij EXTRA, werkt Jixbee automatisch mee. Registreer je eenmalig en klaar." },
-                ].map(({ Icon, title, desc }, i) => (
-                  <RevealSection key={i} delay={i * 120}>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
-                      <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/30 transition-colors">
-                        <Icon className="w-8 h-8 text-purple-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
-                      <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
+      {/* ══ 3. FUNCTIES ══ */}
+      <section id="functies" className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Jouw vakgebied</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Wat voor horecawerk kun je doen?
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Via EXTRA werk je in verschillende horecafuncties. Van bediening tot bar en van events tot banqueting.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {functies.map((f, i) => (
+              <RevealSection key={f.title} delay={i * 70}>
+                <article className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-purple-100 shadow-md hover:shadow-2xl hover:border-purple-200 hover:-translate-y-2 transition-all h-full flex flex-col">
+                  <div className={`relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br ${f.color}`}>
+                    <img src={f.img} alt={f.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-luminosity opacity-90" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-3 left-3">
+                      <h3 className="text-white font-black text-lg leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>{f.title}</h3>
+                      <p className="text-white/70 text-[10px] font-semibold">{f.sub}</p>
                     </div>
-                  </RevealSection>
-                ))}
-              </div>
-              <RevealSection delay={400}>
-                <div className="text-center">
-                  <Link href="/aanmelden" className="group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/20 hover:scale-105">
-                    Schrijf je in <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  </Link>
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <p className="text-sm text-gray-500 leading-relaxed mb-3">{f.desc}</p>
+                    <ul className="space-y-1 mb-4 flex-1">
+                      {f.bullets.map(b => (
+                        <li key={b} className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                          <CheckCircle2 className="w-3 h-3 text-green-500 flex-shrink-0" /> {b}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href={f.href} className={`inline-flex items-center gap-1.5 text-xs font-black text-white px-4 py-2 rounded-full bg-gradient-to-r ${f.color} hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
+                      Schrijf je in <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </article>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={400}>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {["Runner", "Host / Hostess", "Afwas en ondersteunend", "Roomservice"].map((fn) => (
+                <span key={fn} className="bg-purple-50 border border-purple-100 px-5 py-2.5 rounded-full text-sm text-gray-600 font-medium">
+                  {fn}
+                </span>
+              ))}
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 4. WAAROM EXTRA ══ */}
+      <section className="relative bg-white py-16 sm:py-28 overflow-hidden">
+        <XPatternBg />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-100/60 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-12 sm:mb-16">
+              <span className="inline-block bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                Waarom EXTRA?
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Waarom horeca via EXTRA?
+              </h2>
+              <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+                EXTRA is meer dan zomaar een uitzendbureau. We werken anders — en dat merk je direct.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+            {[
+              {
+                icon: Zap, badge: "Financiële vrijheid", title: "Dagbetaling via Jixbee",
+                desc: "Na je dienst staat je geld dezelfde dag nog op je rekening. Geen wachten tot het einde van de maand.",
+                bg: "from-yellow-50 to-orange-50", border: "border-yellow-200", iconBg: "bg-yellow-100", iconColor: "text-yellow-600", tag: "⚡ Dagbetaling",
+              },
+              {
+                icon: CalendarCheck, badge: "Eigen planning", title: "Werk wanneer jij wilt",
+                desc: "Jij kiest je eigen diensten via de EXTRA app. Passend bij je studie, sport of andere bezigheden.",
+                bg: "from-violet-50 to-purple-50", border: "border-violet-200", iconBg: "bg-violet-100", iconColor: "text-violet-600", tag: "📅 Volledig flexibel",
+              },
+              {
+                icon: Gift, badge: "Exclusief beloningssysteem", title: "EXTRAATje beloningen",
+                desc: "Spaar punten voor elke dienst en wissel ze in voor beloningen. Hoe meer je werkt, hoe meer je verdient.",
+                bg: "from-orange-50 to-amber-50", border: "border-orange-200", iconBg: "bg-orange-100", iconColor: "text-orange-600", tag: "🎁 Punten sparen",
+              },
+              {
+                icon: MapPin, badge: "Premium werkomgeving", title: "Werk bij mooie locaties",
+                desc: "Van vijfsterren hotels tot bruisende restaurants en grote events. Locaties waar jij trots op bent.",
+                bg: "from-blue-50 to-indigo-50", border: "border-blue-200", iconBg: "bg-blue-100", iconColor: "text-blue-600", tag: "🏨 Amsterdam · Utrecht",
+              },
+              {
+                icon: Handshake, badge: "Persoonlijke aanpak", title: "Persoonlijk contact",
+                desc: "Onze planners kennen je en helpen je snel verder. Altijd bereikbaar en altijd eerlijk.",
+                bg: "from-teal-50 to-cyan-50", border: "border-teal-200", iconBg: "bg-teal-100", iconColor: "text-teal-600", tag: "💬 Direct bereikbaar",
+              },
+              {
+                icon: Trophy, badge: "Erkenning", title: "Prestaties worden beloond",
+                desc: "Via het EXTRAATJE systeem word je beloond voor consistent goed werk. Hoe meer je scoort, hoe meer voordelen.",
+                bg: "from-purple-50 to-violet-50", border: "border-purple-200", iconBg: "bg-purple-100", iconColor: "text-purple-600", tag: "🏆 EXTRAATJE systeem",
+              },
+            ].map(({ icon: Icon, badge, title, desc, bg, border, iconBg, iconColor, tag }, i) => (
+              <RevealSection key={title} delay={i * 80}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 sm:p-9 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-6">
+                      <span className={`text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${iconBg} ${iconColor}`}>{badge}</span>
+                      <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                        <Icon className={`w-6 h-6 ${iconColor}`} />
+                      </div>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-3 leading-snug" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5">{desc}</p>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-white/70 border border-white px-3 py-1.5 rounded-full">{tag}</span>
+                  </div>
                 </div>
               </RevealSection>
-            </RevealSection>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <XDivider />
-
-        {/* ── 7. REVIEWS ── */}
-        <section className="py-24 bg-[#0a0310]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Wat zeggen onze medewerkers?
-                </h2>
-                <p className="text-white/60 max-w-xl mx-auto">
-                  Van studenten tot young professionals — zij werken al via EXTRA in de horeca.
-                </p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-6">
-                {reviews.map(({ quote, name, role, stars }, i) => (
-                  <RevealSection key={i} delay={i * 120}>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 flex flex-col h-full">
-                      <div className="flex gap-1 mb-6">
-                        {Array.from({ length: stars }).map((_, s) => (
-                          <Star key={s} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        ))}
-                      </div>
-                      <p className="text-white/70 text-sm leading-relaxed flex-grow mb-6">"{quote}"</p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                          <span className="text-purple-400 font-bold text-sm">{name[0]}</span>
-                        </div>
-                        <div>
-                          <p className="text-white font-bold text-sm">{name}</p>
-                          <p className="text-white/40 text-xs">{role} via EXTRA</p>
-                        </div>
-                      </div>
-                    </div>
-                  </RevealSection>
-                ))}
-              </div>
-            </RevealSection>
-          </div>
-        </section>
-
-        {/* ── 8. FAQ ── */}
-        <section className="py-24 bg-[#0d0415]">
-          <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8">
-            <RevealSection>
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Veelgestelde vragen
-                </h2>
-                <p className="text-white/60">
-                  Alles wat je wilt weten over werken in de horeca via EXTRA.
-                </p>
-              </div>
-              <Accordion type="single" collapsible className="space-y-3">
-                {faqs.map(({ q, a }, i) => (
-                  <AccordionItem
-                    key={i}
-                    value={`item-${i}`}
-                    className="bg-white/5 border border-white/10 rounded-2xl px-6 hover:border-purple-500/30 transition-colors data-[state=open]:border-purple-500/40 data-[state=open]:bg-white/10"
-                  >
-                    <AccordionTrigger className="text-white font-semibold text-left py-5 hover:no-underline hover:text-purple-300 transition-colors [&>svg]:text-purple-400">
-                      {q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-white/60 text-sm leading-relaxed pb-5">
-                      {a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </RevealSection>
-          </div>
-        </section>
-
-        {/* ── 9. CTA BANNER ── */}
-        <section className="relative py-20 bg-gradient-to-r from-purple-600 to-violet-700 overflow-hidden">
-          <XPatternBg count={2} opacity={0.08} color="rgba(255,255,255,1)" />
-          <div className="max-w-4xl mx-auto px-5 text-center relative z-10">
-            <RevealSection>
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Klaar om te beginnen?
+      {/* ══ 5. LOCATIES ══ */}
+      <section className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Toplocaties</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Werken op locaties waar jij trots op kunt zijn
               </h2>
-              <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto">
-                Aanmelden duurt minder dan 5 minuten. Daarna bepaal jij wanneer je werkt.
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Via EXTRA werk je bij gerenommeerde hotels, restaurants en events. Geen doorsnee horecabijbaan.
               </p>
-              <Link href="/aanmelden" className="group inline-flex items-center gap-2.5 bg-white text-purple-700 font-bold text-lg px-10 py-5 rounded-full transition-all hover:scale-105 shadow-2xl">
-                Schrijf je in bij EXTRA <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </RevealSection>
-          </div>
-        </section>
-
-        {/* ── LINK CLOUD ── */}
-        <section className="py-12 bg-[#0a0310] border-t border-white/5">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-6 text-center">Gerelateerde pagina's</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {[
-                { label: "Horeca vacatures Amsterdam", href: "/horeca-vacatures-amsterdam" },
-                { label: "Bediening vacatures", href: "/horeca-vacatures-amsterdam" },
-                { label: "Horeca bijbaan Amsterdam", href: "/horeca-werk-amsterdam" },
-                { label: "Flexibel horecawerk", href: "/horeca-werk-amsterdam" },
-                { label: "Housekeeping werk", href: "/ik-zoek-extra-werk/housekeeping" },
-                { label: "Over EXTRA", href: "/horeca-uitzendbureau-amsterdam" },
-              ].map((link, i) => (
-                <Link key={i} href={link.href} className="bg-white/5 px-5 py-2.5 rounded-full border border-white/10 text-sm font-medium text-white/60 hover:border-purple-400/50 hover:text-purple-300 transition-all">
-                  {link.label}
-                </Link>
-              ))}
             </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-10">
+            {[
+              { icon: Building2, title: "Hotels", desc: "Werk bij vijfsterren hotels in Amsterdam, Utrecht en Den Haag. Internationale ketens en boutique hotels.", color: "from-indigo-500 to-blue-600", iconBg: "bg-indigo-100", iconColor: "text-indigo-600", bg: "from-indigo-50 to-blue-50", border: "border-indigo-200" },
+              { icon: UtensilsCrossed, title: "Restaurants", desc: "Van bruisende restaurants tot rustige fine dining. Horeca werk Amsterdam is afwisselend en altijd interessant.", color: "from-purple-500 to-violet-600", iconBg: "bg-purple-100", iconColor: "text-purple-600", bg: "from-purple-50 to-violet-50", border: "border-purple-200" },
+              { icon: PartyPopper, title: "Events", desc: "Festivals, gala-diners, personeelsfeesten en beurzen. Werk op unieke locaties bij bijzondere gelegenheden.", color: "from-emerald-500 to-teal-600", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", bg: "from-emerald-50 to-teal-50", border: "border-emerald-200" },
+            ].map(({ icon: Icon, title, desc, iconBg, iconColor, bg, border }, i) => (
+              <RevealSection key={title} delay={i * 100}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+                  <div className="relative">
+                    <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                      <Icon className={`w-6 h-6 ${iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
           </div>
-        </section>
+          <RevealSection delay={300}>
+            <div className="text-center">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Werk bij de mooiste locaties</p>
+              <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
+                {[
+                  { src: marriottLogo, alt: "Marriott" },
+                  { src: amrathLogo, alt: "Amrath" },
+                  { src: nhLogo, alt: "NH Hotels" },
+                  { src: hiltonLogo, alt: "Hilton" },
+                ].map(({ src, alt }) => (
+                  <img key={alt} src={src} alt={alt} className="h-6 sm:h-8 w-auto object-contain grayscale opacity-40 hover:opacity-70 hover:grayscale-0 transition-all" loading="lazy" />
+                ))}
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
 
-      </main>
+      {/* ══ 6. HOE HET WERKT ══ */}
+      <section id="hoe-het-werkt" className="relative bg-white py-16 sm:py-24 overflow-hidden">
+        <XPatternBg />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 4 stappen</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Zo ziet werken via EXTRA eruit
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Aanmelden, werken en verdienen. Simpeler kan bijna niet.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {[
+              { step: "01", icon: MessageCircle, title: "Schrijf je in", desc: "Vul het aanmeldformulier in en upload je CV. Duurt minder dan 5 minuten.", color: "from-purple-500 to-violet-600" },
+              { step: "02", icon: Users, title: "Kennismaking", desc: "We plannen een kort gesprek. Dan weten we bij welke locaties je past.", color: "from-indigo-500 to-blue-600" },
+              { step: "03", icon: CalendarCheck, title: "Kies je diensten", desc: "Via de EXTRA app zie je beschikbare diensten en kies je zelf wanneer je werkt.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Zap, title: "Werk en word betaald", desc: "Draai je dienst, ontvang dezelfde dag je betaling via Jixbee.", color: "from-orange-500 to-amber-500" },
+            ].map(({ step, icon: Icon, title, desc, color }, i) => (
+              <RevealSection key={step} delay={i * 80}>
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
+                  <span className="text-5xl font-black text-purple-100 leading-none mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>{step}</span>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{desc}</p>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={300}>
+            <div className="flex justify-center mt-10">
+              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+                Schrijf je in <ArrowRight className="w-5 h-5" />
+              </a>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 7. DAGBETALING ══ */}
+      <section className="py-16 sm:py-24 lg:py-32" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Financiële vrijheid</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Geld op je rekening, dezelfde dag nog.
+                </h2>
+                <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
+                  Na je dienst word je uitbetaald via Jixbee. Geen wachten op het einde van de maand — gewoon direct je verdiende geld. Transparant, snel en betrouwbaar.
+                </p>
+                <div className="space-y-3 mb-8">
+                  {[
+                    "Uitbetaling via Jixbee, zelfde dag na je dienst",
+                    "Altijd real-time inzicht in je verdiende uren",
+                    "Officiële payroll, 100% conform wetgeving",
+                    "Geen verrassingen op je loonstrook",
+                  ].map(item => (
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      </div>
+                      <span className="text-sm text-gray-700 font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <a href="/hoe-werkt-dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                  Hoe werkt dagbetaling? <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+              <div className="flex justify-center">
+                <div className="relative flex gap-5 items-end h-[320px] sm:h-[380px]">
+                  <div style={{ transform: "rotate(-5deg)", animation: "float-hw 5s ease-in-out infinite" }}>
+                    <img src={jixbeeUren} alt="Jixbee – gewerkte uren overzicht" className="w-[145px] sm:w-[175px] drop-shadow-2xl rounded-[2rem]" />
+                  </div>
+                  <div className="relative z-10 -mb-4" style={{ animation: "float-hw 4s ease-in-out infinite" }}>
+                    <img src={jixbeePayout} alt="Jixbee – payout succesvol" className="w-[155px] sm:w-[190px] drop-shadow-2xl rounded-[2rem]" />
+                    <div className="absolute -top-3 -right-10 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-purple-100 whitespace-nowrap">
+                      💸 €750,- uitbetaald
+                    </div>
+                    <div className="absolute -bottom-2 -left-8 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-green-100 whitespace-nowrap">
+                      ✅ Uren goedgekeurd
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+        <style>{`
+          @keyframes float-hw {
+            0%, 100% { transform: translateY(0px) rotate(-5deg); }
+            50% { transform: translateY(-12px) rotate(-5deg); }
+          }
+        `}</style>
+      </section>
+
+      {/* ══ 8. REVIEWS ══ */}
+      <section className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Ervaringen</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Wat zeggen onze medewerkers?
+              </h2>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-12">
+            {reviews.map(({ name, functie, tekst, rating }, i) => (
+              <RevealSection key={name} delay={i * 80}>
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all h-full flex flex-col">
+                  <div className="flex mb-3">
+                    {Array.from({ length: rating }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-4 italic">"{tekst}"</p>
+                  <div className="border-t border-purple-100 pt-3 flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white text-xs font-black">
+                      {name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-gray-900">{name}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">{functie} via EXTRA</p>
+                    </div>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 9. CTA STRIP ══ */}
+      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 py-8 sm:py-10">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Meld je aan en begin met werken bij de mooiste horecalocaties.
+            </p>
+            <p className="text-purple-200 text-sm mt-0.5">Geen kosten. Geen verplichtingen. Jij beslist wanneer je werkt.</p>
+          </div>
+          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+            Start je aanmelding <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+
+      {/* ══ 10. FAQ ══ */}
+      <FAQSection
+        heading="Veelgestelde vragen over horecawerk via EXTRA"
+        faqs={faqs}
+      />
+
+      {/* ══ 11. LINK CLOUD ══ */}
+      <section className="py-12 bg-white border-t border-purple-100/60">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">Gerelateerde pagina's</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {[
+              { label: "Horeca vacatures Amsterdam", href: "/horeca-vacatures-amsterdam" },
+              { label: "Housekeeping werk", href: "/housekeeping-werk" },
+              { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
+              { label: "Front Office vacatures", href: "/front-office-vacatures-amsterdam" },
+              { label: "Hoe werkt dagbetaling?", href: "/hoe-werkt-dagbetaling" },
+              { label: "EXTRAATJE beloningen", href: "/extraatje" },
+              { label: "Aanmelden bij EXTRA", href: "/aanmelden" },
+            ].map((link, i) => (
+              <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <PublicFooter />
     </div>
