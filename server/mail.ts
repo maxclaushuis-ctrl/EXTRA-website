@@ -684,12 +684,6 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
           </td>
         </tr>
         <tr>
-          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:16px 28px;">
-            <div style="color:#ffffff;font-size:18px;font-weight:700;">📋 Nieuwe aanmelding</div>
-            <div style="color:#ddd6fe;font-size:13px;margin-top:3px;">Er heeft iemand het aanmeldformulier ingevuld op doehetextra.nl</div>
-          </td>
-        </tr>
-        <tr>
           <td style="padding:20px 20px 8px;">
             <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
               <tr>
