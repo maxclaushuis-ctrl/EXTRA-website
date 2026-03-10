@@ -104,7 +104,7 @@ export default function RestaurantPersoneelGezocht() {
   const [activeScreen, setActiveScreen] = useState(0);
 
   useEffect(() => {
-    document.title = "Restaurantpersoneel Nodig? EXTRA Levert Flexibel Horecapersoneel | Restaurant Uitzendbureau";
+    document.title = "Horecapersoneel voor restaurants | bediening en keuken | EXTRA";
 
     const setMeta = (nameOrProp: string, content: string, attr = "name") => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -123,11 +123,11 @@ export default function RestaurantPersoneelGezocht() {
       document.head.appendChild(s);
     };
 
-    setMeta("description", "Restaurantpersoneel nodig? EXTRA levert flexibel horecapersoneel voor restaurants — van bediening tot keukenondersteuning. Persoonlijk geselecteerd, iedereen in loondienst. NEN-4400-1 gecertificeerd.");
-    setLink("canonical", "https://www.doehetextra.nl/horecapersoneel-gezocht");
-    setMeta("og:title", "Restaurantpersoneel Nodig? EXTRA Levert Flexibel Horecapersoneel", "property");
-    setMeta("og:description", "Restaurantpersoneel nodig? EXTRA levert bediening, keukenondersteuning en barpersoneel voor restaurants. Persoonlijk geselecteerd, iedereen in loondienst.", "property");
-    setMeta("og:url", "https://www.doehetextra.nl/horecapersoneel-gezocht", "property");
+    setMeta("description", "Horecapersoneel nodig voor jouw restaurant? EXTRA levert ervaren bediening, runners, bartenders en keukenpersoneel. Flexibel, betrouwbaar en direct inzetbaar.");
+    setLink("canonical", "https://www.doehetextra.nl/horecapersoneel-restaurants");
+    setMeta("og:title", "Horecapersoneel voor restaurants | bediening en keuken | EXTRA", "property");
+    setMeta("og:description", "Horecapersoneel nodig voor jouw restaurant? EXTRA levert ervaren bediening, runners, bartenders en keukenpersoneel. Flexibel, betrouwbaar en direct inzetbaar.", "property");
+    setMeta("og:url", "https://www.doehetextra.nl/horecapersoneel-restaurants", "property");
     setMeta("og:type", "website", "property");
 
     addSchema("restaurant-faq-schema", {
@@ -169,7 +169,7 @@ export default function RestaurantPersoneelGezocht() {
             <div className="flex flex-wrap gap-3 mb-6 sm:mb-10">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 border border-white/20">
                 <Utensils className="w-3.5 h-3.5 text-purple-300" />
-                <span className="text-white/90 text-xs sm:text-sm font-semibold">Specialist in restaurantpersoneel</span>
+                <span className="text-white/90 text-xs sm:text-sm font-semibold">Specialist in horecapersoneel voor restaurants</span>
               </div>
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 border border-white/20">
                 <Shield className="w-3.5 h-3.5 text-green-400" />
@@ -177,14 +177,14 @@ export default function RestaurantPersoneelGezocht() {
               </div>
             </div>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Restaurantpersoneel nodig?{" "}
+              Horecapersoneel nodig voor jouw restaurant?{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">EXTRA regelt het.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-70 rounded-sm" />
               </span>
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              EXTRA levert flexibel horecapersoneel voor restaurants — van bediening tot keukenondersteuning. Persoonlijk geselecteerd, gewend aan horeca tempo en altijd representatief. Iedereen in loondienst.
+              EXTRA levert flexibel horecapersoneel voor restaurants. Van bediening tot keukenondersteuning. Iedere medewerker is persoonlijk geselecteerd, gewend aan horeca tempo en direct inzetbaar. Iedereen werkt bij ons in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
@@ -255,7 +255,7 @@ export default function RestaurantPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Of het nu gaat om een druk weekend, een zieke medewerker of een onverwacht volgeboekte zaal — EXTRA levert ervaren horecapersoneel dat direct meedraait in jouw restaurant.
+                Of het nu gaat om een druk weekend, een zieke medewerker of een onverwacht volle zaal. EXTRA levert ervaren horecapersoneel dat direct kan meedraaien in jouw restaurant.
               </p>
             </div>
           </RevealSection>
@@ -348,7 +348,7 @@ export default function RestaurantPersoneelGezocht() {
                 <span className="text-purple-600">om één reden: het werkt.</span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Horecapersoneel vinden is al moeilijk genoeg. Het vinden van iemand die direct meedraait in een druk restaurant is nog een stap verder. Dat is precies waar EXTRA in uitblinkt.
+                Horecapersoneel vinden is al lastig genoeg. Iemand vinden die direct meedraait in een druk restaurant is nog moeilijker. EXTRA selecteert horecapersoneel dat gewend is aan tempo, service en teamwork.
               </p>
             </div>
           </RevealSection>
@@ -431,10 +431,10 @@ export default function RestaurantPersoneelGezocht() {
                 </span>
                 <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Zo selecteert EXTRA{" "}
-                  <span className="text-purple-600">de juiste mensen</span>
+                  <span className="text-purple-600">het juiste horecapersoneel</span>
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-10">
-                  Restaurantpersoneel moet direct kunnen meedraaien in een onbekende omgeving. Dat vraagt om ervaring, aanpassingsvermogen en de juiste werkmentaliteit. Wij selecteren precies daarop.
+                  Horecapersoneel moet direct kunnen meedraaien in een nieuwe omgeving. Dat vraagt om ervaring, aanpassingsvermogen en de juiste werkmentaliteit. Daarom selecteren wij medewerkers op houding, service en horecavaardigheden.
                 </p>
                 <ul className="space-y-6">
                   {[
@@ -517,7 +517,7 @@ export default function RestaurantPersoneelGezocht() {
                 Elke dienst beter dan<br className="hidden sm:block" /> de vorige
               </h2>
               <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                Na elke restaurantdienst meten we hoe het personeel heeft gepresteerd. Zo weet je zeker dat je elke keer iemand krijgt die bewezen goed is in jouw type restaurant.
+                Na iedere restaurantdienst meten we hoe het horecapersoneel heeft gepresteerd. Zo weten we zeker dat je elke keer medewerkers krijgt die bewezen goed functioneren in restaurants.
               </p>
             </div>
           </RevealSection>
@@ -593,7 +593,7 @@ export default function RestaurantPersoneelGezocht() {
                   Vaste gezichten<br /> in jouw restaurant
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8">
-                  Restaurants die structureel met EXTRA werken, bouwen een vaste kern op van medewerkers die het restaurant kennen. Ze weten hoe de bediening werkt, kennen het menu en begrijpen de servicestijl — zonder uitgebreide introductie.
+                  Restaurants die structureel met EXTRA werken bouwen een vaste kern van horecapersoneel op. Medewerkers die jouw restaurant kennen, het tempo begrijpen en zonder uitgebreide briefing kunnen starten.
                 </p>
                 <ul className="space-y-4 mb-8">
                   {[
@@ -657,7 +657,7 @@ export default function RestaurantPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Personeel dat gemotiveerd is, presteert beter in jouw restaurant. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers betrokken zijn en elke dienst het beste uit zichzelf halen.
+                Horecapersoneel dat gemotiveerd is presteert beter. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers betrokken blijven en graag terugkomen naar jouw restaurant.
               </p>
             </div>
           </RevealSection>
@@ -701,10 +701,10 @@ export default function RestaurantPersoneelGezocht() {
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>Wat jouw restaurant hiervan merkt</h3>
                 <ul className="space-y-4">
                   {[
-                    { icon: TrendingUp, text: "Hogere motivatie: medewerkers die beloond worden, presteren beter" },
-                    { icon: Check, text: "Minder no-shows: wie punten opbouwt bij jou, komt opdagen" },
-                    { icon: Users, text: "Sterkere teams: dezelfde gemotiveerde gezichten bij elke dienst" },
-                    { icon: Heart, text: "Betere gastbeleving: enthousiast personeel straalt af op jouw gasten" },
+                    { icon: TrendingUp, text: "Hogere motivatie doordat medewerkers beloond worden" },
+                    { icon: Check, text: "Minder no shows doordat medewerkers punten opbouwen" },
+                    { icon: Users, text: "Sterkere teams door dezelfde gezichten" },
+                    { icon: Heart, text: "Betere gastbeleving door gemotiveerd horecapersoneel" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -846,12 +846,12 @@ export default function RestaurantPersoneelGezocht() {
             <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 sm:mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
               Vraag direct{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">EXTRA personeel aan</span>
+                <span className="relative z-10">EXTRA horecapersoneel aan</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
               </span>
             </h2>
             <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
-              Of je nu op zoek bent naar bediening voor dit weekend of een vaste aanvulling op je team zoekt: EXTRA levert snel, flexibel en betrouwbaar horecapersoneel voor restaurants.
+              Of je nu extra bediening zoekt voor dit weekend of een vaste aanvulling op je team nodig hebt. EXTRA levert snel, flexibel en betrouwbaar horecapersoneel voor restaurants.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-14">
               <a

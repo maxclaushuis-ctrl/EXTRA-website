@@ -83,7 +83,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 
 const PUBLIC_PATHS = [
   '/landing', '/personeel-gezocht', '/horeca-personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
-  '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/event-personeel-gezocht', '/eventpersoneel-inhuren', '/cateringpersoneel-gezocht', '/cateringpersoneel-inhuren', '/horecapersoneel-gezocht', '/restaurant-personeel-gezocht',
+  '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/event-personeel-gezocht', '/eventpersoneel-inhuren', '/cateringpersoneel-gezocht', '/cateringpersoneel-inhuren', '/horecapersoneel-gezocht', '/horecapersoneel-restaurants', '/restaurant-personeel-gezocht',
   '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
@@ -126,7 +126,8 @@ function Router() {
         <Route path="/landing" component={LandingPage} />
 
         {/* Werkgever routes */}
-        <Route path="/horecapersoneel-gezocht" component={RestaurantPersoneelGezocht} />
+        <Route path="/horecapersoneel-restaurants" component={RestaurantPersoneelGezocht} />
+        <Route path="/horecapersoneel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
         <Route path="/horeca-personeel-gezocht" component={PersoneelGezocht} />
         <Route path="/personeel-gezocht">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
         <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
@@ -139,8 +140,8 @@ function Router() {
         <Route path="/cateringpersoneel-inhuren" component={CateringPersoneelGezocht} />
         <Route path="/cateringpersoneel-gezocht">{() => { window.location.replace('/cateringpersoneel-inhuren'); return null; }}</Route>
         <Route path="/catering-personeel-amsterdam">{() => { window.location.replace('/cateringpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/restaurant-personeel-gezocht'); return null; }}</Route>
-        <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
+        <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
+        <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
 
         {/* Kandidaat routes */}
         <Route path="/horeca-vacatures-amsterdam" component={IkZoekExtraWerk} />

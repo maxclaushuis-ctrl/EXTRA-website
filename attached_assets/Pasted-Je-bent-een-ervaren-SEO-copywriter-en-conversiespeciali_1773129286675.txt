@@ -1,0 +1,90 @@
+Je bent een ervaren SEO copywriter en conversiespecialist.
+Optimaliseer de pagina Restaurants (subpagina van Personeel gezocht) voor SEO en conversie.
+BELANGRIJK
+Verander NIETS aan:
+layout
+design
+secties
+componenten
+kaarten
+statistieken
+FAQ
+volgorde van de pagina
+Je mag alleen aanpassen:
+headers
+body teksten
+URL structuur
+meta title
+meta description
+De structuur van de pagina moet exact hetzelfde blijven.
+Tone of voice moet passen bij EXTRA:
+speels
+direct
+professioneel
+hospitality gedreven
+Gebruik horecapersoneel als belangrijkste SEO zoekwoord, omdat hier meer op gezocht wordt dan restaurantpersoneel.
+Gebruik restaurants als context zodat de pagina logisch blijft binnen de navigatie.
+Gebruik geen streepjes in zinnen.
+URL STRUCTUUR
+Gebruik de volgende URL voor deze pagina:
+/horecapersoneel-restaurants
+META TITLE
+Horecapersoneel voor restaurants | bediening en keuken | EXTRA
+(maximaal 60 karakters)
+META DESCRIPTION
+Horecapersoneel nodig voor jouw restaurant? EXTRA levert ervaren bediening, runners, bartenders en keukenpersoneel. Flexibel, betrouwbaar en direct inzetbaar.
+(150 tot 160 karakters)
+HERO SECTIE
+H1
+Horecapersoneel nodig voor jouw restaurant?
+EXTRA regelt het.
+Bodytekst
+EXTRA levert flexibel horecapersoneel voor restaurants. Van bediening tot keukenondersteuning. Iedere medewerker is persoonlijk geselecteerd, gewend aan horeca tempo en direct inzetbaar. Iedereen werkt bij ons in loondienst.
+De bestaande CTA knoppen blijven hetzelfde.
+CTA SECTIE ONDERAAN PAGINA
+H2
+Vraag direct EXTRA horecapersoneel aan
+Bodytekst
+Of je nu extra bediening zoekt voor dit weekend of een vaste aanvulling op je team nodig hebt. EXTRA levert snel, flexibel en betrouwbaar horecapersoneel voor restaurants.
+CTA knoppen blijven hetzelfde.
+SECTIE FUNCTIES VOOR RESTAURANTS
+H2
+Elke rol in het restaurant. Snel ingevuld.
+Bodytekst
+Of het nu gaat om een druk weekend, een zieke medewerker of een onverwacht volle zaal. EXTRA levert ervaren horecapersoneel dat direct kan meedraaien in jouw restaurant.
+SECTIE WAAROM EXTRA
+H2
+Restaurants kiezen EXTRA om één reden: het werkt.
+Bodytekst
+Horecapersoneel vinden is al lastig genoeg. Iemand vinden die direct meedraait in een druk restaurant is nog moeilijker. EXTRA selecteert horecapersoneel dat gewend is aan tempo, service en teamwork.
+SECTIE SELECTIEPROCES
+H2
+Zo selecteert EXTRA het juiste horecapersoneel
+Bodytekst
+Horecapersoneel moet direct kunnen meedraaien in een nieuwe omgeving. Dat vraagt om ervaring, aanpassingsvermogen en de juiste werkmentaliteit. Daarom selecteren wij medewerkers op houding, service en horecavaardigheden.
+SECTIE KWALITEITSMETING
+H2
+Elke dienst beter dan de vorige
+Bodytekst
+Na iedere restaurantdienst meten we hoe het horecapersoneel heeft gepresteerd. Zo weten we zeker dat je elke keer medewerkers krijgt die bewezen goed functioneren in restaurants.
+SECTIE FAVORIETENPOULES
+H2
+Vaste gezichten in jouw restaurant
+Bodytekst
+Restaurants die structureel met EXTRA werken bouwen een vaste kern van horecapersoneel op. Medewerkers die jouw restaurant kennen, het tempo begrijpen en zonder uitgebreide briefing kunnen starten.
+SECTIE BELONINGSSYSTEEM
+H2
+Gemotiveerd personeel levert betere service
+Bodytekst
+Horecapersoneel dat gemotiveerd is presteert beter. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers betrokken blijven en graag terugkomen naar jouw restaurant.
+SECTIE RESULTATEN VOOR RESTAURANTS
+H2
+Wat jouw restaurant hiervan merkt
+Bullets (tekst licht optimaliseren)
+Hogere motivatie doordat medewerkers beloond worden
+Minder no shows doordat medewerkers punten opbouwen
+Sterkere teams door dezelfde gezichten
+Betere gastbeleving door gemotiveerd horecapersoneel
+FAQ
+Laat alle FAQ vragen exact hetzelfde.
+Deze zijn goed voor SEO en moeten niet aangepast worden.

@@ -316,7 +316,7 @@ export default function PersoneelGezocht() {
                 desc: "Bediening, koks en barpersoneel voor restaurants bij drukte, uitval en piekmomenten.",
                 color: "from-blue-500 to-indigo-600",
                 border: "border-blue-100",
-                link: "/horecapersoneel-gezocht",
+                link: "/horecapersoneel-restaurants",
                 tags: ["Bediening", "Bar", "Keuken", "Runners"],
               },
             ].map((item, i) => (
