@@ -5621,6 +5621,7 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
         // Kandidaat routes
         { url: '/horeca-vacatures-amsterdam', priority: '0.95', changefreq: 'weekly' },
         { url: '/horeca-werk-amsterdam', priority: '0.9', changefreq: 'weekly' },
+        { url: '/horeca-werk', priority: '0.95', changefreq: 'weekly' },
         { url: '/housekeeping-vacatures-amsterdam', priority: '0.9', changefreq: 'weekly' },
         { url: '/chef-vacatures-amsterdam', priority: '0.85', changefreq: 'weekly' },
         { url: '/front-office-vacatures-amsterdam', priority: '0.85', changefreq: 'weekly' },
