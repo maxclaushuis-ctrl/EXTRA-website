@@ -165,15 +165,15 @@ export default function HousekeepingWerk() {
   }, []);
 
   useEffect(() => {
-    document.title = "Housekeeping Werk via EXTRA | Flexibel Werken in Hotels Amsterdam";
+    document.title = "Housekeeping vacatures Amsterdam | Werken in hotels | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Zoek jij housekeeping werk in hotels? Via EXTRA werk je als room attendant, hotel schoonmaak of public area cleaning bij de mooiste hotels in Amsterdam. Dagbetaling via Jixbee, flexibele diensten en iedereen in loondienst.");
-    setMeta("og:title", "Housekeeping Werk via EXTRA | Werken in Hotels Amsterdam", true);
+    setMeta("description", "Op zoek naar housekeeping werk in Amsterdam? Werk in top hotels als room attendant of hotel schoonmaak medewerker. Flexibele diensten en snelle uitbetaling via EXTRA.");
+    setMeta("og:title", "Housekeeping vacatures Amsterdam | Werken in hotels | EXTRA", true);
     setMeta("og:type", "website", true);
   }, []);
 
@@ -308,7 +308,7 @@ export default function HousekeepingWerk() {
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Werk als room attendant, hotel schoonmaak of public area cleaning bij de mooiste hotels in Amsterdam. Housekeeping vacatures met dagbetaling en flexibele diensten.
+              Werk als room attendant of in hotel schoonmaak bij mooie hotels in Amsterdam. Via EXTRA kies je zelf wanneer je werkt. Flexibele housekeeping vacatures met dagbetaling en duidelijke planning.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -401,7 +401,10 @@ export default function HousekeepingWerk() {
                 Welke housekeeping functies kun je doen?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Via EXTRA werk je in verschillende housekeeping rollen bij hotels en hospitality locaties in Amsterdam en omgeving.
+                Via EXTRA kun je werken in verschillende housekeeping functies bij hotels in Amsterdam. Denk aan room attendant, hotel schoonmaak werk, public area cleaning en linnen service. Bekijk ook{" "}
+                <a href="/horeca-werk" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">horeca werk</a>,{" "}
+                <a href="/front-office-vacatures-amsterdam" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">front office werk</a> of{" "}
+                <a href="/chef-vacatures-amsterdam" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef vacatures</a>. Je kiest zelf de diensten die bij jouw agenda passen.
               </p>
             </div>
           </RevealSection>
@@ -460,7 +463,7 @@ export default function HousekeepingWerk() {
                 Waarom housekeeping via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                EXTRA werkt anders dan andere uitzendbureaus. En dat voel je direct als housekeeping medewerker.
+                EXTRA werkt anders dan traditionele uitzendbureaus. Als housekeeping medewerker krijg je duidelijke planning, flexibiliteit in diensten en werk je bij professionele hotels met housekeeping vacatures die bij jou passen.
               </p>
             </div>
           </RevealSection>
@@ -468,17 +471,17 @@ export default function HousekeepingWerk() {
             {[
               {
                 icon: Zap, badge: "Financiële vrijheid", title: "Dagbetaling via Jixbee",
-                desc: "Na je dienst staat je geld dezelfde dag nog op je rekening. Geen wachten tot het einde van de maand.",
+                desc: "Na je dienst wordt je betaling snel verwerkt. Zo hoef je niet te wachten tot het einde van de maand.",
                 bg: "from-yellow-50 to-orange-50", border: "border-yellow-200", iconBg: "bg-yellow-100", iconColor: "text-yellow-600", tag: "⚡ Dagbetaling",
               },
               {
                 icon: CalendarCheck, badge: "Eigen planning", title: "Flexibele diensten",
-                desc: "Kies zelf je diensten. Of je nu fulltime, parttime of in het weekend wil werken — wij regelen het.",
+                desc: "Kies zelf wanneer je werkt. Ideaal als je parttime of flexibel housekeeping werk zoekt.",
                 bg: "from-violet-50 to-purple-50", border: "border-violet-200", iconBg: "bg-violet-100", iconColor: "text-violet-600", tag: "📅 Volledig flexibel",
               },
               {
                 icon: Building2, badge: "Premium werkomgeving", title: "Werken in tophotels",
-                desc: "Housekeeping vacatures bij vijfsterren hotels, internationale ketens en boutique hotels in Amsterdam.",
+                desc: "Werk als room attendant of hotel schoonmaak medewerker bij hotels met internationale gasten.",
                 bg: "from-blue-50 to-indigo-50", border: "border-blue-200", iconBg: "bg-blue-100", iconColor: "text-blue-600", tag: "🏨 Toplocaties",
               },
               {
@@ -528,7 +531,7 @@ export default function HousekeepingWerk() {
                 Hotels waar jij trots op kunt zijn
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Als housekeeping medewerker via EXTRA werk je in een omgeving van kwaliteit. Hotels met hoge standaarden en een professionele sfeer.
+                Als housekeeping medewerker via EXTRA werk je bij hotels met hoge standaarden en professionele teams. Van internationale hotelketens tot boutique hotels in Amsterdam.
               </p>
             </div>
           </RevealSection>
@@ -578,7 +581,7 @@ export default function HousekeepingWerk() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 4 stappen</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Zo begin je met housekeeping via EXTRA
+                Zo begin je met housekeeping werk via EXTRA
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
                 Van aanmelding tot je eerste hotelkamer. Simpel, snel en duidelijk.
@@ -625,7 +628,7 @@ export default function HousekeepingWerk() {
                   Geld op je rekening, dezelfde dag nog.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Na je housekeeping dienst word je uitbetaald via Jixbee. Geen wachten op het einde van de maand — gewoon direct je verdiende geld. Transparant, snel en betrouwbaar.
+                  Na je housekeeping dienst wordt je uitbetaald via Jixbee. Je ziet direct wat je hebt verdiend en ontvangt je betaling snel. Geen wachttijden, geen onduidelijkheid.
                 </p>
                 <div className="space-y-3 mb-8">
                   {[
@@ -715,9 +718,9 @@ export default function HousekeepingWerk() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Meld je aan en begin met housekeeping werk bij de mooiste hotels.
+              Begin vandaag met housekeeping werk via EXTRA
             </p>
-            <p className="text-purple-200 text-sm mt-0.5">Geen kosten. Geen verplichtingen. Jij beslist wanneer je werkt.</p>
+            <p className="text-purple-200 text-sm mt-0.5">Wil je werken als room attendant of in hotel schoonmaak bij mooie hotels in Amsterdam? Meld je aan bij EXTRA en start snel met housekeeping diensten.</p>
           </div>
           <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start je aanmelding <ArrowRight className="w-4 h-4" />
