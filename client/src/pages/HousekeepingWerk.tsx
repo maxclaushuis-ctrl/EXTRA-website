@@ -5,9 +5,9 @@ import { Link } from "wouter";
 import { ArrowRight, BedDouble, Sparkles, ShieldCheck, Layers, Zap, Trophy, Gift } from "lucide-react";
 import { useEffect } from "react";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
-import housekeepingBlogImg from "../assets/images/blog-housekeeping.jpg";
-import hotelImg from "../assets/images/blog-hotel.jpg";
-import teamImg from "../assets/images/blog-team.jpg";
+import housekeepingBlogImg from "@/assets/images/blog-housekeeping.jpg";
+import hotelImg from "@/assets/images/blog-hotel.jpg";
+import teamImg from "@/assets/images/blog-team.jpg";
 
 const XDivider = () => (
   <div className="relative h-16 overflow-hidden">
