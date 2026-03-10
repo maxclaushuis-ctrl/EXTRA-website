@@ -487,10 +487,10 @@ export async function sendCandidateConfirmationEmail(candidate: {
 
         <!-- ① HERO BANNER -->
         <tr>
-          <td style="padding:0;border-radius:16px 16px 0 0;overflow:hidden;background:#3b0764;line-height:0;font-size:0;">
-            <img src="https://www.doehetextra.nl/extra_email_banner_bg.png"
-                 width="600" height="180"
-                 alt="EXTRA – Nieuwe aanmelding"
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
                  style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
@@ -645,8 +645,16 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:22px 28px;">
-            <div style="color:#ffffff;font-size:20px;font-weight:700;">📋 Nieuwe aanmelding</div>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
+          </td>
+        </tr>
+        <tr>
+          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:16px 28px;">
+            <div style="color:#ffffff;font-size:18px;font-weight:700;">📋 Nieuwe aanmelding</div>
             <div style="color:#ddd6fe;font-size:13px;margin-top:3px;">Er heeft iemand het aanmeldformulier ingevuld op doehetextra.nl</div>
           </td>
         </tr>
@@ -760,8 +768,11 @@ export async function sendCalendlyInviteEmail(candidate: {
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:24px 28px;">
-            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
         <tr>
@@ -818,8 +829,11 @@ export async function sendApplicationRejectionEmail(applicant: {
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:#7c3aed;padding:24px 28px;">
-            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
         <tr>
@@ -868,8 +882,11 @@ export async function sendCandidateRejectionEmailDiensten(candidate: {
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:24px 28px;">
-            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
         <tr>
@@ -918,8 +935,11 @@ export async function sendCandidateRejectionEmailCv(candidate: {
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:#7c3aed;padding:24px 28px;">
-            <div style="color:#ffffff;font-size:22px;font-weight:700;">EXTRA</div>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
         <tr>
@@ -964,11 +984,11 @@ export async function sendCvUploadFirstEmail(candidate: { firstName: string; ema
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
         <tr>
-          <td style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:32px 28px;text-align:center;">
-            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:16px;">
-              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:1px;">EXTRA</span>
-            </div>
-            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Nog één stap — upload je cv</h1>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
         <tr>
@@ -1015,11 +1035,11 @@ export async function sendCvReminderEmail(candidate: { firstName: string; email:
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
         <tr>
-          <td style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:32px 28px;text-align:center;">
-            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:16px;">
-              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:1px;">EXTRA</span>
-            </div>
-            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Vergeet je cv niet!</h1>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
           </td>
         </tr>
         <tr>
@@ -1073,11 +1093,16 @@ export async function sendTwvExpiryReminderEmail(candidate: {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:600px;width:100%;">
         <tr>
-          <td style="background:linear-gradient(135deg,#d97706,#b45309);padding:32px 28px;text-align:center;">
-            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:16px;">
-              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:1px;">EXTRA</span>
-            </div>
-            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">⚠️ TWV verloopt binnenkort</h1>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="https://www.doehetextra.nl/email-banner-extra.png"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
+          </td>
+        </tr>
+        <tr>
+          <td style="background:linear-gradient(135deg,#d97706,#b45309);padding:16px 28px;text-align:center;">
+            <div style="color:#ffffff;font-size:18px;font-weight:700;">⚠️ TWV verloopt binnenkort</div>
           </td>
         </tr>
         <tr>
