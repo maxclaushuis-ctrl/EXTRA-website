@@ -141,7 +141,7 @@ function Router() {
         <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-gezocht'); return null; }}</Route>
 
         {/* Kandidaat routes */}
-        <Route path="/horeca-vacatures-amsterdam" component={HorecaVacaturesAmsterdam} />
+        <Route path="/horeca-vacatures-amsterdam" component={IkZoekExtraWerk} />
         <Route path="/horeca-werk-amsterdam" component={HorecaWerkAmsterdam} />
         <Route path="/housekeeping-vacatures-amsterdam" component={HousekeepingVacaturesAmsterdam} />
         <Route path="/chef-vacatures-amsterdam" component={ChefVacaturesAmsterdam} />
@@ -174,7 +174,7 @@ function Router() {
         <Route path="/aanmelden" component={Aanmelden} />
         <Route path="/extraatje" component={Extraatje} />
         <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
-        <Route path="/ik-zoek-extra-werk" component={IkZoekExtraWerk} />
+        <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
         <Route path="/hoe-werkt-dagbetaling" component={HoeWerktDagbetaling} />
         <Route path="/vacatures" component={Vacatures} />
         <Route path="/vacatures/:slug" component={VacatureDetail} />

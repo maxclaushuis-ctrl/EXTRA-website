@@ -147,7 +147,7 @@ export default function IkZoekExtraWerk() {
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
-    canonical.href = "https://www.doehetextra.nl/ik-zoek-extra-werk";
+    canonical.href = "https://www.doehetextra.nl/horeca-vacatures-amsterdam";
     return () => { canonical?.remove(); };
   }, []);
 
@@ -159,7 +159,7 @@ export default function IkZoekExtraWerk() {
       desc: "Werk als bediening, barmedewerker of runner bij restaurants, hotels en events.",
       bullets: ["Flexibele dag- en avonddiensten", "Hotels, restaurants en events", "Professionele brigades"],
       color: "from-purple-600 to-violet-700",
-      href: "/horeca-vacatures-amsterdam",
+      href: "/aanmelden",
     },
     {
       title: "Chef",
