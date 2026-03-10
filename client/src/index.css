@@ -126,3 +126,64 @@
     text-wrap: balance;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   SMALL LAPTOP RESPONSIVE ADJUSTMENTS  (1024px – 1279px)
+   Ensures 11-inch screens match the 13-inch layout visually.
+   Does NOT affect mobile (< 1024px) or larger screens (≥ 1280px).
+   ══════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+
+  /* ── Navigation bar ──────────────────────────────────────
+     All public pages use <nav class="fixed top-0 ...">
+     Desktop nav items use text-[18px] px-5 which becomes
+     very tight at exactly 1024px. Scale down proportionally. */
+
+  /* Nav item links and dropdown trigger buttons */
+  nav.fixed .items-center.gap-2 > a,
+  nav.fixed .items-center.gap-2 > div > button {
+    font-size: 14px;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  /* "Aanmelden" CTA pill button — keep pill shape, just reduce side padding */
+  nav.fixed .items-center.gap-2 > a.rounded-full {
+    font-size: 14px;
+    padding-left: 1.1rem !important;
+    padding-right: 1.1rem !important;
+    margin-left: 0.4rem;
+  }
+
+  /* Tighten gap between nav items so everything fits in ~960px */
+  nav.fixed .items-center.gap-2 {
+    gap: 0.05rem;
+  }
+
+  /* ── PublicNav: nav group dropdown buttons ─────────────── */
+  nav.fixed .hidden.lg\:flex > div > button {
+    font-size: 14px;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  /* ── Card grids: 4-column at lg (1024px) ─────────────────
+     sm:grid-cols-2 lg:grid-cols-4 grids in max-w-5xl containers
+     get a slightly tighter gap at 1024px to prevent overflow. */
+  .sm\:grid-cols-2.lg\:grid-cols-4 {
+    gap: 0.875rem;
+  }
+
+  /* ── Hero two-column grid gap ────────────────────────────
+     lg:gap-16 (4rem) between hero text + image at 1024px
+     can be compressed slightly for better balance.            */
+  .lg\:grid-cols-2.lg\:gap-16 {
+    gap: 2.5rem;
+  }
+
+  /* ── Nav container: ensure no horizontal overflow ─────── */
+  nav.fixed > div {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}

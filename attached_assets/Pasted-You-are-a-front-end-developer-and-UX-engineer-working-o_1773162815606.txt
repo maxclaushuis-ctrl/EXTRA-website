@@ -1,0 +1,44 @@
+You are a front-end developer and UX engineer working on the EXTRA website.
+We discovered a layout issue on smaller laptop screens (around 11 inch).
+On these smaller screens the alignment, spacing and layout shift slightly, which makes the page look different compared to larger laptop screens.
+For example:
+On a 13 inch laptop the layout looks correct.
+On an 11 inch laptop the alignment shifts and elements are not positioned the same way.
+Goal
+Ensure that the layout on smaller laptop screens automatically adapts, while maintaining the same visual alignment and structure as the layout on a 13 inch laptop.
+Important:
+The layout on smaller screens should scale correctly, but it should not change the design or positioning logic of the rest of the website.
+Requirements
+Implement proper responsive behavior using breakpoints.
+Focus specifically on smaller laptop resolutions, such as:
+1280px width
+1200px width
+1024px width
+The goal is that the layout remains visually consistent across these sizes.
+What needs to be fixed
+Make sure that on smaller laptop screens:
+content containers remain centered
+text blocks keep proper alignment
+spacing between sections stays consistent
+hero sections remain visually balanced
+cards and content blocks do not wrap incorrectly
+margins and padding scale correctly
+navigation elements stay aligned
+Important
+Do not break or change the layout for other screen sizes.
+This means:
+the design on 13 inch and larger screens must remain exactly the same
+the mobile layout must remain unchanged
+only adjust the responsive behavior for smaller laptop screens
+Implementation suggestion
+Use responsive CSS adjustments such as:
+media queries
+container max-width adjustments
+adaptive padding and margins
+flexible grid alignment
+Ensure the layout scales smoothly without visual jumps.
+Final result
+The website should look visually consistent across laptop sizes, especially between:
+13 inch screens
+11 inch screens
+The user should experience the same alignment and layout structure, just scaled appropriately for the screen size.
