@@ -1,0 +1,244 @@
+Je bent een senior UX designer, dashboard designer en front-end developer.
+Binnen de omgeving /dashboard-mockup wil ik onder het hoofdtabblad “Marketing & SEO” een nieuw onderdeel toevoegen met website statistieken.
+
+Het doel van deze omgeving is dat wij in één oogopslag kunnen zien hoe de website presteert, welke pagina’s goed werken, waar bezoekers afhaken en welke pagina’s of formulieren de meeste conversie opleveren.
+
+Algemene opdracht
+
+Ontwerp en bouw binnen /dashboard-mockup een visueel aantrekkelijk en overzichtelijk Marketing & SEO dashboard in dezelfde stijl als de rest van het dashboard.
+
+De opzet moet clean, modern en snel scanbaar zijn, met:
+	•	KPI-cards bovenaan
+	•	grafieken
+	•	tabellen
+	•	filters
+	•	conversieblokken
+	•	SEO-inzichten
+	•	verkeersbronnen
+	•	pagina-performance
+
+Belangrijk: denk zelf mee welke data voor EXTRA relevant is op basis van onze website en businessmodel (werkzoekenden + werkgevers).
+
+⸻
+
+1. Hoofdstructuur van het dashboard
+
+Maak binnen Marketing & SEO een dashboard met de volgende hoofdonderdelen:
+
+A. KPI-overzicht (bovenaan in cards)
+
+Toon in één oogopslag de belangrijkste cijfers van de maand:
+	•	Totale websitebezoekers
+	•	Unieke bezoekers
+	•	Gemiddelde tijd op website
+	•	Aantal bekeken pagina’s
+	•	Bounce rate / uitstappercentage
+	•	Aantal blogweergaven
+	•	Aantal bezoekers op /aanmelden
+	•	Aantal bezoekers op personeelsaanvraagpagina
+	•	Aantal ingediende formulieren
+	•	Conversiepercentage per formulier
+	•	Aantal klikken op WhatsApp / bellen
+	•	Aantal bezoekers vanuit Google
+	•	Aantal bezoekers vanuit social media
+
+Gebruik duidelijke gekleurde KPI-cards zoals in de rest van het dashboard.
+
+⸻
+
+B. Verkeer & bezoekers
+
+Maak een blok met grafieken en tabellen voor:
+	•	Bezoekers per dag / week / maand
+	•	Unieke bezoekers vs terugkerende bezoekers
+	•	Desktop vs mobiel verkeer
+	•	Verdeling per land / stad indien beschikbaar
+	•	Verkeersbronnen:
+	•	Google / organisch
+	•	Direct verkeer
+	•	Social media
+	•	Referral / andere websites
+	•	Betaalde campagnes (indien van toepassing)
+
+Als het technisch/privacy-wise niet mogelijk is om letterlijk te zien wie de website heeft bezocht, geef dit duidelijk aan in de UI met een info-tooltip:
+
+“Individuele websitebezoekers zijn zonder expliciete identificatie of cookie-consent niet herleidbaar. Wel tonen we geanonimiseerde bezoekersdata.”
+
+Denk wel mee in alternatieven, zoals:
+	•	organisatieherkenning / bedrijfs-IP tools (indien later gekoppeld)
+	•	aantal terugkerende bezoekers
+	•	bedrijven / domeinen indien beschikbaar via tools zoals Leadinfo
+
+⸻
+
+C. Pagina-performance
+
+Maak een overzicht van de best bezochte pagina’s met o.a.:
+	•	URL / paginanaam
+	•	aantal pageviews
+	•	unieke bezoekers
+	•	gemiddelde tijd op pagina
+	•	bounce rate
+	•	uitstappercentage
+
+Voeg filters toe op:
+	•	periode
+	•	paginatype
+	•	doelgroep (werkzoekenden / werkgevers)
+	•	blogs / landingspagina’s / formulieren
+
+Belangrijke pagina’s die EXTRA extra wil monitoren:
+	•	homepage
+	•	/ik-zoek-extra-werk
+	•	/personeel-gezocht
+	•	/aanmelden
+	•	personeelsaanvraagpagina
+	•	blogoverzicht
+	•	losse blogpagina’s
+	•	dagbetalingpagina
+	•	functiepagina’s
+
+⸻
+
+D. Formulierconversies
+
+Dit is een heel belangrijk blok.
+
+Maak een apart conversie-overzicht voor formulieren zoals:
+
+Werkzoekenden
+	•	bezoekers op /aanmelden
+	•	aantal gestart
+	•	aantal doorgestroomd naar volgende stap
+	•	aantal CV’s geüpload
+	•	aantal gesprekken ingepland
+	•	uiteindelijke conversieratio
+
+Werkgevers
+	•	bezoekers op personeelsaanvraagpagina
+	•	aantal ingevulde formulieren
+	•	conversiepercentage
+	•	aantal klikken op bellen / WhatsApp
+
+Toon deze data ook als funnel visualisatie zodat we afhakers per stap kunnen zien.
+
+Voorbeeld funnel werkzoekenden:
+	1.	pagina bezocht
+	2.	formulier gestart
+	3.	formulier stap 2 gehaald
+	4.	CV geüpload
+	5.	gesprek ingepland
+
+Voorbeeld funnel werkgevers:
+	1.	pagina bezocht
+	2.	formulier gestart
+	3.	formulier verzonden
+	4.	klik op bellen/WhatsApp
+
+⸻
+
+E. Blog & SEO prestaties
+
+Maak een speciaal blok voor contentprestaties:
+	•	meest bekeken blogs
+	•	organisch verkeer per blog
+	•	gemiddelde leestijd
+	•	doorklikratio naar andere pagina’s
+	•	welke blogs zorgen voor aanmeldingen / aanvragen
+	•	SEO-prestaties indien data beschikbaar is:
+	•	impressies
+	•	klikken
+	•	CTR
+	•	gemiddelde positie in Google
+
+Indien deze data niet direct beschikbaar is, toon dan placeholder integratieblokken voor:
+	•	Google Analytics
+	•	Google Search Console
+
+Belangrijke output:
+	•	Welke blog presteert het beste
+	•	Welke blog heeft veel verkeer maar weinig conversie
+	•	Welke pagina’s meer SEO-kansen hebben
+
+⸻
+
+F. Belangrijkste acties / aanbevelingen
+
+Maak rechts of onderaan een slim blok met inzichten en aanbevelingen, bijvoorbeeld:
+	•	“/aanmelden heeft veel bezoekers maar lage CV-upload ratio”
+	•	“Blog X trekt veel organisch verkeer”
+	•	“Mobiele bezoekers haken vaker af bij stap 2”
+	•	“Personeelsaanvraagpagina converteert 4,8% hoger via WhatsApp klik”
+	•	“Pagina /ik-zoek-extra-werk heeft hoge tijd op pagina maar lage scroll depth”
+
+Gebruik AI-achtige insight cards of een “Aanbevelingen” widget.
+
+⸻
+
+2. Data die EXTRA waarschijnlijk belangrijk vindt
+
+Denk expliciet mee vanuit ons bedrijf en voeg relevante blokken toe voor:
+	•	hoeveel bezoekers zijn werkzoekenden-pagina’s aan het bekijken
+	•	hoeveel bezoekers zijn werkgevers-pagina’s aan het bekijken
+	•	welke doelgroep converteert beter
+	•	hoeveel bezoekers bekijken functiepagina’s
+	•	welke functies worden het meest bekeken
+	•	hoeveel mensen klikken door van landingspagina naar functiepagina
+	•	hoeveel mensen beginnen aan een formulier en haken af
+	•	welke CTA-knoppen het meest worden aangeklikt
+	•	welke pagina’s slecht presteren
+	•	welke pagina’s boven gemiddeld converteren
+
+⸻
+
+3. Designrichtlijnen
+
+Zorg dat dit dashboard:
+	•	volledig aansluit op de bestaande stijl van /dashboard-mockup
+	•	snel scanbaar is
+	•	modulair is opgebouwd
+	•	visueel aantrekkelijk is
+	•	in 1 oogopslag management-informatie toont
+
+Gebruik:
+	•	KPI cards
+	•	lijn- en staafgrafieken
+	•	tabellen
+	•	donut charts
+	•	funnels
+	•	insight cards
+
+De pagina mag best uitgebreid zijn, maar moet logisch opgebouwd zijn.
+
+⸻
+
+4. Technische notitie
+
+Indien bepaalde statistieken nog niet direct beschikbaar zijn vanuit de huidige site, bouw dan:
+	•	de volledige visuele dashboardstructuur
+	•	met realistische placeholder data
+	•	én geef aan welke koppelingen nodig zijn om dit live werkend te maken, bijvoorbeeld:
+	•	Google Analytics 4
+	•	Google Search Console
+	•	Hotjar / Microsoft Clarity
+	•	Meta Pixel
+	•	Leadinfo
+
+Geef bij elk datablock kort aan:
+	•	welke bron nodig is
+	•	of het al direct uit de site gehaald kan worden
+	•	of er een externe integratie nodig is
+
+⸻
+
+5. Einddoel
+
+Het eindresultaat moet een Marketing & SEO dashboard zijn waarin wij direct kunnen zien:
+	•	hoe de website presteert
+	•	waar bezoekers vandaan komen
+	•	welke pagina’s het best werken
+	•	waar formulieren afhaken
+	•	welke blogs en SEO-pagina’s traffic en conversie opleveren
+	•	waar we kunnen optimaliseren
+
+Bouw dit alsof het een dashboard is dat wij dagelijks gebruiken voor sturing.

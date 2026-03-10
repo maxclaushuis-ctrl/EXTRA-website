@@ -22,6 +22,7 @@ import {
   Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2
 } from 'lucide-react';
+import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 
 type User = {
   id: number;
@@ -646,6 +647,15 @@ export default function DashboardMockup() {
                     {blogPosts.filter((p: any) => p.status === 'scheduled').length}
                   </span>
                 )}
+              </button>
+              <button
+                onClick={() => { setActiveTab('stats'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'stats' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>Website Statistieken</span>
               </button>
             </>
           )}
@@ -3338,6 +3348,10 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
             </div>
+
+          ) : activeTab === 'stats' ? (
+            /* ─── WEBSITE STATISTIEKEN tab ─── */
+            <WebsiteStatsTab />
 
           ) : (
             /* Dashboard / Gebruikers Tab */
