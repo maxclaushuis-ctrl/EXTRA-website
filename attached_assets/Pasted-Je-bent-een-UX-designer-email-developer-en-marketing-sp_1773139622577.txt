@@ -1,0 +1,151 @@
+Je bent een UX designer, email developer en marketing specialist.
+
+Maak een professionele en visueel aantrekkelijke HTML e-mail template voor EXTRA.
+
+EXTRA is een horeca uitzendbureau dat werkt met jonge, energieke medewerkers. De tone of voice is vriendelijk, energiek en duidelijk.
+
+Deze mail wordt automatisch verstuurd nadat een kandidaat zich heeft aangemeld op de website en een CV heeft geüpload.
+
+BELANGRIJK:
+Gebruik de bestaande EXTRA email banner die al in het project aanwezig is bovenaan de mail.
+
+De mail moet mobielvriendelijk zijn, overzichtelijk en goed scanbaar.
+
+--------------------------------------------------
+
+EMAIL STRUCTUUR
+
+1. Banner
+
+Plaats bovenaan de mail de bestaande EXTRA banner.
+
+Instellingen:
+- volledige breedte
+- responsive
+- max width container: 600px
+- centreer de banner
+
+--------------------------------------------------
+
+2. Content container
+
+Gebruik een centrale container met:
+
+max-width: 600px  
+background: wit  
+padding: 32px  
+margin: auto  
+
+Gebruik voldoende witruimte tussen tekstblokken zodat de mail goed leesbaar blijft.
+
+Gebruik korte alinea’s.
+
+--------------------------------------------------
+
+3. Email tekst
+
+Onderwerpregel:
+
+Je aanmelding is binnen! 🚀
+
+Body tekst:
+
+Hi [Naam],
+
+Leuk dat je je hebt aangemeld bij EXTRA! 🙌
+
+We hebben je aanmelding en CV goed ontvangen. Ons team gaat er nu mee aan de slag en kijkt of je profiel aansluit bij de functies en opdrachtgevers waar we mee werken.
+
+Wat gebeurt er nu? 👇
+
+1️⃣ We bekijken je CV en aanmelding  
+2️⃣ Past je profiel bij EXTRA? Dan sturen we je een uitnodiging om een gesprek in te plannen 📅  
+3️⃣ In dat gesprek leren we je beter kennen en kijken we welke opdrachten goed bij je passen 🤝  
+
+Je hoort dus snel van ons!
+
+Bedankt voor je interesse in EXTRA ⚡
+
+--------------------------------------------------
+
+4. Extra engagement blok
+
+Voeg onder de tekst een klein blok toe met iets meer interactie.
+
+Tekst:
+
+Benieuwd wat voor opdrachten we doen?  
+Bekijk alvast onze Instagram 👀
+
+Plaats hieronder een knop:
+
+Button tekst:
+Bekijk onze Instagram
+
+Button stijl:
+
+background: EXTRA paars  
+tekst kleur: wit  
+border-radius: 6px  
+padding: 12px 20px  
+font-weight: 600  
+
+--------------------------------------------------
+
+5. Footer
+
+Maak een eenvoudige footer met subtiele stijl.
+
+—
+
+EXTRA  
+Amsterdam  
+
+--------------------------------------------------
+
+6. Design richtlijnen
+
+Gebruik een clean en modern design.
+
+Lettertype:
+
+Arial / Inter / system font
+
+Tekstkleur:
+
+#333333
+
+Titels:
+
+#1A1A1A
+
+Accentkleur:
+
+Gebruik het EXTRA paars uit de website.
+
+Gebruik voldoende witruimte tussen elementen:
+
+margin-bottom: 16px
+
+--------------------------------------------------
+
+7. Mobile optimalisatie
+
+De e-mail moet goed werken op:
+
+Gmail  
+Apple Mail  
+Outlook  
+mobiele telefoons  
+
+Gebruik een responsive layout met een max breedte van 600px.
+
+De tekst moet goed leesbaar blijven op mobiel.
+
+--------------------------------------------------
+
+Doel van de mail:
+
+1. bevestigen dat de aanmelding is ontvangen  
+2. duidelijk uitleggen wat de volgende stappen zijn  
+3. de kandidaat een positieve eerste indruk geven van EXTRA  

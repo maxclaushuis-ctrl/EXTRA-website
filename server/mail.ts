@@ -240,151 +240,52 @@ export async function sendCandidateConfirmationEmail(candidate: {
   const fromEmail = "max@doehetextra.nl";
   const fromName = "EXTRA";
 
-  const CALENDLY_URL = "https://calendly.com/max-_zs/30min";
-  const WHATSAPP_URL = "https://wa.me/31854012373";
-
-  // ─── reusable style atoms ────────────────────────────────────────────────
-  const card = `background:#ffffff;border-radius:16px;padding:28px 32px;margin-bottom:20px;border:1px solid #f0edf8;box-shadow:0 2px 12px rgba(109,40,217,0.06);`;
-  const cardPurple = `background:#f5f3ff;border-radius:16px;padding:28px 32px;margin-bottom:20px;border:1px solid #ede9fe;`;
-  const label = `display:inline-block;background:#ede9fe;color:#6d28d9;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:4px 12px;border-radius:50px;margin-bottom:14px;`;
-  const h2 = `margin:0 0 10px 0;font-size:20px;font-weight:900;color:#1a0a3e;line-height:1.3;font-family:'Arial Black',Arial,sans-serif;`;
-  const body = `margin:0 0 0 0;font-size:15px;color:#4b5563;line-height:1.7;`;
-  const btnPrimary = `display:inline-block;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 30px;border-radius:50px;font-family:Arial,sans-serif;letter-spacing:0.2px;`;
-  const btnWa = `display:inline-block;background:#25d366;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 24px;border-radius:50px;font-family:Arial,sans-serif;letter-spacing:0.2px;`;
+  const INSTAGRAM_URL = "https://www.instagram.com/doehetextra/";
 
   // ─── NL content ──────────────────────────────────────────────────────────
   const nlBody = `
-    <!-- 2. INTRO -->
     <tr><td style="padding:32px 32px 0;">
-      <div style="${card}">
-        <p style="margin:0 0 8px 0;font-size:18px;font-weight:700;color:#1a0a3e;">Hi ${candidate.firstName},</p>
-        <p style="margin:0 0 12px 0;font-size:16px;color:#374151;line-height:1.75;">Top dat je je hebt aangemeld bij EXTRA ⚡</p>
-        <p style="${body}margin-bottom:0;">We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker aan de slag te gaan.</p>
-      </div>
+      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Hi ${candidate.firstName},</p>
+      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Leuk dat je je hebt aangemeld bij EXTRA! 🙌</p>
+      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">We hebben je aanmelding en CV goed ontvangen. Ons team gaat er nu mee aan de slag en kijkt of je profiel aansluit bij de functies en opdrachtgevers waar we mee werken.</p>
     </td></tr>
 
-    <!-- 3. WAT GEBEURT ER NU -->
-    <tr><td style="padding:0 32px;">
-      <div style="background:linear-gradient(135deg,#2e1065,#1e1b4b);border-radius:16px;padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden;">
-        <span style="position:absolute;top:-20px;right:-10px;font-size:120px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;">X</span>
-        <span style="position:absolute;bottom:-30px;left:-5px;font-size:100px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;">X</span>
-        <div style="${label}background:rgba(255,255,255,0.15);color:#e9d5ff;">Wat gebeurt er nu?</div>
+    <tr><td style="padding:20px 32px 0;">
+      <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;">
+        <p style="margin:0 0 16px 0;font-size:15px;font-weight:700;color:#1a1a1a;">Wat gebeurt er nu? 👇</p>
         <table cellpadding="0" cellspacing="0" width="100%">
-          <tr>
-            <td style="padding:10px 0;">
-              <table cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td width="44" valign="top">
-                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.25);text-align:center;line-height:36px;font-size:17px;">1️⃣</div>
-                  </td>
-                  <td valign="middle" style="padding:4px 0;">
-                    <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">Plan je kennismaking</p>
-                    <p style="margin:2px 0 0;font-size:13px;color:rgba(233,213,255,0.8);line-height:1.5;">Kies een moment via Calendly. Duurt maar een paar seconden.</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr><td style="padding:2px 0 2px 18px;"><div style="width:1px;height:16px;background:rgba(167,139,250,0.2);"></div></td></tr>
-          <tr>
-            <td style="padding:10px 0;">
-              <table cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td width="44" valign="top">
-                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.25);text-align:center;line-height:36px;font-size:17px;">2️⃣</div>
-                  </td>
-                  <td valign="middle" style="padding:4px 0;">
-                    <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">Kom langs bij EXTRA</p>
-                    <p style="margin:2px 0 0;font-size:13px;color:rgba(233,213,255,0.8);line-height:1.5;">We ontmoeten je op ons kantoor aan de Herengracht 372 in Amsterdam.</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr><td style="padding:2px 0 2px 18px;"><div style="width:1px;height:16px;background:rgba(167,139,250,0.2);"></div></td></tr>
-          <tr>
-            <td style="padding:10px 0;">
-              <table cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td width="44" valign="top">
-                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.25);text-align:center;line-height:36px;font-size:17px;">3️⃣</div>
-                  </td>
-                  <td valign="middle" style="padding:4px 0;">
-                    <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">Pak je eerste diensten</p>
-                    <p style="margin:2px 0 0;font-size:13px;color:rgba(233,213,255,0.8);line-height:1.5;">Na de kennismaking word je ingepland bij hotels, evenementen en meer.</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+          <tr><td style="padding:6px 0;">
+            <table cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">1️⃣</td>
+              <td style="font-size:14px;color:#333333;line-height:1.65;">We bekijken je CV en aanmelding</td>
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:6px 0;">
+            <table cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">2️⃣</td>
+              <td style="font-size:14px;color:#333333;line-height:1.65;">Past je profiel bij EXTRA? Dan sturen we je een uitnodiging om een gesprek in te plannen 📅</td>
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:6px 0;">
+            <table cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">3️⃣</td>
+              <td style="font-size:14px;color:#333333;line-height:1.65;">In dat gesprek leren we je beter kennen en kijken we welke opdrachten goed bij je passen 🤝</td>
+            </tr></table>
+          </td></tr>
         </table>
       </div>
     </td></tr>
 
-    <!-- 4. AFSPRAAK CTA -->
-    <tr><td style="padding:0 32px;">
-      <div style="${cardPurple}">
-        <div style="${label}">Kennismaking inplannen</div>
-        <p style="${h2}">Nog geen afspraak ingepland?</p>
-        <p style="${body}margin-bottom:20px;">Plan hier direct een moment in. Het duurt maar een paar seconden.</p>
-        <table cellpadding="0" cellspacing="0"><tr>
-          <td style="padding-right:10px;"><a href="${CALENDLY_URL}" style="${btnPrimary}">Afspraak inplannen →</a></td>
-          <td><a href="${WHATSAPP_URL}" style="${btnWa}">💬 WhatsApp</a></td>
-        </tr></table>
-      </div>
+    <tr><td style="padding:20px 32px 0;">
+      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Je hoort dus snel van ons!</p>
+      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">Bedankt voor je interesse in EXTRA ⚡</p>
     </td></tr>
 
-    <!-- 5. LOCATIE -->
-    <tr><td style="padding:0 32px;">
-      <div style="${card}">
-        <table cellpadding="0" cellspacing="0" width="100%"><tr>
-          <td width="44" valign="top">
-            <div style="width:36px;height:36px;border-radius:10px;background:#ede9fe;text-align:center;line-height:36px;font-size:18px;">📍</div>
-          </td>
-          <td valign="top" style="padding-left:12px;">
-            <p style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#1a0a3e;">Kennismaking bij EXTRA</p>
-            <p style="${body}">Je bent welkom bij ons op:<br><strong style="color:#1a0a3e;">Herengracht 372, Amsterdam</strong></p>
-          </td>
-        </tr></table>
-      </div>
-    </td></tr>
-
-    <!-- 6. WAAROM EXTRA -->
-    <tr><td style="padding:0 32px;">
-      <div style="${card}">
-        <div style="${label}">Werken bij EXTRA</div>
-        <p style="${h2}margin-bottom:16px;">Waarom werken bij EXTRA?</p>
-        <table cellpadding="0" cellspacing="0" width="100%">
-          <tr>
-            <td width="33%" style="padding:10px 8px 10px 0;vertical-align:top;">
-              <div style="background:#f5f3ff;border-radius:12px;padding:16px;text-align:center;">
-                <div style="font-size:24px;margin-bottom:8px;">⚡</div>
-                <p style="margin:0;font-size:13px;font-weight:700;color:#1a0a3e;line-height:1.4;">Flexibele diensten</p>
-              </div>
-            </td>
-            <td width="33%" style="padding:10px 4px;vertical-align:top;">
-              <div style="background:#f0fdf4;border-radius:12px;padding:16px;text-align:center;">
-                <div style="font-size:24px;margin-bottom:8px;">💸</div>
-                <p style="margin:0;font-size:13px;font-weight:700;color:#1a0a3e;line-height:1.4;">Snel uitbetaald</p>
-              </div>
-            </td>
-            <td width="33%" style="padding:10px 0 10px 8px;vertical-align:top;">
-              <div style="background:#fff7ed;border-radius:12px;padding:16px;text-align:center;">
-                <div style="font-size:24px;margin-bottom:8px;">🎉</div>
-                <p style="margin:0;font-size:13px;font-weight:700;color:#1a0a3e;line-height:1.4;">EXTRAATje beloningen</p>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </td></tr>
-
-    <!-- 7. AFSLUITING -->
-    <tr><td style="padding:0 32px 32px;">
-      <div style="${card}margin-bottom:0;">
-        <p style="${body}margin-bottom:12px;">Kun je toch niet op het geplande moment? Pas je afspraak dan gewoon even aan zodat we iemand anders kunnen inplannen.</p>
-        <p style="${body}margin-bottom:20px;">We kijken ernaar uit om je te ontmoeten 🙌</p>
-        <p style="margin:0;font-size:15px;color:#374151;line-height:1.75;">Groet,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+    <tr><td style="padding:20px 32px 32px;">
+      <div style="background:#faf9ff;border:1px solid #ede9fe;border-radius:12px;padding:24px 28px;text-align:center;">
+        <p style="margin:0 0 6px 0;font-size:15px;color:#333333;line-height:1.6;">Benieuwd wat voor opdrachten we doen?</p>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#333333;line-height:1.6;">Bekijk alvast onze Instagram 👀</p>
+        <a href="${INSTAGRAM_URL}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:15px;font-weight:600;font-family:Arial,sans-serif;">Bekijk onze Instagram</a>
       </div>
     </td></tr>
   `;
@@ -393,113 +294,47 @@ export async function sendCandidateConfirmationEmail(candidate: {
   const enBody = `
     <!-- 2. INTRO -->
     <tr><td style="padding:32px 32px 0;">
-      <div style="${card}">
-        <p style="margin:0 0 8px 0;font-size:18px;font-weight:700;color:#1a0a3e;">Hi ${candidate.firstName},</p>
-        <p style="margin:0 0 12px 0;font-size:16px;color:#374151;line-height:1.75;">Great that you signed up with EXTRA ⚡</p>
-        <p style="${body}margin-bottom:0;">We always love meeting new people who are ready to get to work.</p>
-      </div>
+      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Hi ${candidate.firstName},</p>
+      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">Great that you signed up with EXTRA! 🙌</p>
+      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">We have received your application and CV. Our team will now review your profile to see if it matches the roles and clients we work with.</p>
     </td></tr>
 
-    <!-- 3. WHAT HAPPENS NEXT -->
-    <tr><td style="padding:0 32px;">
-      <div style="background:linear-gradient(135deg,#2e1065,#1e1b4b);border-radius:16px;padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden;">
-        <span style="position:absolute;top:-20px;right:-10px;font-size:120px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;">X</span>
-        <span style="position:absolute;bottom:-30px;left:-5px;font-size:100px;font-weight:900;color:rgba(255,255,255,0.04);font-family:'Arial Black',Arial,sans-serif;line-height:1;">X</span>
-        <div style="${label}background:rgba(255,255,255,0.15);color:#e9d5ff;">What happens next?</div>
+    <tr><td style="padding:20px 32px 0;">
+      <div style="background:#f5f3ff;border-radius:12px;padding:24px 28px;">
+        <p style="margin:0 0 16px 0;font-size:15px;font-weight:700;color:#1a1a1a;">What happens next? 👇</p>
         <table cellpadding="0" cellspacing="0" width="100%">
-          <tr><td style="padding:10px 0;">
+          <tr><td style="padding:6px 0;">
             <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="44" valign="top"><div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.25);text-align:center;line-height:36px;font-size:17px;">1️⃣</div></td>
-              <td valign="middle" style="padding:4px 0;">
-                <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">Schedule your intro</p>
-                <p style="margin:2px 0 0;font-size:13px;color:rgba(233,213,255,0.8);line-height:1.5;">Pick a moment via Calendly. Takes only a few seconds.</p>
-              </td>
+              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">1️⃣</td>
+              <td style="font-size:14px;color:#333333;line-height:1.65;">We review your CV and application</td>
             </tr></table>
           </td></tr>
-          <tr><td style="padding:2px 0 2px 18px;"><div style="width:1px;height:16px;background:rgba(167,139,250,0.2);"></div></td></tr>
-          <tr><td style="padding:10px 0;">
+          <tr><td style="padding:6px 0;">
             <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="44" valign="top"><div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.25);text-align:center;line-height:36px;font-size:17px;">2️⃣</div></td>
-              <td valign="middle" style="padding:4px 0;">
-                <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">Visit EXTRA</p>
-                <p style="margin:2px 0 0;font-size:13px;color:rgba(233,213,255,0.8);line-height:1.5;">We will meet you at our office at Herengracht 372 in Amsterdam.</p>
-              </td>
+              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">2️⃣</td>
+              <td style="font-size:14px;color:#333333;line-height:1.65;">Does your profile match EXTRA? Then we will send you an invitation to schedule a meeting 📅</td>
             </tr></table>
           </td></tr>
-          <tr><td style="padding:2px 0 2px 18px;"><div style="width:1px;height:16px;background:rgba(167,139,250,0.2);"></div></td></tr>
-          <tr><td style="padding:10px 0;">
+          <tr><td style="padding:6px 0;">
             <table cellpadding="0" cellspacing="0" width="100%"><tr>
-              <td width="44" valign="top"><div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.25);text-align:center;line-height:36px;font-size:17px;">3️⃣</div></td>
-              <td valign="middle" style="padding:4px 0;">
-                <p style="margin:0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">Start your first shifts</p>
-                <p style="margin:2px 0 0;font-size:13px;color:rgba(233,213,255,0.8);line-height:1.5;">After the intro you will be scheduled at hotels, events and more.</p>
-              </td>
+              <td width="32" valign="top" style="font-size:17px;line-height:1.6;">3️⃣</td>
+              <td style="font-size:14px;color:#333333;line-height:1.65;">In that meeting we get to know you better and look at which roles suit you best 🤝</td>
             </tr></table>
           </td></tr>
         </table>
       </div>
     </td></tr>
 
-    <!-- 4. SCHEDULE CTA -->
-    <tr><td style="padding:0 32px;">
-      <div style="${cardPurple}">
-        <div style="${label}">Schedule intro</div>
-        <p style="${h2}">Haven't booked your intro yet?</p>
-        <p style="${body}margin-bottom:20px;">Book a slot here. It only takes a few seconds.</p>
-        <table cellpadding="0" cellspacing="0"><tr>
-          <td style="padding-right:10px;"><a href="${CALENDLY_URL}" style="${btnPrimary}">Schedule a meeting →</a></td>
-          <td><a href="${WHATSAPP_URL}" style="${btnWa}">💬 WhatsApp</a></td>
-        </tr></table>
-      </div>
+    <tr><td style="padding:20px 32px 0;">
+      <p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.75;">You will hear from us soon!</p>
+      <p style="margin:0;font-size:15px;color:#333333;line-height:1.75;">Thanks for your interest in EXTRA ⚡</p>
     </td></tr>
 
-    <!-- 5. LOCATION -->
-    <tr><td style="padding:0 32px;">
-      <div style="${card}">
-        <table cellpadding="0" cellspacing="0" width="100%"><tr>
-          <td width="44" valign="top"><div style="width:36px;height:36px;border-radius:10px;background:#ede9fe;text-align:center;line-height:36px;font-size:18px;">📍</div></td>
-          <td valign="top" style="padding-left:12px;">
-            <p style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#1a0a3e;">Meet us at EXTRA</p>
-            <p style="${body}">You are welcome at:<br><strong style="color:#1a0a3e;">Herengracht 372, Amsterdam</strong></p>
-          </td>
-        </tr></table>
-      </div>
-    </td></tr>
-
-    <!-- 6. WHY EXTRA -->
-    <tr><td style="padding:0 32px;">
-      <div style="${card}">
-        <div style="${label}">Working at EXTRA</div>
-        <p style="${h2}margin-bottom:16px;">Why work at EXTRA?</p>
-        <table cellpadding="0" cellspacing="0" width="100%"><tr>
-          <td width="33%" style="padding:10px 8px 10px 0;vertical-align:top;">
-            <div style="background:#f5f3ff;border-radius:12px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:8px;">⚡</div>
-              <p style="margin:0;font-size:13px;font-weight:700;color:#1a0a3e;line-height:1.4;">Flexible shifts</p>
-            </div>
-          </td>
-          <td width="33%" style="padding:10px 4px;vertical-align:top;">
-            <div style="background:#f0fdf4;border-radius:12px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:8px;">💸</div>
-              <p style="margin:0;font-size:13px;font-weight:700;color:#1a0a3e;line-height:1.4;">Fast payment</p>
-            </div>
-          </td>
-          <td width="33%" style="padding:10px 0 10px 8px;vertical-align:top;">
-            <div style="background:#fff7ed;border-radius:12px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:8px;">🎉</div>
-              <p style="margin:0;font-size:13px;font-weight:700;color:#1a0a3e;line-height:1.4;">EXTRAATje rewards</p>
-            </div>
-          </td>
-        </tr></table>
-      </div>
-    </td></tr>
-
-    <!-- 7. CLOSING -->
-    <tr><td style="padding:0 32px 32px;">
-      <div style="${card}margin-bottom:0;">
-        <p style="${body}margin-bottom:12px;">Can't make it at the scheduled time? Just reschedule so we can plan someone else in.</p>
-        <p style="${body}margin-bottom:20px;">Looking forward to meeting you 🙌</p>
-        <p style="margin:0;font-size:15px;color:#374151;line-height:1.75;">Best regards,<br><strong style="color:#1a0a3e;">Team EXTRA</strong></p>
+    <tr><td style="padding:20px 32px 32px;">
+      <div style="background:#faf9ff;border:1px solid #ede9fe;border-radius:12px;padding:24px 28px;text-align:center;">
+        <p style="margin:0 0 6px 0;font-size:15px;color:#333333;line-height:1.6;">Curious about the kind of work we do?</p>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#333333;line-height:1.6;">Check out our Instagram 👀</p>
+        <a href="${INSTAGRAM_URL}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:15px;font-weight:600;font-family:Arial,sans-serif;">View our Instagram</a>
       </div>
     </td></tr>
   `;
@@ -516,41 +351,27 @@ ${emailMobileCss()}</head>
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-        <!-- ① HERO BANNER -->
+        <!-- ① BANNER -->
         <tr>
           <td style="padding:0;line-height:0;font-size:0;">
             <img src="${getEmailBannerSrc()}"
                  width="600" height="200"
                  alt="EXTRA"
-                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
-          </td>
-        </tr>
-        <!-- ① HERO GREETING -->
-        <tr>
-          <td style="background:linear-gradient(135deg,#4f1a8f 0%,#2e1766 100%);padding:28px 32px 24px;text-align:center;">
-            <div style="font-size:22px;font-weight:900;color:#ffffff;font-family:'Arial Black',Arial,sans-serif;line-height:1.25;margin-bottom:6px;">
-              ${useEnglish ? "Application in. Let&#39;s go! 🚀" : "Aangemeld bij EXTRA. Let&#39;s go! 🚀"}
-            </div>
-            <div style="font-size:14px;color:rgba(233,213,255,0.80);line-height:1.5;">
-              ${useEnglish ? "Welcome to EXTRA. Time to meet." : "Welkom bij EXTRA. Tijd om kennis te maken."}
-            </div>
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;border-radius:12px 12px 0 0;">
           </td>
         </tr>
 
-        <!-- ② BODY SECTIONS -->
+        <!-- ② CONTENT -->
         <tr>
-          <td style="background:#f7f5fb;border-radius:0 0 16px 16px;padding-bottom:8px;">
+          <td style="background:#ffffff;border-radius:0 0 12px 12px;">
             <table cellpadding="0" cellspacing="0" width="100%">
               ${useEnglish ? enBody : nlBody}
 
-              <!-- ⑧ FOOTER -->
+              <!-- FOOTER -->
               <tr>
-                <td style="padding:16px 32px 28px;">
-                  <div style="border-top:1px solid #e9d5ff;padding-top:20px;text-align:center;">
-                    <p style="margin:0 0 6px 0;font-size:20px;font-weight:900;color:#6d28d9;font-family:'Arial Black',Arial,sans-serif;letter-spacing:-0.5px;">EXTRA</p>
-                    <p style="margin:0 0 6px 0;font-size:12px;color:#9ca3af;line-height:1.6;">${useEnglish ? "This is an automated email." : "Dit is een automatisch bericht."}</p>
-                    <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">${useEnglish ? "Questions?" : "Vragen?"} <a href="mailto:info@doehetextra.nl" style="color:#6d28d9;text-decoration:none;font-weight:600;">info@doehetextra.nl</a></p>
-                  </div>
+                <td style="padding:20px 32px 28px;border-top:1px solid #f0edf8;text-align:center;">
+                  <p style="margin:0 0 4px 0;font-size:13px;font-weight:700;color:#7c3aed;letter-spacing:0.5px;">EXTRA</p>
+                  <p style="margin:0;font-size:12px;color:#9ca3af;">Amsterdam</p>
                 </td>
               </tr>
             </table>
@@ -566,50 +387,42 @@ ${emailMobileCss()}</head>
   const text = useEnglish
     ? `Hi ${candidate.firstName},
 
-Great that you signed up with EXTRA ⚡
+Great that you signed up with EXTRA! 🙌
 
-We always love meeting new people who are ready to get to work.
+We have received your application and CV. Our team will now review your profile to see if it matches the roles and clients we work with.
 
 WHAT HAPPENS NEXT?
-1. Schedule your intro
-2. Visit EXTRA at Herengracht 372, Amsterdam
-3. Start your first shifts
+1. We review your CV and application
+2. Does your profile match EXTRA? Then we will send you an invitation to schedule a meeting 📅
+3. In that meeting we get to know you better and look at which roles suit you best 🤝
 
-Haven't booked your intro yet?
-Schedule here: ${CALENDLY_URL}
-Or WhatsApp us: ${WHATSAPP_URL}
+You will hear from us soon!
 
-Can't make it at the scheduled time? Just reschedule so we can plan someone else in.
+Thanks for your interest in EXTRA ⚡
 
-Looking forward to meeting you 🙌
+Check out our Instagram: ${INSTAGRAM_URL}
 
-Best regards,
-Team EXTRA
-
-Questions? info@doehetextra.nl`
+EXTRA
+Amsterdam`
     : `Hi ${candidate.firstName},
 
-Top dat je je hebt aangemeld bij EXTRA ⚡
+Leuk dat je je hebt aangemeld bij EXTRA! 🙌
 
-We vinden het altijd leuk om nieuwe mensen te ontmoeten die zin hebben om lekker aan de slag te gaan.
+We hebben je aanmelding en CV goed ontvangen. Ons team gaat er nu mee aan de slag en kijkt of je profiel aansluit bij de functies en opdrachtgevers waar we mee werken.
 
 WAT GEBEURT ER NU?
-1. Plan je kennismaking
-2. Kom langs bij EXTRA — Herengracht 372, Amsterdam
-3. Pak je eerste diensten
+1. We bekijken je CV en aanmelding
+2. Past je profiel bij EXTRA? Dan sturen we je een uitnodiging om een gesprek in te plannen 📅
+3. In dat gesprek leren we je beter kennen en kijken we welke opdrachten goed bij je passen 🤝
 
-Nog geen afspraak ingepland?
-Plan hier: ${CALENDLY_URL}
-Of stuur ons een WhatsApp: ${WHATSAPP_URL}
+Je hoort dus snel van ons!
 
-Kun je toch niet? Pas je afspraak dan gewoon even aan zodat we iemand anders kunnen inplannen.
+Bedankt voor je interesse in EXTRA ⚡
 
-We kijken ernaar uit om je te ontmoeten 🙌
+Bekijk onze Instagram: ${INSTAGRAM_URL}
 
-Groet,
-Team EXTRA
-
-Vragen? info@doehetextra.nl`;
+EXTRA
+Amsterdam`;
 
   return await sendEmail({
     to: candidate.email,
