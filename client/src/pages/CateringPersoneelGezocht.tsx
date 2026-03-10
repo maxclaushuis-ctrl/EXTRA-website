@@ -105,7 +105,7 @@ export default function CateringPersoneelGezocht() {
   const [activeScreen, setActiveScreen] = useState(0);
 
   useEffect(() => {
-    document.title = "Cateringpersoneel Nodig? EXTRA Levert Snel & Flexibel | Catering Uitzendbureau Amsterdam";
+    document.title = "Cateringpersoneel inhuren | bediening, runners en chefs | EXTRA";
 
     const setMeta = (nameOrProp: string, content: string, attr = "name") => {
       let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -124,11 +124,11 @@ export default function CateringPersoneelGezocht() {
       document.head.appendChild(s);
     };
 
-    setMeta("description", "Cateringpersoneel nodig? EXTRA levert snel en flexibel bediening, runners, barpersoneel en keukenondersteuning voor cateraars en grote catering events. NEN-4400-1 gecertificeerd.");
-    setLink("canonical", "https://www.doehetextra.nl/cateringpersoneel-gezocht");
-    setMeta("og:title", "Cateringpersoneel Nodig? EXTRA Levert Snel & Flexibel", "property");
-    setMeta("og:description", "Cateringpersoneel nodig? EXTRA levert bediening, runners, barpersoneel en keukenondersteuning voor cateraars. Persoonlijk geselecteerd, iedereen in loondienst.", "property");
-    setMeta("og:url", "https://www.doehetextra.nl/cateringpersoneel-gezocht", "property");
+    setMeta("description", "Cateringpersoneel nodig? EXTRA levert ervaren bediening, runners, chefs en keukenondersteuning voor cateraars en grote events. Flexibel en betrouwbaar.");
+    setLink("canonical", "https://www.doehetextra.nl/cateringpersoneel-inhuren");
+    setMeta("og:title", "Cateringpersoneel inhuren | bediening, runners en chefs | EXTRA", "property");
+    setMeta("og:description", "Cateringpersoneel nodig? EXTRA levert ervaren bediening, runners, chefs en keukenondersteuning voor cateraars en grote events. Flexibel en betrouwbaar.", "property");
+    setMeta("og:url", "https://www.doehetextra.nl/cateringpersoneel-inhuren", "property");
     setMeta("og:type", "website", "property");
 
     addSchema("catering-faq-schema", {
@@ -185,7 +185,7 @@ export default function CateringPersoneelGezocht() {
               </span>
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              EXTRA levert ervaren horecapersoneel voor cateraars en grote events — flexibel inzetbaar, gewend aan wisselende locaties en altijd representatief. Iedereen persoonlijk geselecteerd, iedereen in loondienst.
+              EXTRA levert ervaren horecapersoneel voor cateraars en grote events. Flexibel inzetbaar, gewend aan wisselende locaties en altijd representatief. Iedere medewerker persoonlijk geselecteerd en volledig in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
@@ -256,7 +256,7 @@ export default function CateringPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Van kleinschalige bedrijfsdiners tot grandes galas voor honderden gasten. EXTRA levert voor elke cateringopdracht de juiste mensen — ervaren, snel inzetbaar en gewend aan wisselende locaties.
+                Van kleinschalige bedrijfsdiners tot grote gala's met honderden gasten. EXTRA levert voor iedere cateringopdracht de juiste mensen. Ervaren, flexibel en gewend aan wisselende locaties.
               </p>
             </div>
           </RevealSection>
@@ -265,42 +265,42 @@ export default function CateringPersoneelGezocht() {
               {
                 icon: Utensils,
                 title: "Bediening",
-                desc: "Ervaren bedienend personeel voor cateringdiners, buffetten en recepties. Snel, gastgericht en professioneel op elke locatie.",
+                desc: "Ervaren bedienend personeel voor diners, buffetten en recepties. Gastgericht, professioneel en gewend aan het tempo van cateringopdrachten.",
                 tags: ["Dinerservice", "Buffet", "Receptie", "Formeel & informeel"],
                 color: "from-purple-600 to-purple-800",
               },
               {
                 icon: Users,
                 title: "Dinerlopers",
-                desc: "Vlotte dinerlopers voor het uitserveren van gerechten en aanvullen van buffetten tijdens grote cateringopdrachten.",
+                desc: "Snelle diner runners die gerechten uitserveren, buffetten aanvullen en het tempo van grote diners ondersteunen.",
                 tags: ["Uitserveren", "Schalen aanvullen", "Grote groepen", "Doorloop"],
                 color: "from-indigo-500 to-purple-600",
               },
               {
                 icon: GlassWater,
                 title: "Barpersoneel",
-                desc: "Ervaren barkeepers en bartenders voor de drankenservice tijdens cateringevents. Snel, representatief en geschikt voor hoog volume.",
+                desc: "Ervaren bartenders voor drankservice tijdens cateringevents. Representatief, snel en gewend om hoge volumes te draaien.",
                 tags: ["Cocktails", "Wine service", "Drankservice", "Hoog tempo"],
                 color: "from-pink-500 to-purple-600",
               },
               {
                 icon: Zap,
                 title: "Runners",
-                desc: "Energieke runners voor de logistieke ondersteuning van cateringopdrachten: van keuken naar zaal en terug. Snel en betrouwbaar.",
+                desc: "Energieke runners voor logistieke ondersteuning tijdens cateringopdrachten. Van keuken naar zaal en terug. Snel, betrouwbaar en altijd op de juiste plek.",
                 tags: ["Keuken-zaal", "Transport", "Logistiek", "Ondersteuning"],
                 color: "from-blue-500 to-indigo-600",
               },
               {
                 icon: Sparkles,
                 title: "Catering medewerkers",
-                desc: "Allround cateringmedewerkers die op wisselende locaties inzetbaar zijn en het hele cateringproces van opstellen tot afbouw kennen.",
+                desc: "Allround cateringmedewerkers die op wisselende locaties inzetbaar zijn en het volledige cateringproces begrijpen. Van opbouw tot service en afbouw.",
                 tags: ["Allround", "Opstellen", "Service", "Afbouw"],
                 color: "from-orange-500 to-pink-600",
               },
               {
                 icon: ChefHat,
                 title: "Keukenondersteuning",
-                desc: "Betrouwbare keukenondersteuning voor cateraars: keukenmedewerkers, afwassers en keukenhulpen die de keuken draaiende houden.",
+                desc: "Betrouwbare keukenondersteuning voor cateraars. Keukenmedewerkers, afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.",
                 tags: ["Keukenmedewerker", "Afwasser", "Keukenhulp", "Voorbereiding"],
                 color: "from-green-500 to-emerald-600",
               },
@@ -349,7 +349,7 @@ export default function CateringPersoneelGezocht() {
                 <span className="text-purple-600">Wij leveren de juiste.</span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-5 max-w-2xl mx-auto">
-                Cateraars werken op wisselende locaties, met strakke tijdschema's en hoge kwaliteitseisen. EXTRA levert personeel dat daarin meegaat — zonder gedoe.
+                Cateraars werken op wisselende locaties met strakke tijdschema's en hoge kwaliteitseisen. EXTRA levert personeel dat daarin meebeweegt zonder gedoe.
               </p>
             </div>
           </RevealSection>
@@ -358,43 +358,43 @@ export default function CateringPersoneelGezocht() {
               {
                 stat: "Flexibel",
                 statLabel: "opschalen op aanvraag",
-                title: "Flexibel opschalen bij elke opdracht",
-                desc: "Van kleine diners tot events voor honderden gasten. EXTRA helpt cateraars snel op- en afschalen met ervaren personeel dat direct inzetbaar is.",
+                title: "Flexibel opschalen",
+                desc: "Van kleine diners tot grote events met honderden gasten. EXTRA helpt cateraars snel op en af te schalen met ervaren personeel.",
                 accent: "from-purple-500 to-purple-700",
               },
               {
                 stat: "100%",
                 statLabel: "persoonlijk geselecteerd",
                 title: "Persoonlijk geselecteerd personeel",
-                desc: "Iedere medewerker wordt persoonlijk gesproken voordat hij of zij bij EXTRA werkt. We selecteren op houding, service en representativiteit.",
+                desc: "Iedere medewerker wordt persoonlijk gesproken voordat hij of zij via EXTRA werkt. We selecteren op houding, service en representativiteit.",
                 accent: "from-indigo-500 to-purple-600",
               },
               {
                 stat: "Overal",
                 statLabel: "inzetbaar in de regio",
                 title: "Gewend aan wisselende locaties",
-                desc: "Cateringpersoneel werkt zelden op dezelfde plek. Onze medewerkers zijn mobiel, flexibel en gewend aan het snel opstarten op een nieuwe locatie.",
+                desc: "Cateringpersoneel werkt zelden op dezelfde plek. Onze medewerkers zijn mobiel, flexibel en gewend aan snel opstarten op een nieuwe locatie.",
                 accent: "from-pink-500 to-rose-600",
               },
               {
                 stat: "24/7",
                 statLabel: "bereikbaar voor planners",
                 title: "Altijd bereikbaar",
-                desc: "Ook buiten kantooruren. Onze planners staan klaar wanneer je snel moet schakelen — voor, tijdens en na de cateringopdracht.",
+                desc: "Ook buiten kantooruren. Onze planners staan klaar wanneer je snel moet schakelen.",
                 accent: "from-blue-500 to-indigo-600",
               },
               {
                 stat: "★ 4.8",
                 statLabel: "gemiddelde beoordeling",
                 title: "Continu beoordeeld op kwaliteit",
-                desc: "Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die goed presteren komen terug.",
+                desc: "Na iedere dienst verzamelen we feedback van opdrachtgevers. Alleen medewerkers die structureel goed presteren blijven actief.",
                 accent: "from-amber-500 to-orange-500",
               },
               {
                 stat: "0%",
                 statLabel: "ZZP-risico voor jou",
-                title: "Geen zzp-risico",
-                desc: "Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400-1 norm. Geen risico voor jouw organisatie.",
+                title: "Geen zzp risico",
+                desc: "Alle medewerkers werken bij ons in loondienst en voldoen aan de NEN 4400 1 norm.",
                 accent: "from-green-500 to-emerald-600",
               },
             ].map((item, i) => (
@@ -435,14 +435,14 @@ export default function CateringPersoneelGezocht() {
                   <span className="text-purple-600">de juiste mensen</span>
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-10">
-                  Cateringpersoneel moet snel schakelen, zichzelf kunnen redden op een nieuwe locatie en toch altijd representatief zijn. Wij selecteren precies daarop.
+                  Cateringpersoneel moet snel schakelen, zich aanpassen aan nieuwe locaties en toch representatief blijven. Daarom selecteren wij streng.
                 </p>
                 <ul className="space-y-6">
                   {[
                     {
                       icon: Users,
                       title: "Persoonlijke intake",
-                      desc: "Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan. Geen uitzonderingen.",
+                      desc: "Iedere medewerker doorloopt een gesprek en beoordeling voordat hij of zij aan de slag kan.",
                     },
                     {
                       icon: Star,
@@ -452,12 +452,12 @@ export default function CateringPersoneelGezocht() {
                     {
                       icon: Sparkles,
                       title: "Representativiteit",
-                      desc: "Cateringpersoneel staat dicht op de gast. Onze medewerkers zien er verzorgd uit en spreken de taal van hospitality.",
+                      desc: "Cateringpersoneel staat dicht op de gast. Daarom letten we extra op presentatie en servicehouding.",
                     },
                     {
                       icon: ThumbsUp,
                       title: "Ervaring en flexibiliteit",
-                      desc: "We kijken verder dan een CV. Wie gewend is aan wisselende locaties en drukke services scoort extra bij onze matching.",
+                      desc: "We kijken verder dan een CV. Ervaring met wisselende locaties en drukke services telt zwaar mee.",
                     },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-4 group">
@@ -518,19 +518,19 @@ export default function CateringPersoneelGezocht() {
                 Elke catering beter dan<br className="hidden sm:block" /> de vorige
               </h2>
               <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                Na elke cateringopdracht meten we hoe het personeel gepresteerd heeft. Zo weten we wie er echt goed is voor jouw type catering — en zetten we die mensen prioritair in voor jou.
+                Na elke cateringopdracht meten we hoe het personeel gepresteerd heeft. Zo weten we wie het beste past bij jouw type catering en zetten we die medewerkers opnieuw in.
               </p>
             </div>
           </RevealSection>
           <RevealSection delay={100}>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-14 max-w-4xl mx-auto">
               {[
-                { text: "Na elke opdracht een beoordeling op servicekwaliteit en gedrag" },
-                { text: "Betrouwbaarheid en punctualiteit worden nauwkeurig bijgehouden" },
-                { text: "No-shows direct geregistreerd met consequenties" },
-                { text: "Wie structureel goed presteert bij catering wordt prioritair ingezet" },
-                { text: "Vaste poule van catering-toppers opbouwen per opdrachtgever" },
-                { text: "Diensthistorie en scores per medewerker altijd inzichtelijk" },
+                { text: "Na iedere opdracht beoordeling op servicekwaliteit en gedrag" },
+                { text: "Betrouwbaarheid en punctualiteit worden bijgehouden" },
+                { text: "No shows worden direct geregistreerd" },
+                { text: "Top performers krijgen prioriteit bij nieuwe opdrachten" },
+                { text: "Vaste poules per opdrachtgever" },
+                { text: "Diensthistorie en scores per medewerker inzichtelijk" },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm">
                   <div className="mt-0.5 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -594,15 +594,15 @@ export default function CateringPersoneelGezocht() {
                   Vaste teams die<br /> jouw catering kennen
                 </h2>
                 <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8">
-                  Cateraars werken vaak op terugkerende events met vaste opdrachtgevers. Met een favorietenpoule bouwt EXTRA een vaste kern van medewerkers op die jouw werkwijze, jouw standaard en jouw tempo kennen.
+                  Veel cateraars werken met terugkerende opdrachtgevers. Met een favorietenpoule bouwt EXTRA een vaste kern van medewerkers die jouw werkwijze en tempo kennen.
                 </p>
                 <ul className="space-y-4 mb-8">
                   {[
-                    { icon: Users, text: "Vaste poule per cateringbedrijf, opgebouwd op bewezen prestaties" },
-                    { icon: Heart, text: "Medewerkers kennen jouw manier van werken en jouw kwaliteitsstandaard" },
-                    { icon: TrendingUp, text: "Minder briefing nodig, directe inzetbaarheid bij elke opdracht" },
-                    { icon: Star, text: "Hogere servicekwaliteit door vertrouwdheid en continuïteit" },
-                    { icon: Tag, text: "Tags per medewerker: Cateringervaren, Grote groepen, Mobiel, Zelfstandig" },
+                    { icon: Users, text: "Vaste poule per cateringbedrijf opgebouwd op basis van prestaties" },
+                    { icon: Heart, text: "Medewerkers kennen jouw werkwijze en kwaliteitsstandaard" },
+                    { icon: TrendingUp, text: "Minder briefing nodig en sneller inzetbaar" },
+                    { icon: Star, text: "Hogere servicekwaliteit door vertrouwdheid" },
+                    { icon: Tag, text: "Tags per medewerker zoals cateringervaring, grote groepen en zelfstandig" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -658,16 +658,16 @@ export default function CateringPersoneelGezocht() {
                 </span>
               </h2>
               <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                Cateringpersoneel dat gemotiveerd is, presteert beter. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers energy en drive hebben bij elke cateringopdracht.
+                Cateringpersoneel dat gemotiveerd is presteert beter. Met het EXTRAATje beloningssysteem zorgen we dat medewerkers energie en drive houden bij elke cateringopdracht.
               </p>
             </div>
           </RevealSection>
           <RevealSection delay={100}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-4xl mx-auto">
               {[
-                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per cateringopdracht. Goed presteren bij een grote dienst? Bonus-punten. Inzet wordt direct beloond.", icon: "🏃" },
-                { step: "2", title: "Vaker werken, hogere status", desc: "Wie regelmatig opdrachten doet bij jouw cateringbedrijf bouwt status op. Van Bronze naar Diamond. Hogere status = meer binding.", icon: "💎" },
-                { step: "3", title: "Minder uitval, sterkere teams", desc: "Medewerkers die punten opbouwen bij jouw bedrijf willen terugkomen. Dat betekent minder no-shows en een stabieler cateringteam.", icon: "🎁" },
+                { step: "1", title: "Elke dienst levert punten op", desc: "Medewerkers verdienen punten per opdracht. Goed presteren bij een grote dienst levert extra punten op.", icon: "🏃" },
+                { step: "2", title: "Vaker werken hogere status", desc: "Van Bronze naar Diamond. Hoe vaker iemand werkt bij jouw cateringbedrijf hoe hoger de status en betrokkenheid.", icon: "💎" },
+                { step: "3", title: "Minder uitval sterkere teams", desc: "Medewerkers die punten opbouwen bij jouw bedrijf komen vaker terug. Dat betekent minder no shows en stabielere teams.", icon: "🎁" },
               ].map((item, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-purple-100 p-6 sm:p-8 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">
                   <div className="text-4xl sm:text-5xl mb-4 sm:mb-5">{item.icon}</div>
@@ -702,10 +702,10 @@ export default function CateringPersoneelGezocht() {
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>Wat jouw cateringbedrijf hiervan merkt</h3>
                 <ul className="space-y-4">
                   {[
-                    { icon: TrendingUp, text: "Hogere motivatie: medewerkers presteren beter als er iets op het spel staat" },
-                    { icon: Check, text: "Minder no-shows: wie punten opbouwt bij jou, komt opdagen" },
-                    { icon: Users, text: "Sterkere teams: dezelfde gemotiveerde mensen bij elke cateringopdracht" },
-                    { icon: Heart, text: "Betere service: enthousiast personeel straalt af op jouw gasten" },
+                    { icon: TrendingUp, text: "Hogere motivatie doordat medewerkers ergens voor werken" },
+                    { icon: Check, text: "Minder no shows omdat medewerkers punten opbouwen" },
+                    { icon: Users, text: "Sterkere teams door vaste gezichten" },
+                    { icon: Heart, text: "Betere service door gemotiveerd personeel" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -853,7 +853,7 @@ export default function CateringPersoneelGezocht() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-purple-200 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
-              Of je nu een eenmalige cateringopdracht hebt of structureel personeel zoekt: EXTRA levert snel, flexibel en betrouwbaar. Ervaren, representatief en volledig in loondienst.
+              Of je nu een eenmalige cateringopdracht hebt of structureel personeel zoekt. EXTRA levert snel, flexibel en betrouwbaar cateringpersoneel dat gewend is aan grote events.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-14">
               <a

@@ -307,7 +307,7 @@ export default function PersoneelGezocht() {
                 desc: "Chefs, bediening en keukenmedewerkers voor catering en evenementen op iedere locatie.",
                 color: "from-indigo-500 to-purple-600",
                 border: "border-indigo-100",
-                link: "/cateringpersoneel-gezocht",
+                link: "/cateringpersoneel-inhuren",
                 tags: ["Chefs", "Bediening", "Keukenmedewerkers"],
               },
               {
