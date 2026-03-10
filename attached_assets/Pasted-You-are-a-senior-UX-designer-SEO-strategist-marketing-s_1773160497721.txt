@@ -1,0 +1,189 @@
+You are a senior UX designer, SEO strategist, marketing strategist and front-end developer working on the EXTRA website.
+Your task is to create the subpage “Front-office” within the job-seeker section of the website.
+Page to create
+Create the page:
+/ik-zoek-extra-werk/front-office
+This page is aimed at people looking for front office or reception work in hotels and hospitality environments through EXTRA.
+Target audience includes:
+front office employees
+receptionists
+hospitality hosts
+guest service staff
+hospitality students
+Important design rule
+The earlier subpages did not match the design quality of the website.
+Therefore this rule is strict:
+The entire visual style, layout, spacing, card design, typography hierarchy, CTA styling and UX patterns must be based on:
+/horeca-vacatures-amsterdam
+and consistent with:
+/ik-zoek-extra-werk/horeca
+This means:
+same premium visual quality
+same whitespace usage
+same section rhythm
+same card layout
+same button styling
+same typography hierarchy
+same mobile behavior
+same visual balance between text and images
+The page must clearly feel like it belongs to the same design system and design family.
+Main goal of the page
+The goal of the page is conversion.
+Visitors should be encouraged to sign up for front-office work via EXTRA.
+The page should:
+build trust
+clearly explain the type of work
+highlight benefits of working through EXTRA
+remove doubts
+guide visitors toward signing up
+All main CTA buttons must link to:
+/aanmelden
+Tone of voice
+Use the tone of voice of EXTRA.
+Tone should be:
+modern
+professional
+energetic
+approachable
+clear and direct
+not overly salesy
+Target audience:
+young hospitality professionals looking for front-office and reception work in hotels.
+SEO requirements (very important)
+This page must clearly communicate that it is about front office and reception jobs in hospitality.
+Both Google and AI search engines must easily understand this.
+Naturally incorporate keywords such as:
+front office vacatures
+receptionist vacatures
+hotel receptionist werk
+front office medewerker
+front office werk Amsterdam
+receptie werk hotel
+hospitality receptionist
+hotel front office werk
+Use them naturally in headings and paragraphs.
+Avoid keyword stuffing.
+Maintain natural language.
+UX principles
+The page must feel as strong as /horeca-vacatures-amsterdam.
+Focus on:
+strong hero section
+clear visual hierarchy
+logical vertical flow
+mobile-first design
+scanable content
+strategic CTA placement
+balanced mix of text and visual blocks
+cards for roles and benefits
+Avoid:
+large dense text blocks
+inconsistent spacing
+generic page templates
+Page structure
+Use the same visual rhythm as the Horeca page, but adapt the content to front-office roles in hotels.
+1 Hero section
+Create a strong hero that clearly communicates the purpose of the page.
+Example direction:
+H1:
+Front-office werk dat bij jou past
+Supporting text explaining that candidates can work at hotel receptions and hospitality locations via EXTRA.
+Primary CTA:
+Meld je aan
+Secondary CTA:
+Bekijk hoe het werkt
+The hero must visually match /horeca-vacatures-amsterdam.
+2 What kind of front-office work can you do?
+Create a visually appealing card section with different roles.
+Examples:
+Front office medewerker
+Hotel receptionist
+Guest service medewerker
+Hospitality host / hostess
+Night receptionist
+Lobby host
+Each card should contain:
+role name
+short explanation
+small icon or visual element
+This section should feel dynamic and professional.
+3 Why work in front-office via EXTRA?
+Create a benefits section.
+Examples:
+Werken in mooie hotels
+Flexibele diensten
+Dagbetaling via Jixbee
+Professionele werkomgeving
+Duidelijke planning
+EXTRAATJE rewards systeem
+Use visually appealing benefit cards.
+4 Work in hotels you can be proud of
+Create a section emphasizing the quality of the locations.
+Focus on:
+luxury hotels
+hospitality brands
+professional work environments
+This section should feel premium and aspirational.
+5 How it works
+Create a step-by-step overview.
+Example:
+Meld je aan
+Kennismaking met EXTRA
+Kies diensten die bij je passen
+Werk en ontvang je betaling
+Make it clear and visually structured.
+6 Fast payment / financial advantage
+Explain the daily payment system.
+Clarify:
+how quickly candidates get paid
+that payments run via Jixbee
+that the system is transparent
+Highlight this visually.
+7 Social proof
+Add testimonials from people who worked in front-office roles via EXTRA.
+Each testimonial should include:
+quote
+role
+optional rating
+Goal: trust and credibility.
+8 FAQ
+Create a FAQ section focused on front-office candidates.
+Examples:
+Moet ik ervaring hebben als receptionist?
+Werk ik altijd in hetzelfde hotel?
+Hoe werkt de betaling?
+Kan ik zelf mijn diensten kiezen?
+Hoe snel kan ik beginnen?
+Use expandable FAQ blocks if possible.
+9 Final CTA section
+End the page with a strong CTA block.
+Include:
+headline encouraging visitors to start working in front-office roles
+short supporting sentence
+CTA button linking to /aanmelden
+This section must visually stand out.
+Design requirements
+Follow the design system of:
+/horeca-vacatures-amsterdam
+Pay attention to:
+container width
+spacing
+card styling
+button styling
+typography hierarchy
+visual balance between text and imagery
+The page must clearly belong to the same design system.
+Technical requirements
+Build the page:
+component-based
+fully responsive
+mobile-first
+Ensure:
+clean semantic HTML structure
+correct H1 / H2 hierarchy
+fast loading layout
+Final instruction
+Create the complete Front-office page based on these instructions.
+Highest priorities:
+Match the UX and design quality of /horeca-vacatures-amsterdam
+Clearly communicate front-office hospitality work
+Maximize conversion to the signup page

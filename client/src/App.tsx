@@ -94,7 +94,8 @@ const PUBLIC_PATHS = [
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
-  '/ik-zoek-extra-werk/horeca', '/ik-zoek-extra-werk/chef', '/horeca-werk', '/housekeeping-werk',
+  '/ik-zoek-extra-werk/horeca', '/ik-zoek-extra-werk/chef', '/ik-zoek-extra-werk/front-office',
+  '/horeca-werk', '/housekeeping-werk',
   // SEO routes
   '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
@@ -155,6 +156,7 @@ function Router() {
         <Route path="/chef-vacatures-amsterdam" component={ChefVacaturesAmsterdam} />
         <Route path="/ik-zoek-extra-werk/chef">{() => { window.location.replace('/chef-vacatures-amsterdam'); return null; }}</Route>
         <Route path="/front-office-vacatures-amsterdam" component={FrontOfficeVacaturesAmsterdam} />
+        <Route path="/ik-zoek-extra-werk/front-office">{() => { window.location.replace('/front-office-vacatures-amsterdam'); return null; }}</Route>
 
         {/* SEO pillar & landingspagina's */}
         <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
