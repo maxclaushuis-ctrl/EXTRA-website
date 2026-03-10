@@ -1,0 +1,194 @@
+You are a senior UX designer, SEO strategist, marketing strategist and front-end developer working on the EXTRA website.
+Your task is to create the subpage “Chef” within the job-seeker section of the website and fix the navigation label.
+First fix the navigation
+In the submenu under “Ik zoek extra werk” the current label is:
+Chef & keuken
+This should be changed to:
+Chef
+Update the navigation so it displays Chef everywhere in the menu.
+Make sure the link routes correctly to:
+/ik-zoek-extra-werk/chef
+Do not leave any references to Chef & keuken in the navigation.
+Page to create
+Create the page:
+/ik-zoek-extra-werk/chef
+This page is aimed at chefs, cooks and kitchen professionals looking for flexible work through EXTRA.
+Important design rule
+The earlier subpages were not visually consistent with the website.
+Therefore this rule is strict:
+The entire visual design, layout, spacing, card structure, typography hierarchy, CTA styling and UX patterns must be based on:
+/horeca-vacatures-amsterdam
+and consistent with:
+/ik-zoek-extra-werk/horeca
+This means:
+same premium visual quality
+same section rhythm
+same spacing
+same card style
+same CTA styling
+same typography hierarchy
+same responsive behavior
+same visual balance between text and image
+The page should feel like it belongs to the same design system and design family.
+Main goal of the page
+The goal of the page is conversion.
+Visitors should be motivated to sign up for chef / kitchen work through EXTRA.
+The page should:
+build trust
+clearly explain the type of kitchen work
+highlight benefits of working via EXTRA
+remove doubts
+guide users toward signing up
+All main CTA buttons should link to:
+/aanmelden
+Tone of voice
+Use the tone of voice of EXTRA:
+modern
+energetic
+professional
+direct
+confident
+not overly salesy
+not too student-like
+Target audience:
+young chefs, kitchen professionals and hospitality workers looking for flexible or freelance kitchen work.
+SEO requirement (very important)
+This page must clearly communicate that it is about chef work and kitchen jobs.
+Both Google and AI search engines must clearly understand the topic.
+Naturally incorporate keywords such as:
+chef vacatures
+kok vacatures
+keuken werk
+chef werk Amsterdam
+kok werk Amsterdam
+werken als chef
+flexibel chef werk
+freelance kok
+keuken vacatures horeca
+Use them naturally in headings and paragraphs.
+Avoid keyword stuffing.
+Maintain natural language.
+UX principles
+The page must feel just as strong as /horeca-vacatures-amsterdam.
+Focus on:
+strong hero section
+clear visual hierarchy
+logical vertical flow
+mobile-first design
+scanable sections
+clear CTA placements
+balanced mix of text and cards
+strong visual rhythm
+Avoid:
+large text blocks
+inconsistent spacing
+generic layouts
+Page structure
+Use the same visual rhythm as the Horeca page, but with content adapted to chefs and kitchen work.
+1 Hero section
+Create a strong hero that clearly communicates the purpose of the page.
+Example direction:
+H1
+Chef werk dat bij jouw niveau past
+Supporting text explaining that chefs can work in restaurants, hotels, events and banqueting through EXTRA.
+Primary CTA:
+Meld je aan
+Secondary CTA:
+Bekijk hoe het werkt
+Hero must visually match /horeca-vacatures-amsterdam.
+2 What kind of chef work can you do?
+Create a visually appealing card section.
+Examples of roles:
+Zelfstandig werkend kok
+Sous chef
+Chef de partie
+Productie keuken
+Banqueting keuken
+Events / catering keuken
+Each card should contain:
+role title
+short explanation
+small visual icon
+Make this feel professional and appealing, not like a simple vacancy list.
+3 Why chefs work via EXTRA
+Create a benefit section focused on chefs.
+Examples:
+Werken in verschillende keukens
+Flexibele diensten
+Dagbetaling via Jixbee
+Goede tarieven
+Professionele opdrachtgevers
+EXTRAATJE rewards systeem
+Use benefit cards or badges.
+4 Work in kitchens you can be proud of
+Build a section that highlights the quality of the kitchens.
+Examples:
+Hotels
+Event cateraars
+Restaurants
+Banqueting locaties
+This section should feel premium and inspiring.
+5 How it works
+Create a clear step-by-step section.
+Example:
+Meld je aan
+Kennismaking met EXTRA
+Kies diensten die bij je passen
+Werk en ontvang je betaling
+Keep it clean and scanable.
+6 Fast payment / financial advantage
+Explain the daily payment system.
+Clarify:
+how fast chefs get paid
+that payments run through Jixbee
+that the system is transparent
+Highlight this visually.
+7 Social proof
+Add testimonials from chefs who worked via EXTRA.
+Each testimonial:
+quote
+role
+optional rating
+Goal: credibility.
+8 FAQ
+Create a FAQ focused on chefs.
+Examples:
+Moet ik ervaring hebben als chef?
+Kan ik zelf bepalen waar ik werk?
+Hoe werkt de betaling?
+Werk ik steeds op dezelfde locatie?
+Hoe snel kan ik starten?
+Use expandable FAQ blocks if available.
+9 Final CTA section
+End the page with a strong CTA block.
+Include:
+headline encouraging chefs to start working via EXTRA
+short supporting sentence
+CTA button to /aanmelden
+This section must stand out visually.
+Design requirements
+Follow the design system of:
+/horeca-vacatures-amsterdam
+Pay attention to:
+container width
+spacing
+card styling
+button styling
+typography hierarchy
+visual balance between text and imagery
+The page must clearly look like it belongs to the same design system.
+Technical requirements
+Build the page:
+component-based
+fully responsive
+mobile-first
+Ensure:
+clean semantic HTML
+proper H1 / H2 hierarchy
+fast loading structure
+Final instruction
+Create the complete Chef page based on these instructions.
+Highest priorities:
+Match the UX and design quality of /horeca-vacatures-amsterdam
+Clearly communicate chef and kitchen work
+Maximize conversion to the signup page

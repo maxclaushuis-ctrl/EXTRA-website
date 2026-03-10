@@ -244,7 +244,7 @@ export default function IkZoekExtraWerk() {
                     {[
                       { label: "Horeca", href: "/horeca-werk", icon: UtensilsCrossed },
                       { label: "Housekeeping", href: "/housekeeping-werk", icon: BedDouble },
-                      { label: "Chef & Keuken", href: "/chef-vacatures-amsterdam", icon: ChefHat },
+                      { label: "Chef", href: "/chef-vacatures-amsterdam", icon: ChefHat },
                       { label: "Front Office", href: "/front-office-vacatures-amsterdam", icon: ConciergeBell },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all group">
@@ -312,7 +312,7 @@ export default function IkZoekExtraWerk() {
                     {[
                       { label: "Horeca", href: "/horeca-werk" },
                       { label: "Housekeeping", href: "/housekeeping-werk" },
-                      { label: "Chef & Keuken", href: "/chef-vacatures-amsterdam" },
+                      { label: "Chef", href: "/chef-vacatures-amsterdam" },
                       { label: "Front Office", href: "/front-office-vacatures-amsterdam" },
                     ].map((item) => (
                       <a key={item.label} href={item.href} className="block py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">{item.label}</a>
