@@ -80,10 +80,10 @@ const NAV_ITEMS = [
 ];
 
 const functies = [
-  { title: "Front office medewerker", sub: "Hotels · Receptie · Gastgericht", img: frontOfficeImg, desc: "Eerste aanspreekpunt voor hotelgasten. Van check-in tot vragen beantwoorden en de perfecte ontvangst verzorgen.", bullets: ["Dagdiensten in tophotels", "Gastvrij en professioneel", "Internationale werkomgeving"], color: "from-indigo-500 to-blue-700", href: "/aanmelden" },
-  { title: "Hotel receptionist", sub: "Check-in · Reserveringen · Service", img: frontOffice2Img, desc: "Verwerk reserveringen, begeleid gasten bij aankomst en vertrek en zorg voor een vlekkeloze hotelervaring.", bullets: ["Vijfsterren hotelketens", "Front-desk ervaring", "Systeem- en gastvaardig"], color: "from-purple-600 to-violet-700", href: "/aanmelden" },
-  { title: "Guest service medewerker", sub: "Gastbeleving · Hospitality · Support", img: dienstFrontOfficeImg, desc: "Ondersteuning bij de receptie en gastbeleving. Vragen beantwoorden, problemen oplossen en gasten verrassen.", bullets: ["Flexibele diensten", "Gastgericht werken", "Hotels en hospitality venues"], color: "from-teal-500 to-cyan-600", href: "/aanmelden" },
-  { title: "Night receptionist", sub: "Nachtdienst · Overzicht · Rust", img: hotelImg, desc: "Nachtdienst aan de receptie van een hotel. Rust, overzicht en verantwoordelijkheid in een unieke rol.", bullets: ["Nacht- en avonddiensten", "Zelfstandige werkomgeving", "Vaste poule opbouwen"], color: "from-slate-600 to-gray-700", href: "/aanmelden" },
+  { title: "Front office medewerker", sub: "Hotels · Receptie · Gastgericht", img: frontOfficeImg, desc: "Front office vacatures Amsterdam voor gastgerichte medewerkers. Eerste aanspreekpunt voor hotelgasten, van check-in tot een perfecte ontvangst.", bullets: ["Front office vacatures Amsterdam", "Gastvrij en professioneel", "Internationale werkomgeving"], color: "from-indigo-500 to-blue-700", href: "/aanmelden" },
+  { title: "Hotel receptionist", sub: "Check-in · Reserveringen · Service", img: frontOffice2Img, desc: "Receptionist vacatures bij vijfsterren hotels in Amsterdam. Verwerk reserveringen en begeleid gasten bij aankomst voor een vlekkeloze hotelervaring.", bullets: ["Receptionist vacatures hotel", "Front-desk ervaring", "Vijfsterren hotelketens"], color: "from-purple-600 to-violet-700", href: "/aanmelden" },
+  { title: "Guest service medewerker", sub: "Gastbeleving · Hospitality · Support", img: dienstFrontOfficeImg, desc: "Front office medewerker in een guest service rol. Ondersteuning bij receptie en gastbeleving op flexibele basis bij hotels en hospitality venues.", bullets: ["Flexibele front office diensten", "Gastgericht werken", "Hotels en hospitality venues"], color: "from-teal-500 to-cyan-600", href: "/aanmelden" },
+  { title: "Night receptionist", sub: "Nachtdienst · Overzicht · Rust", img: hotelImg, desc: "Hotel receptionist Amsterdam in de nachtdienst. Rust, overzicht en verantwoordelijkheid in een unieke en zelfstandige rol.", bullets: ["Hotel receptionist Amsterdam", "Zelfstandige werkomgeving", "Vaste poule opbouwen"], color: "from-slate-600 to-gray-700", href: "/aanmelden" },
 ];
 
 const reviews = [
@@ -93,11 +93,11 @@ const reviews = [
 ];
 
 const faqs = [
-  { q: "Moet ik ervaring hebben als receptionist?", a: "Enige hospitality-ervaring is een pluspunt, maar niet altijd vereist. We kijken naar jouw communicatieve vaardigheden, representatieve uitstraling en gastgerichtheid. Voor sommige functies bieden we een korte introductie op locatie aan." },
-  { q: "Werk ik altijd in hetzelfde hotel?", a: "In veel gevallen ja. We proberen je te koppelen aan een vaste poule bij een of meerdere hotels, zodat je de procedures kent en je snel op je gemak voelt in het team." },
-  { q: "Kan ik zelf mijn diensten kiezen?", a: "Ja. Je geeft je beschikbaarheid door en wij zorgen voor passende front-office diensten. Zo combineer je het werk met je studie, andere baan of andere bezigheden." },
-  { q: "Hoe werkt de betaling?", a: "Na je dienst word je uitbetaald via Jixbee. Het bedrag staat doorgaans dezelfde dag nog op je rekening. Transparant, snel en zonder verrassingen." },
-  { q: "Hoe snel kan ik beginnen?", a: "Na je aanmelding en een korte kennismaking kun je vaak al binnen een week aan de slag. We doen ons best om de start zo soepel mogelijk te laten verlopen." },
+  { q: "Moet ik ervaring hebben als receptionist?", a: "Enige hospitality-ervaring is een pluspunt, maar niet altijd vereist voor front office werk. We kijken naar jouw communicatieve vaardigheden, representatieve uitstraling en gastgerichtheid. Voor sommige front office vacatures Amsterdam bieden we een korte introductie op locatie aan." },
+  { q: "Werk ik altijd in hetzelfde hotel?", a: "In veel gevallen ja. We proberen je te koppelen aan een vaste poule bij een of meerdere hotels, zodat je de procedures kent en snel op je gemak voelt als hotel receptionist in het team." },
+  { q: "Kan ik zelf mijn diensten kiezen?", a: "Ja. Je geeft je beschikbaarheid door en wij zorgen voor passende front office diensten. Zo combineer je het werk als front office medewerker met je studie, andere baan of andere bezigheden." },
+  { q: "Hoe werkt de betaling?", a: "Na je dienst word je uitbetaald via Jixbee. Het bedrag staat doorgaans dezelfde dag nog op je rekening. Zo werkt front office werk via EXTRA: transparant, snel en zonder verrassingen." },
+  { q: "Hoe snel kan ik beginnen?", a: "Na je aanmelding en een korte kennismaking kun je vaak al binnen een week aan de slag met receptionist werk. We doen ons best om de start zo soepel mogelijk te laten verlopen." },
 ];
 
 const LOGOS = [
@@ -122,15 +122,15 @@ export default function FrontOfficeVacaturesAmsterdam() {
   }, []);
 
   useEffect(() => {
-    document.title = "Front Office Vacatures Amsterdam | Receptionist Hotel Werk via EXTRA";
+    document.title = "Front office vacatures Amsterdam | Receptionist werk via EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Zoek jij front office vacatures of receptionist werk in een hotel? Via EXTRA werk je als front office medewerker, hotel receptionist of guest service medewerker bij tophotels in Amsterdam. Dagbetaling via Jixbee en flexibele diensten.");
-    setMeta("og:title", "Front Office Vacatures Amsterdam | Hotel Receptionist via EXTRA", true);
+    setMeta("description", "Op zoek naar front office vacatures of receptionist werk in Amsterdam? Via EXTRA werk je in tophotels met flexibele diensten en dagbetaling.");
+    setMeta("og:title", "Front office vacatures Amsterdam | Receptionist werk via EXTRA", true);
   }, []);
 
   return (
@@ -225,7 +225,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Werk als hotel receptionist, front office medewerker of guest service medewerker bij de mooiste hotels in Amsterdam. Front office vacatures met dagbetaling en flexibele diensten.
+              Werk als hotel receptionist of front office medewerker bij tophotels in Amsterdam. Via EXTRA kies je zelf je diensten. Flexibel front office werk met dagbetaling en professionele hotelomgevingen.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
@@ -284,10 +284,13 @@ export default function FrontOfficeVacaturesAmsterdam() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Jouw vakgebied</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Welke front-office functies kun je doen?
+                Welke front-office functies kun je doen via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Via EXTRA werk je als hotel receptionist, front office medewerker of in een guest service rol bij hotels en hospitality locaties in Amsterdam.
+                Via EXTRA werk je als hotel receptionist, front office medewerker of guest service medewerker bij hotels in Amsterdam. Wij koppelen je aan hotels die passen bij jouw niveau en wensen. Bekijk ook{" "}
+                <a href="/horeca-werk" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">horeca werk</a>,{" "}
+                <a href="/housekeeping-werk" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">housekeeping werk</a> of{" "}
+                <a href="/chef-vacatures-amsterdam" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef vacatures</a>.
               </p>
             </div>
           </RevealSection>
@@ -338,7 +341,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
                 Waarom front-office werk via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                EXTRA biedt front-office medewerkers de vrijheid van flexibel werk bij professionele hotelomgevingen, met alle voordelen.
+                EXTRA biedt front office medewerkers en hotel receptionisten de vrijheid om te werken wanneer het jou uitkomt. Flexibele front office vacatures Amsterdam, dagbetaling en werken bij professionele hotels zonder langdurige verplichtingen.
               </p>
             </div>
           </RevealSection>
@@ -382,7 +385,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
                 Hotels waar jij trots op kunt zijn
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Als hotel receptionist via EXTRA werk je in een professionele hotelomgeving van hoge kwaliteit. Internationale gasten, hoge standaarden en een prettige werksfeer.
+                Via EXTRA werk je als hotel receptionist of front office medewerker in hotels waar kwaliteit en gastvrijheid centraal staan. Internationale gasten, professionele receptieteams en een prettige werksfeer.
               </p>
             </div>
           </RevealSection>
@@ -434,10 +437,10 @@ export default function FrontOfficeVacaturesAmsterdam() {
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {[
-              { step: "01", icon: MessageCircle, title: "Schrijf je in", desc: "Vul het aanmeldformulier in en upload je CV. Duurt minder dan 5 minuten.", color: "from-purple-500 to-violet-600" },
-              { step: "02", icon: Users, title: "Kennismaking", desc: "Een kort gesprek over jouw niveau en voorkeuren. Dan kijken we welke hotels bij je passen.", color: "from-indigo-500 to-blue-600" },
-              { step: "03", icon: CalendarCheck, title: "Kies je diensten", desc: "Jij geeft je beschikbaarheid door en wij zorgen voor passende front-office diensten.", color: "from-teal-500 to-cyan-600" },
-              { step: "04", icon: Zap, title: "Werk en word betaald", desc: "Draai je dienst en ontvang dezelfde dag je betaling via Jixbee.", color: "from-cyan-500 to-blue-500" },
+              { step: "01", icon: MessageCircle, title: "Schrijf je in", desc: "Meld je aan via het formulier en upload je cv. Binnen enkele minuten geregeld.", color: "from-purple-500 to-violet-600" },
+              { step: "02", icon: Users, title: "Kennismaking", desc: "We bespreken jouw ervaring, voorkeur en beschikbaarheid. Dan kijken we welke hotels bij je passen.", color: "from-indigo-500 to-blue-600" },
+              { step: "03", icon: CalendarCheck, title: "Kies je diensten", desc: "Je kiest zelf de front office diensten die bij jouw agenda passen.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Zap, title: "Werk en word betaald", desc: "Werk je dienst en ontvang dezelfde dag je betaling via Jixbee.", color: "from-cyan-500 to-blue-500" },
             ].map(({ step, icon: Icon, title, desc, color }, i) => (
               <RevealSection key={step} delay={i * 80}>
                 <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
@@ -472,7 +475,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
                   Geld op je rekening, dezelfde dag nog.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Na je front-office dienst word je uitbetaald via Jixbee. Geen wachten op het einde van de maand — gewoon direct je verdiende geld. Transparant, snel en betrouwbaar.
+                  Na je front office dienst wordt je uitbetaald via Jixbee. Geen wachten tot het einde van de maand. Je ziet direct wat je hebt verdiend en ontvangt je geld dezelfde dag.
                 </p>
                 <div className="space-y-3 mb-8">
                   {["Uitbetaling via Jixbee, zelfde dag na je dienst", "Real-time inzicht in je gewerkte uren en bedrag", "Officieel contract en payroll conform wetgeving", "Geen verrassingen op je loonstrook"].map(item => (
@@ -537,8 +540,8 @@ export default function FrontOfficeVacaturesAmsterdam() {
       <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 py-8 sm:py-10">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>Meld je aan en begin met front-office werk bij de mooiste hotels van Amsterdam.</p>
-            <p className="text-purple-200 text-sm mt-0.5">Geen kosten. Geen verplichtingen. Jij beslist wanneer je werkt.</p>
+            <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>Begin vandaag met front office werk via EXTRA</p>
+            <p className="text-purple-200 text-sm mt-0.5">Wil je werken als hotel receptionist of front office medewerker in Amsterdam? Meld je aan bij EXTRA en start snel met diensten bij tophotels.</p>
           </div>
           <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start je aanmelding <ArrowRight className="w-4 h-4" />
