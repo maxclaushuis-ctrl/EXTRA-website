@@ -1,0 +1,72 @@
+Je bent een frontend developer en image-processing specialist.
+We hebben al een banner gegenereerd maar deze wijkt nog iets af van de originele sectie van de website.
+De banner moet pixel-perfect overeenkomen met de sectie “Klaar om samen te werken” op de pagina /landing.
+BELANGRIJK:
+Maak GEEN nieuwe gradient of kleuren.
+Gebruik de originele achtergrondpixels uit de sectie.
+Stap 1 — Achtergrond exact kopiëren
+Gebruik de sectie “Klaar om samen te werken?” van de pagina /landing als bron.
+Van deze sectie moet je:
+Verwijderen:
+titel
+subtekst
+knoppen
+Behoud:
+exacte gradient achtergrond
+exacte lichtval / glow
+exacte positie van alle X-patronen
+⚠️ Belangrijk:
+De achtergrond mag niet opnieuw gegenereerd worden
+Gebruik de originele pixels van de website
+De kleuren moeten 100% identiek blijven
+Stap 2 — Correct banner formaat
+Crop de bestaande sectie naar:
+Breedte: 1200px
+Hoogte: 400px
+Zorg dat:
+de compositie van de X-vormen intact blijft
+de centrale glow zichtbaar blijft
+de banner visueel gelijk blijft aan de website
+Stap 3 — Logo superscherp maken
+Het logo in de huidige versie is niet scherp genoeg.
+Gebruik daarom:
+het originele EXTRA logo als SVG of hoge resolutie PNG
+plaats het logo zonder compressie
+Plaatsing:
+exact horizontaal gecentreerd
+exact verticaal gecentreerd
+Logo breedte:
+ongeveer 420–460px
+Gebruik geen anti-aliasing blur of smoothing.
+Stap 4 — Scherpte optimaliseren
+Zorg dat:
+logo pixel perfect scherp is
+export niet gecomprimeerd wordt
+Gebruik indien nodig:
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+Stap 5 — Export
+Genereer:
+/assets/email-banner-extra.png
+/assets/email-banner-extra.jpg
+Instellingen:
+PNG
+→ volledige kwaliteit
+JPG
+→ max 300kb
+Belangrijk
+Het eindresultaat moet eruit zien als:
+De exacte website sectie “Klaar om samen te werken”, maar zonder tekst en met alleen het EXTRA logo in het midden.
+Geen nieuw ontwerp.
+Alleen:
+originele achtergrond
+crop
+logo toevoegen.
+💡 Nog één tip (dit lost het kleurprobleem bijna altijd op):
+Laat Replit de banner genereren via:
+screenshot van DOM element
+i.p.v. image reconstruction.
+Bijvoorbeeld:
+document.querySelector('#cta-section')
+→ render → screenshot → crop.
+Dan krijg je 100% dezelfde gradient en kleuren als je website
