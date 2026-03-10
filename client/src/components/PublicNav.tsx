@@ -59,7 +59,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
       icon: UserCheck,
       href: "/horeca-vacatures-amsterdam",
       items: [
-        { label: "Horeca", href: "/ik-zoek-extra-werk/horeca", icon: UtensilsCrossed },
+        { label: "Horeca", href: "/horeca-werk", icon: UtensilsCrossed },
         { label: "Housekeeping", href: "/housekeeping-werk", icon: Heart },
         { label: "Chefs", href: "/chef-vacatures-amsterdam", icon: Award },
         { label: "Front-office", href: "/front-office-vacatures-amsterdam", icon: Handshake },

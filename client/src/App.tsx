@@ -21,7 +21,6 @@ import Aanmelden from "@/pages/Aanmelden";
 import CvUpload from "@/pages/CvUpload";
 import HorecaWerk from "@/pages/HorecaWerk";
 import HousekeepingWerk from "@/pages/HousekeepingWerk";
-import IkZoekExtraWerkHoreca from "@/pages/IkZoekExtraWerkHoreca";
 import NieuwsPage from "@/pages/NieuwsPage";
 import NieuwsArtikel from "@/pages/NieuwsArtikel";
 import Extraatje from "@/pages/Extraatje";
@@ -149,7 +148,7 @@ function Router() {
         <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
 
         {/* Kandidaat routes */}
-        <Route path="/ik-zoek-extra-werk/horeca" component={IkZoekExtraWerkHoreca} />
+        <Route path="/ik-zoek-extra-werk/horeca">{() => { window.location.replace('/horeca-werk'); return null; }}</Route>
         <Route path="/horeca-vacatures-amsterdam" component={IkZoekExtraWerk} />
         <Route path="/horeca-werk-amsterdam" component={HorecaWerkAmsterdam} />
         <Route path="/housekeeping-vacatures-amsterdam" component={HousekeepingVacaturesAmsterdam} />
