@@ -1,0 +1,285 @@
+Je bent een senior UX designer, front-end developer en CRO-specialist.
+Schrijf en bouw de subpagina “Horeca” binnen de werkzoekenden-sectie van de EXTRA website.
+
+Belangrijk uitgangspunt
+
+De eerdere subpagina’s komen qua stijl en UX niet goed uit. Daarom geldt nu het volgende als harde richtlijn:
+
+Baseer de volledige visuele stijl, spacing, compositie, hiërarchie, kaartopbouw, gebruik van kleuren, buttons, ritme en UX op de pagina: /horeca-vacatures-amsterdam
+
+Dat betekent:
+	•	zelfde kwaliteitsniveau
+	•	zelfde soort visuele rust
+	•	zelfde premium/modern gevoel
+	•	zelfde duidelijke opbouw en scanbaarheid
+	•	zelfde type sectie-overgangen en balans tussen tekst en beeld
+
+Let op
+
+De stijl en UX moeten dus duidelijk geïnspireerd zijn op /horeca-vacatures-amsterdam,
+maar de inhoud, structuur en doelgroep horen bij de subpagina “Horeca” onder “Ik zoek extra werk”.
+
+Dus:
+	•	stijl = /horeca-vacatures-amsterdam
+	•	inhoud = horeca werken via EXTRA
+	•	doel = conversie naar aanmelden
+
+⸻
+
+Pagina
+
+Maak de subpagina:
+
+/ik-zoek-extra-werk/horeca
+
+Deze pagina is bedoeld voor werkzoekenden / young professionals die horecawerk zoeken via EXTRA.
+
+⸻
+
+Doel van de pagina
+
+De pagina moet bezoekers overtuigen om zich aan te melden voor horecawerk via EXTRA.
+
+De pagina moet dus:
+	•	vertrouwen geven
+	•	duidelijk maken wat voor horecawerk het is
+	•	laten zien wat EXTRA anders maakt
+	•	drempels wegnemen
+	•	doorsturen naar /aanmelden
+
+⸻
+
+Tone of voice
+
+Gebruik de tone of voice van EXTRA:
+	•	jong, professioneel, energiek
+	•	direct en duidelijk
+	•	modern, niet stoffig
+	•	niet te studentikoos
+	•	gericht op young professionals
+	•	geen overdreven verkooptaal
+	•	wel overtuigend en concreet
+
+⸻
+
+UX-richtlijnen
+
+De pagina moet qua UX net zo sterk aanvoelen als /horeca-vacatures-amsterdam.
+
+Dat betekent:
+	•	sterke hero met duidelijke headline en CTA
+	•	prettige verticale flow
+	•	voldoende witruimte
+	•	duidelijke secties
+	•	scanbare teksten
+	•	logische CTA-momenten
+	•	mobile-first
+	•	snelle visuele herkenning
+	•	goede balans tussen tekst, cards, badges, iconen en beeld
+
+⸻
+
+Inhoudelijke structuur van de pagina
+
+Gebruik onderstaande indeling, maar voer hem uit in de stijl van /horeca-vacatures-amsterdam.
+
+⸻
+
+1. Hero
+
+Bouw een hero-sectie die direct duidelijk maakt waar de pagina over gaat.
+
+Inhoud:
+	•	H1 gericht op horecawerk via EXTRA
+	•	korte subtekst
+	•	CTA: Meld je aan
+	•	secundaire CTA: Bekijk hoe het werkt of Bekijk open functies
+	•	visueel element dat aansluit op de rest van de website
+
+Richting voor copy:
+
+Denk aan iets als:
+
+Flexibel horecawerk dat bij jou past
+Werk in bediening, bar, banqueting of events op locaties waar jij trots op kunt zijn.
+
+Maar verbeter dit zelf naar een sterkere versie.
+
+⸻
+
+2. Wat voor horecawerk kun je doen?
+
+Maak een visueel sterke sectie met verschillende soorten horeca-functies.
+
+Denk aan cards of tegels voor:
+	•	Bediening
+	•	Bar
+	•	Runner
+	•	Banqueting
+	•	Host / Hostess
+	•	Afwas / ondersteunend
+	•	Events
+
+Per kaart:
+	•	functienaam
+	•	1 korte zin uitleg
+	•	eventueel klein icoon of visueel accent
+
+Belangrijk:
+dit moet niet aanvoelen als een saaie vacaturelijst, maar als een aantrekkelijke overzichtssectie.
+
+⸻
+
+3. Waarom horeca via EXTRA?
+
+Maak een sectie met duidelijke voordelen.
+
+Gebruik hier niet te veel generieke termen, maar voordelen die echt bij EXTRA passen.
+
+Denk aan:
+	•	dagbetaling via Jixbee
+	•	werken op mooie locaties
+	•	flexibele diensten
+	•	EXTRAATJE rewards
+	•	duidelijke planning
+	•	werken via een bureau dat je kent
+
+Verwerk dit in cards/badges/benefit blocks.
+
+⸻
+
+4. Werken op locaties waar jij trots op kunt zijn
+
+Gebruik deze sectie om vertrouwen en aantrekkingskracht op te bouwen.
+
+Toon:
+	•	logo’s / locatiegevoel / hospitality uitstraling
+	•	korte tekst die duidelijk maakt dat horeca via EXTRA meer is dan zomaar een bijbaan
+
+Deze sectie moet qua uitstraling premium en aantrekkelijk voelen.
+
+⸻
+
+5. Hoe het werkt
+
+Maak een overzichtelijke stap-voor-stap sectie.
+
+Bijvoorbeeld:
+	1.	Meld je aan
+	2.	Kom bij ons langs
+	3.	Kies je diensten
+	4.	Werk en word uitbetaald
+
+Kort, duidelijk en scanbaar.
+
+⸻
+
+6. Dagbetaling / financieel voordeel
+
+Maak een sectie over dagbetaling.
+
+Leg duidelijk uit:
+	•	hoe snel iemand geld ontvangt
+	•	dat dit via Jixbee loopt
+	•	dat het transparant werkt
+	•	dat het prettig is als je flexibel werkt
+
+Gebruik hier visueel sterke elementen, bij voorkeur in lijn met bestaande stijl.
+
+⸻
+
+7. Reviews / social proof
+
+Laat ervaringen zien van mensen die via EXTRA in de horeca werken.
+
+Denk aan:
+	•	korte quotes
+	•	functie erbij
+	•	eventueel sterren / badges
+
+Doel:
+vertrouwen en herkenning.
+
+⸻
+
+8. FAQ
+
+Voeg een FAQ toe gericht op horeca-kandidaten.
+
+Bijvoorbeeld:
+	•	Heb ik ervaring nodig?
+	•	Kan ik zelf mijn diensten kiezen?
+	•	Hoe werkt dagbetaling?
+	•	Op welke locaties kan ik werken?
+	•	Hoe snel kan ik starten?
+
+⸻
+
+9. Sterke CTA onderaan
+
+Sluit af met een duidelijke conversiesectie.
+
+Bijvoorbeeld:
+	•	headline
+	•	1 korte geruststellende zin
+	•	CTA naar /aanmelden
+
+⸻
+
+SEO-richtlijnen
+
+Deze pagina moet ook SEO-technisch goed staan.
+
+Verwerk natuurlijke zoekwoorden zoals:
+	•	horeca werk Amsterdam
+	•	horeca vacatures Amsterdam
+	•	flexibel horeca werk
+	•	werken in de horeca
+	•	bediening vacatures Amsterdam
+	•	horeca bijbaan Amsterdam
+	•	werken op evenementen
+	•	hospitality werk Amsterdam
+
+Maar:
+	•	schrijf natuurlijk
+	•	geen keyword stuffing
+	•	UX en leesbaarheid blijven voorop
+
+⸻
+
+Design-richtlijnen
+
+Nogmaals:
+De stijl moet heel duidelijk gebaseerd zijn op /horeca-vacatures-amsterdam.
+
+Dus let op:
+	•	dezelfde visuele kwaliteit
+	•	vergelijkbare spacing
+	•	vergelijkbare contentblokken
+	•	vergelijkbare headline-hiërarchie
+	•	vergelijkbare card-opbouw
+	•	vergelijkbare button-stijl
+	•	vergelijkbare balans tussen beeld en tekst
+
+De vorige versies waren niet goed genoeg.
+Deze pagina moet voelen alsof hij uit exact dezelfde designfamilie komt als /horeca-vacatures-amsterdam.
+
+⸻
+
+Technisch
+	•	Bouw de pagina netjes component-based op
+	•	Zorg dat hij volledig responsive is
+	•	Gebruik bestaande design tokens / componenten waar mogelijk
+	•	Sluit CTA’s aan op /aanmelden
+	•	Gebruik nette semantische headings (H1, H2, etc.)
+
+⸻
+
+Output
+
+Maak nu de volledige subpagina Horeca opnieuw op basis van deze instructies.
+
+Belangrijkste prioriteit:
+	1.	stijl en UX van /horeca-vacatures-amsterdam
+	2.	duidelijke horeca-propositie voor werkzoekenden
+	3.	hoge conversiekans naar aanmelden
