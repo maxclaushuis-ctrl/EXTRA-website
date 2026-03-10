@@ -185,7 +185,14 @@ function scheduleDailyCvReminders() {
         }
 
         if (shouldSend) {
-          await sendCvReminderEmail({ firstName: candidate.firstName, email: candidate.email, id: candidate.id });
+          // Zorg dat kandidaat een cvUploadToken heeft voor de directe upload link
+          let cvUploadToken = (candidate as any).cvUploadToken;
+          if (!cvUploadToken) {
+            const { randomUUID } = await import('crypto');
+            cvUploadToken = randomUUID();
+            await storage.updateCandidate(candidate.id, { cvUploadToken } as any);
+          }
+          await sendCvReminderEmail({ firstName: candidate.firstName, email: candidate.email, id: candidate.id, cvUploadToken });
           await storage.updateCandidate(candidate.id, {
             cvReminderSentAt: now,
             cvReminderCount: reminderCount + 1,

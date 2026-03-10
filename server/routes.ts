@@ -3852,6 +3852,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ipAddress: req.ip ?? null
       });
 
+      // Genereer cvUploadToken voor partial aanmeldingen zodat de email link direct werkt
+      if (validated.partial) {
+        const cvToken = randomUUID();
+        await storage.updateCandidate(candidate.id, { cvUploadToken: cvToken } as any);
+        (candidate as any).cvUploadToken = cvToken;
+      }
+
       // Stuur bevestigingsmail alleen bij voltooide aanmelding
       if (!validated.partial && validated.status !== 'afgewezen') {
         sendCandidateConfirmationEmail({
@@ -4069,10 +4076,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      const candidate = await storage.getCandidate(id);
+      let candidate = await storage.getCandidate(id);
       if (!candidate || !candidate.email) return res.status(404).json({ message: "Kandidaat niet gevonden" });
       if (candidate.hasCv) return res.status(200).json({ message: "Kandidaat heeft al een cv" });
-      sendCvUploadFirstEmail({ firstName: candidate.firstName, email: candidate.email, id }).catch(console.error);
+
+      // Genereer cvUploadToken als die nog niet bestaat
+      if (!(candidate as any).cvUploadToken) {
+        const cvToken = randomUUID();
+        await storage.updateCandidate(id, { cvUploadToken: cvToken } as any);
+        candidate = await storage.getCandidate(id) as any;
+      }
+
+      sendCvUploadFirstEmail({
+        firstName: candidate.firstName,
+        email: candidate.email,
+        id,
+        cvUploadToken: (candidate as any).cvUploadToken,
+      }).catch(console.error);
       await storage.updateCandidate(id, { cvReminderSentAt: new Date() });
       return res.status(200).json({ message: "Cv-reminder verstuurd" });
     } catch (error) {
@@ -4287,6 +4307,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error uploading CV:", error);
       return res.status(500).json({ message: "Upload failed" });
+    }
+  });
+
+  // Directe CV upload via token-link vanuit email
+  app.post("/api/cv-upload-token", cvUpload.single('cv'), async (req: Request, res: Response) => {
+    try {
+      const token = req.body?.token || req.query?.token;
+      if (!token) return res.status(400).json({ message: "Token ontbreekt" });
+
+      const file = req.file;
+      if (!file) return res.status(400).json({ message: "Geen bestand ontvangen" });
+
+      // Zoek kandidaat op token
+      const { candidates: allCandidates } = await storage.getCandidates({ page: 1, limit: 1000 });
+      const candidate = allCandidates.find((c: any) => (c as any).cvUploadToken === token);
+      if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen upload-link" });
+      if (candidate.hasCv) return res.status(400).json({ message: "CV al ontvangen" });
+
+      // Sla CV op en wis het token (eenmalig gebruik)
+      await storage.updateCandidate(candidate.id, {
+        hasCv: true,
+        cvFilename: file.filename,
+        cvUploadToken: null,
+      } as any);
+
+      await storage.createCandidateAuditLog({
+        candidateId: candidate.id,
+        action: 'updated',
+        changedByUserId: null,
+        changeData: { description: `CV geüpload via directe e-mail link: ${file.filename}` },
+        ipAddress: req.ip ?? null,
+      });
+
+      // Haal bijgewerkte kandidaat op voor de admin-notificatiemail
+      const updated = await storage.getCandidate(candidate.id);
+      if (!updated) return res.status(500).json({ message: "Fout bij ophalen kandidaat" });
+
+      const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+
+      // Genereer reviewToken als die nog niet bestaat
+      let reviewToken = (updated as any).reviewToken;
+      if (!reviewToken) {
+        reviewToken = randomUUID();
+        await storage.updateCandidate(updated.id, { reviewToken } as any);
+      }
+
+      // Stuur interne admin-notificatiemail met CV en review knoppen
+      sendAdminCandidateNotificationEmail({
+        id: updated.id,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        functionType: updated.functionType,
+        city: updated.city,
+        email: updated.email,
+        birthDate: updated.birthDate,
+        phone: updated.phone,
+        nationality: updated.nationality,
+        cvFilename: file.filename,
+        reviewToken,
+        baseUrl: requestBaseUrl,
+      }).catch((err: any) => console.error("Fout bij admin-notificatiemail (cv token upload):", err));
+
+      console.log(`CV geüpload via directe link voor kandidaat ${updated.id} (${updated.firstName} ${updated.lastName})`);
+
+      return res.json({ message: "CV ontvangen", firstName: updated.firstName });
+    } catch (error) {
+      console.error("Error bij directe CV upload:", error);
+      return res.status(500).json({ message: "Upload mislukt" });
+    }
+  });
+
+  // Valideer cv-upload token (GET voor voorpagina)
+  app.get("/api/cv-upload-token", async (req: Request, res: Response) => {
+    try {
+      const token = req.query?.token as string;
+      if (!token) return res.status(400).json({ message: "Token ontbreekt" });
+      const { candidates: allCandidates } = await storage.getCandidates({ page: 1, limit: 1000 });
+      const candidate = allCandidates.find((c: any) => (c as any).cvUploadToken === token);
+      if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen link" });
+      if (candidate.hasCv) return res.status(200).json({ valid: false, message: "CV al ontvangen" });
+      return res.json({ valid: true, firstName: candidate.firstName });
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij valideren" });
     }
   });
 

@@ -938,6 +938,7 @@ export const candidates = pgTable("candidates", {
   cvReminderSentAt: timestamp("cv_reminder_sent_at"),
   cvReminderCount: integer("cv_reminder_count").default(0),
   reviewToken: text("review_token"),
+  cvUploadToken: text("cv_upload_token"),
   
   // Wie heeft aangemaakt
   createdByUserId: integer("created_by_user_id").references(() => users.id),

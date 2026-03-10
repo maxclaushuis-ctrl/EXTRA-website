@@ -18,6 +18,7 @@ import CateringPersoneelGezocht from "@/pages/CateringPersoneelGezocht";
 import RestaurantPersoneelGezocht from "@/pages/RestaurantPersoneelGezocht";
 import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
 import Aanmelden from "@/pages/Aanmelden";
+import CvUpload from "@/pages/CvUpload";
 import NieuwsPage from "@/pages/NieuwsPage";
 import NieuwsArtikel from "@/pages/NieuwsArtikel";
 import Extraatje from "@/pages/Extraatje";
@@ -174,6 +175,7 @@ function Router() {
         {/* Overige publieke routes */}
         <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
         <Route path="/aanmelden" component={Aanmelden} />
+        <Route path="/cv-upload" component={CvUpload} />
         <Route path="/extraatje" component={Extraatje} />
         <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
         <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
