@@ -4,8 +4,8 @@ import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import { Link } from "wouter";
 import {
   ArrowRight, UtensilsCrossed, Beer, PartyPopper, Layers,
-  Zap, Trophy, Gift, MapPin, Clock, Star, CheckCircle,
-  Banknote, Users, CalendarCheck, Handshake, ChevronRight
+  Zap, Gift, MapPin, Star, CheckCircle,
+  CalendarCheck, Handshake, ChevronRight
 } from "lucide-react";
 import { useEffect } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -265,18 +265,18 @@ export default function HorecaWerk() {
               </div>
             </RevealSection>
             <RevealSection delay={200}>
-              <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <div className="grid md:grid-cols-3 gap-8 mb-12">
                 {[
                   { Icon: MapPin, title: "Hotels", desc: "Werk bij vijfsterren hotels in Amsterdam, Utrecht en Den Haag. Denk aan internationale ketens en boutique hotels." },
                   { Icon: UtensilsCrossed, title: "Restaurants", desc: "Van bruisende restaurants tot rustige fine dining. Horeca werk Amsterdam is afwisselend en altijd interessant." },
                   { Icon: PartyPopper, title: "Events", desc: "Festivals, gala-diners, personeelsfeesten en beurzen. Werk op unieke locaties bij bijzondere gelegenheden." },
                 ].map(({ Icon, title, desc }, i) => (
                   <RevealSection key={i} delay={i * 100}>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
-                      <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-500/30 transition-colors">
-                        <Icon className="w-6 h-6 text-purple-400" />
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+                      <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/30 transition-colors">
+                        <Icon className="w-8 h-8 text-purple-400" />
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-3">{title}</h3>
+                      <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
                       <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
                     </div>
                   </RevealSection>
@@ -331,44 +331,38 @@ export default function HorecaWerk() {
         <section className="py-24 bg-[#0d0415]">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
             <RevealSection>
-              <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                <div className="grid md:grid-cols-2 gap-0">
-                  <div className="p-10 lg:p-14 flex flex-col justify-center">
-                    <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-widest mb-6 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 w-fit">
-                      <Banknote className="w-4 h-4" /> Dagbetaling
-                    </span>
-                    <h2 className="text-3xl md:text-4xl font-black text-white mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                      Geld op je rekening, dezelfde dag nog
-                    </h2>
-                    <p className="text-white/60 mb-6 leading-relaxed">
-                      Na je dienst word je uitbetaald via Jixbee. Dat betekent: geen wachten op je maandsalaris, maar direct je verdiende geld. Transparant, snel en betrouwbaar.
-                    </p>
-                    <ul className="space-y-3 mb-8">
-                      {["Uitbetaling via Jixbee", "Zelfde dag na je dienst", "Transparant en duidelijk overzicht", "Geen verrassingen op je loonstrook"].map((item) => (
-                        <li key={item} className="flex items-center gap-3 text-white/70 text-sm">
-                          <CheckCircle className="w-4 h-4 text-purple-400 shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href="/aanmelden" className="group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/20 hover:scale-105 w-fit">
-                      Schrijf je in <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-600/20 to-violet-700/20 flex items-center justify-center p-10 lg:p-14 border-l border-white/10">
-                    <div className="text-center">
-                      <div className="w-24 h-24 bg-purple-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <Banknote className="w-12 h-12 text-purple-400" />
-                      </div>
-                      <p className="text-5xl font-black text-white mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>Dag</p>
-                      <p className="text-white/50 text-lg">betaling</p>
-                      <p className="text-white/40 text-sm mt-4 max-w-xs mx-auto">
-                        Flexibel horecawerk gecombineerd met snelle uitbetaling. Zo hoort het.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <div className="text-center mb-16">
+                <h2 className="text-3xl font-black text-white mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Geld op je rekening, dezelfde dag nog
+                </h2>
+                <p className="text-white/60 max-w-2xl mx-auto">
+                  Na je dienst word je uitbetaald via Jixbee. Geen wachten op het einde van de maand — gewoon direct je verdiende geld.
+                </p>
               </div>
+              <div className="grid md:grid-cols-3 gap-8 mb-12">
+                {[
+                  { Icon: Zap, title: "Zelfde dag betaald", desc: "Na je dienst staat het geld doorgaans dezelfde dag op je rekening. Via Jixbee, automatisch en zonder gedoe." },
+                  { Icon: CheckCircle, title: "Transparant overzicht", desc: "Je ziet precies wat je verdient, wanneer en waarvoor. Geen verrassingen op je loonstrook." },
+                  { Icon: Handshake, title: "Geen extra stappen", desc: "Zodra je aangemeld bent bij EXTRA, werkt Jixbee automatisch mee. Registreer je eenmalig en klaar." },
+                ].map(({ Icon, title, desc }, i) => (
+                  <RevealSection key={i} delay={i * 120}>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+                      <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/30 transition-colors">
+                        <Icon className="w-8 h-8 text-purple-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
+                      <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
+                    </div>
+                  </RevealSection>
+                ))}
+              </div>
+              <RevealSection delay={400}>
+                <div className="text-center">
+                  <Link href="/aanmelden" className="group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/20 hover:scale-105">
+                    Schrijf je in <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </RevealSection>
             </RevealSection>
           </div>
         </section>
@@ -431,7 +425,7 @@ export default function HorecaWerk() {
                   <AccordionItem
                     key={i}
                     value={`item-${i}`}
-                    className="bg-white/5 border border-white/10 rounded-2xl px-6 hover:border-purple-500/30 transition-colors data-[state=open]:border-purple-500/40 data-[state=open]:bg-white/8"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-6 hover:border-purple-500/30 transition-colors data-[state=open]:border-purple-500/40 data-[state=open]:bg-white/10"
                   >
                     <AccordionTrigger className="text-white font-semibold text-left py-5 hover:no-underline hover:text-purple-300 transition-colors [&>svg]:text-purple-400">
                       {q}

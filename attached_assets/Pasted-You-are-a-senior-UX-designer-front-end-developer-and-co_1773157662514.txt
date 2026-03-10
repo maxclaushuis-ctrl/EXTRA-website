@@ -1,0 +1,189 @@
+You are a senior UX designer, front-end developer and conversion-focused web designer working on the website of EXTRA.
+Your task is to rebuild and standardize the page /horeca-werk so it fully matches the design system, structure, spacing, visual hierarchy and UX style of the existing page:
+/horeca-vacatures-amsterdam
+The page /horeca-vacatures-amsterdam is the leading design reference for this task.
+The page /horeca-werk currently looks inconsistent with the rest of the website and must be brought fully in line with the existing site style.
+Main goal
+Make /horeca-werk look and feel like it is part of the exact same website and design system as /horeca-vacatures-amsterdam.
+This is not a request to create a completely new design direction.
+This is a request to reuse the existing visual language, UX patterns and component structure already visible on the website.
+Important context
+This page belongs to the “Ik zoek extra werk” flow and should appeal to candidates looking for hospitality work.
+That means the page must be:
+visually clear
+easy to scan
+mobile friendly
+conversion focused
+trustworthy
+aligned with the rest of the EXTRA branding
+The page should feel modern, energetic and professional, in line with the current website.
+Core instruction
+Use /horeca-vacatures-amsterdam as the blueprint for:
+page width
+content container size
+spacing between sections
+section order rhythm
+typography hierarchy
+button styling
+card styling
+visual balance
+gradient/background usage
+CTA styling
+responsive behavior
+Do not make /horeca-werk look like a standalone page with a different structure or styling approach.
+What must be changed on /horeca-werk
+1. Overall layout
+Rebuild the page structure so it follows the same layout principles as /horeca-vacatures-amsterdam.
+Match:
+max-width containers
+horizontal alignment
+vertical spacing between sections
+consistent padding top and bottom
+use of white space
+section transitions
+The page should immediately feel consistent with the rest of the site.
+2. Hero section
+Redesign the hero section of /horeca-werk so it follows the same composition and styling logic as the hero on /horeca-vacatures-amsterdam.
+The hero should include:
+one strong H1
+short supporting paragraph
+one clear primary CTA
+optional secondary CTA if already used elsewhere on the site
+same visual proportions as the reference page
+same style of background treatment, gradient, image placement or overlay logic if applicable
+Make sure the hero is not overly crowded and remains highly readable on desktop and mobile.
+3. Typography and readability
+Use the same typography system as the reference page.
+This includes:
+same H1, H2, H3 sizing
+same paragraph size
+same line height
+same text width
+same font weight logic
+same spacing between headline and paragraph
+same spacing between paragraph and button
+The page must be easy to scan, especially on mobile.
+4. Section structure and flow
+Rework the page into a clean conversion-oriented flow, based on the styling and section behavior of /horeca-vacatures-amsterdam.
+Use a structure similar to this if applicable:
+Hero
+Intro / explanation
+Benefits of working via EXTRA
+Types of horeca work / roles
+Why choose EXTRA
+Application / CTA section
+FAQ or practical info
+Final CTA
+You may adapt the exact sections based on the current content, but the visual structure should remain consistent with the reference page.
+5. Cards, blocks and content presentation
+If the page uses cards, info blocks, icon sections or benefit modules, they must visually match the reference page.
+This means:
+same card radius
+same padding inside cards
+same shadow style if used
+same hover logic if used
+same border usage
+same gap between cards
+same visual density
+Avoid random new card styles or inconsistent spacing.
+6. Buttons and CTA consistency
+Use the exact same CTA styling as on /horeca-vacatures-amsterdam.
+Check:
+button color
+font size
+border radius
+padding
+hover state
+focus state
+spacing around buttons
+The CTA should clearly guide users toward applying or signing up.
+7. Backgrounds and visual styling
+Follow the same visual language as the reference page.
+This includes:
+gradients
+subtle background patterns
+section backgrounds
+soft contrast between blocks
+brand-consistent visual accents
+Do not introduce completely different colors, textures or visual effects that do not exist on the rest of the site.
+8. UX consistency with the rest of the website
+The page must behave like the rest of the site.
+Check:
+consistent header spacing
+consistent section entrance
+consistent footer transition
+same interaction logic
+same responsiveness rules
+same anchor/link behavior
+The user should never feel they are on a different template.
+9. Mobile optimization
+This is very important.
+Make sure /horeca-werk is fully optimized for mobile in the same way as /horeca-vacatures-amsterdam.
+Check:
+stacked layout
+readable headings
+balanced spacing
+buttons not too small
+no oversized empty space
+no text lines that become too wide or too cramped
+cards aligned neatly
+hero remains visually strong on mobile
+Test for:
+desktop
+tablet
+mobile
+10. SEO and semantic structure
+Keep the content unique to /horeca-werk, but improve the structure for SEO and clarity.
+Requirements:
+one H1 only
+semantic H2/H3 structure
+descriptive headings related to horeca work
+no duplicate text copied blindly from other pages
+proper internal linking where relevant
+optimized readability for both Google and AI-driven search experiences
+The page should clearly communicate that it is about working in horeca via EXTRA.
+11. Keep the content intent, change the design system alignment
+Do not unnecessarily remove useful content that is already on /horeca-werk.
+Instead:
+keep the message
+improve the structure
+improve the layout
+improve the presentation
+align everything visually with the reference page
+So the job is not to rewrite the full page from zero, but to make it consistent and well designed.
+12. Routing and page integrity
+Also verify that /horeca-werk remains correctly linked in navigation and internal CTA flows.
+Check:
+correct route
+no accidental redirect to signup page unless intentional through CTA
+menu items point to the actual page
+no broken internal links
+Implementation approach
+Before changing the page, first analyze /horeca-vacatures-amsterdam and identify:
+section structure
+spacing system
+component styles
+typography logic
+CTA hierarchy
+background treatment
+mobile behavior
+Then apply that same system to /horeca-werk.
+What not to do
+Do not:
+create a completely different page style
+use a generic template that ignores the existing site
+introduce inconsistent fonts, spacing or card styles
+redirect the whole page into an application form
+make the page visually busier than the reference page
+use duplicate blocks without adapting them properly
+Expected outcome
+The final result must feel like:
+the same brand
+the same website
+the same design system
+the same UX standard
+When comparing /horeca-werk and /horeca-vacatures-amsterdam, the pages should clearly feel like sister pages within one coherent site.
+Final instruction
+Please implement the redesign directly on /horeca-werk using /horeca-vacatures-amsterdam as the design reference.
+Do not give only high-level advice.
+Actually update the page structure and styling.
