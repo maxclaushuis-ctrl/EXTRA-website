@@ -103,8 +103,8 @@ const functies = [
     title: "Zelfstandig werkend kok",
     sub: "Restaurants · Hotels · Zelfstandig",
     img: chefImg,
-    desc: "Zelfstandig een keuken runnen of versterking bieden op hoog niveau. Van mise en place tot service.",
-    bullets: ["Hoog niveau keukens", "Diverse keukenstijlen", "Dag- en avonddiensten"],
+    desc: "Zelfstandig werkend kok vacature? Via EXTRA run je een keuken op hoog niveau of lever je versterking bij restaurants en hotels in Amsterdam.",
+    bullets: ["Hoog niveau kok vacatures", "Diverse keukenstijlen", "Dag- en avonddiensten"],
     color: "from-orange-500 to-red-600",
     href: "/aanmelden",
   },
@@ -112,8 +112,8 @@ const functies = [
     title: "Chef de partie",
     sub: "Hotels · Fine Dining · Brigades",
     img: dienstChefImg,
-    desc: "Verantwoordelijk voor een sectie in een professionele hotelkeuken of fine dining brigade.",
-    bullets: ["Vijfsterren keukens", "Werken in brigade", "Doorgroeimogelijkheden"],
+    desc: "Chef de partie vacature bij vijfsterren hotels of fine dining brigades. Verantwoordelijk voor een eigen sectie in een professionele keuken.",
+    bullets: ["Chef de partie vacatures Amsterdam", "Werken in brigade", "Doorgroeimogelijkheden"],
     color: "from-purple-600 to-violet-700",
     href: "/aanmelden",
   },
@@ -121,8 +121,8 @@ const functies = [
     title: "Events en catering keuken",
     sub: "Gala · Festivals · Zakelijk",
     img: cateringImg,
-    desc: "Koken op locatie voor gala-diners, bedrijfsevents en festivals. Altijd afwisselend en energiek.",
-    bullets: ["Unieke locaties", "Grootschalige productie", "Dag en avond beschikbaar"],
+    desc: "Keuken vacatures Amsterdam bij events en catering. Koken op unieke locaties voor gala-diners, bedrijfsevents en festivals.",
+    bullets: ["Keuken vacatures Amsterdam", "Grootschalige productie", "Dag en avond beschikbaar"],
     color: "from-teal-500 to-cyan-600",
     href: "/aanmelden",
   },
@@ -130,8 +130,8 @@ const functies = [
     title: "Banqueting keuken",
     sub: "Hotels · Opbouw · Precisie",
     img: hotelImg,
-    desc: "Productiegerichte keuken bij hotel-events en banqueting. Teamwork, snelheid en consistentie.",
-    bullets: ["Hotelgroepen Amsterdam", "Groot team, duidelijke structuur", "Goede begeleiding"],
+    desc: "Kok werk in een productiegerichte hotelkeuken. Banqueting bij grote hotelgroepen vraagt om teamwork, snelheid en consistentie.",
+    bullets: ["Kok werk bij hotelgroepen", "Groot team, duidelijke structuur", "Goede begeleiding"],
     color: "from-indigo-500 to-blue-700",
     href: "/aanmelden",
   },
@@ -144,11 +144,11 @@ const reviews = [
 ];
 
 const faqs = [
-  { q: "Moet ik ervaring hebben als chef?", a: "Ja, voor de meeste chef-functies is aantoonbare keukenerrvaring vereist. We kijken naar jouw niveau en koppelen je aan passende locaties. Voor ondersteunende keukenrollen is minder ervaring soms voldoende." },
-  { q: "Kan ik zelf bepalen waar ik werk?", a: "Je geeft aan wat je voorkeur heeft qua keukenstijl en locatie, en wij zoeken passende diensten. Je bent niet verplicht een vaste locatie te accepteren." },
-  { q: "Hoe werkt de betaling?", a: "Na je dienst word je uitbetaald via Jixbee. Het bedrag staat doorgaans dezelfde dag nog op je rekening. Transparant en zonder gedoe." },
-  { q: "Werk ik steeds op dezelfde locatie?", a: "Dat hoeft niet. Sommige chefs kiezen voor een vaste poule bij een hotel of restaurant, anderen werken liever gevarieerd. Beiden is mogelijk via EXTRA." },
-  { q: "Hoe snel kan ik starten?", a: "Na je aanmelding en een korte kennismaking kun je al binnen een week je eerste diensten oppakken. We proberen de drempel zo laag mogelijk te houden." },
+  { q: "Moet ik ervaring hebben als chef?", a: "Ja, voor de meeste chef werk functies is aantoonbare keukenervaring vereist. We kijken naar jouw niveau en koppelen je aan passende keukens. Voor ondersteunende keukenrollen is minder ervaring soms voldoende." },
+  { q: "Kan ik zelf bepalen waar ik werk?", a: "Je geeft aan wat je voorkeur heeft qua keukenstijl en locatie, en wij zoeken passende keuken vacatures. Je bent niet verplicht een vaste locatie te accepteren." },
+  { q: "Hoe werkt de betaling?", a: "Na je dienst word je uitbetaald via Jixbee. Het bedrag staat doorgaans dezelfde dag nog op je rekening. Zo werkt kok werk via EXTRA: transparant en zonder gedoe." },
+  { q: "Werk ik steeds op dezelfde locatie?", a: "Dat hoeft niet. Sommige chefs kiezen voor een vaste poule bij een hotel of restaurant, anderen pakken liever gevarieerde keuken vacatures op. Beiden is mogelijk via EXTRA." },
+  { q: "Hoe snel kan ik starten?", a: "Na je aanmelding en een korte kennismaking kun je al binnen een week je eerste chef werk diensten oppakken. We proberen de drempel zo laag mogelijk te houden." },
 ];
 
 export default function ChefVacaturesAmsterdam() {
@@ -166,15 +166,15 @@ export default function ChefVacaturesAmsterdam() {
   }, []);
 
   useEffect(() => {
-    document.title = "Chef Vacatures Amsterdam | Kok Werk via EXTRA | Keukenpersoneel";
+    document.title = "Chef vacatures Amsterdam | Kok werk via EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Op zoek naar chef vacatures in Amsterdam? Via EXTRA werk je als zelfstandig werkend kok, chef de partie of in een events-keuken. Keuken vacatures bij toprestaurants en hotels. Dagbetaling via Jixbee en flexibele diensten.");
-    setMeta("og:title", "Chef Vacatures Amsterdam | Kok Werk via EXTRA", true);
+    setMeta("description", "Op zoek naar chef of kok werk in Amsterdam? Werk in hotels, restaurants en events via EXTRA met flexibele diensten en dagbetaling.");
+    setMeta("og:title", "Chef vacatures Amsterdam | Kok werk via EXTRA", true);
     setMeta("og:type", "website", true);
   }, []);
 
@@ -309,7 +309,7 @@ export default function ChefVacaturesAmsterdam() {
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Kok vacatures en chef werk in restaurants, hotels, events en banqueting keukens in Amsterdam. Flexibele diensten, dagbetaling en keukens om trots op te zijn.
+              Werk als chef of kok bij restaurants, hotels en events in Amsterdam. Via EXTRA kies je zelf je diensten. Flexibel chef werk met dagbetaling en professionele keukens.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -399,10 +399,13 @@ export default function ChefVacaturesAmsterdam() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Jouw vakgebied</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Welke chef functies kun je doen?
+                Welke chef functies kun je doen via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Via EXTRA werk je als kok of chef in restaurants, hotels, events en banqueting. Keuken vacatures op jouw niveau in Amsterdam en omgeving.
+                Via EXTRA werk je als kok of chef in verschillende soorten keukens. Van zelfstandig werkend kok tot chef de partie of event keuken. Wij koppelen je aan keukens die passen bij jouw ervaring en niveau. Bekijk ook{" "}
+                <a href="/horeca-werk" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">horeca werk</a>,{" "}
+                <a href="/housekeeping-werk" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">housekeeping werk</a> of{" "}
+                <a href="/front-office-vacatures-amsterdam" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">front office vacatures</a>.
               </p>
             </div>
           </RevealSection>
@@ -461,7 +464,7 @@ export default function ChefVacaturesAmsterdam() {
                 Waarom chef werk via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                EXTRA biedt chefs en koks de vrijheid om op hun eigen niveau te werken — zonder vast dienstverband, met alle voordelen.
+                EXTRA biedt chefs en koks de vrijheid om te werken op hun eigen niveau. Flexibele diensten, dagbetaling en werken in professionele keukens zonder langdurige verplichtingen. Ideaal voor iedereen die chef vacatures Amsterdam zoekt op zijn of haar niveau.
               </p>
             </div>
           </RevealSection>
@@ -529,7 +532,7 @@ export default function ChefVacaturesAmsterdam() {
                 Keukens waar jij trots op kunt zijn
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Via EXTRA werk je als kok of chef bij opdrachtgevers die kwaliteit serieus nemen. Professionele brigades, goede faciliteiten en een fijne werksfeer.
+                Via EXTRA werk je in professionele keukens waar kwaliteit centraal staat. Van hotelrestaurants tot eventlocaties en cateringbedrijven in Amsterdam.
               </p>
             </div>
           </RevealSection>
@@ -588,10 +591,10 @@ export default function ChefVacaturesAmsterdam() {
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {[
-              { step: "01", icon: MessageCircle, title: "Schrijf je in", desc: "Vul het aanmeldformulier in en upload je CV. Duurt minder dan 5 minuten.", color: "from-purple-500 to-violet-600" },
-              { step: "02", icon: Users, title: "Kennismaking", desc: "Een kort gesprek over jouw niveau, voorkeur en beschikbaarheid. Dan kijken we welke keukens bij je passen.", color: "from-orange-500 to-red-600" },
-              { step: "03", icon: CalendarCheck, title: "Kies je diensten", desc: "Jij geeft je beschikbaarheid door en wij zorgen voor passende chef vacatures en keuken diensten.", color: "from-teal-500 to-cyan-600" },
-              { step: "04", icon: Zap, title: "Werk en word betaald", desc: "Draai je shift en ontvang dezelfde dag je betaling via Jixbee.", color: "from-yellow-500 to-amber-500" },
+              { step: "01", icon: MessageCircle, title: "Schrijf je in", desc: "Meld je aan via het formulier en upload je cv. Binnen enkele minuten geregeld.", color: "from-purple-500 to-violet-600" },
+              { step: "02", icon: Users, title: "Kennismaking", desc: "We bespreken jouw ervaring, voorkeur en beschikbaarheid. Dan kijken we welke keukens bij je passen.", color: "from-orange-500 to-red-600" },
+              { step: "03", icon: CalendarCheck, title: "Kies je diensten", desc: "Je kiest zelf de diensten die bij jouw agenda passen. Flexibel chef werk op jouw niveau.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Zap, title: "Werk en word betaald", desc: "Werk je shift en ontvang dezelfde dag je betaling via Jixbee.", color: "from-yellow-500 to-amber-500" },
             ].map(({ step, icon: Icon, title, desc, color }, i) => (
               <RevealSection key={step} delay={i * 80}>
                 <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
@@ -626,7 +629,7 @@ export default function ChefVacaturesAmsterdam() {
                   Geld op je rekening, dezelfde dag nog.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  Na je keuken dienst word je uitbetaald via Jixbee. Geen wachten tot het einde van de maand — gewoon direct jouw verdiende geld. Transparant, snel en betrouwbaar.
+                  Na je dienst wordt je uitbetaald via Jixbee. Geen wachten tot het einde van de maand. Je ziet direct wat je hebt verdiend en ontvangt je geld vaak dezelfde dag.
                 </p>
                 <div className="space-y-3 mb-8">
                   {[
@@ -716,9 +719,9 @@ export default function ChefVacaturesAmsterdam() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Meld je aan en begin met werken in de mooiste keukens van Amsterdam.
+              Begin vandaag met chef werk via EXTRA
             </p>
-            <p className="text-purple-200 text-sm mt-0.5">Geen kosten. Geen verplichtingen. Jij bepaalt waar en wanneer je werkt.</p>
+            <p className="text-purple-200 text-sm mt-0.5">Wil je werken als chef of kok in Amsterdam? Meld je aan bij EXTRA en start snel met diensten in professionele keukens.</p>
           </div>
           <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start je aanmelding <ArrowRight className="w-4 h-4" />
