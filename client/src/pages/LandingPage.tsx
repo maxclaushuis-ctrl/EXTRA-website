@@ -1,5 +1,6 @@
 import PublicNav from "@/components/PublicNav";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { CLIENT_REVIEWS } from "@/data/reviews";
 import { Link } from "wouter";
 import {
   Users, Trophy, Gift, Star, ChevronDown, ChevronUp,
@@ -746,11 +747,10 @@ export default function LandingPage() {
     { quote: "Extra is nice platform for from entry level to become a pro at hospitality industry.", name: "Oliur Rahman", rating: 5 },
     { quote: "Geweldig uitzendbureau met goede en leerzame opdrachten. Werkt met mooie locaties waar altijd een fijne sfeer hangt en goed personeel rondloopt. De communicatie in het bedrijf zelf verloopt goed waardoor je zonder problemen en miscommunicaties aan het werk kan.", name: "Nathalie Siegerma", rating: 5 },
   ];
-  const klantReviews = [
-    { quote: "EXTRA levert keer op keer betrouwbaar en goed getraind personeel. De communicatie is snel en helder.", name: "Mark de Vries", rating: 5 },
-    { quote: "Binnen 24 uur hadden we personeel voor ons evenement. Professioneel en representatief. Aanrader.", name: "Lisa Jansen", rating: 5 },
-    { quote: "Eindelijk een uitzendbureau dat begrijpt wat hospitality écht betekent. De kwaliteit is constant hoog.", name: "Sophie van Dijk", rating: 5 },
-  ];
+  const klantReviews = ["amrath", "westweelde", "hart"].map((id) => {
+    const r = CLIENT_REVIEWS.find((x) => x.id === id)!;
+    return { quote: r.quote, name: r.author, rating: 5, role: r.role, company: r.company };
+  });
 
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
@@ -1556,14 +1556,21 @@ export default function LandingPage() {
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
                   </div>
-                  <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 flex-1">"{review.quote}"</p>
+                  <p className={`text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 flex-1 ${reviewTab === "klanten" ? "line-clamp-5 text-sm sm:text-base" : ""}`}>"{review.quote}"</p>
                   <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                      <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map(n => n[0]).join("")}</span>
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
+                      <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map((n: string) => n[0]).join("")}</span>
                     </div>
-                    <div>
-                      <p className="text-sm sm:text-base font-bold text-gray-900">{review.name}</p>
-                      <p className="text-xs sm:text-sm text-gray-400 font-medium">Review van Google</p>
+                    <div className="min-w-0">
+                      <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{review.name}</p>
+                      {reviewTab === "klanten" && (review as { role?: string; company?: string }).role ? (
+                        <>
+                          <p className="text-xs sm:text-sm text-gray-400 font-medium truncate">{(review as { role?: string }).role}</p>
+                          <p className="text-xs text-purple-600 font-semibold truncate">{(review as { company?: string }).company}</p>
+                        </>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-400 font-medium">Review van Google</p>
+                      )}
                     </div>
                   </div>
                 </div>
