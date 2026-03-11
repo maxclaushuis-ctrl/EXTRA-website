@@ -743,6 +743,7 @@ export default function LandingPage() {
   }, []);
 
   const [reviewTab, setReviewTab] = useState<"medewerkers" | "klanten">("medewerkers");
+  const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
   const medewerkerReviews = [
     { quote: "Ontzettend leuk uitzendbureau! Open en flexibel team, leuke klussen", name: "Sophie Sybrandy", rating: 5 },
     { quote: "Extra is nice platform for from entry level to become a pro at hospitality industry.", name: "Oliur Rahman", rating: 5 },
@@ -1528,7 +1529,7 @@ export default function LandingPage() {
               {(["medewerkers", "klanten"] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setReviewTab(tab)}
+                  onClick={() => { setReviewTab(tab); setExpandedReviews(new Set()); }}
                   className={`px-5 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold transition-all duration-300 ${
                     reviewTab === tab
                       ? "bg-purple-600 text-white shadow-xl shadow-purple-500/25 scale-105"
@@ -1558,7 +1559,21 @@ export default function LandingPage() {
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
                   </div>
-                  <p className={`text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 flex-1 ${reviewTab === "klanten" ? "line-clamp-7 text-sm sm:text-base" : ""}`}>"{review.quote}"</p>
+                  <div className="mb-6 sm:mb-8 flex-1">
+                    <p className={`text-sm sm:text-base text-gray-600 leading-relaxed ${reviewTab === "klanten" && !expandedReviews.has(i) ? "line-clamp-4" : ""}`}>"{review.quote}"</p>
+                    {reviewTab === "klanten" && (
+                      <button
+                        onClick={() => setExpandedReviews(prev => {
+                          const next = new Set(prev);
+                          next.has(i) ? next.delete(i) : next.add(i);
+                          return next;
+                        })}
+                        className="mt-2 text-xs font-semibold text-purple-600 hover:text-purple-800 underline underline-offset-2 cursor-pointer"
+                      >
+                        {expandedReviews.has(i) ? "Lees minder" : "Lees meer"}
+                      </button>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
                       <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map((n: string) => n[0]).join("")}</span>

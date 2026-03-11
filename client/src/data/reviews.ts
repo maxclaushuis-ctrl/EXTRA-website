@@ -14,7 +14,7 @@ export interface ClientReview {
 export const CLIENT_REVIEWS: ClientReview[] = [
   {
     id: "amrath",
-    quote: "Bij EXTRA wordt men snel en accuraat geholpen. Als er gebeld wordt voor personeel, maakt niet uit wanneer, er wordt altijd gereageerd en er wordt snel gehandeld zodat de aanvraag snel kan worden opgevuld. Bij EXTRA kan ook worden aangegeven welk niveau personeel er nodig is zodat er een goede match is tussen vraag en aanbod. De prijzen en afspraken zijn duidelijk en transparant en marktconform. Het is ook geen probleem als de aanvraag toch anders wordt opgevuld en niet door EXTRA. Kortom, bij EXTRA wordt men gehoord, gezien en geaccepteerd.",
+    quote: "Wij werken samen met EXTRA sinds eind oktober 2025 voor de levering van kamermeisjes, AD-, turndown- en minibarmedewerkers aan Grand Hotel Amrâth Amsterdam. EXTRA heeft professionaliteit, betrouwbaarheid en een sterke toewijding aan kwaliteit getoond. De kamermeisjes hebben onze verwachtingen consequent waargemaakt en overtroffen, en zorgen dat onze hotelkamers aan de hoogste normen van netheid en gasttevredenheid voldoen. De communicatie is efficient en responsief, waardoor de samenwerking soepel verloopt. Wij aarzelen niet om EXTRA aan te bevelen bij ieder bedrijf dat op zoek is naar betrouwbare personeelsoplossingen.",
     author: "D. Koops",
     role: "Hotelmanager",
     company: "Grand Hotel Amrâth Amsterdam",
