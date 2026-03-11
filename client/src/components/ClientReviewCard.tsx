@@ -4,12 +4,14 @@ import logoAmrath from "../assets/pitch/amrath-logo.png";
 import logoMarriott from "../assets/pitch/marriott-logo.png";
 import logoRadisson from "../assets/pitch/logo-radisson.png";
 import logoHart from "../assets/pitch/logo-hart-museum.png";
+import logoWestweelde from "../assets/pitch/logo-westweelde-transparant.png";
 
 const LOGOS: Record<string, string> = {
   amrath: logoAmrath,
   marriott: logoMarriott,
   radisson: logoRadisson,
   hart: logoHart,
+  westweelde: logoWestweelde,
 };
 
 interface ClientReviewCardProps {

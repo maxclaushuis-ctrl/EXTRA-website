@@ -19,6 +19,7 @@ import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import logoWestweelde from "@assets/pitch/logo-westweelde-transparant.png";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
 import sollicitatieImg from "@assets/Sollicitatieformulier_1772893764120.png";
@@ -742,6 +743,7 @@ export default function EventPersoneelGezocht() {
               {[
                 { src: logoHartMuseum, alt: "H'art Museum Amsterdam" },
                 { src: logoFcUtrecht, alt: "FC Utrecht" },
+                { src: logoWestweelde, alt: "Westweelde" },
                 { src: logoAppel, alt: "Appèl" },
                 { src: logoFunda, alt: "Funda" },
                 { src: logoHetePeper, alt: "Hete Peper" },

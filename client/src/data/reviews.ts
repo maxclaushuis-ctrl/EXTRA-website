@@ -50,7 +50,7 @@ export const CLIENT_REVIEWS: ClientReview[] = [
     company: "Westweelde",
     companyType: "Eventlocatie, Amsterdam",
     categories: ["events"],
-    logoKey: undefined,
+    logoKey: "westweelde",
   },
   {
     id: "artzoo",

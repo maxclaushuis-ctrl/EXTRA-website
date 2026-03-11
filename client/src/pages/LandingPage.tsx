@@ -23,6 +23,7 @@ import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
+import logoWestweelde from "@assets/pitch/logo-westweelde-transparant.png";
 import blogHousekeeping from "../assets/images/blog-housekeeping.jpg";
 import blogCatering from "../assets/images/blog-catering.jpg";
 import blogBarista from "../assets/images/blog-barista.jpg";
@@ -957,6 +958,7 @@ export default function LandingPage() {
                     { src: logoMarriott, alt: "Marriott" },
                     { src: logoSelectCatering, alt: "Select Catering" },
                     { src: logoAppel, alt: "Appèl" },
+                    { src: logoWestweelde, alt: "Westweelde" },
                   ].map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
                       <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
@@ -1556,7 +1558,7 @@ export default function LandingPage() {
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
                   </div>
-                  <p className={`text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 flex-1 ${reviewTab === "klanten" ? "line-clamp-5 text-sm sm:text-base" : ""}`}>"{review.quote}"</p>
+                  <p className={`text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 flex-1 ${reviewTab === "klanten" ? "line-clamp-7 text-sm sm:text-base" : ""}`}>"{review.quote}"</p>
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
                       <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map((n: string) => n[0]).join("")}</span>
