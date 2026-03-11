@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
+import { CLIENT_REVIEWS } from "@/data/reviews";
 import { Link } from "wouter";
 import heroBgImage from "@assets/hero-background.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
@@ -161,6 +162,12 @@ export default function HorecaPersoneelGezocht() {
       document.getElementById('faq-schema')?.remove();
     };
   }, []);
+
+  const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
+  const klantReviews = ["amrath", "westweelde", "hart"].map((id) => {
+    const r = CLIENT_REVIEWS.find((x) => x.id === id)!;
+    return { quote: r.quote, name: r.author, rating: 5, role: r.role, company: r.company };
+  });
 
   return (
     <div className="min-h-screen font-sans antialiased overflow-x-hidden relative bg-[#0a0310] text-white">
@@ -364,44 +371,57 @@ export default function HorecaPersoneelGezocht() {
       </section>
 
       {/* 7. SOCIAL PROOF */}
-      <section className="py-24 bg-[#0a0310]">
+      <section className="py-20 sm:py-28" style={{ backgroundColor: "#faf8f5" }}>
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection className="text-center mb-16">
-             <h2 className="text-3xl sm:text-5xl font-black text-white mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-               Wat horecamanagers zeggen
-             </h2>
+          <RevealSection className="text-center mb-12 sm:mb-16">
+            <p className="text-xs sm:text-sm font-bold text-purple-600 uppercase tracking-widest mb-4">Klantreviews</p>
+            <h2 className="text-3xl sm:text-5xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Hoe andere opdrachtgevers<br />EXTRA ervaren
+            </h2>
           </RevealSection>
-          <div className="grid md:grid-cols-2 gap-8">
-            <RevealSection className="bg-white/5 p-10 rounded-3xl border border-white/10 relative">
-              <div className="flex gap-1 text-yellow-400 mb-6">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
-              </div>
-              <p className="text-purple-100/80 italic text-lg mb-8 leading-relaxed">
-                "Wanneer we last-minute uitval hebben op een drukke zaterdagavond, is EXTRA onze eerste keuze. De medewerkers snappen direct wat er moet gebeuren en passen goed in ons team."
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-600/20 rounded-full flex items-center justify-center text-purple-400 font-bold border border-purple-500/30">M</div>
-                <div>
-                  <p className="font-bold text-white text-lg">Mark de Vries</p>
-                  <p className="text-purple-100/40 text-sm">Restaurantmanager, Amsterdam Centrum</p>
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-8">
+            {klantReviews.map((review, i) => (
+              <RevealSection key={i} delay={i * 120}>
+                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col shadow-sm">
+                  <div className="flex items-center justify-between mb-4 sm:mb-5">
+                    <div className="flex gap-1">
+                      {[...Array(review.rating)].map((_, j) => (
+                        <Star key={j} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                  </div>
+                  <div className="mb-6 sm:mb-8 flex-1">
+                    <p className={`text-sm sm:text-base text-gray-600 leading-relaxed ${!expandedReviews.has(i) ? "line-clamp-4" : ""}`}>"{review.quote}"</p>
+                    <button
+                      onClick={() => setExpandedReviews(prev => {
+                        const next = new Set(prev);
+                        next.has(i) ? next.delete(i) : next.add(i);
+                        return next;
+                      })}
+                      className="mt-2 text-xs font-semibold text-purple-600 hover:text-purple-800 underline underline-offset-2 cursor-pointer"
+                    >
+                      {expandedReviews.has(i) ? "Lees minder" : "Lees meer"}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
+                      <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map((n: string) => n[0]).join("")}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{review.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-400 font-medium truncate">{review.role}</p>
+                      <p className="text-xs text-purple-600 font-semibold truncate">{review.company}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </RevealSection>
-            <RevealSection delay={200} className="bg-white/5 p-10 rounded-3xl border border-white/10 relative">
-              <div className="flex gap-1 text-yellow-400 mb-6">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
-              </div>
-              <p className="text-purple-100/80 italic text-lg mb-8 leading-relaxed">
-                "Fijn personeel dat representatief is en echt zin heeft om te werken. Het beloningssysteem van EXTRA zie je echt terug in de motivatie op de werkvloer. Een aanrader."
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-600/20 rounded-full flex items-center justify-center text-purple-400 font-bold border border-purple-500/30">S</div>
-                <div>
-                  <p className="font-bold text-white text-lg">Sophie Janssen</p>
-                  <p className="text-purple-100/40 text-sm">Eigenaar, Bistro de Pijp</p>
-                </div>
-              </div>
-            </RevealSection>
+              </RevealSection>
+            ))}
           </div>
         </div>
       </section>

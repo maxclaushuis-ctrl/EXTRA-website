@@ -742,7 +742,7 @@ export default function LandingPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const [reviewTab, setReviewTab] = useState<"medewerkers" | "klanten">("medewerkers");
+  const [reviewTab, setReviewTab] = useState<"medewerkers" | "klanten">("klanten");
   const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
   const medewerkerReviews = [
     { quote: "Ontzettend leuk uitzendbureau! Open en flexibel team, leuke klussen", name: "Sophie Sybrandy", rating: 5 },
