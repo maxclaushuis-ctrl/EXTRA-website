@@ -23,7 +23,7 @@ import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
-import logoWestweelde from "../assets/pitch/logo-westweelde-transparant.png";
+import logoWestweelde from "../assets/pitch/logo-westweelde-v2-transparant.png";
 import blogHousekeeping from "../assets/images/blog-housekeeping.jpg";
 import blogCatering from "../assets/images/blog-catering.jpg";
 import blogBarista from "../assets/images/blog-barista.jpg";
@@ -959,10 +959,10 @@ export default function LandingPage() {
                     { src: logoMarriott, alt: "Marriott" },
                     { src: logoSelectCatering, alt: "Select Catering" },
                     { src: logoAppel, alt: "Appèl" },
-                    { src: logoWestweelde, alt: "Westweelde" },
+                    { src: logoWestweelde, alt: "Westweelde", filter: "brightness(0)" },
                   ].map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
+                      <img src={logo.src} alt={logo.alt} style={(logo as { filter?: string }).filter ? { filter: (logo as { filter?: string }).filter } : undefined} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
                     </div>
                   ))}
                 </div>

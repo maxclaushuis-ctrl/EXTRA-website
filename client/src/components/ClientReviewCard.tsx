@@ -4,7 +4,7 @@ import logoAmrath from "../assets/pitch/amrath-logo.png";
 import logoMarriott from "../assets/pitch/marriott-logo.png";
 import logoRadisson from "../assets/pitch/logo-radisson.png";
 import logoHart from "../assets/pitch/logo-hart-museum.png";
-import logoWestweelde from "../assets/pitch/logo-westweelde-transparant.png";
+import logoWestweelde from "../assets/pitch/logo-westweelde-v2-transparant.png";
 
 const LOGOS: Record<string, string> = {
   amrath: logoAmrath,
@@ -40,7 +40,7 @@ export function ClientReviewCard({ review, variant = "light" }: ClientReviewCard
           <img
             src={logo}
             alt={review.company}
-            className={`h-8 object-contain flex-shrink-0 ${isDark ? "brightness-0 invert opacity-60" : "opacity-70"}`}
+            className={`h-8 object-contain flex-shrink-0 ${isDark ? "brightness-0 invert opacity-60" : "brightness-0 opacity-60"}`}
           />
         )}
       </div>
