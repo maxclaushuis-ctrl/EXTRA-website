@@ -1,0 +1,207 @@
+You are a senior UX designer and front-end developer working on the EXTRA website.
+You still have not correctly understood the task for the page /vacatures.
+The current implementation keeps too much of the old layout logic and does not feel aligned with the rest of the website.
+This task is NOT about changing the content.
+This task is about rebuilding the layout, visual structure and UX design of /vacatures so it matches the rest of the site.
+Very important
+Do not rewrite, remove or replace the current content structure unnecessarily.
+Keep the existing content and vacancy information intact.
+Instead, redesign the page layout and UX presentation using the existing content.
+So:
+keep the content
+keep the vacancy data
+keep the functional blocks
+but rebuild the page structure, spacing, styling, visual rhythm and component presentation
+Design references (mandatory)
+Use these pages as the leading visual and UX references:
+/horeca-vacatures-amsterdam
+/landing
+These two pages define the correct:
+layout structure
+spacing rhythm
+component choices
+card design
+visual hierarchy
+background usage
+section transitions
+button styling
+typography hierarchy
+hover behavior
+premium / modern feeling
+The page /vacatures must be rebuilt so it clearly feels like it belongs to the exact same design system and UX family.
+Main problem to solve
+The current /vacatures page still looks too much like a separate template.
+It does not yet have the same:
+visual calm
+premium structure
+clean page rhythm
+balanced white space
+strong section composition
+polished UX flow
+as /horeca-vacatures-amsterdam and /landing.
+I want you to rebuild the layout, not just tweak it.
+Goal
+Redesign /vacatures so it feels like a natural combination of:
+the vacancy overview logic of /horeca-vacatures-amsterdam
+the polished visual presentation and section rhythm of /landing
+The page should feel:
+cleaner
+more premium
+more structured
+easier to scan
+more visually aligned with the rest of the site
+Keep this unchanged
+Do not unnecessarily change:
+vacancy titles
+vacancy descriptions
+filters
+vacancy categories
+page purpose
+SEO-oriented content blocks
+The content can remain the same.
+The redesign must focus on:
+layout
+UX
+component hierarchy
+spacing
+visual presentation
+What must change
+1. Hero section
+The hero of /vacatures must be rebuilt in the same style as /horeca-vacatures-amsterdam.
+Use that page as the primary reference for:
+hero height
+content width
+title placement
+supporting text placement
+search bar styling
+info badges / stats row
+spacing above and below
+background treatment
+decorative elements
+The hero on /vacatures should immediately feel like it belongs to the same family as /horeca-vacatures-amsterdam.
+2. Vacancy overview layout
+The vacancy overview area must be redesigned.
+Currently it still feels too rigid and too much like a functional dashboard block.
+I want the vacancy grid + filters to feel like a polished public-facing landing page.
+Use the layout behavior of /horeca-vacatures-amsterdam as the main inspiration.
+Important:
+better alignment between sidebar and vacancy cards
+more refined spacing
+clearer content hierarchy
+more premium card rhythm
+less cramped feeling
+more deliberate balance between left filter column and right vacancy grid
+3. Vacancy cards
+Redesign the vacancy cards so they feel more like part of the EXTRA website design system.
+Do not change the vacancy content itself, but improve:
+padding
+spacing
+typography hierarchy
+border treatment
+hover effect
+badge styling
+CTA placement
+visual consistency
+The cards should feel closer to the quality level of content cards and sections used on /landing.
+4. Filter sidebar
+The filter area should be visually cleaner and more integrated into the page.
+Do not remove the filters, but improve:
+spacing between filter groups
+label hierarchy
+checkbox alignment
+sidebar proportions
+visual integration with the vacancy grid
+overall polish
+It should feel like part of a premium website, not like a basic filter module.
+5. Section transitions
+One of the biggest problems right now is that the page lacks the smooth section rhythm visible on /landing.
+Rebuild the sections below the vacancy overview so they follow the same style logic as /landing.
+This means:
+clearer spacing between sections
+stronger visual hierarchy
+more refined transitions
+better section composition
+more consistent container widths
+more deliberate breathing room
+6. Content sections below vacancies
+All content sections below the vacancy overview should be visually redesigned based on /landing and /horeca-vacatures-amsterdam.
+Examples include sections like:
+category links
+SEO text blocks
+related pages
+CTA sections
+supporting information blocks
+Do not change the textual meaning, but rebuild the way these sections are presented.
+These sections should feel like they are part of the same visual system as the rest of the site.
+7. CTA blocks
+The current CTA blocks do not yet match the quality of /landing.
+Rebuild CTA sections so they match the style of strong CTA areas on the existing site:
+better spacing
+clearer button hierarchy
+stronger typography balance
+cleaner composition
+more elegant background treatment
+improved alignment
+8. Typography and spacing system
+Use the same typography logic as /landing and /horeca-vacatures-amsterdam.
+Match:
+headline scale
+paragraph width
+section spacing
+card text rhythm
+CTA hierarchy
+label treatment
+line height
+The current page still feels too dense and inconsistent compared to the reference pages.
+9. Scroll experience and visual rhythm
+The page should feel smoother to scroll through.
+Right now it feels like stacked functional blocks.
+I want it to feel like a branded public-facing experience.
+Use the references to improve:
+pacing between blocks
+scroll rhythm
+visual breathing room
+consistency in how sections begin and end
+subtle effects and transitions where already used elsewhere on the site
+10. Consistency with existing design system
+Do not invent a new style.
+Use the existing EXTRA design system already visible on:
+/horeca-vacatures-amsterdam
+/landing
+That includes:
+gradients
+dark section styling
+rounded cards
+button styles
+shadows
+badges
+subtle decorative X-elements
+premium hospitality look and feel
+What not to do
+Do not:
+rewrite all content
+change the SEO structure unnecessarily
+change the main functionality
+make it look like a dashboard
+create a completely new visual direction
+keep the current layout and only tweak colors
+This needs to be a real layout rebuild, while preserving content.
+Expected outcome
+When comparing /vacatures to /horeca-vacatures-amsterdam and /landing, /vacatures should clearly feel like:
+designed by the same team
+built in the same design system
+using the same UX logic
+intended for the same website
+It should no longer feel like a separate template.
+Final instruction
+Rebuild the page /vacatures again.
+This time:
+keep the current content
+keep the current purpose
+keep the vacancy data
+but fully redesign the layout, visual hierarchy, spacing, UX structure and presentation using:
+/horeca-vacatures-amsterdam
+/landing
+as the mandatory references.
+Do not give a partial update.
+Actually rebuild the page structure so it visually matches the rest of the site.
