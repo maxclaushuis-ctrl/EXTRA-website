@@ -27,7 +27,7 @@ import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
-import logoWestweelde from "@assets/pitch/logo-westweelde-transparant.png";
+import logoWestweelde from "../assets/pitch/logo-westweelde-transparant.png";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
 
