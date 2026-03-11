@@ -47,6 +47,8 @@ import {
   type Application, type InsertApplication,
   blogPosts as blogPostsTable,
   type BlogPost, type InsertBlogPost,
+  vacancyPosts as vacancyPostsTable,
+  type VacancyPost, type InsertVacancyPost,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -359,6 +361,15 @@ export interface IStorage {
   updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
   deleteBlogPost(id: number): Promise<boolean>;
   publishScheduledBlogPosts(): Promise<number>;
+
+  // Vacancy CMS methods
+  getVacancyPosts(filters?: { status?: string; functionType?: string; location?: string; limit?: number; offset?: number }): Promise<{ posts: VacancyPost[]; total: number }>;
+  getVacancyPostBySlug(slug: string): Promise<VacancyPost | undefined>;
+  getVacancyPostById(id: number): Promise<VacancyPost | undefined>;
+  createVacancyPost(post: InsertVacancyPost): Promise<VacancyPost>;
+  updateVacancyPost(id: number, data: Partial<InsertVacancyPost>): Promise<VacancyPost | undefined>;
+  deleteVacancyPost(id: number): Promise<boolean>;
+  duplicateVacancyPost(id: number): Promise<VacancyPost | undefined>;
 }
 
 // In-memory storage implementation
@@ -3590,6 +3601,62 @@ export class MemStorage implements IStorage {
       .set({ status: 'published', publishedAt: now, updatedAt: now })
       .where(and(eq(blogPostsTable.status, 'scheduled'), sql`${blogPostsTable.scheduledAt} <= ${now}`));
     return result.rowCount ?? 0;
+  }
+
+  // ── Vacancy CMS ──────────────────────────────────────────────
+  async getVacancyPosts(filters?: { status?: string; functionType?: string; location?: string; limit?: number; offset?: number }): Promise<{ posts: VacancyPost[]; total: number }> {
+    const conditions: any[] = [];
+    if (filters?.status) conditions.push(eq(vacancyPostsTable.status, filters.status));
+    if (filters?.functionType) conditions.push(eq(vacancyPostsTable.functionType, filters.functionType));
+    if (filters?.location) conditions.push(eq(vacancyPostsTable.location, filters.location));
+    const all = conditions.length > 0
+      ? await db.select().from(vacancyPostsTable).where(and(...conditions)).orderBy(desc(vacancyPostsTable.updatedAt))
+      : await db.select().from(vacancyPostsTable).orderBy(desc(vacancyPostsTable.updatedAt));
+    const total = all.length;
+    const offset = filters?.offset ?? 0;
+    const limit = filters?.limit ?? 200;
+    return { posts: all.slice(offset, offset + limit), total };
+  }
+
+  async getVacancyPostBySlug(slug: string): Promise<VacancyPost | undefined> {
+    const [post] = await db.select().from(vacancyPostsTable).where(eq(vacancyPostsTable.slug, slug));
+    return post;
+  }
+
+  async getVacancyPostById(id: number): Promise<VacancyPost | undefined> {
+    const [post] = await db.select().from(vacancyPostsTable).where(eq(vacancyPostsTable.id, id));
+    return post;
+  }
+
+  async createVacancyPost(post: InsertVacancyPost): Promise<VacancyPost> {
+    const [created] = await db.insert(vacancyPostsTable).values({ ...post, updatedAt: new Date() }).returning();
+    return created;
+  }
+
+  async updateVacancyPost(id: number, data: Partial<InsertVacancyPost>): Promise<VacancyPost | undefined> {
+    const [updated] = await db.update(vacancyPostsTable).set({ ...data, updatedAt: new Date() }).where(eq(vacancyPostsTable.id, id)).returning();
+    return updated;
+  }
+
+  async deleteVacancyPost(id: number): Promise<boolean> {
+    const result = await db.delete(vacancyPostsTable).where(eq(vacancyPostsTable.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async duplicateVacancyPost(id: number): Promise<VacancyPost | undefined> {
+    const original = await this.getVacancyPostById(id);
+    if (!original) return undefined;
+    const { id: _id, createdAt, updatedAt, publishedAt, ...rest } = original;
+    const newSlug = `${rest.slug}-kopie-${Date.now().toString(36)}`;
+    const [created] = await db.insert(vacancyPostsTable).values({
+      ...rest,
+      slug: newSlug,
+      internalTitle: rest.internalTitle ? `${rest.internalTitle} (kopie)` : `${rest.title} (kopie)`,
+      status: 'draft',
+      publishedAt: null,
+      updatedAt: new Date(),
+    }).returning();
+    return created;
   }
 }
 

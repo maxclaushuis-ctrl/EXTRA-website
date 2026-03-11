@@ -1190,3 +1190,43 @@ export const blogPosts = pgTable("blog_posts", {
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+
+export const vacancyPosts = pgTable("vacancy_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull(),
+  internalTitle: text("internal_title"),
+  functionType: text("function_type").notNull().default("Bediening"),
+  serviceType: text("service_type").notNull().default("Oproep"),
+  location: text("location").notNull().default("Amsterdam"),
+  region: text("region").notNull().default("Amsterdam"),
+  workplace: text("workplace").notNull().default("Hotel"),
+  client: text("client"),
+  salaryMin: text("salary_min"),
+  shortDescription: text("short_description").notNull().default(""),
+  introductionText: text("introduction_text"),
+  aboutRole: text("about_role"),
+  responsibilities: text("responsibilities").array(),
+  requirements: text("requirements").array(),
+  offer: text("offer").array(),
+  workEnvironment: text("work_environment"),
+  faqItems: text("faq_items"),
+  ctaText: text("cta_text"),
+  focusKeyword: text("focus_keyword"),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  canonicalUrl: text("canonical_url"),
+  ogTitle: text("og_title"),
+  ogDescription: text("og_description"),
+  featuredImage: text("featured_image"),
+  featuredImageAlt: text("featured_image_alt"),
+  status: text("status").notNull().default("draft"),
+  publishedAt: timestamp("published_at"),
+  scheduledAt: timestamp("scheduled_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVacancyPostSchema = createInsertSchema(vacancyPosts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertVacancyPost = z.infer<typeof insertVacancyPostSchema>;
+export type VacancyPost = typeof vacancyPosts.$inferSelect;

@@ -1,0 +1,273 @@
+Vacature CMS + SEO vacaturestructuur
+You are a senior product designer, UX designer, front-end developer and SEO strategist working on the EXTRA website and dashboard environment.
+Your task is to create a Vacancy Management System inside the /dashboard-mockup admin environment, similar to the existing “Blogs & SEO” section.
+This system will allow internal staff to create, manage and publish vacancies, while automatically generating SEO-optimized vacancy pages that follow a consistent structure across the website.
+The system must ensure:
+• easy vacancy management for internal users
+• a consistent design across all vacancy pages
+• SEO-optimized page structures by default
+• automatic internal linking
+• a scalable architecture for future vacancies
+1 Dashboard integration
+Add a new subtab in /dashboard-mockup.
+The tab should behave the same as the Blogs & SEO section.
+Suggested name:
+Vacatures
+or
+Vacatures & SEO
+Use the same design system as the rest of the dashboard:
+• typography
+• buttons
+• cards
+• modals
+• table layout
+• spacing
+• UI components
+Do NOT create a new admin design language.
+2 Vacancy overview screen
+The vacancy dashboard must show a vacancy overview table.
+Each row should display:
+• Vacancy title
+• Function category
+• Location
+• Employment type
+• SEO slug / URL
+• Status
+• Publish date
+• Last updated
+• Focus keyword
+Include quick actions:
+• Edit
+• Preview
+• Publish
+• Pause
+• Archive
+• Delete
+Add filters for:
+• Status
+• Location
+• Function category
+• Employment type
+Also include a search bar.
+3 Vacancy status system
+Each vacancy should have the following states:
+Draft
+Published
+Paused
+Archived
+Admins must be able to:
+• create vacancy
+• save as draft
+• publish
+• pause
+• unpublish
+• archive
+• delete
+Add quick toggle buttons.
+4 Vacancy creation form
+Create a structured vacancy creation interface.
+Divide the form into clear sections.
+4.1 Basic information
+• Vacancy title
+• Internal vacancy name
+• Function category
+• Employment type
+• Location / region
+• Workplace type
+• Short introduction
+• Status
+4.2 Vacancy content
+Fields for the page content:
+• H1 headline
+• Introduction paragraph
+• About the role
+• Responsibilities
+• Requirements
+• What EXTRA offers
+• Work environment description
+• FAQ section
+• CTA text
+4.3 SEO fields
+Provide structured SEO inputs:
+• Focus keyword
+• SEO title
+• Meta description
+• URL slug
+• Canonical URL
+• Open Graph title
+• Open Graph description
+• Featured image
+Add character counters.
+Provide guidance text for each field.
+4.4 Publishing settings
+Include options for:
+• Save draft
+• Publish now
+• Schedule publish
+• Pause listing
+• Archive listing
+Include a preview mode.
+5 Standard vacancy page template
+Every vacancy page must follow a fixed template.
+Admins should NOT control layout.
+Use a standardized structure.
+Vacancy page layout
+1 Hero section
+2 Vacancy summary
+3 About the role
+4 Responsibilities
+5 Requirements
+6 What you get via EXTRA
+7 About the location / employer
+8 FAQ
+9 Related vacancies
+10 CTA block
+This ensures:
+• design consistency
+• SEO consistency
+• better user experience
+6 URL structure
+Each vacancy should automatically generate a clean URL.
+Recommended format:
+/vacatures/[functie]-[locatie]
+Examples:
+/vacatures/chef-amsterdam
+/vacatures/housekeeping-medewerker-amsterdam
+/vacatures/front-office-medewerker-utrecht
+Rules:
+• lowercase
+• hyphen separated
+• keyword focused
+• readable
+7 SEO automation
+Every vacancy should be automatically optimized for search engines.
+The system should guide admins when writing content.
+SEO title format
+Example:
+Chef vacature Amsterdam | Werken via EXTRA
+Meta description
+Should include:
+• job title
+• location
+• benefit
+• short call to action
+Example:
+Bekijk deze vacature voor housekeeping medewerker in Amsterdam. Werk via EXTRA op mooie locaties met flexibele diensten en snelle uitbetaling.
+Heading structure
+Each vacancy page must contain:
+• one H1
+• multiple H2 sections
+• optional H3 sections
+Schema markup
+Implement JobPosting schema structured data.
+Include:
+• title
+• description
+• employment type
+• hiring organization
+• job location
+• date posted
+• valid through
+• salary (if available)
+8 Dynamic internal linking system
+Each vacancy page must automatically include internal links to relevant pages within the website to strengthen SEO and site structure.
+Do NOT hardcode URLs.
+Instead, dynamically detect and link to relevant existing pages.
+Use the following logic:
+Step 1
+Identify the main candidate journey page where visitors learn how working via EXTRA works or can sign up.
+Step 2
+Identify job category pages related to the vacancy type.
+Examples:
+• horeca work pages
+• chef work pages
+• housekeeping work pages
+• front office work pages
+Step 3
+Identify other relevant work pages or job categories within the site structure.
+Linking logic
+For each vacancy page automatically generate links to:
+• the main candidate journey page
+• the relevant job category page
+• related job category pages where relevant
+Example logic:
+If vacancy category = Chef
+→ link to the chef category page
+If vacancy category = Housekeeping
+→ link to the housekeeping work page
+Dynamic detection
+The system should:
+• scan the existing site structure
+• detect relevant pages
+• generate contextual links
+Do not rely on fixed URLs.
+Use page identifiers, categories or page types.
+This ensures links remain correct if page URLs change.
+9 Internal linking placement
+Place internal links naturally inside the vacancy page.
+Possible locations:
+• introduction section
+• category references
+• related roles section
+• CTA section
+• related jobs area
+This creates a strong SEO structure.
+10 Related vacancies system
+Each vacancy page should automatically show related vacancies.
+Determine related jobs based on:
+• same function category
+• similar location
+• similar employment type
+Display 3–4 related vacancies at the bottom.
+This improves:
+• SEO
+• page depth
+• user engagement
+11 SEO guidance in admin
+Admins should receive helpful prompts inside the CMS.
+Examples:
+• “Include the job title and location naturally in the title”
+• “Keep the introduction clear and concrete”
+• “Add internal links to relevant work pages”
+• “Write a readable introduction paragraph”
+Add SEO completion indicators.
+12 SEO completeness indicator
+Show an SEO score based on:
+• SEO title present
+• meta description present
+• focus keyword present
+• intro paragraph present
+• internal links present
+• FAQ present
+Display completion percentage.
+13 Vacancy duplication feature
+Add option:
+Duplicate vacancy.
+This allows admins to easily create similar vacancies in other cities.
+Example:
+Chef Amsterdam → duplicate → Chef Utrecht.
+14 Public vacancy page design
+Public vacancy pages must follow the same design system as the EXTRA website.
+Ensure consistency in:
+• typography hierarchy
+• spacing
+• cards
+• button styles
+• container width
+• responsive behavior
+Do not create a separate design.
+15 Mobile behavior
+Ensure vacancy pages remain fully responsive.
+On mobile:
+• sections stack vertically
+• related jobs become swipeable cards
+• CTA remains visible
+16 Final objective
+Build a vacancy management system that allows admins to:
+• create vacancies
+• edit vacancies
+• publish vacancies
+• pause vacancies
+• archive vacancies
+• delete vacancies
+while automatically generating SEO-optimized, internally linked vacancy pages that follow a consistent structure and match the design of the EXTRA website.

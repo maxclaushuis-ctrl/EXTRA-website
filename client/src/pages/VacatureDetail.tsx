@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useRoute, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { VACATURES } from "@/data/vacatures";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
@@ -23,17 +24,45 @@ import { Badge } from "@/components/ui/badge";
 export default function VacatureDetail() {
   const [match, params] = useRoute("/vacatures/:slug");
   const [, setLocation] = useLocation();
-  const vacature = VACATURES.find((v) => v.slug === params?.slug);
+  const slug = params?.slug ?? '';
+
+  const { data: dbVacancy, isLoading } = useQuery<any>({
+    queryKey: [`/api/vacatures/${slug}`],
+    enabled: !!slug,
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  const staticVacature = VACATURES.find((v) => v.slug === slug);
+
+  const vacature = dbVacancy
+    ? {
+        title: dbVacancy.title,
+        slug: dbVacancy.slug,
+        location: dbVacancy.location,
+        region: dbVacancy.region,
+        serviceType: dbVacancy.serviceType,
+        workplace: dbVacancy.workplace,
+        client: dbVacancy.client || 'EXTRA',
+        salaryMin: parseFloat(dbVacancy.salaryMin) || 0,
+        fullDescription: [dbVacancy.introductionText, dbVacancy.aboutRole, dbVacancy.workEnvironment].filter(Boolean).join('\n\n'),
+        responsibilities: dbVacancy.responsibilities || [],
+        requirements: dbVacancy.requirements || [],
+        offer: dbVacancy.offer || [],
+        datePosted: dbVacancy.publishedAt || dbVacancy.createdAt,
+        metaDescription: dbVacancy.metaDescription || dbVacancy.shortDescription || '',
+      }
+    : staticVacature;
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [params?.slug]);
+  }, [slug]);
 
   useEffect(() => {
-    if (!vacature && match) {
+    if (!isLoading && !vacature && match) {
       setLocation("/vacatures");
     }
-  }, [vacature, match, setLocation]);
+  }, [vacature, match, setLocation, isLoading]);
 
   useEffect(() => {
     if (vacature) {
@@ -45,6 +74,7 @@ export default function VacatureDetail() {
     }
   }, [vacature]);
 
+  if (isLoading && !staticVacature) return null;
   if (!vacature) return null;
 
   const jobPostingSchema = {

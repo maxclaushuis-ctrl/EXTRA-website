@@ -1,0 +1,152 @@
+You are a senior UX designer, front-end developer and SEO strategist working on the EXTRA website.
+Your task is to redesign and optimize the page /vacatures so that it becomes both:
+• visually aligned with the EXTRA website design system
+• strongly optimized for SEO and AI search engines
+The current page does not fully match the visual style of the website and is not structured optimally for search engines.
+The page must therefore be improved both design-wise and structurally.
+Primary goal
+Transform /vacatures into a SEO-optimized vacancy overview page that attracts visitors from Google searching for hospitality jobs.
+Examples of search intent:
+horeca vacatures Amsterdam
+chef vacatures Amsterdam
+front office vacatures hotel
+hospitality vacatures Amsterdam
+hotel vacatures Amsterdam
+bediening vacatures Amsterdam
+flexibel horeca werk
+The page must therefore be structured to clearly communicate that it contains hospitality job opportunities in Amsterdam and surrounding regions.
+Important context
+This page is not the main conversion page for candidates.
+The main candidate journey happens through:
+/ik-zoek-extra-werk
+Therefore:
+• /vacatures should focus on discoverability via search engines
+• visitors should browse vacancies and then navigate deeper into the site
+• the page should not push heavy application flows
+The design must still feel consistent with the rest of the site.
+Design system reference
+The entire page must follow the design language used across the EXTRA website.
+Match:
+• typography hierarchy
+• card design
+• gradients
+• spacing system
+• button styling
+• rounded corners
+• shadows
+• icon style
+• subtle scroll animations
+The page should feel like a natural extension of the website.
+Do not introduce a new visual style.
+Page structure
+Redesign the page with the following structure:
+1 Hero section
+Clear SEO-focused hero.
+Example direction:
+H1:
+Horeca vacatures in Amsterdam
+Supporting text:
+Vacatures bij hotels, restaurants, events en hospitality locaties in Amsterdam en omgeving.
+Include:
+• search bar
+• number of active vacancies
+• location indicator
+Hero should visually match the style used elsewhere on the website.
+2 Vacancy overview section
+Main vacancy listing area.
+Layout:
+• filter sidebar on the left
+• vacancy grid on the right
+Grid should display:
+• job cards
+• clear titles
+• location tags
+• job type labels
+Cards must visually match other cards used on the site.
+Vacancy card design
+Each card should contain:
+• location tag
+• job type tag (fulltime / parttime / oproep)
+• job title
+• short description
+• workplace (hotel / restaurant / event location)
+• CTA: Bekijk vacature
+Cards must have:
+• equal height
+• subtle hover effects
+• clear visual hierarchy
+Filters
+Improve the filter sidebar.
+Maintain filters for:
+• Locatie / regio
+• Functie
+• Type dienst
+• Werkplek
+Improve:
+• alignment
+• spacing
+• typography
+• checkbox styling
+Ensure filters are easy to scan and use.
+SEO content block
+Below the vacancy overview, add a SEO content section explaining hospitality jobs in Amsterdam.
+Include a section with:
+H2: Werken in de horeca in Amsterdam
+Include text about:
+• working in hotels
+• working at events
+• working in restaurants
+• flexible hospitality work
+This helps search engines understand the page context.
+Job category links
+Add internal links to category pages such as:
+• Horeca werk
+• Chef vacatures
+• Housekeeping vacatures
+• Front office vacatures
+These should link to:
+/ik-zoek-extra-werk/horeca
+/ik-zoek-extra-werk/chef
+/ik-zoek-extra-werk/housekeeping
+/ik-zoek-extra-werk/front-office
+This improves SEO internal linking.
+UX improvements
+Ensure the page feels:
+• structured
+• easy to scan
+• visually calm
+• modern
+Avoid excessive vertical scrolling.
+Use a balanced grid layout.
+Responsive behavior
+Ensure the page works perfectly on mobile.
+On smaller screens:
+• filters should collapse into a filter drawer
+• vacancy cards should stack vertically
+• search bar should remain accessible
+Performance
+Ensure the page remains fast.
+Use:
+• optimized images
+• lazy loading where appropriate
+• lightweight animations
+SEO technical requirements
+Ensure the page includes:
+• proper H1 / H2 structure
+• descriptive vacancy titles
+• structured semantic HTML
+• readable job descriptions
+The page should clearly signal that it contains hospitality vacancies in Amsterdam.
+Final goal
+The /vacatures page should:
+• visually match the EXTRA brand
+• improve SEO visibility
+• attract organic traffic
+• provide a clean overview of hospitality jobs
+while still supporting the main candidate flow through /ik-zoek-extra-werk.
+💡 Mijn tip (heel belangrijk voor SEO van deze site):
+Je zou eigenlijk nog één extra structuur moeten maken, namelijk SEO landingspagina’s per functie:
+/horeca-vacatures-amsterdam
+/chef-vacatures-amsterdam
+/housekeeping-vacatures-amsterdam
+/front-office-vacatures-amsterdam

@@ -5660,6 +5660,117 @@ ${posts.map(p => `  <url>
     }
   });
 
+  // ── Vacancy CMS public routes ─────────────────────────────
+  app.get('/api/vacatures', async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const functionType = req.query.functionType as string | undefined;
+      const location = req.query.location as string | undefined;
+      const result = await storage.getVacancyPosts({ status: status || 'published', functionType, location });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get('/api/vacatures/:slug', async (req: Request, res: Response) => {
+    try {
+      const post = await storage.getVacancyPostBySlug(req.params.slug);
+      if (!post || post.status !== 'published') return res.status(404).json({ message: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ── Vacancy CMS admin routes ───────────────────────────────
+  app.get('/api/admin/vacatures', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const functionType = req.query.functionType as string | undefined;
+      const location = req.query.location as string | undefined;
+      const result = await storage.getVacancyPosts({ status, functionType, location });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/vacatures', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const post = await storage.createVacancyPost(req.body);
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.put('/api/admin/vacatures/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.updateVacancyPost(id, req.body);
+      if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.delete('/api/admin/vacatures/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const ok = await storage.deleteVacancyPost(id);
+      if (!ok) return res.status(404).json({ message: 'Niet gevonden' });
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/vacatures/:id/publish', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.updateVacancyPost(id, { status: 'published', publishedAt: new Date() });
+      if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/vacatures/:id/pause', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.updateVacancyPost(id, { status: 'paused' });
+      if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/vacatures/:id/archive', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.updateVacancyPost(id, { status: 'archived' });
+      if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/api/admin/vacatures/:id/duplicate', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.duplicateVacancyPost(id);
+      if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      res.json(post);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }

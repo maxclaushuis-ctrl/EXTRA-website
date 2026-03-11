@@ -20,7 +20,8 @@ import {
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
-  Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2
+  Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
+  Briefcase, MapPin, Pause, Archive, ExternalLink
 } from 'lucide-react';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 
@@ -263,6 +264,17 @@ export default function DashboardMockup() {
   const [blogPreviewPost, setBlogPreviewPost] = useState<any | null>(null);
   const [blogPreviewOpen, setBlogPreviewOpen] = useState(false);
 
+  // Vacancy CMS tab state
+  const [vacancySearch, setVacancySearch] = useState('');
+  const [vacancyStatusFilter, setVacancyStatusFilter] = useState('alle');
+  const [vacancyFunctionFilter, setVacancyFunctionFilter] = useState('alle');
+  const [vacancyEditOpen, setVacancyEditOpen] = useState(false);
+  const [vacancyEditPost, setVacancyEditPost] = useState<any | null>(null);
+  const [vacancyForm, setVacancyForm] = useState<any>({});
+  const [vacancySaving, setVacancySaving] = useState(false);
+  const [vacancyDeleteId, setVacancyDeleteId] = useState<number | null>(null);
+  const [vacancyFormTab, setVacancyFormTab] = useState<'basic' | 'content' | 'seo' | 'publish'>('basic');
+
   const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
   const [loginPassword, setLoginPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
@@ -367,6 +379,14 @@ export default function DashboardMockup() {
     refetchOnWindowFocus: true,
   });
   const blogPosts = blogData?.posts ?? [];
+
+  const { data: vacancyData, isLoading: vacancyLoading, refetch: refetchVacancy } = useQuery<{ posts: any[]; total: number }>({
+    queryKey: ['/api/admin/vacatures'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+  const vacancyPosts = vacancyData?.posts ?? [];
 
   if (authLoading) {
     return (
@@ -645,6 +665,20 @@ export default function DashboardMockup() {
                 {blogPosts.filter((p: any) => p.status === 'scheduled').length > 0 && (
                   <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">
                     {blogPosts.filter((p: any) => p.status === 'scheduled').length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => { setActiveTab('vacatures-cms'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'vacatures-cms' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                <span>Vacatures & SEO</span>
+                {vacancyPosts.filter((p: any) => p.status === 'published').length > 0 && (
+                  <span className="ml-auto text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">
+                    {vacancyPosts.filter((p: any) => p.status === 'published').length}
                   </span>
                 )}
               </button>
@@ -3340,6 +3374,684 @@ export default function DashboardMockup() {
                         queryClient.invalidateQueries({ queryKey: ['/api/admin/blog'] });
                         setBlogDeleteId(null);
                         toast({ title: 'Artikel verwijderd' });
+                      }}
+                    >
+                      Verwijderen
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+          ) : activeTab === 'vacatures-cms' ? (
+            /* ─── VACATURES & SEO tab ─── */
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                <div>
+                  <h1 className="text-xl font-bold flex items-center gap-2"><Briefcase className="h-5 w-5 text-purple-600" /> Vacatures &amp; SEO</h1>
+                  <p className="text-sm text-gray-500">Beheer vacatures, publiceer naar de website en optimaliseer voor zoekmachines</p>
+                </div>
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-700"
+                  onClick={() => {
+                    setVacancyEditPost(null);
+                    setVacancyFormTab('basic');
+                    setVacancyForm({
+                      title: '', slug: '', internalTitle: '', functionType: 'Bediening', serviceType: 'Oproep',
+                      location: 'Amsterdam', region: 'Amsterdam', workplace: 'Restaurant', client: '',
+                      salaryMin: '', shortDescription: '', introductionText: '', aboutRole: '',
+                      responsibilities: '', requirements: '', offer: '', workEnvironment: '',
+                      faqItems: '', ctaText: 'Meld je aan en begin vandaag', focusKeyword: '',
+                      metaTitle: '', metaDescription: '', canonicalUrl: '', ogTitle: '', ogDescription: '',
+                      featuredImage: '', featuredImageAlt: '', status: 'draft',
+                    });
+                    setVacancyEditOpen(true);
+                  }}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Nieuwe vacature
+                </Button>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                {[
+                  { label: 'Totaal', value: vacancyPosts.length, color: 'text-gray-700', bg: 'bg-gray-50' },
+                  { label: 'Gepubliceerd', value: vacancyPosts.filter((p: any) => p.status === 'published').length, color: 'text-green-700', bg: 'bg-green-50' },
+                  { label: 'Gepauzeerd', value: vacancyPosts.filter((p: any) => p.status === 'paused').length, color: 'text-amber-700', bg: 'bg-amber-50' },
+                  { label: 'Concept', value: vacancyPosts.filter((p: any) => p.status === 'draft').length, color: 'text-gray-500', bg: 'bg-gray-50' },
+                ].map(s => (
+                  <div key={s.label} className={`${s.bg} rounded-xl p-3 border border-gray-100`}>
+                    <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Zoek op titel, keyword, locatie…"
+                    value={vacancySearch}
+                    onChange={e => setVacancySearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                </div>
+                <select value={vacancyStatusFilter} onChange={e => setVacancyStatusFilter(e.target.value)} className="h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                  <option value="alle">Alle statussen</option>
+                  <option value="published">Gepubliceerd</option>
+                  <option value="draft">Concept</option>
+                  <option value="paused">Gepauzeerd</option>
+                  <option value="archived">Gearchiveerd</option>
+                </select>
+                <select value={vacancyFunctionFilter} onChange={e => setVacancyFunctionFilter(e.target.value)} className="h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                  <option value="alle">Alle functies</option>
+                  {['Bediening','Bartender','Chef','Banqueting','Housekeeping','Front office'].map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+                <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => refetchVacancy()}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              {/* Table */}
+              {vacancyLoading ? (
+                <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div>
+              ) : (() => {
+                const q = vacancySearch.toLowerCase();
+                const filtered = vacancyPosts.filter((p: any) =>
+                  (vacancyStatusFilter === 'alle' || p.status === vacancyStatusFilter) &&
+                  (vacancyFunctionFilter === 'alle' || p.functionType === vacancyFunctionFilter) &&
+                  (!q || (p.title || '').toLowerCase().includes(q) || (p.focusKeyword || '').toLowerCase().includes(q) || (p.location || '').toLowerCase().includes(q))
+                );
+
+                const statusBadge = (s: string) => {
+                  if (s === 'published') return <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Gepubliceerd</span>;
+                  if (s === 'paused') return <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Gepauzeerd</span>;
+                  if (s === 'archived') return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 font-medium">Gearchiveerd</span>;
+                  return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Concept</span>;
+                };
+
+                const seoScore = (p: any) => {
+                  let score = 0;
+                  if (p.metaTitle) score += 20;
+                  if (p.metaDescription) score += 20;
+                  if (p.focusKeyword) score += 20;
+                  if (p.shortDescription) score += 20;
+                  if (p.responsibilities?.length > 0) score += 10;
+                  if (p.faqItems) score += 10;
+                  return score;
+                };
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-16">
+                      <Briefcase className="h-10 w-10 mx-auto mb-3 text-gray-200" />
+                      <p className="text-sm text-gray-400 mb-4">{vacancySearch ? 'Geen resultaten gevonden' : 'Nog geen vacatures. Maak je eerste vacature aan!'}</p>
+                      <Button size="sm" onClick={() => { setVacancyEditPost(null); setVacancyFormTab('basic'); setVacancyForm({ title: '', slug: '', functionType: 'Bediening', serviceType: 'Oproep', location: 'Amsterdam', region: 'Amsterdam', workplace: 'Restaurant', client: '', salaryMin: '', shortDescription: '', status: 'draft', metaTitle: '', metaDescription: '', focusKeyword: '', responsibilities: '', requirements: '', offer: '', faqItems: '', ctaText: 'Meld je aan en begin vandaag', introductionText: '', aboutRole: '', workEnvironment: '', canonicalUrl: '', ogTitle: '', ogDescription: '', featuredImage: '', featuredImageAlt: '', internalTitle: '' }); setVacancyEditOpen(true); }} className="bg-purple-600 hover:bg-purple-700">
+                        <Plus className="h-3.5 w-3.5 mr-1.5" /> Eerste vacature aanmaken
+                      </Button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            {['Titel', 'Functie', 'Locatie', 'Type', 'SEO', 'Status', 'Datum', ''].map(h => (
+                              <th key={h} className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map((post: any) => {
+                            const score = seoScore(post);
+                            return (
+                              <tr key={post.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                <td className="px-3 py-3 max-w-[220px]">
+                                  <div className="font-medium text-gray-900 truncate text-xs">{post.title}</div>
+                                  <div className="text-[11px] text-gray-400 truncate">/vacatures/{post.slug}</div>
+                                </td>
+                                <td className="px-3 py-3 whitespace-nowrap">
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100">{post.functionType}</span>
+                                </td>
+                                <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
+                                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{post.location}</span>
+                                </td>
+                                <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">{post.serviceType}</td>
+                                <td className="px-3 py-3">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                      <div className={`h-full rounded-full ${score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width: `${score}%` }} />
+                                    </div>
+                                    <span className="text-[11px] text-gray-400">{score}%</span>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-3">{statusBadge(post.status)}</td>
+                                <td className="px-3 py-3 text-xs text-gray-400 whitespace-nowrap">
+                                  {post.publishedAt
+                                    ? new Date(post.publishedAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+                                    : new Date(post.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                                </td>
+                                <td className="px-3 py-3">
+                                  <div className="flex items-center gap-1 justify-end">
+                                    {post.status === 'published' && (
+                                      <a href={`/vacatures/${post.slug}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-purple-600 transition-colors" title="Bekijk op website">
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                      </a>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        setVacancyEditPost(post);
+                                        setVacancyFormTab('basic');
+                                        setVacancyForm({
+                                          ...post,
+                                          responsibilities: (post.responsibilities || []).join('\n'),
+                                          requirements: (post.requirements || []).join('\n'),
+                                          offer: (post.offer || []).join('\n'),
+                                        });
+                                        setVacancyEditOpen(true);
+                                      }}
+                                      className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-amber-600 transition-colors" title="Bewerken"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    {post.status !== 'published' && (
+                                      <button
+                                        onClick={async () => {
+                                          await apiRequest('POST', `/api/admin/vacatures/${post.id}/publish`, {});
+                                          queryClient.invalidateQueries({ queryKey: ['/api/admin/vacatures'] });
+                                          toast({ title: 'Vacature gepubliceerd!' });
+                                        }}
+                                        className="p-1.5 rounded hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors" title="Publiceer"
+                                      >
+                                        <Send className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                    {post.status === 'published' && (
+                                      <button
+                                        onClick={async () => {
+                                          await apiRequest('POST', `/api/admin/vacatures/${post.id}/pause`, {});
+                                          queryClient.invalidateQueries({ queryKey: ['/api/admin/vacatures'] });
+                                          toast({ title: 'Vacature gepauzeerd' });
+                                        }}
+                                        className="p-1.5 rounded hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors" title="Pauzeer"
+                                      >
+                                        <Pause className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={async () => {
+                                        await apiRequest('POST', `/api/admin/vacatures/${post.id}/duplicate`, {});
+                                        queryClient.invalidateQueries({ queryKey: ['/api/admin/vacatures'] });
+                                        toast({ title: 'Vacature gedupliceerd als concept' });
+                                      }}
+                                      className="p-1.5 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors" title="Dupliceer"
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => setVacancyDeleteId(post.id)}
+                                      className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Verwijderen"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                );
+              })()}
+
+              {/* SEO tips */}
+              <div className="mt-5 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+                <div className="flex items-start gap-3">
+                  <Globe className="h-5 w-5 text-purple-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-purple-800 mb-1">SEO Tips voor vacatures</p>
+                    <ul className="text-xs text-purple-600 space-y-1">
+                      <li>• Gebruik het format: "<strong>Functie</strong> vacature Amsterdam | Werken via EXTRA" als SEO-titel</li>
+                      <li>• Verwerk functie + locatie in de eerste alinea van de introductie</li>
+                      <li>• Voeg minimaal 5 verantwoordelijkheden en 5 eisen toe voor een hoge SEO-score</li>
+                      <li>• Elke vacaturepagina linkt automatisch naar de bijpassende categoriepagina</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── Create/Edit Modal ─── */}
+              <Dialog open={vacancyEditOpen} onOpenChange={setVacancyEditOpen}>
+                <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{vacancyEditPost ? 'Vacature bewerken' : 'Nieuwe vacature aanmaken'}</DialogTitle>
+                  </DialogHeader>
+
+                  {/* Form tabs */}
+                  <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-5">
+                    {(['basic','content','seo','publish'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setVacancyFormTab(tab)}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${vacancyFormTab === tab ? 'bg-white shadow text-purple-700' : 'text-gray-500 hover:text-gray-700'}`}
+                      >
+                        {tab === 'basic' ? '1. Basisinfo' : tab === 'content' ? '2. Inhoud' : tab === 'seo' ? '3. SEO' : '4. Publiceren'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* SEO score */}
+                  {(() => {
+                    const score = [
+                      vacancyForm.metaTitle, vacancyForm.metaDescription, vacancyForm.focusKeyword,
+                      vacancyForm.shortDescription, vacancyForm.responsibilities, vacancyForm.faqItems
+                    ].filter(Boolean).length;
+                    const pct = Math.round((score / 6) * 100);
+                    return (
+                      <div className="mb-4 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <div className="flex-1">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-xs text-gray-500 font-medium">SEO volledigheid</span>
+                            <span className={`text-xs font-bold ${pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500'}`}>{pct}%</span>
+                          </div>
+                          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="space-y-4">
+                    {/* TAB 1: Basic info */}
+                    {vacancyFormTab === 'basic' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Vacaturetitel *</label>
+                            <input
+                              value={vacancyForm.title || ''}
+                              onChange={e => {
+                                const title = e.target.value;
+                                const slug = !vacancyEditPost
+                                  ? title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 80)
+                                  : vacancyForm.slug;
+                                setVacancyForm((f: any) => ({ ...f, title, slug }));
+                              }}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="bv. Chef Amsterdam – Zelfstandig werkend kok gezocht"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Interne naam</label>
+                            <input
+                              value={vacancyForm.internalTitle || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, internalTitle: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="bv. Chef Amsterdam Q2 2026"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">URL Slug *</label>
+                            <input
+                              value={vacancyForm.slug || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, slug: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="chef-amsterdam"
+                            />
+                            <p className="text-[11px] text-gray-400 mt-1">/vacatures/{vacancyForm.slug || '…'}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Functiecategorie *</label>
+                            <select value={vacancyForm.functionType || 'Bediening'} onChange={e => setVacancyForm((f: any) => ({ ...f, functionType: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                              {['Bediening','Bartender','Chef','Banqueting','Housekeeping','Front office'].map(v => <option key={v}>{v}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Diensttype *</label>
+                            <select value={vacancyForm.serviceType || 'Oproep'} onChange={e => setVacancyForm((f: any) => ({ ...f, serviceType: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                              {['Fulltime','Parttime','Bijbaan','Oproep'].map(v => <option key={v}>{v}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Locatie *</label>
+                            <input
+                              value={vacancyForm.location || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, location: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="Amsterdam"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Regio *</label>
+                            <select value={vacancyForm.region || 'Amsterdam'} onChange={e => setVacancyForm((f: any) => ({ ...f, region: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                              {['Amsterdam','Utrecht','Het Gooi','Randstad'].map(v => <option key={v}>{v}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Werkplek</label>
+                            <select value={vacancyForm.workplace || 'Restaurant'} onChange={e => setVacancyForm((f: any) => ({ ...f, workplace: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                              {['Hotel','Eventlocatie','Catering','Restaurant'].map(v => <option key={v}>{v}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Opdrachtgever / Klant</label>
+                            <input
+                              value={vacancyForm.client || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, client: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="bv. NH Hotels Amsterdam"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Minimumloon (p/u)</label>
+                            <input
+                              value={vacancyForm.salaryMin || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, salaryMin: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="bv. 14.00"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Korte omschrijving * <span className="font-normal text-gray-400">(voor kaartjes op overzichtspagina)</span></label>
+                            <textarea
+                              value={vacancyForm.shortDescription || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, shortDescription: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                              rows={2}
+                              placeholder="Max. 160 tekens voor de kaart op /vacatures"
+                            />
+                            <p className="text-[11px] text-gray-400 mt-0.5">{(vacancyForm.shortDescription || '').length}/160</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 2: Content */}
+                    {vacancyFormTab === 'content' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Introductie alinea <span className="font-normal text-gray-400">(H1 + eerste alinea)</span></label>
+                          <textarea
+                            value={vacancyForm.introductionText || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, introductionText: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={3}
+                            placeholder="Verwerk functietitel + locatie + uniek voordeel EXTRA in de eerste alinea"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Over de functie</label>
+                          <textarea
+                            value={vacancyForm.aboutRole || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, aboutRole: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={3}
+                            placeholder="Beschrijf de rol en dagelijkse werkzaamheden"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Verantwoordelijkheden <span className="font-normal text-gray-400">(één per regel)</span></label>
+                          <textarea
+                            value={vacancyForm.responsibilities || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, responsibilities: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={5}
+                            placeholder={"Gasten ontvangen en aan tafel begeleiden\nBestellingen opnemen en verwerken\nTafels opmaken en afruimen"}
+                          />
+                          <p className="text-[11px] text-gray-400 mt-0.5">Aantal: {(vacancyForm.responsibilities || '').split('\n').filter((l: string) => l.trim()).length}</p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Eisen <span className="font-normal text-gray-400">(één per regel)</span></label>
+                          <textarea
+                            value={vacancyForm.requirements || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, requirements: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={4}
+                            placeholder={"Minimaal 17 jaar oud\nRepresentatief voorkomen\nFlexibel beschikbaar in avonden"}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Wat biedt EXTRA <span className="font-normal text-gray-400">(één per regel)</span></label>
+                          <textarea
+                            value={vacancyForm.offer || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, offer: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={4}
+                            placeholder={"Dagbetaling mogelijk\nEXTRAATje beloningssysteem\nIedereen in loondienst bij EXTRA"}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Werkomgeving omschrijving</label>
+                          <textarea
+                            value={vacancyForm.workEnvironment || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, workEnvironment: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={2}
+                            placeholder="Beschrijf de werkplek en sfeer"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">FAQ <span className="font-normal text-gray-400">(JSON: [{'{\"q\":\"...\",\"a\":\"...\"}'}])</span></label>
+                          <textarea
+                            value={vacancyForm.faqItems || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, faqItems: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none font-mono text-xs"
+                            rows={4}
+                            placeholder={'[{"q":"Hoe solliciteer ik?","a":"Via het aanmeldformulier op onze website."}]'}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 3: SEO */}
+                    {vacancyFormTab === 'seo' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Focus keyword <span className="font-normal text-gray-400">— primair zoekwoord</span></label>
+                          <input
+                            value={vacancyForm.focusKeyword || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, focusKeyword: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            placeholder="bv. chef vacature amsterdam"
+                          />
+                          <p className="text-[11px] text-gray-400 mt-0.5">Tip: gebruik een longtail keyword met functie + locatie</p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">SEO-titel <span className="font-normal text-gray-400">— max. 60 tekens</span></label>
+                          <input
+                            value={vacancyForm.metaTitle || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, metaTitle: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            placeholder="Chef vacature Amsterdam | Werken via EXTRA"
+                          />
+                          <p className={`text-[11px] mt-0.5 ${(vacancyForm.metaTitle || '').length > 60 ? 'text-red-500' : 'text-gray-400'}`}>{(vacancyForm.metaTitle || '').length}/60</p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-1 block">Meta description <span className="font-normal text-gray-400">— max. 155 tekens</span></label>
+                          <textarea
+                            value={vacancyForm.metaDescription || ''}
+                            onChange={e => setVacancyForm((f: any) => ({ ...f, metaDescription: e.target.value }))}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                            rows={2}
+                            placeholder="Bekijk deze vacature voor chef in Amsterdam. Werk via EXTRA bij culinaire restaurants met flexibele diensten en dagbetaling."
+                          />
+                          <p className={`text-[11px] mt-0.5 ${(vacancyForm.metaDescription || '').length > 155 ? 'text-red-500' : 'text-gray-400'}`}>{(vacancyForm.metaDescription || '').length}/155</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Canonical URL</label>
+                            <input
+                              value={vacancyForm.canonicalUrl || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, canonicalUrl: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="/vacatures/chef-amsterdam"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Featured image URL</label>
+                            <input
+                              value={vacancyForm.featuredImage || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, featuredImage: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">OG Titel</label>
+                            <input
+                              value={vacancyForm.ogTitle || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, ogTitle: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="Chef vacature Amsterdam"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">OG Beschrijving</label>
+                            <input
+                              value={vacancyForm.ogDescription || ''}
+                              onChange={e => setVacancyForm((f: any) => ({ ...f, ogDescription: e.target.value }))}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="Werk als chef in Amsterdam via EXTRA"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 4: Publish */}
+                    {vacancyFormTab === 'publish' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-2 block">Status</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { value: 'draft', label: 'Concept', desc: 'Niet zichtbaar op website', color: 'border-gray-300' },
+                              { value: 'published', label: 'Gepubliceerd', desc: 'Direct zichtbaar op /vacatures', color: 'border-green-400' },
+                              { value: 'paused', label: 'Gepauzeerd', desc: 'Tijdelijk offline gehaald', color: 'border-amber-400' },
+                              { value: 'archived', label: 'Gearchiveerd', desc: 'Permanente status', color: 'border-gray-300' },
+                            ].map(opt => (
+                              <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${vacancyForm.status === opt.value ? `${opt.color} bg-purple-50` : 'border-gray-200 hover:border-gray-300'}`}>
+                                <input
+                                  type="radio"
+                                  name="status"
+                                  value={opt.value}
+                                  checked={vacancyForm.status === opt.value}
+                                  onChange={() => setVacancyForm((f: any) => ({ ...f, status: opt.value }))}
+                                  className="mt-0.5"
+                                />
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
+                                  <p className="text-xs text-gray-500">{opt.desc}</p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                          <p className="text-xs font-semibold text-blue-700 mb-2">Automatische SEO-instellingen bij publicatie</p>
+                          <ul className="text-xs text-blue-600 space-y-1">
+                            <li>✓ JobPosting schema markup wordt automatisch gegenereerd</li>
+                            <li>✓ Interne links naar categoriepagina worden automatisch toegevoegd</li>
+                            <li>✓ Gerelateerde vacatures worden automatisch getoond</li>
+                            <li>✓ Vacature verschijnt in /vacatures overzicht en sitemap</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between pt-4 border-t mt-2">
+                    <div className="flex gap-2">
+                      {vacancyFormTab !== 'basic' && (
+                        <Button variant="outline" size="sm" onClick={() => setVacancyFormTab(t => t === 'content' ? 'basic' : t === 'seo' ? 'content' : 'seo')}>
+                          ← Vorige
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {vacancyFormTab !== 'publish' ? (
+                        <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => setVacancyFormTab(t => t === 'basic' ? 'content' : t === 'content' ? 'seo' : 'publish')}>
+                          Volgende →
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          disabled={vacancySaving}
+                          className="bg-purple-600 hover:bg-purple-700"
+                          onClick={async () => {
+                            if (!vacancyForm.title || !vacancyForm.slug) {
+                              toast({ title: 'Vul minimaal titel en slug in', variant: 'destructive' });
+                              return;
+                            }
+                            setVacancySaving(true);
+                            try {
+                              const payload = {
+                                ...vacancyForm,
+                                responsibilities: vacancyForm.responsibilities
+                                  ? vacancyForm.responsibilities.split('\n').map((l: string) => l.trim()).filter(Boolean)
+                                  : [],
+                                requirements: vacancyForm.requirements
+                                  ? vacancyForm.requirements.split('\n').map((l: string) => l.trim()).filter(Boolean)
+                                  : [],
+                                offer: vacancyForm.offer
+                                  ? vacancyForm.offer.split('\n').map((l: string) => l.trim()).filter(Boolean)
+                                  : [],
+                                publishedAt: vacancyForm.status === 'published' ? new Date().toISOString() : vacancyForm.publishedAt || null,
+                              };
+                              if (vacancyEditPost) {
+                                await apiRequest('PUT', `/api/admin/vacatures/${vacancyEditPost.id}`, payload);
+                                toast({ title: 'Vacature opgeslagen' });
+                              } else {
+                                await apiRequest('POST', '/api/admin/vacatures', payload);
+                                toast({ title: 'Vacature aangemaakt' });
+                              }
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/vacatures'] });
+                              setVacancyEditOpen(false);
+                            } catch (err: any) {
+                              toast({ title: 'Fout bij opslaan', description: err.message, variant: 'destructive' });
+                            } finally {
+                              setVacancySaving(false);
+                            }
+                          }}
+                        >
+                          {vacancySaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                          {vacancyEditPost ? 'Opslaan' : 'Aanmaken'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Delete confirmation */}
+              <Dialog open={!!vacancyDeleteId} onOpenChange={() => setVacancyDeleteId(null)}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Vacature verwijderen?</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-gray-500">Deze actie kan niet ongedaan worden gemaakt. De vacaturepagina wordt ook offline gehaald.</p>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" size="sm" onClick={() => setVacancyDeleteId(null)}>Annuleren</Button>
+                    <Button
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={async () => {
+                        if (!vacancyDeleteId) return;
+                        await apiRequest('DELETE', `/api/admin/vacatures/${vacancyDeleteId}`, {});
+                        queryClient.invalidateQueries({ queryKey: ['/api/admin/vacatures'] });
+                        toast({ title: 'Vacature verwijderd' });
+                        setVacancyDeleteId(null);
                       }}
                     >
                       Verwijderen
