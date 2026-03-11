@@ -100,7 +100,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-0.5 xl:gap-2">
             {navGroups.map((group) => (
               <div
                 key={group.key}
@@ -110,7 +110,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
               >
                 <Link
                   href={group.href}
-                  className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-1.5 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all duration-200 whitespace-nowrap ${
                     activeDropdown === group.key
                       ? isDark
                         ? "text-purple-700 bg-purple-50"
@@ -120,10 +120,10 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                         : "text-white hover:text-white hover:bg-white/15"
                   }`}
                 >
-                  <group.icon className="w-5 h-5 shrink-0 opacity-80" />
+                  <group.icon className="w-4 h-4 xl:w-5 xl:h-5 shrink-0 opacity-80 hidden xl:inline-block" />
                   {group.label}
                   <ChevronDown
-                    className={`w-4 h-4 opacity-70 transition-transform duration-200 ${
+                    className={`w-3.5 h-3.5 xl:w-4 xl:h-4 opacity-70 transition-transform duration-200 ${
                       activeDropdown === group.key ? "rotate-180" : ""
                     }`}
                   />
@@ -160,13 +160,13 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           <div className="hidden lg:block">
             <Link
               href="/personeelsaanvraag"
-              className={`inline-flex items-center gap-2.5 text-[18px] font-black px-8 py-3.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl ${
+              className={`inline-flex items-center gap-2 xl:gap-2.5 text-[13px] xl:text-[16px] font-black px-5 xl:px-8 py-2.5 xl:py-3.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl whitespace-nowrap ${
                 isDark
                   ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30"
                   : "bg-white text-purple-700 border-2 border-white hover:shadow-white/30"
               }`}
             >
-              <Phone className="w-[18px] h-[18px]" />
+              <Phone className="w-4 h-4 xl:w-[18px] xl:h-[18px]" />
               Personeel aanvragen
             </Link>
           </div>
