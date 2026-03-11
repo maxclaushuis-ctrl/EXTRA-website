@@ -6,11 +6,14 @@ import {
   ArrowRight, ChevronRight, ChevronDown, Zap, Star, Clock, MapPin,
   Shield, TrendingUp, Gift, Award, Users, Briefcase,
   CheckCircle2, MessageCircle, Phone, Building2, UtensilsCrossed,
-  BedDouble, ChefHat, ConciergeBell, Sparkles, Heart, Target,
+  BedDouble, ChefHat, ConciergeBell, Heart, Target,
   BarChart3, Flame, Menu, X, UserCheck, Trophy
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import blogHousekeeping from "@/assets/images/blog-housekeeping.jpg";
+import blogCatering from "@/assets/images/blog-catering.jpg";
+import blogBarista from "@/assets/images/blog-barista.jpg";
 import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
 import chefImg from "@assets/Chef_1771833440047.webp";
@@ -206,9 +209,9 @@ export default function IkZoekExtraWerk() {
   ];
 
   const blogs = [
-    { tag: "Hospitality", title: "Wat maakt een goede horeca-professional in 2025?", datum: "15 feb 2025", kleur: "bg-purple-100 text-purple-700" },
-    { tag: "Carrière", title: "Van flexibel naar vast: doorgroeien via EXTRA", datum: "3 jan 2025", kleur: "bg-blue-100 text-blue-700" },
-    { tag: "Finance", title: "Dagbetaling: zo werkt financiële vrijheid in de praktijk", datum: "20 dec 2024", kleur: "bg-green-100 text-green-700" },
+    { tag: "Hospitality", title: "Wat maakt een goede horeca-professional in 2025?", datum: "15 feb 2025", image: blogHousekeeping },
+    { tag: "Carrière", title: "Van flexibel naar vast: doorgroeien via EXTRA", datum: "3 jan 2025", image: blogCatering },
+    { tag: "Finance", title: "Dagbetaling: zo werkt financiële vrijheid in de praktijk", datum: "20 dec 2024", image: blogBarista },
   ];
 
   return (
@@ -950,17 +953,45 @@ export default function IkZoekExtraWerk() {
               </Link>
             </div>
           </RevealSection>
-          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6">
-            {blogs.map(({ tag, title, datum, kleur }, i) => (
-              <RevealSection key={title} delay={i * 80}>
-                <Link href="/nieuws" className="group block bg-white rounded-2xl overflow-hidden border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all h-full">
-                  <div className="h-32 bg-gradient-to-br from-purple-100 to-violet-200 flex items-center justify-center">
-                    <Sparkles className="w-10 h-10 text-purple-400" />
+          <div className="hidden sm:grid sm:grid-cols-3 gap-5 sm:gap-6">
+            {blogs.map(({ tag, title, datum, image }, i) => (
+              <RevealSection key={title} delay={i * 120}>
+                <Link href="/nieuws" className="group relative rounded-2xl overflow-hidden cursor-pointer block aspect-[3/4]">
+                  <img
+                    src={image}
+                    alt={title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-7">
+                    <span className="inline-block text-xs font-bold uppercase tracking-wider text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full mb-3 border border-purple-500/30">
+                      {tag}
+                    </span>
+                    <h3 className="text-lg font-bold text-white leading-snug mb-1">{title}</h3>
+                    <span className="text-xs text-gray-400 mt-2 block">{datum}</span>
                   </div>
-                  <div className="p-4">
-                    <span className={`inline-block text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${kleur} mb-2`}>{tag}</span>
-                    <h3 className="text-sm font-black text-gray-900 leading-snug mb-2 group-hover:text-purple-700 transition-colors" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
-                    <p className="text-[11px] text-gray-400 font-medium">{datum}</p>
+                </Link>
+              </RevealSection>
+            ))}
+          </div>
+
+          {/* Mobile: stacked cards */}
+          <div className="sm:hidden flex flex-col gap-4">
+            {blogs.map(({ tag, title, datum, image }, i) => (
+              <RevealSection key={title} delay={i * 80}>
+                <Link href="/nieuws" className="group relative rounded-2xl overflow-hidden cursor-pointer block aspect-[16/9]">
+                  <img
+                    src={image}
+                    alt={title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <span className="inline-block text-xs font-bold uppercase tracking-wider text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full mb-2 border border-purple-500/30">
+                      {tag}
+                    </span>
+                    <h3 className="text-base font-bold text-white leading-snug mb-1">{title}</h3>
+                    <span className="text-xs text-gray-400 block">{datum}</span>
                   </div>
                 </Link>
               </RevealSection>

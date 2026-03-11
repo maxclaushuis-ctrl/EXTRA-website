@@ -1,0 +1,53 @@
+You are a senior UX designer and front-end developer working on the EXTRA website.
+There is currently a visual inconsistency between two sections on the website that should be unified.
+Sections involved
+Reference section (correct design):
+Laatste nieuws uit de branche
+on the page:
+/landing
+This section has the correct layout, card structure, spacing, typography and UX behavior.
+Section that needs to be updated:
+Horeca & hospitality
+on the page:
+/horeca-vacatures-amsterdam
+Goal
+Make the section “Horeca & hospitality” visually identical in layout and structure to the section “Laatste nieuws uit de branche”.
+This means both sections should use the same component structure and visual system, so the website feels more consistent.
+Important difference
+The background design should NOT be copied.
+Only match the following elements:
+card layout
+card design
+image usage
+card spacing
+typography hierarchy
+hover effects
+grid structure
+card proportions
+responsive behavior
+The background color/gradient can remain different.
+Content difference
+The type of content will be different, but the component design must remain the same.
+The section “Laatste nieuws uit de branche” contains blog articles.
+The section “Horeca & hospitality” contains content aimed at job seekers.
+So the content source differs, but the design system should be identical.
+Implementation
+Reuse the same card component and grid structure used in the section:
+Laatste nieuws uit de branche
+Apply this component structure to the section:
+Horeca & hospitality
+on the page:
+/horeca-vacatures-amsterdam.
+UX requirements
+Ensure that the section:
+has identical card proportions
+uses the same grid layout
+has the same spacing between cards
+follows the same responsive breakpoints
+maintains the same visual rhythm
+Result
+Both sections should clearly feel like they belong to the same design system, even though they appear on different pages and have different backgrounds.
+This will improve:
+visual consistency
+UX clarity
+perceived design quality of the website.
