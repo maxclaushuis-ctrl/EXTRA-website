@@ -19,7 +19,7 @@ import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
-import logoWestweelde from "../assets/pitch/logo-westweelde-v2-transparant.png";
+import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
 import sollicitatieImg from "@assets/Sollicitatieformulier_1772893764120.png";
@@ -743,13 +743,13 @@ export default function EventPersoneelGezocht() {
               {[
                 { src: logoHartMuseum, alt: "H'art Museum Amsterdam" },
                 { src: logoFcUtrecht, alt: "FC Utrecht" },
-                { src: logoWestweelde, alt: "Westweelde", filter: "brightness(0)" },
+                { src: logoWestweelde, alt: "Westweelde" },
                 { src: logoAppel, alt: "Appèl" },
                 { src: logoFunda, alt: "Funda" },
                 { src: logoHetePeper, alt: "Hete Peper" },
               ].map((logo, i) => (
                 <div key={i} className="hover:scale-105 transition-transform duration-300">
-                  <img src={logo.src} alt={logo.alt} style={(logo as { filter?: string }).filter ? { filter: (logo as { filter?: string }).filter } : undefined} className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                  <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
                 </div>
               ))}
             </div>
