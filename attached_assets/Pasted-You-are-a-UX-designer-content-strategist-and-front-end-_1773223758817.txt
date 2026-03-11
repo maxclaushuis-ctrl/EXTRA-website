@@ -1,0 +1,154 @@
+You are a UX designer, content strategist and front-end developer working on the EXTRA website.
+We want to integrate customer reviews (references) across the website in a structured and consistent way.
+The goal is to:
+• display the correct reviews on the correct pages
+• keep the visual style consistent with the current website
+• structure the reviews so they can easily be reused across multiple pages
+Important rule
+If something in this instruction is unclear, ask a question first before implementing anything.
+Do NOT guess.
+Step 1 — Create a structured review system
+Create a review component / review data structure so reviews can be reused across multiple pages.
+Each review should contain:
+review text
+reviewer name
+reviewer function
+company name
+company type
+optional image
+optional logo
+Example data fields:
+review_text
+review_author
+review_role
+review_company
+review_company_type
+review_image
+Step 2 — Categorize reviews by company type
+Each review must be categorized by the type of client.
+Use categories such as:
+Hotels
+Event locations
+Museums / cultural venues
+Hospitality venues
+This allows reviews to automatically appear on the most relevant pages.
+Example logic:
+Hotels → show on hotel-related pages
+Event locations → show on event location pages
+Museums → show on cultural venue pages
+Step 3 — Automatically place reviews on relevant pages
+Use the company category to determine where the review should appear.
+Examples:
+Hotels
+Show hotel-related reviews on pages such as:
+hotel staffing pages
+hospitality staffing pages
+hotel-related landing pages
+Examples of reviews for hotels:
+Grand Hotel Amrâth
+Amsterdam Marriott
+Radisson Blu
+Event locations
+Show event location reviews on pages such as:
+event locations
+catering
+event staffing
+Examples:
+Westweelde
+Art Zoo
+Cultural venues / museums
+Show museum-related reviews on pages about:
+event staffing
+hospitality staffing
+cultural venues
+Example:
+H’ART Museum
+Step 4 — Review formatting
+All reviews must follow the same visual component style used elsewhere on the website.
+Ensure consistent:
+• card layout
+• spacing
+• typography
+• quotation styling
+• reviewer information block
+Each review card should include:
+Quote text
+Reviewer name
+Reviewer role
+Company name
+Example:
+Quote text
+— Name, Role
+Company
+Step 5 — Rewrite the Amrath review
+The Amrath reference is currently written in a slightly different format.
+Rewrite it so it matches the style of the other references.
+Important rules:
+• write in third person
+• keep the meaning of the review intact
+• make it stylistically consistent with the other references
+• keep the tone professional and concise
+Use the provided image as the review image.
+Reviewer:
+D. Koops
+Hotelmanager
+Grand Hotel Amrâth Amsterdam
+Step 6 — Review content
+Use the following reviews.
+Grand Hotel Amrâth Amsterdam
+Reviewer:
+D. Koops, Hotelmanager
+Rewrite the following text in third person and keep the meaning intact:
+“bij EXTRA wordt ik snel en accuraat geholpen! Als ik bel voor personeel, maakt niet uit wanneer, er wordt altijd gereageerd en er wordt snel gehandeld zodat de aanvraag snel kan worden opgevuld. Bij EXTRA kun je ook aangeven welk niveau personeel je nodig hebt zodat er een goede match is tussen vraag en aanbod.
+De prijzen en afspraken zijn duidelijk en transparant en marktconform. Het is ook geen probleem als de aanvraag toch anders wordt opgevuld en deze niet door EXTRA wordt opgevuld.
+Kortom, bij EXTRA wordt je gehoord, gezien en geaccepteerd!”
+Use the provided image of the reference.
+Art Zoo
+Reviewer:
+F. De Visser
+(Review text already provided)
+Category: Event locations
+Amsterdam Marriott
+Reviewer:
+G. Di Domenico
+Executive Chef
+(Review text already provided)
+Category: Hotels
+Radisson Blu Hotel Amsterdam Airport
+Reviewer:
+A. Schoenmaker
+(Review text already provided)
+Category: Hotels
+Westweelde
+Reviewer:
+D. Sarda
+(Review text already provided)
+Category: Event locations
+H’ART Museum
+Reviewer:
+T. Bakkenes
+(Review text already provided)
+Category: Cultural venue / museum
+Step 7 — Placement rules
+Ensure the correct reviews appear on the correct pages.
+Examples:
+Hotels → Amrath, Marriott, Radisson
+Event locations → Westweelde, Art Zoo
+Museums → H’ART Museum
+Pages should only display relevant reviews.
+Step 8 — Visual consistency
+Ensure the review blocks match the existing website style:
+• dark background sections
+• rounded cards
+• consistent spacing
+• same typography hierarchy
+• premium hospitality feel
+Use the same styling patterns used on the rest of the website.
+Step 9 — Reusable review component
+Create the review component so that:
+• new reviews can easily be added later
+• reviews can appear on multiple pages
+• reviews can be filtered by category
+Final instruction
+Implement a structured review system and place the provided references across the website based on their category.
+If anything is unclear before implementation, ask for clarification first.
