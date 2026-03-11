@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import FAQSection from "@/components/FAQSection";
+import { ClientReviewCard } from "@/components/ClientReviewCard";
+import { getReviewsByCategory } from "@/data/reviews";
 import {
   ArrowRight, Check, Phone, Shield, Clock, Star, Heart,
   TrendingUp, Users, Zap, Gift, Building2, UserCheck,
@@ -762,62 +764,17 @@ export default function EventPersoneelGezocht() {
           <RevealSection>
             <div className="text-center mb-10 sm:mb-16">
               <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
-                <MessageCircle className="w-4 h-4" /> Klantcases
+                <MessageCircle className="w-4 h-4" /> Referenties
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Hoe eventlocaties EXTRA ervaren
+                Wat eventlocaties over ons zeggen
               </h2>
             </div>
           </RevealSection>
           <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              {
-                company: "H'art Museum Amsterdam",
-                quote: "Voor onze grote events hebben we soms 40 tot 60 medewerkers nodig. EXTRA levert altijd: representatief, op tijd en goed geïnstrueerd. Dat geeft rust.",
-                name: "Lisa Jansen",
-                role: "Event Manager",
-                results: ["Events tot 60 medewerkers volledig bezet", "Dezelfde vaste gezichten bij elk event"],
-              },
-              {
-                company: "FC Utrecht",
-                quote: "Bij thuiswedstrijden en corporate events hebben we snel veel personeel nodig. EXTRA schakelt razendsnel en levert medewerkers die weten wat het betekent om onder druk te presteren.",
-                name: "Joost van der Berg",
-                role: "Hospitality Manager",
-                results: ["Snel opgeschaald van 20 naar 80 medewerkers", "Consistente kwaliteit over meerdere evenementen"],
-              },
-              {
-                company: "Appèl Amsterdam",
-                quote: "We werken regelmatig met EXTRA voor onze borrels en diners. De medewerkers kennen de locatie inmiddels door en door. Minder uitleg, hogere kwaliteit.",
-                name: "Sophie de Vries",
-                role: "Operations Manager",
-                results: ["Vaste eventpoule opgebouwd in 3 maanden", "30% minder briefingstijd per event"],
-              },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-xl transition-all duration-300 h-full shadow-sm flex flex-col">
-                  <div className="flex items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <PartyPopper className="w-4 h-4 text-purple-500" />
-                    <span className="font-bold text-purple-700 text-sm">{item.company}</span>
-                  </div>
-                  <p className="text-gray-600 italic text-sm sm:text-base leading-relaxed mb-6 flex-1">"{item.quote}"</p>
-                  <div className="border-t border-gray-100 pt-4 mb-4">
-                    <p className="font-bold text-gray-900 text-sm">{item.name}</p>
-                    <p className="text-gray-400 text-xs">{item.role}</p>
-                  </div>
-                  <div className="space-y-2">
-                    {item.results.map((r, j) => (
-                      <div key={j} className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                        <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                        {r}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            {getReviewsByCategory("events").map((review, i) => (
+              <RevealSection key={review.id} delay={i * 100}>
+                <ClientReviewCard review={review} variant="light" />
               </RevealSection>
             ))}
           </div>

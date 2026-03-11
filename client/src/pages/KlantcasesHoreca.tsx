@@ -2,129 +2,143 @@ import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, TrendingUp, CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Hotel, PartyPopper, Landmark, ArrowRight } from "lucide-react";
+import { ClientReviewCard } from "@/components/ClientReviewCard";
+import { getReviewsByCategory } from "@/data/reviews";
+import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 
-const cases = [
+const sections = [
   {
-    client: "Hotel V Amsterdam",
-    problem: "Plotselinge uitval van housekeeping personeel tijdens het hoogseizoen in Amsterdam.",
-    solution: "EXTRA leverde binnen 4 uur een team van 5 ervaren housekeeping medewerkers die direct inzetbaar waren.",
-    result: "Alle kamers waren tijdig schoon, de bezettingsgraad bleef 100% en de klanttevredenheidsscore bleef stabiel.",
-    quote: "De snelheid en kwaliteit van EXTRA hebben ons gered tijdens een kritiek moment.",
-    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
+    id: "hotels",
+    icon: Hotel,
+    label: "Hotels",
+    heading: "Wat hotelmanagers over ons zeggen",
+    category: "hotels" as const,
   },
   {
-    client: "Pathé Events",
-    problem: "Behoefte aan 50 gastvrije horecamedewerkers voor een grootschalige filmpremière.",
-    solution: "Een op maat geselecteerd team van hospitality-talenten, inclusief een teamleider van EXTRA voor de coördinatie.",
-    result: "Vlekkeloze doorstroom van 1500 gasten, uitstekende service bij de bars en positieve feedback van de organisatie.",
-    quote: "Het personeel van EXTRA begrijpt wat hospitality is. Ze zijn proactief en representatief.",
-    image: "https://images.unsplash.com/photo-1514525253361-bee8a187499b?auto=format&fit=crop&q=80&w=800",
+    id: "events",
+    icon: PartyPopper,
+    label: "Eventlocaties",
+    heading: "Wat eventlocaties over ons zeggen",
+    category: "events" as const,
   },
   {
-    client: "Marriott Amsterdam",
-    problem: "Structurele behoefte aan flexibele krachten in de F&B afdeling die de luxe standaarden begrijpen.",
-    solution: "Een vaste pool van 10 getrainde medewerkers die wekelijks worden ingezet via het EXTRA platform.",
-    result: "Vermindering van wervingskosten met 20% en een hogere consistentie in servicekwaliteit.",
-    quote: "EXTRA is meer dan een uitzendbureau; ze zijn een strategische partner in onze personeelsplanning.",
-    image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
+    id: "museums",
+    icon: Landmark,
+    label: "Musea & culturele locaties",
+    heading: "Wat culturele locaties over ons zeggen",
+    category: "museums" as const,
   },
 ];
 
 export default function KlantcasesHoreca() {
   return (
-    <div className="min-h-screen bg-[#0a0310] text-white">
-      <PublicNav forceDark />
-      
-      <main className="pt-24 pb-20">
-        <section className="relative py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-16"
-            >
-              <h1 className="text-4xl md:text-6xl font-bold font-poppins mb-6">
-                Wat onze klanten <span className="text-purple-400">zeggen</span>
+    <div className="min-h-screen bg-white text-gray-900">
+      <PublicNav forceDark={false} />
+
+      <main>
+        {/* Hero */}
+        <section className="relative py-32 lg:py-44 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a0a2e] via-[#170926] to-[#12071f]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_20%_80%,rgba(124,58,237,0.15),transparent)]" />
+          <XPatternBg count={3} opacity={0.1} color="rgba(168,85,247,0.6)" />
+          <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10 text-center">
+            <RevealSection>
+              <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-widest mb-6 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
+                Referenties
+              </span>
+              <h1
+                className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
+              >
+                Wat onze klanten{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                  zeggen
+                </span>
               </h1>
-              <p className="text-xl text-purple-200/70 max-w-3xl mx-auto">
-                Ontdek hoe wij horecaondernemers in Amsterdam helpen met flexibele personeelsoplossingen van topkwaliteit.
+              <p className="text-xl text-purple-100/70 max-w-2xl mx-auto leading-relaxed">
+                Ontdek hoe hotels, eventlocaties en culturele instellingen in Amsterdam samenwerken met EXTRA voor betrouwbaar hospitality personeel.
               </p>
-            </motion.div>
+            </RevealSection>
+          </div>
+        </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {cases.map((c, i) => (
-                <motion.div
-                  key={c.client}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: i * 0.1 }}
+        {/* Review sections per category */}
+        {sections.map((section, sIdx) => {
+          const reviews = getReviewsByCategory(section.category);
+          if (reviews.length === 0) return null;
+          const isLight = sIdx % 2 === 0;
+
+          return (
+            <section
+              key={section.id}
+              id={section.id}
+              className={`relative py-20 sm:py-28 lg:py-36 overflow-hidden ${isLight ? "" : ""}`}
+              style={{ backgroundColor: isLight ? "#fdf9f3" : "#ffffff" }}
+            >
+              {isLight && (
+                <XPatternBg count={3} opacity={0.06} color="rgba(139,92,246,1)" />
+              )}
+              <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+                <RevealSection>
+                  <div className="text-center mb-12 sm:mb-16">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs uppercase tracking-widest mb-4 bg-purple-100/60 px-4 py-2 rounded-full">
+                      <section.icon className="w-3.5 h-3.5" /> {section.label}
+                    </span>
+                    <h2
+                      className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900"
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                    >
+                      {section.heading}
+                    </h2>
+                  </div>
+                </RevealSection>
+
+                <div className={`grid gap-5 sm:gap-6 ${reviews.length === 1 ? "max-w-xl mx-auto" : reviews.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
+                  {reviews.map((review, i) => (
+                    <RevealSection key={review.id} delay={i * 100}>
+                      <ClientReviewCard review={review} variant="light" />
+                    </RevealSection>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        })}
+
+        {/* CTA */}
+        <section className="relative py-24 lg:py-36 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
+          <XPatternBg count={2} opacity={0.08} color="rgba(255,255,255,1)" />
+          <div className="max-w-3xl mx-auto px-5 text-center relative z-10">
+            <RevealSection>
+              <h2
+                className="text-3xl md:text-4xl font-black text-white mb-5"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
+              >
+                Ook extra personeel nodig?
+              </h2>
+              <p className="text-purple-200/80 text-lg mb-10 max-w-xl mx-auto">
+                Neem contact op en ontdek wat EXTRA voor jouw locatie kan betekenen.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Button
+                  asChild
+                  className="bg-white hover:bg-gray-100 text-purple-900 font-bold rounded-full px-10 py-5 text-base h-auto shadow-xl shadow-white/10 hover:-translate-y-1 transition-all"
                 >
-                  <Card className="bg-white/5 border-white/10 overflow-hidden h-full flex flex-col hover:border-purple-500/50 transition-colors">
-                    <div className="aspect-video relative overflow-hidden">
-                      <img 
-                        src={c.image} 
-                        alt={c.client} 
-                        className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0310] to-transparent opacity-60" />
-                      <div className="absolute bottom-4 left-4">
-                        <h3 className="text-xl font-bold text-white">{c.client}</h3>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 flex-1 flex flex-col text-white">
-                      <div className="space-y-4 flex-1">
-                        <div>
-                          <div className="flex items-center gap-2 text-purple-400 mb-1">
-                            <MessageSquare className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-wider">Probleem</span>
-                          </div>
-                          <p className="text-sm text-purple-100/80">{c.problem}</p>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 text-blue-400 mb-1">
-                            <TrendingUp className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-wider">Oplossing</span>
-                          </div>
-                          <p className="text-sm text-purple-100/80">{c.solution}</p>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 text-green-400 mb-1">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-wider">Resultaat</span>
-                          </div>
-                          <p className="text-sm text-purple-100/80">{c.result}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-8 pt-6 border-t border-white/10 italic text-sm text-purple-200/60">
-                        "{c.quote}"
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-20 text-center space-y-8">
-              <h2 className="text-3xl font-bold font-poppins">Ook extra personeel nodig?</h2>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-8">
-                  <Link href="/personeelsaanvraag">Personeel aanvragen</Link>
+                  <Link href="/personeelsaanvraag" className="flex items-center gap-2">
+                    Personeel aanvragen <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="border-purple-500 text-purple-400 hover:bg-purple-500/10 rounded-full px-8">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-white/25 text-white hover:bg-white/10 font-bold rounded-full px-10 py-5 text-base h-auto hover:-translate-y-1 transition-all"
+                >
                   <Link href="/horeca-uitzendbureau-amsterdam">Lees meer over ons</Link>
                 </Button>
               </div>
-              <div className="flex justify-center gap-8 pt-8 opacity-50 grayscale contrast-125">
-                <Link href="/horeca-personeel-inhuren" className="text-sm hover:text-purple-400 transition-colors">Horeca personeel inhuren</Link>
-                <Link href="/horeca-uitzendbureau-amsterdam" className="text-sm hover:text-purple-400 transition-colors">Uitzendbureau Amsterdam</Link>
-              </div>
-            </div>
+            </RevealSection>
           </div>
         </section>
       </main>
