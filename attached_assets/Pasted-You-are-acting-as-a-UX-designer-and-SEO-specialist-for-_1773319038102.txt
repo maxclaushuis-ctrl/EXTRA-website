@@ -1,0 +1,104 @@
+You are acting as a UX designer and SEO specialist for the EXTRA website.
+The main landing page for companies looking for hospitality staff has now been fully optimized:
+/horeca-personeel-gezocht
+Because this page now has the correct structure and UX flow, we want to optimize several related landing pages using the same layout structure.
+Pages to update
+Apply the same layout structure and UX flow to the following pages:
+/hotelpersoneel-inhuren
+/eventpersoneel-inhuren
+/cateringpersoneel-inhuren
+/horecapersoneel-restaurants
+Do not change these URLs.
+Only update the layout, structure and content within these pages.
+Goal
+Create a consistent landing page structure across all these pages while ensuring:
+• strong SEO relevance for each page
+• clear topical focus for Google and LLMs
+• consistent UX and design across the website
+Each page should clearly communicate the specific type of hospitality staffing it focuses on.
+Layout structure
+Use the same section structure and UX flow as the page:
+/horeca-personeel-gezocht
+This includes sections such as:
+• hero section
+• explanation of the selection process
+• data-driven selection section
+• favorite pool section
+• reviews / references
+• CTA sections
+Maintain the same section order and design rhythm so all pages feel like part of the same landing page system.
+Important SEO rule
+Although the layout should be identical, the text content must be adapted per page.
+Avoid duplicate content between these pages.
+Each page must clearly focus on its own topic.
+Examples:
+/hotelpersoneel-inhuren
+Focus on:
+• hotels
+• housekeeping teams
+• front office staff
+• hotel F&B operations
+/eventpersoneel-inhuren
+Focus on:
+• event locations
+• banqueting teams
+• event service staff
+• temporary teams for events
+/cateringpersoneel-inhuren
+Focus on:
+• cateraars
+• event catering teams
+• kitchen brigades
+• large production kitchens
+/horecapersoneel-restaurants
+Focus on:
+• restaurants
+• bediening
+• chefs
+• bar staff
+Reviews placement
+Place the reviews section higher on the page, similar to the optimized layout on /horeca-personeel-gezocht.
+Select reviews that match the industry type.
+Examples:
+Hotels → Amrath, Marriott, Radisson
+Event locations → Westweelde, Art Zoo
+Cultural venues → H’ART Museum
+Ensure reviews appear in the most relevant pages.
+Reuse sections from the werkwijze page
+Reuse the strong sections from:
+/horeca-uitzendbureau-amsterdam-werkwijze
+Examples include:
+• persoonlijke selectie
+• slimme selectie met data
+• vaste favorietenpoule
+These sections should be reused because they visually match the website design system.
+However:
+Do not copy the text exactly.
+Rewrite parts slightly so the content fits the specific page topic.
+Design consistency
+Ensure all pages follow the same design language used on:
+/landing
+/horeca-vacatures-amsterdam
+/horeca-personeel-gezocht
+Maintain consistent:
+• spacing
+• typography hierarchy
+• card styles
+• icon usage
+• section layout
+• CTA styling
+The pages should feel like part of one coherent landing page system.
+Internal linking
+Ensure the pages internally link to:
+/horeca-personeel-gezocht
+and where relevant also link between the related pages.
+Example:
+hotel page → link to catering or event staffing pages where relevant.
+This helps search engines understand the topic cluster structure.
+Expected result
+Each page should:
+• follow the same UX structure as /horeca-personeel-gezocht
+• contain slightly adapted text to avoid duplicate content
+• show relevant reviews higher on the page
+• reuse the strongest sections from /horeca-uitzendbureau-amsterdam-werkwijze
+The pages should feel like a unified landing page system, but each page should still clearly target its own hospitality niche.

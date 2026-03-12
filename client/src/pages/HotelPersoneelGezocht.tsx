@@ -20,10 +20,10 @@ import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoNH from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
-import screenDashboard from "@assets/IMG_8803_1770915286475.png";
-import screenRewards from "@assets/IMG_8805_1770915286475.png";
-import screenChallenges from "@assets/IMG_8807_1770915286475.png";
-import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
+import screenDashboard from "@assets/IMG_9066_1773314165933.png";
+import screenRewards from "@assets/IMG_9067_1773314165933.png";
+import screenUitdagingen from "@assets/IMG_9071_1773316943369.png";
+import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -99,8 +99,8 @@ function GrainOverlay() {
 
 const appScreens = [
   { key: "dashboard", img: screenDashboard, label: "Dashboard" },
-  { key: "rewards", img: screenRewards, label: "Rewards" },
-  { key: "challenges", img: screenChallenges, label: "Challenges" },
+  { key: "beloningen", img: screenRewards, label: "Beloningen" },
+  { key: "uitdagingen", img: screenUitdagingen, label: "Uitdagingen" },
   { key: "ranglijst", img: screenRanglijst, label: "Ranglijst" },
 ];
 
