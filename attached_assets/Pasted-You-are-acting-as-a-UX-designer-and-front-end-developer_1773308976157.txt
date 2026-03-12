@@ -1,0 +1,72 @@
+You are acting as a UX designer and front-end developer for the EXTRA website.
+We need to redesign two sections on the page:
+/horeca-uitzendbureau-amsterdam-werkwijze
+The sections currently shown in the attached screenshots do not match the design system used across the rest of the website.
+Both sections use a dark background and colored logo styling that visually conflicts with the rest of the site.
+Goal
+Update the layout and styling of these two sections so they fully match the existing EXTRA website design system.
+Use the following pages as the primary design reference:
+/landing
+/horeca-vacatures-amsterdam
+These pages define the correct:
+• layout structure
+• spacing system
+• typography hierarchy
+• color usage
+• button styling
+• section composition
+• background treatment
+Problem with the current sections
+The current sections feel visually inconsistent because:
+• they use dark background blocks that are not used elsewhere
+• the colored logo element breaks the design language
+• spacing and alignment differ from other pages
+• the sections feel like separate components instead of part of the same system
+As a result, the page does not feel visually consistent with the rest of the site.
+What needs to change
+Redesign the two sections so they match the design patterns used on /landing and /horeca-vacatures-amsterdam.
+1 Background styling
+Remove the heavy dark background blocks.
+Replace them with the same background treatment used on the other pages, such as:
+• light sections
+• subtle gradient backgrounds
+• decorative shapes (like the X elements used on other pages)
+The section must visually integrate with the surrounding content.
+2 Typography hierarchy
+Ensure headings follow the same typography system used across the website.
+Use consistent:
+• heading sizes
+• paragraph spacing
+• line height
+• text alignment
+3 CTA buttons
+Ensure the buttons follow the same styling used across the website.
+Use:
+Primary button
+Personeel aanvragen
+Secondary button
+Solliciteren
+Buttons should match the styling used on /landing.
+4 Layout alignment
+Improve the layout so the content follows the same structure as other pages:
+• consistent content width
+• proper spacing between sections
+• balanced layout between text and visuals
+The section should feel calmer and more structured.
+5 Visual consistency
+Ensure the section uses the same design language as the rest of the site:
+• same border radius
+• same shadow usage
+• same spacing system
+• same badge styling
+Avoid introducing new styles.
+6 Image / illustration placement
+If images or UI mockups are used (such as the tablet interface in the hero), ensure they are aligned and scaled similarly to visuals used on the reference pages.
+Important
+Do not change the content or text of the sections.
+Only update the layout, styling and structure to align with the design system used on:
+/landing
+/horeca-vacatures-amsterdam
+Expected result
+The two sections should feel like a natural part of the website, rather than standalone blocks with a different style.
+When viewing the page, it should feel visually consistent with the rest of the EXTRA website.

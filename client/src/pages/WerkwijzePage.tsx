@@ -144,9 +144,9 @@ export default function WerkwijzePage() {
 
       <main>
         {/* ① HERO — dark purple, same as LandingPage */}
-        <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden" style={{ backgroundColor: "#0a0310" }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-[#0a0310] to-[#0a0310]" />
-          <XPatternBg count={3} opacity={0.09} color="rgba(168,85,247,0.5)" />
+        <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-to-br from-[#1a0a2e] via-[#170926] to-[#12071f]">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/15 via-transparent to-fuchsia-600/10 pointer-events-none" />
+          <XPatternBg count={3} opacity={0.09} color="rgba(255,255,255,0.9)" />
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <RevealSection>
@@ -157,20 +157,25 @@ export default function WerkwijzePage() {
                     <li className="text-white font-medium">Werkwijze</li>
                   </ol>
                 </nav>
-                <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-widest mb-6 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
+                <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
                   <Zap className="w-4 h-4" /> Horeca Uitzendbureau Amsterdam
                 </span>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Hoe <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">EXTRA</span> werkt
+                  Hoe{" "}
+                  <span className="relative inline-block">
+                    <span className="relative z-10">EXTRA</span>
+                    <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+                  </span>{" "}
+                  werkt
                 </h1>
                 <p className="text-lg sm:text-xl text-purple-100/70 mb-10 leading-relaxed max-w-lg">
                   Het horeca uitzendbureau in Amsterdam voor hotels, evenementen en hospitality. Van eerste aanvraag tot een vaste favorietenpoule.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Link href="/personeelsaanvraag" className="group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/25 hover:scale-105">
+                  <Link href="/personeelsaanvraag" className="group inline-flex items-center gap-2.5 bg-white text-purple-900 font-bold text-base sm:text-lg px-7 py-4 rounded-full transition-all duration-300 shadow-xl shadow-white/10 hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5">
                     Personeel aanvragen <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
-                  <Link href="/aanmelden" className="inline-flex items-center gap-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full border border-white/20 transition-all">
+                  <Link href="/aanmelden" className="inline-flex items-center gap-2.5 border-2 border-white/25 text-white font-bold text-base sm:text-lg px-7 py-4 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all">
                     Solliciteren
                   </Link>
                 </div>
@@ -503,26 +508,30 @@ export default function WerkwijzePage() {
           </div>
         </section>
 
-        {/* ⑪ CTA — dark purple, same as LandingPage hero */}
-        <section className="relative py-24 sm:py-32 overflow-hidden" style={{ backgroundColor: "#0a0310" }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-transparent" />
-          <XPatternBg count={2} opacity={0.07} color="rgba(168,85,247,0.5)" />
+        {/* ⑪ CTA — dark purple gradient matching LandingPage/OnsTeam CTA */}
+        <section className="relative py-24 sm:py-32 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950" />
+          <XPatternBg count={2} opacity={0.08} color="rgba(255,255,255,0.9)" />
           <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center relative z-10">
             <RevealSection>
-              <span className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-widest mb-6 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
+              <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
                 <Users className="w-4 h-4" /> Klaar om te starten?
               </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Personeel nodig?
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Personeel{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10">nodig?</span>
+                  <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+                </span>
               </h2>
-              <p className="text-lg sm:text-xl text-purple-100/65 mb-10 leading-relaxed">
+              <p className="text-lg sm:text-xl text-purple-200 mb-10 leading-relaxed max-w-xl mx-auto">
                 Vraag vandaag nog flexibel horecapersoneel aan voor hotels en evenementen in Amsterdam.
               </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link href="/personeelsaanvraag" className="group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-base sm:text-lg px-8 py-4 rounded-full transition-all duration-300 shadow-xl shadow-purple-600/25 hover:scale-105">
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-5">
+                <Link href="/personeelsaanvraag" className="group inline-flex items-center justify-center gap-2.5 bg-white text-purple-900 font-bold text-base px-8 py-4 rounded-full transition-all hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5">
                   Personeel aanvragen <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <Link href="/aanmelden" className="inline-flex items-center gap-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-base sm:text-lg px-8 py-4 rounded-full border border-white/20 transition-all hover:scale-105">
+                <Link href="/aanmelden" className="inline-flex items-center justify-center gap-2.5 border-2 border-white/25 text-white font-bold text-base px-8 py-4 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all">
                   Solliciteren
                 </Link>
               </div>
