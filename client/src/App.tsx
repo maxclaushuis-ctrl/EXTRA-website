@@ -46,6 +46,7 @@ const FlexibelHorecaPersoneel = lazy(() => import("@/pages/FlexibelHorecaPersone
 const WerkwijzePage = lazy(() => import("@/pages/WerkwijzePage"));
 
 const KlantcasesHoreca = lazy(() => import("@/pages/KlantcasesHoreca"));
+const BHGGroupPage = lazy(() => import("@/pages/BHGGroupPage"));
 const Contact = lazy(() => import("@/pages/Contact"));
 
 const UserProfile = lazy(() => import("@/pages/user/Profile"));
@@ -177,6 +178,7 @@ function Router() {
           <Route path="/ons-team" component={OnsTeam} />
           <Route path="/beloningssysteem" component={Extraatje} />
           <Route path="/klantcases-horeca" component={KlantcasesHoreca} />
+          <Route path="/BHG-group" component={BHGGroupPage} />
 
           {/* Overige publieke routes */}
           <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />

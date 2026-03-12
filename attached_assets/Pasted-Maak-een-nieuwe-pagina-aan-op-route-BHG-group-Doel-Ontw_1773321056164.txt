@@ -1,0 +1,102 @@
+Maak een nieuwe pagina aan op route: /BHG-group
+
+Doel:
+Ontwikkel een conversiegerichte, visueel sterke brochurepagina voor BHG Group in exact dezelfde huisstijl, tone of voice en visuele lijn als de bestaande website van EXTRA. Gebruik daarbij vooral /landing en /horeca-personeel-gezocht als referentie voor structuur, design, spacing, kleurgebruik, typografie, componenten en uitstraling.
+
+Belangrijke context:
+BHG Group bestaat uit meerdere hotelbrands. Deze brochure moet daarom volledig gericht zijn op de hotellerie. De inhoud moet aansluiten op de belangrijkste uitdagingen van hotelgroepen en hotelmanagers, zoals:
+- langdurig ziekteverzuim
+- no-shows en last minute uitval
+- moeite met het vinden van betrouwbaar personeel
+- behoefte aan continuïteit op locatie
+- operationele druk op managers
+- behoefte aan een partner die niet alleen personeel levert, maar ook rust en structuur brengt
+
+Doel van de pagina:
+De pagina moet voelen als een gepersonaliseerde brochure voor BHG Group en duidelijk maken waarom EXTRA een sterke strategische partner is voor hotels. De focus moet liggen op kwaliteit, continuïteit, betrouwbaarheid, schaalbaarheid en operationele ontzorging.
+
+Designrichtlijnen:
+- Houd de styling 1-op-1 in lijn met de bestaande EXTRA-website
+- Gebruik dezelfde fonts, kleuren, buttons, cards, iconstijl, spacing en section-opbouw als op /landing en /horeca-personeel-gezocht
+- Het moet premium, overzichtelijk, modern en hospitality-gericht aanvoelen
+- Geen generieke corporate brochure-look, maar echt een sterke landingspagina/brochure-hybride
+- Mobile-first en responsive uitwerken
+- Zorg voor duidelijke visuele hiërarchie en logische flow
+- Verwerk subtiele animaties of hover-effecten als dat al past binnen de bestaande site
+
+Verplichte onderdelen/secties:
+Deze onderdelen moeten in ieder geval terugkomen, maar jij bepaalt als expert de beste volgorde en presentatie:
+
+1. Hero sectie
+- Gericht op hotels / hotelgroepen
+- Duidelijke headline die inspeelt op betrouwbare hotelmedewerkers en minder operationele druk
+- Korte subheadline
+- CTA richting contact / kennismaking
+
+2. Waarom hotels voor EXTRA kiezen
+- Focus op de kernvoordelen voor hotels
+- Bijvoorbeeld: minder no-shows, stabielere teams, sneller opschalen, minder druk op operatie, meer grip op kwaliteit
+
+3. Extraatje beloningssysteem
+- Dit moet een prominente sectie zijn
+- Leg helder uit hoe het systeem werkt
+- Laat zien dat medewerkers punten/reputatie opbouwen door goed gedrag, op tijd komen, kwaliteit leveren en vaker op dezelfde locatie te werken
+- Benadruk dat dit leidt tot motivatie, continuïteit, hogere betrouwbaarheid en meer binding met het hotel
+- Maak deze sectie visueel sterk, eventueel met stappen, iconen of een kleine flow
+
+4. Selectieproces
+- Leg uit hoe EXTRA medewerkers selecteert
+- Focus op betrouwbaarheid, representativiteit, hospitality-gevoel en kwaliteit
+- Laat zien dat selectie aan de voorkant zorgt voor minder uitval en betere matches
+
+5. Favorietenpoule
+- Leg uit hoe hotels kunnen werken met een voorkeurs- of favorietenpoule
+- Benadruk dat terugkerende gezichten zorgen voor rust, kwaliteit en snellere inwerktijd
+- Maak duidelijk dat dit vooral voor hotels veel waarde heeft
+
+6. Data & technologie
+- Laat zien hoe EXTRA technologie inzet om kwaliteit, matching, planning en continuïteit te verbeteren
+- Houd dit concreet en niet te technisch
+- Focus op voordelen voor hotelmanagers en operatie
+
+7. Functies voor hotels
+- Overzicht van relevante functies, bijvoorbeeld:
+  - Front office medewerkers
+  - Housekeeping
+  - Ontbijtmedewerkers
+  - F&B / bediening
+  - Hosts / hostesses
+  - Event support binnen hotels
+- Presenteer dit overzichtelijk en visueel aantrekkelijk
+
+8. Wat hotelmanagers over ons zeggen
+- Reviewsectie met testimonials van hotelklanten
+- Gebruik echte reviews van hotels indien beschikbaar
+- Deze sectie moet vertrouwen opbouwen en hospitality-specifiek aanvoelen
+
+Aanvullende instructie:
+Bepaal zelf de beste flow van de brochure. Denk dus niet alleen uitvoerend, maar ook strategisch. Voeg gerust extra secties toe als dat de pagina sterker maakt, zoals:
+- een sectie over operationele ontzorging
+- een sectie over schaalbaarheid voor meerdere hotel-locaties
+- een CTA-blok aan het einde
+- een korte “hoe samenwerking eruitziet”-sectie
+
+Belangrijk:
+- De pagina moet niet aanvoelen als een algemene EXTRA-pagina, maar als een brochure op maat voor BHG Group
+- Schrijf copy die duidelijk hospitality-gericht is
+- De tone of voice moet menselijk, slim, professioneel en commercieel sterk zijn
+- Geen clichés of te algemene marketingtaal
+- Alles moet direct relevant voelen voor hotelmanagement
+
+Technische opdracht:
+- Maak de pagina aan op /BHG-group
+- Gebruik dezelfde componentstructuur en styling-aanpak als de bestaande site
+- Hergebruik waar mogelijk bestaande UI-componenten uit de website zodat de pagina naadloos aansluit op de rest van het platform
+
+Output:
+Lever de volledige pagina op, inclusief:
+- structuur
+- copy
+- componentindeling
+- styling in bestaande huisstijl
+- responsive opbouw
