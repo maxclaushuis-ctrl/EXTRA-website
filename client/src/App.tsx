@@ -49,6 +49,12 @@ const KlantcasesHoreca = lazy(() => import("@/pages/KlantcasesHoreca"));
 const BHGGroupPage = lazy(() => import("@/pages/BHGGroupPage"));
 const Contact = lazy(() => import("@/pages/Contact"));
 
+const HospitalityStaffAmsterdam = lazy(() => import("@/pages/en/HospitalityStaffAmsterdam"));
+const HotelStaffingAmsterdam = lazy(() => import("@/pages/en/HotelStaffingAmsterdam"));
+const EventStaffAmsterdam = lazy(() => import("@/pages/en/EventStaffAmsterdam"));
+const CateringStaffAmsterdam = lazy(() => import("@/pages/en/CateringStaffAmsterdam"));
+const RestaurantStaffAmsterdam = lazy(() => import("@/pages/en/RestaurantStaffAmsterdam"));
+
 const UserProfile = lazy(() => import("@/pages/user/Profile"));
 const Rewards = lazy(() => import("@/pages/user/Rewards"));
 const RewardDetail = lazy(() => import("@/pages/employee/RewardDetail"));
@@ -96,6 +102,8 @@ const PUBLIC_PATHS = [
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
   '/klantcases-horeca', '/contact',
   '/vacatures',
+  '/en/hospitality-staff-amsterdam', '/en/hotel-staffing-amsterdam',
+  '/en/event-staff-amsterdam', '/en/catering-staff-amsterdam', '/en/restaurant-staff-amsterdam',
 ];
 
 function PageLoader() {
@@ -164,6 +172,13 @@ function Router() {
           <Route path="/horeca-personeel-amsterdam" component={HorecaPersoneelAmsterdamPage} />
           <Route path="/horeca-personeel" component={HorecaPersoneelPage} />
           <Route path="/flexibel-horeca-personeel" component={FlexibelHorecaPersoneel} />
+
+          {/* English employer pages */}
+          <Route path="/en/hospitality-staff-amsterdam" component={HospitalityStaffAmsterdam} />
+          <Route path="/en/hotel-staffing-amsterdam" component={HotelStaffingAmsterdam} />
+          <Route path="/en/event-staff-amsterdam" component={EventStaffAmsterdam} />
+          <Route path="/en/catering-staff-amsterdam" component={CateringStaffAmsterdam} />
+          <Route path="/en/restaurant-staff-amsterdam" component={RestaurantStaffAmsterdam} />
 
           {/* Blog */}
           <Route path="/blog" component={NieuwsPage} />

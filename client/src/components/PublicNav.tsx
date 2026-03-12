@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   Menu, X, ChevronDown, Phone, Briefcase, UserCheck, Star,
   Hotel, PartyPopper, UtensilsCrossed, Wine, Heart, Award, Handshake,
-  Clock, Trophy, Gift, Users
+  Clock, Trophy, Gift, Users, Globe
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 
@@ -11,12 +11,38 @@ interface PublicNavProps {
   forceDark?: boolean;
 }
 
+const LANG_MAP: Record<string, string> = {
+  "/horeca-personeel-gezocht": "/en/hospitality-staff-amsterdam",
+  "/hotelpersoneel-inhuren": "/en/hotel-staffing-amsterdam",
+  "/eventpersoneel-inhuren": "/en/event-staff-amsterdam",
+  "/cateringpersoneel-inhuren": "/en/catering-staff-amsterdam",
+  "/horecapersoneel-restaurants": "/en/restaurant-staff-amsterdam",
+  "/en/hospitality-staff-amsterdam": "/horeca-personeel-gezocht",
+  "/en/hotel-staffing-amsterdam": "/hotelpersoneel-inhuren",
+  "/en/event-staff-amsterdam": "/eventpersoneel-inhuren",
+  "/en/catering-staff-amsterdam": "/cateringpersoneel-inhuren",
+  "/en/restaurant-staff-amsterdam": "/horecapersoneel-restaurants",
+};
+
+const EN_PATHS = [
+  "/en/hospitality-staff-amsterdam",
+  "/en/hotel-staffing-amsterdam",
+  "/en/event-staff-amsterdam",
+  "/en/catering-staff-amsterdam",
+  "/en/restaurant-staff-amsterdam",
+];
+
 export default function PublicNav({ forceDark = false }: PublicNavProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [langOpen, setLangOpen] = useState(false);
   const [location] = useLocation();
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const langTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isEnglish = EN_PATHS.includes(location);
+  const altPath = LANG_MAP[location];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
@@ -27,6 +53,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
   useEffect(() => {
     setMobileOpen(false);
     setActiveDropdown(null);
+    setLangOpen(false);
   }, [location]);
 
   const isDark = scrolled || forceDark || mobileOpen;
@@ -40,44 +67,71 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
     setActiveDropdown(key);
   };
 
-  const navGroups = [
-    {
-      key: "personeel",
-      label: "Ik zoek extra personeel",
-      icon: Briefcase,
-      href: "/personeel-gezocht",
-      items: [
-        { label: "Hotels", href: "/hotelpersoneel-inhuren", icon: Hotel },
-        { label: "Eventlocaties", href: "/eventpersoneel-inhuren", icon: PartyPopper },
-        { label: "Cateraars", href: "/cateringpersoneel-inhuren", icon: UtensilsCrossed },
-        { label: "Restaurants", href: "/horecapersoneel-restaurants", icon: UtensilsCrossed },
-      ],
-    },
-    {
-      key: "werk",
-      label: "Ik zoek extra werk",
-      icon: UserCheck,
-      href: "/horeca-vacatures-amsterdam",
-      items: [
-        { label: "Horeca", href: "/horeca-werk", icon: UtensilsCrossed },
-        { label: "Housekeeping", href: "/housekeeping-werk", icon: Heart },
-        { label: "Chefs", href: "/chef-vacatures-amsterdam", icon: Award },
-        { label: "Front-office", href: "/front-office-vacatures-amsterdam", icon: Handshake },
-      ],
-    },
-    {
-      key: "over",
-      label: "Over EXTRA",
-      icon: Star,
-      href: "/over-extra",
-      items: [
-        { label: "Onze werkwijze", href: "/horeca-uitzendbureau-amsterdam-werkwijze", icon: Clock },
-        { label: "Klantcases", href: "/klantcases-horeca", icon: Trophy },
-        { label: "Beloningssysteem", href: "/beloningssysteem", icon: Gift },
-        { label: "Ons team", href: "/ons-team", icon: Users },
-      ],
-    },
-  ];
+  const handleLangMouseEnter = () => {
+    if (langTimeout.current) clearTimeout(langTimeout.current);
+    setLangOpen(true);
+  };
+
+  const handleLangMouseLeave = () => {
+    langTimeout.current = setTimeout(() => setLangOpen(false), 200);
+  };
+
+  const navGroups = isEnglish
+    ? [
+        {
+          key: "staff",
+          label: "Hire hospitality staff",
+          icon: Briefcase,
+          href: "/en/hospitality-staff-amsterdam",
+          items: [
+            { label: "Hotels", href: "/en/hotel-staffing-amsterdam", icon: Hotel },
+            { label: "Events", href: "/en/event-staff-amsterdam", icon: PartyPopper },
+            { label: "Catering", href: "/en/catering-staff-amsterdam", icon: UtensilsCrossed },
+            { label: "Restaurants", href: "/en/restaurant-staff-amsterdam", icon: UtensilsCrossed },
+          ],
+        },
+      ]
+    : [
+        {
+          key: "personeel",
+          label: "Ik zoek extra personeel",
+          icon: Briefcase,
+          href: "/personeel-gezocht",
+          items: [
+            { label: "Hotels", href: "/hotelpersoneel-inhuren", icon: Hotel },
+            { label: "Eventlocaties", href: "/eventpersoneel-inhuren", icon: PartyPopper },
+            { label: "Cateraars", href: "/cateringpersoneel-inhuren", icon: UtensilsCrossed },
+            { label: "Restaurants", href: "/horecapersoneel-restaurants", icon: UtensilsCrossed },
+          ],
+        },
+        {
+          key: "werk",
+          label: "Ik zoek extra werk",
+          icon: UserCheck,
+          href: "/horeca-vacatures-amsterdam",
+          items: [
+            { label: "Horeca", href: "/horeca-werk", icon: UtensilsCrossed },
+            { label: "Housekeeping", href: "/housekeeping-werk", icon: Heart },
+            { label: "Chefs", href: "/chef-vacatures-amsterdam", icon: Award },
+            { label: "Front-office", href: "/front-office-vacatures-amsterdam", icon: Handshake },
+          ],
+        },
+        {
+          key: "over",
+          label: "Over EXTRA",
+          icon: Star,
+          href: "/over-extra",
+          items: [
+            { label: "Onze werkwijze", href: "/horeca-uitzendbureau-amsterdam-werkwijze", icon: Clock },
+            { label: "Klantcases", href: "/klantcases-horeca", icon: Trophy },
+            { label: "Beloningssysteem", href: "/beloningssysteem", icon: Gift },
+            { label: "Ons team", href: "/ons-team", icon: Users },
+          ],
+        },
+      ];
+
+  const ctaLabel = isEnglish ? "Request staff" : "Personeel aanvragen";
+  const ctaHref = "/personeelsaanvraag";
 
   return (
     <nav
@@ -91,7 +145,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <Link href="/landing">
+          <Link href={isEnglish ? "/en/hospitality-staff-amsterdam" : "/landing"}>
             <img
               src={extraLogoWit}
               alt="EXTRA"
@@ -156,10 +210,67 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
             ))}
           </div>
 
-          {/* CTA right */}
-          <div className="hidden lg:block">
+          {/* Right side: lang switcher + CTA */}
+          <div className="hidden lg:flex items-center gap-3">
+
+            {/* Language switcher */}
+            <div
+              className="relative"
+              onMouseEnter={handleLangMouseEnter}
+              onMouseLeave={handleLangMouseLeave}
+            >
+              <button
+                className={`flex items-center gap-1.5 text-[13px] xl:text-[14px] font-bold px-3 xl:px-4 py-2 rounded-lg transition-all duration-200 ${
+                  isDark
+                    ? "text-gray-700 hover:text-purple-700 hover:bg-purple-50/60"
+                    : "text-white hover:bg-white/15"
+                }`}
+                aria-label="Switch language"
+              >
+                <Globe className="w-4 h-4 opacity-80" />
+                <span>{isEnglish ? "EN" : "NL"}</span>
+                <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${langOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <div
+                className={`absolute top-full right-0 pt-2 transition-all duration-200 ${
+                  langOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+                }`}
+              >
+                <div className="bg-white rounded-2xl shadow-2xl shadow-purple-500/15 border border-purple-100/60 p-2 min-w-[160px]">
+                  <Link
+                    href={isEnglish ? (altPath || "/horeca-personeel-gezocht") : location}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      !isEnglish ? "bg-purple-50 text-purple-700" : "text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                    }`}
+                  >
+                    <span className="text-xl">🇳🇱</span>
+                    <div>
+                      <div className="text-[14px] font-bold">Nederlands</div>
+                      <div className="text-[11px] text-gray-400">NL</div>
+                    </div>
+                    {!isEnglish && <div className="ml-auto w-2 h-2 bg-purple-600 rounded-full" />}
+                  </Link>
+                  <Link
+                    href={isEnglish ? location : (altPath || "/en/hospitality-staff-amsterdam")}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      isEnglish ? "bg-purple-50 text-purple-700" : "text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                    }`}
+                  >
+                    <span className="text-xl">🇬🇧</span>
+                    <div>
+                      <div className="text-[14px] font-bold">English</div>
+                      <div className="text-[11px] text-gray-400">EN</div>
+                    </div>
+                    {isEnglish && <div className="ml-auto w-2 h-2 bg-purple-600 rounded-full" />}
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA */}
             <Link
-              href="/personeelsaanvraag"
+              href={ctaHref}
               className={`inline-flex items-center gap-2 xl:gap-2.5 text-[13px] xl:text-[16px] font-black px-5 xl:px-8 py-2.5 xl:py-3.5 rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl whitespace-nowrap ${
                 isDark
                   ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30"
@@ -167,7 +278,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
               }`}
             >
               <Phone className="w-4 h-4 xl:w-[18px] xl:h-[18px]" />
-              Personeel aanvragen
+              {ctaLabel}
             </Link>
           </div>
 
@@ -228,13 +339,37 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                 )}
               </div>
             ))}
+
+            {/* Mobile language switcher */}
+            <div className="border-t border-gray-100 pt-3 pb-1">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Language</p>
+              <div className="flex gap-2 px-4">
+                <Link
+                  href={isEnglish ? (altPath || "/horeca-personeel-gezocht") : location}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center ${
+                    !isEnglish ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                  }`}
+                >
+                  🇳🇱 Nederlands
+                </Link>
+                <Link
+                  href={isEnglish ? location : (altPath || "/en/hospitality-staff-amsterdam")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center ${
+                    isEnglish ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                  }`}
+                >
+                  🇬🇧 English
+                </Link>
+              </div>
+            </div>
+
             <div className="pt-3 border-t border-gray-100">
               <Link
-                href="/personeelsaanvraag"
+                href={ctaHref}
                 className="flex items-center justify-center gap-2.5 w-full py-4 text-base font-black text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-full shadow-md hover:from-purple-700 hover:to-purple-800 transition-all"
               >
                 <Phone className="w-[18px] h-[18px]" />
-                Personeel aanvragen
+                {ctaLabel}
               </Link>
             </div>
           </div>
