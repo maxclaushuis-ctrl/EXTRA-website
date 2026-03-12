@@ -351,7 +351,61 @@ export default function HotelPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 4. HOE WIJ HOTELPERSONEEL SELECTEREN               */}
+      {/* 4. LOGO'S VAN HOTELKLANTEN                         */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
+              Vertrouwd door toonaangevende hotelketens in Amsterdam
+            </p>
+          </RevealSection>
+          <RevealSection delay={100}>
+            <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 lg:gap-20">
+              {[
+                { src: logoMarriott, alt: "Marriott Hotels" },
+                { src: logoHilton, alt: "Hilton Hotels" },
+                { src: logoAmrath, alt: "Amrâth Hotels" },
+                { src: logoNH, alt: "NH Hotels" },
+              ].map((logo, i) => (
+                <div key={i} className="hover:scale-105 transition-transform duration-300">
+                  <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5. KLANTCASE HOTEL                                 */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="klantcase" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
+                <MessageCircle className="w-4 h-4" /> Referenties
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Wat hotels over ons zeggen
+              </h2>
+            </div>
+          </RevealSection>
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+            {getReviewsByCategory("hotels").map((review, i) => (
+              <RevealSection key={review.id} delay={i * 100}>
+                <ClientReviewCard review={review} variant="light" />
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 6. HOE WIJ HOTELPERSONEEL SELECTEREN               */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="selectie" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
@@ -404,7 +458,7 @@ export default function HotelPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 5. CONTINUE KWALITEITSMETING                       */}
+      {/* 7. CONTINUE KWALITEITSMETING                       */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="kwaliteit" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-white">
         <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
@@ -479,7 +533,7 @@ export default function HotelPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 6. FAVORIETENPOULES VOOR HOTELS                    */}
+      {/* 8. FAVORIETENPOULES VOOR HOTELS                    */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="favorietenpoule" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
         <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
@@ -539,7 +593,7 @@ export default function HotelPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 7. EXTRAATJE BELONINGSSYSTEEM                      */}
+      {/* 9. EXTRAATJE BELONINGSSYSTEEM                      */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="extraatje" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
@@ -618,59 +672,6 @@ export default function HotelPersoneelGezocht() {
               </div>
             </div>
           </RevealSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* 8. LOGO'S VAN HOTELKLANTEN                         */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection>
-            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
-              Vertrouwd door toonaangevende hotelketens in Amsterdam
-            </p>
-          </RevealSection>
-          <RevealSection delay={100}>
-            <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 lg:gap-20">
-              {[
-                { src: logoMarriott, alt: "Marriott Hotels" },
-                { src: logoHilton, alt: "Hilton Hotels" },
-                { src: logoAmrath, alt: "Amrâth Hotels" },
-                { src: logoNH, alt: "NH Hotels" },
-              ].map((logo, i) => (
-                <div key={i} className="hover:scale-105 transition-transform duration-300">
-                  <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
-                </div>
-              ))}
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* 9. KLANTCASE HOTEL                                 */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <section id="klantcase" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
-        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-10 sm:mb-16">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
-                <MessageCircle className="w-4 h-4" /> Referenties
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Wat hotels over ons zeggen
-              </h2>
-            </div>
-          </RevealSection>
-          <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-            {getReviewsByCategory("hotels").map((review, i) => (
-              <RevealSection key={review.id} delay={i * 100}>
-                <ClientReviewCard review={review} variant="light" />
-              </RevealSection>
-            ))}
-          </div>
         </div>
       </section>
 

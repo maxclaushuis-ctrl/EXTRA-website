@@ -419,7 +419,106 @@ export default function CateringPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 4. ZO SELECTEERT EXTRA DE JUISTE MENSEN            */}
+      {/* 4. LOGO'S VAN CATERINGKLANTEN                      */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
+              Vertrouwd door cateraars en cateringopdrachtgevers
+            </p>
+          </RevealSection>
+          <RevealSection delay={100}>
+            <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 lg:gap-20">
+              {[
+                { src: logoSelectCatering, alt: "Select Catering" },
+                { src: logoAppel, alt: "Appèl" },
+                { src: logoHetePeper, alt: "Hete Peper" },
+                { src: logoFunda, alt: "Funda" },
+              ].map((logo, i) => (
+                <div key={i} className="hover:scale-105 transition-transform duration-300">
+                  <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5. KLANTCASE CATERING                              */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="klantcase" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
+                <MessageCircle className="w-4 h-4" /> Klantcases
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Hoe cateraars EXTRA ervaren
+              </h2>
+            </div>
+          </RevealSection>
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+            {[
+              {
+                company: "Select Catering",
+                quote: "EXTRA levert altijd betrouwbaar personeel voor onze cateringopdrachten. Ze zijn gewend aan wisselende locaties, snel inzetbaar en begrijpen het tempo van een grote dienst.",
+                name: "Mark de Vries",
+                role: "Operations Manager",
+                results: ["Vaste bedieningspoule opgebouwd in 2 maanden", "Consistent hoge kwaliteit over 50+ events"],
+              },
+              {
+                company: "Hete Peper",
+                quote: "Bij grote cateringevents schalen we snel op. EXTRA begrijpt dat: ze leveren op korte termijn ervaren personeel dat direct inzetbaar is en past binnen onze werkwijze.",
+                name: "Lisa Jansen",
+                role: "Event Manager",
+                results: ["Snel opgeschaald voor events tot 300 gasten", "Dezelfde gezichten bij terugkerende events"],
+              },
+              {
+                company: "Appèl Amsterdam",
+                quote: "De medewerkers van EXTRA kennen het vak. Ze zijn representatief, servicegericht en weten wat ze doen. Dat merk je direct aan de kwaliteit van de service bij onze gasten.",
+                name: "Sophie de Vries",
+                role: "Operationeel Manager",
+                results: ["Vaste cateringpoule voor weekenddiensten", "20% minder no-shows ten opzichte van voorheen"],
+              },
+            ].map((item, i) => (
+              <RevealSection key={i} delay={i * 100}>
+                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-xl transition-all duration-300 h-full shadow-sm flex flex-col">
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Utensils className="w-4 h-4 text-purple-500" />
+                    <span className="font-bold text-purple-700 text-sm">{item.company}</span>
+                  </div>
+                  <p className="text-gray-600 italic text-sm sm:text-base leading-relaxed mb-6 flex-1">"{item.quote}"</p>
+                  <div className="border-t border-gray-100 pt-4 mb-4">
+                    <p className="font-bold text-gray-900 text-sm">{item.name}</p>
+                    <p className="text-gray-400 text-xs">{item.role}</p>
+                  </div>
+                  <div className="space-y-2">
+                    {item.results.map((r, j) => (
+                      <div key={j} className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                        <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                        {r}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 6. ZO SELECTEERT EXTRA DE JUISTE MENSEN            */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="selectie" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#f3f0fa" }}>
         <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
@@ -504,7 +603,7 @@ export default function CateringPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 5. CONTINUE KWALITEITSMETING                       */}
+      {/* 7. CONTINUE KWALITEITSMETING                       */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="kwaliteit" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-white">
         <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
@@ -579,7 +678,7 @@ export default function CateringPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 6. FAVORIETENPOULES VOOR CATERAARS                 */}
+      {/* 8. FAVORIETENPOULES VOOR CATERAARS                 */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="favorietenpoule" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
         <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
@@ -639,7 +738,7 @@ export default function CateringPersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 7. EXTRAATJE BELONINGSSYSTEEM                      */}
+      {/* 9. EXTRAATJE BELONINGSSYSTEEM                      */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="extraatje" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
@@ -718,104 +817,6 @@ export default function CateringPersoneelGezocht() {
               </div>
             </div>
           </RevealSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* 8. LOGO'S VAN CATERINGKLANTEN                      */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection>
-            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
-              Vertrouwd door cateraars en cateringopdrachtgevers
-            </p>
-          </RevealSection>
-          <RevealSection delay={100}>
-            <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 lg:gap-20">
-              {[
-                { src: logoSelectCatering, alt: "Select Catering" },
-                { src: logoAppel, alt: "Appèl" },
-                { src: logoHetePeper, alt: "Hete Peper" },
-                { src: logoFunda, alt: "Funda" },
-              ].map((logo, i) => (
-                <div key={i} className="hover:scale-105 transition-transform duration-300">
-                  <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
-                </div>
-              ))}
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* 9. KLANTCASE CATERING                              */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <section id="klantcase" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
-        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-10 sm:mb-16">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
-                <MessageCircle className="w-4 h-4" /> Klantcases
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Hoe cateraars EXTRA ervaren
-              </h2>
-            </div>
-          </RevealSection>
-          <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              {
-                company: "Select Catering",
-                quote: "EXTRA levert altijd betrouwbaar personeel voor onze cateringopdrachten. Ze zijn gewend aan wisselende locaties, snel inzetbaar en begrijpen het tempo van een grote dienst.",
-                name: "Mark de Vries",
-                role: "Operations Manager",
-                results: ["Vaste bedieningspoule opgebouwd in 2 maanden", "Consistent hoge kwaliteit over 50+ events"],
-              },
-              {
-                company: "Hete Peper",
-                quote: "Bij grote cateringevents schalen we snel op. EXTRA begrijpt dat: ze leveren op korte termijn ervaren personeel dat direct inzetbaar is en past binnen onze werkwijze.",
-                name: "Lisa Jansen",
-                role: "Event Manager",
-                results: ["Snel opgeschaald voor events tot 300 gasten", "Dezelfde gezichten bij terugkerende events"],
-              },
-              {
-                company: "Appèl Amsterdam",
-                quote: "De medewerkers van EXTRA kennen het vak. Ze zijn representatief, servicegericht en weten wat ze doen. Dat merk je direct aan de kwaliteit van de service bij onze gasten.",
-                name: "Sophie de Vries",
-                role: "Operationeel Manager",
-                results: ["Vaste cateringpoule voor weekenddiensten", "20% minder no-shows ten opzichte van voorheen"],
-              },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-xl transition-all duration-300 h-full shadow-sm flex flex-col">
-                  <div className="flex items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Utensils className="w-4 h-4 text-purple-500" />
-                    <span className="font-bold text-purple-700 text-sm">{item.company}</span>
-                  </div>
-                  <p className="text-gray-600 italic text-sm sm:text-base leading-relaxed mb-6 flex-1">"{item.quote}"</p>
-                  <div className="border-t border-gray-100 pt-4 mb-4">
-                    <p className="font-bold text-gray-900 text-sm">{item.name}</p>
-                    <p className="text-gray-400 text-xs">{item.role}</p>
-                  </div>
-                  <div className="space-y-2">
-                    {item.results.map((r, j) => (
-                      <div key={j} className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                        <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                        {r}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
         </div>
       </section>
 
