@@ -14,9 +14,9 @@ import {
 import heroBgImage from "@assets/hero-background.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
-import screenDashboard from "@assets/IMG_9066_1773314165933.PNG";
-import screenRewards from "@assets/IMG_9067_1773314165933.PNG";
-import screenRanglijst from "@assets/IMG_9068_1773314165933.PNG";
+import screenDashboard from "@assets/IMG_9066_1773314165933.png";
+import screenRewards from "@assets/IMG_9067_1773314165933.png";
+import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
 import screenRanglijstWeb from "@assets/Scherm\u00adafbeelding_2026-03-12_om_12.13.01_1773314159864.png";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
