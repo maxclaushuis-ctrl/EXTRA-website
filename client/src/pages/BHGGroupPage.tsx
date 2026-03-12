@@ -1,185 +1,214 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Users, Shield, Clock, Star,
   CheckCircle2, UserCheck, Gift, TrendingUp, Target, Trophy,
-  BarChart3, Zap, Building2, BedDouble, Utensils, ChefHat,
+  BarChart3, BarChart2, Zap, Building2, BedDouble, Utensils, ChefHat,
   GlassWater, CalendarCheck, Layers, Handshake, Phone, Mail,
-  Check, Bell, ArrowRight, Heart
+  Check, Bell, ArrowRight, Heart, CookingPot, ClipboardList
 } from "lucide-react";
 
 import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
-import extraXShape from "../assets/pitch/extra-x-shape.png";
+import extraLogoBlauw from "../assets/pitch/extra-logo-blauw.png";
+import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import heroBgImage from "@assets/hero-background.webp";
 
-import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
-import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
-import extraatjeApp from "../assets/pitch/extraatje-app.png";
-import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
-import appRanking from "../assets/pitch/app-ranking.png";
-import appRewards from "../assets/pitch/app-rewards.png";
-import annaBakkerProfiel from "../assets/pitch/anna-bakker-profiel.png";
-import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
-import beoordelingScreen from "../assets/pitch/beoordeling-screen.png";
+import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
+import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
+import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
+import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
+import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
 
-import logoAmrath from "../assets/pitch/amrath-logo.png";
-import logoMarriott from "../assets/pitch/marriott-logo.png";
-import logoHilton from "../assets/pitch/logo-hilton.png";
-import logoNH from "../assets/pitch/nh-hotels-logo.png";
+import screenDashboard from "@assets/IMG_9066_1773314165933.png";
+import screenRewards from "@assets/IMG_9067_1773314165933.png";
+import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
+import screenUitdagingen from "@assets/IMG_9071_1773316943369.png";
+
+import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
+import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
+import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
+import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
+import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
+import logoFunda from "@assets/Logo_funda_1771267205959.webp";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 
 const TOTAL_SLIDES = 11;
 
+const appScreens = [
+  { key: "dashboard", img: screenDashboard, label: "Dashboard" },
+  { key: "beloningen", img: screenRewards, label: "Beloningen" },
+  { key: "uitdagingen", img: screenUitdagingen, label: "Uitdagingen" },
+  { key: "ranglijst", img: screenRanglijst, label: "Ranglijst" },
+];
+
+const marqueeLogos = [
+  { src: logoMarriott, alt: "Marriott" },
+  { src: logoHilton, alt: "Hilton" },
+  { src: logoHartMuseum, alt: "Hart Museum" },
+  { src: logoSelectCatering, alt: "Select Catering" },
+  { src: logoAppel, alt: "Appel" },
+  { src: logoAmrath, alt: "Amrath Hotels" },
+  { src: logoFcUtrecht, alt: "FC Utrecht" },
+  { src: logoWestweelde, alt: "Westweelde" },
+  { src: logoFunda, alt: "Funda" },
+  { src: logoHetePeper, alt: "Hete Peper" },
+];
+
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, isVisible };
+}
+
+function RevealSection({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const { ref, isVisible } = useScrollReveal();
+  return (
+    <div ref={ref} className={`transition-all duration-700 ${className}`}
+      style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? "translateY(0)" : "translateY(24px)", transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
+function XPatternBg({ count = 4, opacity = 0.06, color = "rgba(139,92,246,1)" }: { count?: number; opacity?: number; color?: string }) {
+  const positions = [
+    { top: "8%", left: "3%" }, { top: "10%", right: "4%" },
+    { bottom: "10%", left: "5%" }, { bottom: "8%", right: "3%" },
+    { top: "45%", left: "1%" }, { top: "40%", right: "2%" },
+  ].slice(0, count);
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {positions.map((pos, i) => (
+        <div key={i} className="absolute" style={{ ...pos, opacity }}>
+          <img src={xPatroon} alt="" width="180" height="180" className="w-28 sm:w-40 lg:w-48" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function IpadMockup({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative mx-auto w-full" style={{ maxWidth: 520 }}>
+      <div className="relative rounded-[2rem] shadow-2xl shadow-purple-500/20"
+        style={{ background: "linear-gradient(145deg, #2e2e32, #1c1c20)", padding: "14px 20px", border: "1px solid rgba(255,255,255,0.09)" }}>
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+          <div className="w-1 h-1 rounded-full bg-gray-600" />
+          <div className="w-2 h-0.5 rounded-full bg-gray-700" />
+        </div>
+        <div className="rounded-[1.2rem] overflow-hidden bg-white ml-2" style={{ aspectRatio: "4/3" }}>
+          <img src={src} alt={alt} className="w-full h-full object-cover" style={{ objectPosition: "center 58%" }} loading="lazy" decoding="async" />
+        </div>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="w-1 h-10 rounded-full bg-gray-600" />
+        </div>
+      </div>
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full blur-xl bg-purple-400/20" />
+    </div>
+  );
+}
+
+function BrowserMockup({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative mx-auto w-full" style={{ maxWidth: 560 }}>
+      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/15 border border-gray-200">
+        <div className="bg-gray-100 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-400" />
+            <div className="w-3 h-3 rounded-full bg-yellow-400" />
+            <div className="w-3 h-3 rounded-full bg-green-400" />
+          </div>
+          <div className="flex-1 bg-white rounded-lg px-3 py-1.5 flex items-center gap-2">
+            <Shield className="w-3 h-3 text-green-500 shrink-0" />
+            <span className="text-xs text-gray-500 font-medium truncate">app.doehetextra.nl/dashboard</span>
+          </div>
+        </div>
+        <img src={src} alt={alt} className="w-full object-cover object-top" loading="lazy" decoding="async" />
+      </div>
+    </div>
+  );
+}
+
 const slideVariants = {
-  enter: { opacity: 0, y: 24 },
+  enter: { opacity: 0, y: 18 },
   center: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -24 },
+  exit: { opacity: 0, y: -18 },
 };
 
-function Slide({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function SlideWrap({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
   return (
     <motion.div
       variants={slideVariants}
       initial="enter"
       animate="center"
       exit="exit"
-      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={`absolute inset-0 flex flex-col ${className}`}
-      onClick={(e) => e.stopPropagation()}
+      transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={`absolute inset-0 overflow-y-auto ${className}`}
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
     >
       {children}
     </motion.div>
   );
 }
 
-function Tag({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-4 py-2 text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-widest mb-5 sm:mb-7">
-      {children}
-    </div>
-  );
-}
-
-function H1({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <h1
-      className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] mb-4 sm:mb-6 ${className}`}
-      style={{ fontFamily: "'Poppins', sans-serif" }}
-    >
-      {children}
-    </h1>
-  );
-}
-
-function H2({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <h2
-      className={`text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4 sm:mb-6 ${className}`}
-      style={{ fontFamily: "'Poppins', sans-serif" }}
-    >
-      {children}
-    </h2>
-  );
-}
-
-function Accent({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-200">
-      {children}
-    </span>
-  );
-}
-
-function BgGradient() {
-  return <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a2e] via-[#170926] to-[#12071f]" />;
-}
-
-function BgDecos() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] rounded-full opacity-10"
-        style={{ background: "radial-gradient(ellipse at center, rgba(139,92,246,0.4) 0%, transparent 70%)" }} />
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full opacity-8"
-        style={{ background: "radial-gradient(ellipse at center, rgba(168,85,247,0.3) 0%, transparent 70%)" }} />
-      <img src={extraXShape} alt="" className="absolute top-8 right-8 w-16 sm:w-24 opacity-10"
-        style={{ filter: "invert(1) brightness(2) sepia(1) saturate(5) hue-rotate(240deg)" }} />
-      <img src={extraXShape} alt="" className="absolute bottom-8 left-8 w-12 sm:w-16 opacity-8"
-        style={{ filter: "invert(1) brightness(2) sepia(1) saturate(5) hue-rotate(240deg)" }} />
-    </div>
-  );
-}
-
-function SlideNumber({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="absolute bottom-6 left-6 text-xs font-bold text-white/30 z-50 select-none">
-      {current + 1} / {total}
-    </div>
-  );
-}
-
 export default function BHGGroupPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeScreen, setActiveScreen] = useState(0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === " ") {
-        e.preventDefault();
-        setCurrentSlide((prev) => Math.min(prev + 1, TOTAL_SLIDES - 1));
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        setCurrentSlide((prev) => Math.max(prev - 1, 0));
-      }
+      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); setCurrentSlide((p) => Math.min(p + 1, TOTAL_SLIDES - 1)); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); setCurrentSlide((p) => Math.max(p - 1, 0)); }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (currentSlide !== 7) return;
+    const interval = setInterval(() => setActiveScreen((p) => (p + 1) % appScreens.length), 3500);
+    return () => clearInterval(interval);
+  }, [currentSlide]);
+
   const next = () => setCurrentSlide((p) => Math.min(p + 1, TOTAL_SLIDES - 1));
   const prev = () => setCurrentSlide((p) => Math.max(p - 1, 0));
 
   return (
-    <div
-      className="h-screen w-screen overflow-hidden relative select-none"
-      onClick={next}
-    >
+    <div className="h-screen w-screen overflow-hidden relative select-none" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+
       {/* ─── Progress dots ─── */}
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-50">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-50">
         {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-          <button
-            key={i}
-            onClick={(e) => { e.stopPropagation(); setCurrentSlide(i); }}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === currentSlide ? "bg-purple-400 w-6" : "bg-white/20 hover:bg-white/40 w-1.5"
-            }`}
-          />
+          <button key={i} onClick={(e) => { e.stopPropagation(); setCurrentSlide(i); }}
+            className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-purple-600 w-6" : "bg-gray-300 hover:bg-gray-400 w-1.5"}`} />
         ))}
       </div>
 
       {/* ─── Nav arrows ─── */}
-      <div className="absolute bottom-5 right-6 flex gap-2 z-50">
-        <button
-          onClick={(e) => { e.stopPropagation(); prev(); }}
-          disabled={currentSlide === 0}
-          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center transition-all ${
-            currentSlide === 0
-              ? "border-white/10 text-white/20 cursor-not-allowed"
-              : "border-purple-500/40 bg-white/5 hover:bg-white/15 text-white"
-          }`}
-        >
-          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+      <div className="absolute bottom-4 right-5 flex gap-2 z-50">
+        <button onClick={(e) => { e.stopPropagation(); prev(); }} disabled={currentSlide === 0}
+          className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${currentSlide === 0 ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-gray-300 bg-white hover:bg-gray-50 text-gray-700 shadow-sm"}`}>
+          <ChevronLeft className="w-4 h-4" />
         </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); next(); }}
-          disabled={currentSlide === TOTAL_SLIDES - 1}
-          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center transition-all ${
-            currentSlide === TOTAL_SLIDES - 1
-              ? "border-white/10 text-white/20 cursor-not-allowed"
-              : "border-purple-500/40 bg-purple-500/20 hover:bg-purple-500/40 text-white"
-          }`}
-        >
-          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        <button onClick={(e) => { e.stopPropagation(); next(); }} disabled={currentSlide === TOTAL_SLIDES - 1}
+          className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${currentSlide === TOTAL_SLIDES - 1 ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-purple-300 bg-purple-600 hover:bg-purple-700 text-white shadow-sm"}`}>
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
-      <SlideNumber current={currentSlide} total={TOTAL_SLIDES} />
+      {/* ─── Slide counter ─── */}
+      <div className="absolute bottom-5 left-5 text-xs font-bold text-gray-300 z-50 select-none">{currentSlide + 1} / {TOTAL_SLIDES}</div>
 
       <AnimatePresence mode="wait">
 
@@ -187,656 +216,642 @@ export default function BHGGroupPage() {
         {/* SLIDE 0 — HERO                                     */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 0 && (
-          <Slide key="s0" className="items-center justify-center p-8 sm:p-12 lg:p-16 text-center">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 max-w-5xl mx-auto">
-              <motion.img
-                src={extraLogoWit}
-                alt="EXTRA"
-                className="h-10 sm:h-14 mx-auto mb-8 sm:mb-10"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-              />
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.25 }}
-                className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-5 py-2 text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-widest mb-7"
-              >
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                Persoonlijke brochure voor BHG Group
+          <SlideWrap key="s0">
+            <div className="relative min-h-screen flex flex-col">
+              <div className="absolute inset-0">
+                <img src={heroBgImage} alt="" className="w-full h-full object-cover object-center" loading="eager" />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(26,10,46,0.96) 0%, rgba(26,10,46,0.90) 45%, rgba(26,10,46,0.65) 70%, rgba(26,10,46,0.30) 100%)" }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
+              </div>
+              <XPatternBg count={3} opacity={0.07} color="rgba(168,85,247,0.7)" />
+
+              <div className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full pt-16 pb-8">
+                <div className="max-w-2xl">
+                  <motion.img src={extraLogoWit} alt="EXTRA" className="h-8 sm:h-10 mb-7"
+                    initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} />
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+                    className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="text-white text-xs sm:text-sm font-semibold">Persoonlijke brochure voor BHG Group</span>
+                  </motion.div>
+                  <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] mb-5"
+                    style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Minder uitval,{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-200">meer continuïteit</span>{" "}
+                    in uw hotels
+                  </motion.h1>
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
+                    className="text-base sm:text-lg text-purple-100/80 leading-relaxed mb-8 max-w-xl">
+                    EXTRA levert geselecteerd hotelpersoneel met een bewezen systeem voor motivatie, kwaliteit en loyaliteit — speciaal gebouwd voor hotelgroepen die structurele rust willen in hun operatie.
+                  </motion.p>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+                    className="flex flex-wrap gap-6">
+                    {[
+                      { icon: Shield, text: "NEN 4400-1 gecertificeerd" },
+                      { icon: Users, text: "Iedereen in loondienst" },
+                      { icon: Clock, text: "Binnen 48 uur beschikbaar" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-white/70">
+                        <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+                          <item.icon className="w-2.5 h-2.5" />
+                        </div>
+                        <span className="text-xs sm:text-sm font-medium">{item.text}</span>
+                      </div>
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Marquee logos strip */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}
+                className="relative z-10 w-full py-5 border-t border-white/10 bg-black/20 backdrop-blur-sm overflow-hidden">
+                <div className="relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-black/30 to-transparent z-10" />
+                  <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-black/30 to-transparent z-10" />
+                  <div className="flex animate-marquee-bhg">
+                    {[...Array(2)].map((_, setIdx) => (
+                      <div key={setIdx} className="flex items-center gap-10 sm:gap-14 px-8 flex-shrink-0">
+                        {marqueeLogos.map((logo) => (
+                          <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0">
+                            <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async"
+                              className="h-8 sm:h-10 w-auto object-contain opacity-50" />
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
-              >
-                <H1>
-                  Minder uitval,{" "}
-                  <Accent>meer continuïteit</Accent>
-                  <br />in uw hotels
-                </H1>
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="text-base sm:text-xl text-purple-200/70 max-w-2xl mx-auto leading-relaxed mb-10"
-              >
-                EXTRA levert geselecteerd hotelpersoneel met een bewezen systeem voor motivatie, kwaliteit en loyaliteit — speciaal gebouwd voor hotelgroepen die structurele rust willen in hun operatie.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.65 }}
-                className="flex flex-wrap justify-center gap-8 sm:gap-14"
-              >
-                {[logoAmrath, logoMarriott, logoHilton, logoNH].map((logo, i) => (
-                  <img key={i} src={logo} alt="" className="h-7 sm:h-10 w-auto object-contain opacity-50" />
-                ))}
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="text-xs text-white/25 mt-8"
-              >
-                Klik of gebruik ← → om door de brochure te navigeren
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
+                className="relative z-10 text-center text-xs text-white/25 py-2">
+                Klik of gebruik pijltjestoetsen om te navigeren
               </motion.p>
             </div>
-          </Slide>
+            <style>{`
+              @keyframes marquee-bhg { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+              .animate-marquee-bhg { animation: marquee-bhg 35s linear infinite; }
+            `}</style>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
         {/* SLIDE 1 — UITDAGINGEN                              */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 1 && (
-          <Slide key="s1" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto">
-              <Tag><Building2 className="w-3 h-3" /> Herkenbaar?</Tag>
-              <H2>De uitdagingen waar hotelgroepen dagelijks mee leven</H2>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {[
-                  { emoji: "🤒", title: "Langdurig ziekteverzuim", desc: "Uitval die de rest van het team overbelast en kwaliteit ondermijnt." },
-                  { emoji: "🚫", title: "No-shows & last-minute uitval", desc: "Diensten die op het laatste moment wegvallen met operationele chaos als gevolg." },
-                  { emoji: "🔍", title: "Moeite met betrouwbaar personeel", desc: "Veel tijd kwijt aan wervingsprocessen die telkens opnieuw beginnen." },
-                  { emoji: "🔄", title: "Gebrek aan continuïteit", desc: "Steeds andere gezichten die telkens opnieuw ingewerkt moeten worden." },
-                  { emoji: "😰", title: "Operationele druk op managers", desc: "Managers die brandblusdienst spelen in plaats van leidinggeven." },
-                  { emoji: "❌", title: "Geen echte partnerrelatie", desc: "Bureaus die leveren maar niet meedenken over structurele oplossingen." },
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.07 }}
-                    className="bg-white/[0.06] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5"
-                  >
-                    <div className="text-2xl sm:text-3xl mb-2">{item.emoji}</div>
-                    <h3 className="font-bold text-white text-sm sm:text-base mb-1">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-purple-200/50 leading-relaxed">{item.desc}</p>
-                  </motion.div>
-                ))}
+          <SlideWrap key="s1">
+            <div className="relative min-h-screen bg-white">
+              <XPatternBg count={3} opacity={0.06} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <RevealSection>
+                  <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 py-2 rounded-full">
+                    <Building2 className="w-4 h-4" /> Herkenbaar?
+                  </span>
+                  <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    De uitdagingen waar hotelgroepen dagelijks mee leven
+                  </h2>
+                  <p className="text-base sm:text-lg text-gray-500 mb-8 max-w-2xl">
+                    BHG Group opereert op meerdere locaties tegelijk. Dat vraagt om een personeelspartner die niet alleen levert, maar ook structureel meedenkt.
+                  </p>
+                </RevealSection>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {[
+                    { emoji: "🤒", title: "Langdurig ziekteverzuim", desc: "Uitval die de rest van het team overbelast en de servicekwaliteit ondermijnt." },
+                    { emoji: "🚫", title: "No-shows en last-minute uitval", desc: "Diensten die op het laatste moment wegvallen met operationele chaos als gevolg." },
+                    { emoji: "🔍", title: "Moeite met betrouwbaar personeel", desc: "Veel tijd kwijt aan wervingsprocessen die telkens opnieuw beginnen." },
+                    { emoji: "🔄", title: "Gebrek aan continuïteit", desc: "Steeds andere gezichten die telkens opnieuw ingewerkt moeten worden." },
+                    { emoji: "😰", title: "Operationele druk op managers", desc: "Managers die brandblusdienst spelen in plaats van leidinggeven aan hun team." },
+                    { emoji: "❌", title: "Geen echte partnerrelatie", desc: "Bureaus die leveren maar niet meedenken over structurele oplossingen per locatie." },
+                  ].map((item, i) => (
+                    <RevealSection key={i} delay={i * 70}>
+                      <div className="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-5 sm:p-6 border border-purple-100 hover:border-purple-200 hover:shadow-lg transition-all duration-300 h-full">
+                        <div className="text-3xl mb-3">{item.emoji}</div>
+                        <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-1.5">{item.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </RevealSection>
+                  ))}
+                </div>
               </div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
         {/* SLIDE 2 — WAAROM EXTRA                             */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 2 && (
-          <Slide key="s2" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto">
-              <Tag><Shield className="w-3 h-3" /> Waarom EXTRA</Tag>
-              <H2>Wat BHG Group van EXTRA mag verwachten</H2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {[
-                  { icon: Shield, title: "Structureel minder no-shows", desc: "Ons beloningssysteem beloont punctualiteit en betrouwbaarheid. Aantoonbaar minder uitval, ook bij last-minute diensten." },
-                  { icon: Building2, title: "Vaste gezichten per hotel", desc: "Via favorietenpoules per BHG-locatie bouw je een vaste kern op van mensen die jouw procedures en standaarden kennen." },
-                  { icon: BarChart3, title: "Inzicht per locatie", desc: "Na elke dienst: scores, feedback en prestatierapportages per medewerker per hotel. Geen buikgevoel, maar data." },
-                  { icon: Zap, title: "Snel opschalen bij drukte", desc: "Seizoenspiek, groot event, onverwachte uitval? EXTRA levert geselecteerd personeel, ook op korte termijn." },
-                  { icon: Handshake, title: "Één aanspreekpunt, alle locaties", desc: "Eén dedicated contactpersoon die alle BHG-hotels kent en proactief meedenkt over uw operatie." },
-                  { icon: CheckCircle2, title: "Volledig in loondienst & NEN-gecertificeerd", desc: "Geen zzp-risico's. Alles compliant met arbeidswetgeving. NEN-4400-1 gecertificeerd." },
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.07 }}
-                    className="bg-gradient-to-br from-purple-900/40 to-purple-950/60 border border-purple-500/20 rounded-xl sm:rounded-2xl p-4 sm:p-6"
-                  >
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3">
-                      <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
-                    </div>
-                    <h3 className="font-bold text-white text-sm sm:text-base mb-1.5">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-purple-200/55 leading-relaxed">{item.desc}</p>
-                  </motion.div>
-                ))}
+          <SlideWrap key="s2">
+            <div className="relative min-h-screen" style={{ backgroundColor: "#faf8f5" }}>
+              <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <RevealSection>
+                  <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 py-2 rounded-full">
+                    <Shield className="w-4 h-4" /> Waarom EXTRA
+                  </span>
+                  <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Wat BHG Group van EXTRA mag verwachten
+                  </h2>
+                  <p className="text-base sm:text-lg text-gray-500 mb-8 max-w-2xl">
+                    Hotelgroepen hebben andere eisen dan losse locaties. EXTRA begrijpt dat en bouwt de samenwerking daar specifiek omheen.
+                  </p>
+                </RevealSection>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {[
+                    { emoji: "🛡️", title: "Structureel minder no-shows", desc: "Ons beloningssysteem beloont punctualiteit en betrouwbaarheid. Aantoonbaar minder uitval, ook bij last-minute diensten." },
+                    { emoji: "🏨", title: "Vaste gezichten per hotel", desc: "Via favorietenpoules per BHG-locatie bouwt u een vaste kern op van mensen die uw procedures en standaarden kennen." },
+                    { emoji: "📊", title: "Inzicht per locatie", desc: "Na elke dienst: scores, feedback en prestatierapportages per medewerker per hotel. Geen buikgevoel, maar data." },
+                    { emoji: "⚡", title: "Snel opschalen bij drukte", desc: "Seizoenspiek, groot event of onverwachte uitval? EXTRA levert geselecteerd personeel, ook op korte termijn." },
+                    { emoji: "🤝", title: "Één aanspreekpunt voor alle locaties", desc: "Een dedicated contactpersoon die alle BHG-hotels kent en proactief meedenkt over uw operatie." },
+                    { emoji: "📋", title: "Volledig in loondienst en NEN-gecertificeerd", desc: "Geen zzp-risico. Alles conform arbeidswetgeving. NEN 4400-1 gecertificeerd." },
+                  ].map((item, i) => (
+                    <RevealSection key={i} delay={i * 70}>
+                      <div className="group bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-7 border border-gray-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm">
+                        <div className="text-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">{item.emoji}</div>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </RevealSection>
+                  ))}
+                </div>
               </div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
-        {/* SLIDE 3 — FUNCTIES                                 */}
+        {/* SLIDE 3 — FUNCTIES (= HotelPersoneelGezocht §2)   */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 3 && (
-          <Slide key="s3" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-5xl mx-auto">
-              <Tag><Users className="w-3 h-3" /> Functies</Tag>
-              <H2>Voor elke afdeling binnen BHG Group</H2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                {[
-                  { icon: BedDouble, title: "Housekeeping", desc: "Room attendants en kamermeisjes die uw hotelstandaard kennen en naleven." },
-                  { icon: UserCheck, title: "Front Office", desc: "Representatieve receptiemedewerkers voor een professionele eerste indruk bij elke gast." },
-                  { icon: Utensils, title: "F&B Bediening", desc: "Ervaren bediening voor restaurant, roomservice, banqueting en conferenties." },
-                  { icon: ChefHat, title: "Keuken & Chef", desc: "Keukenondersteuning, sous-chefs en ontbijtmedewerkers voor een soepele F&B-operatie." },
-                  { icon: GlassWater, title: "Bar & Lounge", desc: "Barpersoneel dat stijlvol en efficiënt werkt tijdens drukke avonddiensten." },
-                  { icon: CalendarCheck, title: "Event & Banqueting", desc: "Teams voor gala-diners, congressen, boardroom-lunches en hotelgebonden events." },
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.08 + i * 0.07 }}
-                    className="bg-white/[0.06] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-white/[0.10] transition-colors"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-purple-500/20 flex items-center justify-center mb-3">
-                      <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
-                    </div>
-                    <h3 className="font-bold text-white text-sm sm:text-base mb-1">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-purple-200/50 leading-relaxed">{item.desc}</p>
-                  </motion.div>
-                ))}
+          <SlideWrap key="s3">
+            <div className="relative min-h-screen" style={{ backgroundColor: "#faf8f5" }}>
+              <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <RevealSection>
+                  <div className="text-center mb-10 sm:mb-12">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                      <Users className="w-4 h-4" /> Functies voor hotels
+                    </span>
+                    <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Voor elke hotelfunctie de juiste mensen
+                    </h2>
+                    <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                      Of het nu gaat om dagelijkse bezetting of piekdrukte. EXTRA levert ervaren hotelpersoneel voor iedere rol binnen BHG Group.
+                    </p>
+                  </div>
+                </RevealSection>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {[
+                    { icon: BedDouble, title: "Housekeeping", desc: "Ervaren kamermeisjes en room attendants die werken volgens uw SOP's en kwaliteitsstandaarden.", tags: ["Kamerreiniging", "Badkamers", "Linnengoed", "Inspectie"], color: "from-purple-600 to-purple-800" },
+                    { icon: Building2, title: "Front Office", desc: "Representatieve medewerkers voor receptie, check-in, check-out en guestrelations. Professioneel, gastvrij en gewend aan hotelprocessen.", tags: ["Receptie", "Check-in", "Guestrelations", "Conciërge"], color: "from-blue-500 to-indigo-600" },
+                    { icon: Utensils, title: "F&B Medewerkers", desc: "Gastvrije F&B medewerkers voor hotelrestaurants, ontbijtservice, roomservice en banqueting.", tags: ["Bediening", "Ontbijtmedewerker", "Banqueting medewerker", "Runner"], color: "from-indigo-500 to-purple-600" },
+                    { icon: GlassWater, title: "Banqueting", desc: "Professionele bediening voor conferenties, gala-diners, meetings en events binnen het hotel.", tags: ["Conferenties", "Gala-diners", "Boardroom", "Events"], color: "from-pink-500 to-purple-600" },
+                    { icon: ChefHat, title: "Chefs en Keukenpersoneel", desc: "Ervaren chefs, sous-chefs en koks voor à la carte service, banqueting en ontbijtservice.", tags: ["Chef de partie", "Sous-chef", "Zelfstandig werkend kok", "Commis"], color: "from-orange-500 to-pink-600" },
+                    { icon: CookingPot, title: "Keukenondersteuning", desc: "Betrouwbare ondersteuning voor drukke hotelkeukens. Afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.", tags: ["Afwasser", "Keukenhulp", "Spoelkeuken medewerker"], color: "from-green-500 to-emerald-600" },
+                  ].map((item, i) => (
+                    <RevealSection key={i} delay={i * 70}>
+                      <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-6 sm:p-7 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-purple-50 to-transparent rounded-bl-[100%] opacity-60" />
+                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                          <item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        </div>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">{item.desc}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.tags.map((tag, j) => (
+                            <span key={j} className="text-xs font-semibold bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full border border-purple-100">{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </RevealSection>
+                  ))}
+                </div>
               </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-5 py-3"
-              >
-                <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <p className="text-sm text-green-200/80">Alle medewerkers zijn geselecteerd op hospitality-ervaring, representativiteit en betrouwbaarheid.</p>
-              </motion.div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
-        {/* SLIDE 4 — SELECTIEPROCES                           */}
+        {/* SLIDE 4 — SELECTIEPROCES (= WerkwijzePage §5)     */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 4 && (
-          <Slide key="s4" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-              <div>
-                <Tag><UserCheck className="w-3 h-3" /> Selectieproces</Tag>
-                <H2>Elke kandidaat,<br />persoonlijk gescreend</H2>
-                <p className="text-purple-200/65 text-sm sm:text-base leading-relaxed mb-7">
-                  BHG Group vraagt om personeel dat verder gaat dan technisch competent. Representativiteit, gastvrijheid en betrouwbaarheid zijn doorslaggevend — getoetst aan de voorkant, zodat u nooit voor verrassingen staat.
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: CheckCircle2, text: "Persoonlijk gesprek op karakter, motivatie en gastvrijheid" },
-                    { icon: Star, text: "Beoordeling op hotelstandaarden en representativiteit" },
-                    { icon: BarChart3, text: "Trackrecord bij eerdere hotelplaatsingen weegt mee" },
-                    { icon: Shield, text: "Volledige identiteits- en tewerkstellingsvergunningcontrole" },
-                  ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -14 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + i * 0.1 }}
-                      className="flex items-start gap-3"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-4 h-4 text-purple-300" />
-                      </div>
-                      <p className="text-sm sm:text-base text-purple-100/80 pt-1">{item.text}</p>
-                    </motion.div>
-                  ))}
+          <SlideWrap key="s4">
+            <div className="relative min-h-screen overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
+              <XPatternBg count={4} opacity={0.08} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                  <RevealSection>
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-white/70 px-4 py-2 rounded-full">
+                      <ClipboardList className="w-4 h-4" /> Selectieproces
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Persoonlijke selectie van hotelpersoneel
+                    </h2>
+                    <p className="text-gray-600 leading-relaxed mb-7 text-base sm:text-lg">
+                      Iedere medewerker bij EXTRA wordt persoonlijk beoordeeld via een digitaal intakeformulier per functie. Zo weten wij precies wie klaar is voor uw locatie.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { n: 1, emoji: "⭐", label: "Topper!" },
+                        { n: 2, emoji: "🏆", label: "Veel ervaring" },
+                        { n: 3, emoji: "💁", label: "Verzorgd" },
+                        { n: 4, emoji: "😄", label: "Enthousiast" },
+                        { n: 5, emoji: "🇳🇱", label: "NL" },
+                        { n: 7, emoji: "🍽️", label: "3 borden lopen" },
+                      ].map(({ n, emoji, label }) => (
+                        <div key={n} className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-white font-semibold text-sm shadow-md"
+                          style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)" }}>
+                          <span className="opacity-60 font-bold text-xs">{n}.</span>
+                          <span>{emoji}</span>
+                          <span>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </RevealSection>
+                  <RevealSection delay={150}>
+                    <IpadMockup src={sollicitatieformulier} alt="Digitale intake beoordeling hotelpersoneel EXTRA" />
+                  </RevealSection>
                 </div>
               </div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="relative hidden lg:block"
-              >
-                <div className="rounded-2xl overflow-hidden border border-purple-500/20 shadow-2xl shadow-purple-900/50">
-                  <img src={adminGebruikers} alt="Kandidatenoverzicht" className="w-full" />
-                </div>
-                <div className="absolute -bottom-5 -right-5 w-[55%] rounded-xl overflow-hidden border border-purple-500/20 shadow-2xl rotate-2">
-                  <img src={annaBakkerProfiel} alt="Medewerkersprofiel" className="w-full" />
-                </div>
-              </motion.div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
-        {/* SLIDE 5 — FAVORIETENPOULE                          */}
+        {/* SLIDE 5 — FAVORIETENPOULE (= WerkwijzePage §7)    */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 5 && (
-          <Slide key="s5" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-              <div>
-                <Tag><Layers className="w-3 h-3" /> Favorietenpoule</Tag>
-                <H2>Dezelfde gezichten.<br />Minder uitleg. Meer kwaliteit.</H2>
-                <p className="text-purple-200/65 text-sm sm:text-base leading-relaxed mb-7">
-                  Voor BHG Group bouwen we per locatie een vaste favorietenpoule op. Medewerkers die uw procedures, kamernormen en servicecultuur kennen — zodat elke dienst soepel verloopt, ook bij onverwachte drukte.
-                </p>
-                <div className="space-y-2.5">
-                  {[
-                    "Snellere inwerktijd bij terugkerende medewerkers",
-                    "Hogere gastvredenheid door consistente service",
-                    "Minder operationele druk op uw vaste managers",
-                    "Per locatie een aparte poule, centraal beheerd",
-                    "Inzicht in wie waar presteert via ons platform",
-                  ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25 + i * 0.08 }}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 text-green-400" />
+          <SlideWrap key="s5">
+            <div className="relative min-h-screen bg-white">
+              <XPatternBg count={2} opacity={0.06} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                  <RevealSection>
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 py-2 rounded-full">
+                      <Star className="w-4 h-4" /> Favorietenpoule
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Bouw een vaste favorietenpoule op
+                    </h2>
+                    <p className="text-gray-600 leading-relaxed mb-7 text-base sm:text-lg">
+                      Na iedere dienst kan BHG Group medewerkers beoordelen. Bevalt iemand goed? Dan wordt deze toegevoegd aan de favorietenpoule per locatie — een vaste pool van mensen die uw hotel al kennen.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 mb-7">
+                      {["Tijd en punctualiteit", "Vaardigheden", "Houding", "Verzorging"].map((c, i) => (
+                        <div key={i} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
+                          <span className="text-sm font-medium text-gray-700">{c}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-2.5">
+                      {[
+                        "Minder introductietijd bij terugkerende medewerkers",
+                        "Hogere gastvredenheid door consistente service",
+                        "Minder operationele druk op vaste managers",
+                        "Per BHG-locatie een aparte poule, centraal beheerd",
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 text-green-600" />
+                          </div>
+                          <span className="text-sm sm:text-base text-gray-700">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </RevealSection>
+                  <RevealSection delay={100}>
+                    <div className="relative pb-10 pr-4">
+                      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/80 border border-gray-100 bg-white">
+                        <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-b border-gray-100">
+                          <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                          <div className="ml-3 flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-400 border border-gray-200 max-w-[160px]">
+                            app.doehetextra.nl
+                          </div>
+                        </div>
+                        <img src={poulesMatches} alt="Favorietenpoule matches dashboard" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
                       </div>
-                      <span className="text-sm sm:text-base text-purple-100/80">{item}</span>
-                    </motion.div>
-                  ))}
+                      <div className="absolute -bottom-2 -right-2 w-[52%] rounded-xl overflow-hidden shadow-xl border border-gray-100 -rotate-1 hover:rotate-0 transition-transform duration-300 bg-white">
+                        <img src={poulesButton} alt="Poules uitnodigen knop" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
+                      </div>
+                    </div>
+                  </RevealSection>
                 </div>
               </div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white/[0.05] border border-purple-500/20 rounded-2xl p-5 sm:p-7"
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <p className="font-bold text-white text-sm">Actieve poule — BHG Group</p>
-                  <span className="text-xs bg-green-500/20 text-green-300 font-bold px-3 py-1 rounded-full">Live</span>
-                </div>
-                <div className="space-y-3 mb-5">
-                  {[
-                    { hotel: "Amrâth Grand Hotel", n: 12, color: "from-purple-500 to-purple-600" },
-                    { hotel: "BHG Hotel Centrum", n: 8, color: "from-indigo-500 to-indigo-600" },
-                    { hotel: "BHG Airport Hotel", n: 6, color: "from-violet-500 to-violet-600" },
-                    { hotel: "BHG Spa & Resort", n: 5, color: "from-fuchsia-500 to-fuchsia-600" },
-                  ].map((h, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white/[0.05] rounded-xl p-3.5">
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${h.color} flex items-center justify-center flex-shrink-0`}>
-                        <Building2 className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-xs sm:text-sm truncate">{h.hotel}</p>
-                        <p className="text-xs text-purple-300/60">{h.n} vaste medewerkers</p>
-                      </div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-white/10 pt-4 grid grid-cols-3 gap-4 text-center">
-                  {[
-                    { v: "31", l: "Vaste medewerkers" },
-                    { v: "94%", l: "Terugkeer­percentage" },
-                    { v: "↓62%", l: "Minder intro­ductietijd" },
-                  ].map((s, i) => (
-                    <div key={i}>
-                      <p className="text-lg sm:text-2xl font-black text-purple-300">{s.v}</p>
-                      <p className="text-xs text-purple-300/50 mt-0.5 leading-tight">{s.l}</p>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
-        {/* SLIDE 6 — EXTRAATJE BELONINGSSYSTEEM               */}
+        {/* SLIDE 6 — DATA & TECHNOLOGIE (= WerkwijzePage §6) */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 6 && (
-          <Slide key="s6" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-              <div>
-                <Tag><Gift className="w-3 h-3" /> Het Extraatje systeem</Tag>
-                <H2>Gemotiveerde medewerkers leveren betere hotelservice</H2>
-                <p className="text-purple-200/65 text-sm sm:text-base leading-relaxed mb-6">
-                  Het Extraatje beloningssysteem is onze sleutel voor continuïteit. Medewerkers verdienen punten door op tijd te komen, diensten niet af te zeggen en bij vaste klanten te werken. Dat levert BHG Group betere, loyalere mensen op.
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: TrendingUp, title: "Punten voor punctualiteit & kwaliteit", desc: "Elke dienst goed afgerond = punten. Dit beloont het gedrag dat voor BHG Group belangrijk is." },
-                    { icon: Trophy, title: "Ranglijst & beloningen", desc: "Medewerkers die hoog scoren, krijgen zinvolle beloningen: cadeaukaarten, kortingen, erkenning." },
-                    { icon: Target, title: "Continuïteit als drijfveer", desc: "Vaste locaties leveren extra punten op. Medewerkers kiezen daardoor bewust voor terugkeer bij BHG." },
-                    { icon: Bell, title: "No-shows dalen structureel", desc: "Bij actieve deelnemers aan ons systeem zien we aantoonbaar minder afmeldingen en no-shows." },
-                  ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25 + i * 0.08 }}
-                      className="flex gap-3"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <item.icon className="w-4 h-4 text-purple-300" />
+          <SlideWrap key="s6">
+            <div className="relative min-h-screen" style={{ backgroundColor: "#faf8f5" }}>
+              <XPatternBg count={2} opacity={0.05} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                  <RevealSection className="order-2 lg:order-1">
+                    <div className="relative">
+                      <BrowserMockup src={dashboardKandidaten} alt="Dashboard met beoordelingen hotelpersoneel EXTRA" />
+                      <div className="absolute -bottom-5 -right-3 w-[60%] rounded-2xl overflow-hidden shadow-2xl border border-white/80 ring-1 ring-purple-100/60 rotate-1 hover:rotate-0 transition-transform duration-300">
+                        <img src={scoreSnippet} alt="Scores kandidaat" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
                       </div>
-                      <div>
-                        <p className="font-bold text-white text-sm">{item.title}</p>
-                        <p className="text-xs text-purple-200/50 mt-0.5 leading-relaxed">{item.desc}</p>
-                      </div>
-                    </motion.div>
-                  ))}
+                    </div>
+                  </RevealSection>
+                  <RevealSection className="order-1 lg:order-2">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 py-2 rounded-full">
+                      <BarChart2 className="w-4 h-4" /> Data en technologie
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Slimme selectie met data
+                    </h2>
+                    <p className="text-gray-600 leading-relaxed mb-7 text-base sm:text-lg">
+                      Geen buikgevoel, maar data. Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner — zodat wij precies de juiste match kunnen maken voor uw hotel.
+                    </p>
+                    <div className="space-y-4">
+                      {[
+                        "Waar iemand ervaring heeft opgedaan",
+                        "Hoe iemand beoordeeld is door opdrachtgevers",
+                        "Welke locatie en functie het beste past",
+                        "Periodieke kwaliteitsrapportage per BHG-locatie",
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-3 h-3 text-purple-600" />
+                          </div>
+                          <span className="text-sm sm:text-base text-gray-600 leading-relaxed">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </RevealSection>
                 </div>
               </div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="hidden lg:grid grid-cols-2 gap-3"
-              >
-                {[extraatjeApp, appRanking, extraatjeChallenges, appRewards].map((img, i) => (
-                  <div key={i} className="rounded-xl sm:rounded-2xl overflow-hidden border border-purple-500/20 shadow-xl">
-                    <img src={img} alt="" className="w-full" />
-                  </div>
-                ))}
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="lg:hidden grid grid-cols-2 gap-3"
-              >
-                {[extraatjeApp, appRanking].map((img, i) => (
-                  <div key={i} className="rounded-xl overflow-hidden border border-purple-500/20">
-                    <img src={img} alt="" className="w-full" />
-                  </div>
-                ))}
-              </motion.div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
-        {/* SLIDE 7 — DATA & TECHNOLOGIE                       */}
+        {/* SLIDE 7 — EXTRAATJE (= PersoneelGezocht §7 phone) */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 7 && (
-          <Slide key="s7" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-              <div>
-                <Tag><BarChart3 className="w-3 h-3" /> Data & technologie</Tag>
-                <H2>Grip op kwaliteit, per BHG-locatie</H2>
-                <p className="text-purple-200/65 text-sm sm:text-base leading-relaxed mb-6">
-                  Geen buikgevoel, maar data. EXTRA meet prestaties per medewerker, per locatie en per functietype. Zo weten we altijd wie op welke BHG-locatie het beste presteert — en verbeteren we de match met elke dienst.
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: BarChart3, title: "Prestatiescore na elke dienst", desc: "Punctualiteit, werkhouding en kwaliteit worden geregistreerd. Elke plaatsing wordt beter." },
-                    { icon: Users, title: "Matchingalgoritme op historische prestaties", desc: "Niet alleen op beschikbaarheid matchen — maar op bewezen prestaties bij vergelijkbare hotels." },
-                    { icon: Zap, title: "Real-time planning & beschikbaarheid", desc: "Direct zicht op wie beschikbaar is en al eerder bij BHG heeft gewerkt." },
-                    { icon: TrendingUp, title: "Periodieke kwaliteitsrapportage", desc: "BHG Group ontvangt periodiek een overzicht van scores en trends per locatie." },
-                  ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25 + i * 0.08 }}
-                      className="flex gap-3"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <item.icon className="w-4 h-4 text-purple-300" />
+          <SlideWrap key="s7">
+            <div className="relative min-h-screen overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
+              <XPatternBg count={4} opacity={0.10} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <RevealSection>
+                  <div className="text-center mb-10 sm:mb-14">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-white/70 px-4 py-2 rounded-full">
+                      <Gift className="w-4 h-4" /> EXTRAATje beloningssysteem
+                    </span>
+                    <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Betere motivatie ={" "}
+                      <span className="relative inline-block">
+                        <span className="relative z-10">beter hotelpersoneel</span>
+                        <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+                      </span>
+                    </h2>
+                    <p className="text-base sm:text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+                      Ons unieke beloningssysteem zorgt voor gemotiveerde medewerkers die graag terugkomen. Wat BHG Group merkt: minder uitval, meer continuïteit en vaste teams per locatie.
+                    </p>
+                  </div>
+                </RevealSection>
+
+                <RevealSection delay={100}>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10 sm:mb-14 max-w-4xl mx-auto">
+                    {[
+                      { step: "1", title: "Medewerker verdient punten", desc: "Elke shift levert punten op. Goed presteren? Extra punten. Zo wordt kwaliteit beloond.", icon: "🏃" },
+                      { step: "2", title: "Status stijgt, motivatie groeit", desc: "Van Bronze naar Diamond. Hogere status betekent betere beloningen en meer betrokkenheid.", icon: "💎" },
+                      { step: "3", title: "Medewerker wil terugkomen", desc: "Punten opbouwen op uw locatie is een reden om te blijven. Minder wisselende gezichten.", icon: "🎁" },
+                    ].map((item, i) => (
+                      <div key={i} className="bg-white rounded-2xl border border-purple-100 p-5 sm:p-7 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">
+                        <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{item.icon}</div>
+                        <div className="text-[10px] sm:text-xs font-black text-purple-500 uppercase tracking-widest mb-2">Stap {item.step}</div>
+                        <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h4>
+                        <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                       </div>
-                      <div>
-                        <p className="font-bold text-white text-sm">{item.title}</p>
-                        <p className="text-xs text-purple-200/50 mt-0.5 leading-relaxed">{item.desc}</p>
+                    ))}
+                  </div>
+                </RevealSection>
+
+                <RevealSection delay={200}>
+                  <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 max-w-5xl mx-auto">
+                    <div className="relative flex-shrink-0">
+                      <div className="relative w-[200px] sm:w-[260px]">
+                        <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-500/20 border-[5px] border-gray-700 bg-gray-900">
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[18px] bg-gray-900 rounded-b-xl z-20" />
+                          <div className="relative">
+                            {appScreens.map((screen, i) => (
+                              <img key={screen.key} src={screen.img} alt={screen.label}
+                                className={`w-full transition-opacity duration-500 ${activeScreen === i ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-[3rem] blur-3xl -z-10" />
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      <div className="flex gap-2 mt-4 justify-center">
+                        {appScreens.map((_, i) => (
+                          <button key={i} onClick={(e) => { e.stopPropagation(); setActiveScreen(i); }}
+                            className={`h-2.5 rounded-full transition-all duration-300 ${activeScreen === i ? "bg-purple-500 w-10" : "bg-purple-200 w-2.5 hover:bg-purple-300"}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                        Wat BHG Group merkt
+                      </h3>
+                      <ul className="space-y-3.5">
+                        {[
+                          { icon: TrendingUp, text: "Hogere motivatie, want medewerkers willen punten verdienen op uw locatie" },
+                          { icon: Check, text: "Minder uitval, want betrouwbare medewerkers die komen opdagen" },
+                          { icon: Users, text: "Meer continuïteit, vaste teams die uw hotel door en door kennen" },
+                          { icon: Heart, text: "Medewerkers die graag terugkomen naar uw locatie" },
+                        ].map((item, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <item.icon className="w-4 h-4 text-purple-700" />
+                            </div>
+                            <span className="text-gray-700 font-medium text-sm sm:text-base">{item.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </RevealSection>
               </div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="hidden lg:flex flex-col gap-3"
-              >
-                <div className="rounded-2xl overflow-hidden border border-purple-500/20 shadow-2xl">
-                  <img src={beoordelingenStatistieken} alt="Beoordelingen & statistieken" className="w-full" />
-                </div>
-                <div className="rounded-xl overflow-hidden border border-purple-500/20 shadow-xl">
-                  <img src={beoordelingScreen} alt="Beoordeling" className="w-full" />
-                </div>
-              </motion.div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
         {/* SLIDE 8 — REVIEWS                                  */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 8 && (
-          <Slide key="s8" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-6xl mx-auto">
-              <Tag><Heart className="w-3 h-3" /> Referenties</Tag>
-              <H2>Wat hotelmanagers over EXTRA zeggen</H2>
-              <div className="grid sm:grid-cols-3 gap-4 sm:gap-5 mb-5">
-                {[
-                  {
-                    quote: "EXTRA levert structureel betrouwbaar personeel voor onze hoteldiensten. Ze begrijpen wat housekeeping- en F&B-kwaliteit voor ons betekent. De vaste poule die we hebben opgebouwd, maakt echt het verschil.",
-                    name: "Geert di Domenico",
-                    role: "General Manager",
-                    hotel: "Marriott Hotels Amsterdam",
-                    logo: logoMarriott,
-                  },
-                  {
-                    quote: "No-shows zijn bij ons met meer dan de helft gedaald sinds we met EXTRA werken. De medewerkers kennen onze standaarden, komen op tijd en zijn representatief. Dat is precies wat je nodig hebt.",
-                    name: "Anya Schoenmaker",
-                    role: "Operations Director",
-                    hotel: "Radisson Blu Amsterdam",
-                    logo: logoAmrath,
-                  },
-                  {
-                    quote: "Wat EXTRA onderscheidt: ze leveren niet alleen mensen, ze leveren de juiste mensen. En als er iets speelt, wordt er meteen geschakeld. Dat geeft rust op de werkvloer.",
-                    name: "Dirk Koops",
-                    role: "Hotel Manager",
-                    hotel: "Amrâth Grand Hotel",
-                    logo: logoAmrath,
-                  },
-                ].map((review, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.1 }}
-                    className="bg-white/[0.06] border border-white/10 rounded-xl sm:rounded-2xl p-5 sm:p-6 flex flex-col"
-                  >
-                    <div className="flex gap-0.5 mb-3">
-                      {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />)}
-                    </div>
-                    <p className="text-sm sm:text-base text-purple-100/80 italic leading-relaxed flex-1 mb-4">"{review.quote}"</p>
-                    <div className="border-t border-white/10 pt-3 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-bold text-white text-sm">{review.name}</p>
-                        <p className="text-xs text-purple-300/60">{review.role} · {review.hotel}</p>
+          <SlideWrap key="s8">
+            <div className="relative min-h-screen" style={{ backgroundColor: "#fdf9f3" }}>
+              <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <RevealSection>
+                  <div className="text-center mb-10 sm:mb-14">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 py-2 rounded-full">
+                      <Heart className="w-4 h-4" /> Referenties
+                    </span>
+                    <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Wat hotelmanagers over EXTRA zeggen
+                    </h2>
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, j) => <Star key={j} className="w-5 h-5 text-yellow-400 fill-yellow-400" />)}
                       </div>
+                      <span className="text-base font-bold text-gray-900">4,8</span>
+                      <span className="text-sm text-gray-500">gemiddeld uit 232 Google reviews</span>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="flex items-center justify-center gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-5 py-3"
-              >
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
+                  </div>
+                </RevealSection>
+                <div className="grid sm:grid-cols-3 gap-5 sm:gap-6">
+                  {[
+                    {
+                      quote: "EXTRA levert structureel betrouwbaar personeel voor onze hoteldiensten. Ze begrijpen wat housekeeping en F&B kwaliteit voor ons betekent. De vaste poule die we hebben opgebouwd maakt echt het verschil.",
+                      name: "Gabriel di Domenico",
+                      role: "General Manager",
+                      hotel: "Marriott Hotels Amsterdam",
+                    },
+                    {
+                      quote: "No-shows zijn bij ons met meer dan de helft gedaald sinds we met EXTRA werken. De medewerkers kennen onze standaarden, komen op tijd en zijn representatief. Dat is precies wat je nodig hebt.",
+                      name: "Alissa Schoenmaker",
+                      role: "Operations Director",
+                      hotel: "Radisson Blu Amsterdam",
+                    },
+                    {
+                      quote: "Wat EXTRA onderscheidt: ze leveren niet alleen mensen, ze leveren de juiste mensen. En als er iets speelt, wordt er meteen geschakeld. Dat geeft rust op de werkvloer.",
+                      name: "Dodi Koops",
+                      role: "Hotel Manager",
+                      hotel: "Amrâth Grand Hotel",
+                    },
+                  ].map((review, i) => (
+                    <RevealSection key={i} delay={i * 100}>
+                      <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-gray-100 shadow-sm hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full flex flex-col">
+                        <div className="flex gap-0.5 mb-4">
+                          {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
+                        </div>
+                        <p className="text-gray-600 italic text-sm sm:text-base leading-relaxed flex-1 mb-5">"{review.quote}"</p>
+                        <div className="border-t border-gray-100 pt-4">
+                          <p className="font-bold text-gray-900 text-sm">{review.name}</p>
+                          <p className="text-gray-400 text-xs mt-0.5">{review.role} · {review.hotel}</p>
+                        </div>
+                      </div>
+                    </RevealSection>
+                  ))}
                 </div>
-                <p className="text-sm text-yellow-200/80 font-semibold">4,8 gemiddeld · 232+ Google reviews van hotelklanten en medewerkers</p>
-              </motion.div>
+              </div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
         {/* SLIDE 9 — SAMENWERKING                             */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 9 && (
-          <Slide key="s9" className="items-center justify-center p-6 sm:p-10 lg:p-14">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 w-full max-w-5xl mx-auto">
-              <Tag><Handshake className="w-3 h-3" /> Samenwerking</Tag>
-              <H2 className="mb-8">Zo ziet de samenwerking met BHG Group eruit</H2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                {[
-                  {
-                    step: "01",
-                    icon: Users,
-                    title: "Intake & afstemming",
-                    desc: "We stellen per locatie vast welke functies, standaarden en capaciteit nodig zijn. Inclusief jaarplanning en piekmomenten.",
-                  },
-                  {
-                    step: "02",
-                    icon: UserCheck,
-                    title: "Eerste plaatsingen",
-                    desc: "Gerichte proefplaatsingen met medewerkers die geselecteerd zijn op prestaties bij vergelijkbare hotels.",
-                  },
-                  {
-                    step: "03",
-                    icon: Layers,
-                    title: "Opbouw favorietenpoule",
-                    desc: "Samen bepalen we wie structureel ingepland wordt. Die medewerkers vormen de vaste kern per BHG-hotel.",
-                  },
-                  {
-                    step: "04",
-                    icon: TrendingUp,
-                    title: "Continue sturing & rapportage",
-                    desc: "Maandelijkse inzichten in kwaliteitsscores, bezettingsgraad en trends. Één aanspreekpunt, proactief contact.",
-                  },
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.1 }}
-                    className="bg-gradient-to-br from-purple-900/40 to-purple-950/60 border border-purple-500/20 rounded-xl sm:rounded-2xl p-5 sm:p-6 relative"
-                  >
-                    <div className="absolute top-4 right-4 text-3xl font-black text-white/10">{item.step}</div>
-                    <div className="w-9 h-9 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
-                      <item.icon className="w-4 h-4 text-purple-300" />
-                    </div>
-                    <h3 className="font-bold text-white text-sm sm:text-base mb-2">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-purple-200/55 leading-relaxed">{item.desc}</p>
-                    {i < 3 && (
-                      <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 bg-purple-600/50 rounded-full items-center justify-center">
-                        <ArrowRight className="w-3 h-3 text-purple-200" />
+          <SlideWrap key="s9">
+            <div className="relative min-h-screen bg-white">
+              <XPatternBg count={2} opacity={0.06} color="rgba(139,92,246,1)" />
+              <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+                <RevealSection>
+                  <div className="text-center mb-10 sm:mb-14">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 py-2 rounded-full">
+                      <Handshake className="w-4 h-4" /> Samenwerking
+                    </span>
+                    <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Zo ziet de samenwerking met BHG Group eruit
+                    </h2>
+                    <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-xl mx-auto">
+                      Concrete stappen, geen vaag traject. Van eerste afstemming tot vaste operationele partner.
+                    </p>
+                  </div>
+                </RevealSection>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+                  {[
+                    { step: "01", icon: Users, title: "Intake en afstemming", desc: "We stellen per locatie vast welke functies, standaarden en capaciteit nodig zijn. Inclusief jaarplanning en piekmomenten.", color: "from-purple-500 to-purple-700" },
+                    { step: "02", icon: UserCheck, title: "Eerste plaatsingen", desc: "Gerichte proefplaatsingen met medewerkers die geselecteerd zijn op prestaties bij vergelijkbare hotels.", color: "from-indigo-500 to-purple-600" },
+                    { step: "03", icon: Layers, title: "Opbouw favorietenpoule", desc: "Samen bepalen we wie structureel ingepland wordt. Die medewerkers vormen de vaste kern per BHG-hotel.", color: "from-blue-500 to-indigo-600" },
+                    { step: "04", icon: TrendingUp, title: "Continue sturing en rapportage", desc: "Maandelijkse inzichten in kwaliteitsscores, bezettingsgraad en trends. Één aanspreekpunt, proactief contact.", color: "from-emerald-500 to-teal-600" },
+                  ].map((item, i) => (
+                    <RevealSection key={i} delay={i * 80}>
+                      <div className="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-6 sm:p-7 border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full shadow-sm relative">
+                        <div className="absolute top-4 right-4 text-2xl font-black text-purple-100">{item.step}</div>
+                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-5 shadow-lg`}>
+                          <item.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-bold text-gray-900 text-base mb-2">{item.title}</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
                       </div>
-                    )}
-                  </motion.div>
-                ))}
+                    </RevealSection>
+                  ))}
+                </div>
               </div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
         {/* ═══════════════════════════════════════════════════ */}
         {/* SLIDE 10 — CONTACT                                 */}
         {/* ═══════════════════════════════════════════════════ */}
         {currentSlide === 10 && (
-          <Slide key="s10" className="items-center justify-center p-8 sm:p-12 lg:p-16 text-center">
-            <BgGradient />
-            <BgDecos />
-            <div className="relative z-10 max-w-3xl mx-auto">
-              <motion.img
-                src={extraLogoWit}
-                alt="EXTRA"
-                className="h-10 sm:h-12 mx-auto mb-8"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-              />
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <H1 className="text-4xl sm:text-5xl lg:text-6xl">
+          <SlideWrap key="s10">
+            <div className="relative min-h-screen overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a2e] via-[#170926] to-[#12071f]" />
+              <XPatternBg count={4} opacity={0.10} color="rgba(168,85,247,0.6)" />
+              <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 sm:px-10 text-center pt-12 pb-16">
+                <motion.img src={extraLogoWit} alt="EXTRA" className="h-9 sm:h-11 mx-auto mb-8"
+                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} />
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
+                  className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-4 py-2 text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-widest mb-7">
+                  <Building2 className="w-4 h-4" /> BHG Group × EXTRA
+                </motion.div>
+                <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+                  className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight max-w-3xl"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Klaar voor de{" "}
-                  <Accent>volgende stap?</Accent>
-                </H1>
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
-                className="text-base sm:text-lg text-purple-200/70 leading-relaxed mb-10"
-              >
-                Neem rechtstreeks contact op met ons team. We denken graag mee over hoe EXTRA structurele rust brengt in de operatie van BHG Group — per locatie, op maat.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex flex-col sm:flex-row gap-3 justify-center mb-8"
-              >
-                <a
-                  href="tel:0851305915"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center justify-center gap-2.5 bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-0.5"
-                  style={{ boxShadow: "0 0 30px rgba(168,85,247,0.3), 0 8px 32px rgba(0,0,0,0.2)" }}
-                >
-                  <Phone className="w-4 h-4" />
-                  085 130 59 15
-                </a>
-                <a
-                  href="mailto:info@doehetextra.nl"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center justify-center gap-2.5 border-2 border-white/25 text-white font-bold px-8 py-4 rounded-full text-base hover:bg-white/10 transition-all hover:-translate-y-0.5"
-                >
-                  <Mail className="w-4 h-4" />
-                  info@doehetextra.nl
-                </a>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.65 }}
-                className="flex flex-wrap justify-center gap-8 sm:gap-12"
-              >
-                {[
-                  { icon: Shield, text: "NEN-4400-1 gecertificeerd" },
-                  { icon: Users, text: "Iedereen in loondienst" },
-                  { icon: Clock, text: "Binnen 48 uur beschikbaar" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-white/40">
-                    <item.icon className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-medium">{item.text}</span>
-                  </div>
-                ))}
-              </motion.div>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-200">volgende stap?</span>
+                </motion.h1>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                  className="text-base sm:text-lg text-purple-200/70 leading-relaxed mb-9 max-w-2xl">
+                  Neem contact op met ons team. We denken graag mee over hoe EXTRA structurele rust brengt in de operatie van BHG Group — per locatie, op maat.
+                </motion.p>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+                  className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+                  <a href="tel:0851305915" onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-center gap-2.5 bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5 transition-all"
+                    style={{ boxShadow: "0 0 30px rgba(168,85,247,0.25), 0 8px 32px rgba(0,0,0,0.2)" }}>
+                    <Phone className="w-4 h-4" />
+                    085 130 59 15
+                  </a>
+                  <a href="mailto:max@doehetextra.nl" onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-center gap-2.5 border-2 border-white/25 text-white font-bold px-8 py-4 rounded-full text-base hover:bg-white/10 hover:-translate-y-0.5 transition-all">
+                    <Mail className="w-4 h-4" />
+                    max@doehetextra.nl
+                  </a>
+                </motion.div>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+                  className="flex flex-wrap justify-center gap-7 sm:gap-12">
+                  {[
+                    { icon: Shield, text: "NEN 4400-1 gecertificeerd" },
+                    { icon: Users, text: "Iedereen in loondienst" },
+                    { icon: Clock, text: "Binnen 48 uur beschikbaar" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 text-white/40">
+                      <item.icon className="w-4 h-4 text-purple-400" />
+                      <span className="text-sm font-medium">{item.text}</span>
+                    </div>
+                  ))}
+                </motion.div>
+              </div>
             </div>
-          </Slide>
+          </SlideWrap>
         )}
 
       </AnimatePresence>

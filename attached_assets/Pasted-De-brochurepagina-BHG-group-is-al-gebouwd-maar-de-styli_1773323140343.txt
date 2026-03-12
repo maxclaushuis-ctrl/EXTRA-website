@@ -1,0 +1,134 @@
+De brochurepagina /BHG-group is al gebouwd, maar de styling en een aantal secties moeten worden aangepast zodat deze volledig aansluit bij de huisstijl en componenten van de EXTRA website.
+
+BELANGRIJKSTE AANPASSING
+De huidige brochure gebruikt een donkere gradient achtergrond (paars/zwart). Dit past niet bij de designstijl van de EXTRA website.
+
+Pas daarom de volledige brochure aan zodat deze visueel overeenkomt met de website van EXTRA.
+
+Gebruik de pagina /horeca-personeel-gezocht als primaire referentie voor:
+- kleuren
+- achtergrondgebruik
+- typografie
+- spacing
+- component styling
+- knoppen
+- sectie-opbouw
+- animaties
+
+De brochure moet voelen alsof het een natuurlijke pagina binnen de bestaande website is en niet als een losse microsite.
+
+ALGEMENE DESIGNREGELS
+
+• Verwijder de donkere gradient achtergrond volledig  
+• Gebruik dezelfde lichte achtergrond en kleurstructuur als de EXTRA website  
+• Gebruik exact dezelfde fonts en typografiehiërarchie  
+• Gebruik dezelfde UI-componenten (cards, iconen, buttons)  
+• Houd spacing, padding en sectie-opbouw consistent met de bestaande website  
+• Vermijd het leesteken "-" in de volledige brochure  
+
+SECTIE AANPASSINGEN PER PAGINA
+
+PAGINA 1 / HERO
+
+Onder de introductietekst staan nu statische hotel-logo's.
+
+Vervang deze door dezelfde logo-animatie die gebruikt wordt op de pagina:
+ /horeca-personeel-gezocht
+
+Gebruik dezelfde bewegende logo-strip zoals in de sectie:
+"VERTROUWD DOOR HOTELS, CATERAARS EN EVENTLOCATIES"
+
+Aanpassingen:
+• Gebruik dezelfde animatie en layout
+• Laat de titel "VERTROUWD DOOR HOTELS, CATERAARS EN EVENTLOCATIES" weg
+• Alleen de bewegende logo’s tonen
+
+PAGINA 4
+
+Vervang de huidige layout volledig door dezelfde layout en componentstructuur als de sectie:
+
+"Voor elke hotelfunctie de juiste mensen"
+
+van de pagina:
+/hotelpersoneel-inhuren
+
+Gebruik dezelfde visuele opbouw, kaarten en iconen.
+
+PAGINA 5
+
+Vervang deze pagina volledig door de sectie:
+
+"Selectieproces"
+
+van:
+/horeca-uitzendbureau-amsterdam-werkwijze
+
+Gebruik dezelfde layout en visuele elementen.
+
+PAGINA 6
+
+Vervang deze pagina volledig door de sectie:
+
+"Favorietenpoule"
+
+van:
+/horeca-uitzendbureau-amsterdam-werkwijze
+
+Gebruik dezelfde layout en componenten.
+
+PAGINA 7
+
+De foto's moeten vervangen worden.
+
+Gebruik hier dezelfde interactieve telefoon component die wordt gebruikt in de sectie:
+
+"EXTRAATJE beloningssysteem"
+
+op:
+/horeca-personeel-gezocht
+
+Belangrijk:
+• Gebruik dezelfde telefoon visual
+• Gebruik dezelfde animaties / beeldwisselingen
+• Laat de huidige teksten staan
+
+PAGINA 8
+
+Vervang deze pagina volledig door de sectie:
+
+"Data & technologie"
+
+van:
+/horeca-uitzendbureau-amsterdam-werkwijze
+
+Gebruik dezelfde layout, componenten en visuele stijl.
+
+PAGINA 9
+
+De huidige referenties moeten aangepast worden.
+
+• Vervang de referentie placeholders door geschreven referenties
+• Pas de namen aan naar:
+
+Gabriel di Domenico  
+Alissa Schoenmaker  
+Dodi Koops
+
+Laat de testimonial structuur verder hetzelfde.
+
+LAATSTE PAGINA
+
+Pas het e-mailadres aan naar:
+
+max@doehetextra.nl
+
+ALGEMEEN
+
+Controleer de volledige brochure en zorg dat:
+
+• Alle "-" leestekens verwijderd of vervangen worden
+• De volledige pagina visueel consistent is met de EXTRA website
+• Alle componenten overeenkomen met bestaande website componenten
+• De brochure voelt als een geïntegreerde pagina binnen de website
+
+Het eindresultaat moet eruitzien alsof de pagina altijd al onderdeel was van de EXTRA website.
