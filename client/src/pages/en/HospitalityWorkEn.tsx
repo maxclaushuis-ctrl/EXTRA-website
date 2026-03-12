@@ -12,8 +12,8 @@ import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
 import mercureLogo from "../../assets/pitch/logo-mercure.png";
-import pulitzerLogo from "../../assets/pitch/logo-pulitzer-transparent.png";
-import nhLogo from "../../assets/pitch/logo-nh-transparent.png";
+import pulitzerLogo from "../../assets/pitch/logo-pulitzer-clean.svg";
+import nhLogo from "../../assets/pitch/logo-nh-clean.svg";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);

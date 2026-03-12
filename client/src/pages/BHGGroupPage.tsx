@@ -31,7 +31,7 @@ import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp"
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoMercure from "../assets/pitch/logo-mercure.png";
-import logoPulitzer from "../assets/pitch/logo-pulitzer-transparent.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer-clean.svg";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
