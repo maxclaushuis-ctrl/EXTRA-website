@@ -54,6 +54,17 @@ const HotelStaffingAmsterdam = lazy(() => import("@/pages/en/HotelStaffingAmster
 const EventStaffAmsterdam = lazy(() => import("@/pages/en/EventStaffAmsterdam"));
 const CateringStaffAmsterdam = lazy(() => import("@/pages/en/CateringStaffAmsterdam"));
 const RestaurantStaffAmsterdam = lazy(() => import("@/pages/en/RestaurantStaffAmsterdam"));
+const AboutExtra = lazy(() => import("@/pages/en/AboutExtra"));
+const OurTeam = lazy(() => import("@/pages/en/OurTeam"));
+const ContactEn = lazy(() => import("@/pages/en/ContactEn"));
+const ClientStories = lazy(() => import("@/pages/en/ClientStories"));
+const HowWeWork = lazy(() => import("@/pages/en/HowWeWork"));
+const RewardsEn = lazy(() => import("@/pages/en/RewardsEn"));
+const HospitalityJobsAmsterdam = lazy(() => import("@/pages/en/HospitalityJobsAmsterdam"));
+const HospitalityWorkEn = lazy(() => import("@/pages/en/HospitalityWorkEn"));
+const HousekeepingJobsEn = lazy(() => import("@/pages/en/HousekeepingJobsEn"));
+const ChefJobsEn = lazy(() => import("@/pages/en/ChefJobsEn"));
+const FrontOfficeJobsEn = lazy(() => import("@/pages/en/FrontOfficeJobsEn"));
 
 const UserProfile = lazy(() => import("@/pages/user/Profile"));
 const Rewards = lazy(() => import("@/pages/user/Rewards"));
@@ -104,6 +115,10 @@ const PUBLIC_PATHS = [
   '/vacatures',
   '/en/hospitality-staff-amsterdam', '/en/hotel-staffing-amsterdam',
   '/en/event-staff-amsterdam', '/en/catering-staff-amsterdam', '/en/restaurant-staff-amsterdam',
+  '/en/about', '/en/our-team', '/en/contact', '/en/client-stories',
+  '/en/how-we-work', '/en/rewards',
+  '/en/hospitality-jobs', '/en/hospitality-work',
+  '/en/housekeeping-jobs', '/en/chef-jobs', '/en/front-office-jobs',
 ];
 
 function PageLoader() {
@@ -179,6 +194,21 @@ function Router() {
           <Route path="/en/event-staff-amsterdam" component={EventStaffAmsterdam} />
           <Route path="/en/catering-staff-amsterdam" component={CateringStaffAmsterdam} />
           <Route path="/en/restaurant-staff-amsterdam" component={RestaurantStaffAmsterdam} />
+
+          {/* English other pages */}
+          <Route path="/en/about" component={AboutExtra} />
+          <Route path="/en/our-team" component={OurTeam} />
+          <Route path="/en/contact" component={ContactEn} />
+          <Route path="/en/client-stories" component={ClientStories} />
+          <Route path="/en/how-we-work" component={HowWeWork} />
+          <Route path="/en/rewards" component={RewardsEn} />
+
+          {/* English candidate pages */}
+          <Route path="/en/hospitality-jobs" component={HospitalityJobsAmsterdam} />
+          <Route path="/en/hospitality-work" component={HospitalityWorkEn} />
+          <Route path="/en/housekeeping-jobs" component={HousekeepingJobsEn} />
+          <Route path="/en/chef-jobs" component={ChefJobsEn} />
+          <Route path="/en/front-office-jobs" component={FrontOfficeJobsEn} />
 
           {/* Blog */}
           <Route path="/blog" component={NieuwsPage} />
