@@ -1408,6 +1408,8 @@ export default function LandingPage() {
                         <img
                           src={reward.image}
                           alt={reward.name}
+                          loading="lazy"
+                          decoding="async"
                           className="max-w-full max-h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
                         />
                       </div>

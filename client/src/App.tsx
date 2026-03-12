@@ -1,68 +1,63 @@
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 
-import Home from "@/pages/Home";
-import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
-import SollicitatieFormulier from "@/pages/SollicitatieFormulier";
-import DashboardMockup from "@/pages/DashboardMockup";
-import Brochure from "@/pages/Brochure";
-import BrochureEN from "@/pages/BrochureEN";
-import BrochureEvents from "@/pages/BrochureEvents";
-import LandingPage from "@/pages/LandingPage";
-import PersoneelGezocht from "@/pages/PersoneelGezocht";
-import HotelPersoneelGezocht from "@/pages/HotelPersoneelGezocht";
-import EventPersoneelGezocht from "@/pages/EventPersoneelGezocht";
-import CateringPersoneelGezocht from "@/pages/CateringPersoneelGezocht";
-import RestaurantPersoneelGezocht from "@/pages/RestaurantPersoneelGezocht";
-import PersoneelsAanvraag from "@/pages/PersoneelsAanvraag";
-import Aanmelden from "@/pages/Aanmelden";
-import CvUpload from "@/pages/CvUpload";
-import HorecaWerk from "@/pages/HorecaWerk";
-import HousekeepingWerk from "@/pages/HousekeepingWerk";
-import NieuwsPage from "@/pages/NieuwsPage";
-import NieuwsArtikel from "@/pages/NieuwsArtikel";
-import Extraatje from "@/pages/Extraatje";
-import OverExtra from "@/pages/OverExtra";
-import OnsTeam from "@/pages/OnsTeam";
-import HoeExtraWerkt from "@/pages/HoeExtraWerkt";
-import IkZoekExtraWerk from "@/pages/IkZoekExtraWerk";
-import HoeWerktDagbetaling from "@/pages/HoeWerktDagbetaling";
-import Vacatures from "@/pages/Vacatures";
-import VacatureDetail from "@/pages/VacatureDetail";
+const Home = lazy(() => import("@/pages/Home"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
+const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
+const Brochure = lazy(() => import("@/pages/Brochure"));
+const BrochureEN = lazy(() => import("@/pages/BrochureEN"));
+const BrochureEvents = lazy(() => import("@/pages/BrochureEvents"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
+const PersoneelGezocht = lazy(() => import("@/pages/PersoneelGezocht"));
+const HotelPersoneelGezocht = lazy(() => import("@/pages/HotelPersoneelGezocht"));
+const EventPersoneelGezocht = lazy(() => import("@/pages/EventPersoneelGezocht"));
+const CateringPersoneelGezocht = lazy(() => import("@/pages/CateringPersoneelGezocht"));
+const RestaurantPersoneelGezocht = lazy(() => import("@/pages/RestaurantPersoneelGezocht"));
+const PersoneelsAanvraag = lazy(() => import("@/pages/PersoneelsAanvraag"));
+const Aanmelden = lazy(() => import("@/pages/Aanmelden"));
+const CvUpload = lazy(() => import("@/pages/CvUpload"));
+const HorecaWerk = lazy(() => import("@/pages/HorecaWerk"));
+const HousekeepingWerk = lazy(() => import("@/pages/HousekeepingWerk"));
+const NieuwsPage = lazy(() => import("@/pages/NieuwsPage"));
+const NieuwsArtikel = lazy(() => import("@/pages/NieuwsArtikel"));
+const Extraatje = lazy(() => import("@/pages/Extraatje"));
+const OverExtra = lazy(() => import("@/pages/OverExtra"));
+const OnsTeam = lazy(() => import("@/pages/OnsTeam"));
+const HoeExtraWerkt = lazy(() => import("@/pages/HoeExtraWerkt"));
+const IkZoekExtraWerk = lazy(() => import("@/pages/IkZoekExtraWerk"));
+const HoeWerktDagbetaling = lazy(() => import("@/pages/HoeWerktDagbetaling"));
+const Vacatures = lazy(() => import("@/pages/Vacatures"));
+const VacatureDetail = lazy(() => import("@/pages/VacatureDetail"));
+const HorecaPersoneelGezocht = lazy(() => import("@/pages/HorecaPersoneelGezocht"));
 
-import HorecaPersoneelGezocht from "@/pages/HorecaPersoneelGezocht";
+const HorecaVacaturesAmsterdam = lazy(() => import("@/pages/HorecaVacaturesAmsterdam"));
+const HorecaWerkAmsterdam = lazy(() => import("@/pages/HorecaWerkAmsterdam"));
+const HousekeepingVacaturesAmsterdam = lazy(() => import("@/pages/HousekeepingVacaturesAmsterdam"));
+const ChefVacaturesAmsterdam = lazy(() => import("@/pages/ChefVacaturesAmsterdam"));
+const FrontOfficeVacaturesAmsterdam = lazy(() => import("@/pages/FrontOfficeVacaturesAmsterdam"));
 
-// Kandidaat pagina's
-import HorecaVacaturesAmsterdam from "@/pages/HorecaVacaturesAmsterdam";
-import HorecaWerkAmsterdam from "@/pages/HorecaWerkAmsterdam";
-import HousekeepingVacaturesAmsterdam from "@/pages/HousekeepingVacaturesAmsterdam";
-import ChefVacaturesAmsterdam from "@/pages/ChefVacaturesAmsterdam";
-import FrontOfficeVacaturesAmsterdam from "@/pages/FrontOfficeVacaturesAmsterdam";
+const HorecaUitzendbureau = lazy(() => import("@/pages/HorecaUitzendbureau"));
+const HorecaPersoneelAmsterdamPage = lazy(() => import("@/pages/HorecaPersoneelAmsterdamPage"));
+const HorecaPersoneelPage = lazy(() => import("@/pages/HorecaPersoneelPage"));
+const FlexibelHorecaPersoneel = lazy(() => import("@/pages/FlexibelHorecaPersoneel"));
+const WerkwijzePage = lazy(() => import("@/pages/WerkwijzePage"));
 
-// SEO pillar & landingspagina's
-import HorecaUitzendbureau from "@/pages/HorecaUitzendbureau";
-import HorecaPersoneelAmsterdamPage from "@/pages/HorecaPersoneelAmsterdamPage";
-import HorecaPersoneelPage from "@/pages/HorecaPersoneelPage";
-import FlexibelHorecaPersoneel from "@/pages/FlexibelHorecaPersoneel";
-import WerkwijzePage from "@/pages/WerkwijzePage";
+const KlantcasesHoreca = lazy(() => import("@/pages/KlantcasesHoreca"));
+const Contact = lazy(() => import("@/pages/Contact"));
 
-// Overige pagina's
-import KlantcasesHoreca from "@/pages/KlantcasesHoreca";
-import Contact from "@/pages/Contact";
-
-import UserProfile from "@/pages/user/Profile";
-import Rewards from "@/pages/user/Rewards";
-import RewardDetail from "@/pages/employee/RewardDetail";
-import History from "@/pages/user/History";
-import LeaderboardPage from "@/pages/LeaderboardPage";
+const UserProfile = lazy(() => import("@/pages/user/Profile"));
+const Rewards = lazy(() => import("@/pages/user/Rewards"));
+const RewardDetail = lazy(() => import("@/pages/employee/RewardDetail"));
+const History = lazy(() => import("@/pages/user/History"));
+const LeaderboardPage = lazy(() => import("@/pages/LeaderboardPage"));
 
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MilestoneProvider } from "@/contexts/MilestoneContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import NotificationToast from "@/components/NotificationToast";
-import { MainNav } from "@/components/MainNav";
 
 function ProtectedRoute({ component: Component, adminOnly = false, ...rest }: 
   { component: React.ComponentType<any>, adminOnly?: boolean, [key: string]: any }) {
@@ -90,22 +85,25 @@ const PUBLIC_PATHS = [
   '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
-  // Kandidaat routes
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
   '/ik-zoek-extra-werk/horeca', '/ik-zoek-extra-werk/chef', '/ik-zoek-extra-werk/front-office',
   '/horeca-werk', '/housekeeping-werk',
-  // SEO routes
   '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
-  // Alias routes
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
-  // Overige
   '/klantcases-horeca', '/contact',
-  // Vacatures
   '/vacatures',
 ];
+
+function PageLoader() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-white">
+      <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function Router() {
   const { isAuthenticated, user } = useAuth();
@@ -122,88 +120,90 @@ function Router() {
         <NotificationToast />
       )}
 
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
-        <Route path="/brochure" component={Brochure} />
-        <Route path="/brochures" component={BrochureEN} />
-        <Route path="/events" component={BrochureEvents} />
-        <Route path="/landing" component={LandingPage} />
+      <Suspense fallback={<PageLoader />}>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/sollicitatieformulier" component={SollicitatieFormulier} />
+          <Route path="/brochure" component={Brochure} />
+          <Route path="/brochures" component={BrochureEN} />
+          <Route path="/events" component={BrochureEvents} />
+          <Route path="/landing" component={LandingPage} />
 
-        {/* Werkgever routes */}
-        <Route path="/horecapersoneel-restaurants" component={RestaurantPersoneelGezocht} />
-        <Route path="/horecapersoneel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
-        <Route path="/horeca-personeel-gezocht" component={PersoneelGezocht} />
-        <Route path="/personeel-gezocht">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
-        <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
-        <Route path="/hotelpersoneel-inhuren" component={HotelPersoneelGezocht} />
-        <Route path="/hotel-personeel-gezocht">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/eventpersoneel-inhuren" component={EventPersoneelGezocht} />
-        <Route path="/event-personeel-gezocht">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/evenementen-personeel-amsterdam">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/cateringpersoneel-inhuren" component={CateringPersoneelGezocht} />
-        <Route path="/cateringpersoneel-gezocht">{() => { window.location.replace('/cateringpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/catering-personeel-amsterdam">{() => { window.location.replace('/cateringpersoneel-inhuren'); return null; }}</Route>
-        <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
-        <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
+          {/* Werkgever routes */}
+          <Route path="/horecapersoneel-restaurants" component={RestaurantPersoneelGezocht} />
+          <Route path="/horecapersoneel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
+          <Route path="/horeca-personeel-gezocht" component={PersoneelGezocht} />
+          <Route path="/personeel-gezocht">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
+          <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
+          <Route path="/hotelpersoneel-inhuren" component={HotelPersoneelGezocht} />
+          <Route path="/hotel-personeel-gezocht">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
+          <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
+          <Route path="/eventpersoneel-inhuren" component={EventPersoneelGezocht} />
+          <Route path="/event-personeel-gezocht">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
+          <Route path="/evenementen-personeel-amsterdam">{() => { window.location.replace('/eventpersoneel-inhuren'); return null; }}</Route>
+          <Route path="/cateringpersoneel-inhuren" component={CateringPersoneelGezocht} />
+          <Route path="/cateringpersoneel-gezocht">{() => { window.location.replace('/cateringpersoneel-inhuren'); return null; }}</Route>
+          <Route path="/catering-personeel-amsterdam">{() => { window.location.replace('/cateringpersoneel-inhuren'); return null; }}</Route>
+          <Route path="/restaurant-personeel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
+          <Route path="/restaurant-personeel-amsterdam">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
 
-        {/* Kandidaat routes */}
-        <Route path="/ik-zoek-extra-werk/horeca">{() => { window.location.replace('/horeca-werk'); return null; }}</Route>
-        <Route path="/horeca-vacatures-amsterdam" component={IkZoekExtraWerk} />
-        <Route path="/horeca-werk-amsterdam" component={HorecaWerkAmsterdam} />
-        <Route path="/housekeeping-vacatures-amsterdam" component={HousekeepingVacaturesAmsterdam} />
-        <Route path="/chef-vacatures-amsterdam" component={ChefVacaturesAmsterdam} />
-        <Route path="/ik-zoek-extra-werk/chef">{() => { window.location.replace('/chef-vacatures-amsterdam'); return null; }}</Route>
-        <Route path="/front-office-vacatures-amsterdam" component={FrontOfficeVacaturesAmsterdam} />
-        <Route path="/ik-zoek-extra-werk/front-office">{() => { window.location.replace('/front-office-vacatures-amsterdam'); return null; }}</Route>
+          {/* Kandidaat routes */}
+          <Route path="/ik-zoek-extra-werk/horeca">{() => { window.location.replace('/horeca-werk'); return null; }}</Route>
+          <Route path="/horeca-vacatures-amsterdam" component={IkZoekExtraWerk} />
+          <Route path="/horeca-werk-amsterdam" component={HorecaWerkAmsterdam} />
+          <Route path="/housekeeping-vacatures-amsterdam" component={HousekeepingVacaturesAmsterdam} />
+          <Route path="/chef-vacatures-amsterdam" component={ChefVacaturesAmsterdam} />
+          <Route path="/ik-zoek-extra-werk/chef">{() => { window.location.replace('/chef-vacatures-amsterdam'); return null; }}</Route>
+          <Route path="/front-office-vacatures-amsterdam" component={FrontOfficeVacaturesAmsterdam} />
+          <Route path="/ik-zoek-extra-werk/front-office">{() => { window.location.replace('/front-office-vacatures-amsterdam'); return null; }}</Route>
 
-        {/* SEO pillar & landingspagina's */}
-        <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
-        <Route path="/horeca-uitzendbureau-amsterdam-werkwijze" component={WerkwijzePage} />
-        <Route path="/horeca-personeel-amsterdam" component={HorecaPersoneelAmsterdamPage} />
-        <Route path="/horeca-personeel" component={HorecaPersoneelPage} />
-        <Route path="/flexibel-horeca-personeel" component={FlexibelHorecaPersoneel} />
+          {/* SEO pillar & landingspagina's */}
+          <Route path="/horeca-uitzendbureau-amsterdam" component={HorecaUitzendbureau} />
+          <Route path="/horeca-uitzendbureau-amsterdam-werkwijze" component={WerkwijzePage} />
+          <Route path="/horeca-personeel-amsterdam" component={HorecaPersoneelAmsterdamPage} />
+          <Route path="/horeca-personeel" component={HorecaPersoneelPage} />
+          <Route path="/flexibel-horeca-personeel" component={FlexibelHorecaPersoneel} />
 
-        {/* Blog - primair op /blog, ook /nieuws behouden */}
-        <Route path="/blog" component={NieuwsPage} />
-        <Route path="/blog/:slug" component={NieuwsArtikel} />
-        <Route path="/nieuws" component={NieuwsPage} />
-        <Route path="/nieuws/:slug" component={NieuwsArtikel} />
+          {/* Blog */}
+          <Route path="/blog" component={NieuwsPage} />
+          <Route path="/blog/:slug" component={NieuwsArtikel} />
+          <Route path="/nieuws" component={NieuwsPage} />
+          <Route path="/nieuws/:slug" component={NieuwsArtikel} />
 
-        {/* Over EXTRA sub-routes */}
-        <Route path="/over-extra/ons-team" component={OnsTeam} />
-        <Route path="/over-extra" component={OverExtra} />
-        <Route path="/onze-werkwijze" component={HoeExtraWerkt} />
-        <Route path="/ons-team" component={OnsTeam} />
-        <Route path="/beloningssysteem" component={Extraatje} />
-        <Route path="/klantcases-horeca" component={KlantcasesHoreca} />
+          {/* Over EXTRA sub-routes */}
+          <Route path="/over-extra/ons-team" component={OnsTeam} />
+          <Route path="/over-extra" component={OverExtra} />
+          <Route path="/onze-werkwijze" component={HoeExtraWerkt} />
+          <Route path="/ons-team" component={OnsTeam} />
+          <Route path="/beloningssysteem" component={Extraatje} />
+          <Route path="/klantcases-horeca" component={KlantcasesHoreca} />
 
-        {/* Overige publieke routes */}
-        <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
-        <Route path="/aanmelden" component={Aanmelden} />
-        <Route path="/cv-upload" component={CvUpload} />
-        <Route path="/horeca-werk" component={HorecaWerk} />
-        <Route path="/housekeeping-werk" component={HousekeepingWerk} />
-        <Route path="/extraatje" component={Extraatje} />
-        <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
-        <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
-        <Route path="/hoe-werkt-dagbetaling" component={HoeWerktDagbetaling} />
-        <Route path="/vacatures" component={Vacatures} />
-        <Route path="/vacatures/:slug" component={VacatureDetail} />
-        <Route path="/contact" component={Contact} />
-        <Route path="/dashboard-mockup" component={DashboardMockup} />
+          {/* Overige publieke routes */}
+          <Route path="/personeelsaanvraag" component={PersoneelsAanvraag} />
+          <Route path="/aanmelden" component={Aanmelden} />
+          <Route path="/cv-upload" component={CvUpload} />
+          <Route path="/horeca-werk" component={HorecaWerk} />
+          <Route path="/housekeeping-werk" component={HousekeepingWerk} />
+          <Route path="/extraatje" component={Extraatje} />
+          <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
+          <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
+          <Route path="/hoe-werkt-dagbetaling" component={HoeWerktDagbetaling} />
+          <Route path="/vacatures" component={Vacatures} />
+          <Route path="/vacatures/:slug" component={VacatureDetail} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/dashboard-mockup" component={DashboardMockup} />
 
-        {/* Beschermde routes */}
-        <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
-        <Route path="/profile">{() => <ProtectedRoute component={UserProfile} />}</Route>
-        <Route path="/rewards">{() => <ProtectedRoute component={Rewards} />}</Route>
-        <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>
-        <Route path="/history">{() => <ProtectedRoute component={History} />}</Route>
-        <Route path="/leaderboard">{() => <ProtectedRoute component={LeaderboardPage} />}</Route>
+          {/* Beschermde routes */}
+          <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
+          <Route path="/profile">{() => <ProtectedRoute component={UserProfile} />}</Route>
+          <Route path="/rewards">{() => <ProtectedRoute component={Rewards} />}</Route>
+          <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>
+          <Route path="/history">{() => <ProtectedRoute component={History} />}</Route>
+          <Route path="/leaderboard">{() => <ProtectedRoute component={LeaderboardPage} />}</Route>
 
-        <Route component={NotFound} />
-      </Switch>
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     </>
   );
 }
