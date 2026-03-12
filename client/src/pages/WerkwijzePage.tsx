@@ -20,6 +20,7 @@ import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
 import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
 import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
+import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.26.57_1773311268529.png";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -331,7 +332,7 @@ export default function WerkwijzePage() {
                 <p className="text-gray-600 leading-relaxed mb-8 text-lg">
                   Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner, zodat wij precies de juiste match kunnen maken.
                 </p>
-                <div className="space-y-4">
+                <div className="space-y-4 mb-8">
                   {[
                     "Waar iemand ervaring heeft opgedaan",
                     "Hoe iemand beoordeeld is door opdrachtgevers",
@@ -344,6 +345,15 @@ export default function WerkwijzePage() {
                       <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
                     </div>
                   ))}
+                </div>
+                <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg">
+                  <img
+                    src={scoreSnippet}
+                    alt="Scores per kandidaat: softskills, bar, bediening en diner"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
               </RevealSection>
             </div>
