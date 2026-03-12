@@ -457,7 +457,7 @@ export default function PersoneelGezocht() {
             <div className="text-center mt-8 sm:mt-12">
               <span className="inline-flex items-center gap-2 bg-green-100 text-green-800 font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full border border-green-200">
                 <Shield className="w-4 h-4" />
-                Volledig conform arbeidswetgeving 2026 — NEN-4400-1 gecertificeerd
+                Volledig conform arbeidswetgeving 2026, NEN-4400-1 gecertificeerd
               </span>
             </div>
           </RevealSection>
@@ -669,7 +669,7 @@ export default function PersoneelGezocht() {
                 Uw kandidaten geselecteerd op bewezen scores
               </h2>
               <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                Wij slaan elke beoordeling op. Per medewerker ziet u scores op softskills, bediening, bar en diner — zo matchen wij altijd de juiste persoon aan uw locatie, zonder gokken.
+                Wij slaan elke beoordeling op. Per medewerker ziet u scores op softskills, bediening, bar en diner. Zo matchen wij altijd de juiste persoon aan uw locatie, zonder gokken.
               </p>
               <div className="space-y-4">
                 {[
@@ -705,7 +705,7 @@ export default function PersoneelGezocht() {
                 Vaste gezichten, minder uitleg
               </h2>
               <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                Na elke geslaagde samenwerking voegen wij uw favorieten toe aan uw persoonlijke poule. Direct inzetbaar bij uw volgende aanvraag — geen inwerken, geen verrassingen.
+                Na elke geslaagde samenwerking voegen wij uw favorieten toe aan uw persoonlijke poule. Direct inzetbaar bij uw volgende aanvraag, zonder inwerken en zonder verrassingen.
               </p>
               <div className="space-y-4 mb-8">
                 {[

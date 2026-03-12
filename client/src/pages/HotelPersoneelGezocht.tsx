@@ -24,6 +24,11 @@ import screenDashboard from "@assets/IMG_9066_1773314165933.png";
 import screenRewards from "@assets/IMG_9067_1773314165933.png";
 import screenUitdagingen from "@assets/IMG_9071_1773316943369.png";
 import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
+import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
+import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
+import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
+import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
+import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -94,6 +99,50 @@ function GrainOverlay() {
         opacity: 0.4, mixBlendMode: "overlay",
       }}
     />
+  );
+}
+
+function IpadMockup({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative mx-auto w-full" style={{ maxWidth: 560 }}>
+      <div className="relative rounded-[2rem] p-3 shadow-2xl shadow-purple-900/30" style={{ background: "linear-gradient(145deg, #1c1c1e, #2c2c2e)", border: "2px solid #3a3a3e" }}>
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+          <div className="w-1 h-1 rounded-full bg-gray-600" />
+          <div className="w-2 h-0.5 rounded-full bg-gray-700" />
+        </div>
+        <div className="rounded-[1.2rem] overflow-hidden bg-white ml-2" style={{ aspectRatio: "4/3" }}>
+          <img src={src} alt={alt} className="w-full h-full object-cover" style={{ objectPosition: "center 58%" }} loading="lazy" decoding="async" />
+        </div>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="w-1 h-10 rounded-full bg-gray-600" />
+        </div>
+        <div className="absolute top-[-4px] left-[30%] h-1 w-8 rounded-t-sm" style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }} />
+        <div className="absolute top-[-4px] left-[42%] h-1 w-8 rounded-t-sm" style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }} />
+        <div className="absolute top-[-4px] right-[20%] h-1 w-6 rounded-t-sm" style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }} />
+      </div>
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full blur-xl bg-purple-400/20" />
+    </div>
+  );
+}
+
+function BrowserMockup({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative mx-auto w-full" style={{ maxWidth: 600 }}>
+      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/15 border border-gray-200">
+        <div className="bg-gray-100 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-400" />
+            <div className="w-3 h-3 rounded-full bg-yellow-400" />
+            <div className="w-3 h-3 rounded-full bg-green-400" />
+          </div>
+          <div className="flex-1 bg-white rounded-lg px-3 py-1.5 flex items-center gap-2">
+            <Shield className="w-3 h-3 text-green-500 shrink-0" />
+            <span className="text-xs text-gray-500 font-medium truncate">app.doehetextra.nl/dashboard</span>
+          </div>
+        </div>
+        <img src={src} alt={alt} className="w-full h-auto object-contain" loading="lazy" decoding="async" />
+      </div>
+    </div>
   );
 }
 
@@ -403,6 +452,174 @@ export default function HotelPersoneelGezocht() {
         </div>
       </section>
 
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5B. PERSOONLIJK GESCREEND                          */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="screening" className="relative py-20 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
+        <XPatternBg count={4} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+            <RevealSection>
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-white/70 px-5 py-2 rounded-full">
+                <UserCheck className="w-4 h-4" /> Screeningsproces
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Elke hotelmedewerker, persoonlijk gescreend
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
+                Voordat een medewerker bij uw hotel staat, is deze persoonlijk gezien op kantoor en digitaal beoordeeld op presentatie, gastvrijheid en vakkennis per hotelfunctie. U weet altijd wie er achter uw receptie of in uw housekeeping staat.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { n: 1, emoji: "⭐", label: "Topper!" },
+                  { n: 2, emoji: "🏆", label: "Veel ervaring" },
+                  { n: 3, emoji: "💁", label: "Verzorgd" },
+                  { n: 4, emoji: "😄", label: "Enthousiast" },
+                  { n: 5, emoji: "🇳🇱", label: "NL" },
+                  { n: 7, emoji: "🛏️", label: "Housekeeping" },
+                ].map(({ n, emoji, label }) => (
+                  <div key={n} className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-white font-semibold text-sm shadow-md" style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)" }}>
+                    <span className="opacity-70 font-bold text-xs">{n}.</span>
+                    <span>{emoji}</span>
+                    <span>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </RevealSection>
+            <RevealSection delay={150}>
+              <IpadMockup
+                src={sollicitatieformulier}
+                alt="Digitaal intakeformulier screening hotelpersoneel EXTRA"
+              />
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5C. GESELECTEERD OP BEWEZEN SCORES                 */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="datakwaliteit" className="relative py-20 sm:py-28 pb-28 sm:pb-36 overflow-x-hidden" style={{ backgroundColor: "#faf8f5" }}>
+        <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+            <RevealSection className="order-2 lg:order-1">
+              <div className="relative">
+                <BrowserMockup
+                  src={dashboardKandidaten}
+                  alt="Kandidaten dashboard met servicescores per hotelfunctie EXTRA"
+                />
+                <div className="absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-6 w-[65%] rounded-2xl overflow-hidden shadow-2xl border border-white/80 ring-1 ring-purple-100/60 rotate-1 hover:rotate-0 transition-transform duration-300">
+                  <img
+                    src={scoreSnippet}
+                    alt="Scores hotelmedewerker: gastvrijheid, presentatie en betrouwbaarheid"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </div>
+            </RevealSection>
+            <RevealSection className="order-1 lg:order-2">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-purple-100/60 px-5 py-2 rounded-full">
+                <BarChart3 className="w-4 h-4" /> Data en inzicht
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Hotelpersoneel geselecteerd op bewezen servicescores
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
+                Wij registreren elke plaatsing. Per medewerker ziet u scores op gastvrijheid, presentatie en betrouwbaarheid per hotelfunctie. Zo plaatsen wij altijd de persoon die bij uw hotelstandaard en afdeling past, zonder gokken.
+              </p>
+              <div className="space-y-4">
+                {[
+                  "Elk medewerkersprofiel met functie- en dienstscores",
+                  "Direct inzicht in wie past bij uw hotel en afdeling",
+                  "Objectieve matching op basis van bewezen hotelervaring",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-purple-600" />
+                    </div>
+                    <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5D. VASTE GEZICHTEN PER HOTEL                      */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="pouleoverzicht" className="relative py-20 sm:py-28 bg-white">
+        <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+            <RevealSection>
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-purple-100/60 px-5 py-2 rounded-full">
+                <Heart className="w-4 h-4" /> Favorietenpoule
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Vaste gezichten per hotel, minder uitleg
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
+                Na elke geslaagde plaatsing voegen wij uw favorieten toe aan uw hotelpoule per afdeling. Direct inzetbaar bij uw volgende aanvraag: geen inwerkkosten, geen verrassingen bij de deur.
+              </p>
+              <div className="space-y-4 mb-8">
+                {[
+                  "Opgebouwd per afdeling: housekeeping, F&B, banqueting en front office",
+                  "Direct inzetbaar bij uw volgende aanvraag",
+                  "Zelf uitnodigen via de knop 'Poules uitnodigen' in uw dashboard",
+                  "Automatisch bijgewerkt na elke dienst op basis van beoordelingen",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-purple-600" />
+                    </div>
+                    <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <a href="/personeelsaanvraag" className="group inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-7 py-3.5 rounded-full hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/25 transition-all hover:-translate-y-0.5">
+                Bouw uw hotelpoule op <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </RevealSection>
+            <RevealSection delay={100}>
+              <div className="relative pb-12 pr-4">
+                <div className="rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/80 border border-gray-100 bg-white">
+                  <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-b border-gray-100">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                    <div className="ml-3 flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-400 border border-gray-200 max-w-[180px]">
+                      app.doehetextra.nl
+                    </div>
+                  </div>
+                  <img
+                    src={poulesMatches}
+                    alt="Hotelpoule medewerker matches favorietenpoule EXTRA dashboard"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div className="absolute -bottom-2 -right-2 sm:-bottom-4 sm:right-0 w-[55%] rounded-xl overflow-hidden shadow-xl border border-gray-100 -rotate-1 hover:rotate-0 transition-transform duration-300 bg-white">
+                  <img
+                    src={poulesButton}
+                    alt="Poules uitnodigen knop EXTRA hotel dashboard"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* 6. HOE WIJ HOTELPERSONEEL SELECTEREN               */}
