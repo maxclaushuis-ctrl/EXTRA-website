@@ -51,7 +51,8 @@ function IpadMockup({ src, alt }: { src: string; alt: string }) {
           <img
             src={src}
             alt={alt}
-            className="w-full h-full object-contain object-top"
+            className="w-full h-full object-cover"
+            style={{ objectPosition: "center 12%" }}
             loading="lazy"
             decoding="async"
           />
@@ -283,12 +284,18 @@ export default function WerkwijzePage() {
                   Iedere medewerker bij EXTRA wordt persoonlijk beoordeeld via een digitaal intakeformulier per functie. Zo weten wij precies wie klaar is voor jouw locatie.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Houding & motivatie", "Communicatieve vaardigheden", "Representativiteit", "Horeca ervaring", "Barvaardigheden", "Bediening & diner"].map((c, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white/80 rounded-xl px-4 py-3 border border-white shadow-sm">
-                      <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                        <Check className="w-3 h-3 text-purple-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700">{c}</span>
+                  {[
+                    { n: 1, emoji: "⭐", label: "Topper!" },
+                    { n: 2, emoji: "🏆", label: "Veel ervaring" },
+                    { n: 3, emoji: "💁", label: "Verzorgd" },
+                    { n: 4, emoji: "😄", label: "Enthousiast" },
+                    { n: 5, emoji: "🇳🇱", label: "NL" },
+                    { n: 7, emoji: "🍽️", label: "3 borden lopen" },
+                  ].map(({ n, emoji, label }) => (
+                    <div key={n} className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-white font-semibold text-sm shadow-md" style={{ background: "linear-gradient(135deg, #4a9fdf 0%, #3b8ecf 100%)" }}>
+                      <span className="opacity-70 font-bold text-xs">{n}.</span>
+                      <span>{emoji}</span>
+                      <span>{label}</span>
                     </div>
                   ))}
                 </div>
