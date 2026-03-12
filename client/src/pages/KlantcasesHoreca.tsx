@@ -1,7 +1,6 @@
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { Hotel, PartyPopper, Landmark, ArrowRight } from "lucide-react";
 import { ClientReviewCard } from "@/components/ClientReviewCard";
 import { getReviewsByCategory } from "@/data/reviews";
@@ -116,27 +115,18 @@ export default function KlantcasesHoreca() {
                 className="text-3xl md:text-4xl font-black text-white mb-5"
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                Ook extra personeel nodig?
+                Ook <span className="uppercase tracking-wide">EXTRA</span> personeel nodig?
               </h2>
               <p className="text-purple-200/80 text-lg mb-10 max-w-xl mx-auto">
                 Neem contact op en ontdek wat EXTRA voor jouw locatie kan betekenen.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Button
-                  asChild
-                  className="bg-white hover:bg-gray-100 text-purple-900 font-bold rounded-full px-10 py-5 text-base h-auto shadow-xl shadow-white/10 hover:-translate-y-1 transition-all"
-                >
-                  <Link href="/personeelsaanvraag" className="flex items-center gap-2">
-                    Personeel aanvragen <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-white/25 text-white hover:bg-white/10 font-bold rounded-full px-10 py-5 text-base h-auto hover:-translate-y-1 transition-all"
-                >
-                  <Link href="/horeca-uitzendbureau-amsterdam">Lees meer over ons</Link>
-                </Button>
+                <Link href="/personeelsaanvraag" className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 text-purple-900 font-bold rounded-full px-10 py-4 text-base shadow-xl shadow-white/10 hover:-translate-y-1 transition-all">
+                  Personeel aanvragen <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/horeca-uitzendbureau-amsterdam" className="inline-flex items-center gap-2 border-2 border-white/50 text-white hover:bg-white/10 font-bold rounded-full px-10 py-4 text-base hover:-translate-y-1 transition-all">
+                  Lees meer over ons
+                </Link>
               </div>
             </RevealSection>
           </div>
