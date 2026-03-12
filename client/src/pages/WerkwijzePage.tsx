@@ -14,6 +14,10 @@ import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
+import logoFunda from "@assets/Logo_funda_1771267205959.webp";
+import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
+import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
 import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
 
@@ -121,14 +125,6 @@ const medewerkerSteps = [
   { icon: Gift, step: "4", title: "Verdien EXTRAATjes", desc: "Na iedere dienst word je beoordeeld en kun je punten verdienen.", color: "from-emerald-500 to-teal-600" },
 ];
 
-const logos = [
-  { src: logoMarriott, alt: "Marriott Hotels Amsterdam" },
-  { src: logoHilton, alt: "Hilton Amsterdam" },
-  { src: logoHartMuseum, alt: "H'art Museum Amsterdam" },
-  { src: logoSelectCatering, alt: "Select Catering" },
-  { src: logoAppel, alt: "Appèl Catering" },
-  { src: logoAmrath, alt: "Amrâth Hotels Amsterdam" },
-];
 
 export default function WerkwijzePage() {
   useEffect(() => {
@@ -488,24 +484,48 @@ export default function WerkwijzePage() {
           </div>
         </section>
 
-        {/* ⑩ LOGO'S SOCIAL PROOF — white */}
-        <section className="py-14 bg-white border-t border-gray-100">
+        {/* ⑩ LOGO MARQUEE — identical to LandingPage */}
+        <section className="py-10 sm:py-14 bg-white border-t border-gray-100 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
             <RevealSection>
-              <p className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">
-                Werk voor toonaangevende locaties
-              </p>
+              <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Vertrouwd door teams in de horeca</p>
             </RevealSection>
-            <RevealSection delay={100}>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                {logos.map((logo, i) => (
-                  <div key={i} className="bg-gray-50 rounded-2xl p-4 sm:p-5 flex items-center justify-center aspect-[3/2] hover:bg-purple-50 hover:border-purple-100 border border-transparent transition-all duration-300">
-                    <img src={logo.src} alt={logo.alt} className="max-h-10 max-w-full object-contain opacity-60 hover:opacity-90 transition-opacity" loading="lazy" decoding="async" />
+            <div className="relative overflow-hidden group">
+              <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
+              <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
+              <div className="flex animate-marquee-werkwijze group-hover:[animation-play-state:paused]">
+                {[...Array(2)].map((_, setIdx) => (
+                  <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                    {[
+                      { src: logoAmrath, alt: "Amrâth Hotels Amsterdam" },
+                      { src: logoFcUtrecht, alt: "FC Utrecht" },
+                      { src: logoFunda, alt: "Funda" },
+                      { src: logoHartMuseum, alt: "H'art Museum Amsterdam" },
+                      { src: logoHetePeper, alt: "Hete Peper" },
+                      { src: logoHilton, alt: "Hilton Amsterdam" },
+                      { src: logoMarriott, alt: "Marriott Hotels Amsterdam" },
+                      { src: logoSelectCatering, alt: "Select Catering" },
+                      { src: logoAppel, alt: "Appèl Catering" },
+                      { src: logoWestweelde, alt: "Westweelde" },
+                    ].map((logo) => (
+                      <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                        <img src={logo.src} alt={logo.alt} width="200" height="200" className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            </RevealSection>
+            </div>
           </div>
+          <style>{`
+            @keyframes marquee-werkwijze {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee-werkwijze {
+              animation: marquee-werkwijze 40s linear infinite;
+            }
+          `}</style>
         </section>
 
         {/* ⑪ CTA — dark purple gradient matching LandingPage/OnsTeam CTA */}
