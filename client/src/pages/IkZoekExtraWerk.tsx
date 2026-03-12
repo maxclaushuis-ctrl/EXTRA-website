@@ -25,7 +25,7 @@ import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import mercureLogo from "../assets/pitch/logo-mercure.png";
 import pulitzerLogo from "../assets/pitch/logo-pulitzer.png";
-import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
+import nhLogo from "../assets/pitch/logo-nh.png";
 import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";

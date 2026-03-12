@@ -19,7 +19,7 @@ import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoMercure from "../assets/pitch/logo-mercure.png";
 import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
-import logoNH from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
+import logoNH from "../assets/pitch/logo-nh.png";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
 import screenDashboard from "@assets/IMG_9066_1773314165933.png";
