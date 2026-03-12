@@ -1,0 +1,109 @@
+You are still solving the wrong problem.
+Do not spend more time reasoning about PNG transparency.
+The issue is not fixed.
+In the client logo section, the Pulitzer and NH logos are still rendering as visible colored blocks instead of clean logo marks.
+The screenshot clearly shows that the actual logo rendering is still wrong.
+What I need you to do now
+Stop investigating in theory and directly fix the implementation.
+I want you to debug and replace the current logo rendering step by step.
+Required outcome
+In the opdrachtgever / client logo section, the following must be visible as proper logos:
+Pulitzer
+NH Hotels
+They must appear just like the other logos in the row:
+clean
+centered
+transparent background
+no colored square or rectangle
+no placeholder block
+no overlay
+no tint block
+no CSS background box
+Important: the current result is wrong
+The current output still shows:
+a blue square where one logo should be
+a brown rectangle where one logo should be
+That means the current implementation is still rendering the wrong visual output.
+Do not tell me the PNG is transparent if the site still shows blocks.
+Fix what is rendered in the browser.
+What to do now
+1. Remove the currently broken Pulitzer and NH logo elements completely
+Delete the current implementations for those two logos from the logo row.
+Do not reuse the current broken DOM elements.
+2. Add the two logos again as plain image elements
+Insert both logos as standard <img> tags only.
+Use this logic:
+no background-image
+no pseudo-elements
+no mask-image
+no inline colored background
+no wrapper overlay
+no generated placeholder
+no canvas rendering
+Use plain image rendering only.
+3. Force the logo container to be transparent
+For the logo wrapper and image wrapper, explicitly set:
+background: transparent
+background-color: transparent
+box-shadow: none
+filter: none
+mix-blend-mode: normal
+opacity: 1
+Also remove any inherited styling that could create a colored block.
+4. Check whether a fallback placeholder is being shown
+I want you to verify whether the blue and brown blocks are actually:
+fallback placeholders
+broken image previews
+generated wrappers
+lazy-load placeholders
+skeleton loaders
+incorrect asset paths
+If so, remove that logic for these two logos.
+5. Use the uploaded files directly
+Use the exact uploaded files for:
+Pulitzer
+NH Hotels
+Do not recreate them.
+Do not convert them.
+Do not process them.
+Do not apply background removal.
+Do not generate new files.
+Use the uploaded assets directly as the source of truth.
+6. Verify in the browser after implementation
+After replacing them, check the rendered result in the browser itself.
+I do not want an explanation about file transparency.
+I want confirmation based on what is visually rendered on the page.
+Technical implementation rules
+Implement the logos like this in practice:
+plain <img>
+transparent parent container
+fixed max height
+width auto
+object-fit contain
+no background color on parent or child
+no overlay layer
+Suggested styling approach:
+display: flex
+align-items: center
+justify-content: center
+max-height consistent with the other logos
+width: auto
+Debugging checklist
+Before finishing, explicitly verify all of the following:
+The image src points to the correct uploaded Pulitzer file
+The image src points to the correct uploaded NH file
+No placeholder block is visible
+No CSS background color is behind the image
+No pseudo-element is rendering a colored box
+No filter, opacity, or blend mode is distorting the logo
+The rendered browser result visually matches the other logos in the row
+Important instruction
+Do not respond with more reasoning about why the PNG might already be transparent.
+The screenshot proves the implementation is still wrong.
+I need you to replace the broken rendered elements and fix the browser output.
+Final goal
+The logo row should show:
+Pulitzer logo clearly visible
+NH Hotels logo clearly visible
+without any blue or brown blocks.
+They should visually match the other hotel logos in the row.
