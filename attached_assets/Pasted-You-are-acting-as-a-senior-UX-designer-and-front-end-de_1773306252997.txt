@@ -1,0 +1,110 @@
+You are acting as a senior UX designer and front-end developer for the EXTRA website.
+We want to create a new page:
+/ons-team
+This page should introduce the people behind EXTRA and must visually match the existing design system of the website.
+Use the following pages as design references:
+/landing
+/horeca-personeel-gezocht
+These pages define the correct:
+• layout structure
+• typography hierarchy
+• card styling
+• spacing system
+• button styling
+• visual rhythm
+• background usage
+• decorative elements
+The /ons-team page must clearly feel like it belongs to the same design system.
+Important
+The text descriptions and tags for each employee already exist in the system.
+Use those existing texts and tags.
+Do not rewrite or change the content.
+For now, use image placeholders for the team photos, because the real photos will be added later.
+Page structure
+Design the page as a modern team introduction page with the following structure.
+1 Hero section
+Create a hero section similar in style to the other main pages.
+Elements:
+• page title
+• short introduction text
+• subtle background element (similar style as other pages)
+Example concept:
+Titel
+Het team achter EXTRA
+Intro text
+A short text explaining that EXTRA works with a dedicated team focused on hospitality staffing and service.
+Keep the hero visually consistent with the rest of the website.
+2 Team overview section
+Below the hero, create a team overview grid.
+Each team member should appear in a team card.
+Each card contains:
+• placeholder photo
+• name
+• role / function
+• short description text
+• tags (skills or specialties)
+Example card structure:
+Photo placeholder
+Name
+Role
+Short text
+Tags
+3 Card design
+The team cards must match the website design system.
+Design characteristics:
+• rounded cards
+• subtle shadow
+• clean spacing
+• clear typography hierarchy
+• tag styling consistent with other parts of the site
+Cards should feel premium and modern, similar to the cards used elsewhere on the website.
+4 Grid layout
+Use a responsive grid.
+Desktop:
+3–4 team members per row.
+Tablet:
+2 per row.
+Mobile:
+1 per row.
+Ensure enough whitespace between cards so the layout feels calm and premium.
+5 Hover interaction
+Add subtle hover effects:
+• slight card elevation
+• subtle shadow increase
+• optional reveal of additional info
+Keep interactions subtle and consistent with the rest of the website.
+6 Optional detail interaction
+If possible, add the option that clicking a team card can expand or open additional information about the person.
+This could include:
+• longer bio
+• expertise
+• specialties
+But this should not disrupt the layout.
+7 Placeholder images
+Since the real images are not available yet:
+Use placeholders such as:
+/images/team-placeholder.jpg
+The image container should already have the correct aspect ratio so that the real photos can easily replace the placeholders later.
+8 Visual style consistency
+Make sure the page visually aligns with the rest of the site.
+Use the same:
+• font sizes
+• card radius
+• button styles
+• color palette
+• section spacing
+• layout width
+as used on /landing and /horeca-personeel-gezocht.
+9 CTA section
+At the bottom of the page, create a CTA section.
+Example:
+Titel
+Werken bij EXTRA?
+Text
+Short text encouraging people to apply for jobs.
+Button:
+Bekijk vacatures
+Link to /vacatures
+Goal
+The final result should feel like a professional, modern and premium team page that fits perfectly within the EXTRA website.
+It should not feel like a generic team template, but like a page designed within the existing EXTRA design system.

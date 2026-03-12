@@ -3,15 +3,11 @@ import { Link } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
 import PublicNav from "@/components/PublicNav";
 import {
-  Users, ArrowRight, ChevronRight, Zap, Heart,
-  Star, Coffee, Trophy, Flame, Camera, Sparkles, Award
+  Users, ArrowRight, Camera, Music, Hotel, Lightbulb,
+  BookOpen, Zap, Smile, Smartphone, Trophy, MapPin, ChevronDown
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 
-/* ─────────────────────────────────────────────
-   ANIMATION HELPERS
-───────────────────────────────────────────── */
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -41,279 +37,161 @@ function RevealSection({ children, className = "", delay = 0 }: { children: Reac
   );
 }
 
-/* ─────────────────────────────────────────────
-   X-PATTERN BACKGROUNDS
-───────────────────────────────────────────── */
-function XPatternBg() {
+function XPatternBg({ color = "rgba(139,92,246,1)", opacity = 0.07 }: { color?: string; opacity?: number }) {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {[
-        { left: "4%", top: "8%", w: 180, rot: 15, op: 0.07 },
-        { left: "76%", top: "12%", w: 140, rot: -8, op: 0.05 },
-        { left: "46%", top: "70%", w: 160, rot: 25, op: 0.06 },
+        { left: "3%", top: "5%", w: 180, rot: 12 },
+        { left: "78%", top: "8%", w: 140, rot: -10 },
+        { left: "50%", top: "72%", w: 160, rot: 22 },
       ].map((x, i) => (
         <div key={i} className="absolute" style={{
           left: x.left, top: x.top, width: x.w, height: x.w,
-          transform: `rotate(${x.rot}deg)`, opacity: x.op,
+          transform: `rotate(${x.rot}deg)`, opacity,
           WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
           WebkitMaskSize: "contain", maskSize: "contain",
           WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
           WebkitMaskPosition: "center", maskPosition: "center",
-          backgroundColor: "rgba(139,92,246,1)",
+          backgroundColor: color,
         }} />
       ))}
     </div>
   );
 }
 
-function XPatternBgDark() {
+function PhotoPlaceholder({ initials, gradient }: { initials: string; gradient: string }) {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[
-        { left: "5%", top: "10%", w: 200, rot: 15, op: 0.1 },
-        { left: "80%", top: "55%", w: 240, rot: -20, op: 0.08 },
-      ].map((x, i) => (
-        <div key={i} className="absolute" style={{
-          left: x.left, top: x.top, width: x.w, height: x.w,
-          transform: `rotate(${x.rot}deg)`, opacity: x.op,
-          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
-          WebkitMaskSize: "contain", maskSize: "contain",
-          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-          WebkitMaskPosition: "center", maskPosition: "center",
-          backgroundColor: "rgba(255,255,255,0.9)",
-        }} />
-      ))}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   PHOTO PLACEHOLDER
-───────────────────────────────────────────── */
-function PhotoPlaceholder({ initials, color, size = "md" }: { initials: string; color: string; size?: "md" | "lg" }) {
-  const height = size === "lg" ? "h-72 sm:h-80" : "h-56 sm:h-64";
-  return (
-    <div className={`relative w-full ${height} bg-gradient-to-br ${color} flex flex-col items-center justify-center overflow-hidden`}>
-      {/* decorative diagonal stripe */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-full h-full" style={{
-          background: "repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.15) 20px, rgba(255,255,255,0.15) 21px)"
-        }} />
-      </div>
-      {/* faded initials */}
-      <span className="absolute text-[7rem] font-black text-white/10 select-none leading-none">
-        {initials}
-      </span>
-      {/* camera icon + label */}
-      <div className="relative z-10 flex flex-col items-center gap-2">
-        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-          <Camera className="w-5 h-5 text-white" />
+    <div className={`relative w-full aspect-[3/4] bg-gradient-to-br ${gradient} flex flex-col items-center justify-center overflow-hidden rounded-t-2xl sm:rounded-t-3xl`}>
+      <div className="absolute inset-0 opacity-10" style={{
+        background: "repeating-linear-gradient(45deg, transparent, transparent 24px, rgba(255,255,255,0.15) 24px, rgba(255,255,255,0.15) 25px)"
+      }} />
+      <span className="absolute text-[8rem] font-black text-white/10 select-none leading-none">{initials}</span>
+      <div className="relative z-10 flex flex-col items-center gap-3">
+        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+          <Camera className="w-6 h-6 text-white" />
         </div>
-        <span className="text-white/80 text-xs font-bold tracking-widest uppercase">Foto volgt</span>
+        <span className="text-white/70 text-xs font-bold tracking-widest uppercase">Foto volgt</span>
       </div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   TEAM DATA
-───────────────────────────────────────────── */
+type Tag = { emoji: string; label: string };
+
 type Member = {
   naam: string;
   functie: string;
   initials: string;
-  color: string;
+  gradient: string;
+  accentColor: string;
   shadowColor: string;
   bio: string;
-  badge: string;
-  badgeIcon: React.ElementType;
-  badgeBg: string;
-  badgeText: string;
-  fun: string;
-  dept: string;
-  deptColor: string;
+  tags: Tag[];
+  fullBio: string;
 };
 
 const team: Member[] = [
   {
+    naam: "Max",
+    functie: "Eigenaar & Sales",
+    initials: "MA",
+    gradient: "from-purple-600 via-violet-600 to-indigo-500",
+    accentColor: "text-purple-600",
+    shadowColor: "shadow-purple-500/20",
+    bio: "Ideeën heeft Max altijd genoeg, meestal een stuk of tien tegelijk en vaak nog een paar extra onderweg. Als eigenaar van EXTRA en verantwoordelijk voor sales is hij continu bezig met nieuwe kansen, slimme verbeteringen en manieren om dingen nét iets beter te doen dan gisteren.",
+    tags: [
+      { emoji: "🏆", label: "Competitief, ook buiten werk" },
+      { emoji: "📍", label: "Favoriete tent: Bar Buuf" },
+      { emoji: "💡", label: "Bekend om: tien ideeën tegelijk" },
+    ],
+    fullBio: "Ideeën heeft Max altijd genoeg, meestal een stuk of tien tegelijk en vaak nog een paar extra onderweg. Als eigenaar van EXTRA en verantwoordelijk voor sales is hij continu bezig met nieuwe kansen, slimme verbeteringen en manieren om dingen nét iets beter te doen dan gisteren. Nieuwe technologie en handige tools probeert hij het liefst meteen uit, zolang het maar helpt om het werk slimmer en sneller te maken.\n\nBuiten kantoor is Max net zo enthousiast over de horeca als binnen. Een goed restaurant, een volle tafel en een gezellige avond slaan ze bij hem zelden over. En als er iets te vieren valt, is de kans groot dat hij degene is die zegt: \"Nog eentje dan.\"",
+  },
+  {
     naam: "Eveline",
     functie: "Operations Manager",
     initials: "EV",
-    color: "from-violet-600 via-purple-600 to-fuchsia-500",
-    shadowColor: "shadow-violet-500/25",
-    bio: "Geen obstakel is te hoog voor Eveline. Ze schakelt sneller dan je wifi op kantoor en staat bekend om haar 'komt goed'-mentaliteit. De motor die EXTRA draaiende houdt.",
-    badge: "Onverslaanbaar",
-    badgeIcon: Flame,
-    badgeBg: "bg-orange-100",
-    badgeText: "text-orange-700",
-    fun: "Kan elke situatie omtoveren tot een kans 🚀",
-    dept: "Operations",
-    deptColor: "bg-violet-100 text-violet-700",
+    gradient: "from-fuchsia-500 via-purple-500 to-violet-600",
+    accentColor: "text-fuchsia-600",
+    shadowColor: "shadow-fuchsia-500/20",
+    bio: "Als er iemand is die overzicht houdt, is het Eveline wel. Goed georganiseerd, scherp en een echte aanpakker die niet snel het kaas van haar brood laat eten. Binnen EXTRA weet ze precies wat er speelt — er ontgaat haar weinig en vaak is ze al op de hoogte voordat iemand anders het doorheeft.",
+    tags: [
+      { emoji: "📚", label: "Boekenworm" },
+      { emoji: "⚡", label: "Aanpakker" },
+      { emoji: "💡", label: "Bekend om: altijd overal van op de hoogte" },
+    ],
+    fullBio: "Als er iemand is die overzicht houdt, is het Eveline wel. Goed georganiseerd, scherp en een echte aanpakker die niet snel het kaas van haar brood laat eten. Binnen EXTRA weet ze precies wat er speelt — er ontgaat haar weinig en vaak is ze al op de hoogte voordat iemand anders het doorheeft.\n\nEveline is recht voor de raap en houdt van duidelijkheid. Dat maakt haar niet alleen een sterke sparringpartner binnen het team, maar ook iemand die ervoor zorgt dat plannen daadwerkelijk worden uitgevoerd. EXTRA zit haar duidelijk in het bloed — soms lijkt het bijna alsof ze er zelfs over droomt.\n\nEn als het werk erop zit? Dan duikt Eveline net zo graag in een goed boek. Een echte boekenworm die net zo enthousiast kan worden van een sterk verhaal als van een goed georganiseerde planning.",
   },
   {
-    naam: "Jayden",
-    functie: "Planner",
-    initials: "JA",
-    color: "from-blue-500 via-cyan-500 to-sky-400",
-    shadowColor: "shadow-blue-500/25",
-    bio: "Jayden plant niet alleen mensen in, hij plant chaos uit. Als iemand last-minute uitvalt, heeft hij al een oplossing voordat jij 'no-show' kunt zeggen.",
-    badge: "Last-minute held",
-    badgeIcon: Zap,
-    badgeBg: "bg-blue-100",
-    badgeText: "text-blue-700",
-    fun: "Heeft waarschijnlijk al jouw volgende shift gepland 📅",
-    dept: "Planning",
-    deptColor: "bg-blue-100 text-blue-700",
+    naam: "Charlotte",
+    functie: "Hotel & Housekeeping specialist",
+    initials: "CH",
+    gradient: "from-rose-500 via-pink-500 to-fuchsia-400",
+    accentColor: "text-rose-600",
+    shadowColor: "shadow-rose-500/20",
+    bio: "Charlotte ademt hotels. Met een achtergrond van de hotelschool voelt hospitality voor haar als tweede natuur. Binnen EXTRA staat ze bekend om haar scherpe oog voor detail en haar liefde voor structuur — niets ontgaat haar en alles moet kloppen, tot in de kleinste puntjes.",
+    tags: [
+      { emoji: "🎼", label: "Fan van klassieke muziek" },
+      { emoji: "🏨", label: "Hotelhart" },
+      { emoji: "💡", label: "Bekend om: oog voor elk detail" },
+    ],
+    fullBio: "Charlotte ademt hotels. Met een achtergrond van de hotelschool voelt hospitality voor haar als tweede natuur. Binnen EXTRA staat ze bekend om haar scherpe oog voor detail en haar liefde voor structuur — niets ontgaat haar en alles moet kloppen, tot in de kleinste puntjes.\n\nWaar anderen chaos zien, ziet Charlotte overzicht. Ze wordt oprecht blij van een strakke planning en een goed georganiseerd proces. En terwijl ze dat allemaal regelt, gaat ze meestal neuriënd door de dag — zingen doet ze namelijk ook buiten werk, in een koor.\n\nOoit wil Charlotte haar eigen hotel openen. Tot die tijd zorgt ze er bij EXTRA voor dat alles loopt zoals het hoort: gestructureerd, gastvrij en tot in de puntjes verzorgd.",
   },
   {
-    naam: "Lotte",
-    functie: "Recruiter",
-    initials: "LO",
-    color: "from-pink-500 via-rose-500 to-red-400",
-    shadowColor: "shadow-pink-500/25",
-    bio: "Lotte spot talent van drie kilometer afstand. Ze weet precies wie waar past. Haar motto: 'Iedereen heeft een EXTRAatje, je moet 'm alleen even vinden.'",
-    badge: "Talentspotter",
-    badgeIcon: Star,
-    badgeBg: "bg-pink-100",
-    badgeText: "text-pink-700",
-    fun: "Heeft meer mensen gescout dan een voetbalmakelaar 🌟",
-    dept: "Recruitment",
-    deptColor: "bg-pink-100 text-pink-700",
-  },
-  {
-    naam: "Milan",
-    functie: "Klantenmanager",
-    initials: "MI",
-    color: "from-emerald-500 via-green-500 to-teal-400",
-    shadowColor: "shadow-emerald-500/25",
-    bio: "Milan is de brug tussen klanten en medewerkers. Altijd positief, altijd strak geregeld. Hij kent onze klanten bij naam, en soms ook hun honden.",
-    badge: "Klantkampioen",
-    badgeIcon: Trophy,
-    badgeBg: "bg-green-100",
-    badgeText: "text-green-700",
-    fun: "Onthoudt elke verjaardag van elke klant 🎂",
-    dept: "Account Management",
-    deptColor: "bg-green-100 text-green-700",
-  },
-  {
-    naam: "Sanne",
-    functie: "HR & Medewerkerszaken",
-    initials: "SA",
-    color: "from-amber-500 via-yellow-500 to-orange-400",
-    shadowColor: "shadow-amber-500/25",
-    bio: "Bij Sanne is je verhaal altijd veilig. Ze zorgt dat medewerkers zich gehoord voelen en dat EXTRA een plek is waar je echt jezelf kunt zijn.",
-    badge: "People person",
-    badgeIcon: Heart,
-    badgeBg: "bg-yellow-100",
-    badgeText: "text-yellow-700",
-    fun: "Heeft nog nooit een e-mail onbeantwoord gelaten ✉️",
-    dept: "HR",
-    deptColor: "bg-amber-100 text-amber-700",
-  },
-  {
-    naam: "Daan",
-    functie: "Account Manager Hospitality",
-    initials: "DA",
-    color: "from-indigo-500 via-blue-500 to-violet-500",
-    shadowColor: "shadow-indigo-500/25",
-    bio: "Daan weet alles van de hospitality-sector. Van sterrenzaken tot boutique hotels. Hij snapt wat klanten nodig hebben, vaak voordat ze het zelf weten.",
-    badge: "Hospitality pro",
-    badgeIcon: Award,
-    badgeBg: "bg-indigo-100",
-    badgeText: "text-indigo-700",
-    fun: "Heeft in meer keukens gestaan dan de meeste koks 👨‍🍳",
-    dept: "Account Management",
-    deptColor: "bg-indigo-100 text-indigo-700",
-  },
-  {
-    naam: "Yara",
-    functie: "Marketing & Communicatie",
-    initials: "YA",
-    color: "from-fuchsia-500 via-pink-500 to-rose-400",
-    shadowColor: "shadow-fuchsia-500/25",
-    bio: "Yara maakt van EXTRA een merk dat je voelt. Van social media tot campagnes, zij geeft EXTRA haar stem en een gave voor verhalen die echt raken.",
-    badge: "Storyteller",
-    badgeIcon: Sparkles,
-    badgeBg: "bg-fuchsia-100",
-    badgeText: "text-fuchsia-700",
-    fun: "Vindt in elke situatie een goede caption 📸",
-    dept: "Marketing",
-    deptColor: "bg-fuchsia-100 text-fuchsia-700",
-  },
-  {
-    naam: "Remi",
-    functie: "Finance & Administratie",
-    initials: "RE",
-    color: "from-teal-500 via-cyan-500 to-sky-400",
-    shadowColor: "shadow-teal-500/25",
-    bio: "Remi houdt EXTRA scherp. Cijfers zijn zijn taal, nauwkeurigheid zijn superkracht. Terwijl de rest bezig is met buiten, klopt alles binnen tot op de cent.",
-    badge: "Cijferaar",
-    badgeIcon: Zap,
-    badgeBg: "bg-teal-100",
-    badgeText: "text-teal-700",
-    fun: "Heeft elk budget altijd on point 💰",
-    dept: "Finance",
-    deptColor: "bg-teal-100 text-teal-700",
-  },
-  {
-    naam: "Nina",
-    functie: "Trainer & Onboarding",
-    initials: "NI",
-    color: "from-orange-500 via-red-500 to-rose-500",
-    shadowColor: "shadow-orange-500/25",
-    bio: "Nina zorgt dat nieuwe medewerkers van dag één het gevoel hebben dat ze thuis zijn. Ze traint, begeleidt en motiveert, met een energie die aanstekelijk is.",
-    badge: "Coach",
-    badgeIcon: Coffee,
-    badgeBg: "bg-orange-100",
-    badgeText: "text-orange-700",
-    fun: "Heeft de beste onboarding-playlist van het kantoor 🎵",
-    dept: "Training",
-    deptColor: "bg-orange-100 text-orange-700",
+    naam: "Lea",
+    functie: "Recruiter & Kandidaatrelaties",
+    initials: "LE",
+    gradient: "from-amber-400 via-orange-500 to-rose-400",
+    accentColor: "text-orange-600",
+    shadowColor: "shadow-orange-500/20",
+    bio: "Lea is de verbinder van het team. Altijd met een lach, altijd behulpzaam en iemand bij wie mensen zich meteen op hun gemak voelen. Of het nu collega's, kandidaten of opdrachtgevers zijn — Lea zorgt dat iedereen zich gezien en gehoord voelt.",
+    tags: [
+      { emoji: "😊", label: "Altijd met een lach" },
+      { emoji: "📱", label: "Onze TikTok ster" },
+      { emoji: "💡", label: "Bekend om: mensen verbinden" },
+    ],
+    fullBio: "Lea is de verbinder van het team. Altijd met een lach, altijd behulpzaam en iemand bij wie mensen zich meteen op hun gemak voelen. Of het nu collega's, kandidaten of opdrachtgevers zijn — Lea zorgt dat iedereen zich gezien en gehoord voelt.\n\nNaast haar rol op kantoor staat ze ook regelmatig zelf op de vloer. Niet alleen om te helpen, maar ook om te blijven voelen hoe het er in de praktijk aan toe gaat. Daardoor weet ze precies hoe alles reilt en zeilt en waar we dingen nog beter kunnen maken.\n\nEn buiten het plannen en verbinden is Lea ook onze onofficiële TikTok ster. Waar zij verschijnt, gebeurt er meestal wel iets dat het delen waard is.",
   },
 ];
 
-/* ─────────────────────────────────────────────
-   TEAM CARD (PORTRAIT STYLE)
-───────────────────────────────────────────── */
-function TeamCard({ m, delay, size = "md" }: { m: Member; delay: number; size?: "md" | "lg" }) {
-  const [hovered, setHovered] = useState(false);
-  const BadgeIcon = m.badgeIcon;
+function TeamCard({ member, delay }: { member: Member; delay: number }) {
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <RevealSection delay={delay}>
-      <article
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        className={`group rounded-2xl sm:rounded-3xl overflow-hidden border-2 bg-white transition-all duration-400 ${
-          hovered
-            ? `border-transparent shadow-2xl ${m.shadowColor} -translate-y-2`
-            : "border-purple-100 shadow-md"
-        }`}
-      >
-        {/* ── PHOTO AREA ── */}
-        <div className="relative overflow-hidden">
-          <PhotoPlaceholder initials={m.initials} color={m.color} size={size} />
-          {/* dept tag */}
-          <span className={`absolute top-3 left-3 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${m.deptColor} backdrop-blur-sm`}>
-            {m.dept}
-          </span>
-          {/* badge */}
-          <span className={`absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full ${m.badgeBg} ${m.badgeText}`}>
-            <BadgeIcon className="h-2.5 w-2.5" /> {m.badge}
-          </span>
-          {/* gradient overlay at bottom of photo */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
-        </div>
+      <article className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 hover:border-purple-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
 
-        {/* ── INFO ── */}
-        <div className="px-5 pb-5 pt-2">
-          <h3 className="text-lg font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-            {m.naam}
-          </h3>
-          <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-3">{m.functie}</p>
-          <p className="text-sm text-gray-500 leading-relaxed mb-4">{m.bio}</p>
-          <div className="border-t border-purple-100 pt-3">
-            <p className="text-[11px] text-gray-400 italic leading-relaxed">{m.fun}</p>
+        <PhotoPlaceholder initials={member.initials} gradient={member.gradient} />
+
+        <div className="p-6 sm:p-8 flex flex-col flex-1">
+          <div className="mb-4">
+            <h3 className="text-xl sm:text-2xl font-black text-gray-900 leading-tight mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              {member.naam}
+            </h3>
+            <p className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${member.accentColor}`}>{member.functie}</p>
+          </div>
+
+          <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5 flex-1">
+            {expanded
+              ? member.fullBio.split("\n\n").map((p, i) => <span key={i}>{p}{i < member.fullBio.split("\n\n").length - 1 && <><br /><br /></>}</span>)
+              : member.bio
+            }
+          </p>
+
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`inline-flex items-center gap-1.5 text-xs font-bold mb-5 transition-colors ${member.accentColor} hover:opacity-70`}
+          >
+            {expanded ? "Lees minder" : "Lees meer"}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
+          </button>
+
+          <div className="border-t border-gray-100 pt-4 space-y-2">
+            {member.tags.map((tag, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-base leading-none">{tag.emoji}</span>
+                <span className="text-xs text-gray-500 font-medium">{tag.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </article>
@@ -321,25 +199,22 @@ function TeamCard({ m, delay, size = "md" }: { m: Member; delay: number; size?: 
   );
 }
 
-/* ─────────────────────────────────────────────
-   PAGE
-───────────────────────────────────────────── */
 export default function OnsTeam() {
   useEffect(() => {
-    document.title = "Ons Team: De mensen achter EXTRA | EXTRA Hospitality Staffing";
+    document.title = "Ons Team | De mensen achter EXTRA | doehetextra.nl";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Maak kennis met het team achter EXTRA, jong, energiek en gedreven. Ontdek wie elke dag zorgt dat de beste medewerkers matchen met de mooiste opdrachtgevers.");
+    setMeta("description", "Maak kennis met het team achter EXTRA. Max, Eveline, Charlotte en Lea zorgen elke dag dat de beste horecamedewerkers matchen met de mooiste opdrachtgevers in Amsterdam.");
     setMeta("og:title", "Ons Team: De mensen achter EXTRA", true);
-    setMeta("og:description", "Jong horeca team met grote energie. Planners, recruiters, klantenmanagers en trainers die werken met passie voor hospitality.", true);
+    setMeta("og:description", "Maak kennis met het team achter EXTRA Hospitality Staffing.", true);
 
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
-    canonical.href = "https://www.doehetextra.nl/over-extra/ons-team";
+    canonical.href = "https://www.doehetextra.nl/ons-team";
 
     const schema = {
       "@context": "https://schema.org",
@@ -359,156 +234,147 @@ export default function OnsTeam() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
-
       <PublicNav forceDark={false} />
 
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
-        <XPatternBgDark />
-        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 pb-20 sm:pb-28">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+      {/* ═══════════════════════════════════════ */}
+      {/* HERO                                   */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#1a0a2e] via-[#170926] to-[#12071f]">
+        <XPatternBg color="rgba(255,255,255,0.9)" opacity={0.07} />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-transparent to-fuchsia-600/10 pointer-events-none" />
+        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 pb-20 sm:pb-28">
+          <RevealSection>
+            <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
+              <Users className="w-4 h-4" /> Ons team
+            </span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
               De mensen{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">achter EXTRA</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
             </h1>
-            <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Jong, energiek en een tikje eigenwijs. Dit zijn de {team.length} mensen die elke dag zorgen dat alles loopt zoals het moet lopen, en soms net een beetje EXTRA.
+            <p className="text-lg sm:text-xl text-purple-100/80 max-w-2xl leading-relaxed mb-10">
+              Wij zijn geen anoniem bureau. Elk vraagstuk, elke kandidaat en elke opdrachtgever krijgt een menselijk gezicht. Maak kennis met het kleine team dat grote dingen doet.
             </p>
             <div className="flex flex-wrap gap-3">
-              {["Operations", "Planning", "Recruitment", "HR", "Marketing", "Finance"].map(d => (
-                <span key={d} className="text-xs font-bold bg-white/15 border border-white/20 text-white px-3 py-1.5 rounded-full backdrop-blur-sm">
-                  {d}
+              {["4 mensen", "1 missie", "100% hospitality", "Amsterdam"].map(tag => (
+                <span key={tag} className="text-xs font-bold bg-white/10 border border-white/15 text-white/90 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  {tag}
                 </span>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── INTRO QUOTE ── */}
-      <section className="relative bg-white py-14 sm:py-20 overflow-hidden">
-        <XPatternBg />
-        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
-          <RevealSection>
-            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-              <div className="lg:w-1/2">
-                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Ons team</span>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Bij EXTRA draait alles om mensen
-                </h2>
-                <p className="text-gray-600 leading-relaxed text-base sm:text-lg mb-6">
-                  Wij zijn geen anoniem bureau. Elk vraagstuk, elke planning en elke medewerker krijgt een menselijk gezicht. Snel schakelen, direct contact, oprechte aandacht. Dat is hoe wij werken.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  {[
-                    { num: `${team.length}`, label: "Teamleden" },
-                    { num: "5+", label: "Steden" },
-                    { num: "9+", label: "Jaar ervaring" },
-                  ].map(({ num, label }) => (
-                    <div key={label} className="bg-purple-50 rounded-2xl px-5 py-3 border border-purple-100 text-center min-w-[80px]">
-                      <p className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{num}</p>
-                      <p className="text-xs text-gray-500 font-semibold mt-0.5">{label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* decorative quote */}
-              <div className="lg:w-1/2">
-                <div className="relative bg-gradient-to-br from-purple-600 via-violet-600 to-fuchsia-500 rounded-3xl p-8 sm:p-10 text-white overflow-hidden">
-                  <XPatternBgDark />
-                  <span className="text-6xl font-black text-white/20 leading-none absolute top-4 left-6">"</span>
-                  <p className="relative z-10 text-lg sm:text-xl font-bold leading-relaxed mt-4">
-                    Iedereen heeft een EXTRAatje, je moet 'm alleen even vinden.
-                  </p>
-                  <p className="relative z-10 text-white/70 text-sm mt-4 font-semibold">— Lotte, Recruiter</p>
-                </div>
-              </div>
-            </div>
           </RevealSection>
         </div>
       </section>
 
-      {/* ── FEATURED: TOP 3 ── */}
-      <section className="py-10 sm:py-14" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
-        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+      {/* ═══════════════════════════════════════ */}
+      {/* TEAM GRID                              */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
+        <XPatternBg color="rgba(139,92,246,1)" opacity={0.07} />
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 relative z-10">
           <RevealSection>
-            <div className="flex items-center gap-3 mb-8">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Kernteam</span>
-              <div className="flex-1 h-px bg-purple-100" />
+            <div className="text-center mb-12 sm:mb-16">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
+                <Users className="w-4 h-4" /> Maak kennis
+              </span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Het team
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-xl mx-auto leading-relaxed">
+                Klein team, groot resultaat. Ieder met zijn eigen specialiteit, samen zorgen we dat alles klopt.
+              </p>
             </div>
           </RevealSection>
-          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6">
-            {team.slice(0, 3).map((m, i) => (
-              <TeamCard key={m.naam} m={m} delay={i * 80} size="lg" />
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8">
+            {team.map((member, i) => (
+              <TeamCard key={member.naam} member={member} delay={i * 100} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── FULL TEAM GRID ── */}
-      <section className="relative bg-white py-10 sm:py-14 overflow-hidden">
-        <XPatternBg />
+      {/* ═══════════════════════════════════════ */}
+      {/* MISSIE SECTIE                          */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="relative py-20 sm:py-28 overflow-hidden bg-white">
+        <XPatternBg color="rgba(139,92,246,1)" opacity={0.05} />
         <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
-          <RevealSection>
-            <div className="flex items-center gap-3 mb-8">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Het volledige team</span>
-              <div className="flex-1 h-px bg-purple-100" />
-            </div>
-          </RevealSection>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {team.slice(3).map((m, i) => (
-              <TeamCard key={m.naam} m={m} delay={i * 60} />
-            ))}
+          <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <RevealSection>
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 py-2 rounded-full">
+                Onze aanpak
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Bij EXTRA draait alles om mensen
+              </h2>
+              <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base mb-8">
+                <p>Wij zijn geen anoniem bureau. Elk vraagstuk, elke planning en elke medewerker krijgt een menselijk gezicht. Snel schakelen, direct contact, oprechte aandacht.</p>
+                <p>Flexibiliteit zit in ons DNA. We denken in oplossingen en in mensen. En we kennen onze medewerkers echt — van hun sterke kanten tot wat ze drijft.</p>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {["Hospitality specialist", "Direct contact", "Persoonlijk", "Snel schakelen"].map(tag => (
+                  <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full bg-purple-100 text-purple-700">{tag}</span>
+                ))}
+              </div>
+            </RevealSection>
+
+            <RevealSection delay={150}>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { num: "800+", label: "Actieve medewerkers", color: "from-purple-600 to-violet-600" },
+                  { num: "4,8", label: "Google reviews", color: "from-amber-400 to-orange-500" },
+                  { num: "4", label: "Gepassioneerde teamleden", color: "from-fuchsia-500 to-pink-500" },
+                  { num: "100%", label: "In loondienst", color: "from-emerald-500 to-teal-500" },
+                ].map(({ num, label, color }) => (
+                  <div key={label} className={`bg-gradient-to-br ${color} rounded-2xl p-5 sm:p-6 text-white`}>
+                    <p className="text-2xl sm:text-3xl font-black leading-none mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>{num}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white/80 leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </RevealSection>
           </div>
         </div>
       </section>
 
-      {/* ── CULTUUR TEKST ── */}
-      <section className="py-14 sm:py-20" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
-        <div className="max-w-3xl mx-auto px-5 sm:px-8">
-          <RevealSection>
-            <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Onze cultuur</span>
-            <h2 className="text-2xl sm:text-4xl font-black text-gray-900 mt-3 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Wat maakt ons horeca team anders?
-            </h2>
-            <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base">
-              <p>Het EXTRA team bestaat uit een mix van jonge professionals met één gemeenschappelijk doel: de beste medewerkers koppelen aan de mooiste opdrachtgevers in de hospitality. We werken snel, denken vooruit en communiceren helder.</p>
-              <p>Flexibiliteit zit in ons DNA. Onze planners denken in oplossingen, onze recruiters denken in mensen en onze klantenmanagers denken in relaties.</p>
-              <p>Wat ons echt uniek maakt? We geloven dat motivatie van binnenuit komt. Daarom bouwen we het EXTRAATJE puntensysteem, om medewerkers te belonen voor wie ze zijn en wat ze bijdragen.</p>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-2.5">
-              {["Jong team", "Hospitality specialist", "Snel schakelen", "Medewerkersgericht", "EXTRAATJE systeem"].map(tag => (
-                <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full bg-purple-100 text-purple-700">{tag}</span>
-              ))}
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="relative bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950 py-16 sm:py-24 overflow-hidden">
-        <XPatternBgDark />
+      {/* ═══════════════════════════════════════ */}
+      {/* CTA                                    */}
+      {/* ═══════════════════════════════════════ */}
+      <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950" />
+        <XPatternBg color="rgba(255,255,255,0.9)" opacity={0.08} />
         <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8 text-center">
           <RevealSection>
-            <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-widest mb-5 bg-white/10 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10">
-              <Users className="w-4 h-4" /> Werken bij EXTRA?
+            <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
+              Werken bij EXTRA?
             </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Onderdeel worden van dit team?
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Word onderdeel{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">van ons team</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
+              </span>
             </h2>
-            <p className="text-purple-200/80 text-base sm:text-lg mb-8 leading-relaxed">
-              Meld je aan als medewerker en begin vandaag nog, of vraag personeel aan voor jouw locatie.
+            <p className="text-base sm:text-xl text-purple-200 mb-10 max-w-xl mx-auto leading-relaxed">
+              Ben jij de aanvulling die ons team nodig heeft? Bekijk onze openstaande vacatures of neem direct contact op.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2">
-                Aanmelden als medewerker <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-              <a href="/personeel-gezocht" className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2">
-                Opdrachtgever? <ChevronRight className="w-5 h-5" />
-              </a>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center">
+              <Link
+                href="/vacatures"
+                className="group inline-flex items-center justify-center gap-2.5 bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5 transition-all"
+              >
+                Bekijk vacatures
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/contact"
+                className="group inline-flex items-center justify-center gap-2.5 border-2 border-white/25 text-white font-bold px-8 py-4 rounded-full text-base hover:bg-white/10 hover:-translate-y-0.5 transition-all"
+              >
+                Neem contact op
+              </Link>
             </div>
           </RevealSection>
         </div>
