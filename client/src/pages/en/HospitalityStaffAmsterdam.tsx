@@ -12,7 +12,7 @@ import heroBgImage from "@assets/hero-background.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoMercure from "../../assets/pitch/logo-mercure.png";
-import logoPulitzer from "../../assets/pitch/logo-pulitzer-clean.svg";
+import logoPulitzer from "../../assets/pitch/logo-pulitzer-clean.png";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";

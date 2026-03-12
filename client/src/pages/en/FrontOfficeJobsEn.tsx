@@ -9,8 +9,8 @@ import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
 import mercureLogo from "../../assets/pitch/logo-mercure.png";
-import pulitzerLogo from "../../assets/pitch/logo-pulitzer-clean.svg";
-import nhLogo from "../../assets/pitch/logo-nh-clean.svg";
+import pulitzerLogo from "../../assets/pitch/logo-pulitzer-clean.png";
+import nhLogo from "../../assets/pitch/logo-nh-clean.png";
 
 function useScrollReveal() { const ref = useRef<HTMLDivElement>(null); const [visible, setVisible] = useState(false); useEffect(() => { const el = ref.current; if (!el) return; const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.07, rootMargin: "0px 0px -40px 0px" }); obs.observe(el); return () => obs.disconnect(); }, []); return { ref, visible }; }
 function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) { const { ref, visible } = useScrollReveal(); return <div ref={ref} className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`} style={{ transitionDelay: `${delay}ms` }}>{children}</div>; }

@@ -21,7 +21,7 @@ import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
 import screenUitdagingen from "@assets/IMG_9071_1773316943369.png";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoMercure from "../assets/pitch/logo-mercure.png";
-import logoPulitzer from "../assets/pitch/logo-pulitzer-clean.svg";
+import logoPulitzer from "../assets/pitch/logo-pulitzer-clean.png";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
