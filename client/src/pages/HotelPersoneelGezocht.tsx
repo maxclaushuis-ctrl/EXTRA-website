@@ -405,29 +405,42 @@ export default function HotelPersoneelGezocht() {
       {/* 4. LOGO'S VAN HOTELKLANTEN                         */}
       {/* ═══════════════════════════════════════════════════ */}
       <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection>
-            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
-              Vertrouwd door toonaangevende hotelketens in Amsterdam
-            </p>
-          </RevealSection>
-          <RevealSection delay={100}>
-            <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 lg:gap-20">
-              {[
-                { src: logoMarriott, alt: "Marriott Hotels" },
-                { src: logoHilton, alt: "Hilton Hotels" },
-                { src: logoAmrath, alt: "Amrâth Hotels" },
-                { src: logoNH, alt: "NH Hotels" },
-                { src: logoMercure, alt: "Mercure Hotels" },
-                { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
-              ].map((logo, i) => (
-                <div key={i} className="hover:scale-105 transition-transform duration-300">
-                  <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
-                </div>
-              ))}
-            </div>
-          </RevealSection>
+        <RevealSection>
+          <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 sm:mb-12">
+            Vertrouwd door toonaangevende hotelketens in Amsterdam
+          </p>
+        </RevealSection>
+        <div className="relative group overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
+          <div className="flex animate-marquee-hotel group-hover:[animation-play-state:paused]">
+            {[...Array(2)].map((_, setIdx) => (
+              <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                {[
+                  { src: logoMarriott, alt: "Marriott Hotels" },
+                  { src: logoHilton, alt: "Hilton Hotels" },
+                  { src: logoAmrath, alt: "Amrâth Hotels" },
+                  { src: logoNH, alt: "NH Hotels" },
+                  { src: logoMercure, alt: "Mercure Hotels" },
+                  { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
+                ].map((logo) => (
+                  <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                    <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto max-w-[120px] sm:max-w-[160px] object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
+        <style>{`
+          @keyframes marquee-hotel {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee-hotel {
+            animation: marquee-hotel 30s linear infinite;
+          }
+        `}</style>
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
