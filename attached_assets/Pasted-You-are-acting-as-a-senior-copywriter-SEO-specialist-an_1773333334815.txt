@@ -1,0 +1,167 @@
+You are acting as a senior copywriter, SEO specialist and front-end developer for the EXTRA website.
+The website currently exists only in Dutch, but we now want to implement a fully optimized English version of the entire website.
+This is not just a translation task.
+This task includes:
+• copywriting
+• multilingual SEO
+• international keyword optimization
+• language switching in the navigation
+• proper URL structure
+• meta data optimization
+The final result must feel like a native English website, not a literal translation.
+Main objective
+Create a fully bilingual website (Dutch + English) where users can easily switch languages and where the English pages are optimized for international search traffic and readability.
+The English version must:
+• read naturally in English
+• match the tone of voice of EXTRA
+• be optimized for hospitality staffing keywords
+• maintain the same UX and layout as the Dutch pages
+Important rule
+Do not translate text literally.
+Instead:
+• rewrite sentences where necessary
+• improve readability
+• adjust phrasing to sound natural in English
+• maintain the intent of the Dutch text
+The English version should feel like it was written originally in English by a native copywriter.
+Tone of voice
+The English copy must match the EXTRA brand tone:
+• modern
+• energetic
+• hospitality-focused
+• professional but approachable
+• slightly playful where appropriate
+Headlines should feel clear and engaging, not literal translations.
+Example:
+Dutch headline
+"Hoe EXTRA werkt"
+Bad translation
+"How EXTRA works"
+Better English version
+"How EXTRA builds the perfect hospitality team"
+Language switcher
+Add a language switcher to the main navigation menu.
+Users must be able to switch between:
+Dutch (NL)
+English (EN)
+Requirements:
+• visible in the top navigation
+• works on desktop and mobile
+• switching language keeps the user on the equivalent page
+Example:
+Dutch page
+/horeca-personeel-gezocht
+English page
+/en/hospitality-staff-amsterdam
+URL structure
+Implement SEO-friendly multilingual URLs.
+Use this structure:
+Dutch pages
+Keep the existing URLs.
+English pages
+Add /en/ before the URL.
+Example:
+Dutch
+/horeca-personeel-gezocht
+English
+/en/hospitality-staff-amsterdam
+Example:
+Dutch
+/hotelpersoneel-inhuren
+English
+/en/hotel-staffing-amsterdam
+Ensure all English URLs are:
+• short
+• readable
+• optimized for search
+Keyword optimization
+The English pages must be optimized for international hospitality staffing keywords.
+Important keywords include:
+hospitality staff
+hospitality staffing
+event staff
+hotel staff
+catering staff
+restaurant staff
+temporary hospitality staff
+flexible hospitality staff
+hospitality staffing agency Amsterdam
+Use these keywords naturally in:
+• headings
+• body text
+• meta titles
+• meta descriptions
+• alt text
+Avoid keyword stuffing.
+Page title optimization (meta titles)
+Rewrite titles for English search behavior.
+Example:
+Dutch
+"Horeca personeel gezocht in Amsterdam"
+Better English version
+"Hospitality Staff in Amsterdam | Flexible Hospitality Staffing"
+Keep titles between 55–65 characters.
+Meta descriptions
+Write new English meta descriptions for each page.
+Guidelines:
+• 150–160 characters
+• natural sentence structure
+• include primary keyword
+Example:
+"Looking for reliable hospitality staff in Amsterdam? EXTRA provides experienced hotel, restaurant and event staff on demand."
+Headings (H1, H2, H3)
+Rewrite headings so they fit English search behavior.
+Do not translate literally.
+Example:
+Dutch
+"Persoonlijke selectie van horecapersoneel"
+Better English
+"Carefully selected hospitality staff for your venue"
+Ensure headings:
+• are clear
+• include relevant keywords
+• remain engaging
+Alt text optimization
+Translate and optimize all image alt texts.
+Alt texts must:
+• describe the image clearly
+• include relevant keywords where appropriate
+Example:
+Bad alt text
+"image1.jpg"
+Better alt text
+"hospitality staff serving guests at event in Amsterdam"
+Internal linking
+Ensure the internal linking structure works correctly.
+Rules:
+Dutch pages → link to Dutch pages
+English pages → link to English pages
+Avoid mixing languages within the same internal link structure.
+Example:
+English page
+/en/hotel-staffing-amsterdam
+Should link to:
+/en/event-staff-amsterdam
+/en/catering-staff-amsterdam
+Technical multilingual SEO
+Implement proper multilingual SEO signals:
+Add:
+hreflang="nl"
+hreflang="en"
+Example:
+<link rel="alternate" hreflang="nl" href="/horeca-personeel-gezocht" /> <link rel="alternate" hreflang="en" href="/en/hospitality-staff-amsterdam" />
+Ensure canonical tags remain correct.
+Layout requirement
+Do not change the layout of the pages.
+Maintain the same:
+• design
+• section structure
+• card layouts
+• visual hierarchy
+Only adapt the content and SEO elements.
+Final expected result
+The website should become a fully bilingual hospitality staffing website.
+Visitors should be able to switch languages easily while search engines can clearly understand both language versions.
+The English pages should feel like native English marketing pages optimized for hospitality staffing search queries.
+Important
+If anything is unclear before implementation, ask a question first instead of guessing.
