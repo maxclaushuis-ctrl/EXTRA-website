@@ -190,7 +190,7 @@ export default function HotelPersoneelGezocht() {
       "@type": "FAQPage",
       "mainEntity": [
         { "@type": "Question", "name": "Hoe snel kunnen jullie hotelpersoneel leveren?", "acceptedAnswer": { "@type": "Answer", "text": "Bij EXTRA kunnen we in veel gevallen binnen 48 uur geschikt hotelpersoneel leveren. Dankzij onze vaste poule van geselecteerde hotelmedewerkers kunnen we snel schakelen bij uitval, piekdrukte of last-minute aanvragen." } },
-        { "@type": "Question", "name": "Kunnen jullie housekeeping personeel leveren?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Housekeeping is één van onze kernspecialisaties voor hotels. We leveren ervaren kamermeisjes en room attendants die vertrouwd zijn met hotelstandaarden zoals SOP's en kwaliteitscontroles." } },
+        { "@type": "Question", "name": "Kunnen jullie housekeeping personeel leveren?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Housekeeping is één van onze kernspecialisaties voor hotels. We leveren ervaren kamermeisjes en room attendants die vertrouwd zijn met hotelstandaarden en kwaliteitscontroles." } },
         { "@type": "Question", "name": "Kunnen jullie personeel leveren voor banqueting?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. EXTRA levert professionele bediening en keukenmedewerkers voor banqueting en conferenties in hotels. Van kleine boardroom-lunches tot gala-diners van 300+ gasten." } },
         { "@type": "Question", "name": "Hoe werkt het met vaste teams per hotel?", "acceptedAnswer": { "@type": "Answer", "text": "EXTRA werkt met favorietenpoules per opdrachtgever. We bouwen per hotel een vaste poule op van medewerkers die jouw locatie kennen. Dezelfde gezichten, minder uitleg, hogere kwaliteit." } },
         { "@type": "Question", "name": "Voor welke hotelfuncties kan ik personeel inhuren?", "acceptedAnswer": { "@type": "Answer", "text": "Via EXTRA kun je personeel inhuren voor: housekeeping, front office, F&B, banqueting, keuken, afwassers en roomservice. We kijken altijd welke medewerkers het beste passen bij jouw hotel en standaard." } },
@@ -293,8 +293,8 @@ export default function HotelPersoneelGezocht() {
               {
                 icon: BedDouble,
                 title: "Housekeeping",
-                desc: "Ervaren kamermeisjes en room attendants die werken volgens jouw SOP's en kwaliteitsstandaarden.",
-                tags: ["Kamerreiniging", "Badkamers", "Linnengoed", "Inspectie"],
+                desc: "Ervaren kamermeisjes en room attendants die werken volgens jouw kwaliteitsstandaarden.",
+                tags: ["AD", "Turndown", "Welness", "Houseman", "Room attendant"],
                 color: "from-purple-600 to-purple-800",
               },
               {
@@ -382,7 +382,7 @@ export default function HotelPersoneelGezocht() {
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
-              { emoji: "🏨", title: "Vertrouwd met hotelstandaarden", desc: "Onze medewerkers kennen het verschil tussen drie en vijf sterren service. Ze werken volgens SOP's, dresscodes en guestrelations protocollen." },
+              { emoji: "🏨", title: "Vertrouwd met hotelstandaarden", desc: "Onze medewerkers kennen het verschil tussen drie en vijf sterren service. Ze werken volgens hotelstandaarden, dresscodes en guestrelations protocollen." },
               { emoji: "🤝", title: "Vaste gezichten per hotel", desc: "Via favorietenpoules bouwen we per hotel een vaste poule op. Medewerkers die jouw procedures kennen en direct inzetbaar zijn." },
               { emoji: "⭐", title: "Geselecteerd op gastvrijheid", desc: "Representativiteit en gastvrijheid zijn doorslaggevend in onze selectie. Iedereen heeft eerst een persoonlijk gesprek gehad." },
               { emoji: "📞", title: "Snel schakelen bij uitval", desc: "Ziekte of last minute aanvragen? EXTRA is 24 uur per dag bereikbaar en kan snel schakelen." },
@@ -781,7 +781,7 @@ export default function HotelPersoneelGezocht() {
         heading="Veelgestelde vragen over hotelpersoneel"
         faqs={[
           { q: "Hoe snel kunnen jullie hotelpersoneel leveren?", a: "Bij EXTRA kunnen we in veel gevallen binnen 48 uur geschikt hotelpersoneel leveren. Dankzij onze vaste poule van geselecteerde hotelmedewerkers kunnen we snel schakelen bij uitval, piekdrukte of last-minute aanvragen. Neem contact op en we kijken direct wat mogelijk is." },
-          { q: "Kunnen jullie housekeeping personeel leveren?", a: "Ja. Housekeeping is één van onze kernspecialisaties voor hotels. We leveren ervaren kamermeisjes en room attendants die vertrouwd zijn met hotelstandaarden, SOP's en kwaliteitscontroles. Via onze favorietenpoule bouwen we een vast team op dat jouw hotel door en door kent." },
+          { q: "Kunnen jullie housekeeping personeel leveren?", a: "Ja. Housekeeping is één van onze kernspecialisaties voor hotels. We leveren ervaren kamermeisjes en room attendants die vertrouwd zijn met hotelstandaarden en kwaliteitscontroles. Via onze favorietenpoule bouwen we een vast team op dat jouw hotel door en door kent." },
           { q: "Kunnen jullie personeel leveren voor banqueting en conferenties?", a: "Ja. EXTRA levert professionele bediening en keukenmedewerkers voor banqueting, conferenties en events in hotels. Van kleine boardroom-lunches tot gala-diners van 300+ gasten. We hebben ervaren medewerkers die weten hoe formele hotelservice werkt." },
           { q: "Hoe werkt het met vaste teams per hotel?", a: "EXTRA werkt met favorietenpoules per opdrachtgever. We bouwen per hotel een vaste poule op van medewerkers die jouw locatie kennen. Dezelfde gezichten, minder uitleg, hogere kwaliteit. Dit geldt per afdeling: housekeeping, F&B, banqueting en front office." },
           { q: "Voor welke hotelfuncties kan ik personeel inhuren?", a: "Via EXTRA kun je personeel inhuren voor: housekeeping, front office, F&B bediening, banqueting, keuken (chefs, sous-chefs, keukenmedewerkers), afwassers en roomservice. We kijken altijd welke medewerkers het beste passen bij jouw hotel en standaard." },

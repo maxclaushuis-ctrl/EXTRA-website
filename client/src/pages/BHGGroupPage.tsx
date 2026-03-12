@@ -419,7 +419,7 @@ export default function BHGGroupPage() {
                 </RevealSection>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {[
-                    { icon: BedDouble, title: "Housekeeping", desc: "Kamermeisjes en room attendants die werken volgens uw SOP's.", tags: ["Kamerreiniging", "Linnengoed", "Inspectie"], color: "from-purple-600 to-purple-800" },
+                    { icon: BedDouble, title: "Housekeeping", desc: "Kamermeisjes en room attendants die werken volgens uw kwaliteitsstandaarden.", tags: ["AD", "Turndown", "Welness", "Houseman", "Room attendant"], color: "from-purple-600 to-purple-800" },
                     { icon: Building2, title: "Front Office", desc: "Representatieve medewerkers voor receptie en guestrelations.", tags: ["Receptie", "Check-in", "Guestrelations"], color: "from-blue-500 to-indigo-600" },
                     { icon: Utensils, title: "F&B Medewerkers", desc: "Voor hotelrestaurants, ontbijtservice, roomservice en banqueting.", tags: ["Bediening", "Ontbijtmedewerker", "Runner"], color: "from-indigo-500 to-purple-600" },
                     { icon: GlassWater, title: "Banqueting", desc: "Professionele bediening voor conferenties, gala-diners en events.", tags: ["Conferenties", "Gala-diners", "Events"], color: "from-pink-500 to-purple-600" },
