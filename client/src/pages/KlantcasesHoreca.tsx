@@ -124,7 +124,7 @@ export default function KlantcasesHoreca() {
                 <Link href="/personeelsaanvraag" className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 text-purple-900 font-bold rounded-full px-10 py-4 text-base shadow-xl shadow-white/10 hover:-translate-y-1 transition-all">
                   Personeel aanvragen <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link href="/horeca-uitzendbureau-amsterdam" className="inline-flex items-center gap-2 border-2 border-white/50 text-white hover:bg-white/10 font-bold rounded-full px-10 py-4 text-base hover:-translate-y-1 transition-all">
+                <Link href="/ons-team" className="inline-flex items-center gap-2 border-2 border-white/50 text-white hover:bg-white/10 font-bold rounded-full px-10 py-4 text-base hover:-translate-y-1 transition-all">
                   Lees meer over ons
                 </Link>
               </div>
