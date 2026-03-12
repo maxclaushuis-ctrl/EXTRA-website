@@ -15,6 +15,8 @@ import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoMercure from "../assets/pitch/logo-mercure.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
@@ -959,6 +961,8 @@ export default function LandingPage() {
                 <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
                   {[
                     { src: logoAmrath, alt: "Amrâth Hotels" },
+                    { src: logoMercure, alt: "Mercure Hotels" },
+                    { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
                     { src: logoFcUtrecht, alt: "FC Utrecht" },
                     { src: logoFunda, alt: "Funda" },
                     { src: logoHartMuseum, alt: "H'art Museum" },

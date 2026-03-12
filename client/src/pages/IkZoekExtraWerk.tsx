@@ -23,6 +23,8 @@ import airpodsImg from "@assets/Airpods_1771872665358.webp";
 import extraAppImg from "@assets/EXTRA_app_1772394156269.webp";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
+import mercureLogo from "../assets/pitch/logo-mercure.png";
+import pulitzerLogo from "../assets/pitch/logo-pulitzer.png";
 import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
 import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
@@ -447,6 +449,8 @@ export default function IkZoekExtraWerk() {
                 <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
                   {[
                     { src: amrathLogo, alt: "Amrâth Hotels" },
+                    { src: mercureLogo, alt: "Mercure Hotels" },
+                    { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
                     { src: logoFcUtrecht, alt: "FC Utrecht" },
                     { src: logoFunda, alt: "Funda" },
                     { src: logoHartMuseum, alt: "H'art Museum" },
@@ -858,6 +862,8 @@ export default function IkZoekExtraWerk() {
                   { src: amrathLogo, alt: "Amrath" },
                   { src: nhLogo, alt: "NH Hotels" },
                   { src: hiltonLogo, alt: "Hilton" },
+                  { src: mercureLogo, alt: "Mercure Hotels" },
+                  { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
                 ].map(({ src, alt }) => (
                   <img key={alt} src={src} alt={alt} className="h-6 sm:h-8 w-auto object-contain grayscale opacity-40 hover:opacity-70 hover:grayscale-0 transition-all" loading="lazy" />
                 ))}

@@ -14,6 +14,8 @@ import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoMercure from "../assets/pitch/logo-mercure.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
@@ -522,6 +524,8 @@ export default function WerkwijzePage() {
                   <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
                     {[
                       { src: logoAmrath, alt: "Amrâth Hotels Amsterdam" },
+                      { src: logoMercure, alt: "Mercure Hotels" },
+                      { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
                       { src: logoFcUtrecht, alt: "FC Utrecht" },
                       { src: logoFunda, alt: "Funda" },
                       { src: logoHartMuseum, alt: "H'art Museum Amsterdam" },

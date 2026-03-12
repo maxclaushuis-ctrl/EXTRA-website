@@ -20,6 +20,8 @@ import screenRewards from "@assets/IMG_9067_1773314165933.png";
 import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
 import screenUitdagingen from "@assets/IMG_9071_1773316943369.png";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoMercure from "../assets/pitch/logo-mercure.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
@@ -483,6 +485,8 @@ export default function PersoneelGezocht() {
                   {[
                     { src: logoMarriott, alt: "Marriott" },
                     { src: logoHilton, alt: "Hilton" },
+                    { src: logoMercure, alt: "Mercure Hotels" },
+                    { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
                     { src: logoHartMuseum, alt: "Scheepvaartmuseum" },
                     { src: logoSelectCatering, alt: "Select Catering" },
                     { src: logoAppel, alt: "Appèl" },

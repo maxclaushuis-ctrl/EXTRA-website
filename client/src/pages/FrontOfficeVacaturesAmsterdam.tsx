@@ -14,6 +14,8 @@ import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 import frontOffice2Img from "@assets/Front-office_1771842809388.webp";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
+import mercureLogo from "../assets/pitch/logo-mercure.png";
+import pulitzerLogo from "../assets/pitch/logo-pulitzer.png";
 import nhLogo from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
 import hiltonLogo from "@assets/Logo_Hilton_1771267205959.webp";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
@@ -101,7 +103,8 @@ const faqs = [
 ];
 
 const LOGOS = [
-  { src: amrathLogo, alt: "Amrâth Hotels" }, { src: logoFcUtrecht, alt: "FC Utrecht" }, { src: logoFunda, alt: "Funda" },
+  { src: amrathLogo, alt: "Amrâth Hotels" }, { src: mercureLogo, alt: "Mercure Hotels" }, { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
+  { src: logoFcUtrecht, alt: "FC Utrecht" }, { src: logoFunda, alt: "Funda" },
   { src: logoHartMuseum, alt: "H'art Museum" }, { src: logoHetePeper, alt: "Hete Peper" }, { src: hiltonLogo, alt: "Hilton" },
   { src: marriottLogo, alt: "Marriott" }, { src: logoSelectCatering, alt: "Select Catering" }, { src: logoAppel, alt: "Appèl" },
 ];
@@ -413,7 +416,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
             <div className="text-center">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Partnerhotels</p>
               <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
-                {[{ src: marriottLogo, alt: "Marriott" }, { src: amrathLogo, alt: "Amrath" }, { src: nhLogo, alt: "NH Hotels" }, { src: hiltonLogo, alt: "Hilton" }].map(({ src, alt }) => (
+                {[{ src: marriottLogo, alt: "Marriott" }, { src: amrathLogo, alt: "Amrath" }, { src: nhLogo, alt: "NH Hotels" }, { src: hiltonLogo, alt: "Hilton" }, { src: mercureLogo, alt: "Mercure Hotels" }, { src: pulitzerLogo, alt: "Pulitzer Amsterdam" }].map(({ src, alt }) => (
                   <img key={alt} src={src} alt={alt} className="h-6 sm:h-8 w-auto object-contain grayscale opacity-40 hover:opacity-70 hover:grayscale-0 transition-all" loading="lazy" />
                 ))}
               </div>

@@ -17,6 +17,8 @@ import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
+import logoMercure from "../assets/pitch/logo-mercure.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
 import logoNH from "@assets/Copyright_nh_hotel_group_Logo_NH-Hotels_1769548607559.webp";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
@@ -416,6 +418,8 @@ export default function HotelPersoneelGezocht() {
                 { src: logoHilton, alt: "Hilton Hotels" },
                 { src: logoAmrath, alt: "Amrâth Hotels" },
                 { src: logoNH, alt: "NH Hotels" },
+                { src: logoMercure, alt: "Mercure Hotels" },
+                { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
               ].map((logo, i) => (
                 <div key={i} className="hover:scale-105 transition-transform duration-300">
                   <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
