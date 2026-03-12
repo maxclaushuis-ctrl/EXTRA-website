@@ -21,6 +21,8 @@ import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
 import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
 import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
+import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
+import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -387,33 +389,35 @@ export default function WerkwijzePage() {
                 </div>
               </RevealSection>
               <RevealSection delay={100}>
-                <div className="bg-gradient-to-br from-purple-600 to-violet-700 rounded-3xl p-8 sm:p-10 text-white shadow-2xl shadow-purple-500/20">
-                  <div className="text-sm font-black uppercase tracking-widest mb-6 text-purple-200/70">Jouw favorietenpoule</div>
-                  <div className="space-y-4">
-                    {[
-                      { name: "Priya Sharma", role: "Bediening", rating: 9.4, diensten: 24 },
-                      { name: "Tom van Beek", role: "Bar", rating: 8.9, diensten: 17 },
-                      { name: "Sarah Koster", role: "Housekeeping", rating: 9.7, diensten: 31 },
-                    ].map((p, i) => (
-                      <div key={i} className="flex items-center justify-between bg-white/10 rounded-2xl p-4 border border-white/10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-sm font-black shrink-0">
-                            {p.name.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold">{p.name}</div>
-                            <div className="text-xs text-purple-200/70">{p.role} · {p.diensten} diensten</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
-                          <span className="text-sm font-black">{p.rating}</span>
-                        </div>
+                <div className="relative pb-12 pr-4">
+                  {/* Main browser-style card with matches table */}
+                  <div className="rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/80 border border-gray-100 bg-white">
+                    {/* Browser chrome bar */}
+                    <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-b border-gray-100">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                      <div className="ml-3 flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-400 border border-gray-200 max-w-[180px]">
+                        app.doehetextra.nl
                       </div>
-                    ))}
+                    </div>
+                    <img
+                      src={poulesMatches}
+                      alt="Medewerker matches met favorietenpoule in EXTRA dashboard"
+                      className="w-full h-auto object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
-                  <div className="mt-6 pt-5 border-t border-white/15 text-center text-xs text-purple-200/50">
-                    Opgebouwd na 3 maanden samenwerking
+                  {/* Floating "Poules uitnodigen" button snippet */}
+                  <div className="absolute -bottom-2 -right-2 sm:-bottom-4 sm:right-0 w-[55%] rounded-xl overflow-hidden shadow-xl border border-gray-100 -rotate-1 hover:rotate-0 transition-transform duration-300 bg-white">
+                    <img
+                      src={poulesButton}
+                      alt="Poules uitnodigen knop"
+                      className="w-full h-auto object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
                 </div>
               </RevealSection>
