@@ -165,6 +165,7 @@ function SlideWrap({ children, className = "", onClick }: { children: React.Reac
 export default function BHGGroupPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeScreen, setActiveScreen] = useState(0);
+  const [expandedReview, setExpandedReview] = useState<number | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -243,7 +244,7 @@ export default function BHGGroupPage() {
                   </motion.h1>
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
                     className="text-base sm:text-lg text-purple-100/80 leading-relaxed mb-8 max-w-xl">
-                    EXTRA levert geselecteerd hotelpersoneel met een bewezen systeem voor motivatie, kwaliteit en loyaliteit — speciaal gebouwd voor hotelgroepen die structurele rust willen in hun operatie.
+                    EXTRA levert geselecteerd hotelpersoneel met een bewezen systeem voor motivatie, kwaliteit en loyaliteit, speciaal gebouwd voor hotels die structurele rust willen in hun operatie.
                   </motion.p>
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
                     className="flex flex-wrap gap-6">
@@ -308,7 +309,7 @@ export default function BHGGroupPage() {
                     <Building2 className="w-4 h-4" /> Herkenbaar?
                   </span>
                   <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    De uitdagingen waar hotelgroepen dagelijks mee leven
+                    De uitdagingen waar hotels dagelijks mee leven
                   </h2>
                   <p className="text-base sm:text-lg text-gray-500 mb-8 max-w-2xl">
                     BHG Group opereert op meerdere locaties tegelijk. Dat vraagt om een personeelspartner die niet alleen levert, maar ook structureel meedenkt.
@@ -386,40 +387,40 @@ export default function BHGGroupPage() {
           <SlideWrap key="s3">
             <div className="relative min-h-screen" style={{ backgroundColor: "#faf8f5" }}>
               <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
-              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-10 pb-6">
                 <RevealSection>
-                  <div className="text-center mb-10 sm:mb-12">
-                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
-                      <Users className="w-4 h-4" /> Functies voor hotels
+                  <div className="text-center mb-6">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs uppercase tracking-widest mb-3 bg-purple-100/60 px-4 py-1.5 rounded-full">
+                      <Users className="w-3.5 h-3.5" /> Functies voor hotels
                     </span>
-                    <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    <h2 className="text-2xl sm:text-4xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       Voor elke hotelfunctie de juiste mensen
                     </h2>
-                    <p className="text-base sm:text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
-                      Of het nu gaat om dagelijkse bezetting of piekdrukte. EXTRA levert ervaren hotelpersoneel voor iedere rol binnen BHG Group.
+                    <p className="text-sm sm:text-base text-gray-500 mt-2 max-w-2xl mx-auto">
+                      EXTRA levert ervaren hotelpersoneel voor iedere rol binnen BHG Group, bij dagelijkse bezetting en bij piekdrukte.
                     </p>
                   </div>
                 </RevealSection>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {[
-                    { icon: BedDouble, title: "Housekeeping", desc: "Ervaren kamermeisjes en room attendants die werken volgens uw SOP's en kwaliteitsstandaarden.", tags: ["Kamerreiniging", "Badkamers", "Linnengoed", "Inspectie"], color: "from-purple-600 to-purple-800" },
-                    { icon: Building2, title: "Front Office", desc: "Representatieve medewerkers voor receptie, check-in, check-out en guestrelations. Professioneel, gastvrij en gewend aan hotelprocessen.", tags: ["Receptie", "Check-in", "Guestrelations", "Conciërge"], color: "from-blue-500 to-indigo-600" },
-                    { icon: Utensils, title: "F&B Medewerkers", desc: "Gastvrije F&B medewerkers voor hotelrestaurants, ontbijtservice, roomservice en banqueting.", tags: ["Bediening", "Ontbijtmedewerker", "Banqueting medewerker", "Runner"], color: "from-indigo-500 to-purple-600" },
-                    { icon: GlassWater, title: "Banqueting", desc: "Professionele bediening voor conferenties, gala-diners, meetings en events binnen het hotel.", tags: ["Conferenties", "Gala-diners", "Boardroom", "Events"], color: "from-pink-500 to-purple-600" },
-                    { icon: ChefHat, title: "Chefs en Keukenpersoneel", desc: "Ervaren chefs, sous-chefs en koks voor à la carte service, banqueting en ontbijtservice.", tags: ["Chef de partie", "Sous-chef", "Zelfstandig werkend kok", "Commis"], color: "from-orange-500 to-pink-600" },
-                    { icon: CookingPot, title: "Keukenondersteuning", desc: "Betrouwbare ondersteuning voor drukke hotelkeukens. Afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.", tags: ["Afwasser", "Keukenhulp", "Spoelkeuken medewerker"], color: "from-green-500 to-emerald-600" },
+                    { icon: BedDouble, title: "Housekeeping", desc: "Kamermeisjes en room attendants die werken volgens uw SOP's.", tags: ["Kamerreiniging", "Linnengoed", "Inspectie"], color: "from-purple-600 to-purple-800" },
+                    { icon: Building2, title: "Front Office", desc: "Representatieve medewerkers voor receptie en guestrelations.", tags: ["Receptie", "Check-in", "Guestrelations"], color: "from-blue-500 to-indigo-600" },
+                    { icon: Utensils, title: "F&B Medewerkers", desc: "Voor hotelrestaurants, ontbijtservice, roomservice en banqueting.", tags: ["Bediening", "Ontbijtmedewerker", "Runner"], color: "from-indigo-500 to-purple-600" },
+                    { icon: GlassWater, title: "Banqueting", desc: "Professionele bediening voor conferenties, gala-diners en events.", tags: ["Conferenties", "Gala-diners", "Events"], color: "from-pink-500 to-purple-600" },
+                    { icon: ChefHat, title: "Chefs en Keukenpersoneel", desc: "Chefs, sous-chefs en koks voor à la carte, banqueting en ontbijt.", tags: ["Chef de partie", "Sous-chef", "Commis"], color: "from-orange-500 to-pink-600" },
+                    { icon: CookingPot, title: "Keukenondersteuning", desc: "Afwassers en keukenhulpen die zorgen dat de keuken blijft draaien.", tags: ["Afwasser", "Keukenhulp"], color: "from-green-500 to-emerald-600" },
                   ].map((item, i) => (
-                    <RevealSection key={i} delay={i * 70}>
-                      <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl sm:rounded-[2rem] shadow-lg shadow-purple-500/5 border-2 border-purple-100 p-6 sm:p-7 hover:shadow-2xl hover:border-purple-300 hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-purple-50 to-transparent rounded-bl-[100%] opacity-60" />
-                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                          <item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <RevealSection key={i} delay={i * 50}>
+                      <div className="group relative bg-white rounded-xl border border-purple-100 p-4 hover:border-purple-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full overflow-hidden">
+                        <div className="absolute top-0 right-0 w-14 h-14 bg-gradient-to-bl from-purple-50 to-transparent rounded-bl-[100%] opacity-60" />
+                        <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300 shadow-md`}>
+                          <item.icon className="w-4 h-4 text-white" />
                         </div>
-                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">{item.desc}</p>
-                        <div className="flex flex-wrap gap-1.5">
+                        <h3 className="text-sm font-bold text-gray-900 mb-1.5">{item.title}</h3>
+                        <p className="text-xs text-gray-500 leading-relaxed mb-2.5">{item.desc}</p>
+                        <div className="flex flex-wrap gap-1">
                           {item.tags.map((tag, j) => (
-                            <span key={j} className="text-xs font-semibold bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full border border-purple-100">{tag}</span>
+                            <span key={j} className="text-[10px] font-semibold bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full border border-purple-100">{tag}</span>
                           ))}
                         </div>
                       </div>
@@ -439,19 +440,23 @@ export default function BHGGroupPage() {
             <div className="relative min-h-screen overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
               <XPatternBg count={4} opacity={0.08} color="rgba(139,92,246,1)" />
-              <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
-                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-                  <RevealSection>
-                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-white/70 px-4 py-2 rounded-full">
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-12 pb-10">
+                <RevealSection>
+                  <div className="text-center mb-8">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-white/70 px-4 py-2 rounded-full">
                       <ClipboardList className="w-4 h-4" /> Selectieproces
                     </span>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-4 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       Persoonlijke selectie van hotelpersoneel
                     </h2>
-                    <p className="text-gray-600 leading-relaxed mb-7 text-base sm:text-lg">
+                    <p className="text-gray-600 leading-relaxed text-base sm:text-lg max-w-2xl mx-auto">
                       Iedere medewerker bij EXTRA wordt persoonlijk beoordeeld via een digitaal intakeformulier per functie. Zo weten wij precies wie klaar is voor uw locatie.
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  </div>
+                </RevealSection>
+                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                  <RevealSection>
+                    <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                       {[
                         { n: 1, emoji: "⭐", label: "Topper!" },
                         { n: 2, emoji: "🏆", label: "Veel ervaring" },
@@ -460,7 +465,7 @@ export default function BHGGroupPage() {
                         { n: 5, emoji: "🇳🇱", label: "NL" },
                         { n: 7, emoji: "🍽️", label: "3 borden lopen" },
                       ].map(({ n, emoji, label }) => (
-                        <div key={n} className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-white font-semibold text-sm shadow-md"
+                        <div key={n} className="flex items-center gap-2.5 rounded-xl px-5 py-3 text-white font-semibold text-sm shadow-md"
                           style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)" }}>
                           <span className="opacity-60 font-bold text-xs">{n}.</span>
                           <span>{emoji}</span>
@@ -485,19 +490,23 @@ export default function BHGGroupPage() {
           <SlideWrap key="s5">
             <div className="relative min-h-screen bg-white">
               <XPatternBg count={2} opacity={0.06} color="rgba(139,92,246,1)" />
-              <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
-                <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-                  <RevealSection>
-                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 py-2 rounded-full">
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-12 pb-10">
+                <RevealSection>
+                  <div className="text-center mb-8">
+                    <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 py-2 rounded-full">
                       <Star className="w-4 h-4" /> Favorietenpoule
                     </span>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-4 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       Bouw een vaste favorietenpoule op
                     </h2>
-                    <p className="text-gray-600 leading-relaxed mb-7 text-base sm:text-lg">
-                      Na iedere dienst kan BHG Group medewerkers beoordelen. Bevalt iemand goed? Dan wordt deze toegevoegd aan de favorietenpoule per locatie — een vaste pool van mensen die uw hotel al kennen.
+                    <p className="text-gray-600 leading-relaxed text-base sm:text-lg max-w-2xl mx-auto">
+                      Na iedere dienst kan BHG Group medewerkers beoordelen. Bevalt iemand goed? Dan wordt deze toegevoegd aan de favorietenpoule per locatie, een vaste pool van mensen die uw hotel al kennen.
                     </p>
-                    <div className="grid grid-cols-2 gap-3 mb-7">
+                  </div>
+                </RevealSection>
+                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                  <RevealSection>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
                       {["Tijd en punctualiteit", "Vaardigheden", "Houding", "Verzorging"].map((c, i) => (
                         <div key={i} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
                           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
@@ -570,7 +579,7 @@ export default function BHGGroupPage() {
                       Slimme selectie met data
                     </h2>
                     <p className="text-gray-600 leading-relaxed mb-7 text-base sm:text-lg">
-                      Geen buikgevoel, maar data. Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner — zodat wij precies de juiste match kunnen maken voor uw hotel.
+                      Geen buikgevoel, maar data. Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner, zodat wij precies de juiste match kunnen maken voor uw hotel.
                     </p>
                     <div className="space-y-4">
                       {[
@@ -602,9 +611,9 @@ export default function BHGGroupPage() {
             <div className="relative min-h-screen overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
               <XPatternBg count={4} opacity={0.10} color="rgba(139,92,246,1)" />
-              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-12 pb-10">
                 <RevealSection>
-                  <div className="text-center mb-10 sm:mb-14">
+                  <div className="text-center mb-8">
                     <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-white/70 px-4 py-2 rounded-full">
                       <Gift className="w-4 h-4" /> EXTRAATje beloningssysteem
                     </span>
@@ -615,35 +624,15 @@ export default function BHGGroupPage() {
                         <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-60 rounded-sm" />
                       </span>
                     </h2>
-                    <p className="text-base sm:text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
-                      Ons unieke beloningssysteem zorgt voor gemotiveerde medewerkers die graag terugkomen. Wat BHG Group merkt: minder uitval, meer continuïteit en vaste teams per locatie.
-                    </p>
                   </div>
                 </RevealSection>
 
                 <RevealSection delay={100}>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10 sm:mb-14 max-w-4xl mx-auto">
-                    {[
-                      { step: "1", title: "Medewerker verdient punten", desc: "Elke shift levert punten op. Goed presteren? Extra punten. Zo wordt kwaliteit beloond.", icon: "🏃" },
-                      { step: "2", title: "Status stijgt, motivatie groeit", desc: "Van Bronze naar Diamond. Hogere status betekent betere beloningen en meer betrokkenheid.", icon: "💎" },
-                      { step: "3", title: "Medewerker wil terugkomen", desc: "Punten opbouwen op uw locatie is een reden om te blijven. Minder wisselende gezichten.", icon: "🎁" },
-                    ].map((item, i) => (
-                      <div key={i} className="bg-white rounded-2xl border border-purple-100 p-5 sm:p-7 text-center hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 shadow-sm">
-                        <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{item.icon}</div>
-                        <div className="text-[10px] sm:text-xs font-black text-purple-500 uppercase tracking-widest mb-2">Stap {item.step}</div>
-                        <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h4>
-                        <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </RevealSection>
-
-                <RevealSection delay={200}>
-                  <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 max-w-5xl mx-auto">
-                    <div className="relative flex-shrink-0">
-                      <div className="relative w-[200px] sm:w-[260px]">
+                  <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-14 max-w-5xl mx-auto">
+                    <div className="relative flex-shrink-0 order-2 lg:order-1">
+                      <div className="relative w-[180px] sm:w-[220px]">
                         <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-500/20 border-[5px] border-gray-700 bg-gray-900">
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[18px] bg-gray-900 rounded-b-xl z-20" />
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[16px] bg-gray-900 rounded-b-xl z-20" />
                           <div className="relative">
                             {appScreens.map((screen, i) => (
                               <img key={screen.key} src={screen.img} alt={screen.label}
@@ -653,32 +642,30 @@ export default function BHGGroupPage() {
                         </div>
                         <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-[3rem] blur-3xl -z-10" />
                       </div>
-                      <div className="flex gap-2 mt-4 justify-center">
+                      <div className="flex gap-2 mt-3 justify-center">
                         {appScreens.map((_, i) => (
                           <button key={i} onClick={(e) => { e.stopPropagation(); setActiveScreen(i); }}
-                            className={`h-2.5 rounded-full transition-all duration-300 ${activeScreen === i ? "bg-purple-500 w-10" : "bg-purple-200 w-2.5 hover:bg-purple-300"}`} />
+                            className={`h-2 rounded-full transition-all duration-300 ${activeScreen === i ? "bg-purple-500 w-8" : "bg-purple-200 w-2 hover:bg-purple-300"}`} />
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                        Wat BHG Group merkt
-                      </h3>
-                      <ul className="space-y-3.5">
+                    <div className="order-1 lg:order-2 flex-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
                         {[
-                          { icon: TrendingUp, text: "Hogere motivatie, want medewerkers willen punten verdienen op uw locatie" },
-                          { icon: Check, text: "Minder uitval, want betrouwbare medewerkers die komen opdagen" },
-                          { icon: Users, text: "Meer continuïteit, vaste teams die uw hotel door en door kennen" },
-                          { icon: Heart, text: "Medewerkers die graag terugkomen naar uw locatie" },
+                          { step: "1", title: "Medewerker verdient punten", desc: "Elke shift levert punten op. Goed presteren betekent extra punten en hogere status.", icon: "🏃" },
+                          { step: "2", title: "Status stijgt van Bronze naar Diamond", desc: "Hogere status betekent betere beloningen, meer betrokkenheid en meer motivatie.", icon: "💎" },
+                          { step: "3", title: "Medewerker wil terugkomen", desc: "Punten opbouwen op uw locatie is een concrete reden om te blijven. Minder wisselende gezichten.", icon: "🎁" },
                         ].map((item, i) => (
-                          <li key={i} className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <item.icon className="w-4 h-4 text-purple-700" />
+                          <div key={i} className="bg-white rounded-2xl border border-purple-100 p-4 sm:p-5 flex items-start gap-4 shadow-sm hover:shadow-md hover:border-purple-200 transition-all duration-300">
+                            <div className="text-3xl flex-shrink-0">{item.icon}</div>
+                            <div>
+                              <div className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Stap {item.step}</div>
+                              <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-1">{item.title}</h4>
+                              <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                             </div>
-                            <span className="text-gray-700 font-medium text-sm sm:text-base">{item.text}</span>
-                          </li>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   </div>
                 </RevealSection>
@@ -694,58 +681,83 @@ export default function BHGGroupPage() {
           <SlideWrap key="s8">
             <div className="relative min-h-screen" style={{ backgroundColor: "#fdf9f3" }}>
               <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
-              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-12 pb-10">
                 <RevealSection>
-                  <div className="text-center mb-10 sm:mb-14">
+                  <div className="text-center mb-8">
                     <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 bg-purple-100/60 px-4 py-2 rounded-full">
                       <Heart className="w-4 h-4" /> Referenties
                     </span>
-                    <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                      Wat hotelmanagers over EXTRA zeggen
+                    <h2 className="text-3xl sm:text-4xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Wat zij over EXTRA zeggen
                     </h2>
-                    <div className="flex items-center justify-center gap-2 mt-4">
+                    <div className="flex items-center justify-center gap-2 mt-3">
                       <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, j) => <Star key={j} className="w-5 h-5 text-yellow-400 fill-yellow-400" />)}
+                        {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
                       </div>
-                      <span className="text-base font-bold text-gray-900">4,8</span>
+                      <span className="text-sm font-bold text-gray-900">4,8</span>
                       <span className="text-sm text-gray-500">gemiddeld uit 232 Google reviews</span>
                     </div>
                   </div>
                 </RevealSection>
-                <div className="grid sm:grid-cols-3 gap-5 sm:gap-6">
+                <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
                   {[
                     {
-                      quote: "EXTRA levert structureel betrouwbaar personeel voor onze hoteldiensten. Ze begrijpen wat housekeeping en F&B kwaliteit voor ons betekent. De vaste poule die we hebben opgebouwd maakt echt het verschil.",
-                      name: "Gabriel di Domenico",
-                      role: "General Manager",
-                      hotel: "Marriott Hotels Amsterdam",
+                      shortQuote: "EXTRA heeft professionaliteit, betrouwbaarheid en een sterke toewijding aan kwaliteit getoond. De kamermeisjes hebben onze verwachtingen consequent waargemaakt en overtroffen.",
+                      fullQuote: "Wij werken samen met EXTRA sinds eind oktober 2025 voor de levering van kamermeisjes, AD medewerkers, turndown en minibarmedewerkers aan Grand Hotel Amrâth Amsterdam. EXTRA heeft professionaliteit, betrouwbaarheid en een sterke toewijding aan kwaliteit getoond. De kamermeisjes hebben onze verwachtingen consequent waargemaakt en overtroffen, en zorgen dat onze hotelkamers aan de hoogste normen van netheid en gasttevredenheid voldoen. De communicatie is efficiënt en responsief, waardoor de samenwerking soepel verloopt. Wij aarzelen niet om EXTRA aan te bevelen bij ieder bedrijf dat op zoek is naar betrouwbare personeelsoplossingen.",
+                      name: "D. Koops",
+                      role: "Hotelmanager",
+                      hotel: "Grand Hotel Amrâth Amsterdam",
+                      logo: logoAmrath,
                     },
                     {
-                      quote: "No-shows zijn bij ons met meer dan de helft gedaald sinds we met EXTRA werken. De medewerkers kennen onze standaarden, komen op tijd en zijn representatief. Dat is precies wat je nodig hebt.",
-                      name: "Alissa Schoenmaker",
-                      role: "Operations Director",
-                      hotel: "Radisson Blu Amsterdam",
+                      shortQuote: "Extra has consistently supplied skilled and reliable personnel for our kitchen and stewarding departments. Their culinary and operational skills have greatly supported our daily operations.",
+                      fullQuote: "Extra has consistently supplied skilled and reliable personnel for our kitchen and stewarding departments. The team members provided by Extra have demonstrated excellent professionalism, strong work ethic, and the ability to adapt to the fast-paced environment of our hotel. Their culinary and operational skills have greatly supported our daily operations, and they have consistently met and exceeded our expectations. I confidently endorse Extra and their staff for any hotel or hospitality establishment seeking dedicated and competent personnel.",
+                      name: "G. Di Domenico",
+                      role: "Headchef",
+                      hotel: "Amsterdam Marriott Hotel",
+                      logo: logoMarriott,
                     },
                     {
-                      quote: "Wat EXTRA onderscheidt: ze leveren niet alleen mensen, ze leveren de juiste mensen. En als er iets speelt, wordt er meteen geschakeld. Dat geeft rust op de werkvloer.",
-                      name: "Dodi Koops",
-                      role: "Hotel Manager",
-                      hotel: "Amrâth Grand Hotel",
+                      shortQuote: "Het proces rondom het uitzetten van diensten verloopt soepel en de kwaliteit van de medewerkers die jullie sturen is goed.",
+                      fullQuote: "Het proces rondom het uitzetten van diensten verloopt soepel en de kwaliteit van de medewerkers die jullie sturen is goed. Negen van de tien kandidaten die jullie hebben gestuurd, hebben uitstekend gewerkt. Één kandidaat was wat minder passend, maar daar hebben jullie direct actie op ondernomen, wat we erg waarderen.",
+                      name: "A. Schoenmaker",
+                      role: "HR-manager",
+                      hotel: "Radisson Blu Hotel Amsterdam Airport",
+                      logo: null,
                     },
-                  ].map((review, i) => (
-                    <RevealSection key={i} delay={i * 100}>
-                      <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-gray-100 shadow-sm hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full flex flex-col">
-                        <div className="flex gap-0.5 mb-4">
-                          {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
+                  ].map((review, i) => {
+                    const isExpanded = expandedReview === i;
+                    return (
+                      <RevealSection key={i} delay={i * 80}>
+                        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-sm hover:border-purple-200 hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex gap-0.5">
+                              {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />)}
+                            </div>
+                            {review.logo && (
+                              <img src={review.logo} alt={review.hotel} className="h-6 w-auto object-contain opacity-60" />
+                            )}
+                          </div>
+                          <p className="text-gray-600 italic text-xs sm:text-sm leading-relaxed flex-1 mb-3">
+                            "{isExpanded ? review.fullQuote : review.shortQuote}"
+                          </p>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setExpandedReview(isExpanded ? null : i); }}
+                            className="text-purple-600 font-bold text-xs hover:text-purple-800 transition-colors mb-4 text-left">
+                            {isExpanded ? "Lees minder" : "Lees meer"}
+                          </button>
+                          <div className="border-t border-gray-100 pt-3 mt-auto">
+                            <div className="flex gap-0.5 mb-1">
+                              {[...Array(5)].map((_, j) => <Star key={j} className="w-3 h-3 text-yellow-400 fill-yellow-400" />)}
+                            </div>
+                            <p className="font-bold text-gray-900 text-xs sm:text-sm">{review.name}</p>
+                            <p className="text-gray-400 text-xs mt-0.5">{review.role}</p>
+                            <p className="text-purple-600 text-xs font-semibold mt-0.5">{review.hotel}</p>
+                          </div>
                         </div>
-                        <p className="text-gray-600 italic text-sm sm:text-base leading-relaxed flex-1 mb-5">"{review.quote}"</p>
-                        <div className="border-t border-gray-100 pt-4">
-                          <p className="font-bold text-gray-900 text-sm">{review.name}</p>
-                          <p className="text-gray-400 text-xs mt-0.5">{review.role} · {review.hotel}</p>
-                        </div>
-                      </div>
-                    </RevealSection>
-                  ))}
+                      </RevealSection>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -820,7 +832,7 @@ export default function BHGGroupPage() {
                 </motion.h1>
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
                   className="text-base sm:text-lg text-purple-200/70 leading-relaxed mb-9 max-w-2xl">
-                  Neem contact op met ons team. We denken graag mee over hoe EXTRA structurele rust brengt in de operatie van BHG Group — per locatie, op maat.
+                  Neem contact op met ons team. We denken graag mee over hoe EXTRA structurele rust brengt in de operatie van BHG Group, per locatie en op maat.
                 </motion.p>
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
                   className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
