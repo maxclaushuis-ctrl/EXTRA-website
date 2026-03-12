@@ -4092,6 +4092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: candidate.email,
         id,
         cvUploadToken: (candidate as any).cvUploadToken,
+        baseUrl: process.env.BASE_URL || `${req.protocol}://${req.get('host')}`,
       }).catch(console.error);
       await storage.updateCandidate(id, { cvReminderSentAt: new Date() });
       return res.status(200).json({ message: "Cv-reminder verstuurd" });

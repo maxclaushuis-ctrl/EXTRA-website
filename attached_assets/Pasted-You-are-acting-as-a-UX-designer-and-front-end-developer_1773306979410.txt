@@ -1,0 +1,50 @@
+You are acting as a UX designer and front-end developer working on the EXTRA website and email flow.
+We need to fix and improve the “Upload je CV” button behavior in the email flow.
+Currently when a user clicks the button “Upload je cv nu”, the link redirects to a page that returns a 404 error.
+This is not the intended behavior.
+Goal
+The CV upload must happen directly after clicking the button, without sending the user to a broken or separate page.
+The process should feel simple and mobile-friendly, especially for users opening the email on their phone.
+Desired behavior
+When a user clicks “Upload je cv nu”:
+The user should remain within the same environment / flow.
+A file upload interface should open immediately.
+The user should be able to select a file from:
+phone files
+camera roll
+cloud storage (Google Drive / iCloud if available)
+This should behave like a standard mobile file picker.
+Technical requirements
+Implement a file upload input using something similar to:
+<input type="file">
+The upload should allow common CV formats:
+• PDF
+• DOC
+• DOCX
+Optional but preferred:
+• maximum file size validation
+• visual upload confirmation
+Mobile UX requirement
+The experience must be optimized for mobile users, since most candidates open the email on their phone.
+When the button is clicked on mobile:
+• the native file picker should open
+• users should be able to select a document from their phone files
+Routing issue
+The current button link leads to a 404 page.
+Fix the routing so the button instead triggers the file upload action.
+Do not redirect the user to a separate page unless absolutely necessary.
+UX requirement
+Keep the process extremely simple.
+The flow should be:
+Email → click button → upload document → confirmation.
+No unnecessary pages or steps.
+Important
+If the upload must technically occur on a page rather than directly inside the email environment, then create a very minimal upload screen with:
+• a single upload field
+• clear instruction text
+• immediate confirmation after upload
+But avoid a complex page or navigation.
+Final goal
+The user experience should feel like:
+Click button → choose CV from phone → upload → done
+without any broken pages or confusing navigation.

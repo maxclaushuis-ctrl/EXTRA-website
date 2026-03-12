@@ -811,10 +811,11 @@ export async function sendCandidateRejectionEmailCv(candidate: {
   });
 }
 
-export async function sendCvUploadFirstEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null }): Promise<boolean> {
+export async function sendCvUploadFirstEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string }): Promise<boolean> {
+  const base = candidate.baseUrl || process.env.BASE_URL || 'https://www.doehetextra.nl';
   const uploadUrl = candidate.cvUploadToken
-    ? `https://www.doehetextra.nl/cv-upload?token=${candidate.cvUploadToken}`
-    : `https://www.doehetextra.nl/aanmelden`;
+    ? `${base}/cv-upload?token=${candidate.cvUploadToken}`
+    : `${base}/aanmelden`;
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -864,10 +865,11 @@ export async function sendCvUploadFirstEmail(candidate: { firstName: string; ema
   });
 }
 
-export async function sendCvReminderEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null }): Promise<boolean> {
+export async function sendCvReminderEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string }): Promise<boolean> {
+  const base = candidate.baseUrl || process.env.BASE_URL || 'https://www.doehetextra.nl';
   const uploadUrl = candidate.cvUploadToken
-    ? `https://www.doehetextra.nl/cv-upload?token=${candidate.cvUploadToken}`
-    : `https://www.doehetextra.nl/aanmelden`;
+    ? `${base}/cv-upload?token=${candidate.cvUploadToken}`
+    : `${base}/aanmelden`;
 
   const html = `<!DOCTYPE html>
 <html lang="nl">

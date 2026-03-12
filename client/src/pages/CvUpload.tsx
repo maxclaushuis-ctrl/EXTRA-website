@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { CheckCircle2, Upload, AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle2, Upload, AlertCircle, Loader2, FileText, X } from 'lucide-react';
 
 type State = 'loading' | 'ready' | 'uploading' | 'success' | 'already_uploaded' | 'invalid' | 'error';
 
@@ -14,21 +13,14 @@ export default function CvUpload() {
   const token = new URLSearchParams(window.location.search).get('token');
 
   useEffect(() => {
-    if (!token) {
-      setState('invalid');
-      return;
-    }
+    document.title = 'Upload je cv | EXTRA';
+    if (!token) { setState('invalid'); return; }
     fetch(`/api/cv-upload-token?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
       .then(data => {
-        if (data.valid === false) {
-          setState('already_uploaded');
-        } else if (data.valid) {
-          setFirstName(data.firstName || '');
-          setState('ready');
-        } else {
-          setState('invalid');
-        }
+        if (data.valid === false) { setState('already_uploaded'); }
+        else if (data.valid) { setFirstName(data.firstName || ''); setState('ready'); }
+        else { setState('invalid'); }
       })
       .catch(() => setState('invalid'));
   }, [token]);
@@ -43,10 +35,12 @@ export default function CvUpload() {
     ];
     if (!validTypes.includes(f.type)) {
       setErrorMsg('Alleen PDF, DOC of DOCX bestanden zijn toegestaan.');
+      setFile(null);
       return;
     }
     if (f.size > 10 * 1024 * 1024) {
-      setErrorMsg('Maximaal 10 MB toegestaan.');
+      setErrorMsg('Je bestand is te groot. Maximaal 10 MB toegestaan.');
+      setFile(null);
       return;
     }
     setErrorMsg('');
@@ -75,175 +69,233 @@ export default function CvUpload() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0310' }}>
-      {/* Banner */}
-      <div className="w-full" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #5b21b6 100%)', padding: '0' }}>
-        <div className="max-w-xl mx-auto px-6 py-8 text-center">
-          <div className="text-3xl font-black text-white tracking-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f5f3ff', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+
+      {/* ── Header ── */}
+      <div style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #170926 50%, #2d1060 100%)' }}>
+        <div className="max-w-lg mx-auto px-6 py-6 flex items-center justify-center">
+          <span className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.02em' }}>
             EXTRA
-          </div>
+          </span>
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto px-4 py-10">
+      {/* ── Body ── */}
+      <div className="flex-1 flex items-start justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-md">
 
-        {/* Loading */}
-        {state === 'loading' && (
-          <div className="bg-white rounded-2xl p-10 text-center shadow-2xl">
-            <Loader2 className="w-10 h-10 text-purple-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Bezig met laden...</p>
-          </div>
-        )}
-
-        {/* Invalid token */}
-        {state === 'invalid' && (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
-            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Ongeldige of verlopen link
-            </h1>
-            <p className="text-gray-500 text-sm leading-relaxed mb-6">
-              Deze uploadlink is ongeldig of al gebruikt. Heb je vragen? Stuur ons een bericht via WhatsApp.
-            </p>
-            <a
-              href="https://wa.me/31851305915"
-              className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors"
-            >
-              App ons op WhatsApp
-            </a>
-          </div>
-        )}
-
-        {/* Already uploaded */}
-        {state === 'already_uploaded' && (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
-            <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              CV al ontvangen
-            </h1>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              We hebben je cv al ontvangen. Je hoort van ons zodra we je aanmelding bekeken hebben.
-            </p>
-          </div>
-        )}
-
-        {/* Ready to upload */}
-        {(state === 'ready' || state === 'uploading') && (
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl">
-            <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Upload je cv{firstName ? `, ${firstName}` : ''}
-            </h1>
-            <p className="text-gray-500 text-sm leading-relaxed mb-6">
-              Zodra we je cv hebben ontvangen, bekijken we je aanmelding. Als er een goede match is, sturen we je snel een uitnodiging voor een gesprek.
-            </p>
-
-            {/* Drop zone */}
-            <div
-              onClick={() => state !== 'uploading' && fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-                file
-                  ? 'border-green-400 bg-green-50/50'
-                  : 'border-gray-200 bg-gray-50/50 hover:border-purple-400 hover:bg-purple-50/50'
-              } ${state === 'uploading' ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={state === 'uploading'}
-              />
-              {file ? (
-                <div className="flex flex-col items-center gap-2">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" />
-                  <p className="text-sm font-bold text-green-700">{file.name}</p>
-                  <p className="text-xs text-green-600">
-                    {(file.size / 1024 / 1024).toFixed(1)} MB ·{' '}
-                    <span className="underline">Ander bestand kiezen</span>
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-10 h-10 text-gray-400" />
-                  <p className="text-sm font-bold text-gray-700">Kies bestand</p>
-                  <p className="text-xs text-gray-400">PDF, DOC of DOCX (max. 10 MB)</p>
-                </div>
-              )}
+          {/* Loading */}
+          {state === 'loading' && (
+            <div className="bg-white rounded-3xl p-10 text-center shadow-xl shadow-purple-100">
+              <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin" style={{ color: '#7c3aed' }} />
+              <p className="text-gray-500 text-sm">Bezig met laden…</p>
             </div>
+          )}
 
-            {errorMsg && (
-              <div className="mt-3 flex items-start gap-2 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                {errorMsg}
+          {/* Invalid token */}
+          {state === 'invalid' && (
+            <div className="bg-white rounded-3xl p-8 text-center shadow-xl shadow-purple-100">
+              <div className="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center mx-auto mb-5">
+                <AlertCircle className="w-8 h-8 text-rose-500" />
               </div>
-            )}
-
-            <Button
-              onClick={handleUpload}
-              disabled={!file || state === 'uploading'}
-              className="w-full mt-6 h-14 text-base font-bold rounded-xl bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {state === 'uploading' ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Bezig met uploaden...
-                </span>
-              ) : (
-                'Cv uploaden'
-              )}
-            </Button>
-
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Heb je vragen?{' '}
-              <a href="https://wa.me/31851305915" className="text-purple-600 underline">
+              <h1 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Ongeldige of verlopen link
+              </h1>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                Deze uploadlink is al gebruikt of niet meer geldig. Heb je nog geen cv geüpload? App ons even.
+              </p>
+              <a
+                href="https://wa.me/31851305915"
+                className="inline-flex items-center gap-2 font-bold text-white px-6 py-3 rounded-2xl text-sm transition-all active:scale-95"
+                style={{ background: '#25d366' }}
+              >
                 App ons op WhatsApp
               </a>
-            </p>
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Success */}
-        {state === 'success' && (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-green-500/20">
-              <CheckCircle2 className="w-8 h-8 text-white" />
+          {/* Already uploaded */}
+          {state === 'already_uploaded' && (
+            <div className="bg-white rounded-3xl p-8 text-center shadow-xl shadow-purple-100">
+              <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-5">
+                <CheckCircle2 className="w-8 h-8 text-green-500" />
+              </div>
+              <h1 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                CV al ontvangen
+              </h1>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                We hebben je cv al goed ontvangen. Je hoort van ons zodra we je aanmelding bekeken hebben.
+              </p>
             </div>
-            <h1 className="text-2xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              CV ontvangen!
-            </h1>
-            <p className="text-gray-600 text-sm leading-relaxed mb-6">
-              Super, we hebben je cv goed ontvangen{firstName ? `, ${firstName}` : ''}. Ons team bekijkt je aanmelding en je hoort van ons zodra er een match is.
-            </p>
-            <div className="rounded-xl border border-purple-100 bg-purple-50/60 p-5 text-left mb-6">
-              <h3 className="text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
-                <span>📬</span> Wat gebeurt er nu?
-              </h3>
-              <ol className="space-y-2.5">
-                {[
-                  'Ons team bekijkt je aanmelding en cv — dit duurt meestal 1 tot 2 werkdagen.',
-                  'Als je profiel past, sturen we je een uitnodiging voor een gesprek.',
-                  'Na het gesprek hoor je snel of je welkom bent bij EXTRA!',
-                ].map((t, i) => (
-                  <li key={i} className="flex gap-3 text-sm text-purple-800">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
-                      {i + 1}
-                    </span>
-                    {t}
-                  </li>
-                ))}
-              </ol>
+          )}
+
+          {/* Ready / Uploading */}
+          {(state === 'ready' || state === 'uploading') && (
+            <div className="bg-white rounded-3xl shadow-xl shadow-purple-100 overflow-hidden">
+
+              {/* Card header */}
+              <div className="px-6 pt-7 pb-5 border-b border-gray-100">
+                <h1 className="text-2xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  {firstName ? `Hi ${firstName},` : 'Upload je cv'}
+                </h1>
+                {firstName && (
+                  <p className="text-base font-bold text-gray-900 mt-0.5">upload je cv</p>
+                )}
+                <p className="text-gray-500 text-sm leading-relaxed mt-2">
+                  Zodra we je cv hebben ontvangen, bekijken we je aanmelding en hoor je snel van ons.
+                </p>
+              </div>
+
+              <div className="p-6 space-y-4">
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  capture={undefined}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={state === 'uploading'}
+                />
+
+                {/* File area — big tap target on mobile */}
+                {!file ? (
+                  <button
+                    type="button"
+                    onClick={() => state !== 'uploading' && fileInputRef.current?.click()}
+                    disabled={state === 'uploading'}
+                    className="w-full border-2 border-dashed rounded-2xl p-8 text-center transition-all active:scale-[0.98] focus:outline-none"
+                    style={{ borderColor: '#d8b4fe', backgroundColor: '#faf5ff' }}
+                  >
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: '#ede9fe' }}>
+                      <Upload className="w-7 h-7" style={{ color: '#7c3aed' }} />
+                    </div>
+                    <p className="font-bold text-gray-800 text-base mb-1">Kies je cv</p>
+                    <p className="text-xs text-gray-400">PDF, DOC of DOCX · max. 10 MB</p>
+                    <p className="text-xs mt-2 font-semibold" style={{ color: '#7c3aed' }}>
+                      Tik hier om een bestand te kiezen
+                    </p>
+                  </button>
+                ) : (
+                  <div className="rounded-2xl border p-4 flex items-center gap-3" style={{ borderColor: '#bbf7d0', backgroundColor: '#f0fdf4' }}>
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#dcfce7' }}>
+                      <FileText className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-green-800 text-sm truncate">{file.name}</p>
+                      <p className="text-xs text-green-600">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setFile(null); setErrorMsg(''); }}
+                      disabled={state === 'uploading'}
+                      className="p-1.5 rounded-lg hover:bg-green-100 transition-colors"
+                    >
+                      <X className="w-4 h-4 text-green-700" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Error */}
+                {errorMsg && (
+                  <div className="flex items-start gap-2 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                {/* Upload button */}
+                <button
+                  type="button"
+                  onClick={handleUpload}
+                  disabled={!file || state === 'uploading'}
+                  className="w-full h-14 rounded-2xl text-white font-bold text-base transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ background: file ? 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' : '#9ca3af', boxShadow: file ? '0 8px 24px rgba(124,58,237,0.3)' : 'none' }}
+                >
+                  {state === 'uploading' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Bezig met uploaden…
+                    </>
+                  ) : (
+                    'CV uploaden'
+                  )}
+                </button>
+
+                {/* Change file link when file selected */}
+                {file && state !== 'uploading' && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full text-center text-xs text-gray-400 underline underline-offset-2 hover:text-purple-600 transition-colors"
+                  >
+                    Ander bestand kiezen
+                  </button>
+                )}
+
+                <p className="text-xs text-gray-400 text-center pt-1">
+                  Vragen?{' '}
+                  <a href="https://wa.me/31851305915" className="underline underline-offset-2" style={{ color: '#7c3aed' }}>
+                    App ons op WhatsApp
+                  </a>
+                </p>
+              </div>
             </div>
-            <a
-              href="https://www.instagram.com/doehetextra/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-gray-400 hover:text-purple-600 transition-colors"
-            >
-              Volg ons op Instagram @doehetextra
-            </a>
-          </div>
-        )}
+          )}
+
+          {/* Success */}
+          {state === 'success' && (
+            <div className="bg-white rounded-3xl shadow-xl shadow-purple-100 overflow-hidden">
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', boxShadow: '0 8px 24px rgba(34,197,94,0.3)' }}>
+                  <CheckCircle2 className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-2xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  CV ontvangen!
+                </h1>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  {firstName ? `Goed bezig, ${firstName}!` : 'Goed bezig!'} We hebben je cv ontvangen en gaan er snel mee aan de slag.
+                </p>
+              </div>
+
+              <div className="mx-6 mb-6 rounded-2xl border border-purple-100 p-5" style={{ backgroundColor: '#faf5ff' }}>
+                <p className="text-xs font-bold mb-3" style={{ color: '#6d28d9' }}>WAT GEBEURT ER NU?</p>
+                <ol className="space-y-3">
+                  {[
+                    'Ons team bekijkt je aanmelding en cv — meestal binnen 1 tot 2 werkdagen.',
+                    'Als je profiel past, sturen we je een uitnodiging voor een gesprek.',
+                    'Na het gesprek hoor je snel of je welkom bent bij EXTRA!',
+                  ].map((t, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-700">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center font-bold text-xs" style={{ backgroundColor: '#7c3aed' }}>
+                        {i + 1}
+                      </span>
+                      {t}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="px-6 pb-6 text-center">
+                <a
+                  href="https://www.instagram.com/doehetextra/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-gray-400 hover:text-purple-600 transition-colors underline underline-offset-2"
+                >
+                  Volg ons op Instagram @doehetextra
+                </a>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="text-center py-6 text-xs text-gray-400">
+        EXTRA · Herengracht 372 · Amsterdam
       </div>
     </div>
   );
