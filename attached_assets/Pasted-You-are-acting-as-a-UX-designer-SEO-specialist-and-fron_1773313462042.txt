@@ -1,0 +1,76 @@
+You are acting as a UX designer, SEO specialist and front-end developer for the EXTRA website.
+We need to update several sections on the page:
+/horeca-personeel-gezocht
+Goal
+Replace the sections currently shown on /horeca-personeel-gezocht with the content structure used on the page:
+/horeca-uitzendbureau-amsterdam-werkwijze
+However, the sections should not be copied 1:1.
+They should be adapted for the context of the page so that:
+• the content fits the page purpose
+• the wording is slightly different
+• there is no duplicate content issue for Google or LLMs
+Important SEO rule
+Avoid duplicate content between:
+/horeca-uitzendbureau-amsterdam-werkwijze
+and
+/horeca-personeel-gezocht
+This means:
+• keep the same core message
+• but rewrite parts of the text slightly
+• adjust headings where necessary
+• change some wording and structure
+The goal is that both pages explain the process, but from a slightly different angle.
+Layout requirement
+Use the same design components and structure as the sections on:
+/horeca-uitzendbureau-amsterdam-werkwijze
+Examples include sections such as:
+• persoonlijke selectie
+• selectieproces
+• selectie met data
+• favorietenpoules
+These components should be reused because they visually match the website design system.
+Content adaptation
+Do not heavily rewrite the content.
+Instead:
+• slightly adjust wording
+• adapt some sentences
+• change the angle to fit the page context
+Example approach:
+Werkwijze page → explains the process internally
+Personeel gezocht page → explains the benefits for the client
+Visual styling
+You are allowed to slightly vary the backgrounds of the sections.
+For example:
+The purple background used in the section “Ons selectieproces” is visually strong and fits the brand well.
+You may reuse this purple background style for one of the sections on the page.
+However:
+• do not overuse dark sections
+• maintain the visual rhythm of the page
+• keep consistency with the rest of the website
+Design references
+Use these pages as design reference for layout, spacing and styling:
+/landing
+/horeca-vacatures-amsterdam
+/horeca-uitzendbureau-amsterdam-werkwijze
+Ensure:
+• consistent spacing
+• consistent typography hierarchy
+• consistent card styling
+• consistent icon usage
+What should stay unchanged
+Do NOT change:
+• the main meaning of the content
+• the UX flow of the page
+• the CTA sections
+• the page purpose
+Only adapt the sections so they:
+• visually match the design system
+• avoid duplicate content
+• fit the context of the page
+Expected result
+The sections on /horeca-personeel-gezocht should feel like part of the same design system, while still having slightly unique wording and structure compared to /horeca-uitzendbureau-amsterdam-werkwijze.
+The result should:
+• look visually consistent
+• avoid duplicate content issues
+• improve clarity for visitors
+• maintain strong SEO signals.

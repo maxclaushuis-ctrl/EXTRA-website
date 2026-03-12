@@ -8,7 +8,7 @@ import {
   ArrowRight, Check, Briefcase, UserCheck,
   Award, Handshake, Phone, Sparkles, Heart, Zap,
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
-  Tag, BookOpen, BarChart3, UserPlus, Search, CalendarCheck, ThumbsUp,
+  Tag, BarChart3, UserPlus, Search, CalendarCheck,
   AlertCircle, Bell, Lock, CheckCircle2, Flame
 } from "lucide-react";
 import heroBgImage from "@assets/hero-background.webp";
@@ -29,8 +29,11 @@ import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
 import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 import { CLIENT_REVIEWS } from "@/data/reviews";
-import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
-import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
+import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
+import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
+import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
+import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
+import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -106,6 +109,65 @@ function XPatternBg({ className = "", count = 3, opacity = 0.12, color = "rgba(1
           }}
         />
       ))}
+    </div>
+  );
+}
+
+function IpadMockup({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative mx-auto w-full" style={{ maxWidth: 560 }}>
+      <div
+        className="relative rounded-[2rem] p-3 shadow-2xl shadow-purple-900/30"
+        style={{
+          background: "linear-gradient(145deg, #1c1c1e, #2c2c2e)",
+          border: "2px solid #3a3a3e",
+        }}
+      >
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+          <div className="w-1 h-1 rounded-full bg-gray-600" />
+          <div className="w-2 h-0.5 rounded-full bg-gray-700" />
+        </div>
+        <div className="rounded-[1.2rem] overflow-hidden bg-white ml-2" style={{ aspectRatio: "4/3" }}>
+          <img
+            src={src}
+            alt={alt}
+            className="w-full h-full object-cover"
+            style={{ objectPosition: "center 58%" }}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="w-1 h-10 rounded-full bg-gray-600" />
+        </div>
+        <div className="absolute top-[-4px] left-[30%] h-1 w-8 rounded-t-sm" style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }} />
+        <div className="absolute top-[-4px] left-[42%] h-1 w-8 rounded-t-sm" style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }} />
+        <div className="absolute top-[-4px] right-[20%] h-1 w-6 rounded-t-sm" style={{ background: "linear-gradient(180deg, #3a3a3e, #222226)" }} />
+      </div>
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full blur-xl bg-purple-400/20" />
+    </div>
+  );
+}
+
+function BrowserMockup({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative mx-auto w-full" style={{ maxWidth: 600 }}>
+      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/15 border border-gray-200">
+        <div className="bg-gray-100 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-400" />
+            <div className="w-3 h-3 rounded-full bg-yellow-400" />
+            <div className="w-3 h-3 rounded-full bg-green-400" />
+          </div>
+          <div className="flex-1 bg-white rounded-lg px-3 py-1.5 flex items-center gap-2">
+            <Shield className="w-3 h-3 text-green-500 shrink-0" />
+            <span className="text-xs text-gray-500 font-medium truncate">app.doehetextra.nl/dashboard</span>
+          </div>
+        </div>
+        <div className="overflow-hidden">
+          <img src={src} alt={alt} className="w-full object-cover object-top" loading="lazy" decoding="async" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -402,227 +464,167 @@ export default function PersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 4. HOE WIJ SELECTEREN                              */}
+      {/* 4. SCREENINGSPROCES                                */}
       {/* ═══════════════════════════════════════════════════ */}
-      <section id="selectie" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-        <XPatternBg count={5} opacity={0.12} color="rgba(255,255,255,0.8)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-12 sm:mb-20">
-              <span className="inline-flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 rounded-full border border-white/10">
-                <UserCheck className="w-4 h-4" /> Ons selectieproces
+      <section id="selectie" className="relative py-20 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
+        <XPatternBg count={4} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+            <RevealSection>
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-white/70 px-5 py-2 rounded-full">
+                <UserCheck className="w-4 h-4" /> Screeningsproces
               </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Hoe wij selecteren
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Elke kandidaat, persoonlijk gescreend
               </h2>
-              <p className="text-base sm:text-lg text-purple-200/70 mt-4 max-w-2xl mx-auto">
-                Geen anonieme uitzendkrachten. Iedereen die via EXTRA werkt heeft eerst bij ons op kantoor gezeten.
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
+                Voordat een medewerker bij uw locatie staat, is deze persoonlijk gezien op kantoor en digitaal beoordeeld per functie. U weet altijd wie er voor de deur staat.
               </p>
-            </div>
-          </RevealSection>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              {
-                step: "1",
-                icon: Users,
-                title: "Persoonlijk gesprek op kantoor",
-                desc: "Iedere kandidaat komt fysiek langs. We leren ze kennen, beoordelen hun presentatie en testen hun motivatie.",
-              },
-              {
-                step: "2",
-                icon: Star,
-                title: "Selectie op soft & hard skills",
-                desc: "Vakkennis telt, maar houding, representativiteit en gastvrijheid zijn net zo belangrijk. We selecteren op allebei.",
-              },
-              {
-                step: "3",
-                icon: BookOpen,
-                title: "Referenties checken",
-                desc: "Waar relevant checken we referenties bij eerdere opdrachtgevers. Zo weten we wie bewezen goed presteert.",
-              },
-              {
-                step: "4",
-                icon: ThumbsUp,
-                title: "Continu beoordelen na elke dienst",
-                desc: "Na elke opdracht volgt een score. Wie structureel goed beoordeeld wordt, staat bovenaan voor de volgende opdracht.",
-              },
-            ].map((item, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="group bg-white/[0.06] backdrop-blur-sm rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-8 border border-white/[0.08] hover:border-purple-400/30 hover:bg-white/[0.10] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 h-full">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                    <item.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { n: 1, emoji: "⭐", label: "Topper!" },
+                  { n: 2, emoji: "🏆", label: "Veel ervaring" },
+                  { n: 3, emoji: "💁", label: "Verzorgd" },
+                  { n: 4, emoji: "😄", label: "Enthousiast" },
+                  { n: 5, emoji: "🇳🇱", label: "NL" },
+                  { n: 7, emoji: "🍽️", label: "3 borden lopen" },
+                ].map(({ n, emoji, label }) => (
+                  <div key={n} className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-white font-semibold text-sm shadow-md" style={{ background: "linear-gradient(135deg, #4a9fdf 0%, #3b8ecf 100%)" }}>
+                    <span className="opacity-70 font-bold text-xs">{n}.</span>
+                    <span>{emoji}</span>
+                    <span>{label}</span>
                   </div>
-                  <div className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest mb-2 sm:mb-3">Stap {item.step}</div>
-                  <h3 className="text-lg sm:text-xl font-black text-white mb-2 sm:mb-3">{item.title}</h3>
-                  <p className="text-sm sm:text-base text-purple-200/70 leading-relaxed">{item.desc}</p>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-          <RevealSection delay={400}>
-            <div className="mt-12 sm:mt-16 text-center">
-              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/15 text-white px-6 sm:px-8 py-4 sm:py-5 rounded-2xl">
-                <Shield className="w-5 h-5 text-purple-300 flex-shrink-0" />
-                <p className="text-sm sm:text-base font-semibold leading-snug text-left">
-                  Geen kandidaat gaat naar een opdrachtgever zonder persoonlijk gesprek.{" "}
-                  <span className="text-purple-300">Dat is onze standaard, geen uitzondering.</span>
-                </p>
+                ))}
               </div>
-            </div>
-          </RevealSection>
+            </RevealSection>
+            <RevealSection delay={150}>
+              <IpadMockup
+                src={sollicitatieformulier}
+                alt="Digitaal intakeformulier screening horecamedewerker EXTRA"
+              />
+            </RevealSection>
+          </div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 5. CONTINUE KWALITEITSMETING                       */}
+      {/* 5. SELECTIE MET DATA                               */}
       {/* ═══════════════════════════════════════════════════ */}
-      <section id="kwaliteit" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden bg-white">
-        <XPatternBg count={3} opacity={0.07} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-12 sm:mb-18">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
-                <BarChart3 className="w-4 h-4" /> Continue kwaliteitsmeting
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-5 sm:mb-7" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Wij sturen op data,<br className="hidden sm:block" /> zodat jij niet hoeft te gokken
-              </h2>
-              <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                Na elke dienst meten we prestaties, gedrag en soft skills. Niet incidenteel, maar structureel. Zo weet EXTRA altijd wie de beste keuze is voor jouw locatie.
-              </p>
-            </div>
-          </RevealSection>
-
-          <RevealSection delay={100}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-14 sm:mb-20 max-w-4xl mx-auto">
-              {[
-                { text: "Soft skills & hard skills real-time gemeten" },
-                { text: "Scores per dienst opgeslagen in de database" },
-                { text: "No-shows, complimenten en klachten direct inzichtelijk" },
-                { text: "Kwaliteitsdalingen signaleren we direct" },
-                { text: "Vaste poule van toppers voor elke opdrachtgever" },
-                { text: "Alle sollicitaties vinden persoonlijk op kantoor plaats" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3 bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm">
-                  <div className="mt-0.5 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-                  </div>
-                  <span className="text-sm sm:text-base font-semibold text-gray-800 leading-snug">{item.text}</span>
-                </div>
-              ))}
-            </div>
-          </RevealSection>
-
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
-            <RevealSection delay={150}>
-              <div className="group relative">
-                <div className="absolute -inset-1 bg-gradient-to-br from-purple-200 to-indigo-200 rounded-2xl sm:rounded-3xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
-                <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100">
-                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-5 sm:px-6 py-3 sm:py-4 border-b border-purple-100/60">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-purple-600" />
-                      <span className="text-xs sm:text-sm font-bold text-purple-800 uppercase tracking-wide">Medewerkers overzicht</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-0.5">Real-time data van alle medewerkers in één oogopslag</p>
-                  </div>
-                  <img src={screenshotGebruikers} alt="Dashboard medewerkers overzicht met ratings en statistieken" className="w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" />
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-xs sm:text-sm text-gray-500 font-medium">We sturen op feiten, niet op gevoel</p>
+      <section id="kwaliteit" className="relative py-20 sm:py-28 pb-28 sm:pb-36 overflow-x-hidden" style={{ backgroundColor: "#faf8f5" }}>
+        <XPatternBg count={2} opacity={0.05} color="rgba(139,92,246,1)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+            <RevealSection className="order-2 lg:order-1">
+              <div className="relative">
+                <BrowserMockup
+                  src={dashboardKandidaten}
+                  alt="Kandidaten dashboard met scores per discipline EXTRA Amsterdam"
+                />
+                <div className="absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-6 w-[65%] rounded-2xl overflow-hidden shadow-2xl border border-white/80 ring-1 ring-purple-100/60 rotate-1 hover:rotate-0 transition-transform duration-300">
+                  <img
+                    src={scoreSnippet}
+                    alt="Scores kandidaat: softskills, bar, bediening en diner"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
               </div>
             </RevealSection>
-
-            <RevealSection delay={250}>
-              <div className="group relative">
-                <div className="absolute -inset-1 bg-gradient-to-br from-green-200 to-emerald-200 rounded-2xl sm:rounded-3xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
-                <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100">
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 sm:px-6 py-3 sm:py-4 border-b border-green-100/60">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-green-600" />
-                      <span className="text-xs sm:text-sm font-bold text-green-800 uppercase tracking-wide">Individueel medewerkersprofiel</span>
+            <RevealSection className="order-1 lg:order-2">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-purple-100/60 px-5 py-2 rounded-full">
+                <BarChart3 className="w-4 h-4" /> Data & inzicht
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Uw kandidaten geselecteerd op bewezen scores
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
+                Wij slaan elke beoordeling op. Per medewerker ziet u scores op softskills, bediening, bar en diner — zo matchen wij altijd de juiste persoon aan uw locatie, zonder gokken.
+              </p>
+              <div className="space-y-4">
+                {[
+                  "Elk kandidaatprofiel met discipline-scores",
+                  "Direct inzicht in wie bij uw concept past",
+                  "Objectieve matching op basis van werkhistorie",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-purple-600" />
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">Scores, complimenten, no-shows en diensthistorie per persoon</p>
+                    <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
                   </div>
-                  <img src={screenshotProfiel} alt="Individueel medewerkersprofiel met beoordelingen en statistieken" className="w-full object-cover group-hover:scale-[1.01] transition-transform duration-500" />
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-xs sm:text-sm text-gray-500 font-medium">Zo selecteren we op bewezen kwaliteit</p>
-                </div>
+                ))}
               </div>
             </RevealSection>
           </div>
-
-          <RevealSection delay={300}>
-            <div className="mt-14 sm:mt-20 text-center">
-              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 text-white px-6 sm:px-8 py-4 sm:py-5 rounded-2xl shadow-lg shadow-purple-900/20">
-                <TrendingUp className="w-5 h-5 text-purple-300 flex-shrink-0" />
-                <p className="text-sm sm:text-base font-semibold leading-snug text-left">
-                  Met deze data weet je precies wie betrouwbaar is, wie groeit en wie structureel sterk presteert.<br className="hidden sm:block" />
-                  <span className="text-purple-300"> Zo schaal je op zonder in te leveren op kwaliteit.</span>
-                </p>
-              </div>
-            </div>
-          </RevealSection>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* 6. FAVORIETENPOULES                                */}
       {/* ═══════════════════════════════════════════════════ */}
-      <section id="favorietenpoule" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
-        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <section id="favorietenpoule" className="relative py-20 sm:py-28 bg-white">
+        <XPatternBg count={2} opacity={0.04} color="rgba(139,92,246,1)" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
             <RevealSection>
-              <div>
-                <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-5 bg-purple-100/60 px-4 sm:px-5 py-2 rounded-full">
-                  <Heart className="w-4 h-4" /> Favorietenpoules
-                </span>
-                <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Vaste gezichten,<br /> minder uitleg
-                </h2>
-                <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-8">
-                  Bij EXTRA bouwen we per opdrachtgever een vaste favorietenpoule op. Dezelfde mensen die jouw locatie kennen, jouw standaard begrijpen en direct inzetbaar zijn. Geen nieuwe gezichten die elke keer opnieuw moeten worden ingewerkt.
-                </p>
-                <ul className="space-y-4 mb-8">
-                  {[
-                    { icon: Users, text: "Vaste poule per locatie — opgebouwd op basis van prestaties en voorkeur" },
-                    { icon: Heart, text: "Medewerkers die jouw locatie kennen en hoe jullie het doen" },
-                    { icon: TrendingUp, text: "Sneller schakelen bij last-minute aanvragen" },
-                    { icon: Star, text: "Hogere kwaliteit door continuïteit en bekendheid" },
-                    { icon: Tag, text: "Tags & profielen: Topper, Chef ervaren, Bar expert, Representatief" },
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <item.icon className="w-4 h-4 text-purple-700" />
-                      </div>
-                      <span className="text-gray-700 font-medium text-sm sm:text-base">{item.text}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a href="/personeelsaanvraag" className="group inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-7 py-3.5 rounded-full hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/25 transition-all hover:-translate-y-0.5">
-                  Bouw jouw vaste poule op <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </a>
-              </div>
-            </RevealSection>
-
-            <RevealSection delay={150}>
-              <div className="grid grid-cols-2 gap-4">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-purple-100/60 px-5 py-2 rounded-full">
+                <Heart className="w-4 h-4" /> Favorietenpoule
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Vaste gezichten, minder uitleg
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
+                Na elke geslaagde samenwerking voegen wij uw favorieten toe aan uw persoonlijke poule. Direct inzetbaar bij uw volgende aanvraag — geen inwerken, geen verrassingen.
+              </p>
+              <div className="space-y-4 mb-8">
                 {[
-                  { icon: "⭐", title: "Favoriet bij Hotel Amrâth", desc: "3 diensten per week, altijd dezelfde mensen op de etages.", tag: "Housekeeping" },
-                  { icon: "🏆", title: "Vaste eventpoule", desc: "60+ dezelfde medewerkers bij elk event in het Scheepvaartmuseum.", tag: "Events" },
-                  { icon: "👨‍🍳", title: "Vaste keukenploeg", desc: "Chefs die de keuken kennen, de menukaart begrijpen en direct inzetbaar zijn.", tag: "Catering" },
-                  { icon: "🎯", title: "Tagged op kwaliteit", desc: "Elk profiel bevat tags, scores, beoordelingen en diensthistorie.", tag: "Data" },
-                ].map((card, i) => (
-                  <div key={i} className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300">
-                    <div className="text-3xl mb-3">{card.icon}</div>
-                    <div className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-2">{card.tag}</div>
-                    <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-2">{card.title}</h4>
-                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{card.desc}</p>
+                  "Opgebouwd op basis van uw voorkeuren en feedback",
+                  "Direct inzetbaar bij uw volgende aanvraag",
+                  "Zelf uitnodigen via de knop 'Poules uitnodigen'",
+                  "Continu bijgewerkt na elke dienst",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-purple-600" />
+                    </div>
+                    <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
                   </div>
                 ))}
+              </div>
+              <a href="/personeelsaanvraag" className="group inline-flex items-center gap-2 bg-purple-600 text-white font-bold px-7 py-3.5 rounded-full hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/25 transition-all hover:-translate-y-0.5">
+                Bouw uw vaste poule op <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </RevealSection>
+            <RevealSection delay={100}>
+              <div className="relative pb-12 pr-4">
+                <div className="rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/80 border border-gray-100 bg-white">
+                  <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-b border-gray-100">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                    <div className="ml-3 flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-400 border border-gray-200 max-w-[180px]">
+                      app.doehetextra.nl
+                    </div>
+                  </div>
+                  <img
+                    src={poulesMatches}
+                    alt="Medewerker matches favorietenpoule EXTRA dashboard opdrachtgever"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div className="absolute -bottom-2 -right-2 sm:-bottom-4 sm:right-0 w-[55%] rounded-xl overflow-hidden shadow-xl border border-gray-100 -rotate-1 hover:rotate-0 transition-transform duration-300 bg-white">
+                  <img
+                    src={poulesButton}
+                    alt="Poules uitnodigen knop EXTRA dashboard"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
               </div>
             </RevealSection>
           </div>
