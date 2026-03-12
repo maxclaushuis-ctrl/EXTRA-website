@@ -20,7 +20,7 @@ import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
 import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
 import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
 import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
-import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.26.57_1773311268529.png";
+import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -312,15 +312,27 @@ export default function WerkwijzePage() {
         </section>
 
         {/* ⑥ KANDIDATEN DASHBOARD — warm off-white */}
-        <section className="relative py-20 sm:py-28 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
+        <section className="relative py-20 sm:py-28 pb-28 sm:pb-36 overflow-x-hidden" style={{ backgroundColor: "#faf8f5" }}>
           <XPatternBg count={2} opacity={0.05} color="rgba(139,92,246,1)" />
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
             <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
               <RevealSection className="order-2 lg:order-1">
-                <BrowserMockup
-                  src={dashboardKandidaten}
-                  alt="Dashboard met beoordelingen horecapersoneel EXTRA Amsterdam"
-                />
+                <div className="relative">
+                  <BrowserMockup
+                    src={dashboardKandidaten}
+                    alt="Dashboard met beoordelingen horecapersoneel EXTRA Amsterdam"
+                  />
+                  {/* Floating score snippet card — speels overlappend */}
+                  <div className="absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-6 w-[65%] rounded-2xl overflow-hidden shadow-2xl border border-white/80 ring-1 ring-purple-100/60 rotate-1 hover:rotate-0 transition-transform duration-300">
+                    <img
+                      src={scoreSnippet}
+                      alt="Scores kandidaat: softskills, bar, bediening en diner"
+                      className="w-full h-auto object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                </div>
               </RevealSection>
               <RevealSection className="order-1 lg:order-2">
                 <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-6 bg-purple-100/60 px-5 py-2 rounded-full">
@@ -332,7 +344,7 @@ export default function WerkwijzePage() {
                 <p className="text-gray-600 leading-relaxed mb-8 text-lg">
                   Alle sollicitaties worden opgeslagen in ons systeem. Per kandidaat zien wij scores op softskills, bediening, bar en diner, zodat wij precies de juiste match kunnen maken.
                 </p>
-                <div className="space-y-4 mb-8">
+                <div className="space-y-4">
                   {[
                     "Waar iemand ervaring heeft opgedaan",
                     "Hoe iemand beoordeeld is door opdrachtgevers",
@@ -345,15 +357,6 @@ export default function WerkwijzePage() {
                       <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
                     </div>
                   ))}
-                </div>
-                <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-lg">
-                  <img
-                    src={scoreSnippet}
-                    alt="Scores per kandidaat: softskills, bar, bediening en diner"
-                    className="w-full h-auto object-contain"
-                    loading="lazy"
-                    decoding="async"
-                  />
                 </div>
               </RevealSection>
             </div>
