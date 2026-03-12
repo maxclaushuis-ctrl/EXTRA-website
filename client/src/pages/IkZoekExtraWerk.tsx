@@ -239,7 +239,7 @@ export default function IkZoekExtraWerk() {
 
               {/* Ik zoek extra werk (dropdown) */}
               <div className="relative" onMouseEnter={() => { if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current); setActiveDropdown("werk"); }}>
-                <button className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
+                <button className={`flex items-center gap-2 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all ${activeDropdown === "werk" ? (scrolled ? "text-purple-700 bg-purple-50" : "text-white bg-white/10") : (scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10")}`}>
                   <UserCheck className="w-5 h-5" />
                   Ik zoek extra werk
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === "werk" ? "rotate-180" : ""}`} />
@@ -264,25 +264,25 @@ export default function IkZoekExtraWerk() {
               </div>
 
               {/* EXTRAATJE */}
-              <a href="/extraatje" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+              <a href="/extraatje" className={`flex items-center gap-2 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
                 <Trophy className="w-5 h-5" />
                 EXTRAATJE
               </a>
 
               {/* Werkwijze */}
-              <a href="/hoe-extra-werkt" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+              <a href="/horeca-uitzendbureau-amsterdam-werkwijze" className={`flex items-center gap-2 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
                 <Clock className="w-5 h-5" />
                 Werkwijze
               </a>
 
               {/* Ons Team */}
-              <a href="/over-extra/ons-team" className={`flex items-center gap-2 text-[18px] font-bold px-5 py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+              <a href="/over-extra/ons-team" className={`flex items-center gap-2 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
                 <Users className="w-5 h-5" />
                 Ons Team
               </a>
 
               {/* CTA */}
-              <a href="/aanmelden" className={`ml-4 text-[18px] font-black px-8 py-3.5 rounded-full transition-all hover:shadow-2xl hover:-translate-y-0.5 flex items-center gap-2.5 ${scrolled ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30" : "bg-white text-purple-700 hover:shadow-white/30 border-2 border-white"}`}>
+              <a href="/aanmelden" className={`ml-4 text-[13px] xl:text-[16px] font-black px-5 xl:px-8 py-2.5 xl:py-3.5 rounded-full transition-all hover:shadow-2xl hover:-translate-y-0.5 flex items-center gap-2.5 ${scrolled ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border border-purple-500/20 hover:shadow-purple-500/30" : "bg-white text-purple-700 hover:shadow-white/30 border-2 border-white"}`}>
                 Aanmelden <ArrowRight className="w-[18px] h-[18px]" />
               </a>
             </div>
@@ -333,7 +333,7 @@ export default function IkZoekExtraWerk() {
                 EXTRAATJE
               </a>
               {/* Werkwijze */}
-              <a href="/hoe-extra-werkt" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
+              <a href="/horeca-uitzendbureau-amsterdam-werkwijze" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
                   <Clock className="w-4 h-4 text-purple-600" />
                 </div>
