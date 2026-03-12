@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Link } from "wouter";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import FAQSection from "@/components/FAQSection";
@@ -464,7 +465,135 @@ export default function PersoneelGezocht() {
       </section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* 4. SCREENINGSPROCES                                */}
+      {/* 4. LOGO'S VAN OPDRACHTGEVERS                      */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <RevealSection>
+            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">
+              Vertrouwd door hotels, cateraars en eventlocaties
+            </p>
+          </RevealSection>
+          <div className="relative overflow-hidden group">
+            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
+            <div className="flex animate-marquee-pg group-hover:[animation-play-state:paused]">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
+                  {[
+                    { src: logoMarriott, alt: "Marriott" },
+                    { src: logoHilton, alt: "Hilton" },
+                    { src: logoHartMuseum, alt: "Scheepvaartmuseum" },
+                    { src: logoSelectCatering, alt: "Select Catering" },
+                    { src: logoAppel, alt: "Appèl" },
+                    { src: logoAmrath, alt: "Amrâth Hotels" },
+                    { src: logoFcUtrecht, alt: "FC Utrecht" },
+                    { src: logoWestweelde, alt: "Westweelde" },
+                    { src: logoFunda, alt: "Funda" },
+                    { src: logoHetePeper, alt: "Hete Peper" },
+                  ].map((logo) => (
+                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                      <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes marquee-pg { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+          .animate-marquee-pg { animation: marquee-pg 40s linear infinite; }
+        `}</style>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 5. KLANTREVIEWS                                    */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <section id="reviews" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
+        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
+                <Heart className="w-4 h-4" /> Ervaringen
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Wat anderen zeggen
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 mt-4 sm:mt-6">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
+                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">4,8</span>
+                </div>
+                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">232 Google reviews</span></span>
+              </div>
+            </div>
+          </RevealSection>
+
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-8">
+            {klantReviews.map((review, i) => (
+              <RevealSection key={i} delay={i * 120}>
+                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col shadow-sm">
+                  <div className="flex items-center justify-between mb-4 sm:mb-5">
+                    <div className="flex gap-1">
+                      {[...Array(review.rating)].map((_, j) => (
+                        <Star key={j} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                  </div>
+                  <div className="mb-6 sm:mb-8 flex-1">
+                    <p className={`text-sm sm:text-base text-gray-600 leading-relaxed ${!expandedReviews.has(i) ? "line-clamp-4" : ""}`}>"{review.quote}"</p>
+                    <button
+                      onClick={() => setExpandedReviews(prev => {
+                        const next = new Set(prev);
+                        next.has(i) ? next.delete(i) : next.add(i);
+                        return next;
+                      })}
+                      className="mt-2 text-xs font-semibold text-purple-600 hover:text-purple-800 underline underline-offset-2 cursor-pointer"
+                    >
+                      {expandedReviews.has(i) ? "Lees minder" : "Lees meer"}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
+                      <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map((n: string) => n[0]).join("")}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{review.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-400 font-medium truncate">{review.role}</p>
+                      <p className="text-xs text-purple-600 font-semibold truncate">{review.company}</p>
+                    </div>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+
+          <RevealSection delay={200}>
+            <div className="flex justify-center mt-10 sm:mt-14">
+              <Link href="/klantcases-horeca">
+                <button className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-sm sm:text-base text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:-translate-y-0.5 transition-all duration-200" style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)" }}>
+                  Bekijk alle klantcases <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 6. SCREENINGSPROCES                                */}
       {/* ═══════════════════════════════════════════════════ */}
       <section id="selectie" className="relative py-20 sm:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-purple-50 to-indigo-100" />
@@ -840,124 +969,6 @@ export default function PersoneelGezocht() {
               </a>
             </div>
           </RevealSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* 10. LOGO'S VAN OPDRACHTGEVERS                      */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <section className="py-10 sm:py-16 bg-white border-y border-gray-100 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <RevealSection>
-            <p className="text-center text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">
-              Vertrouwd door hotels, cateraars en eventlocaties
-            </p>
-          </RevealSection>
-          <div className="relative overflow-hidden group">
-            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
-            <div className="flex animate-marquee-pg group-hover:[animation-play-state:paused]">
-              {[...Array(2)].map((_, setIdx) => (
-                <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
-                  {[
-                    { src: logoMarriott, alt: "Marriott" },
-                    { src: logoHilton, alt: "Hilton" },
-                    { src: logoHartMuseum, alt: "Scheepvaartmuseum" },
-                    { src: logoSelectCatering, alt: "Select Catering" },
-                    { src: logoAppel, alt: "Appèl" },
-                    { src: logoAmrath, alt: "Amrâth Hotels" },
-                    { src: logoFcUtrecht, alt: "FC Utrecht" },
-                    { src: logoWestweelde, alt: "Westweelde" },
-                    { src: logoFunda, alt: "Funda" },
-                    { src: logoHetePeper, alt: "Hete Peper" },
-                  ].map((logo) => (
-                    <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                      <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <style>{`
-          @keyframes marquee-pg { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-          .animate-marquee-pg { animation: marquee-pg 40s linear infinite; }
-        `}</style>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* 11. KLANTREVIEWS                                   */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <section id="reviews" className="relative py-20 sm:py-28 lg:py-36 overflow-hidden" style={{ backgroundColor: "#fdf9f3" }}>
-        <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <RevealSection>
-            <div className="text-center mb-10 sm:mb-14">
-              <span className="inline-flex items-center gap-2 text-purple-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5 bg-purple-100/50 px-4 sm:px-5 py-2 rounded-full">
-                <Heart className="w-4 h-4" /> Ervaringen
-              </span>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Wat anderen zeggen
-              </h2>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 mt-4 sm:mt-6">
-                <div className="flex items-center gap-1.5">
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="text-base sm:text-xl font-bold text-gray-900 ml-0.5">4,8</span>
-                </div>
-                <span className="text-sm sm:text-base text-gray-500">gemiddeld uit <span className="font-semibold text-gray-700">232 Google reviews</span></span>
-              </div>
-            </div>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-4 sm:gap-8">
-            {klantReviews.map((review, i) => (
-              <RevealSection key={i} delay={i * 120}>
-                <div className="bg-white rounded-2xl sm:rounded-[1.5rem] p-6 sm:p-9 border border-gray-100 hover:border-purple-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col shadow-sm">
-                  <div className="flex items-center justify-between mb-4 sm:mb-5">
-                    <div className="flex gap-1">
-                      {[...Array(review.rating)].map((_, j) => (
-                        <Star key={j} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
-                      ))}
-                    </div>
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                  </div>
-                  <div className="mb-6 sm:mb-8 flex-1">
-                    <p className={`text-sm sm:text-base text-gray-600 leading-relaxed ${!expandedReviews.has(i) ? "line-clamp-4" : ""}`}>"{review.quote}"</p>
-                    <button
-                      onClick={() => setExpandedReviews(prev => {
-                        const next = new Set(prev);
-                        next.has(i) ? next.delete(i) : next.add(i);
-                        return next;
-                      })}
-                      className="mt-2 text-xs font-semibold text-purple-600 hover:text-purple-800 underline underline-offset-2 cursor-pointer"
-                    >
-                      {expandedReviews.has(i) ? "Lees minder" : "Lees meer"}
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
-                      <span className="text-white font-bold text-sm sm:text-base">{review.name.split(" ").map((n: string) => n[0]).join("")}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{review.name}</p>
-                      <p className="text-xs sm:text-sm text-gray-400 font-medium truncate">{review.role}</p>
-                      <p className="text-xs text-purple-600 font-semibold truncate">{review.company}</p>
-                    </div>
-                  </div>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
         </div>
       </section>
 
