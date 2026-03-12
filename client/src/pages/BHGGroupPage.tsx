@@ -81,18 +81,30 @@ function RevealSection({ children, delay = 0, className = "" }: { children: Reac
   );
 }
 
-function XPatternBg({ count = 4, opacity = 0.06, color = "rgba(139,92,246,1)" }: { count?: number; opacity?: number; color?: string }) {
+function XPatternBg({ count = 4, opacity = 0.08, color = "rgba(139,92,246,1)", className = "" }: { count?: number; opacity?: number; color?: string; className?: string }) {
   const positions = [
-    { top: "8%", left: "3%" }, { top: "10%", right: "4%" },
-    { bottom: "10%", left: "5%" }, { bottom: "8%", right: "3%" },
-    { top: "45%", left: "1%" }, { top: "40%", right: "2%" },
-  ].slice(0, count);
+    { left: "5%",  top: "10%", size: 200, rotate: 15 },
+    { left: "80%", top: "20%", size: 160, rotate: -25 },
+    { left: "50%", top: "60%", size: 240, rotate: 35 },
+    { left: "15%", top: "75%", size: 180, rotate: -10 },
+    { left: "90%", top: "80%", size: 140, rotate: 45 },
+    { left: "35%", top: "30%", size: 120, rotate: -30 },
+  ];
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {positions.map((pos, i) => (
-        <div key={i} className="absolute" style={{ ...pos, opacity }}>
-          <img src={xPatroon} alt="" width="180" height="180" className="w-28 sm:w-40 lg:w-48" />
-        </div>
+    <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}>
+      {positions.slice(0, count).map((pos, i) => (
+        <div key={i} className="absolute" style={{
+          left: pos.left, top: pos.top,
+          width: pos.size, height: pos.size,
+          transform: `rotate(${pos.rotate}deg)`,
+          opacity,
+          WebkitMaskImage: `url(${xPatroon})`,
+          maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: color,
+        }} />
       ))}
     </div>
   );
@@ -489,7 +501,7 @@ export default function BHGGroupPage() {
         {currentSlide === 5 && (
           <SlideWrap key="s5">
             <div className="relative min-h-screen bg-white">
-              <XPatternBg count={2} opacity={0.06} color="rgba(139,92,246,1)" />
+              <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
               <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-12 pb-10">
                 <RevealSection>
                   <div className="text-center mb-8">
@@ -560,7 +572,7 @@ export default function BHGGroupPage() {
         {currentSlide === 6 && (
           <SlideWrap key="s6">
             <div className="relative min-h-screen" style={{ backgroundColor: "#faf8f5" }}>
-              <XPatternBg count={2} opacity={0.05} color="rgba(139,92,246,1)" />
+              <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
               <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
                 <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                   <RevealSection className="order-2 lg:order-1">
@@ -770,7 +782,7 @@ export default function BHGGroupPage() {
         {currentSlide === 9 && (
           <SlideWrap key="s9">
             <div className="relative min-h-screen bg-white">
-              <XPatternBg count={2} opacity={0.06} color="rgba(139,92,246,1)" />
+              <XPatternBg count={3} opacity={0.08} color="rgba(139,92,246,1)" />
               <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-14">
                 <RevealSection>
                   <div className="text-center mb-10 sm:mb-14">
