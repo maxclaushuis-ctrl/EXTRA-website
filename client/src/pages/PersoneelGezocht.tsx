@@ -14,10 +14,10 @@ import {
 import heroBgImage from "@assets/hero-background.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
-import screenDashboard from "@assets/IMG_8803_1770915286475.png";
-import screenRewards from "@assets/IMG_8805_1770915286475.png";
-import screenChallenges from "@assets/IMG_8807_1770915286475.png";
-import screenRanglijst from "@assets/IMG_8808_1770915286475.png";
+import screenDashboard from "@assets/IMG_9066_1773314165933.PNG";
+import screenRewards from "@assets/IMG_9067_1773314165933.PNG";
+import screenRanglijst from "@assets/IMG_9068_1773314165933.PNG";
+import screenRanglijstWeb from "@assets/Scherm\u00adafbeelding_2026-03-12_om_12.13.01_1773314159864.png";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
@@ -189,9 +189,9 @@ function GrainOverlay() {
 
 const appScreens = [
   { key: "dashboard", img: screenDashboard, label: "Dashboard" },
-  { key: "rewards", img: screenRewards, label: "Rewards" },
-  { key: "challenges", img: screenChallenges, label: "Challenges" },
+  { key: "beloningen", img: screenRewards, label: "Beloningen" },
   { key: "ranglijst", img: screenRanglijst, label: "Ranglijst" },
+  { key: "ranglijst-web", img: screenRanglijstWeb, label: "Jouw positie" },
 ];
 
 export default function PersoneelGezocht() {
