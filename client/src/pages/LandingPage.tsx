@@ -16,7 +16,7 @@ import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoMercure from "../assets/pitch/logo-mercure.png";
-import logoPulitzer from "../assets/pitch/logo-pulitzer.png";
+import logoPulitzer from "../assets/pitch/logo-pulitzer-transparent.png";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
