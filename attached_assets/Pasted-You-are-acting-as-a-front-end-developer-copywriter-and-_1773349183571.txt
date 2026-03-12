@@ -1,0 +1,82 @@
+You are acting as a front-end developer, copywriter and SEO specialist for the EXTRA website.
+The English version of the website has already been created, but the problem is that the pages and sections are not identical to the Dutch version.
+The English pages currently contain different sections, layouts and content structures, which is not what we want.
+We need to fix this.
+Main objective
+Create an English version of the website by duplicating the Dutch pages exactly, and then translating the content.
+Important:
+The layout, sections, and structure must remain 100% identical to the Dutch version.
+Critical rule
+The English pages must be a direct duplicate of the Dutch pages.
+This means:
+• same layout
+• same sections
+• same section order
+• same spacing
+• same components
+• same cards
+• same CTA buttons
+• same UX structure
+Do not redesign pages.
+Do not create new sections.
+Do not remove sections.
+Do not reorder sections.
+Only the text content should be translated and rewritten in English.
+Translation instructions
+Translate the Dutch text to English.
+However:
+Do not translate word-for-word.
+Instead:
+• ensure the English reads naturally
+• adjust sentence structure if necessary
+• keep the meaning identical
+• ensure headlines remain engaging
+The English copy should feel natural and professional, while keeping the same intent as the Dutch version.
+Maintain identical page structure
+Each English page must contain the exact same sections as the Dutch version.
+Example:
+If the Dutch page contains:
+Hero
+Benefits section
+Process section
+Reviews
+CTA section
+The English page must contain the same sections in the same order.
+URL structure
+Keep the Dutch URLs unchanged.
+Create English versions using /en/.
+Example:
+Dutch
+/horeca-personeel-gezocht
+English
+/en/hospitality-staff-amsterdam
+Dutch
+/hotelpersoneel-inhuren
+English
+/en/hotel-staff-amsterdam
+SEO elements
+Translate and optimize the following:
+• meta titles
+• meta descriptions
+• alt texts
+• button labels
+• headings (H1, H2, H3)
+Ensure the English text remains natural and readable.
+Internal linking
+Ensure that:
+Dutch pages link to Dutch pages.
+English pages link to English pages.
+Do not mix languages in the internal linking structure.
+Important
+Before implementing changes:
+Compare each English page with its Dutch counterpart.
+If the English page does not match the Dutch layout:
+• rebuild it so it becomes an exact duplicate
+• then translate the content
+Expected result
+The English website should be an exact structural duplicate of the Dutch website, with:
+• identical layout
+• identical section order
+• identical UX
+• identical components
+The only difference should be that the text is translated into natural English.
