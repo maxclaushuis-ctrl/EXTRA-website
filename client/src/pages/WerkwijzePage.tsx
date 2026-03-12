@@ -52,7 +52,7 @@ function IpadMockup({ src, alt }: { src: string; alt: string }) {
             src={src}
             alt={alt}
             className="w-full h-full object-cover"
-            style={{ objectPosition: "center 12%" }}
+            style={{ objectPosition: "center 58%" }}
             loading="lazy"
             decoding="async"
           />
