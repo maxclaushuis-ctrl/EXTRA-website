@@ -541,6 +541,10 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
                       <img
                         src={item.image}
                         alt={item.alt || item.title}
+                        width="1080"
+                        height="1080"
+                        loading="lazy"
+                        decoding="async"
                         className={`absolute ${item.imgStyle || "bottom-[-60px] right-[-35px] h-[125%]"} object-contain object-bottom z-10`}
                         style={{
                           filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.3))",
@@ -554,6 +558,10 @@ function DienstenDesktop({ diensten }: { diensten: DienstItem[] }) {
                     key={item.id}
                     src={item.image}
                     alt={item.alt || item.title}
+                    width="1080"
+                    height="1080"
+                    loading="lazy"
+                    decoding="async"
                     className={`absolute bottom-0 w-full h-full object-cover object-top transition-all duration-700 ${
                       i === active ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
                     }`}
@@ -962,7 +970,7 @@ export default function LandingPage() {
                     { src: logoWestweelde, alt: "Westweelde" },
                   ].map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                      <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
+                      <img src={logo.src} alt={logo.alt} width="200" height="200" className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
                     </div>
                   ))}
                 </div>

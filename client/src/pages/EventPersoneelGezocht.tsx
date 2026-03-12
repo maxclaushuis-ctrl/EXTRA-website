@@ -749,7 +749,7 @@ export default function EventPersoneelGezocht() {
                 { src: logoHetePeper, alt: "Hete Peper" },
               ].map((logo, i) => (
                 <div key={i} className="hover:scale-105 transition-transform duration-300">
-                  <img src={logo.src} alt={logo.alt} className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                  <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-10 sm:h-14 lg:h-16 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
                 </div>
               ))}
             </div>

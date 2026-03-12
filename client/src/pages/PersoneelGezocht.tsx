@@ -870,7 +870,7 @@ export default function PersoneelGezocht() {
                     { src: logoHetePeper, alt: "Hete Peper" },
                   ].map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                      <img src={logo.src} alt={logo.alt} className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                      <img src={logo.src} alt={logo.alt} width="200" height="200" loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
                     </div>
                   ))}
                 </div>
