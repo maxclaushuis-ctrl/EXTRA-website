@@ -1,0 +1,68 @@
+You are acting as a front-end developer fixing the logo rendering in the client logo section of the EXTRA website.
+Currently there is a problem with two logos that were added:
+• Pulitzer Hotel
+• NH Hotels
+Instead of showing the actual logos, the section currently displays colored rectangles instead of the logos.
+This indicates that something is wrong with either:
+• the image format
+• the background handling
+• the CSS styling
+• or the way the logos are inserted.
+Objective
+Fix the logo display so the actual logos become visible and render correctly.
+Use the PNG files provided in the attachments.
+The logos must appear exactly like the other client logos in the grid.
+Files to use
+Replace the current logos with the PNG files provided:
+Pulitzer logo
+NH Hotels logo
+These must be used directly as image elements, not as CSS backgrounds.
+Critical implementation rules
+Do NOT render these logos as colored blocks.
+The logos must be implemented as:
+<img src="/path/logo.png" alt="Pulitzer Hotel logo">
+NOT as:
+background-image
+Remove background issues
+Ensure the following:
+• no background color behind the logos
+• no CSS overlays
+• no filters applied to the image
+• no mask or opacity layers
+• no gradient overlays
+The logos must appear with their transparent background intact.
+Container styling
+Ensure the logo container uses:
+background: transparent
+display: flex
+align-items: center
+justify-content: center
+Do not apply any background color to the logo container.
+Logo sizing
+The logos must match the styling of the other client logos.
+Use something like:
+max-height: 40px
+width: auto
+object-fit: contain
+Ensure all logos appear visually consistent in the grid.
+Replace the current Pulitzer logo
+The current Pulitzer logo already on the website must be replaced with the PNG provided.
+Remove the existing file reference and insert the new PNG.
+Important debugging step
+Before finishing, check the following:
+Open the image directly in the browser to confirm transparency.
+Inspect the CSS of the logo container.
+Ensure there is no background color covering the logo.
+Ensure the PNG file loads correctly.
+Expected result
+The client logo section must display:
+• the Pulitzer logo
+• the NH Hotels logo
+Both logos must be:
+• clearly visible
+• rendered as PNG images
+• with transparent backgrounds
+• consistent with the other client logos.
+Important
+Do not apply any colored backgrounds behind the logos.
+If the logos still appear as colored rectangles, inspect the CSS and remove any background layers or overlays causing the issue.
