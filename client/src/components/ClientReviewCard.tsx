@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Quote, Star, Building2 } from "lucide-react";
 import type { ClientReview } from "@/data/reviews";
 import logoAmrath from "../assets/pitch/amrath-logo.png";
@@ -20,6 +21,7 @@ interface ClientReviewCardProps {
 }
 
 export function ClientReviewCard({ review, variant = "light" }: ClientReviewCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const logo = review.logoKey ? LOGOS[review.logoKey] : null;
   const isDark = variant === "dark";
 
@@ -45,13 +47,23 @@ export function ClientReviewCard({ review, variant = "light" }: ClientReviewCard
         )}
       </div>
 
-      <p
-        className={`text-sm sm:text-base leading-relaxed flex-grow mb-6 line-clamp-6 ${
-          isDark ? "text-white/75 italic" : "text-gray-600 italic"
-        }`}
-      >
-        "{review.quote}"
-      </p>
+      <div className="flex-grow mb-2">
+        <p
+          className={`text-sm sm:text-base leading-relaxed ${expanded ? "" : "line-clamp-6"} ${
+            isDark ? "text-white/75 italic" : "text-gray-600 italic"
+          }`}
+        >
+          "{review.quote}"
+        </p>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className={`mt-2 mb-4 text-xs font-semibold underline underline-offset-2 cursor-pointer ${
+            isDark ? "text-purple-300 hover:text-purple-100" : "text-purple-600 hover:text-purple-800"
+          }`}
+        >
+          {expanded ? "Lees minder" : "Lees meer"}
+        </button>
+      </div>
 
       <div className={`pt-5 border-t ${isDark ? "border-white/10" : "border-gray-100"}`}>
         <div className="flex items-center gap-1 mb-3">
