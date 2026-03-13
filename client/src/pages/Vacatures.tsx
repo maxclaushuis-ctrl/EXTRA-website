@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "wouter";
 import {
   Search,
@@ -8,7 +8,6 @@ import {
   X,
   CheckCircle2,
   ArrowRight,
-  Star,
   Zap,
   UtensilsCrossed,
   ChefHat,
@@ -16,7 +15,7 @@ import {
   ConciergeBell,
   SlidersHorizontal,
   Euro,
-  Calendar,
+  ChevronDown,
   ChevronRight,
   Gift,
   Trophy,
@@ -26,26 +25,32 @@ import PublicFooter from "@/components/PublicFooter";
 import { VACATURES } from "@/data/vacatures";
 import { RevealSection, XPatternBg } from "@/pages/LandingPage";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
 import chefImg from "@assets/Chef_1771833440047.webp";
 import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 
-const serviceTypeBadgeColors: Record<string, string> = {
-  Fulltime: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25",
-  Parttime: "bg-blue-500/15 text-blue-300 border border-blue-500/25",
-  Bijbaan: "bg-amber-500/15 text-amber-300 border border-amber-500/25",
-  Oproep: "bg-purple-500/20 text-purple-200 border border-purple-500/30",
+type SortOption = "newest" | "salary_high" | "parttime" | "fulltime";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  newest: "Nieuwste vacatures",
+  salary_high: "Hoogste salaris",
+  parttime: "Parttime eerst",
+  fulltime: "Fulltime eerst",
+};
+
+const SERVICE_TYPE_COLORS: Record<string, string> = {
+  Fulltime: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  Parttime: "bg-blue-50 text-blue-700 border-blue-100",
+  Bijbaan: "bg-amber-50 text-amber-700 border-amber-100",
+  Oproep: "bg-purple-50 text-purple-700 border-purple-100",
 };
 
 export default function Vacatures() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<{
     regions: string[];
     functions: string[];
@@ -57,6 +62,8 @@ export default function Vacatures() {
     serviceTypes: [],
     workplaces: [],
   });
+
+  const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -76,19 +83,8 @@ export default function Vacatures() {
         "description": vacature.shortDescription,
         "employmentType": vacature.serviceType.toUpperCase(),
         "datePosted": vacature.datePosted,
-        "hiringOrganization": {
-          "@type": "Organization",
-          "name": "EXTRA Uitzendbureau",
-          "sameAs": "https://www.doehetextra.nl"
-        },
-        "jobLocation": {
-          "@type": "Place",
-          "address": {
-            "@type": "PostalAddress",
-            "addressLocality": vacature.location,
-            "addressCountry": "NL"
-          }
-        }
+        "hiringOrganization": { "@type": "Organization", "name": "EXTRA Uitzendbureau", "sameAs": "https://www.doehetextra.nl" },
+        "jobLocation": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": vacature.location, "addressCountry": "NL" } }
       });
       document.head.appendChild(script);
       scripts.push(script);
@@ -96,8 +92,22 @@ export default function Vacatures() {
     return () => { scripts.forEach(s => document.head.removeChild(s)); };
   }, []);
 
-  const filteredVacatures = useMemo(() => {
-    return VACATURES.filter(v => {
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (mobileFiltersOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileFiltersOpen]);
+
+  const filteredAndSorted = useMemo(() => {
+    const filtered = VACATURES.filter(v => {
       const q = searchQuery.toLowerCase();
       const matchesSearch = !q || v.title.toLowerCase().includes(q) || v.shortDescription.toLowerCase().includes(q);
       const matchesRegion = filters.regions.length === 0 || filters.regions.includes(v.region);
@@ -106,7 +116,20 @@ export default function Vacatures() {
       const matchesWorkplace = filters.workplaces.length === 0 || filters.workplaces.includes(v.workplace);
       return matchesSearch && matchesRegion && matchesFunction && matchesService && matchesWorkplace;
     });
-  }, [searchQuery, filters]);
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "salary_high") return b.salaryMin - a.salaryMin;
+      if (sortBy === "parttime") {
+        const order = ["Parttime", "Bijbaan", "Oproep", "Fulltime"];
+        return order.indexOf(a.serviceType) - order.indexOf(b.serviceType);
+      }
+      if (sortBy === "fulltime") {
+        const order = ["Fulltime", "Parttime", "Bijbaan", "Oproep"];
+        return order.indexOf(a.serviceType) - order.indexOf(b.serviceType);
+      }
+      return 0;
+    });
+  }, [searchQuery, filters, sortBy]);
 
   const activeFilterCount =
     filters.regions.length + filters.functions.length +
@@ -127,7 +150,7 @@ export default function Vacatures() {
   };
 
   const FilterCheckbox = ({ type, value }: { type: keyof typeof filters; value: string }) => (
-    <label className="flex items-center gap-3 cursor-pointer group py-1">
+    <label className="flex items-center gap-3 cursor-pointer group py-2 rounded-lg hover:bg-purple-50/60 px-2 -mx-2 transition-colors">
       <input
         type="checkbox"
         checked={filters[type].includes(value)}
@@ -140,35 +163,35 @@ export default function Vacatures() {
     </label>
   );
 
-  const filterContent = (
-    <div className="space-y-7">
+  const FilterPanel = () => (
+    <div className="space-y-8">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-3">Locatie / Regio</p>
-        <div className="space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-2">Locatie / Regio</p>
+        <div>
           {(["Amsterdam", "Utrecht", "Het Gooi", "Randstad"] as const).map(r => (
             <FilterCheckbox key={r} type="regions" value={r} />
           ))}
         </div>
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-3">Functie</p>
-        <div className="space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-2">Functie</p>
+        <div>
           {(["Bediening", "Bartender", "Chef", "Banqueting", "Housekeeping", "Front office"] as const).map(f => (
             <FilterCheckbox key={f} type="functions" value={f} />
           ))}
         </div>
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-3">Type dienst</p>
-        <div className="space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-2">Type dienst</p>
+        <div>
           {(["Fulltime", "Parttime", "Bijbaan", "Oproep"] as const).map(t => (
             <FilterCheckbox key={t} type="serviceTypes" value={t} />
           ))}
         </div>
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-3">Werkplek</p>
-        <div className="space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-2">Werkplek</p>
+        <div>
           {(["Hotel", "Eventlocatie", "Catering", "Restaurant"] as const).map(w => (
             <FilterCheckbox key={w} type="workplaces" value={w} />
           ))}
@@ -177,7 +200,7 @@ export default function Vacatures() {
       {activeFilterCount > 0 && (
         <button
           type="button"
-          onClick={clearFilters}
+          onClick={() => { clearFilters(); setMobileFiltersOpen(false); }}
           className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-xl transition-colors border border-purple-200"
         >
           <X className="w-3.5 h-3.5" /> Filters wissen ({activeFilterCount})
@@ -191,9 +214,8 @@ export default function Vacatures() {
       <PublicNav forceDark={false} />
 
       <main>
-
-        {/* ── HERO — exact same style as /landing hero section ── */}
-        <section className="relative min-h-[72vh] flex items-center overflow-hidden">
+        {/* HERO */}
+        <section className="relative min-h-[68vh] flex items-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a0a2e] via-[#170926] to-[#12071f]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_20%_80%,rgba(124,58,237,0.15),transparent)]" />
           <XPatternBg count={3} opacity={0.12} color="rgba(168,85,247,0.6)" />
@@ -208,10 +230,8 @@ export default function Vacatures() {
                 te laten zien?
               </h1>
               <p className="text-xl text-purple-100/70 mb-10 leading-relaxed max-w-2xl">
-                Vacatures bij hotels, restaurants, events en hospitality locaties in Amsterdam en omgeving. Kies jouw functie en solliciteer direct.
+                Vacatures bij hotels, restaurants, events en hospitality locaties in Amsterdam en omgeving.
               </p>
-
-              {/* Search bar */}
               <div className="relative max-w-xl mb-10">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300/50 pointer-events-none" />
                 <input
@@ -222,53 +242,39 @@ export default function Vacatures() {
                   className="w-full bg-white/10 border border-white/20 rounded-full py-4 pl-14 pr-6 text-white placeholder:text-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all backdrop-blur-sm text-base"
                 />
                 {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-300/50 hover:text-white transition-colors"
-                  >
+                  <button onClick={() => setSearchQuery("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-300/50 hover:text-white transition-colors">
                     <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
-
-              {/* Stats row */}
               <div className="flex flex-wrap gap-6 text-sm font-semibold text-purple-300/70">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                  {VACATURES.length}+ actieve vacatures
-                </span>
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-purple-400" />
-                  Amsterdam &amp; regio
-                </span>
-                <span className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-purple-400" />
-                  Dagbetaling mogelijk
-                </span>
+                <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-400" />{VACATURES.length}+ actieve vacatures</span>
+                <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-purple-400" />Amsterdam &amp; regio</span>
+                <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-purple-400" />Dagbetaling mogelijk</span>
               </div>
             </RevealSection>
           </div>
         </section>
 
-        {/* ── VACATURE OVERVIEW — white background like /landing audience section ── */}
-        <section className="py-20 bg-white">
+        {/* VACATURE OVERVIEW */}
+        <section className="py-12 lg:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row gap-10">
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
 
               {/* Desktop Sidebar */}
-              <aside className="hidden lg:block w-60 flex-shrink-0">
+              <aside className="hidden lg:block w-56 flex-shrink-0">
                 <div className="sticky top-28">
                   <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                    <div className="flex items-center gap-2 mb-6 pb-5 border-b border-gray-100">
+                    <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
                       <SlidersHorizontal className="w-4 h-4 text-purple-600" />
-                      <span className="font-bold text-sm text-gray-800">Verfijn resultaten</span>
+                      <span className="font-bold text-sm text-gray-800">Filters</span>
                       {activeFilterCount > 0 && (
                         <span className="ml-auto bg-purple-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
                           {activeFilterCount}
                         </span>
                       )}
                     </div>
-                    {filterContent}
+                    <FilterPanel />
                   </div>
                 </div>
               </aside>
@@ -276,83 +282,104 @@ export default function Vacatures() {
               {/* Results column */}
               <div className="flex-1 min-w-0">
 
-                {/* Mobile filter accordion */}
-                <div className="lg:hidden mb-6">
-                  <Accordion type="single" collapsible className="bg-white border border-gray-200 rounded-2xl px-5 shadow-sm">
-                    <AccordionItem value="filters" className="border-none">
-                      <AccordionTrigger className="hover:no-underline py-4">
-                        <div className="flex items-center gap-2">
-                          <SlidersHorizontal className="w-4 h-4 text-purple-600" />
-                          <span className="font-semibold text-sm text-gray-800">Verfijn resultaten</span>
-                          {activeFilterCount > 0 && (
-                            <span className="ml-1 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              {activeFilterCount}
-                            </span>
-                          )}
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-6">{filterContent}</AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                {/* Top bar: count + mobile filter button + sort */}
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    {/* Mobile filter button */}
+                    <button
+                      onClick={() => setMobileFiltersOpen(true)}
+                      className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-purple-300 hover:text-purple-700 transition-colors shadow-sm"
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                      Filters
+                      {activeFilterCount > 0 && (
+                        <span className="bg-purple-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </button>
+                    <p className="text-sm font-semibold text-gray-500">
+                      <span className="text-gray-900 font-black">{filteredAndSorted.length}</span> {filteredAndSorted.length === 1 ? "vacature" : "vacatures"} gevonden
+                    </p>
+                  </div>
+
+                  {/* Sort dropdown */}
+                  <div className="relative flex-shrink-0" ref={sortRef}>
+                    <button
+                      onClick={() => setSortOpen(o => !o)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-purple-300 hover:text-purple-700 transition-colors shadow-sm"
+                    >
+                      <span className="hidden sm:inline">{SORT_LABELS[sortBy]}</span>
+                      <span className="sm:hidden">Sorteren</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {sortOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-30">
+                        {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
+                          <button
+                            key={key}
+                            onClick={() => { setSortBy(key); setSortOpen(false); }}
+                            className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${sortBy === key ? "bg-purple-50 text-purple-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Results header */}
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl sm:text-2xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    Actuele vacatures
-                  </h2>
-                  <span className="text-sm text-gray-400 font-medium ml-4 flex-shrink-0">
-                    {filteredVacatures.length} {filteredVacatures.length === 1 ? "vacature" : "vacatures"}
-                  </span>
-                </div>
+                {/* Job list */}
+                {filteredAndSorted.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredAndSorted.map((v, i) => (
+                      <RevealSection key={v.slug} delay={i * 40}>
+                        <Link href={`/vacatures/${v.slug}`} className="group block">
+                          <article className="bg-white border border-gray-100 rounded-2xl hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/8 transition-all duration-200 overflow-hidden">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-5">
 
-                {filteredVacatures.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {filteredVacatures.map((v) => (
-                      <RevealSection key={v.slug}>
-                        <Link href={`/vacatures/${v.slug}`} className="group block h-full">
-                          <article className="h-full bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 flex flex-col shadow-sm">
-                            {/* Badges */}
-                            <div className="px-6 pt-6 pb-3 flex flex-wrap gap-2">
-                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
-                                <MapPin className="w-3 h-3" /> {v.location}
-                              </span>
-                              <span className={`inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-full ${
-                                v.serviceType === "Fulltime" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
-                                v.serviceType === "Parttime" ? "bg-blue-50 text-blue-700 border border-blue-100" :
-                                v.serviceType === "Bijbaan" ? "bg-amber-50 text-amber-700 border border-amber-100" :
-                                "bg-purple-50 text-purple-700 border border-purple-100"
-                              }`}>
-                                {v.serviceType}
-                              </span>
-                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-                                <Building2 className="w-3 h-3" /> {v.workplace}
-                              </span>
+                              {/* Left: title + tags */}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-base font-bold text-gray-900 group-hover:text-purple-700 transition-colors leading-snug mb-2">
+                                  {v.title}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+                                    <MapPin className="w-3 h-3" /> {v.location}
+                                  </span>
+                                  <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border ${SERVICE_TYPE_COLORS[v.serviceType] ?? "bg-gray-50 text-gray-500 border-gray-100"}`}>
+                                    {v.serviceType}
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+                                    <Building2 className="w-3 h-3" /> {v.workplace}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Middle: description (hidden on mobile) */}
+                              <div className="hidden md:block w-64 lg:w-72 flex-shrink-0">
+                                <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
+                                  {v.shortDescription}
+                                </p>
+                              </div>
+
+                              {/* Right: salary + CTA */}
+                              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 flex-shrink-0">
+                                <span className="flex items-center gap-1 text-sm font-bold text-gray-800">
+                                  <Euro className="w-3.5 h-3.5 text-purple-500" />
+                                  {v.salaryMin.toFixed(2).replace(".", ",")} p/u
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 bg-purple-600 group-hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-full transition-colors whitespace-nowrap">
+                                  Bekijk vacature <ChevronRight className="w-3.5 h-3.5" />
+                                </span>
+                              </div>
                             </div>
 
-                            {/* Body */}
-                            <div className="px-6 pb-5 flex flex-col flex-grow">
-                              <h3 className="text-base font-bold text-gray-900 leading-snug mb-1.5 group-hover:text-purple-700 transition-colors duration-300 line-clamp-2">
-                                {v.title}
-                              </h3>
-                              <p className="text-xs text-gray-400 mb-3 flex items-center gap-1.5">
-                                <Briefcase className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate">{v.client}</span>
-                              </p>
-                              <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 flex-grow">
+                            {/* Mobile description */}
+                            <div className="md:hidden px-5 pb-4 -mt-1">
+                              <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
                                 {v.shortDescription}
                               </p>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/50 flex items-center justify-between">
-                              <span className="flex items-center gap-1.5 text-xs font-bold text-purple-700">
-                                <Euro className="w-3.5 h-3.5" />
-                                Vanaf €{v.salaryMin.toFixed(2).replace(".", ",")} p/u
-                              </span>
-                              <span className="flex items-center gap-1 text-xs font-bold text-purple-600 group-hover:gap-2 transition-all duration-300">
-                                Bekijk vacature <ChevronRight className="w-4 h-4" />
-                              </span>
                             </div>
                           </article>
                         </Link>
@@ -368,27 +395,21 @@ export default function Vacatures() {
                     <p className="text-gray-500 max-w-xs mx-auto mb-8 text-sm leading-relaxed">
                       Probeer je zoekopdracht aan te passen of de filters te wissen.
                     </p>
-                    <Button
-                      onClick={clearFilters}
-                      className="border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 rounded-full shadow-none"
-                    >
+                    <Button onClick={clearFilters} className="border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 rounded-full shadow-none">
                       Alle filters wissen
                     </Button>
                   </div>
                 )}
 
                 {/* CTA below results */}
-                {filteredVacatures.length > 0 && (
+                {filteredAndSorted.length > 0 && (
                   <RevealSection>
-                    <div className="mt-14 relative overflow-hidden bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-100 rounded-2xl px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div className="mt-10 relative overflow-hidden bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-100 rounded-2xl px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-6">
                       <div>
                         <p className="font-black text-gray-900 text-xl leading-snug mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>Niet gevonden wat je zocht?</p>
                         <p className="text-gray-500 text-sm mt-1">Meld je aan en wij matchen je aan de beste opdrachten.</p>
                       </div>
-                      <Link
-                        href="/aanmelden"
-                        className="flex-shrink-0 group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-full transition-all text-sm hover:scale-105 shadow-xl shadow-purple-600/20"
-                      >
+                      <Link href="/aanmelden" className="flex-shrink-0 group inline-flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-full transition-all text-sm hover:scale-105 shadow-xl shadow-purple-600/20">
                         Direct aanmelden <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                       </Link>
                     </div>
@@ -399,8 +420,42 @@ export default function Vacatures() {
           </div>
         </section>
 
-        {/* ── CATEGORIE LINKS — dark purple section like /landing "diensten" ── */}
-        <section className="relative py-24 lg:py-36 overflow-hidden">
+        {/* Mobile filter slide-in panel */}
+        {mobileFiltersOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileFiltersOpen(false)} />
+            <div className="absolute right-0 top-0 bottom-0 w-80 max-w-full bg-white shadow-2xl flex flex-col">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-purple-600" />
+                  <span className="font-bold text-gray-800">Filters</span>
+                  {activeFilterCount > 0 && (
+                    <span className="bg-purple-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => setMobileFiltersOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-6">
+                <FilterPanel />
+              </div>
+              <div className="px-6 py-5 border-t border-gray-100">
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-full transition-colors text-sm"
+                >
+                  {filteredAndSorted.length} vacatures tonen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VAKGEBIEDEN */}
+        <section className="relative py-24 lg:py-32 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-[#1a0a3e] to-indigo-950" />
           <XPatternBg count={2} opacity={0.08} color="rgba(168,85,247,0.6)" />
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
@@ -449,8 +504,8 @@ export default function Vacatures() {
           </div>
         </section>
 
-        {/* ── USP SECTION — white background like /landing "how it works" ── */}
-        <section className="relative py-24 lg:py-36 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
+        {/* VOORDELEN */}
+        <section className="relative py-24 lg:py-32 overflow-hidden" style={{ backgroundColor: "#faf8f5" }}>
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
             <RevealSection>
               <div className="text-center mb-16">
@@ -461,156 +516,25 @@ export default function Vacatures() {
                   Waarom werken via EXTRA?
                 </h2>
                 <p className="text-gray-500 max-w-xl mx-auto">
-                  Meer dan een uitzendbureau. EXTRA is een platform dat jou beloont voor elke gewerkte dienst.
+                  EXTRA biedt meer dan een gewone bijbaan. Dagbetaling, punten sparen en werken bij toplocaties.
                 </p>
               </div>
             </RevealSection>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6">
               {[
-                {
-                  Icon: Zap,
-                  color: "from-purple-600 to-purple-800",
-                  title: "Dagbetaling",
-                  desc: "Niet wachten op je geld aan het einde van de maand. Bij EXTRA word je na elke gewerkte shift direct uitbetaald.",
-                },
-                {
-                  Icon: Trophy,
-                  color: "from-indigo-500 to-purple-600",
-                  title: "Punten verdienen",
-                  desc: "Voor elk gewerkt uur spaar je punten. Hoe meer je werkt, hoe hoger je rank in het leaderboard.",
-                },
-                {
-                  Icon: Gift,
-                  color: "from-violet-500 to-indigo-600",
-                  title: "EXTRAATje beloningen",
-                  desc: "Wissel je gespaarde punten in voor geweldige beloningen, van cadeaubonnen tot exclusieve EXTRA gadgets.",
-                },
-              ].map(({ Icon, color, title, desc }, i) => (
-                <RevealSection key={title} delay={i * 120}>
-                  <div className="group bg-white rounded-2xl p-8 border border-gray-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 shadow-sm h-full flex flex-col text-center">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${color} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                      <Icon className="w-8 h-8 text-white" />
+                { Icon: Zap, title: "Dagbetaling", color: "bg-amber-50 text-amber-600", desc: "Na elke shift direct uitbetaald. Geen wachten tot het einde van de maand." },
+                { Icon: Trophy, title: "Punten & rankings", color: "bg-purple-50 text-purple-600", desc: "Verdien punten per gewerkt uur. Klim in de rankings en verdien meer beloningen." },
+                { Icon: Gift, title: "EXTRAATje beloningen", color: "bg-emerald-50 text-emerald-600", desc: "Wissel gespaarde punten in voor cadeaubonnen, gadgets en exclusieve beloningen." },
+              ].map(({ Icon, title, color, desc }, i) => (
+                <RevealSection key={i} delay={i * 100}>
+                  <div className="bg-white rounded-2xl p-8 border border-gray-100 hover:border-purple-100 hover:shadow-md transition-all duration-300 shadow-sm">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${color}`}>
+                      <Icon className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed flex-grow">{desc}</p>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
                   </div>
                 </RevealSection>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── SEO CONTENT — white/light background ── */}
-        <section className="py-24 lg:py-36 bg-white border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-16 items-start">
-              <RevealSection>
-                <span className="text-purple-600 font-bold text-xs uppercase tracking-widest mb-4 block">Amsterdam &amp; regio</span>
-                <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Werken in de horeca in Amsterdam
-                </h2>
-                <div className="space-y-5 text-gray-500 leading-relaxed">
-                  <p>
-                    Amsterdam is een van de meest bruisende horecasteden van Europa. Van internationale vijfsterrenhotels tot intieme restaurants in de Jordaan: de vraag naar hospitality professionals is het hele jaar door hoog.
-                  </p>
-                  <p>
-                    Via EXTRA werk je bij de mooiste locaties in de stad. Of je nu kiest voor bediening in een grand café, housekeeping in een luxehotel, of professionele chefwerkzaamheden bij een cateraar: wij matchen je aan de opdracht die bij jou past.
-                  </p>
-                  <p>
-                    Dankzij ons flexibele systeem bepaal jij wanneer je werkt. Geen vaste schema's, geen verplichtingen. Gewoon werken wanneer het jou uitkomt, met dagbetaling en het EXTRAATje beloningssysteem als extra motivatie.
-                  </p>
-                </div>
-              </RevealSection>
-
-              <RevealSection delay={150}>
-                <div className="grid sm:grid-cols-2 gap-5">
-                  {[
-                    {
-                      Icon: Building2,
-                      title: "Hotels Amsterdam",
-                      body: "Werk bij internationale hotelketens zoals Hilton, Marriott en NH Hotels. Van housekeeping tot front office, EXTRA biedt plaatsingen in de meest prestigieuze hotels van Amsterdam.",
-                    },
-                    {
-                      Icon: Star,
-                      title: "Events & catering",
-                      body: "Amsterdam is een toplocatie voor bedrijfsevents, galadiensten en beurzen. Als banqueting- of eventmedewerker werk je op de bijzonderste locaties in de stad.",
-                    },
-                    {
-                      Icon: UtensilsCrossed,
-                      title: "Restaurants",
-                      body: "Van bruisende grand cafés tot culinaire fine-dining restaurants. Bediening, bar en keuken: EXTRA heeft vacatures op alle niveaus in de Amsterdamse restaurantsector.",
-                    },
-                    {
-                      Icon: Zap,
-                      title: "Flexibel horeca werk",
-                      body: "Geen zin in een vaste baan? Via EXTRA werk je als oproepkracht op jouw eigen voorwaarden. Maximale vrijheid, directe uitbetaling en een groot netwerk van opdrachtgevers.",
-                    },
-                  ].map(({ Icon, title, body }) => (
-                    <div key={title} className="group bg-white border border-gray-100 rounded-2xl p-6 hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 shadow-sm">
-                      <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-600 transition-colors duration-300">
-                        <Icon className="w-5 h-5 text-purple-600 group-hover:text-white transition-colors duration-300" />
-                      </div>
-                      <h3 className="font-bold text-gray-900 text-sm mb-2">{title}</h3>
-                      <p className="text-gray-500 text-xs leading-relaxed">{body}</p>
-                    </div>
-                  ))}
-                </div>
-              </RevealSection>
-            </div>
-          </div>
-        </section>
-
-        {/* ── CTA BANNER — dark purple like /landing final-cta ── */}
-        <section className="relative py-24 lg:py-36 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950" />
-          <XPatternBg count={2} opacity={0.08} color="rgba(255,255,255,1)" />
-          <div className="max-w-4xl mx-auto px-5 text-center relative z-10">
-            <RevealSection>
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Klaar om te knallen?
-              </h2>
-              <p className="text-purple-200/80 text-xl mb-10 max-w-xl mx-auto leading-relaxed">
-                Meld je vandaag aan en begin morgen al te werken via EXTRA.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link
-                  href="/aanmelden"
-                  className="group bg-white text-purple-900 font-bold px-10 py-5 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center gap-2"
-                >
-                  Meld je aan <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/horeca-vacatures-amsterdam"
-                  className="group border-2 border-white/25 text-white font-bold px-10 py-5 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center gap-2"
-                >
-                  Alle vacatures
-                </Link>
-              </div>
-            </RevealSection>
-          </div>
-        </section>
-
-        {/* ── LINK CLOUD — light section ── */}
-        <section className="py-12 bg-gray-50 border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">Gerelateerde pagina's</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {[
-                { label: "Horeca werk Amsterdam", href: "/horeca-vacatures-amsterdam" },
-                { label: "Chef vacatures Amsterdam", href: "/chef-vacatures-amsterdam" },
-                { label: "Housekeeping vacatures", href: "/housekeeping-vacatures-amsterdam" },
-                { label: "Front office vacatures", href: "/front-office-vacatures-amsterdam" },
-                { label: "Horeca uitzendbureau Amsterdam", href: "/horeca-uitzendbureau-amsterdam" },
-                { label: "Flexibel horeca personeel", href: "/flexibel-horeca-personeel" },
-                { label: "Ik zoek extra werk", href: "/horeca-vacatures-amsterdam" },
-              ].map((link, i) => (
-                <Link
-                  key={i}
-                  href={link.href}
-                  className="bg-white px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-500 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-all shadow-sm"
-                >
-                  {link.label}
-                </Link>
               ))}
             </div>
           </div>

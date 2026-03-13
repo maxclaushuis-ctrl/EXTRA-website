@@ -1,0 +1,127 @@
+You are acting as a senior UX designer and conversion-focused neuro marketing specialist.
+The /vacatures page of the EXTRA website needs a complete UX upgrade.
+Currently the page feels:
+• visually cluttered
+• difficult to scan
+• inconsistent in layout
+• not optimized for job discovery
+The current grid layout with multiple cards creates too much visual noise.
+We want to redesign the page using modern job platform UX patterns.
+Use inspiration from:
+• LinkedIn Jobs
+• Indeed
+• Temper
+• YoungOnes
+• Glassdoor
+But maintain the EXTRA design system (colors, typography, UI style).
+Core UX principle
+Job search pages must be optimized for fast scanning and quick decision making.
+Candidates should be able to understand a job opportunity in less than 2 seconds.
+Therefore the current grid layout must be replaced.
+New layout structure
+Redesign the page using a two-column job search layout.
+Left side
+Filters
+Right side
+Vacancy results
+Structure:
+[ Filters ]   [ Vacancy list ]
+This pattern is used by most modern job platforms.
+Vacancy list redesign
+Instead of a card grid, implement:
+1 vacancy per row
+Each vacancy becomes a horizontal job listing card.
+Structure example:
+Left side:
+Job title
+Location
+Type dienst
+Werkplek
+Middle:
+Short description (2 lines max)
+Right side:
+Salary indication
+CTA button
+Example layout:
+Bediening medewerker – Amsterdam
+Restaurant · Oproep · Amsterdam
+
+Representatieve bediening medewerkers gezocht voor restaurants en cafés in Amsterdam.
+
+€13,27 p/u                 Bekijk vacature →
+This layout drastically improves scan speed.
+Vacancy header improvement
+Above the vacancies show:
+10 vacatures gevonden
+Add sorting options:
+• Nieuwste vacatures
+• Hoogste salaris
+• Parttime / Fulltime
+Sorting should appear in the top-right of the vacancy list.
+Filter sidebar redesign
+The filter panel must be cleaned up and structured.
+Current problems:
+• spacing inconsistent
+• visually cluttered
+• partly outside the page layout
+Fix by:
+• adding more spacing between filter groups
+• clearer section titles
+• aligning filters with the main grid
+Filter groups should be:
+Locatie / regio
+Functie
+Type dienst
+Werkplek
+Visual hierarchy improvements
+Ensure the page clearly communicates:
+1️⃣ Page title
+2️⃣ Vacancy count
+3️⃣ Filters
+4️⃣ Vacancy list
+Candidates should instantly understand what they are looking at.
+Vacancy card improvements
+Each vacancy row should include:
+• clear job title
+• location tag
+• job type tag
+• workplace type tag
+• short description
+• salary indication
+• call-to-action button
+Keep descriptions short.
+Maximum 2 lines preview.
+Reduce visual noise
+Simplify the design:
+• reduce heavy borders
+• increase whitespace between rows
+• improve alignment
+Use subtle separators between vacancy rows instead of heavy cards.
+Mobile optimization
+On mobile:
+Filters should collapse into a Filter button.
+When clicked:
+Open a slide-in filter panel.
+Vacancy rows should stack vertically and remain easy to scan.
+UX psychology improvements
+Apply neuro marketing principles:
+• clear hierarchy
+• limited visual distractions
+• predictable patterns
+• strong CTA visibility
+The goal is to make candidates click on a vacancy as quickly as possible.
+Maintain EXTRA design language
+Do NOT change:
+• color palette
+• typography
+• button styling
+• icon style
+The redesign must feel like a natural evolution of the current EXTRA website.
+Expected result
+The /vacatures page should feel:
+• cleaner
+• calmer
+• more professional
+• easier to scan
+• similar to modern job platforms
+The page should transition from a chaotic card grid to a structured job search interface.
