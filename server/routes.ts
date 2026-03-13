@@ -5514,7 +5514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin: AI generate blog post content
   app.post('/api/admin/blog/generate', adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { topic, focusKeyword, category } = req.body;
+      const { topic, focusKeyword, category, extraContext, referenceUrls, internalLinks, toneOfVoice, targetAudience } = req.body;
       if (!topic) return res.status(400).json({ error: 'Topic is verplicht' });
 
       let OpenAI: any;
@@ -5532,11 +5532,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const slug = topic.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60);
       const keyword = focusKeyword || topic;
 
-      const systemPrompt = `Je bent een SEO-content expert voor EXTRA, een horeca uitzendbureau uit Amsterdam. Schrijf professionele, energieke en duidelijke content gericht op hotel managers, horeca ondernemers en HR managers. Gebruik geen corporate taal.`;
+      const tone = toneOfVoice || 'Informeel & energiek (EXTRA stijl)';
+      const audience = targetAudience || 'Horeca ondernemers';
+
+      const systemPrompt = `Je bent een SEO-content expert voor EXTRA, een horeca uitzendbureau uit Amsterdam. Schrijf content in de gevraagde tone of voice voor de opgegeven doelgroep. Gebruik geen corporate taal. Wees concreet, praktisch en overtuigend.`;
+
+      // Build extra context block
+      let contextBlock = '';
+      if (extraContext) contextBlock += `\nExtra instructies: ${extraContext}`;
+      if (referenceUrls) contextBlock += `\nReferentie artikelen (gebruik als inspiratie voor structuur en diepgang):\n${referenceUrls}`;
+
+      // Build internal links block
+      const defaultInternalLinks = '/horeca-uitzendbureau-amsterdam, /werkgevers, /ik-zoek-extra-werk';
+      const allInternalLinks = internalLinks
+        ? `${internalLinks}\n${defaultInternalLinks}`
+        : defaultInternalLinks;
+      const internalLinksFormatted = allInternalLinks
+        .split(/[\n,]/)
+        .map((l: string) => l.trim())
+        .filter(Boolean)
+        .map((path: string) => {
+          const label = path.replace(/^\//, '').replace(/-/g, ' ');
+          return `<a href="${path}">${label}</a>`;
+        })
+        .join(', ');
 
       const userPrompt = `Schrijf een SEO-geoptimaliseerd blog artikel in het Nederlands over: "${topic}"
 Focus keyword: "${keyword}"
 Categorie: ${category || 'Blog'}
+Tone of voice: ${tone}
+Doelgroep: ${audience}
+${contextBlock}
 
 Vereisten:
 - Lengte: 900-1300 woorden
@@ -5546,7 +5572,7 @@ Vereisten:
 - Elke H2 sectie: 150-250 woorden
 - Voeg minimaal 1 quote toe als <blockquote>
 - Voeg minimaal 1 tiptekst toe als <div class="tip">
-- Interne links toevoegen naar: <a href="/horeca-uitzendbureau-amsterdam">horeca uitzendbureau Amsterdam</a>, <a href="/werkgevers">werkgevers</a>, <a href="/ik-zoek-extra-werk">werken bij EXTRA</a>
+- Verwerk de volgende interne links op een natuurlijke manier: ${internalLinksFormatted}
 - Sluit af met een call-to-action naar EXTRA
 - Geef ALLEEN de HTML terug, geen markdown, geen uitleg
 
@@ -5556,7 +5582,8 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
 - metaDescription: 150-160 karakters
 - excerpt: samenvatting van 1-2 zinnen
 - readTime: geschatte leestijd (bijv. "5 min")
-- imageAlt: alt tekst voor afbeelding`;
+- imageAlt: alt tekst voor afbeelding
+- suggestedInternalLinks: array van 3 aanbevolen interne paginapaden als strings`;
 
       const response = await client.chat.completions.create({
         model: 'gpt-5-mini',
@@ -5590,6 +5617,7 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
         category: category || 'Blog',
         readTime: meta.readTime || '5 min',
         imageAlt: meta.imageAlt || keyword,
+        suggestedInternalLinks: meta.suggestedInternalLinks || [],
         status: 'draft',
       });
     } catch (err: any) {

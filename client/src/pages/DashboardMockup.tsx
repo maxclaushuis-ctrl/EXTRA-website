@@ -21,7 +21,7 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal
 } from 'lucide-react';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 
@@ -261,6 +261,12 @@ export default function DashboardMockup() {
   const [blogAiLoading, setBlogAiLoading] = useState(false);
   const [blogAiError, setBlogAiError] = useState<string | null>(null);
   const [blogAiResult, setBlogAiResult] = useState<any | null>(null);
+  const [blogAiAdvancedOpen, setBlogAiAdvancedOpen] = useState(false);
+  const [blogAiContext, setBlogAiContext] = useState('');
+  const [blogAiRefUrls, setBlogAiRefUrls] = useState('');
+  const [blogAiInternalLinks, setBlogAiInternalLinks] = useState('');
+  const [blogAiTone, setBlogAiTone] = useState('Informeel & energiek (EXTRA stijl)');
+  const [blogAiAudience, setBlogAiAudience] = useState('Horeca ondernemers');
   const [blogPreviewPost, setBlogPreviewPost] = useState<any | null>(null);
   const [blogPreviewOpen, setBlogPreviewOpen] = useState(false);
 
@@ -3028,36 +3034,123 @@ export default function DashboardMockup() {
                     {!blogAiResult ? (
                       <>
                         <p className="text-sm text-gray-500">Geef een onderwerp op en de AI genereert een volledig SEO-geoptimaliseerd artikel in het Nederlands (900–1300 woorden) met interne links en structured data.</p>
-                        <div>
-                          <label className="text-xs font-medium text-gray-700 mb-1 block">Onderwerp *</label>
-                          <input
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-                            placeholder="bijv. Hoe vind je snel horeca personeel in Amsterdam"
-                            value={blogAiTopic}
-                            onChange={e => setBlogAiTopic(e.target.value)}
-                          />
+
+                        {/* Basic settings */}
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 mb-1 block">Onderwerp *</label>
+                            <input
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              placeholder="bijv. Hoe vind je snel horeca personeel in Amsterdam"
+                              value={blogAiTopic}
+                              onChange={e => setBlogAiTopic(e.target.value)}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-semibold text-gray-700 mb-1 block">Focus keyword (optioneel)</label>
+                              <input
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                                placeholder="bijv. horeca personeel amsterdam"
+                                value={blogAiKeyword}
+                                onChange={e => setBlogAiKeyword(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-gray-700 mb-1 block">Categorie</label>
+                              <select
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                                value={blogAiCategory}
+                                onChange={e => setBlogAiCategory(e.target.value)}
+                              >
+                                <option>Blog</option>
+                                <option>Nieuws</option>
+                                <option>Kennisbank</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-700 mb-1 block">Focus keyword (optioneel)</label>
-                          <input
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-                            placeholder="bijv. horeca personeel amsterdam"
-                            value={blogAiKeyword}
-                            onChange={e => setBlogAiKeyword(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-700 mb-1 block">Categorie</label>
-                          <select
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-                            value={blogAiCategory}
-                            onChange={e => setBlogAiCategory(e.target.value)}
-                          >
-                            <option>Blog</option>
-                            <option>Nieuws</option>
-                            <option>Kennisbank</option>
-                          </select>
-                        </div>
+
+                        {/* Advanced section toggle */}
+                        <button
+                          type="button"
+                          onClick={() => setBlogAiAdvancedOpen(o => !o)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-purple-50 hover:bg-purple-100 border border-purple-100 rounded-xl text-sm font-semibold text-purple-700 transition-colors"
+                        >
+                          <span className="flex items-center gap-2">
+                            <SlidersHorizontal className="h-4 w-4" />
+                            Extra context voor AI (optioneel)
+                          </span>
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${blogAiAdvancedOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Advanced fields */}
+                        {blogAiAdvancedOpen && (
+                          <div className="space-y-4 p-4 border border-purple-100 rounded-xl bg-purple-50/30">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-semibold text-gray-700 mb-1 block">Tone of voice</label>
+                                <select
+                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                                  value={blogAiTone}
+                                  onChange={e => setBlogAiTone(e.target.value)}
+                                >
+                                  <option>Informeel & energiek (EXTRA stijl)</option>
+                                  <option>Zakelijk</option>
+                                  <option>Informatief</option>
+                                  <option>Conversiegericht</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-gray-700 mb-1 block">Doelgroep</label>
+                                <select
+                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                                  value={blogAiAudience}
+                                  onChange={e => setBlogAiAudience(e.target.value)}
+                                >
+                                  <option>Horeca ondernemers</option>
+                                  <option>HR managers</option>
+                                  <option>Hotels</option>
+                                  <option>Restaurants</option>
+                                  <option>Cateraars</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-gray-700 mb-1 block">Extra instructies voor de AI</label>
+                              <textarea
+                                rows={4}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                                placeholder={`Bijvoorbeeld:\n- Specifieke invalshoek of uniek standpunt\n- Doelgroep details\n- Interne informatie over EXTRA die mee moet\n- Onderwerpen die vermeden moeten worden`}
+                                value={blogAiContext}
+                                onChange={e => setBlogAiContext(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-gray-700 mb-1 block">Referentie artikelen (optioneel)</label>
+                              <textarea
+                                rows={2}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none font-mono text-xs"
+                                placeholder="https://example.com/artikel-1&#10;https://example.com/artikel-2"
+                                value={blogAiRefUrls}
+                                onChange={e => setBlogAiRefUrls(e.target.value)}
+                              />
+                              <p className="text-xs text-gray-400 mt-1">De AI gebruikt de structuur en onderwerpen als inspiratie. Plak meerdere URLs op aparte regels.</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-gray-700 mb-1 block">Interne links die verwerkt moeten worden</label>
+                              <textarea
+                                rows={3}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none font-mono text-xs"
+                                placeholder="/horeca-personeel-gezocht&#10;/horeca-uitzendbureau-amsterdam&#10;/hotelpersoneel-inhuren"
+                                value={blogAiInternalLinks}
+                                onChange={e => setBlogAiInternalLinks(e.target.value)}
+                              />
+                              <p className="text-xs text-gray-400 mt-1">De AI verwerkt deze links op een natuurlijke manier in het artikel.</p>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                           <p className="text-xs text-amber-700">
                             <strong>Voorbeeldonderwerpen:</strong> "7 oplossingen voor personeelstekort in de horeca" · "Wat kost horeca personeel via een uitzendbureau" · "Waarom hotels werken met een flexpool" · "Hoe voorkom je no-shows van personeel"
@@ -3078,7 +3171,16 @@ export default function DashboardMockup() {
                             setBlogAiLoading(true);
                             setBlogAiError(null);
                             try {
-                              const result = await apiRequest('POST', '/api/admin/blog/generate', { topic: blogAiTopic, focusKeyword: blogAiKeyword, category: blogAiCategory });
+                              const result = await apiRequest('POST', '/api/admin/blog/generate', {
+                                topic: blogAiTopic,
+                                focusKeyword: blogAiKeyword,
+                                category: blogAiCategory,
+                                extraContext: blogAiContext,
+                                referenceUrls: blogAiRefUrls,
+                                internalLinks: blogAiInternalLinks,
+                                toneOfVoice: blogAiTone,
+                                targetAudience: blogAiAudience,
+                              });
                               setBlogAiResult(result);
                             } catch (err: any) {
                               setBlogAiError(err.message || 'Generatie mislukt');
@@ -3113,6 +3215,18 @@ export default function DashboardMockup() {
                             <label className="text-xs text-gray-500">Content preview (eerste 300 tekens)</label>
                             <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100 max-h-24 overflow-hidden">{blogAiResult.content?.replace(/<[^>]+>/g, ' ').slice(0, 300)}…</div>
                           </div>
+                          {blogAiResult.suggestedInternalLinks?.length > 0 && (
+                            <div>
+                              <label className="text-xs text-gray-500">Aanbevolen interne links</label>
+                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                {blogAiResult.suggestedInternalLinks.map((link: string, i: number) => (
+                                  <span key={i} className="inline-flex items-center gap-1 text-xs font-mono bg-purple-50 text-purple-700 border border-purple-100 px-2 py-0.5 rounded-full">
+                                    <Link className="h-3 w-3" />{link}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" className="flex-1 text-sm" onClick={() => setBlogAiResult(null)}>

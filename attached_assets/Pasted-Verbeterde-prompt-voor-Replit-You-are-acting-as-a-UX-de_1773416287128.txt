@@ -1,0 +1,98 @@
+Verbeterde prompt voor Replit
+You are acting as a UX designer and AI content workflow specialist.
+Improve the “Blog & SEO” tab inside the dashboard-mockup.
+Currently the AI Blog Generator only allows a simple topic input.
+However, when generating high-quality SEO articles, users should also be able to enrich the AI prompt with additional context and sources.
+The goal is to make the blog generator significantly more powerful while keeping the interface simple.
+Current problem
+The current generator only includes:
+• Topic
+• Focus keyword
+• Category
+This limits the quality of the AI-generated content.
+For better SEO blogs, users must be able to provide additional context and source material.
+New functionality to add
+Extend the generator with an Advanced Prompt section.
+This section should be optional and collapsible.
+Label it:
+“Extra context voor AI (optioneel)”
+Fields to add
+1. Additional context field
+Add a large text area where the user can provide extra instructions.
+Example label:
+Extra instructies voor de AI
+Placeholder example:
+Bijvoorbeeld:
+belangrijke informatie die in het artikel moet komen
+specifieke invalshoek
+doelgroep van het artikel
+interne informatie over EXTRA
+This text should be injected into the final AI prompt.
+2. Reference articles input
+Allow the user to paste links to relevant articles.
+Label:
+Referentie artikelen (optioneel)
+Function:
+• user pastes URLs
+• AI analyzes the structure and topics
+• uses them as inspiration for the generated article
+Multiple links should be supported.
+3. Internal links field
+Add a field where internal pages from the website can be inserted.
+Label:
+Interne links die verwerkt moeten worden
+Example input:
+/horeca-personeel-gezocht
+/horeca-uitzendbureau-amsterdam
+/hotelpersoneel-inhuren
+The AI should automatically integrate these links naturally into the article.
+4. Tone of voice selector
+Add a dropdown:
+Tone of voice
+Options:
+• Informeel & energiek (EXTRA stijl)
+• Zakelijk
+• Informatief
+• Conversiegericht
+Default should be:
+Informeel & energiek (EXTRA stijl)
+5. Target audience
+Add a dropdown:
+Doelgroep
+Options:
+• Horeca ondernemers
+• HR managers
+• Hotels
+• Restaurants
+• Cateraars
+This helps the AI tailor the article.
+UX improvements
+The generator interface should be structured as follows:
+Basic settings
+• Topic
+• Focus keyword
+• Category
+Advanced AI input (collapsible section)
+• Extra context
+• Reference articles
+• Internal links
+• Tone of voice
+• Target audience
+UX requirement
+The interface should remain clean and minimal, so advanced options must be placed inside a collapsible section.
+Default state:
+Advanced options collapsed.
+Result
+The AI Blog Generator becomes a professional SEO content tool instead of a simple text generator.
+This allows us to:
+• guide the AI better
+• generate higher quality SEO blogs
+• integrate internal links automatically
+• align the content with the EXTRA tone of voice
+💡 Extra slimme toevoeging (dit zou ik echt laten bouwen):
+Laat de AI automatisch een veld genereren:
+“SEO titel voorstel”
+“Meta description voorstel”
+en:
+“Aanbevolen interne links”
+Dan heb je meteen een complete SEO blog workflow in je dashboard.
