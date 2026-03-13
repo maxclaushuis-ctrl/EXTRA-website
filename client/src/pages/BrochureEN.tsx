@@ -35,7 +35,7 @@ import intakeBeoordeling from "../assets/pitch/intake-beoordeling.png";
 import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
 import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
 import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
-import logoPulitzer from "../assets/pitch/logo-pulitzer-clean.png";
+import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.png";
 import logoRadisson from "../assets/pitch/logo-radisson.png";
 import logoHilton from "../assets/pitch/logo-hilton.png";
 

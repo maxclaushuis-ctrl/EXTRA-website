@@ -18,8 +18,8 @@ import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
 import logoMercure from "../assets/pitch/logo-mercure.png";
-import logoPulitzer from "../assets/pitch/logo-pulitzer-clean.png";
-import logoNH from "../assets/pitch/logo-nh-clean.png";
+import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.png";
+import logoNH from "@assets/Logo_NH_1773389329669.png";
 import screenshotGebruikers from "@assets/Gebruikers_1772098047298.webp";
 import screenshotProfiel from "@assets/Medewerkersprofiel_1772098064753.webp";
 import screenDashboard from "@assets/IMG_9066_1773314165933.png";
@@ -425,7 +425,7 @@ export default function HotelPersoneelGezocht() {
                   { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
                 ].map((logo) => (
                   <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                    <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto max-w-[180px] sm:max-w-[220px] object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                    <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto max-w-[180px] sm:max-w-[220px] object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
                   </div>
                 ))}
               </div>
