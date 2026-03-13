@@ -425,7 +425,7 @@ export default function HotelPersoneelGezocht() {
                   { src: logoPulitzer, alt: "Pulitzer Amsterdam" },
                 ].map((logo) => (
                   <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
-                    <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto max-w-[180px] sm:max-w-[220px] object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+                    <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" className="h-12 sm:h-16 lg:h-20 w-auto max-w-[180px] sm:max-w-[220px] object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
                   </div>
                 ))}
               </div>
