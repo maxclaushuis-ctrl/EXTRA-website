@@ -1,0 +1,65 @@
+You are acting as a UX designer and front-end developer for the EXTRA website.
+Candidates receive an automated email when they have signed up but have not uploaded their CV yet.
+In this email there is a button:
+“Upload je cv nu”
+Currently this button leads to a 404 page, which means the upload page does not exist or is not connected correctly.
+We need to fix this.
+Objective
+Create a simple CV upload page that the email button links to.
+When candidates click the button in the email, they should land on a clean upload page where they can immediately upload their CV.
+Important limitation
+File uploads cannot be done directly inside an email.
+Therefore the email button must open a dedicated upload page on the website.
+Required flow
+1️⃣ Candidate receives the reminder email
+2️⃣ Candidate clicks “Upload je cv nu”
+3️⃣ Candidate lands on a minimal CV upload page
+4️⃣ Candidate uploads their CV file
+5️⃣ Candidate sees a confirmation message
+Upload page requirements
+Create a new page such as:
+/cv-upload
+The page should be very simple and mobile friendly.
+Suggested structure:
+Header
+Upload je cv
+Text
+Je bent bijna klaar met je aanmelding bij EXTRA.
+Upload hieronder je cv zodat we je profiel compleet kunnen maken en een gesprek kunnen inplannen.
+Upload field
+Upload CV (PDF / DOC / DOCX)
+Button
+Verstuur cv
+UX requirements
+The page should feel fast and simple, because candidates are coming directly from email.
+Requirements:
+• mobile optimized
+• minimal layout
+• no navigation distractions
+• clear upload button
+• clear confirmation message
+After upload
+After the candidate uploads the file:
+Show a confirmation message such as:
+Bedankt!
+Je cv is ontvangen. We nemen binnenkort contact met je op om een gesprek in te plannen.
+Optionally redirect to:
+/bedankt
+Technical requirements
+The upload form must:
+• accept PDF, DOC, DOCX
+• connect to the candidate profile if possible
+• store the file correctly
+• prevent empty submissions
+Email change
+Update the email button so that it links to the new upload page:
+Example:
+https://doehetextra.nl/cv-upload
+The button should no longer link to a non-existing page.
+Expected result
+When a candidate clicks “Upload je cv nu” in the email:
+• they land on a clean upload page
+• they can upload their CV in one step
+• the file is stored correctly
+• they receive a confirmation message
+No more 404 page.
