@@ -263,7 +263,7 @@ export default function Vacatures() {
 
               {/* Desktop Sidebar */}
               <aside className="hidden lg:block w-56 flex-shrink-0">
-                <div className="sticky top-28">
+                <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl">
                   <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                     <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
                       <SlidersHorizontal className="w-4 h-4 text-purple-600" />
@@ -336,7 +336,7 @@ export default function Vacatures() {
                       <RevealSection key={v.slug} delay={i * 40}>
                         <Link href={`/vacatures/${v.slug}`} className="group block">
                           <article className="bg-white border border-gray-100 rounded-2xl hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/8 transition-all duration-200 overflow-hidden">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-5">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-6 lg:py-7">
 
                               {/* Left: title + tags */}
                               <div className="flex-1 min-w-0">
@@ -376,7 +376,7 @@ export default function Vacatures() {
                             </div>
 
                             {/* Mobile description */}
-                            <div className="md:hidden px-5 pb-4 -mt-1">
+                            <div className="md:hidden px-6 pb-5 -mt-1">
                               <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
                                 {v.shortDescription}
                               </p>
