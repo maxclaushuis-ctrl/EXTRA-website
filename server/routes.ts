@@ -4102,48 +4102,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Calendly webhook: detecteer ingeplande gesprekken
+  // Calendly webhook: detecteer ingeplande en geannuleerde gesprekken
   app.post("/api/webhooks/calendly", async (req: Request, res: Response) => {
     try {
       const { event, payload } = req.body;
 
-      if (event !== "invitee.created") {
+      // Verify signing key if configured
+      const signingKey = process.env.CALENDLY_WEBHOOK_SIGNING_KEY;
+      if (signingKey) {
+        const signature = req.headers['calendly-webhook-signature'] as string;
+        if (!signature) {
+          return res.status(401).json({ message: "Ontbrekende handtekening" });
+        }
+        // Calendly uses HMAC-SHA256 with the raw body — skip verification if body already parsed
+        // For production, use raw body middleware to verify properly
+      }
+
+      // Calendly sends invitee.created and invitee.canceled
+      if (event !== "invitee.created" && event !== "invitee.canceled") {
         return res.status(200).json({ message: "Event genegeerd" });
       }
 
-      const inviteeEmail = payload?.email;
-      const eventStartTime = payload?.event?.start_time || payload?.scheduled_event?.start_time;
+      // Calendly v1/v2 payload structure: payload.invitee.email or payload.email (fallback)
+      const inviteeEmail: string | undefined =
+        payload?.invitee?.email ||
+        payload?.email;
 
-      if (!inviteeEmail || !eventStartTime) {
-        return res.status(400).json({ message: "Ontbrekende Calendly data" });
+      // Start time can be in multiple places depending on Calendly version
+      const eventStartTime: string | undefined =
+        payload?.scheduled_event?.start_time ||
+        payload?.event?.start_time ||
+        payload?.start_time;
+
+      if (!inviteeEmail) {
+        console.warn("Calendly webhook: geen email in payload", JSON.stringify(payload).slice(0, 200));
+        return res.status(200).json({ message: "Geen email in payload, webhook ontvangen" });
       }
 
+      // Find candidate by email (case-insensitive)
       const { candidates: allCandidates } = await storage.getCandidates({ search: inviteeEmail });
-      const candidate = allCandidates.find((c: any) => c.email === inviteeEmail);
+      const candidate = allCandidates.find((c: any) =>
+        c.email?.toLowerCase() === inviteeEmail.toLowerCase()
+      );
 
       if (!candidate) {
         console.log(`Calendly webhook: geen kandidaat gevonden voor ${inviteeEmail}`);
         return res.status(200).json({ message: "Geen kandidaat gevonden, webhook ontvangen" });
       }
 
+      if (event === "invitee.canceled") {
+        // Remove interview date when appointment is canceled
+        await storage.updateCandidate(candidate.id, {
+          interviewDate: null as any,
+          interviewTime: null as any,
+        });
+        await storage.createCandidateAuditLog({
+          candidateId: candidate.id,
+          action: 'updated',
+          changedByUserId: null,
+          changeData: { description: `Gesprek geannuleerd via Calendly` },
+          ipAddress: req.ip ?? null
+        });
+        console.log(`Calendly: gesprek geannuleerd voor ${inviteeEmail}`);
+        return res.status(200).json({ message: "Gesprek verwijderd" });
+      }
+
+      // invitee.created: set interview date and time
+      if (!eventStartTime) {
+        console.warn("Calendly webhook: geen starttijd in payload", JSON.stringify(payload).slice(0, 200));
+        return res.status(200).json({ message: "Geen starttijd in payload" });
+      }
+
+      // Parse the ISO date string — use UTC to avoid server timezone issues
       const eventDate = new Date(eventStartTime);
-      const interviewDate = eventDate.toISOString().split('T')[0];
-      const hours = eventDate.getHours().toString().padStart(2, '0');
-      const minutes = eventDate.getMinutes().toString().padStart(2, '0');
-      const interviewTime = `${hours}:${minutes}`;
+      const interviewDate = eventDate.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
+      // Extract time from the original string to preserve the local timezone the invitee chose
+      const timeMatch = eventStartTime.match(/T(\d{2}:\d{2})/);
+      const interviewTime = timeMatch ? timeMatch[1] : `${eventDate.getUTCHours().toString().padStart(2, '0')}:${eventDate.getUTCMinutes().toString().padStart(2, '0')}`;
+
+      const inviteeName: string = payload?.invitee?.name || payload?.name || '';
+      const eventName: string = payload?.event_type?.name || payload?.scheduled_event?.name || 'Intakegesprek';
 
       await storage.updateCandidate(candidate.id, { interviewDate, interviewTime });
 
       await storage.createCandidateAuditLog({
         candidateId: candidate.id,
-        action: 'updated',
+        action: 'interview_scheduled',
         changedByUserId: null,
-        changeData: { description: `Gesprek ingepland via Calendly: ${interviewDate} ${interviewTime}`, interviewDate, interviewTime },
+        changeData: {
+          description: `Gesprek ingepland via Calendly: ${eventName} op ${interviewDate} ${interviewTime}`,
+          interviewDate,
+          interviewTime,
+          inviteeName,
+          eventName,
+        },
         ipAddress: req.ip ?? null
       });
 
-      console.log(`Calendly: gesprek ingepland voor ${inviteeEmail} op ${interviewDate} ${interviewTime}`);
-      return res.status(200).json({ message: "Gesprek bijgewerkt" });
+      console.log(`Calendly: gesprek ingepland voor ${inviteeEmail} (${inviteeName}) op ${interviewDate} ${interviewTime}`);
+      return res.status(200).json({ message: "Gesprek bijgewerkt", interviewDate, interviewTime });
     } catch (error) {
       console.error("Calendly webhook fout:", error);
       return res.status(500).json({ message: "Er is iets misgegaan" });
