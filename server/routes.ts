@@ -5857,6 +5857,143 @@ ${posts.map(p => `  <url>
     }
   });
 
+  // ─── Calendly polling sync ────────────────────────────────────────────────
+  // Because the free Calendly plan doesn't support webhooks, we poll the API
+  // every 5 minutes to detect new/canceled bookings and link them to candidates.
+
+  const CALENDLY_USER_URI = "https://api.calendly.com/users/ac39f79b-cd97-4ef3-bd74-f4b2bc09093f";
+
+  async function syncCalendlyEvents() {
+    const token = process.env.CALENDLY_API_TOKEN;
+    if (!token) return;
+
+    try {
+      // Fetch scheduled events from the past day and next 90 days
+      const minStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const maxStart = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+
+      const eventsRes = await fetch(
+        `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(CALENDLY_USER_URI)}&min_start_time=${minStart}&max_start_time=${maxStart}&status=active&count=100`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!eventsRes.ok) {
+        console.warn(`Calendly sync: events API returned ${eventsRes.status}`);
+        return;
+      }
+
+      const eventsData = await eventsRes.json();
+      const events = eventsData?.collection ?? [];
+
+      for (const event of events) {
+        const eventUri: string = event.uri;
+        const startTime: string = event.start_time;
+        if (!eventUri || !startTime) continue;
+
+        // Fetch invitees for this event
+        const invRes = await fetch(
+          `${eventUri}/invitees?count=50`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!invRes.ok) continue;
+
+        const invData = await invRes.json();
+        const invitees = invData?.collection ?? [];
+
+        for (const invitee of invitees) {
+          const email: string = invitee.email;
+          if (!email) continue;
+
+          // Find matching candidate
+          const { candidates } = await storage.getCandidates({ search: email });
+          const candidate = candidates.find((c: any) =>
+            c.email?.toLowerCase() === email.toLowerCase()
+          );
+          if (!candidate) continue;
+
+          // Parse date and time from the ISO start_time
+          const eventDate = new Date(startTime);
+          const interviewDate = eventDate.toISOString().split('T')[0];
+          const timeMatch = startTime.match(/T(\d{2}:\d{2})/);
+          const interviewTime = timeMatch
+            ? timeMatch[1]
+            : `${eventDate.getUTCHours().toString().padStart(2, '0')}:${eventDate.getUTCMinutes().toString().padStart(2, '0')}`;
+
+          // Only update if changed
+          if (candidate.interviewDate !== interviewDate || candidate.interviewTime !== interviewTime) {
+            await storage.updateCandidate(candidate.id, { interviewDate, interviewTime });
+            await storage.createCandidateAuditLog({
+              candidateId: candidate.id,
+              action: 'interview_scheduled',
+              changedByUserId: null,
+              changeData: {
+                description: `Gesprek gesynchroniseerd via Calendly: ${interviewDate} ${interviewTime}`,
+                interviewDate,
+                interviewTime,
+                source: 'calendly_poll',
+              },
+              ipAddress: null,
+            });
+            console.log(`Calendly sync: gesprek bijgewerkt voor ${email} → ${interviewDate} ${interviewTime}`);
+          }
+        }
+      }
+
+      // Also check for canceled events and clear interviewDate if applicable
+      const canceledRes = await fetch(
+        `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(CALENDLY_USER_URI)}&min_start_time=${minStart}&max_start_time=${maxStart}&status=canceled&count=100`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (canceledRes.ok) {
+        const canceledData = await canceledRes.json();
+        const canceledEvents = canceledData?.collection ?? [];
+        for (const event of canceledEvents) {
+          const invRes = await fetch(`${event.uri}/invitees?count=50`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!invRes.ok) continue;
+          const invData = await invRes.json();
+          for (const invitee of invData?.collection ?? []) {
+            const email: string = invitee.email;
+            if (!email) continue;
+            const { candidates } = await storage.getCandidates({ search: email });
+            const candidate = candidates.find((c: any) =>
+              c.email?.toLowerCase() === email.toLowerCase()
+            );
+            if (!candidate || !candidate.interviewDate) continue;
+            await storage.updateCandidate(candidate.id, {
+              interviewDate: null as any,
+              interviewTime: null as any,
+            });
+            console.log(`Calendly sync: gesprek geannuleerd voor ${email}`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Calendly sync fout:", err);
+    }
+  }
+
+  // Manual trigger endpoint for admin
+  app.post("/api/admin/calendly/sync", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      await syncCalendlyEvents();
+      res.json({ message: "Calendly synchronisatie voltooid" });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Run sync every 5 minutes
+  if (process.env.CALENDLY_API_TOKEN) {
+    syncCalendlyEvents(); // Run immediately on startup
+    setInterval(syncCalendlyEvents, 5 * 60 * 1000);
+    console.log("Calendly auto-sync gestart (elke 5 minuten)");
+  } else {
+    console.log("CALENDLY_API_TOKEN niet ingesteld — Calendly sync uitgeschakeld");
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
   return httpServer;
 }
