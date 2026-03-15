@@ -646,7 +646,7 @@ export async function sendCalendlyInviteEmail(candidate: {
   return await sendEmail({
     to: candidate.email,
     from: 'EXTRA <max@doehetextra.nl>',
-    subject: 'Leuk dat je je hebt aangemeld bij EXTRA',
+    subject: 'Plan je gesprek 📅',
     html,
     text,
   });
