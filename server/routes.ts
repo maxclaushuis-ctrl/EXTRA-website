@@ -34,13 +34,13 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { users, candidates as candidatesTable } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
@@ -3859,8 +3859,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (candidate as any).cvUploadToken = cvToken;
       }
 
-      // Stuur bevestigingsmail alleen bij voltooide aanmelding
-      if (!validated.partial && validated.status !== 'afgewezen') {
+      // Stuur bevestigingsmail alleen bij voltooide aanmelding met CV
+      if (!validated.partial && validated.status !== 'afgewezen' && candidate.hasCv) {
         sendCandidateConfirmationEmail({
           firstName: candidate.firstName,
           lastName: candidate.lastName,
@@ -3879,27 +3879,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }).catch((err) => {
           console.error("Fout bij versturen bevestigingsmail:", err);
         });
+      }
 
+      // Admin-notificatie: met CV (met knoppen) of zonder CV (alleen melding)
+      if (!validated.partial && validated.status !== 'afgewezen') {
         (async () => {
           try {
             const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-            const token = randomUUID();
-            await storage.updateCandidate(candidate.id, { reviewToken: token } as any);
-            const sent = await sendAdminCandidateNotificationEmail({
-              id: candidate.id,
-              firstName: candidate.firstName,
-              lastName: candidate.lastName,
-              functionType: candidate.functionType,
-              city: candidate.city,
-              email: candidate.email,
-              birthDate: candidate.birthDate,
-              phone: candidate.phone,
-              nationality: candidate.nationality,
-              cvFilename: candidate.cvFilename,
-              reviewToken: token,
-              baseUrl: requestBaseUrl,
-            });
-            console.log(`Admin-notificatiemail (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+            if (candidate.hasCv) {
+              const token = randomUUID();
+              await storage.updateCandidate(candidate.id, { reviewToken: token } as any);
+              const sent = await sendAdminCandidateNotificationEmail({
+                id: candidate.id,
+                firstName: candidate.firstName,
+                lastName: candidate.lastName,
+                functionType: candidate.functionType,
+                city: candidate.city,
+                email: candidate.email,
+                birthDate: candidate.birthDate,
+                phone: candidate.phone,
+                nationality: candidate.nationality,
+                cvFilename: candidate.cvFilename,
+                reviewToken: token,
+                baseUrl: requestBaseUrl,
+              });
+              console.log(`Admin-notificatiemail met CV (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+            } else {
+              const sent = await sendAdminCandidateNoCvEmail({
+                id: candidate.id,
+                firstName: candidate.firstName,
+                lastName: candidate.lastName,
+                functionType: candidate.functionType,
+                city: candidate.city,
+                email: candidate.email,
+                birthDate: candidate.birthDate,
+                phone: candidate.phone,
+                nationality: candidate.nationality,
+                baseUrl: requestBaseUrl,
+              });
+              console.log(`Admin-notificatiemail zonder CV (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+            }
           } catch (err) {
             console.error("Fout bij versturen admin-notificatiemail:", err);
           }
@@ -3997,45 +4016,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Stuur bevestigingsmail en push notificatie bij voltooiing — alleen als er ook een CV is
-      if (!validated.partial && validated.status !== 'afgewezen' && updated?.email && updated.hasCv) {
-        sendCandidateConfirmationEmail({
-          firstName: updated.firstName,
-          lastName: updated.lastName,
-          email: updated.email,
-          functionType: updated.functionType,
-          nationality: updated.nationality,
-          language: updated.language,
-          interviewDate: updated.interviewDate,
-          interviewTime: updated.interviewTime,
-        }).catch((err) => console.error("Fout bij versturen bevestigingsmail:", err));
+      if (!validated.partial && validated.status !== 'afgewezen' && updated?.email) {
+        const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
-        (async () => {
-          try {
-            const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-            let token = (updated as any).reviewToken;
-            if (!token) {
-              token = randomUUID();
-              await storage.updateCandidate(updated.id, { reviewToken: token } as any);
+        if (updated.hasCv) {
+          // Met CV: stuur bevestigingsmail naar kandidaat + volledige admin-mail met accept/afwijs knoppen
+          sendCandidateConfirmationEmail({
+            firstName: updated.firstName,
+            lastName: updated.lastName,
+            email: updated.email,
+            functionType: updated.functionType,
+            nationality: updated.nationality,
+            language: updated.language,
+            interviewDate: updated.interviewDate,
+            interviewTime: updated.interviewTime,
+          }).catch((err) => console.error("Fout bij versturen bevestigingsmail:", err));
+
+          (async () => {
+            try {
+              let token = (updated as any).reviewToken;
+              if (!token) {
+                token = randomUUID();
+                await storage.updateCandidate(updated.id, { reviewToken: token } as any);
+              }
+              const sent = await sendAdminCandidateNotificationEmail({
+                id: updated.id,
+                firstName: updated.firstName,
+                lastName: updated.lastName,
+                functionType: updated.functionType,
+                city: updated.city,
+                email: updated.email,
+                birthDate: updated.birthDate,
+                phone: updated.phone,
+                nationality: updated.nationality,
+                cvFilename: (updated as any).cvFilename,
+                reviewToken: token,
+                baseUrl: requestBaseUrl,
+              });
+              console.log(`Admin-notificatiemail met CV (PUT) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+            } catch (err) {
+              console.error("Fout bij versturen admin-notificatiemail:", err);
             }
-            const sent = await sendAdminCandidateNotificationEmail({
-              id: updated.id,
-              firstName: updated.firstName,
-              lastName: updated.lastName,
-              functionType: updated.functionType,
-              city: updated.city,
-              email: updated.email,
-              birthDate: updated.birthDate,
-              phone: updated.phone,
-              nationality: updated.nationality,
-              cvFilename: (updated as any).cvFilename,
-              reviewToken: token,
-              baseUrl: requestBaseUrl,
-            });
-            console.log(`Admin-notificatiemail (PATCH) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
-          } catch (err) {
-            console.error("Fout bij versturen admin-notificatiemail:", err);
-          }
-        })();
+          })();
+        } else {
+          // Zonder CV: stuur alleen informatieve admin-mail zonder knoppen
+          (async () => {
+            try {
+              const sent = await sendAdminCandidateNoCvEmail({
+                id: updated.id,
+                firstName: updated.firstName,
+                lastName: updated.lastName,
+                functionType: updated.functionType,
+                city: updated.city,
+                email: updated.email,
+                birthDate: updated.birthDate,
+                phone: updated.phone,
+                nationality: updated.nationality,
+                baseUrl: requestBaseUrl,
+              });
+              console.log(`Admin-notificatiemail zonder CV (PUT) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
+            } catch (err) {
+              console.error("Fout bij versturen admin-notificatiemail (geen CV):", err);
+            }
+          })();
+        }
 
         // Push notification to admins
         try {
@@ -4043,10 +4087,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const adminUserIds = allUsers.filter((u: any) => u.role === 'admin').map((u: any) => u.id);
           const candidateName = `${updated.firstName} ${updated.lastName}`;
           const pushService = getPushNotificationService();
-          console.log(`[PUSH PATCH] adminUserIds: ${JSON.stringify(adminUserIds)}, pushService: ${!!pushService}`);
           if (pushService && adminUserIds.length > 0) {
             await pushService.sendNewCandidateAlert(adminUserIds, candidateName, updated.functionType || 'onbekend', id);
-            console.log(`[PUSH PATCH] sendNewCandidateAlert voltooid`);
           }
           if (typeof (global as any).broadcastNotification === 'function') {
             (global as any).broadcastNotification(
@@ -4371,15 +4413,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Directe CV upload via token-link vanuit email
   app.post("/api/cv-upload-token", cvUpload.single('cv'), async (req: Request, res: Response) => {
     try {
-      const token = req.body?.token || req.query?.token;
+      const token = req.body?.token || req.query?.token as string;
       if (!token) return res.status(400).json({ message: "Token ontbreekt" });
 
       const file = req.file;
       if (!file) return res.status(400).json({ message: "Geen bestand ontvangen" });
 
-      // Zoek kandidaat op token
-      const { candidates: allCandidates } = await storage.getCandidates({ page: 1, limit: 1000 });
-      const candidate = allCandidates.find((c: any) => (c as any).cvUploadToken === token);
+      // Zoek kandidaat op token via directe DB query
+      const [candidate] = await db.select().from(candidatesTable).where(eq(candidatesTable.cvUploadToken, token)).limit(1);
       if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen upload-link" });
       if (candidate.hasCv) return res.status(400).json({ message: "CV al ontvangen" });
 
@@ -4441,8 +4482,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const token = req.query?.token as string;
       if (!token) return res.status(400).json({ message: "Token ontbreekt" });
-      const { candidates: allCandidates } = await storage.getCandidates({ page: 1, limit: 1000 });
-      const candidate = allCandidates.find((c: any) => (c as any).cvUploadToken === token);
+      // Directe DB query — werkt ook als getCandidates limiet wordt bereikt
+      const [candidate] = await db.select().from(candidatesTable).where(eq(candidatesTable.cvUploadToken, token)).limit(1);
       if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen link" });
       if (candidate.hasCv) return res.status(200).json({ valid: false, message: "CV al ontvangen" });
       return res.json({ valid: true, firstName: candidate.firstName });

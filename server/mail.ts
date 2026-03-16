@@ -589,6 +589,106 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   return results.every(Boolean);
 }
 
+// Interne admin-melding zonder CV (alleen informatief, geen accept/afwijs knoppen)
+export async function sendAdminCandidateNoCvEmail(candidate: {
+  id: number;
+  firstName: string;
+  lastName: string;
+  functionType: string;
+  city?: string | null;
+  email?: string | null;
+  birthDate?: string | null;
+  phone?: string | null;
+  nationality?: string | null;
+  baseUrl?: string | null;
+}): Promise<boolean> {
+  const functionLabels: Record<string, string> = {
+    housekeeping: 'Housekeeping medewerker',
+    horecamedewerker: 'Horecamedewerker',
+    chef: 'Chef / Kok',
+    frontoffice: 'Front office medewerker',
+  };
+  const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
+  const baseUrl = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
+  const dashboardUrl = `${baseUrl}/dashboard-mockup`;
+
+  const cell = (label: string, value: string | null | undefined) =>
+    `<td style="padding:10px 14px;vertical-align:top;width:50%;border-bottom:1px solid #f3f4f6;">
+      <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${label}</div>
+      <div style="color:#111827;font-size:14px;font-weight:600;">${value || '—'}</div>
+    </td>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 12px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="${getEmailBannerSrc()}" width="600" height="200" alt="EXTRA" style="display:block;width:100%;max-width:600px;height:auto;border:0;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 20px 8px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Nieuwe aanmelding ontvangen — <strong>nog geen CV bijgevoegd</strong>. Zodra de kandidaat het CV uploadt, ontvang je een nieuwe e-mail met de mogelijkheid om te accepteren of af te wijzen.</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+              <tr>
+                ${cell('Voornaam', candidate.firstName)}
+                ${cell('Achternaam', candidate.lastName)}
+              </tr>
+              <tr>
+                ${cell('Functie', functionLabel)}
+                ${cell('Woonplaats', candidate.city)}
+              </tr>
+              <tr>
+                ${cell('Telefoonnummer', candidate.phone)}
+                ${cell('E-mail', candidate.email)}
+              </tr>
+              <tr>
+                ${cell('Geboortedatum', candidate.birthDate ? candidate.birthDate.split('-').reverse().join('-') : null)}
+                ${cell('Nationaliteit', candidate.nationality)}
+              </tr>
+            </table>
+            <div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">
+              ⏳ Kandidaat is uitgenodigd om het CV te uploaden. Accepteren of afwijzen is pas mogelijk na ontvangst van het CV.
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:8px;">
+              <tr>
+                <td style="text-align:center;padding-bottom:4px;">
+                  <a href="${dashboardUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;">Bekijk in dashboard</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Nieuwe aanmelding ontvangen (nog geen CV)\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\n\nDe kandidaat heeft nog geen CV geüpload. Je ontvangt een tweede e-mail zodra het CV er is.\n\nBekijk in dashboard: ${dashboardUrl}`;
+
+  const recipients = getAdminRecipientsForFunction(candidate.functionType);
+  const results = await Promise.all(recipients.map(to =>
+    sendEmail({
+      to,
+      from: 'EXTRA 🚀 <max@doehetextra.nl>',
+      subject: `Nieuwe aanmelding (geen CV) – ${candidate.firstName} ${candidate.lastName} (${functionLabel})`,
+      html,
+      text,
+    })
+  ));
+  return results.every(Boolean);
+}
+
 // Stuur Calendly-uitnodiging naar geaccepteerde kandidaat
 export async function sendCalendlyInviteEmail(candidate: {
   firstName: string;
