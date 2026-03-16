@@ -682,7 +682,15 @@ export default function Aanmelden() {
 
     const fn = formData.preferredFunction as keyof ExperienceThresholds;
     const thresholds = flow === "NL" ? NL_THRESHOLDS : flow === "EU" ? EU_THRESHOLDS : NON_EU_THRESHOLDS;
-    const allowed = thresholds[fn] || [];
+    let allowed = thresholds[fn] || [];
+
+    // Horecamedewerker: ervaringsdrempel op basis van taalniveau
+    // Nederlandssprekend (redelijk/goed) → minimaal 6 maanden
+    // Niet-Nederlandssprekend → minimaal 1 jaar (lastiger te plaatsen)
+    if (fn === "horecamedewerker") {
+      const isDutchSpeaking = formData.dutchLevel === "redelijk" || formData.dutchLevel === "goed";
+      allowed = isDutchSpeaking ? ["6to12", "1to3", "3plus"] : ["1to3", "3plus"];
+    }
 
     if (allowed.length === 0) {
       await saveCandidate("afgewezen", false, "Functie niet beschikbaar");
