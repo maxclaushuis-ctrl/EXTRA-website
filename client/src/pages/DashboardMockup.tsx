@@ -169,7 +169,7 @@ export default function DashboardMockup() {
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('alle');
   const [candidateSearch, setCandidateSearch] = useState('');
-  const [kandidatenSubtab, setKandidatenSubtab] = useState<'in_proces' | 'gesprek_gepland' | 'afgewezen'>('in_proces');
+  const [kandidatenSubtab, setKandidatenSubtab] = useState<'in_proces' | 'beoordelen' | 'gesprek_gepland' | 'afgewezen'>('in_proces');
   const [kandidatenSearch, setKandidatenSearch] = useState('');
   const [kandidatenFunctionFilter, setKandidatenFunctionFilter] = useState('alle');
   const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
@@ -333,6 +333,16 @@ export default function DashboardMockup() {
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       apiRequest('PATCH', `/api/admin/candidates/${id}/status`, { status: 'afgewezen', rejectionReason: reason }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] }); },
+  });
+
+  const reviewCandidateMutation = useMutation({
+    mutationFn: ({ id, action }: { id: number; action: 'accept' | 'reject' }) =>
+      apiRequest('POST', `/api/admin/candidates/${id}/review`, { action }),
+    onSuccess: (_, { action }) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+      toast({ title: action === 'accept' ? '✅ Kandidaat geaccepteerd' : '❌ Kandidaat afgewezen', description: action === 'accept' ? 'Een Calendly-uitnodiging is verstuurd.' : 'Een afwijzingsmail is verstuurd.' });
+    },
+    onError: () => { toast({ title: 'Fout', description: 'Er is iets misgegaan.', variant: 'destructive' }); },
   });
 
   const { data: applicationsData, isLoading: applicationsLoading, refetch: refetchApplications } = useQuery<{ applications: any[]; total: number }>({
@@ -540,10 +550,11 @@ export default function DashboardMockup() {
   const userGrowth = stats?.changes?.activeUsersChange || '+28';
 
   // Kandidaten tab computed values
-  const kanInProces = allCandidates.filter(c => c.status !== 'afgewezen' && !c.interviewDate);
+  const kanInProces = allCandidates.filter(c => c.status !== 'afgewezen' && !c.hasCv && !c.interviewDate);
+  const kanBeoordelen = allCandidates.filter(c => c.status !== 'afgewezen' && !!c.hasCv && !c.interviewDate);
   const kanGesprekGepland = allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate);
   const kanAfgewezen = allCandidates.filter(c => c.status === 'afgewezen');
-  const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
+  const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, beoordelen: kanBeoordelen, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
   const kanRawSubset: Candidate[] = kanSubsetMap[kandidatenSubtab] || [];
   const kanSubset = kanRawSubset
     .filter(c => {
@@ -996,12 +1007,19 @@ export default function DashboardMockup() {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
                 <Card className="bg-white border-l-4 border-l-purple-500">
                   <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1">In proces</p>
                     <p className="text-2xl font-bold text-purple-700">{kanInProces.length}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Formulier ingevuld</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">Wacht op CV</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white border-l-4 border-l-amber-500">
+                  <CardContent className="p-3 sm:p-4">
+                    <p className="text-xs text-gray-500 mb-1">Beoordelen</p>
+                    <p className="text-2xl font-bold text-amber-600">{kanBeoordelen.length}</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">CV ter beoordeling</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-blue-500">
@@ -1024,6 +1042,7 @@ export default function DashboardMockup() {
               <div className="flex items-center gap-0 mb-4 border-b">
                 {([
                   { key: 'in_proces', labelFull: 'In proces', labelShort: 'In proces', count: kanInProces.length, color: 'text-purple-700 border-purple-500' },
+                  { key: 'beoordelen', labelFull: 'Beoordelen', labelShort: 'Beoordelen', count: kanBeoordelen.length, color: 'text-amber-600 border-amber-500' },
                   { key: 'gesprek_gepland', labelFull: 'Gesprek gepland', labelShort: 'Gepland', count: kanGesprekGepland.length, color: 'text-blue-600 border-blue-500' },
                   { key: 'afgewezen', labelFull: 'Afgewezen', labelShort: 'Afgewezen', count: kanAfgewezen.length, color: 'text-red-600 border-red-500' },
                 ] as const).map(tab => (
@@ -1193,24 +1212,63 @@ export default function DashboardMockup() {
                                 </td>
                                 {/* CV + ACTIES */}
                                 <td className="px-3 py-3">
-                                  <div className="flex items-center gap-0.5">
-                                    <Button
-                                      variant="ghost" size="icon" className="h-7 w-7"
-                                      onClick={() => { setCvPreviewCandidate(c); setCvPreviewOpen(true); }}
-                                      title={c.hasCv ? "CV bekijken" : "Geen CV geüpload"}
-                                    >
-                                      <Eye className={`h-3.5 w-3.5 ${c.hasCv ? 'text-green-500' : 'text-red-400'}`} />
-                                    </Button>
-                                    {kandidatenSubtab !== 'afgewezen' && (
+                                  {kandidatenSubtab === 'beoordelen' ? (
+                                    <div className="flex items-center gap-1">
                                       <Button
                                         variant="ghost" size="icon" className="h-7 w-7"
-                                        onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
-                                        title="Afwijzen"
+                                        onClick={() => { setCvPreviewCandidate(c); setCvPreviewOpen(true); }}
+                                        title={c.hasCv ? "CV bekijken" : "Geen CV"}
                                       >
-                                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                        <Eye className={`h-3.5 w-3.5 ${c.hasCv ? 'text-green-500' : 'text-gray-300'}`} />
                                       </Button>
-                                    )}
-                                  </div>
+                                      {c.status === 'aangenomen' ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-200 whitespace-nowrap">
+                                          ✓ Goedgekeurd
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white text-xs"
+                                            disabled={reviewCandidateMutation.isPending}
+                                            onClick={() => reviewCandidateMutation.mutate({ id: c.id, action: 'accept' })}
+                                            title="Accepteren — stuurt Calendly-uitnodiging"
+                                          >
+                                            ✓ Accepteren
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-red-600 border-red-200 hover:bg-red-50 text-xs"
+                                            disabled={reviewCandidateMutation.isPending}
+                                            onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
+                                            title="Afwijzen"
+                                          >
+                                            ✗ Afwijzen
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-0.5">
+                                      <Button
+                                        variant="ghost" size="icon" className="h-7 w-7"
+                                        onClick={() => { setCvPreviewCandidate(c); setCvPreviewOpen(true); }}
+                                        title={c.hasCv ? "CV bekijken" : "Geen CV geüpload"}
+                                      >
+                                        <Eye className={`h-3.5 w-3.5 ${c.hasCv ? 'text-green-500' : 'text-red-400'}`} />
+                                      </Button>
+                                      {kandidatenSubtab !== 'afgewezen' && (
+                                        <Button
+                                          variant="ghost" size="icon" className="h-7 w-7"
+                                          onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
+                                          title="Afwijzen"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
                                 </td>
                               </tr>
                             );

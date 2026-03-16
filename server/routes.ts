@@ -4706,6 +4706,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/candidates/:id/review", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { action } = req.body as { action: 'accept' | 'reject' };
+      if (!action || !['accept', 'reject'].includes(action)) {
+        return res.status(400).json({ message: 'Ongeldige actie' });
+      }
+      const candidate = await storage.getCandidate(id);
+      if (!candidate) return res.status(404).json({ message: 'Kandidaat niet gevonden' });
+      if (candidate.status === 'aangenomen' || candidate.status === 'afgewezen') {
+        return res.status(409).json({ message: 'Kandidaat is al beoordeeld' });
+      }
+      if (action === 'accept') {
+        await storage.updateCandidateStatus(id, 'aangenomen', undefined);
+        if (candidate.email && candidate.firstName) {
+          sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
+            console.error('Fout bij versturen Calendly-mail:', err)
+          );
+        }
+        return res.json({ message: 'Kandidaat geaccepteerd' });
+      } else {
+        await storage.updateCandidateStatus(id, 'afgewezen', undefined);
+        if (candidate.email && candidate.firstName) {
+          sendCandidateRejectionEmailDiensten({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
+            console.error('Fout bij versturen afwijzingsmail:', err)
+          );
+        }
+        return res.json({ message: 'Kandidaat afgewezen' });
+      }
+    } catch (err: any) {
+      console.error('Review kandidaat fout:', err);
+      return res.status(500).json({ message: 'Er is iets misgegaan' });
+    }
+  });
+
   app.get("/api/admin/candidates/:id/cv", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
