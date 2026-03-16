@@ -5727,7 +5727,7 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
   app.get('/sitemap.xml', async (_req: Request, res: Response) => {
     try {
       const { posts } = await storage.getBlogPosts({ status: 'published', limit: 500 });
-      const baseUrl = 'https://www.doehetextra.nl';
+      const baseUrl = process.env.BASE_URL || 'https://brochure.doehetextra.nl';
       const staticPages = [
         // Hoofdpagina's
         { url: '/', priority: '1.0', changefreq: 'weekly' },

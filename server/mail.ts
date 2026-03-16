@@ -912,7 +912,7 @@ export async function sendCandidateRejectionEmailCv(candidate: {
 }
 
 export async function sendCvUploadFirstEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string }): Promise<boolean> {
-  const base = candidate.baseUrl || process.env.BASE_URL || 'https://www.doehetextra.nl';
+  const base = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
   const uploadUrl = candidate.cvUploadToken
     ? `${base}/cv-upload?token=${candidate.cvUploadToken}`
     : `${base}/aanmelden`;
@@ -966,7 +966,7 @@ export async function sendCvUploadFirstEmail(candidate: { firstName: string; ema
 }
 
 export async function sendCvReminderEmail(candidate: { firstName: string; email: string; id: number; cvUploadToken?: string | null; baseUrl?: string }): Promise<boolean> {
-  const base = candidate.baseUrl || process.env.BASE_URL || 'https://www.doehetextra.nl';
+  const base = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
   const uploadUrl = candidate.cvUploadToken
     ? `${base}/cv-upload?token=${candidate.cvUploadToken}`
     : `${base}/aanmelden`;
@@ -1059,7 +1059,7 @@ export async function sendTwvExpiryReminderEmail(candidate: {
             </div>
             <p style="margin:24px 0 0;font-size:15px;color:#374151;line-height:1.6;">Bekijk het TWV-overzicht in het dashboard voor meer details.</p>
             <div style="text-align:center;margin:28px 0;">
-              <a href="https://app.doehetextra.nl/dashboard-mockup" style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
+              <a href="${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard-mockup" style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
             </div>
             <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA – Geautomatiseerde melding</strong></p>
           </td>

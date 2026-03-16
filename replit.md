@@ -46,6 +46,8 @@ The application utilizes a monorepo structure, organizing code into `client/` fo
 ### Deployment
 Configured for Replit autoscale deployment, utilizing Vite for frontend builds and `tsx` for development. Environment variables are used for configuration (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`).
 
+**Domein configuratie**: Alle e-maillinks en de sitemap.xml gebruiken `BASE_URL` (shared env var). Huidig: `https://brochure.doehetextra.nl`. Bij domeinswitch naar `doehetextra.nl`: wijzig alleen `BASE_URL` naar `https://doehetextra.nl`. Alle fallbacks in code staan ook op `brochure.doehetextra.nl`.
+
 ### Important Technical Notes
 -   **queryClient (`client/src/lib/queryClient.ts`)**: Has a `defaultQueryFn` that uses `queryKey[0]` as the URL and returns parsed JSON. All `useQuery` calls in DashboardMockup rely on this — do NOT remove it.
 -   **apiRequest**: Supports 3 calling patterns: `(url, options)`, `(method, url, body)`, `(url, method, body)`. Returns parsed JSON (not a Response object).
