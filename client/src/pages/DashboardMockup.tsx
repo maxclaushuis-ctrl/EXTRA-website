@@ -1110,7 +1110,7 @@ export default function DashboardMockup() {
                               className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap cursor-pointer select-none hover:text-gray-700 hidden sm:table-cell"
                               onClick={() => setKanSortDesc(v => !v)}
                             >
-                              Datum {kanSortDesc ? '↓' : '↑'}
+                              {kandidatenSubtab === 'gesprek_gepland' ? 'Gesprek' : 'Datum'} {kanSortDesc ? '↓' : '↑'}
                             </th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Naam</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Functie</th>
@@ -1127,9 +1127,20 @@ export default function DashboardMockup() {
                             const missing = kanMissingItems(c);
                             return (
                               <tr key={c.id} className="hover:bg-gray-50 align-middle">
-                                {/* DATUM */}
+                                {/* DATUM / GESPREK */}
                                 <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">
-                                  {new Date(c.createdAt).toLocaleDateString('nl-NL')}
+                                  {kandidatenSubtab === 'gesprek_gepland' && c.interviewDate ? (
+                                    <div>
+                                      <div className="font-medium text-gray-700">
+                                        {new Date(c.interviewDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </div>
+                                      {c.interviewTime && (
+                                        <div className="text-blue-500 font-medium">{c.interviewTime.slice(0, 5)}</div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    new Date(c.createdAt).toLocaleDateString('nl-NL')
+                                  )}
                                 </td>
                                 {/* NAAM */}
                                 <td className="px-3 py-3 whitespace-nowrap">
@@ -1143,7 +1154,11 @@ export default function DashboardMockup() {
                                       <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                         {c.firstName} {c.lastName}
                                       </span>
-                                      <div className="text-xs text-gray-400 sm:hidden">{new Date(c.createdAt).toLocaleDateString('nl-NL')}</div>
+                                      <div className="text-xs text-gray-400 sm:hidden">
+                                        {kandidatenSubtab === 'gesprek_gepland' && c.interviewDate
+                                          ? `${new Date(c.interviewDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}${c.interviewTime ? ' ' + c.interviewTime.slice(0, 5) : ''}`
+                                          : new Date(c.createdAt).toLocaleDateString('nl-NL')}
+                                      </div>
                                     </div>
                                   </div>
                                 </td>
