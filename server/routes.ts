@@ -3996,8 +3996,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ipAddress: req.ip ?? null
       });
 
-      // Stuur bevestigingsmail en push notificatie bij voltooiing
-      if (!validated.partial && validated.status !== 'afgewezen' && updated?.email) {
+      // Stuur bevestigingsmail en push notificatie bij voltooiing — alleen als er ook een CV is
+      if (!validated.partial && validated.status !== 'afgewezen' && updated?.email && updated.hasCv) {
         sendCandidateConfirmationEmail({
           firstName: updated.firstName,
           lastName: updated.lastName,
