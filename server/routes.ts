@@ -6025,11 +6025,11 @@ ${posts.map(p => `  <url>
     }
   });
 
-  // Run sync every 5 minutes
+  // Run sync every 30 seconds for near real-time updates
   if (process.env.CALENDLY_API_TOKEN) {
     syncCalendlyEvents(); // Run immediately on startup
-    setInterval(syncCalendlyEvents, 5 * 60 * 1000);
-    console.log("Calendly auto-sync gestart (elke 5 minuten)");
+    setInterval(syncCalendlyEvents, 30 * 1000);
+    console.log("Calendly auto-sync gestart (elke 30 seconden)");
   } else {
     console.log("CALENDLY_API_TOKEN niet ingesteld — Calendly sync uitgeschakeld");
   }
