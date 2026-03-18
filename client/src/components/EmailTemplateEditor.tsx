@@ -297,10 +297,8 @@ const EmailTemplateEditor = ({
     // Eenvoudige HTML naar tekst conversie
     if (activeTab === 'html') {
       const stripHtml = (html: string) => {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        const text = tempDiv.textContent || tempDiv.innerText || '';
-        return text;
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || '';
       };
       
       // Alleen bijwerken als er significante wijzigingen zijn
