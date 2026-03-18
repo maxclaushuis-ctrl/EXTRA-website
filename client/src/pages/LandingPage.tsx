@@ -11,6 +11,8 @@ import {
   Mail, MapPin, Instagram, Linkedin
 } from "lucide-react";
 import heroBgImage from "@assets/hero-background.webp";
+import heroBartenderBg from "@assets/hero-bartender-bg.png";
+import heroPersonCutout from "@assets/hero-person-cutout.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
@@ -776,10 +778,10 @@ export default function LandingPage() {
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={heroBgImage}
+            src={heroBartenderBg}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
-            style={{ filter: "contrast(1.03) saturate(1.02)" }}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ filter: "blur(10px) contrast(1.03) saturate(1.02)", transform: "scale(1.06)" }}
             loading="eager"
             {...{ fetchpriority: "high" } as any}
             decoding="async"
@@ -798,6 +800,14 @@ export default function LandingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
+        <img
+          src={heroPersonCutout}
+          alt="Horecamedewerker EXTRA"
+          className="absolute bottom-0 right-0 h-[95%] w-auto object-contain object-bottom hidden sm:block pointer-events-none"
+          style={{ maxWidth: "52%", zIndex: 15 }}
+          loading="eager"
+          decoding="async"
+        />
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
           <div className="absolute" style={{ left: "5%", top: "10%", width: 200, height: 200, transform: "rotate(15deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
           <div className="absolute" style={{ left: "15%", top: "75%", width: 180, height: 180, transform: "rotate(-10deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
