@@ -1230,3 +1230,81 @@ export const vacancyPosts = pgTable("vacancy_posts", {
 export const insertVacancyPostSchema = createInsertSchema(vacancyPosts).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertVacancyPost = z.infer<typeof insertVacancyPostSchema>;
 export type VacancyPost = typeof vacancyPosts.$inferSelect;
+
+// ==========================================
+// CRM Tables
+// ==========================================
+
+export const crmCompanies = pgTable("crm_companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("hotel"), // eventlocatie | hotel | restaurant | cateraar
+  isClient: boolean("is_client").default(false).notNull(), // false = prospect/lead, true = bestaande klant
+  phase: text("phase").default("nieuw"), // prospects: nieuw | toegewezen | eerste_contact | in_gesprek | afspraak_gepland | voorstel_verstuurd | follow_up | gewonnen | verloren | on_hold
+  abc: text("abc"), // clients: A | B | C
+  owner: text("owner"), // max | eveline | charlotte | lea
+  accountOwner: text("account_owner"), // same options
+  city: text("city"),
+  region: text("region"),
+  website: text("website"),
+  linkedin: text("linkedin"),
+  potential: text("potential"), // laag | midden | hoog
+  source: text("source"), // linkedin | referral | website | inbound | netwerk | anders
+  parentCompanyId: integer("parent_company_id"), // for sub-locations
+  attentionNeeded: boolean("attention_needed").default(false),
+  risk: boolean("risk").default(false),
+  busyPeriods: text("busy_periods"),
+  planningNotes: text("planning_notes"),
+  notes: text("notes"), // general notes field
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const crmContacts = pgTable("crm_contacts", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => crmCompanies.id, { onDelete: 'cascade' }).notNull(),
+  name: text("name").notNull(),
+  function: text("function"),
+  email: text("email"),
+  phone: text("phone"),
+  linkedin: text("linkedin"),
+  isPrimary: boolean("is_primary").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const crmNotes = pgTable("crm_notes", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => crmCompanies.id, { onDelete: 'cascade' }).notNull(),
+  owner: text("owner").notNull(), // max | eveline | charlotte | lea
+  text: text("text").notNull(),
+  type: text("type").default("note"), // note | call | email | meeting | follow_up
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const crmReminders = pgTable("crm_reminders", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => crmCompanies.id, { onDelete: 'cascade' }).notNull(),
+  contactId: integer("contact_id").references(() => crmContacts.id, { onDelete: 'set null' }),
+  title: text("title").notNull(),
+  dueDate: date("due_date").notNull(),
+  owner: text("owner").notNull(), // max | eveline | charlotte | lea
+  note: text("note"),
+  status: text("status").default("open").notNull(), // open | completed | overdue
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCrmCompanySchema = createInsertSchema(crmCompanies).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCrmCompany = z.infer<typeof insertCrmCompanySchema>;
+export type CrmCompany = typeof crmCompanies.$inferSelect;
+
+export const insertCrmContactSchema = createInsertSchema(crmContacts).omit({ id: true, createdAt: true });
+export type InsertCrmContact = z.infer<typeof insertCrmContactSchema>;
+export type CrmContact = typeof crmContacts.$inferSelect;
+
+export const insertCrmNoteSchema = createInsertSchema(crmNotes).omit({ id: true, createdAt: true });
+export type InsertCrmNote = z.infer<typeof insertCrmNoteSchema>;
+export type CrmNote = typeof crmNotes.$inferSelect;
+
+export const insertCrmReminderSchema = createInsertSchema(crmReminders).omit({ id: true, createdAt: true });
+export type InsertCrmReminder = z.infer<typeof insertCrmReminderSchema>;
+export type CrmReminder = typeof crmReminders.$inferSelect;

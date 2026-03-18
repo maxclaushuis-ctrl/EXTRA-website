@@ -49,6 +49,14 @@ import {
   type BlogPost, type InsertBlogPost,
   vacancyPosts as vacancyPostsTable,
   type VacancyPost, type InsertVacancyPost,
+  crmCompanies as crmCompaniesTable,
+  crmContacts as crmContactsTable,
+  crmNotes as crmNotesTable,
+  crmReminders as crmRemindersTable,
+  type CrmCompany, type InsertCrmCompany,
+  type CrmContact, type InsertCrmContact,
+  type CrmNote, type InsertCrmNote,
+  type CrmReminder, type InsertCrmReminder,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -370,6 +378,24 @@ export interface IStorage {
   updateVacancyPost(id: number, data: Partial<InsertVacancyPost>): Promise<VacancyPost | undefined>;
   deleteVacancyPost(id: number): Promise<boolean>;
   duplicateVacancyPost(id: number): Promise<VacancyPost | undefined>;
+
+  // CRM methods
+  getCrmCompanies(filters?: { isClient?: boolean; type?: string; owner?: string; phase?: string; abc?: string; search?: string }): Promise<CrmCompany[]>;
+  getCrmCompanyById(id: number): Promise<CrmCompany | undefined>;
+  createCrmCompany(data: InsertCrmCompany): Promise<CrmCompany>;
+  updateCrmCompany(id: number, data: Partial<InsertCrmCompany>): Promise<CrmCompany | undefined>;
+  deleteCrmCompany(id: number): Promise<boolean>;
+  getCrmContacts(companyId: number): Promise<CrmContact[]>;
+  createCrmContact(data: InsertCrmContact): Promise<CrmContact>;
+  updateCrmContact(id: number, data: Partial<InsertCrmContact>): Promise<CrmContact | undefined>;
+  deleteCrmContact(id: number): Promise<boolean>;
+  getCrmNotes(companyId: number): Promise<CrmNote[]>;
+  createCrmNote(data: InsertCrmNote): Promise<CrmNote>;
+  deleteCrmNote(id: number): Promise<boolean>;
+  getCrmReminders(filters?: { companyId?: number; owner?: string; status?: string }): Promise<CrmReminder[]>;
+  createCrmReminder(data: InsertCrmReminder): Promise<CrmReminder>;
+  updateCrmReminder(id: number, data: Partial<InsertCrmReminder>): Promise<CrmReminder | undefined>;
+  deleteCrmReminder(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -3657,6 +3683,105 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     }).returning();
     return created;
+  }
+
+  // ── CRM methods ──────────────────────────────────────────────────────────
+
+  async getCrmCompanies(filters?: { isClient?: boolean; type?: string; owner?: string; phase?: string; abc?: string; search?: string }): Promise<CrmCompany[]> {
+    let query = db.select().from(crmCompaniesTable).$dynamic();
+    const conditions = [];
+    if (filters?.isClient !== undefined) conditions.push(eq(crmCompaniesTable.isClient, filters.isClient));
+    if (filters?.type && filters.type !== 'alle') conditions.push(eq(crmCompaniesTable.type, filters.type));
+    if (filters?.owner && filters.owner !== 'alle') conditions.push(eq(crmCompaniesTable.owner, filters.owner));
+    if (filters?.phase && filters.phase !== 'alle') conditions.push(eq(crmCompaniesTable.phase, filters.phase));
+    if (filters?.abc && filters.abc !== 'alle') conditions.push(eq(crmCompaniesTable.abc, filters.abc));
+    if (filters?.search) {
+      conditions.push(or(
+        ilike(crmCompaniesTable.name, `%${filters.search}%`),
+        ilike(crmCompaniesTable.city, `%${filters.search}%`),
+        ilike(crmCompaniesTable.region, `%${filters.search}%`),
+      ) as any);
+    }
+    if (conditions.length > 0) query = query.where(and(...conditions) as any) as any;
+    return query.orderBy(desc(crmCompaniesTable.createdAt));
+  }
+
+  async getCrmCompanyById(id: number): Promise<CrmCompany | undefined> {
+    const [company] = await db.select().from(crmCompaniesTable).where(eq(crmCompaniesTable.id, id));
+    return company;
+  }
+
+  async createCrmCompany(data: InsertCrmCompany): Promise<CrmCompany> {
+    const [company] = await db.insert(crmCompaniesTable).values({ ...data, updatedAt: new Date() }).returning();
+    return company;
+  }
+
+  async updateCrmCompany(id: number, data: Partial<InsertCrmCompany>): Promise<CrmCompany | undefined> {
+    const [company] = await db.update(crmCompaniesTable).set({ ...data, updatedAt: new Date() }).where(eq(crmCompaniesTable.id, id)).returning();
+    return company;
+  }
+
+  async deleteCrmCompany(id: number): Promise<boolean> {
+    const result = await db.delete(crmCompaniesTable).where(eq(crmCompaniesTable.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getCrmContacts(companyId: number): Promise<CrmContact[]> {
+    return db.select().from(crmContactsTable).where(eq(crmContactsTable.companyId, companyId)).orderBy(desc(crmContactsTable.isPrimary));
+  }
+
+  async createCrmContact(data: InsertCrmContact): Promise<CrmContact> {
+    const [contact] = await db.insert(crmContactsTable).values(data).returning();
+    return contact;
+  }
+
+  async updateCrmContact(id: number, data: Partial<InsertCrmContact>): Promise<CrmContact | undefined> {
+    const [contact] = await db.update(crmContactsTable).set(data).where(eq(crmContactsTable.id, id)).returning();
+    return contact;
+  }
+
+  async deleteCrmContact(id: number): Promise<boolean> {
+    const result = await db.delete(crmContactsTable).where(eq(crmContactsTable.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getCrmNotes(companyId: number): Promise<CrmNote[]> {
+    return db.select().from(crmNotesTable).where(eq(crmNotesTable.companyId, companyId)).orderBy(desc(crmNotesTable.createdAt));
+  }
+
+  async createCrmNote(data: InsertCrmNote): Promise<CrmNote> {
+    const [note] = await db.insert(crmNotesTable).values(data).returning();
+    return note;
+  }
+
+  async deleteCrmNote(id: number): Promise<boolean> {
+    const result = await db.delete(crmNotesTable).where(eq(crmNotesTable.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getCrmReminders(filters?: { companyId?: number; owner?: string; status?: string }): Promise<CrmReminder[]> {
+    let query = db.select().from(crmRemindersTable).$dynamic();
+    const conditions = [];
+    if (filters?.companyId) conditions.push(eq(crmRemindersTable.companyId, filters.companyId));
+    if (filters?.owner && filters.owner !== 'alle') conditions.push(eq(crmRemindersTable.owner, filters.owner));
+    if (filters?.status && filters.status !== 'alle') conditions.push(eq(crmRemindersTable.status, filters.status));
+    if (conditions.length > 0) query = query.where(and(...conditions) as any) as any;
+    return query.orderBy(asc(crmRemindersTable.dueDate));
+  }
+
+  async createCrmReminder(data: InsertCrmReminder): Promise<CrmReminder> {
+    const [reminder] = await db.insert(crmRemindersTable).values(data).returning();
+    return reminder;
+  }
+
+  async updateCrmReminder(id: number, data: Partial<InsertCrmReminder>): Promise<CrmReminder | undefined> {
+    const [reminder] = await db.update(crmRemindersTable).set(data).where(eq(crmRemindersTable.id, id)).returning();
+    return reminder;
+  }
+
+  async deleteCrmReminder(id: number): Promise<boolean> {
+    const result = await db.delete(crmRemindersTable).where(eq(crmRemindersTable.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

@@ -23,6 +23,7 @@ import {
   Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
   Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal
 } from 'lucide-react';
+import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 
 type User = {
@@ -687,15 +688,25 @@ export default function DashboardMockup() {
             <ChevronDown className={`h-3 w-3 transition-transform ${bedrijvenExpanded ? '' : '-rotate-90'}`} />
           </button>
           {bedrijvenExpanded && (
-            <button
-              onClick={() => { setActiveTab('bedrijven-aanvragen'); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                activeTab === 'bedrijven-aanvragen' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Building2 className="h-4 w-4" />
-              <span>Personeelsaanvragen</span>
-            </button>
+            <>
+              {[
+                { icon: Building2, label: 'Personeelsaanvragen', tab: 'bedrijven-aanvragen' },
+                { icon: TrendingUp, label: 'Leads & Prospects', tab: 'crm-leads' },
+                { icon: Users, label: 'Bestaande klanten', tab: 'crm-klanten' },
+                { icon: Bell, label: 'Reminders', tab: 'crm-reminders' },
+              ].map(item => (
+                <button
+                  key={item.tab}
+                  onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                    activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </>
           )}
 
           {/* Group: Marketing & SEO */}
@@ -3043,6 +3054,15 @@ export default function DashboardMockup() {
                 </div>
               </div>
             </div>
+          ) : activeTab === 'crm-leads' ? (
+            <CrmLeadsTab />
+
+          ) : activeTab === 'crm-klanten' ? (
+            <CrmKlantenTab />
+
+          ) : activeTab === 'crm-reminders' ? (
+            <CrmRemindersTab />
+
           ) : activeTab === 'bedrijven-aanvragen' ? (
             /* ─── PERSONEELSAANVRAGEN tab ─── */
             <div className="p-6">

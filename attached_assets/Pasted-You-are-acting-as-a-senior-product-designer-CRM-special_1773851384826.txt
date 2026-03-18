@@ -1,0 +1,353 @@
+You are acting as a senior product designer, CRM specialist, UX designer and front-end developer.
+We want to build a simple but complete CRM system inside the /dashboard-mockup environment of the EXTRA website.
+This is a V1 CRM, so it does not need to be overly complex, but it must already be complete enough to work in practice for sales, account management and reminders.
+The CRM must be added under the tab:
+Bedrijven
+Main objective
+Build a CRM in /dashboard-mockup that helps us manage:
+new leads / prospects
+existing clients
+contact history
+reminders / follow-ups
+ownership of leads and clients
+segmentation by company type
+simple relationship management for multi-location companies
+This CRM must feel:
+clean
+fast
+structured
+easy to scan
+practical for daily use
+It should be much better than a basic Excel sheet, but still simple enough for V1.
+Main users
+This CRM will be used by:
+Max
+Eveline
+Charlotte
+Lea
+Leads and clients must be assignable to one of these users.
+CRM navigation structure
+Under the tab Bedrijven, create 3 subtabs:
+Bedrijven
+Bestaande klanten
+Reminders
+These three sections must be clearly separated.
+1. Tab: Bedrijven
+This tab is for:
+prospects
+leads
+companies not yet active as clients
+Purpose
+Track new opportunities and move them through the sales pipeline.
+Company list view
+Create a structured table/list view showing:
+Company name
+Company type
+Status / phase
+Owner
+City / region
+Potential
+Last contact date
+Next reminder date
+Add:
+search bar
+filters
+sort options
+Filters for Bedrijven
+At minimum include filters for:
+Company type
+Eventlocatie
+Hotel
+Restaurant
+Cateraar
+Status / phase
+Owner
+Region / city
+Potential
+Reminder open yes/no
+Sales phases
+Use the following stages for prospects:
+Nieuw
+Toegewezen
+Eerste contact
+In gesprek
+Afspraak gepland
+Voorstel verstuurd
+Follow-up
+Gewonnen
+Verloren
+On hold
+These should be easy to change from the overview and from the detail page.
+2. Tab: Bestaande klanten
+This tab is for active clients.
+Purpose
+Relationship management and client follow-up.
+These clients should be separate from prospects.
+Company list view
+Show a structured overview with:
+Company name
+Company type
+A / B / C classification
+Account owner
+Region / city
+Potential
+Last contact date
+Open reminders
+Risk label if relevant
+Filters for Bestaande klanten
+At minimum include:
+Company type
+A / B / C
+Account owner
+Region / city
+Potential
+Reminder open yes/no
+Risk / attention needed yes/no
+Company types
+A company must always belong to exactly one of these types:
+Eventlocatie
+Hotel
+Restaurant
+Cateraar
+No company may have multiple main types.
+Multi-location structure
+The CRM must support companies with multiple locations.
+Example:
+A hotel group can have several branches.
+Implement this with:
+Parent company
+Sub-location / vestiging
+Each vestiging must behave as its own client record, with its own:
+notes
+contact persons
+reminders
+status
+owner
+But it should also clearly show which parent company it belongs to.
+Example:
+Amrath = parent company
+Grand Hotel Amrâth Amsterdam = sub-location
+Other Amrath locations = sub-locations
+This is important because each location may be a separate commercial opportunity.
+Company detail page
+Both for prospects and existing clients, create a detail page / detail drawer / detail screen per company.
+This detail page must show:
+Basic information
+Company name
+Type
+Status
+Owner
+Account owner
+Region / city
+Website
+LinkedIn company page
+Potential
+Parent company / sub-location relationship
+Contact persons
+Allow multiple contact persons per company.
+Each contact person must support:
+Name
+Function
+Email
+Phone
+LinkedIn
+Primary contact yes/no
+Notes / timeline
+Create a timeline-based notes section.
+Each note must contain:
+date + time automatically
+owner
+note text
+Optional but recommended:
+support a simple contact moment type such as:
+note
+call
+email
+meeting
+follow-up
+Even if not fully exposed yet, build the structure cleanly.
+Reminders
+Display reminders linked to the company.
+Allow:
+create reminder
+complete reminder
+view reminder history
+Sub-locations / vestigingen
+Show linked locations if relevant.
+Performance block for existing clients
+Prepare a section where uploaded data can be shown, such as:
+hours
+revenue
+average rate
+number of workers
+period
+This can be a placeholder-ready block for V1, but the design must already support it.
+Notes system
+Notes should be stored at company / location level.
+Requirements:
+every note has an owner
+every note has timestamp
+notes are shown in chronological order
+notes remain visible in the company history
+We want this to feel like a practical contact log.
+Reminders system
+This is very important.
+Reminder requirements
+Users must be able to manually create reminders.
+A reminder must contain:
+title / short action description
+linked company
+optional linked contact person
+date
+owner
+note / context
+status
+Reminder status
+Use statuses:
+Open
+Completed
+Overdue
+Reminder visibility
+Reminders must appear in:
+the company detail page
+the Reminders tab
+the main /dashboard-mockup dashboard as notifications / widgets
+Reminder notifications
+When a reminder is assigned to someone, the owner must receive an email reminder.
+The following users are part of the system and must see reminders in the dashboard:
+max@doehetextra.nl
+eveline@doehetextra.nl
+charlotte@doehetextra.nl
+lea@doehetextra.nl
+Email reminders only need the date, no time.
+Reminder color logic
+Use clear color logic:
+red = overdue
+orange = today
+blue/purple = upcoming
+green = completed
+Completion
+Reminders must be easy to mark as completed and must remain visible in history after completion.
+Ownership / assignment
+Each lead, company, note and reminder must have an owner / responsible person.
+Allowed owners:
+Max
+Eveline
+Charlotte
+Lea
+This ownership must be filterable across the CRM.
+Existing clients extra fields
+For the Bestaande klanten tab, add these extra fields:
+A / B / C classification
+Potential
+Planning / important notes
+Busy periods
+Account owner
+Attention needed yes/no
+Risk yes/no
+These fields are important for account management.
+A / B / C classification
+Existing clients must be classified as:
+A klant
+B klant
+C klant
+For V1 this can be set manually.
+The system should be built in a way that later allows this to be linked to uploaded hours / revenue data.
+Potential field
+Add a field:
+Omzetpotentie
+Recommended options:
+Laag
+Midden
+Hoog
+This is enough for V1.
+Lead source
+Add a field:
+Bron
+Recommended options:
+LinkedIn
+Referral
+Website
+Inbound
+Netwerk
+Anders
+This is useful for tracking lead origin.
+Search and filters
+Add a global search that can search by:
+company name
+contact person
+city
+This search should be available in both Bedrijven and Bestaande klanten.
+Dashboard widgets in /dashboard-mockup
+Because this CRM will live inside /dashboard-mockup, also add CRM-related widgets to the dashboard overview.
+Create dashboard widgets for:
+Reminders today
+Overdue reminders
+New leads
+Leads per owner
+Existing clients with open follow-up
+Recent notes
+These should feel visually integrated with the existing dashboard style.
+Import readiness
+We currently use an Excel sheet.
+This CRM should therefore be built with the structure ready for importing data later.
+For now, design and structure it so that we can later import companies, contact persons and client data into it.
+Optional V1 placeholder:
+a button or placeholder section for future import functionality is fine.
+UX design requirements
+The CRM must feel:
+cleaner than Excel
+practical
+modern
+not too complex
+easy to scan
+efficient in day-to-day use
+Use a design language consistent with the rest of /dashboard-mockup.
+Match:
+cards
+tables
+typography
+spacing
+modals
+detail drawers
+status badges
+tabs
+Do not build a generic ugly CRM.
+This should feel like a polished internal system.
+Suggested UI pattern
+Use this structure:
+In overview tabs
+top bar with title, search, filters, actions
+table or hybrid list
+clickable row to open detail
+In detail page
+Use sections or tabs such as:
+Overzicht
+Contactpersonen
+Notities
+Reminders
+Vestigingen
+Performance
+Important V1 principle
+Keep the CRM simple, but complete.
+Do NOT add unnecessary enterprise complexity yet.
+We do not need in V1:
+advanced permissions
+workflow automation
+full mail sync
+WhatsApp integration
+complex reporting
+quote generation
+But the structure should be solid enough to expand later.
+Final result
+Build a usable V1 CRM inside /dashboard-mockup under Bedrijven that supports:
+prospects
+existing clients
+A/B/C segmentation
+company type filters
+notes per company
+reminders with dashboard visibility
+reminders by email
+ownership assignment
+multi-location company structure
+The result must feel like a simple but complete CRM, suitable for daily use by Max, Eveline, Charlotte and Lea.

@@ -6037,6 +6037,235 @@ ${posts.map(p => `  <url>
     }
   });
 
+  // ─── CRM routes ────────────────────────────────────────────────────────────
+
+  // Companies
+  app.get("/api/admin/crm/companies", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { isClient, type, owner, phase, abc, search } = req.query;
+      const companies = await storage.getCrmCompanies({
+        isClient: isClient !== undefined ? isClient === 'true' : undefined,
+        type: type as string,
+        owner: owner as string,
+        phase: phase as string,
+        abc: abc as string,
+        search: search as string,
+      });
+      return res.json(companies);
+    } catch (error) {
+      console.error("Error fetching CRM companies:", error);
+      return res.status(500).json({ message: "Fout bij ophalen bedrijven" });
+    }
+  });
+
+  app.get("/api/admin/crm/companies/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const company = await storage.getCrmCompanyById(id);
+      if (!company) return res.status(404).json({ message: "Bedrijf niet gevonden" });
+      const [contacts, notes, reminders, subLocations] = await Promise.all([
+        storage.getCrmContacts(id),
+        storage.getCrmNotes(id),
+        storage.getCrmReminders({ companyId: id }),
+        storage.getCrmCompanies({ search: '' }).then(all => all.filter(c => c.parentCompanyId === id)),
+      ]);
+      return res.json({ ...company, contacts, notes, reminders, subLocations });
+    } catch (error) {
+      console.error("Error fetching CRM company:", error);
+      return res.status(500).json({ message: "Fout bij ophalen bedrijf" });
+    }
+  });
+
+  app.post("/api/admin/crm/companies", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const company = await storage.createCrmCompany(req.body);
+      return res.status(201).json(company);
+    } catch (error) {
+      console.error("Error creating CRM company:", error);
+      return res.status(500).json({ message: "Fout bij aanmaken bedrijf" });
+    }
+  });
+
+  app.patch("/api/admin/crm/companies/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const company = await storage.updateCrmCompany(id, req.body);
+      if (!company) return res.status(404).json({ message: "Bedrijf niet gevonden" });
+      return res.json(company);
+    } catch (error) {
+      console.error("Error updating CRM company:", error);
+      return res.status(500).json({ message: "Fout bij bijwerken bedrijf" });
+    }
+  });
+
+  app.delete("/api/admin/crm/companies/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const ok = await storage.deleteCrmCompany(id);
+      if (!ok) return res.status(404).json({ message: "Bedrijf niet gevonden" });
+      return res.json({ message: "Bedrijf verwijderd" });
+    } catch (error) {
+      console.error("Error deleting CRM company:", error);
+      return res.status(500).json({ message: "Fout bij verwijderen bedrijf" });
+    }
+  });
+
+  // Contacts
+  app.get("/api/admin/crm/contacts/:companyId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const contacts = await storage.getCrmContacts(parseInt(req.params.companyId));
+      return res.json(contacts);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij ophalen contactpersonen" });
+    }
+  });
+
+  app.post("/api/admin/crm/contacts", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const contact = await storage.createCrmContact(req.body);
+      return res.status(201).json(contact);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij aanmaken contactpersoon" });
+    }
+  });
+
+  app.patch("/api/admin/crm/contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const contact = await storage.updateCrmContact(parseInt(req.params.id), req.body);
+      if (!contact) return res.status(404).json({ message: "Contactpersoon niet gevonden" });
+      return res.json(contact);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij bijwerken contactpersoon" });
+    }
+  });
+
+  app.delete("/api/admin/crm/contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const ok = await storage.deleteCrmContact(parseInt(req.params.id));
+      if (!ok) return res.status(404).json({ message: "Contactpersoon niet gevonden" });
+      return res.json({ message: "Contactpersoon verwijderd" });
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij verwijderen contactpersoon" });
+    }
+  });
+
+  // Notes
+  app.get("/api/admin/crm/notes/:companyId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const notes = await storage.getCrmNotes(parseInt(req.params.companyId));
+      return res.json(notes);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij ophalen notities" });
+    }
+  });
+
+  app.post("/api/admin/crm/notes", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const note = await storage.createCrmNote(req.body);
+      return res.status(201).json(note);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij aanmaken notitie" });
+    }
+  });
+
+  app.delete("/api/admin/crm/notes/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const ok = await storage.deleteCrmNote(parseInt(req.params.id));
+      if (!ok) return res.status(404).json({ message: "Notitie niet gevonden" });
+      return res.json({ message: "Notitie verwijderd" });
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij verwijderen notitie" });
+    }
+  });
+
+  // Reminders
+  app.get("/api/admin/crm/reminders", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { companyId, owner, status } = req.query;
+      // Auto-update overdue reminders
+      const allOpen = await storage.getCrmReminders({ status: 'open' });
+      const today = new Date().toISOString().slice(0, 10);
+      for (const r of allOpen) {
+        if (r.dueDate < today) {
+          await storage.updateCrmReminder(r.id, { status: 'overdue' });
+        }
+      }
+      const reminders = await storage.getCrmReminders({
+        companyId: companyId ? parseInt(companyId as string) : undefined,
+        owner: owner as string,
+        status: status as string,
+      });
+      // Enrich with company names
+      const companies = await storage.getCrmCompanies({});
+      const companyMap = Object.fromEntries(companies.map(c => [c.id, c.name]));
+      const enriched = reminders.map(r => ({ ...r, companyName: companyMap[r.companyId] || '' }));
+      return res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching CRM reminders:", error);
+      return res.status(500).json({ message: "Fout bij ophalen reminders" });
+    }
+  });
+
+  app.post("/api/admin/crm/reminders", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const reminder = await storage.createCrmReminder(req.body);
+      // Send email reminder
+      try {
+        const company = await storage.getCrmCompanyById(reminder.companyId);
+        const ownerEmails: Record<string, string> = {
+          max: 'max@doehetextra.nl',
+          eveline: 'eveline@doehetextra.nl',
+          charlotte: 'charlotte@doehetextra.nl',
+          lea: 'lea@doehetextra.nl',
+        };
+        const toEmail = ownerEmails[reminder.owner];
+        if (toEmail) {
+          const { sendEmail } = await import('./mail');
+          await sendEmail({
+            to: toEmail,
+            subject: `📅 CRM Reminder: ${reminder.title}`,
+            html: `
+              <p>Hallo ${reminder.owner.charAt(0).toUpperCase() + reminder.owner.slice(1)},</p>
+              <p>Er staat een nieuwe reminder voor je klaar in het CRM:</p>
+              <table style="border-collapse:collapse;margin:12px 0">
+                <tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Actie</td><td>${reminder.title}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Bedrijf</td><td>${company?.name || ''}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Datum</td><td>${reminder.dueDate}</td></tr>
+                ${reminder.note ? `<tr><td style="padding:4px 12px 4px 0;color:#666;font-weight:600">Notitie</td><td>${reminder.note}</td></tr>` : ''}
+              </table>
+              <p>Open het dashboard voor meer informatie.</p>
+            `,
+          });
+        }
+      } catch (mailErr) {
+        console.error("CRM reminder email error:", mailErr);
+      }
+      return res.status(201).json(reminder);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij aanmaken reminder" });
+    }
+  });
+
+  app.patch("/api/admin/crm/reminders/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const reminder = await storage.updateCrmReminder(parseInt(req.params.id), req.body);
+      if (!reminder) return res.status(404).json({ message: "Reminder niet gevonden" });
+      return res.json(reminder);
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij bijwerken reminder" });
+    }
+  });
+
+  app.delete("/api/admin/crm/reminders/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const ok = await storage.deleteCrmReminder(parseInt(req.params.id));
+      if (!ok) return res.status(404).json({ message: "Reminder niet gevonden" });
+      return res.json({ message: "Reminder verwijderd" });
+    } catch (error) {
+      return res.status(500).json({ message: "Fout bij verwijderen reminder" });
+    }
+  });
+
   // ─── Calendly polling sync ────────────────────────────────────────────────
   // Because the free Calendly plan doesn't support webhooks, we poll the API
   // every 5 minutes to detect new/canceled bookings and link them to candidates.
