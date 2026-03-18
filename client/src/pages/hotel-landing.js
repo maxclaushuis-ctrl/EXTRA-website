@@ -200,12 +200,21 @@ function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-        </div>
-    `;
+    const content = document.createElement('div');
+    content.className = 'notification-content';
+
+    const span = document.createElement('span');
+    span.className = 'notification-message';
+    span.textContent = message;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', () => notification.remove());
+
+    content.appendChild(span);
+    content.appendChild(closeBtn);
+    notification.appendChild(content);
     
     // Add notification styles
     notification.style.cssText = `
