@@ -1,0 +1,46 @@
+Pas op de homepagina alleen de hero-afbeelding aan.
+
+Heel belangrijk:
+- Verander niets aan de layout van de hero/header.
+- Laat het paarse verloop, de overlays, X-patronen, tekstblokken, badges, USP’s, knoppen, spacing, uitlijning en verhoudingen exact zoals ze nu zijn.
+- Pas geen andere secties op de pagina aan.
+- Vernieuw niets aan de structuur.
+- Het gaat alleen om het beeld in de hero aan de rechterkant / achtergrondlaag van de header.
+
+Wat er nu fout gaat:
+- De nieuwe afbeelding is nu te veel als vage achtergrond verwerkt.
+- Daarnaast staat er nog een los vrijstaand figuur vooraan in beeld.
+- Dat is niet de bedoeling.
+
+Wat ik wél wil:
+1. Gebruik de nieuwe afbeelding als hoofdbeeld in de hero.
+2. Verwijder de extra losstaande vrijstaande persoon op de voorgrond volledig.
+3. Laat de originele scène uit de nieuwe afbeelding juist goed zichtbaar terugkomen in de hero.
+4. Zorg dat vooral de cirkel met de cocktail-elementen, glazen, citrus, ijs en lichteffecten duidelijk zichtbaar en krachtig naar voren komt.
+5. Die cirkel moet echt “poppen” en meer impact hebben dan nu.
+6. De persoon én de cirkel moeten samen één sterk geheel vormen binnen de hero.
+7. Maak de afbeelding wel iets kleiner dan hij nu staat, zodat hij beter in balans is met de tekst links.
+8. Zorg dat de compositie rechts in de hero blijft en de headline, buttons en USP’s links niet overlapt.
+9. De achtergrond van de nieuwe afbeelding mag niet zo zwaar geblurd zijn als nu. Hij moet zichtbaar en sfeervol blijven.
+10. Het beeld moet premium, krachtig en scherp ogen, alsof het bewust onderdeel is van de bestaande hero.
+
+Visuele richting:
+- De bartender en vooral de energieke cocktail-cirkel moeten de eyecatcher zijn.
+- De lichteffecten en zwevende attributen moeten goed leesbaar blijven.
+- De scène mag subtiel geïntegreerd worden in de paarse hero-stijl, maar niet zó ver dat alle details verdwijnen.
+- Denk aan een mooie balans tussen integratie in de paarse EXTRA-header en behoud van de dynamiek uit de nieuwe afbeelding.
+
+Wat absoluut niet mag:
+- Geen dubbele compositie met én een achtergrondversie én een losse uitgeknipte versie van dezelfde persoon.
+- Geen extra nieuwe grafische elementen toevoegen.
+- Geen repositionering van tekst of knoppen.
+- Geen aanpassing aan de rest van de pagina.
+- Geen compleet nieuw hero-ontwerp.
+
+Doel:
+De hero moet exact dezelfde structuur behouden als nu, maar met de nieuwe afbeelding veel sterker geïntegreerd:
+- geen losse voorgrondfiguur meer
+- de bartender-scène zichtbaar in de hero
+- de cirkel met cocktail-attributen duidelijk en opvallend in beeld
+- iets kleiner en beter in balans dan het huidige resultaat
+- nog steeds volledig passend binnen de bestaande EXTRA homepagina-stijl
