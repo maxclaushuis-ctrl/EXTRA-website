@@ -5102,6 +5102,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==========================================
+  // KPI Rapportage endpoint
+  app.get("/api/admin/kpi", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { from, to } = req.query;
+      const { candidates: allCandidates } = await storage.getCandidates({ limit: 10000 });
+
+      const filterFrom = from ? new Date(from as string) : null;
+      const filterTo = to ? new Date(to as string) : null;
+
+      const filtered = allCandidates.filter((c: any) => {
+        const d = new Date(c.createdAt);
+        if (filterFrom && d < filterFrom) return false;
+        if (filterTo && d > filterTo) return false;
+        return true;
+      });
+
+      const total = filtered.length;
+      const metCv = filtered.filter((c: any) => c.hasCv).length;
+      const gesprekGepland = filtered.filter((c: any) => !!c.interviewDate).length;
+      const aangenomen = filtered.filter((c: any) => c.status === 'aangenomen').length;
+      const afgewezen = filtered.filter((c: any) => c.status === 'afgewezen').length;
+      const inBehandeling = filtered.filter((c: any) => c.status === 'in_behandeling').length;
+
+      // Doorlooptijd: aanmeld → gesprek (in days)
+      const withInterview = filtered.filter((c: any) => c.interviewDate && c.createdAt);
+      const avgDaysToInterview = withInterview.length > 0
+        ? Math.round(withInterview.reduce((sum: number, c: any) => {
+            const diff = (new Date(c.interviewDate).getTime() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+            return sum + Math.max(0, diff);
+          }, 0) / withInterview.length)
+        : null;
+
+      // Bron verdeling
+      const bronMap: Record<string, number> = {};
+      filtered.forEach((c: any) => {
+        const bron = c.sourceChannel || 'Onbekend';
+        bronMap[bron] = (bronMap[bron] || 0) + 1;
+      });
+      const bronVerdeling = Object.entries(bronMap)
+        .map(([bron, count]) => ({ bron, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // Functie verdeling
+      const functieMap: Record<string, { total: number; aangenomen: number; afgewezen: number }> = {};
+      filtered.forEach((c: any) => {
+        const fn = c.functionType || 'Onbekend';
+        if (!functieMap[fn]) functieMap[fn] = { total: 0, aangenomen: 0, afgewezen: 0 };
+        functieMap[fn].total++;
+        if (c.status === 'aangenomen') functieMap[fn].aangenomen++;
+        if (c.status === 'afgewezen') functieMap[fn].afgewezen++;
+      });
+      const functieVerdeling = Object.entries(functieMap)
+        .map(([functie, data]) => ({ functie, ...data }))
+        .sort((a, b) => b.total - a.total);
+
+      // Nationaliteit verdeling (top 10)
+      const natMap: Record<string, number> = {};
+      filtered.forEach((c: any) => {
+        const nat = c.nationality || 'Onbekend';
+        natMap[nat] = (natMap[nat] || 0) + 1;
+      });
+      const nationaliteitVerdeling = Object.entries(natMap)
+        .map(([nationaliteit, count]) => ({ nationaliteit, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 12);
+
+      // Maandelijkse trend (laatste 12 maanden)
+      const now = new Date();
+      const maandTrend = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const nextD = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        const label = d.toLocaleDateString('nl-NL', { month: 'short', year: '2-digit' });
+        const maandCandidates = allCandidates.filter((c: any) => {
+          const cd = new Date(c.createdAt);
+          return cd >= d && cd < nextD;
+        });
+        maandTrend.push({
+          label,
+          aanmeldingen: maandCandidates.length,
+          aangenomen: maandCandidates.filter((c: any) => c.status === 'aangenomen').length,
+          gesprekken: maandCandidates.filter((c: any) => !!c.interviewDate).length,
+        });
+      }
+
+      // Conversieratio's
+      const ratioGesprek = total > 0 ? Math.round((gesprekGepland / total) * 100) : 0;
+      const ratioCv = total > 0 ? Math.round((metCv / total) * 100) : 0;
+      const ratioAangenomen = total > 0 ? Math.round((aangenomen / total) * 100) : 0;
+      const ratioAfgewezen = total > 0 ? Math.round((afgewezen / total) * 100) : 0;
+
+      return res.json({
+        trechter: { total, metCv, gesprekGepland, aangenomen, afgewezen, inBehandeling },
+        ratios: { ratioCv, ratioGesprek, ratioAangenomen, ratioAfgewezen },
+        avgDaysToInterview,
+        bronVerdeling,
+        functieVerdeling,
+        nationaliteitVerdeling,
+        maandTrend,
+      });
+    } catch (error) {
+      console.error("Error fetching KPI data:", error);
+      return res.status(500).json({ message: "Fout bij ophalen KPI-data" });
+    }
+  });
+
   // Public Sollicitatie Form API (no auth required)
   // ==========================================
   
