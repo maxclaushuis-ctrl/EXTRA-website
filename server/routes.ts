@@ -5422,6 +5422,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const [result] = await db.insert(staffingRequests).values(data).returning();
 
+      // Auto-create CRM lead from staffing request
+      try {
+        const locationTypeToCrmType: Record<string, string> = {
+          hotel: 'hotel', restaurant: 'restaurant', eventlocatie: 'eventlocatie',
+          cateraar: 'cateraar', catering: 'cateraar', event: 'eventlocatie',
+        };
+        const crmType = locationTypeToCrmType[data.locationType?.toLowerCase() || ''] || 'hotel';
+        const existingCompanies = await storage.getCrmCompanies({ search: data.companyName });
+        const existingMatch = existingCompanies.find(
+          (c: any) => c.name.toLowerCase().trim() === data.companyName.toLowerCase().trim()
+        );
+        if (existingMatch) {
+          // Update existing company: ensure "Hot lead" tag is added
+          const currentTags: string[] = existingMatch.tags || [];
+          if (!currentTags.includes('Hot lead')) {
+            await storage.updateCrmCompany(existingMatch.id, { tags: [...currentTags, 'Hot lead'] });
+          }
+        } else {
+          // Create new CRM prospect from this staffing request
+          const urgencyNote = data.urgency === 'zo_snel_mogelijk'
+            ? 'Urgentie: zo snel mogelijk.'
+            : data.urgency === 'deze_week' ? 'Urgentie: deze week.'
+            : data.urgency === 'volgende_week' ? 'Urgentie: volgende week.' : '';
+          const notesText = [
+            `Aanvraag via personeelsaanvraagformulier. Contact: ${data.contactName} (${data.email}, ${data.phone}).`,
+            data.functions?.length ? `Functies: ${data.functions.join(', ')}.` : '',
+            data.staffCount ? `Aantal medewerkers: ${data.staffCount}.` : '',
+            data.datesPeriod ? `Periode: ${data.datesPeriod}.` : '',
+            urgencyNote,
+            data.notes ? `Extra info: ${data.notes}` : '',
+          ].filter(Boolean).join(' ');
+          await storage.createCrmCompany({
+            name: data.companyName,
+            type: crmType,
+            isClient: false,
+            phase: 'nieuw',
+            owner: 'max',
+            potential: data.urgency === 'zo_snel_mogelijk' ? 'hoog' : 'midden',
+            source: 'website',
+            tags: ['Hot lead'],
+            notes: notesText,
+            staffingRequestId: result.id,
+          } as any);
+        }
+        // Create a contact for the person who submitted
+        const newCompanies = await storage.getCrmCompanies({ search: data.companyName });
+        const company = newCompanies.find((c: any) => c.name.toLowerCase().trim() === data.companyName.toLowerCase().trim());
+        if (company) {
+          await storage.createCrmContact({ companyId: company.id, name: data.contactName, email: data.email, phone: data.phone, isPrimary: true } as any);
+        }
+      } catch (crmErr) {
+        console.error('CRM auto-create error (non-fatal):', crmErr);
+      }
+
       // Notify admins about new staffing request
       try {
         const allUsers = await storage.getUsers();

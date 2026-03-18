@@ -1256,6 +1256,8 @@ export const crmCompanies = pgTable("crm_companies", {
   busyPeriods: text("busy_periods"),
   planningNotes: text("planning_notes"),
   notes: text("notes"), // general notes field
+  tags: text("tags").array().default([]), // hot_lead | warm_lead | cold_lead | vip | urgent | follow_up | etc.
+  staffingRequestId: integer("staffing_request_id"), // link to original staffing request if created from form
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

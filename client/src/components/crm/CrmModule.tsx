@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,117 @@ import {
 
 export const CRM_OWNERS = ['max', 'eveline', 'charlotte', 'lea'] as const;
 export type CrmOwner = typeof CRM_OWNERS[number];
+
+export const CRM_TAGS = [
+  'Hot lead',
+  'Warm lead',
+  'Cold lead',
+  'VIP klant',
+  'Urgent',
+  'Follow-up',
+  'Offerte verstuurd',
+  'Contract besproken',
+  'Terugkerende klant',
+  'Nieuw contact',
+] as const;
+
+const TAG_COLORS: Record<string, string> = {
+  'Hot lead':          'bg-red-100 text-red-700 border-red-200',
+  'Warm lead':         'bg-orange-100 text-orange-700 border-orange-200',
+  'Cold lead':         'bg-slate-100 text-slate-600 border-slate-200',
+  'VIP klant':         'bg-yellow-100 text-yellow-700 border-yellow-200',
+  'Urgent':            'bg-rose-100 text-rose-700 border-rose-200',
+  'Follow-up':         'bg-blue-100 text-blue-600 border-blue-200',
+  'Offerte verstuurd': 'bg-violet-100 text-violet-700 border-violet-200',
+  'Contract besproken':'bg-purple-100 text-purple-700 border-purple-200',
+  'Terugkerende klant':'bg-green-100 text-green-700 border-green-200',
+  'Nieuw contact':     'bg-teal-100 text-teal-600 border-teal-200',
+};
+
+function getTagStyle(tag: string): string {
+  return TAG_COLORS[tag] || 'bg-gray-100 text-gray-600 border-gray-200';
+}
+
+function TagBadge({ tag, onRemove }: { tag: string; onRemove?: () => void }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium ${getTagStyle(tag)}`}>
+      {tag}
+      {onRemove && (
+        <button onClick={onRemove} className="hover:opacity-70 ml-0.5">
+          <X className="h-2.5 w-2.5" />
+        </button>
+      )}
+    </span>
+  );
+}
+
+function TagsInlineEditor({ companyId, initialTags }: { companyId: number; initialTags: string[] }) {
+  const [localTags, setLocalTags] = useState<string[]>(initialTags);
+  const [saving, setSaving] = useState(false);
+
+  // Sync when parent data changes (e.g. query refetch or different company)
+  const prevId = useRef(companyId);
+  const prevTags = useRef(initialTags);
+  if (prevId.current !== companyId) { prevId.current = companyId; prevTags.current = initialTags; setLocalTags(initialTags); }
+
+  const save = async (newTags: string[]) => {
+    setLocalTags(newTags);
+    setSaving(true);
+    try {
+      await apiRequest('PATCH', `/api/admin/crm/companies/${companyId}`, { tags: newTags });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', companyId] });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-xs text-gray-500">Tags</p>
+        {saving && <span className="text-xs text-gray-400">Opslaan...</span>}
+      </div>
+      <TagEditor tags={localTags} onChange={save} />
+    </div>
+  );
+}
+
+function TagEditor({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const available = CRM_TAGS.filter(t => !tags.includes(t));
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 mb-1.5">
+        {tags.map(tag => (
+          <TagBadge key={tag} tag={tag} onRemove={() => onChange(tags.filter(t => t !== tag))} />
+        ))}
+      </div>
+      {available.length > 0 && (
+        <div className="relative">
+          <Button type="button" size="sm" variant="outline" className="h-6 text-xs gap-1" onClick={() => setOpen(o => !o)}>
+            <Plus className="h-3 w-3" />Tag toevoegen
+          </Button>
+          {open && (
+            <div className="absolute z-50 mt-1 bg-white border rounded-lg shadow-lg p-2 flex flex-wrap gap-1.5 max-w-xs">
+              {available.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`text-xs px-2 py-0.5 rounded-full border font-medium hover:opacity-80 transition-opacity ${getTagStyle(tag)}`}
+                  onClick={() => { onChange([...tags, tag]); setOpen(false); }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const OWNER_COLORS: Record<string, string> = {
   max: 'bg-blue-100 text-blue-700',
@@ -135,6 +246,7 @@ function CompanyFormModal({
     owner: 'max', accountOwner: '', city: '', region: '', website: '', linkedin: '',
     potential: 'midden', source: 'inbound', parentCompanyId: null,
     attentionNeeded: false, risk: false, busyPeriods: '', planningNotes: '', notes: '',
+    tags: [],
   });
 
   const createMutation = useMutation({
@@ -306,6 +418,10 @@ function CompanyFormModal({
               </div>
             </>
           )}
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Tags</label>
+            <TagEditor tags={form.tags || []} onChange={v => set('tags', v)} />
+          </div>
           <div className="col-span-2">
             <label className="text-xs font-medium text-gray-600 mb-1 block">Notities</label>
             <Textarea value={form.notes || ''} onChange={e => set('notes', e.target.value)} rows={3} placeholder="Algemene notities over dit bedrijf..." />
@@ -664,6 +780,8 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
                 {/* OVERZICHT */}
                 {activeTab === 'overzicht' && (
                   <div className="space-y-4">
+                    {/* Tags inline */}
+                    <TagsInlineEditor companyId={companyId!} initialTags={company.tags || []} />
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { label: 'Type', value: TYPE_LABELS[company.type] },
@@ -929,11 +1047,12 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
 
 function CompanyRow({ company, onClick, showAbc = false }: { company: any; onClick: () => void; showAbc?: boolean }) {
   const openReminders = (company.reminders || []).filter((r: any) => r.status !== 'completed').length;
+  const tags: string[] = company.tags || [];
   return (
     <tr onClick={onClick} className="hover:bg-purple-50/30 cursor-pointer transition-colors border-b border-gray-100 last:border-0">
       <td className="py-2.5 px-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+        <div className="flex items-start gap-2">
+          <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
             <Building2 className="h-3.5 w-3.5 text-purple-500" />
           </div>
           <div className="min-w-0">
@@ -951,6 +1070,16 @@ function CompanyRow({ company, onClick, showAbc = false }: { company: any; onCli
         ) : (
           <span className={`text-xs px-2 py-0.5 rounded-full ${PHASE_COLORS[company.phase || 'nieuw']}`}>{PHASE_LABELS[company.phase || 'nieuw']}</span>
         )}
+      </td>
+      {/* Tags column */}
+      <td className="py-2.5 px-3">
+        <div className="flex flex-wrap gap-1">
+          {tags.length === 0
+            ? <span className="text-xs text-gray-300">—</span>
+            : tags.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} />)
+          }
+          {tags.length > 2 && <span className="text-xs text-gray-400">+{tags.length - 2}</span>}
+        </div>
       </td>
       <td className="py-2.5 px-3">
         {company.owner ? (
@@ -987,6 +1116,7 @@ export function CrmLeadsTab() {
   const [phaseFilter, setPhaseFilter] = useState('alle');
   const [ownerFilter, setOwnerFilter] = useState('alle');
   const [potentialFilter, setPotentialFilter] = useState('alle');
+  const [tagFilter, setTagFilter] = useState('alle');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -1000,12 +1130,13 @@ export function CrmLeadsTab() {
     if (phaseFilter !== 'alle' && c.phase !== phaseFilter) return false;
     if (ownerFilter !== 'alle' && c.owner !== ownerFilter) return false;
     if (potentialFilter !== 'alle' && c.potential !== potentialFilter) return false;
+    if (tagFilter !== 'alle' && !(c.tags || []).includes(tagFilter)) return false;
     if (search) {
       const s = search.toLowerCase();
       return c.name?.toLowerCase().includes(s) || c.city?.toLowerCase().includes(s) || c.region?.toLowerCase().includes(s);
     }
     return true;
-  }), [companies, typeFilter, phaseFilter, ownerFilter, potentialFilter, search]);
+  }), [companies, typeFilter, phaseFilter, ownerFilter, potentialFilter, tagFilter, search]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -1035,6 +1166,7 @@ export function CrmLeadsTab() {
           { value: phaseFilter, onChange: setPhaseFilter, placeholder: 'Fase', options: [['alle', 'Alle fases'], ...Object.entries(PHASE_LABELS)] },
           { value: ownerFilter, onChange: setOwnerFilter, placeholder: 'Eigenaar', options: [['alle', 'Alle eigenaren'], ...CRM_OWNERS.map(o => [o, o.charAt(0).toUpperCase() + o.slice(1)])] },
           { value: potentialFilter, onChange: setPotentialFilter, placeholder: 'Potentie', options: [['alle', 'Alle potentie'], ['laag', 'Laag'], ['midden', 'Midden'], ['hoog', 'Hoog']] },
+          { value: tagFilter, onChange: setTagFilter, placeholder: 'Tag', options: [['alle', 'Alle tags'], ...CRM_TAGS.map(t => [t, t])] },
         ].map((f, i) => (
           <Select key={i} value={f.value} onValueChange={f.onChange}>
             <SelectTrigger className="h-8 text-xs w-auto min-w-[120px]"><SelectValue placeholder={f.placeholder} /></SelectTrigger>
@@ -1043,8 +1175,8 @@ export function CrmLeadsTab() {
             </SelectContent>
           </Select>
         ))}
-        {(typeFilter !== 'alle' || phaseFilter !== 'alle' || ownerFilter !== 'alle' || potentialFilter !== 'alle' || search) && (
-          <button className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1" onClick={() => { setTypeFilter('alle'); setPhaseFilter('alle'); setOwnerFilter('alle'); setPotentialFilter('alle'); setSearch(''); }}>
+        {(typeFilter !== 'alle' || phaseFilter !== 'alle' || ownerFilter !== 'alle' || potentialFilter !== 'alle' || tagFilter !== 'alle' || search) && (
+          <button className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1" onClick={() => { setTypeFilter('alle'); setPhaseFilter('alle'); setOwnerFilter('alle'); setPotentialFilter('alle'); setTagFilter('alle'); setSearch(''); }}>
             <X className="h-3 w-3" />Wis filters
           </button>
         )}
@@ -1064,7 +1196,7 @@ export function CrmLeadsTab() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Bedrijf', 'Type', 'Fase', 'Eigenaar', 'Potentie', 'Toegevoegd', ''].map((h, i) => (
+                {['Bedrijf', 'Type', 'Fase', 'Tags', 'Eigenaar', 'Potentie', 'Toegevoegd', ''].map((h, i) => (
                   <th key={i} className="text-left py-2.5 px-3 text-xs font-semibold text-gray-500">{h}</th>
                 ))}
               </tr>
@@ -1093,6 +1225,7 @@ export function CrmKlantenTab() {
   const [ownerFilter, setOwnerFilter] = useState('alle');
   const [potentialFilter, setPotentialFilter] = useState('alle');
   const [attentionFilter, setAttentionFilter] = useState('alle');
+  const [tagFilter, setTagFilter] = useState('alle');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -1108,12 +1241,13 @@ export function CrmKlantenTab() {
     if (potentialFilter !== 'alle' && c.potential !== potentialFilter) return false;
     if (attentionFilter === 'aandacht' && !c.attentionNeeded) return false;
     if (attentionFilter === 'risico' && !c.risk) return false;
+    if (tagFilter !== 'alle' && !(c.tags || []).includes(tagFilter)) return false;
     if (search) {
       const s = search.toLowerCase();
       return c.name?.toLowerCase().includes(s) || c.city?.toLowerCase().includes(s) || c.region?.toLowerCase().includes(s);
     }
     return true;
-  }), [companies, typeFilter, abcFilter, ownerFilter, potentialFilter, attentionFilter, search]);
+  }), [companies, typeFilter, abcFilter, ownerFilter, potentialFilter, attentionFilter, tagFilter, search]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -1142,6 +1276,7 @@ export function CrmKlantenTab() {
           { value: ownerFilter, onChange: setOwnerFilter, options: [['alle', 'Alle eigenaren'], ...CRM_OWNERS.map(o => [o, o.charAt(0).toUpperCase() + o.slice(1)])] },
           { value: potentialFilter, onChange: setPotentialFilter, options: [['alle', 'Alle potentie'], ['laag', 'Laag'], ['midden', 'Midden'], ['hoog', 'Hoog']] },
           { value: attentionFilter, onChange: setAttentionFilter, options: [['alle', 'Alle statussen'], ['aandacht', 'Aandacht nodig'], ['risico', 'Risico']] },
+          { value: tagFilter, onChange: setTagFilter, options: [['alle', 'Alle tags'], ...CRM_TAGS.map(t => [t, t])] },
         ].map((f, i) => (
           <Select key={i} value={f.value} onValueChange={f.onChange}>
             <SelectTrigger className="h-8 text-xs w-auto min-w-[120px]"><SelectValue /></SelectTrigger>
@@ -1150,8 +1285,8 @@ export function CrmKlantenTab() {
             </SelectContent>
           </Select>
         ))}
-        {(typeFilter !== 'alle' || abcFilter !== 'alle' || ownerFilter !== 'alle' || potentialFilter !== 'alle' || attentionFilter !== 'alle' || search) && (
-          <button className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1" onClick={() => { setTypeFilter('alle'); setAbcFilter('alle'); setOwnerFilter('alle'); setPotentialFilter('alle'); setAttentionFilter('alle'); setSearch(''); }}>
+        {(typeFilter !== 'alle' || abcFilter !== 'alle' || ownerFilter !== 'alle' || potentialFilter !== 'alle' || attentionFilter !== 'alle' || tagFilter !== 'alle' || search) && (
+          <button className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1" onClick={() => { setTypeFilter('alle'); setAbcFilter('alle'); setOwnerFilter('alle'); setPotentialFilter('alle'); setAttentionFilter('alle'); setTagFilter('alle'); setSearch(''); }}>
             <X className="h-3 w-3" />Wis filters
           </button>
         )}
@@ -1170,7 +1305,7 @@ export function CrmKlantenTab() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Bedrijf', 'Type', 'Klasse', 'Eigenaar', 'Potentie', 'Toegevoegd', ''].map((h, i) => (
+                {['Bedrijf', 'Type', 'Klasse', 'Tags', 'Eigenaar', 'Potentie', 'Toegevoegd', ''].map((h, i) => (
                   <th key={i} className="text-left py-2.5 px-3 text-xs font-semibold text-gray-500">{h}</th>
                 ))}
               </tr>
