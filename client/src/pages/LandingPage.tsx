@@ -10,7 +10,7 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin, Instagram, Linkedin
 } from "lucide-react";
-import heroBgImage from "@assets/hero-background.webp";
+import heroBartenderBg from "@assets/hero-bartender-bg.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
@@ -774,25 +774,38 @@ export default function LandingPage() {
       {/* 1. HERO                                          */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={heroBgImage}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover object-right sm:object-center"
-            style={{ filter: "contrast(1.03) saturate(1.02)" }}
-            loading="eager"
-            {...{ fetchpriority: "high" } as any}
-            decoding="async"
-          />
+        <div className="absolute inset-0 bg-[#3b0d8f]">
+          <div className="absolute right-0 top-0 bottom-0 w-[58%] hidden sm:block overflow-hidden">
+            <img
+              src={heroBartenderBg}
+              alt=""
+              className="w-full h-full object-cover object-center"
+              style={{ filter: "contrast(1.05) saturate(1.08) brightness(0.92)" }}
+              loading="eager"
+              {...{ fetchpriority: "high" } as any}
+              decoding="async"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(90deg,
+                  rgba(59,13,143,1) 0%,
+                  rgba(59,13,143,0.55) 28%,
+                  rgba(59,13,143,0.10) 60%,
+                  rgba(59,13,143,0.0) 100%
+                )`
+              }}
+            />
+          </div>
           <div
             className="absolute inset-0"
             style={{
               background: `linear-gradient(90deg,
-                rgba(88,22,164,0.92) 0%,
-                rgba(88,22,164,0.88) 40%,
-                rgba(88,22,164,0.70) 65%,
-                rgba(88,22,164,0.35) 82%,
-                rgba(88,22,164,0.10) 100%
+                rgba(88,22,164,0.97) 0%,
+                rgba(88,22,164,0.93) 38%,
+                rgba(88,22,164,0.50) 56%,
+                rgba(88,22,164,0.08) 78%,
+                rgba(88,22,164,0.0) 100%
               )`
             }}
           />
