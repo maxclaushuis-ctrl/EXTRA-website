@@ -482,7 +482,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Debug logging
       console.log("Wachtwoord hash in database:", user.password.substring(0, 30) + "...");
-      console.log("Ingevoerd wachtwoord:", password);
       
       // Controleer wachtwoord met SHA256 (zoals opgeslagen in database)
       const hashedInputPassword = createHash('sha256').update(password).digest('hex');
