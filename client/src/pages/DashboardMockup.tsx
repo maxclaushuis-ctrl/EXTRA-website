@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -232,6 +232,8 @@ export default function DashboardMockup() {
   const [appInterviewerFilter, setAppInterviewerFilter] = useState('alle');
   const [appSortDesc, setAppSortDesc] = useState(true);
   const [appSortField, setAppSortField] = useState<string>('date');
+  const [appPage, setAppPage] = useState(0);
+  const APP_PAGE_SIZE = 50;
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [appDetailOpen, setAppDetailOpen] = useState(false);
   const [appRejectConfirmApp, setAppRejectConfirmApp] = useState<any | null>(null);
@@ -326,9 +328,9 @@ export default function DashboardMockup() {
   const { data: candidatesData, isLoading: candidatesLoading, refetch: refetchCandidates } = useQuery<{ candidates: Candidate[]; total: number }>({
     queryKey: ['/api/admin/candidates'],
     enabled: isAuthenticated && user?.role === 'admin',
-    staleTime: 0,
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
   });
 
   const rejectCandidateMutation = useMutation({
@@ -350,9 +352,9 @@ export default function DashboardMockup() {
   const { data: applicationsData, isLoading: applicationsLoading, refetch: refetchApplications } = useQuery<{ applications: any[]; total: number }>({
     queryKey: ['/api/admin/applications'],
     enabled: isAuthenticated && user?.role === 'admin',
-    staleTime: 0,
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
   });
 
   const updateAppStatusMutation = useMutation({
@@ -468,9 +470,9 @@ export default function DashboardMockup() {
     );
   }
 
-  const allCandidates = candidatesData?.candidates || [];
+  const allCandidates = useMemo(() => candidatesData?.candidates || [], [candidatesData]);
 
-  const filteredCandidates = allCandidates.filter(c => {
+  const filteredCandidates = useMemo(() => allCandidates.filter(c => {
     const matchesStatus = candidateStatusFilter === 'alle' || c.status === candidateStatusFilter;
     const searchTerm = candidateSearch.toLowerCase();
     const matchesSearch = candidateSearch === '' || 
@@ -479,21 +481,21 @@ export default function DashboardMockup() {
       (c.email && c.email.toLowerCase().includes(searchTerm)) ||
       (c.phone && c.phone.toLowerCase().includes(searchTerm));
     return matchesStatus && matchesSearch;
-  });
+  }), [allCandidates, candidateStatusFilter, candidateSearch]);
 
-  const candidateCounts = {
+  const candidateCounts = useMemo(() => ({
     total: allCandidates.length,
     inBehandeling: allCandidates.filter(c => c.status === 'in_behandeling').length,
     aangenomen: allCandidates.filter(c => c.status === 'aangenomen').length,
     afgewezen: allCandidates.filter(c => c.status === 'afgewezen').length,
-  };
+  }), [allCandidates]);
 
   // Applications (sollicitanten) computed
-  const allApplications: any[] = applicationsData?.applications || [];
-  const activeApplications = allApplications.filter(a => a.status !== 'afgewezen');
-  const rejectedApplications = allApplications.filter(a => a.status === 'afgewezen');
+  const allApplications: any[] = useMemo(() => applicationsData?.applications || [], [applicationsData]);
+  const activeApplications = useMemo(() => allApplications.filter(a => a.status !== 'afgewezen'), [allApplications]);
+  const rejectedApplications = useMemo(() => allApplications.filter(a => a.status === 'afgewezen'), [allApplications]);
 
-  const filteredApplications = (() => {
+  const filteredApplications = useMemo(() => {
     let base = appTab === 'afgewezen' ? rejectedApplications : activeApplications.filter(a => {
       if (appTab !== 'alle') {
         const fn = a.functionType === 'front-office' ? 'frontoffice' : a.functionType;
@@ -517,16 +519,24 @@ export default function DashboardMockup() {
       if (bv === null) return -1;
       return appSortDesc ? bv - av : av - bv;
     });
-  })();
+  }, [allApplications, appTab, appInterviewerFilter, appSearch, appSortField, appSortDesc, activeApplications, rejectedApplications]);
 
-  const appCounts = {
+  const appCounts = useMemo(() => ({
     alle: activeApplications.length,
     afgewezen: rejectedApplications.length,
     horecamedewerker: activeApplications.filter(a => a.functionType === 'horecamedewerker').length,
     housekeeping: activeApplications.filter(a => a.functionType === 'housekeeping').length,
     chef: activeApplications.filter(a => a.functionType === 'chef').length,
     frontoffice: activeApplications.filter(a => a.functionType === 'frontoffice' || a.functionType === 'front-office').length,
-  };
+  }), [activeApplications, rejectedApplications]);
+
+  const pagedApplications = useMemo(
+    () => filteredApplications.slice(appPage * APP_PAGE_SIZE, (appPage + 1) * APP_PAGE_SIZE),
+    [filteredApplications, appPage]
+  );
+  const appTotalPages = Math.ceil(filteredApplications.length / APP_PAGE_SIZE);
+
+  useEffect(() => { setAppPage(0); }, [appTab, appSearch, appInterviewerFilter, appSortField, appSortDesc]);
 
   const topUsers = [...allUsers]
     .filter(u => u.role !== 'admin')
@@ -552,29 +562,31 @@ export default function DashboardMockup() {
   const userGrowth = stats?.changes?.activeUsersChange || '+28';
 
   // Kandidaten tab computed values
-  const kanInProces = allCandidates.filter(c => c.status !== 'afgewezen' && !c.hasCv && !c.interviewDate);
-  const kanBeoordelen = allCandidates.filter(c => c.status !== 'afgewezen' && !!c.hasCv && !c.interviewDate);
-  const kanGesprekGepland = allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate);
-  const kanAfgewezen = allCandidates.filter(c => c.status === 'afgewezen');
-  const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, beoordelen: kanBeoordelen, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
-  const kanRawSubset: Candidate[] = kanSubsetMap[kandidatenSubtab] || [];
-  const kanSubset = kanRawSubset
-    .filter(c => {
-      const q = kandidatenSearch.toLowerCase();
-      const matchQ = q === '' ||
-        `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-        (c.email || '').toLowerCase().includes(q) ||
-        (c.city || '').toLowerCase().includes(q);
-      const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
-      const matchTaal = kandidatenTaalFilter === 'alle' ||
-        (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
-      const matchDay = !weekDayFilter || (c.interviewDate && c.interviewDate.slice(0, 10) === weekDayFilter);
-      return matchQ && matchFn && matchTaal && matchDay;
-    })
-    .sort((a, b) => {
-      const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      return kanSortDesc ? diff : -diff;
-    });
+  const kanInProces = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !c.hasCv && !c.interviewDate), [allCandidates]);
+  const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !!c.hasCv && !c.interviewDate), [allCandidates]);
+  const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate), [allCandidates]);
+  const kanAfgewezen = useMemo(() => allCandidates.filter(c => c.status === 'afgewezen'), [allCandidates]);
+  const kanSubset = useMemo(() => {
+    const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, beoordelen: kanBeoordelen, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
+    const kanRawSubset: Candidate[] = kanSubsetMap[kandidatenSubtab] || [];
+    return kanRawSubset
+      .filter(c => {
+        const q = kandidatenSearch.toLowerCase();
+        const matchQ = q === '' ||
+          `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+          (c.email || '').toLowerCase().includes(q) ||
+          (c.city || '').toLowerCase().includes(q);
+        const matchFn = kandidatenFunctionFilter === 'alle' || c.functionType === kandidatenFunctionFilter;
+        const matchTaal = kandidatenTaalFilter === 'alle' ||
+          (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
+        const matchDay = !weekDayFilter || (c.interviewDate && c.interviewDate.slice(0, 10) === weekDayFilter);
+        return matchQ && matchFn && matchTaal && matchDay;
+      })
+      .sort((a, b) => {
+        const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return kanSortDesc ? diff : -diff;
+      });
+  }, [kanInProces, kanBeoordelen, kanGesprekGepland, kanAfgewezen, kandidatenSubtab, kandidatenSearch, kandidatenFunctionFilter, kandidatenTaalFilter, weekDayFilter, kanSortDesc]);
   const kanMissingItems = (c: Candidate) => {
     const items: string[] = [];
     if (!c.cvUrl) items.push('CV ontbreekt');
@@ -2324,7 +2336,7 @@ export default function DashboardMockup() {
                   <>
                     {/* Mobile cards */}
                     <div className="block md:hidden space-y-2">
-                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                      {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     {/* Desktop table */}
                     <div className="hidden md:block">
@@ -2344,7 +2356,7 @@ export default function DashboardMockup() {
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredApplications.map(app => (
+                              {pagedApplications.map(app => (
                                 <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
                                   <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
                                   <NameCell app={app} />
@@ -2368,7 +2380,7 @@ export default function DashboardMockup() {
                 if (appTab === 'horecamedewerker') return (
                   <>
                     <div className="block md:hidden space-y-2">
-                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                      {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
                     <Card><CardContent className="p-0">
@@ -2419,7 +2431,7 @@ export default function DashboardMockup() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredApplications.map(app => {
+                          {pagedApplications.map(app => {
                             const fd = (app.formData || {}) as any;
                             return (
                               <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
@@ -2478,7 +2490,7 @@ export default function DashboardMockup() {
                 if (appTab === 'chef') return (
                   <>
                     <div className="block md:hidden space-y-2">
-                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                      {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
                   <Card><CardContent className="p-0">
@@ -2509,7 +2521,7 @@ export default function DashboardMockup() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredApplications.map(app => {
+                          {pagedApplications.map(app => {
                             const fd = (app.formData || {}) as any;
                             return (
                               <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
@@ -2548,7 +2560,7 @@ export default function DashboardMockup() {
                 if (appTab === 'housekeeping') return (
                   <>
                     <div className="block md:hidden space-y-2">
-                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                      {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
                   <Card><CardContent className="p-0">
@@ -2578,7 +2590,7 @@ export default function DashboardMockup() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredApplications.map(app => {
+                          {pagedApplications.map(app => {
                             const fd = (app.formData || {}) as any;
                             return (
                               <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
@@ -2616,7 +2628,7 @@ export default function DashboardMockup() {
                 return (
                   <>
                     <div className="block md:hidden space-y-2">
-                      {filteredApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                      {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
                     </div>
                     <div className="hidden md:block">
                   <Card><CardContent className="p-0">
@@ -2649,7 +2661,7 @@ export default function DashboardMockup() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredApplications.map(app => {
+                          {pagedApplications.map(app => {
                             const fd = (app.formData || {}) as any;
                             return (
                               <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
@@ -2686,6 +2698,36 @@ export default function DashboardMockup() {
                   </>
                 );
               })()}
+
+              {/* Paginering */}
+              {appTotalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-1">
+                  <p className="text-sm text-gray-500">
+                    {appPage * APP_PAGE_SIZE + 1}–{Math.min((appPage + 1) * APP_PAGE_SIZE, filteredApplications.length)} van {filteredApplications.length} sollicitaties
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={appPage === 0}
+                      onClick={() => setAppPage(p => p - 1)}
+                    >
+                      ← Vorige
+                    </Button>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Pagina {appPage + 1} / {appTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={appPage >= appTotalPages - 1}
+                      onClick={() => setAppPage(p => p + 1)}
+                    >
+                      Volgende →
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : activeTab === 'twv' ? (
             /* TWV Tab — Tewerkstellingsvergunning Kanban */
