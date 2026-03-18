@@ -25,7 +25,6 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
   
   console.log('VAPID keys gegenereerd:');
   console.log('Public Key:', VAPID_PUBLIC_KEY);
-  console.log('Private Key:', VAPID_PRIVATE_KEY);
   console.log('Voeg deze toe aan je environment variables voor productie gebruik');
 }
 
