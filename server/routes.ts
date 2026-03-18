@@ -75,7 +75,6 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
   // Dit is een workaround voor bepaalde situaties waar sessies niet correct worden doorgegeven
   const specialAuthHeader = req.headers['x-internal-auth'];
   if (specialAuthHeader === 'employee_access' || specialAuthHeader === 'admin_access') {
-    console.log("Toegang verleend via speciale header:", specialAuthHeader);
     
     // Maak een tijdelijke sessie aan voor dit verzoek
     if (!req.session) {
