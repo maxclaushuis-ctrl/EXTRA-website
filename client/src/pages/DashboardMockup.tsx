@@ -408,67 +408,9 @@ export default function DashboardMockup() {
   });
   const vacancyPosts = vacancyData?.posts ?? [];
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Laden...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || user?.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
-          <div className="text-center mb-6">
-            <div className="bg-purple-600 text-white font-bold text-2xl px-4 py-2 rounded inline-block mb-4">
-              EXTRA
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">Beheerdersdashboard</h1>
-            <p className="text-gray-500 mt-1">Log in om toegang te krijgen</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-mailadres</label>
-              <Input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@extra.nl"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Wachtwoord</label>
-              <Input
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            {loginError && (
-              <p className="text-red-500 text-sm">{loginError}</p>
-            )}
-            <Button
-              type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              disabled={isLoggingIn}
-            >
-              {isLoggingIn ? 'Bezig met inloggen...' : 'Inloggen'}
-            </Button>
-          </form>
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Standaard: admin@extra.nl / admin123
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // ── All derived/computed values moved here (before conditional returns) ──
+  // This is required by React's Rules of Hooks: hooks must always be called
+  // in the same order on every render, never after a conditional return.
 
   const allCandidates = useMemo(() => candidatesData?.candidates || [], [candidatesData]);
 
@@ -538,19 +480,19 @@ export default function DashboardMockup() {
 
   useEffect(() => { setAppPage(0); }, [appTab, appSearch, appInterviewerFilter, appSortField, appSortDesc]);
 
-  const topUsers = [...allUsers]
+  const topUsers = useMemo(() => [...allUsers]
     .filter(u => u.role !== 'admin')
     .sort((a, b) => (b.points || 0) - (a.points || 0))
-    .slice(0, 4);
+    .slice(0, 4), [allUsers]);
 
-  const inactiveUsers = [...allUsers]
+  const inactiveUsers = useMemo(() => [...allUsers]
     .filter(u => u.role !== 'admin' && daysSince(u.lastLogin || '') > 14)
     .sort((a, b) => daysSince(b.lastLogin || '') - daysSince(a.lastLogin || ''))
-    .slice(0, 4);
+    .slice(0, 4), [allUsers]);
 
-  const recentTransactions = [...transactions]
+  const recentTransactions = useMemo(() => [...transactions]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+    .slice(0, 5), [transactions]);
 
   const dashTotalUsers = 247;
   const dashActiveUsers = 189;
@@ -587,6 +529,70 @@ export default function DashboardMockup() {
         return kanSortDesc ? diff : -diff;
       });
   }, [kanInProces, kanBeoordelen, kanGesprekGepland, kanAfgewezen, kandidatenSubtab, kandidatenSearch, kandidatenFunctionFilter, kandidatenTaalFilter, weekDayFilter, kanSortDesc]);
+
+  // ── Conditional early returns (after all hooks) ──
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
+          <div className="text-center mb-6">
+            <div className="bg-purple-600 text-white font-bold text-2xl px-4 py-2 rounded inline-block mb-4">
+              EXTRA
+            </div>
+            <h1 className="text-xl font-bold text-gray-900">Beheerdersdashboard</h1>
+            <p className="text-gray-500 mt-1">Log in om toegang te krijgen</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-mailadres</label>
+              <Input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="admin@extra.nl"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Wachtwoord</label>
+              <Input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            {loginError && (
+              <p className="text-red-500 text-sm">{loginError}</p>
+            )}
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? 'Bezig met inloggen...' : 'Inloggen'}
+            </Button>
+          </form>
+          <p className="text-center text-xs text-gray-400 mt-6">
+            Standaard: admin@extra.nl / admin123
+          </p>
+        </div>
+      </div>
+    );
+  }
   const kanMissingItems = (c: Candidate) => {
     const items: string[] = [];
     if (!c.cvUrl) items.push('CV ontbreekt');
