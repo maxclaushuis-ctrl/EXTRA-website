@@ -408,6 +408,22 @@ export default function DashboardMockup() {
   });
   const vacancyPosts = vacancyData?.posts ?? [];
 
+  // KPI tab state
+  const [kpiFromDate, setKpiFromDate] = useState('');
+  const [kpiToDate, setKpiToDate] = useState('');
+
+  const kpiQueryParams = new URLSearchParams();
+  if (kpiFromDate) kpiQueryParams.set('from', kpiFromDate);
+  if (kpiToDate) kpiQueryParams.set('to', kpiToDate);
+  const kpiQueryString = kpiQueryParams.toString();
+
+  const { data: kpiData, isLoading: kpiLoading, refetch: refetchKpi } = useQuery<any>({
+    queryKey: ['/api/admin/kpi', kpiFromDate, kpiToDate],
+    queryFn: () => fetch(`/api/admin/kpi${kpiQueryString ? '?' + kpiQueryString : ''}`, { credentials: 'include' }).then(r => r.json()),
+    enabled: isAuthenticated && user?.role === 'admin',
+    staleTime: 30000,
+  });
+
   // ── All derived/computed values moved here (before conditional returns) ──
   // This is required by React's Rules of Hooks: hooks must always be called
   // in the same order on every render, never after a conditional return.
@@ -728,6 +744,15 @@ export default function DashboardMockup() {
               >
                 <BarChart3 className="h-4 w-4" />
                 <span>Website Statistieken</span>
+              </button>
+              <button
+                onClick={() => { setActiveTab('kpi'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'kpi' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>KPI & Rapportage</span>
               </button>
             </>
           )}
@@ -4478,6 +4503,301 @@ export default function DashboardMockup() {
           ) : activeTab === 'stats' ? (
             /* ─── WEBSITE STATISTIEKEN tab ─── */
             <WebsiteStatsTab />
+
+          ) : activeTab === 'kpi' ? (
+            /* ─── KPI & RAPPORTAGE tab ─── */
+            <div className="p-6 max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">KPI & Rapportage</h1>
+                  <p className="text-sm text-gray-500 mt-0.5">Conversietrechter, doorlooptijden en bronanalyse</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs h-8"
+                    onClick={() => {
+                      if (!kpiData) return;
+                      const rows = [
+                        ['Metric', 'Waarde'],
+                        ['Totaal aanmeldingen', kpiData.trechter?.total ?? 0],
+                        ['Met CV', kpiData.trechter?.metCv ?? 0],
+                        ['Gesprek gepland', kpiData.trechter?.gesprekGepland ?? 0],
+                        ['Aangenomen', kpiData.trechter?.aangenomen ?? 0],
+                        ['Afgewezen', kpiData.trechter?.afgewezen ?? 0],
+                        ['In behandeling', kpiData.trechter?.inBehandeling ?? 0],
+                        ['Gem. dagen aanmeld→gesprek', kpiData.avgDaysToInterview ?? 'N/B'],
+                        [],
+                        ['Bron', 'Kandidaten'],
+                        ...(kpiData.bronVerdeling ?? []).map((b: any) => [b.bron, b.count]),
+                        [],
+                        ['Functie', 'Totaal', 'Aangenomen', 'Afgewezen'],
+                        ...(kpiData.functieVerdeling ?? []).map((f: any) => [f.functie, f.total, f.aangenomen, f.afgewezen]),
+                        [],
+                        ['Nationaliteit', 'Kandidaten'],
+                        ...(kpiData.nationaliteitVerdeling ?? []).map((n: any) => [n.nationaliteit, n.count]),
+                        [],
+                        ['Maand', 'Aanmeldingen', 'Gesprekken', 'Aangenomen'],
+                        ...(kpiData.maandTrend ?? []).map((m: any) => [m.label, m.aanmeldingen, m.gesprekken, m.aangenomen]),
+                      ];
+                      const csv = rows.map(r => r.join(';')).join('\n');
+                      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `kpi-rapportage-${new Date().toISOString().slice(0, 10)}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+                    CSV exporteren
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-xs h-8"
+                    onClick={() => refetchKpi()}
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Vernieuwen
+                  </Button>
+                </div>
+              </div>
+
+              {/* Datum filter */}
+              <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-xs font-medium text-gray-600">Periode:</span>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-500">Van</label>
+                  <input
+                    type="date"
+                    value={kpiFromDate}
+                    onChange={e => setKpiFromDate(e.target.value)}
+                    className="text-xs border border-gray-200 rounded px-2 py-1 h-7 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-500">Tot</label>
+                  <input
+                    type="date"
+                    value={kpiToDate}
+                    onChange={e => setKpiToDate(e.target.value)}
+                    className="text-xs border border-gray-200 rounded px-2 py-1 h-7 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  />
+                </div>
+                {(kpiFromDate || kpiToDate) && (
+                  <button
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    onClick={() => { setKpiFromDate(''); setKpiToDate(''); }}
+                  >
+                    Wissen
+                  </button>
+                )}
+              </div>
+
+              {kpiLoading ? (
+                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Data laden...
+                </div>
+              ) : !kpiData ? (
+                <div className="text-center text-gray-400 text-sm py-16">Geen data beschikbaar</div>
+              ) : (
+                <>
+                  {/* Sleutelcijfers */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: 'Totaal aanmeldingen', value: kpiData.trechter?.total ?? 0, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Gesprek gepland', value: kpiData.trechter?.gesprekGepland ?? 0, sub: `${kpiData.ratios?.ratioGesprek ?? 0}% conversie`, color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200' },
+                      { label: 'Aangenomen', value: kpiData.trechter?.aangenomen ?? 0, sub: `${kpiData.ratios?.ratioAangenomen ?? 0}% conversie`, color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Gem. dagen → gesprek', value: kpiData.avgDaysToInterview != null ? `${kpiData.avgDaysToInterview}d` : 'N/B', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+                    ].map((card, i) => (
+                      <div key={i} className={`rounded-xl border p-4 ${card.bg}`}>
+                        <p className="text-xs text-gray-500 mb-1">{card.label}</p>
+                        <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                        {card.sub && <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Conversietrechter */}
+                  <Card className="mb-6">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-semibold">Conversietrechter</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {(() => {
+                        const total = kpiData.trechter?.total || 1;
+                        const steps = [
+                          { label: 'Aangemeld', count: kpiData.trechter?.total ?? 0, color: 'bg-blue-500', light: 'bg-blue-100 text-blue-700' },
+                          { label: 'CV ingediend', count: kpiData.trechter?.metCv ?? 0, color: 'bg-indigo-500', light: 'bg-indigo-100 text-indigo-700' },
+                          { label: 'Gesprek gepland', count: kpiData.trechter?.gesprekGepland ?? 0, color: 'bg-violet-500', light: 'bg-violet-100 text-violet-700' },
+                          { label: 'Aangenomen', count: kpiData.trechter?.aangenomen ?? 0, color: 'bg-green-500', light: 'bg-green-100 text-green-700' },
+                          { label: 'Afgewezen', count: kpiData.trechter?.afgewezen ?? 0, color: 'bg-red-400', light: 'bg-red-100 text-red-600' },
+                        ];
+                        return (
+                          <div className="space-y-3">
+                            {steps.map((step, i) => {
+                              const pct = Math.round((step.count / total) * 100);
+                              return (
+                                <div key={i} className="flex items-center gap-3">
+                                  <div className="w-28 text-xs text-gray-600 text-right shrink-0">{step.label}</div>
+                                  <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden relative">
+                                    <div
+                                      className={`h-full ${step.color} rounded-full transition-all duration-700`}
+                                      style={{ width: `${Math.max(pct, pct > 0 ? 3 : 0)}%` }}
+                                    />
+                                  </div>
+                                  <div className="w-24 flex items-center gap-1.5 shrink-0">
+                                    <span className="text-sm font-semibold text-gray-800">{step.count}</span>
+                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${step.light}`}>{pct}%</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Maandelijkse trend */}
+                  <Card className="mb-6">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-semibold">Maandelijkse trend (12 maanden)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {(() => {
+                        const trend = kpiData.maandTrend ?? [];
+                        const maxVal = Math.max(...trend.map((m: any) => m.aanmeldingen), 1);
+                        return (
+                          <div className="overflow-x-auto">
+                            <div className="flex items-end gap-2 min-w-max pb-2" style={{ height: 140 }}>
+                              {trend.map((m: any, i: number) => (
+                                <div key={i} className="flex flex-col items-center gap-1" style={{ width: 52 }}>
+                                  <div className="flex items-end gap-0.5" style={{ height: 100 }}>
+                                    <div
+                                      title={`Aanmeldingen: ${m.aanmeldingen}`}
+                                      className="w-3 bg-blue-400 rounded-t transition-all"
+                                      style={{ height: `${Math.round((m.aanmeldingen / maxVal) * 100)}%` }}
+                                    />
+                                    <div
+                                      title={`Gesprekken: ${m.gesprekken}`}
+                                      className="w-3 bg-violet-400 rounded-t transition-all"
+                                      style={{ height: `${Math.round((m.gesprekken / maxVal) * 100)}%` }}
+                                    />
+                                    <div
+                                      title={`Aangenomen: ${m.aangenomen}`}
+                                      className="w-3 bg-green-400 rounded-t transition-all"
+                                      style={{ height: `${Math.round((m.aangenomen / maxVal) * 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-[9px] text-gray-400 leading-tight text-center">{m.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-4 mt-2 pt-2 border-t">
+                              {[
+                                { color: 'bg-blue-400', label: 'Aanmeldingen' },
+                                { color: 'bg-violet-400', label: 'Gesprekken' },
+                                { color: 'bg-green-400', label: 'Aangenomen' },
+                              ].map((l, i) => (
+                                <div key={i} className="flex items-center gap-1.5">
+                                  <div className={`w-3 h-3 rounded-sm ${l.color}`} />
+                                  <span className="text-xs text-gray-500">{l.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Bron & Functie verdeling */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Bronverdeling */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-semibold">Kandidaten per bron</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {kpiData.bronVerdeling?.length === 0 ? (
+                          <p className="text-xs text-gray-400 italic">Geen brondata beschikbaar</p>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {(() => {
+                              const maxB = Math.max(...(kpiData.bronVerdeling ?? []).map((b: any) => b.count), 1);
+                              return (kpiData.bronVerdeling ?? []).map((b: any, i: number) => (
+                                <div key={i} className="flex items-center gap-2">
+                                  <div className="w-24 text-xs text-gray-600 text-right truncate shrink-0" title={b.bron}>{b.bron}</div>
+                                  <div className="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
+                                    <div
+                                      className="h-full bg-indigo-400 rounded transition-all"
+                                      style={{ width: `${Math.round((b.count / maxB) * 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-medium text-gray-700 w-6 shrink-0">{b.count}</span>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Functieverdeling */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-semibold">Kandidaten per functie</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {kpiData.functieVerdeling?.length === 0 ? (
+                          <p className="text-xs text-gray-400 italic">Geen functiedata beschikbaar</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {(kpiData.functieVerdeling ?? []).map((f: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                                <span className="text-xs text-gray-700 capitalize">{f.functie}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">{f.total}</span>
+                                  {f.aangenomen > 0 && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">{f.aangenomen} ✓</span>}
+                                  {f.afgewezen > 0 && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">{f.afgewezen} ✗</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Nationaliteitsverdeling */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-semibold">Top nationaliteiten</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {kpiData.nationaliteitVerdeling?.length === 0 ? (
+                        <p className="text-xs text-gray-400 italic">Geen nationaliteitsdata beschikbaar</p>
+                      ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {(kpiData.nationaliteitVerdeling ?? []).map((n: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                              <span className="text-xs text-gray-700">{n.nationaliteit}</span>
+                              <span className="text-xs font-semibold text-gray-800 bg-white border border-gray-200 px-1.5 py-0.5 rounded">{n.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
 
           ) : (
             /* Dashboard / Gebruikers Tab */
