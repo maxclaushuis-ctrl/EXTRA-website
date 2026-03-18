@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { db } from './db';
 import { applications } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
@@ -102,17 +102,14 @@ export function parseScore(value: any): number | null {
 // ─── Date parsing ────────────────────────────────────────────────────────────
 function parseDate(value: any): string | null {
   if (!value) return null;
-  // When cellDates:true, xlsx returns Date objects directly
   if (value instanceof Date) {
     return isNaN(value.getTime()) ? null : value.toISOString();
   }
-  // Fallback: numeric serial date (Excel date number)
   if (typeof value === 'number') {
     try {
-      // Excel date serial: days since 1900-01-01 (with Lotus 1-2-3 bug offset)
       const excelEpoch = new Date(1900, 0, 1);
       const msPerDay = 86400000;
-      const adjusted = value > 59 ? value - 1 : value; // skip Lotus bug day
+      const adjusted = value > 59 ? value - 1 : value;
       const d = new Date(excelEpoch.getTime() + (adjusted - 1) * msPerDay);
       return isNaN(d.getTime()) ? null : d.toISOString();
     } catch {
@@ -144,6 +141,31 @@ function parseTwv(value: any): boolean {
 function normalizePhone(value: any): string | null {
   if (!value) return null;
   return String(value).trim().replace(/\s+/g, ' ');
+}
+
+// ─── Resolve ExcelJS cell value to a plain JS value ─────────────────────────
+function resolveCellValue(value: ExcelJS.CellValue): any {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'object') {
+    // RichText
+    if ('richText' in value) {
+      return (value as ExcelJS.CellRichTextValue).richText.map((r: any) => r.text).join('');
+    }
+    // Formula result
+    if ('formula' in value) {
+      const result = (value as ExcelJS.CellFormulaValue).result;
+      return resolveCellValue(result as ExcelJS.CellValue);
+    }
+    // Hyperlink
+    if ('text' in value && 'hyperlink' in value) {
+      const t = (value as ExcelJS.CellHyperlinkValue).text;
+      return typeof t === 'string' ? t : resolveCellValue(t as ExcelJS.CellValue);
+    }
+    // Error
+    if ('error' in value) return null;
+  }
+  return value;
 }
 
 // ─── Column mapping ──────────────────────────────────────────────────────────
@@ -237,8 +259,8 @@ function buildDedupeKey(row: Record<string, any>, role: string): string {
   return `${role}|name:${row.fullName?.toLowerCase()}|bd:${row.birthdate || ''}|city:${row.city?.toLowerCase() || ''}|${datePart}`;
 }
 
-// ─── Parse XLSX buffer ───────────────────────────────────────────────────────
-export function parseXlsx(buffer: Buffer, role: string): {
+// ─── Parse Excel buffer using ExcelJS ───────────────────────────────────────
+export async function parseXlsx(buffer: Buffer, role: string): Promise<{
   sheetFound: boolean;
   sheetName: string;
   availableSheets: string[];
@@ -246,24 +268,27 @@ export function parseXlsx(buffer: Buffer, role: string): {
   mapping: Record<string, string>;
   missing: string[];
   rows: Record<string, any>[];
-} {
-  const wb = XLSX.read(buffer, { type: 'buffer', cellDates: true });
-  const availableSheets = wb.SheetNames;
+}> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+
+  const availableSheets = workbook.worksheets.map(ws => ws.name);
 
   const candidates = SHEET_NAMES[role] || [];
   let sheetName = '';
+
   // 1) Exact match (case-insensitive)
   for (const candidate of candidates) {
     const found = availableSheets.find(s => s.toLowerCase() === candidate.toLowerCase());
     if (found) { sheetName = found; break; }
   }
-  // 2) Fuzzy match: sheet name contains keyword or vice versa
+  // 2) Fuzzy match
   if (!sheetName) {
-    const roleKeywords = {
+    const roleKeywords = ({
       horeca: ['horeca'],
       housekeeping: ['housekeeping', 'hk'],
       chef: ['chef'],
-    }[role] || [];
+    } as Record<string, string[]>)[role] || [];
     for (const s of availableSheets) {
       const sLow = s.toLowerCase();
       if (roleKeywords.some(k => sLow.includes(k) || k.includes(sLow))) {
@@ -279,14 +304,51 @@ export function parseXlsx(buffer: Buffer, role: string): {
     return { sheetFound: false, sheetName: '', availableSheets, headers: [], mapping: {}, missing: [], rows: [] };
   }
 
-  const ws = wb.Sheets[sheetName];
-  const rawRows: Record<string, any>[] = XLSX.utils.sheet_to_json(ws, { raw: true, defval: null });
+  const worksheet = workbook.getWorksheet(sheetName);
+  if (!worksheet) {
+    return { sheetFound: false, sheetName: '', availableSheets, headers: [], mapping: {}, missing: [], rows: [] };
+  }
 
-  if (rawRows.length === 0) {
+  // Extract headers from the first row
+  const headers: string[] = [];
+  const headerRow = worksheet.getRow(1);
+  headerRow.eachCell({ includeEmpty: false }, (cell) => {
+    headers.push(String(resolveCellValue(cell.value) ?? ''));
+  });
+
+  if (headers.length === 0) {
     return { sheetFound: true, sheetName, availableSheets, headers: [], mapping: {}, missing: [], rows: [] };
   }
 
-  const headers = Object.keys(rawRows[0]);
+  // Build column index map: colNumber -> header name
+  const colIndexToHeader: Record<number, string> = {};
+  headerRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+    const h = String(resolveCellValue(cell.value) ?? '');
+    if (h) colIndexToHeader[colNumber] = h;
+  });
+
+  // Extract data rows
+  const rawRows: Record<string, any>[] = [];
+  worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    if (rowNumber === 1) return; // skip header row
+    const rowData: Record<string, any> = {};
+    // Initialize all columns to null
+    for (const h of headers) {
+      rowData[h] = null;
+    }
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const header = colIndexToHeader[colNumber];
+      if (header) {
+        rowData[header] = resolveCellValue(cell.value);
+      }
+    });
+    rawRows.push(rowData);
+  });
+
+  if (rawRows.length === 0) {
+    return { sheetFound: true, sheetName, availableSheets, headers, mapping: {}, missing: [], rows: [] };
+  }
+
   const aliases = ROLE_ALIASES[role] || {};
   const { mapping, missing } = buildColumnMapping(headers, aliases);
 
@@ -343,7 +405,7 @@ function rowToDbRecord(row: Record<string, any>, role: string, batchId: string) 
 
 // ─── Preview endpoint handler ─────────────────────────────────────────────────
 export async function previewImport(buffer: Buffer, role: string) {
-  const parsed = parseXlsx(buffer, role);
+  const parsed = await parseXlsx(buffer, role);
   if (!parsed.sheetFound) {
     return {
       error: `Sheet voor '${role}' niet gevonden. Beschikbare sheets: ${parsed.availableSheets.join(', ')}`,
@@ -361,7 +423,7 @@ export async function previewImport(buffer: Buffer, role: string) {
 
 // ─── Commit endpoint handler ──────────────────────────────────────────────────
 export async function commitImport(buffer: Buffer, role: string, batchId: string) {
-  const parsed = parseXlsx(buffer, role);
+  const parsed = await parseXlsx(buffer, role);
   if (!parsed.sheetFound) {
     return {
       error: `Sheet voor '${role}' niet gevonden. Beschikbare sheets: ${parsed.availableSheets.join(', ')}`,
