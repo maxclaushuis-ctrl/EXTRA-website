@@ -76,7 +76,7 @@ export default function Vacatures() {
     VACATURES.forEach((vacature) => {
       const script = document.createElement("script");
       script.type = "application/ld+json";
-      script.innerHTML = JSON.stringify({
+      script.textContent = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "JobPosting",
         "title": vacature.title,
