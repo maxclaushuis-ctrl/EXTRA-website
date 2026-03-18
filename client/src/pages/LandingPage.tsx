@@ -10,7 +10,7 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin, Instagram, Linkedin
 } from "lucide-react";
-import heroBartenderBg from "@assets/hero-bartender-bg.png";
+import heroBartenderCutout from "@assets/hero-bartender-cutout.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
@@ -774,42 +774,32 @@ export default function LandingPage() {
       {/* 1. HERO                                          */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 bg-[#3b0d8f]">
-          <div className="absolute right-0 top-0 bottom-0 w-[58%] hidden sm:block overflow-hidden">
-            <img
-              src={heroBartenderBg}
-              alt=""
-              className="w-full h-full object-cover object-center"
-              style={{ filter: "contrast(1.05) saturate(1.08) brightness(0.92)" }}
-              loading="eager"
-              {...{ fetchpriority: "high" } as any}
-              decoding="async"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(90deg,
-                  rgba(59,13,143,1) 0%,
-                  rgba(59,13,143,0.55) 28%,
-                  rgba(59,13,143,0.10) 60%,
-                  rgba(59,13,143,0.0) 100%
-                )`
-              }}
-            />
-          </div>
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #4c1294 0%, #3b0d8f 50%, #2d0a6e 100%)" }}>
+          <img
+            src={heroBartenderCutout}
+            alt=""
+            className="absolute bottom-0 right-0 h-full w-auto object-contain object-right-bottom hidden sm:block pointer-events-none"
+            style={{
+              maxWidth: "58%",
+              filter: "drop-shadow(0 0 32px rgba(139,92,246,0.5)) drop-shadow(0 0 12px rgba(96,165,250,0.35)) contrast(1.08) saturate(1.10) brightness(1.04)",
+            }}
+            loading="eager"
+            {...{ fetchpriority: "high" } as any}
+            decoding="async"
+          />
           <div
             className="absolute inset-0"
             style={{
               background: `linear-gradient(90deg,
-                rgba(88,22,164,0.97) 0%,
-                rgba(88,22,164,0.93) 38%,
-                rgba(88,22,164,0.50) 56%,
-                rgba(88,22,164,0.08) 78%,
-                rgba(88,22,164,0.0) 100%
+                rgba(59,13,143,0.98) 0%,
+                rgba(59,13,143,0.90) 35%,
+                rgba(59,13,143,0.40) 55%,
+                rgba(59,13,143,0.05) 72%,
+                rgba(59,13,143,0.0) 100%
               )`
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/50 via-transparent to-transparent" />
         </div>
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
           <div className="absolute" style={{ left: "5%", top: "10%", width: 200, height: 200, transform: "rotate(15deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
