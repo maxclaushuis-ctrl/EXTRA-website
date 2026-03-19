@@ -6257,7 +6257,7 @@ ${posts.map(p => `  <url>
   // Because the free Calendly plan doesn't support webhooks, we poll the API
   // every 5 minutes to detect new/canceled bookings and link them to candidates.
 
-  const CALENDLY_USER_URI = "https://api.calendly.com/users/ac39f79b-cd97-4ef3-bd74-f4b2bc09093f";
+  const CALENDLY_USER_URI = process.env.CALENDLY_USER_URI || "https://api.calendly.com/users/ac39f79b-cd97-4ef3-bd74-f4b2bc09093f";
 
   async function syncCalendlyEvents() {
     const token = process.env.CALENDLY_API_TOKEN;
