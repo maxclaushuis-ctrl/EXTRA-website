@@ -661,7 +661,10 @@ export default function Aanmelden() {
       const fn = formData.preferredFunction;
       if (fn === "horecamedewerker" || fn === "frontoffice") {
         await saveCandidate("afgewezen", false, "Functie niet beschikbaar voor non-EU");
-        setRejectionReason(COPY.EN.roleNotAvailable);
+        const isNlSpeaker = formData.nationality === "Nederland" ||
+          ["Curaçao", "Aruba", "Sint Maarten", "Bonaire"].includes(formData.nationality) ||
+          ["België", "Duitsland", "Oostenrijk", "Zwitserland", "Luxemburg"].includes(formData.nationality);
+        setRejectionReason(isNlSpeaker ? COPY.NL.roleNotAvailable : COPY.EN.roleNotAvailable);
         setStep("rejected");
         return;
       }
