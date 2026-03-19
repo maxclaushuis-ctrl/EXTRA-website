@@ -4419,7 +4419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==========================================
 
   // Intake lookup — returns candidates by functionType for admin intake form
-  app.get("/api/intake/candidates", async (req: Request, res: Response) => {
+  app.get("/api/intake/candidates", authMiddleware, async (req: Request, res: Response) => {
     try {
       const { functionType } = req.query;
       const result = await storage.getCandidates({
