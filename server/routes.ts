@@ -3755,6 +3755,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validated = publicRegistrationSchema.parse(req.body);
 
+      if (validated.email) {
+        const existingByEmail = await db.select({ id: candidatesTable.id })
+          .from(candidatesTable)
+          .where(eq(candidatesTable.email, validated.email))
+          .limit(1);
+        if (existingByEmail.length > 0) {
+          return res.status(200).json({
+            id: existingByEmail[0].id,
+            message: "Bestaande aanmelding gevonden"
+          });
+        }
+      }
+
       const candidate = await storage.createCandidate({
         firstName: validated.firstName,
         lastName: validated.lastName,
