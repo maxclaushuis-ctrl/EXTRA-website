@@ -208,15 +208,15 @@ const COPY = {
     langLevelGoed: "Goed",
     functionConfirm: "Voor welke functie wil je solliciteren?",
     experienceQuestion: "Hoeveel relevante werkervaring heb je in deze functie?",
-    distanceWarning: "We werken vooral in Amsterdam, Den Haag en Utrecht. Woon je wat verder weg, dan zijn diensten soms lastiger te combineren. Weet je zeker dat je je aanmelding wilt doorzetten?",
-    yesContine: "Ja, ik wil doorgaan",
+    distanceWarning: "Onze opdrachten zijn vooral in Amsterdam, Den Haag en Utrecht. Woon je verder weg? Dan kan reizen naar diensten wat meer tijd kosten. Wil je toch doorgaan?",
+    yesContinue: "Ja, ik wil doorgaan",
     noStop: "Nee, ik stop mijn aanmelding",
-    ageTooYoung: "Je moet minimaal 17 jaar zijn om je bij EXTRA aan te melden.",
-    noLanguage: "Bij bijna al onze opdrachten heb je Nederlands of Engels nodig. Omdat je hebt aangegeven beide talen niet goed genoeg te spreken, kunnen we je helaas niet verder helpen.",
+    ageTooYoung: "Je moet minimaal 17 jaar zijn om mee te draaien bij EXTRA. Kom gerust terug als je zover bent!",
+    noLanguage: "Jammer! Bij bijna al onze opdrachten heb je Nederlands of Engels nodig om goed met gasten en collega's te communiceren. Verbeter je je taalskills? Dan staan de deuren weer open.",
     noCvBlocker: "Om een gesprek in te plannen vragen we je eerst je cv te uploaden. Zo kunnen we kijken of er een goede match is met onze opdrachten.",
     noCvHelper: "Je cv helpt ons om je sneller te matchen met opdrachten. Zonder cv kun je nog geen gesprek inplannen.",
-    notEnoughExperience: "Voor de opdrachten die we nu hebben, vragen onze klanten meer ervaring in deze functie. Dat wil niet zeggen dat je geen talent hebt, maar nu matcht het nog niet goed genoeg. Je kunt je later altijd opnieuw aanmelden.",
-    roleNotAvailable: "Vanwege Nederlandse wetgeving rond werkvergunningen kunnen we voor deze functie op dit moment alleen kandidaten aannemen met een andere verblijfsstatus. Dat is geen beoordeling van jou als persoon, maar puur een juridische voorwaarde.",
+    notEnoughExperience: "Op dit moment zoeken onze opdrachtgevers kandidaten met wat meer ervaring in deze functie. Dat zegt niks over jouw potentieel — het matcht nu gewoon nog niet. Kom gerust terug als je meer uren hebt staan!",
+    roleNotAvailable: "Voor deze functie zijn we helaas gebonden aan Nederlandse wetgeving rondom werkvergunningen — dat betekent dat we op dit moment alleen kandidaten met een bepaalde verblijfsstatus kunnen aannemen. Dat heeft niks met jou persoonlijk te maken.",
     uploadCv: "Upload je cv",
     uploadCvDesc: "Voordat je een gesprek inplant, willen we je cv erbij. Zo kunnen we gericht meekijken welke opdrachten bij je passen.",
     uploadBtn: "Kies bestand",
@@ -267,13 +267,13 @@ const COPY = {
     functionConfirm: "Which role are you applying for?",
     experienceQuestion: "How many years of relevant experience do you have in this role?",
     distanceWarning: "Most of our shifts are in Amsterdam, The Hague and Utrecht. If you live further away, travel can be challenging. Are you sure you want to continue your application?",
-    yesContine: "Yes, I want to continue",
+    yesContinue: "Yes, I want to continue",
     noStop: "No, I'll stop my application",
-    ageTooYoung: "You must be at least 17 years old to register with EXTRA.",
+    ageTooYoung: "Unfortunately you need to be at least 17 to join EXTRA. Come back when you're ready — we'd love to have you!",
     noLanguage: "Most of our assignments require Dutch or English. Since you indicated you don't speak either language sufficiently, we unfortunately cannot proceed.",
     noCvBlocker: "To schedule an interview, we need your CV first. This helps us find the best assignments for you.",
     noCvHelper: "Your CV helps us match you faster with assignments. Without a CV, you cannot yet schedule an interview.",
-    notEnoughExperience: "For the assignments we currently have, our clients require more experience in this role. This doesn't mean you lack talent, but it's not the right match at this time. You're always welcome to reapply later.",
+    notEnoughExperience: "Right now our clients are looking for candidates with a bit more experience in this role. That's no reflection on you — it's just not the right match at this moment. Check back in when you've got more hours under your belt!",
     roleNotAvailable: "Due to Dutch labour law and work permit regulations, we can only accept candidates with a different residency status for this role at this time. This is not a judgment of you as a person, but purely a legal requirement.",
     uploadCv: "Upload your CV",
     uploadCvDesc: "Before scheduling an interview, we'd like to see your CV. This helps us find the best assignments for you.",
@@ -981,7 +981,7 @@ export default function Aanmelden() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button onClick={() => setStep("skills")} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-5 rounded-xl text-base shadow-lg shadow-purple-500/20">
-                  {t.yesContine}
+                  {t.yesContinue}
                 </Button>
                 <Button onClick={() => { setRejectionReason(t.stoppedDesc); setStep("rejected"); }} variant="outline" className="font-bold px-8 py-5 rounded-xl text-base border-gray-300">
                   {t.noStop}

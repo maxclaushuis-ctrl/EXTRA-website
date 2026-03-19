@@ -1,0 +1,40 @@
+In client/src/pages/Aanmelden.tsx, find the COPY object. In both the NL and EN sections, update the following text values:
+
+In COPY.NL, replace:
+  ageTooYoung: "Je moet minimaal 17 jaar zijn om je bij EXTRA aan te melden.",
+With:
+  ageTooYoung: "Je moet minimaal 17 jaar zijn om mee te draaien bij EXTRA. Kom gerust terug als je zover bent!",
+
+In COPY.NL, replace:
+  noLanguage: "Bij bijna al onze opdrachten heb je Nederlands of Engels nodig. Omdat je hebt aangegeven beide talen niet goed genoeg te spreken, kunnen we je helaas niet verder helpen.",
+With:
+  noLanguage: "Jammer! Bij bijna al onze opdrachten heb je Nederlands of Engels nodig om goed met gasten en collega's te communiceren. Verbeter je je taalskills? Dan staan de deuren weer open.",
+
+In COPY.NL, replace:
+  notEnoughExperience: "Voor de opdrachten die we nu hebben, vragen onze klanten meer ervaring in deze functie. Dat wil niet zeggen dat je geen talent hebt, maar nu matcht het nog niet goed genoeg. Je kunt je later altijd opnieuw aanmelden.",
+With:
+  notEnoughExperience: "Op dit moment zoeken onze opdrachtgevers kandidaten met wat meer ervaring in deze functie. Dat zegt niks over jouw potentieel — het matcht nu gewoon nog niet. Kom gerust terug als je meer uren hebt staan!",
+
+In COPY.NL, replace:
+  roleNotAvailable: "Vanwege Nederlandse wetgeving rond werkvergunningen kunnen we voor deze functie op dit moment alleen kandidaten aannemen met een andere verblijfsstatus. Dat is geen beoordeling van jou als persoon, maar puur een juridische voorwaarde.",
+With:
+  roleNotAvailable: "Voor deze functie zijn we helaas gebonden aan Nederlandse wetgeving rondom werkvergunningen — dat betekent dat we op dit moment alleen kandidaten met een bepaalde verblijfsstatus kunnen aannemen. Dat heeft niks met jou persoonlijk te maken.",
+
+In COPY.NL, replace:
+  distanceWarning: "We werken vooral in Amsterdam, Den Haag en Utrecht. Woon je wat verder weg, dan zijn diensten soms lastiger te combineren. Weet je zeker dat je je aanmelding wilt doorzetten?",
+With:
+  distanceWarning: "Onze opdrachten zijn vooral in Amsterdam, Den Haag en Utrecht. Woon je verder weg? Dan kan reizen naar diensten wat meer tijd kosten. Wil je toch doorgaan?",
+
+In COPY.EN, replace:
+  ageTooYoung: "You must be at least 17 years old to register with EXTRA.",
+With:
+  ageTooYoung: "Unfortunately you need to be at least 17 to join EXTRA. Come back when you're ready — we'd love to have you!",
+
+In COPY.EN, replace:
+  notEnoughExperience: "For the assignments we currently have, our clients require more experience in this role. This doesn't mean you lack talent, but it's not the right match at this time. You're always welcome to reapply later.",
+With:
+  notEnoughExperience: "Right now our clients are looking for candidates with a bit more experience in this role. That's no reflection on you — it's just not the right match at this moment. Check back in when you've got more hours under your belt!",
+
+Also find the key `yesContine` in both COPY.NL and COPY.EN and rename it to `yesContinue` everywhere it appears (in the COPY object and wherever it is used in JSX). This fixes the typo.
+
+Do not change any other copy or logic.
