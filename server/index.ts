@@ -46,8 +46,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve uploaded files (candidate photos, etc.)
-app.use('/uploads', express.static('uploads'));
 
 // CORS headers toevoegen om cross-domain problemen te voorkomen
 app.use((req, res, next) => {
