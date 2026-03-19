@@ -30,6 +30,7 @@ const EU_EER_COUNTRIES = [
 
 const ALL_COUNTRIES = [
   "Nederland", ...EU_EER_COUNTRIES.sort(),
+  "Curaçao", "Aruba", "Sint Maarten", "Bonaire",
   "---",
   "Afghanistan", "Albanië", "Algerije", "Angola", "Argentinië", "Armenië",
   "Australië", "Azerbeidzjan", "Bangladesh", "Belarus", "Bhutan", "Bolivia",
@@ -84,6 +85,8 @@ const EXPERIENCE_MAP: Record<string, string> = {
 
 function getFlow(nationality: string): FlowType {
   if (nationality === "Nederland") return "NL";
+  const NL_TERRITORIES = ["Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"];
+  if (NL_TERRITORIES.includes(nationality)) return "NL";
   if (EU_EER_COUNTRIES.includes(nationality)) return "EU";
   return "NON_EU";
 }
@@ -119,8 +122,12 @@ function isWithin50km(city: string): boolean {
     "voorhout", "oegstgeest", "rijnsburg", "dordrecht", "vlaardingen",
     "schiedam", "capelle aan den ijssel", "waddinxveen", "bodegraven",
     "huizen", "laren", "blaricum", "eemnes", "bunschoten",
+    "'s-gravenhage", "diemen-noord", "diemen-zuid", "ouder-amstel", "landsmeer", "oostzaan", "duivendrecht",
   ];
-  return knownClose.includes(c);
+  if (knownClose.includes(c)) return true;
+  const nearbyParts = ["amsterdam", "utrecht", "den haag", "rotterdam", "haarlem", "leiden"];
+  if (nearbyParts.some(part => c.includes(part))) return true;
+  return false;
 }
 
 interface ExperienceThresholds {
