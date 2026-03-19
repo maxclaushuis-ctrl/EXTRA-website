@@ -3819,7 +3819,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
             if (candidate.hasCv) {
               const token = randomUUID();
-              await storage.updateCandidate(candidate.id, { reviewToken: token } as any);
+              await storage.updateCandidate(candidate.id, {
+                reviewToken: token,
+                reviewTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+              } as any);
               const sent = await sendAdminCandidateNotificationEmail({
                 id: candidate.id,
                 firstName: candidate.firstName,
@@ -3968,7 +3971,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               let token = (updated as any).reviewToken;
               if (!token) {
                 token = randomUUID();
-                await storage.updateCandidate(updated.id, { reviewToken: token } as any);
+                await storage.updateCandidate(updated.id, {
+                  reviewToken: token,
+                  reviewTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                } as any);
               }
               const sent = await sendAdminCandidateNotificationEmail({
                 id: updated.id,
@@ -4380,7 +4386,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let reviewToken = (updated as any).reviewToken;
       if (!reviewToken) {
         reviewToken = randomUUID();
-        await storage.updateCandidate(updated.id, { reviewToken } as any);
+        await storage.updateCandidate(updated.id, {
+          reviewToken,
+          reviewTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        } as any);
       }
 
       // Stuur interne admin-notificatiemail met CV en review knoppen
@@ -4597,6 +4606,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const candidate = await storage.getCandidate(id);
       if (!candidate) return res.status(404).send('Kandidaat niet gevonden');
       if ((candidate as any).reviewToken !== token) return res.status(403).send('Ongeldig token');
+      const tokenExpiry = (candidate as any).reviewTokenExpiresAt;
+      if (tokenExpiry && new Date(tokenExpiry) < new Date()) {
+        return res.status(403).send('Deze link is verlopen. Open het dashboard om de kandidaat te beoordelen.');
+      }
       if (candidate.status === 'aangenomen') {
         return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} was al geaccepteerd.</h2><p>Er is al een Calendly-link verstuurd.</p></body></html>`);
       }
@@ -4620,6 +4633,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const candidate = await storage.getCandidate(id);
       if (!candidate) return res.status(404).send('Kandidaat niet gevonden');
       if ((candidate as any).reviewToken !== token) return res.status(403).send('Ongeldig token');
+      const tokenExpiry = (candidate as any).reviewTokenExpiresAt;
+      if (tokenExpiry && new Date(tokenExpiry) < new Date()) {
+        return res.status(403).send('Deze link is verlopen. Open het dashboard om de kandidaat te beoordelen.');
+      }
       if (candidate.status === 'afgewezen') {
         return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#dc2626;">❌ ${candidate.firstName} ${candidate.lastName} was al afgewezen.</h2></body></html>`);
       }
