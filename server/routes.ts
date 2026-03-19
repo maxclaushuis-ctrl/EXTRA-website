@@ -244,6 +244,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Start de verjaardagscontrole planning
   scheduleBirthdayCheck();
+
+  async function scheduleGdprCleanup() {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(2, 0, 0, 0);
+    if (now >= next) next.setDate(next.getDate() + 1);
+    const delay = next.getTime() - now.getTime();
+    setTimeout(async () => {
+      try {
+        console.log("GDPR cleanup gestart...");
+        const result = await storage.getCandidates({ limit: 2000 });
+        const allCandidates = result.candidates;
+
+        // Anonymize expired candidates
+        const expired = allCandidates.filter((c: any) =>
+          c.retentionUntil &&
+          new Date(c.retentionUntil) < new Date() &&
+          !c.anonymizedAt
+        );
+        for (const c of expired) {
+          await storage.anonymizeCandidate(c.id);
+          console.log(`GDPR: kandidaat ${c.id} geanonimiseerd`);
+        }
+
+        // Delete partial candidates older than 30 days with no CV
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const stalePartials = allCandidates.filter((c: any) =>
+          !c.hasCv &&
+          c.status === 'in_behandeling' &&
+          new Date(c.createdAt) < thirtyDaysAgo
+        );
+        for (const c of stalePartials) {
+          await storage.deleteCandidate(c.id);
+          console.log(`Cleanup: gedeeltelijke aanmelding ${c.id} verwijderd`);
+        }
+
+        console.log(`GDPR cleanup klaar: ${expired.length} geanonimiseerd, ${stalePartials.length} verwijderd`);
+      } catch (e) {
+        console.error("GDPR cleanup fout:", e);
+      } finally {
+        scheduleGdprCleanup();
+      }
+    }, delay);
+  }
+  scheduleGdprCleanup();
+
   // Legacy API routes - behouden voor backward compatibility
   app.post("/api/signup", async (req: Request, res: Response) => {
     try {
@@ -3786,6 +3832,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceChannel: validated.sourceChannel || "Website",
         notes: validated.notes || null,
         status: validated.status || "in_behandeling",
+        retentionUntil: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       } as any);
 
       await storage.createCandidateAuditLog({
