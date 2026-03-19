@@ -548,7 +548,9 @@ export default function Aanmelden() {
     if (!formData.city.trim()) newErrors.city = lang === "NL" ? "Woonplaats is verplicht" : "City is required";
     if (!formData.email.trim()) newErrors.email = lang === "NL" ? "E-mailadres is verplicht" : "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = lang === "NL" ? "Ongeldig e-mailadres" : "Invalid email address";
-    if (!formData.nationality) newErrors.nationality = lang === "NL" ? "Nationaliteit is verplicht" : "Nationality is required";
+    if (!formData.nationality || formData.nationality === "---" || formData.nationality === "sep-disabled") {
+      newErrors.nationality = lang === "NL" ? "Nationaliteit is verplicht" : "Nationality is required";
+    }
     if (!formData.preferredFunction) newErrors.preferredFunction = lang === "NL" ? "Kies een functie" : "Please select a role";
 
     const code = formData.phoneCountryCode === "+other" ? "" : formData.phoneCountryCode;
@@ -914,8 +916,10 @@ export default function Aanmelden() {
                       <SelectValue placeholder={lang === "NL" ? "Selecteer land" : "Select country"} />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {ALL_COUNTRIES.filter(c => c !== "---").map((country) => (
-                        <SelectItem key={country} value={country}>{country}</SelectItem>
+                      {ALL_COUNTRIES.map((country) => (
+                        country === "---"
+                          ? <SelectItem key="sep" value="sep-disabled" disabled className="text-gray-300 cursor-default select-none">──────────────</SelectItem>
+                          : <SelectItem key={country} value={country}>{country}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
