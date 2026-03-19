@@ -71,23 +71,6 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
     return next();
   }
   
-  // Als er geen sessie is, controleer dan de headers voor speciale interne verzoeken
-  // Dit is een workaround voor bepaalde situaties waar sessies niet correct worden doorgegeven
-  const specialAuthHeader = req.headers['x-internal-auth'];
-  if (specialAuthHeader === 'employee_access' || specialAuthHeader === 'admin_access') {
-    
-    // Maak een tijdelijke sessie aan voor dit verzoek
-    if (!req.session) {
-      console.log("Geen sessie gevonden, kan geen tijdelijke sessie aanmaken");
-    } else {
-      req.session.userId = specialAuthHeader === 'employee_access' ? 2 : 1; // employee of admin id
-      req.session.userRole = specialAuthHeader === 'employee_access' ? 'employee' : 'admin';
-      console.log("Tijdelijke sessie aangemaakt:", req.session);
-    }
-    
-    return next();
-  }
-  
   console.log("Toegang geweigerd: Geen geldige gebruikerssessie of auth header gevonden");
   return res.status(401).json({ message: "Niet ingelogd" });
 }
@@ -103,26 +86,14 @@ async function adminMiddleware(req: Request, res: Response, next: NextFunction) 
     return next();
   }
   
-  // Check voor x-ws-auth header als fallback authenticatiemethode
-  const wsAuth = req.headers['x-ws-auth'];
-  if (wsAuth === 'admin_authenticated') {
-    console.log("WebSocket authenticatie header gedetecteerd");
-    
-    // We gaan ervan uit dat dit een admin request is als de header correct is
-    // In een productie-omgeving zou je hier extra validaties willen doen
-    console.log("Admin toegang verleend via WebSocket auth header");
-    return next();
-  }
-  
-  // Als de gebruiker niet is ingelogd via sessie of ws header, stuur 403
+  // Als de gebruiker niet is ingelogd via sessie, stuur 403
   console.log("Admin toegang geweigerd, geen geldige sessie of ws auth");
   return res.status(403).json({ 
     message: "Geen toegang", 
     sessionInfo: { 
       hasSession: !!req.session,
       hasUserId: !!req.session?.userId,
-      role: req.session?.userRole || 'none',
-      wsAuth: wsAuth || 'none'
+      role: req.session?.userRole || 'none'
     } 
   });
 }
