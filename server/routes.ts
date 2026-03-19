@@ -44,6 +44,15 @@ import { users, candidates as candidatesTable } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
+import rateLimit from "express-rate-limit";
+
+const registrationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Te veel aanmeldingen vanaf dit IP-adres. Probeer het over 15 minuten opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Simple cookie parser function
 function parseCookies(cookieString?: string): Record<string, string> {
@@ -3722,7 +3731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PUBLIC CANDIDATE REGISTRATION (Aanmeldflow)
   // ==========================================
 
-  app.post("/api/aanmelden", async (req: Request, res: Response) => {
+  app.post("/api/aanmelden", registrationLimiter, async (req: Request, res: Response) => {
     try {
       const publicRegistrationSchema = z.object({
         firstName: z.string().min(1, "Voornaam is verplicht"),
@@ -3894,7 +3903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Public PATCH: update kandidaat na gedeeltelijke save (beveiligd via email + id)
-  app.patch("/api/aanmelden/:id", async (req: Request, res: Response) => {
+  app.patch("/api/aanmelden/:id", registrationLimiter, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
@@ -4309,7 +4318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/aanmelden/cv", cvUpload.single('cv'), async (req: Request, res: Response) => {
+  app.post("/api/aanmelden/cv", registrationLimiter, cvUpload.single('cv'), async (req: Request, res: Response) => {
     try {
       const file = req.file;
       if (!file) {
