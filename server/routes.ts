@@ -388,63 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Login poging:", email);
 
-      // Hardcode admin toegang om te testen
-      if (email === "admin@extra.nl" && password === "admin123") {
-        console.log("Admin login poging gedetecteerd");
-        
-        // Test of de user aangemaakt is of al bestaat
-        const existingUser = await storage.getUserByEmail("admin@extra.nl");
-        
-        let adminUser = existingUser;
-        
-        if (!adminUser) {
-          console.log("Admin gebruiker bestaat niet, aanmaken...");
-          // Admin user bestaat nog niet, aanmaken
-          adminUser = await storage.createUser({
-            email: "admin@extra.nl",
-            password: "admin123",
-            firstName: "Admin",
-            lastName: "User",
-            role: "admin",
-            status: "active",
-            points: 0
-          });
-          console.log("Admin gebruiker aangemaakt met id:", adminUser.id);
-        } else {
-          console.log("Admin gebruiker gevonden met id:", adminUser.id);
-        }
-        
-        // Expliciete sessie aanmaken
-        req.session.userId = adminUser.id;
-        req.session.userRole = "admin";
-        
-        console.log("Sessie ingesteld, nu opslaan...");
-        console.log("Sessie inhoud:", req.session);
-        
-        // Sessie forceren om op te slaan voordat we response sturen
-        req.session.save((err) => {
-          if (err) {
-            console.error("Fout bij opslaan sessie:", err);
-            return res.status(500).json({ message: "Fout bij opslaan sessie" });
-          }
-          
-          console.log("Sessie succesvol opgeslagen");
-          return res.status(200).json({
-            message: "Login succesvol",
-            user: {
-              id: adminUser.id,
-              email: adminUser.email,
-              firstName: adminUser.firstName,
-              lastName: adminUser.lastName,
-              role: "admin"
-            }
-          });
-        });
-        
-        return; // Belangrijk: stoppen na sessie opslaan om dubbele responses te voorkomen
-      }
-      
-      // Voor reguliere users (niet admin)
+      // Voor reguliere users
       const user = await storage.getUserByEmail(email);
       
       if (!user) {
@@ -454,9 +398,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Debug logging
       console.log("Wachtwoord hash in database:", user.password.substring(0, 30) + "...");
       
-      // Controleer wachtwoord met SHA256 (zoals opgeslagen in database)
-      const hashedInputPassword = createHash('sha256').update(password).digest('hex');
-      const isValidPassword = hashedInputPassword === user.password;
+      // Migratie-veilige wachtwoordcheck: ondersteunt zowel oude SHA256 als nieuwe bcrypt hashes
+      let isValidPassword = false;
+      if (user.password.startsWith('$2')) {
+        isValidPassword = await bcrypt.compare(password, user.password);
+      } else {
+        const sha256Hash = createHash('sha256').update(password).digest('hex');
+        isValidPassword = sha256Hash === user.password;
+        if (isValidPassword) {
+          const newHash = await bcrypt.hash(password, 12);
+          await storage.updateUser(user.id, { password: newHash });
+        }
+      }
       
       console.log("Finale wachtwoord verificatie resultaat:", isValidPassword);
       
