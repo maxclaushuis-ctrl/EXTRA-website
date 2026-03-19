@@ -6358,6 +6358,13 @@ ${posts.map(p => `  <url>
       const eventsData = await eventsRes.json();
       const events = eventsData?.collection ?? [];
 
+      const allCandidatesResult = await storage.getCandidates({ limit: 5000 });
+      const candidatesByEmail = new Map<string, any>(
+        allCandidatesResult.candidates
+          .filter((c: any) => c.email)
+          .map((c: any) => [c.email.toLowerCase(), c])
+      );
+
       for (const event of events) {
         const eventUri: string = event.uri;
         const startTime: string = event.start_time;
@@ -6378,10 +6385,7 @@ ${posts.map(p => `  <url>
           if (!email) continue;
 
           // Find matching candidate
-          const { candidates } = await storage.getCandidates({ search: email });
-          const candidate = candidates.find((c: any) =>
-            c.email?.toLowerCase() === email.toLowerCase()
-          );
+          const candidate = candidatesByEmail.get(email.toLowerCase());
           if (!candidate) continue;
 
           // Parse date and time from the ISO start_time
@@ -6429,10 +6433,7 @@ ${posts.map(p => `  <url>
           for (const invitee of invData?.collection ?? []) {
             const email: string = invitee.email;
             if (!email) continue;
-            const { candidates } = await storage.getCandidates({ search: email });
-            const candidate = candidates.find((c: any) =>
-              c.email?.toLowerCase() === email.toLowerCase()
-            );
+            const candidate = candidatesByEmail.get(email.toLowerCase());
             if (!candidate || !candidate.interviewDate) continue;
             await storage.updateCandidate(candidate.id, {
               interviewDate: null as any,
