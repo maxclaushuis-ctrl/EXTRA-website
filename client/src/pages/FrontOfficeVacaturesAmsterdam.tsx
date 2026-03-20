@@ -12,6 +12,7 @@ import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 import frontOffice2Img from "@assets/Front-office_1771842809388.webp";
+import frontOfficeHeroImg from "@assets/PHOTO-2026-03-19-17-40-31_1774004644769.jpg";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import mercureLogo from "../assets/pitch/logo-mercure.png";
@@ -210,27 +211,63 @@ export default function FrontOfficeVacaturesAmsterdam() {
       </nav>
 
       {/* ══ HERO ══ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
-        <XBgDark />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-cyan-400/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
+
+        {/* X-patroon achtergrond */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
+        </div>
+
+        {/* Ambient glow links */}
+        <div className="absolute top-1/3 left-0 w-80 h-80 bg-purple-500/25 rounded-full blur-3xl pointer-events-none" />
+
+        {/* ── Hero foto rechts — geblend in achtergrond ── */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Foto rechterhelft */}
+          <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[58%] xl:w-[55%]">
+            <img
+              src={frontOfficeHeroImg}
+              alt="Front office medewerker via EXTRA – hotel receptionist Amsterdam"
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+              style={{ objectPosition: "55% center" }}
+            />
+            {/* Fade links: laat tekst door paarse achtergrond lopen */}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, #2d0663 0%, #4a0e96 12%, rgba(74,14,150,0.75) 30%, rgba(74,14,150,0.15) 60%, transparent 100%)" }} />
+            {/* Fade onderkant */}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #2d0663 0%, transparent 30%)" }} />
+            {/* Paarse kleur-overlay voor branding eenheid */}
+            <div className="absolute inset-0" style={{ background: "rgba(80,20,160,0.18)", mixBlendMode: "multiply" }} />
+          </div>
+        </div>
+
+        {/* ── Content ── */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
+          <div className="max-w-xl lg:max-w-[52%]">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
               <ConciergeBell className="w-3.5 h-3.5 text-white/80" />
               <span className="text-white/90 text-xs font-semibold">Front office vacatures via EXTRA</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
               Front-office werk{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">dat bij jou past.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-cyan-400 to-blue-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
             </h1>
-            <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
+
+            <p className="text-lg sm:text-xl text-purple-100/90 leading-relaxed font-medium mb-8 max-w-lg">
               Werk als hotel receptionist of front office medewerker bij tophotels in Amsterdam. Via EXTRA kies je zelf je diensten. Flexibel front office werk met dagbetaling en professionele hotelomgevingen.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Meld je aan <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
@@ -238,20 +275,11 @@ export default function FrontOfficeVacaturesAmsterdam() {
                 Bekijk hoe het werkt <ChevronRight className="w-5 h-5" />
               </a>
             </div>
-            <div className="mt-8 flex flex-wrap gap-2.5">
+
+            <div className="flex flex-wrap gap-2.5">
               {[{ emoji: "⚡", label: "Dagbetaling via Jixbee" }, { emoji: "🏨", label: "Tophotels Amsterdam" }, { emoji: "📅", label: "Flexibele diensten" }].map(({ emoji, label }) => (
                 <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">{emoji} {label}</span>
               ))}
-            </div>
-          </div>
-          <div className="relative flex justify-center items-center">
-            <div className="relative w-full max-w-sm">
-              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/40 border-4 border-white/20">
-                <img src={frontOfficeImg} alt="Front office medewerker via EXTRA – hotel receptionist Amsterdam" className="w-full h-[380px] sm:h-[440px] object-cover" loading="eager" />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent rounded-3xl" />
-              </div>
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-cyan-100">💰 Dagbetaling actief</div>
-              <div className="absolute -bottom-3 -left-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-green-100">🏨 Hotel receptionist werk</div>
             </div>
           </div>
         </div>
