@@ -224,27 +224,37 @@ export default function FrontOfficeVacaturesAmsterdam() {
           ))}
         </div>
 
-        {/* Ambient glow links */}
-        <div className="absolute top-1/3 left-0 w-80 h-80 bg-purple-500/25 rounded-full blur-3xl pointer-events-none" />
+        {/* Ambient glow — warmte centrum */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
 
-        {/* ── Hero foto rechts — geblend in achtergrond ── */}
+        {/* ── Hero foto — volledig scherm, persoon als eyecatcher ── */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Foto rechterhelft */}
-          <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[58%] xl:w-[55%]">
-            <img
-              src={frontOfficeHeroImg}
-              alt="Front office medewerker via EXTRA – hotel receptionist Amsterdam"
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              style={{ objectPosition: "55% center" }}
-            />
-            {/* Fade links: laat tekst door paarse achtergrond lopen */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, #2d0663 0%, #4a0e96 12%, rgba(74,14,150,0.75) 30%, rgba(74,14,150,0.15) 60%, transparent 100%)" }} />
-            {/* Fade onderkant */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #2d0663 0%, transparent 30%)" }} />
-            {/* Paarse kleur-overlay voor branding eenheid */}
-            <div className="absolute inset-0" style={{ background: "rgba(80,20,160,0.18)", mixBlendMode: "multiply" }} />
-          </div>
+          <img
+            src={frontOfficeHeroImg}
+            alt="Front office medewerker via EXTRA – hotel receptionist Amsterdam"
+            className="w-full h-full object-cover"
+            loading="eager"
+            style={{ objectPosition: "62% center" }}
+          />
+
+          {/* Gradient 1: links uitdimmen zodat witte tekst leesbaar blijft */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(45,8,100,0.97) 18%, rgba(60,11,130,0.82) 32%, rgba(74,14,150,0.48) 46%, rgba(74,14,150,0.18) 60%, rgba(74,14,150,0.04) 76%, transparent 100%)"
+          }} />
+
+          {/* Gradient 2: onderkant — subtiel gronden */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to top, rgba(29,5,73,0.88) 0%, rgba(29,5,73,0.3) 18%, transparent 38%)"
+          }} />
+
+          {/* Gradient 3: bovenkant — navbar ruimte */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to bottom, rgba(29,5,73,0.55) 0%, transparent 22%)"
+          }} />
+
+          {/* Lichte paarse tint voor kleur-eenheid, niet te zwaar */}
+          <div className="absolute inset-0" style={{ background: "rgba(58,14,120,0.12)" }} />
         </div>
 
         {/* ── Content ── */}

@@ -1,0 +1,77 @@
+De huidige hero van `/front-office-vacatures-amsterdam` is nog niet goed.
+
+Wat nu misgaat:
+- de paarse gradient/overlay is te zwaar en te vlak
+- de achtergrond loopt niet mooi in elkaar over
+- de persoon staat te ver naar rechts en valt bijna uit beeld
+- de persoon is niet het duidelijke middelpunt van de hero
+- de compositie mist de impact van de andere referentiehero
+
+Ik wil dat je de hero opnieuw aanpast met deze instructies:
+
+DOEL
+De vrouw uit de aangeleverde afbeelding moet veel prominenter en centraler in beeld komen, zoals in de andere referentiehero.
+Ze moet echt de eyecatcher van de header zijn en visueel “naar voren springen”, zonder dat de tekst links in de knel komt.
+
+POSITIONERING PERSOON
+- Verplaats de persoon duidelijk meer naar links ten opzichte van de huidige versie
+- Zet haar niet tegen de rechterrand aan
+- Haar lichaam mag deels overlappen met het rechterdeel van de hero, maar moet volledig goed in beeld blijven
+- Laat haar dichter richting het tekstvlak komen, zodat beeld en tekst meer één compositie vormen
+- Ze moet ongeveer in de center-right zone staan, niet helemaal rechts
+- De persoon moet groter en dominanter aanwezig zijn, vergelijkbaar met de impact van de referentiehero
+
+VISUELE HIËRARCHIE
+- De persoon moet het visuele middelpunt zijn van de hero
+- Eerst moet je oog naar de persoon en headline gaan
+- Daarna pas naar de rest van de achtergrond
+- De hero moet dus minder voelen als “tekst links + losse afbeelding rechts”
+- Het moet voelen als één krachtige hero-compositie
+
+OVERLAY / VERLOOP
+- Maak het verloop veel mooier en subtieler
+- Vermijd een harde verticale scheiding of een donker vlak in het midden
+- Laat de paarse gradient natuurlijk overvloeien van links naar rechts
+- Zorg voor diepte in de achtergrond, niet een matte of vlakke overlay
+- Houd links voldoende contrast voor de witte tekst, maar laat rechts meer helderheid en detail over zodat de persoon eruit springt
+- Gebruik dus geen zware uniforme paarse waas over het hele rechterdeel
+
+ACHTERGROND
+- De hotelachtergrond mag zichtbaar blijven, maar ondersteunend zijn
+- De achtergrond moet meer diepte en sfeer houden
+- Niet te blurry, niet te donker, niet te dichtgesmeerd met paars
+- De omgeving moet premium en cinematic ogen
+
+EXTRA-EFFECT
+- De lightning/electric effecten rond de persoon mogen zichtbaar blijven
+- Zorg dat deze bijdragen aan focus en energie
+- Maak ze netjes geïntegreerd, dus opvallend maar niet rommelig
+- De effecten mogen helpen om de persoon los te trekken van de achtergrond
+
+X-PATROON
+- Laat het subtiele EXTRA “X”-patroon links in de hero terugkomen zoals op de andere pagina’s
+- Niet te dominant, wel duidelijk genoeg om de branding te ondersteunen
+
+BEHOUDEN
+- Behoud de huidige copy
+- Behoud navbar, buttons, badges en algemene structuur
+- Verander dus niet de contentblokken, alleen de hero-compositie en styling
+
+BELANGRIJKE REFERENTIE
+De compositie moet veel meer aanvoelen als de andere aangeleverde hero:
+- persoon groot en prominent
+- niet half buiten beeld
+- niet naar de rand gedrukt
+- sterke focus op de persoon
+- zachte, luxe paarse gloed
+- één geheel tussen tekst, persoon en achtergrond
+
+CONCREET
+Pas de hero zo aan dat:
+1. de persoon groter wordt
+2. de persoon meer naar links komt
+3. de overlay subtieler en mooier wordt
+4. de achtergrond meer diepte houdt
+5. de persoon echt de eyecatcher van de pagina wordt
+
+Dit moet uiteindelijk voelen als een high-end recruitment hero waarin de kandidaat centraal staat, niet als een achtergrondbeeld met iemand aan de zijkant.
