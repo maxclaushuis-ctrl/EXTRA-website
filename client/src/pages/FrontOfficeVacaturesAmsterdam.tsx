@@ -230,31 +230,39 @@ export default function FrontOfficeVacaturesAmsterdam() {
 
         {/* ── Hero foto — volledig scherm, persoon als eyecatcher ── */}
         <div className="absolute inset-0 pointer-events-none">
+          {/* Foto: contrast+saturatie boost zodat kleuren levendiger zijn dan de paarse achtergrond */}
           <img
             src={frontOfficeHeroImg}
             alt="Front office medewerker via EXTRA – hotel receptionist Amsterdam"
             className="w-full h-full object-cover"
             loading="eager"
-            style={{ objectPosition: "62% center" }}
+            style={{
+              objectPosition: "62% center",
+              filter: "contrast(1.12) saturate(1.22) brightness(1.07)",
+            }}
           />
 
-          {/* Gradient 1: links uitdimmen zodat witte tekst leesbaar blijft */}
+          {/* Spotlight radial achter de persoon — witte glow licht haar op */}
           <div className="absolute inset-0" style={{
-            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(45,8,100,0.97) 18%, rgba(60,11,130,0.82) 32%, rgba(74,14,150,0.48) 46%, rgba(74,14,150,0.18) 60%, rgba(74,14,150,0.04) 76%, transparent 100%)"
+            background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Gradient 2: onderkant — subtiel gronden */}
+          {/* Gradient links — stopt vóór de persoon (volledig transparant op 60%) */}
           <div className="absolute inset-0" style={{
-            background: "linear-gradient(to top, rgba(29,5,73,0.88) 0%, rgba(29,5,73,0.3) 18%, transparent 38%)"
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,0.98) 20%, rgba(52,10,115,0.88) 32%, rgba(68,13,140,0.55) 42%, rgba(72,14,148,0.18) 50%, rgba(72,14,148,0.04) 56%, transparent 62%)"
           }} />
 
-          {/* Gradient 3: bovenkant — navbar ruimte */}
-          <div className="absolute inset-0" style={{
-            background: "linear-gradient(to bottom, rgba(29,5,73,0.55) 0%, transparent 22%)"
+          {/* Bottom vignette — alleen de alleronderste rand */}
+          <div className="absolute bottom-0 left-0 right-0" style={{
+            height: "20%",
+            background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)"
           }} />
 
-          {/* Lichte paarse tint voor kleur-eenheid, niet te zwaar */}
-          <div className="absolute inset-0" style={{ background: "rgba(58,14,120,0.12)" }} />
+          {/* Top vignette — navbar overlay */}
+          <div className="absolute top-0 left-0 right-0" style={{
+            height: "18%",
+            background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)"
+          }} />
         </div>
 
         {/* ── Content ── */}
