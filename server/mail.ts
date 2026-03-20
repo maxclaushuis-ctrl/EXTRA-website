@@ -551,14 +551,16 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
 
-  // Laad CV bijlage als beschikbaar
+  // Laad CV bijlage als beschikbaar (vanuit Supabase URL)
   const attachments: EmailAttachment[] = [];
-  if (candidate.cvFilename) {
-    const cvPath = path.join(process.cwd(), 'uploads', 'cv', candidate.cvFilename);
-    if (fs.existsSync(cvPath)) {
-      try {
-        const cvBuffer = fs.readFileSync(cvPath);
-        const ext = path.extname(candidate.cvFilename).toLowerCase();
+  if (candidate.cvFilename && candidate.cvFilename.startsWith('http')) {
+    try {
+      const cvResponse = await fetch(candidate.cvFilename);
+      if (cvResponse.ok) {
+        const cvBuffer = Buffer.from(await cvResponse.arrayBuffer());
+        const ext = candidate.cvFilename.includes('.')
+          ? '.' + candidate.cvFilename.split('.').pop()!.split('?')[0].toLowerCase()
+          : '';
         const mimeType = ext === '.pdf' ? 'application/pdf'
           : ext === '.doc' ? 'application/msword'
           : ext === '.docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -569,9 +571,9 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
           type: mimeType,
           disposition: 'attachment',
         });
-      } catch (err) {
-        console.warn('Kon CV niet bijvoegen:', err);
       }
+    } catch (err) {
+      console.warn('Kon CV niet bijvoegen vanuit Supabase:', err);
     }
   }
 

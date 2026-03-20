@@ -43,6 +43,31 @@ import { db } from "./db";
 import { users, candidates as candidatesTable } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
+import { createClient } from '@supabase/supabase-js';
+
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_KEY;
+    if (!url || !key) throw new Error('SUPABASE_URL en SUPABASE_SERVICE_KEY zijn vereist voor CV-upload');
+    _supabaseAdmin = createClient(url, key);
+  }
+  return _supabaseAdmin;
+}
+
+async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName: string): Promise<string> {
+  const ext = path.extname(originalName);
+  const filename = `cv-${Date.now()}${ext}`;
+  const client = getSupabaseAdmin();
+  const { error } = await client.storage.from('cvs').upload(filename, buffer, {
+    contentType: mimetype,
+    upsert: false,
+  });
+  if (error) throw new Error(`Supabase upload fout: ${error.message}`);
+  const { data } = client.storage.from('cvs').getPublicUrl(filename);
+  return data.publicUrl;
+}
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 import rateLimit from "express-rate-limit";
 
@@ -4352,23 +4377,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(html);
   });
 
-  const cvUploadStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(process.cwd(), 'uploads', 'cv');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname);
-      const filename = `cv-${Date.now()}${ext}`;
-      cb(null, filename);
-    }
-  });
-
   const cvUpload = multer({
-    storage: cvUploadStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       const allowedTypes = [
@@ -4391,16 +4401,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      const publicUrl = await uploadCvToSupabase(file.buffer, file.mimetype, file.originalname);
+
       const candidateId = req.body?.candidateId ? parseInt(req.body.candidateId) : null;
       if (candidateId && !isNaN(candidateId)) {
         try {
-          await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: file.filename });
+          await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: publicUrl });
         } catch (err) {
           console.error("Fout bij markeren hasCv:", err);
         }
       }
 
-      return res.json({ message: "CV uploaded", filename: file.filename });
+      return res.json({ message: "CV uploaded", filename: publicUrl });
     } catch (error) {
       console.error("Error uploading CV:", error);
       return res.status(500).json({ message: "Upload failed" });
@@ -4421,10 +4433,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen upload-link" });
       if (candidate.hasCv) return res.status(400).json({ message: "CV al ontvangen" });
 
+      const publicUrl = await uploadCvToSupabase(file.buffer, file.mimetype, file.originalname);
+
       // Sla CV op en wis het token (eenmalig gebruik)
       await storage.updateCandidate(candidate.id, {
         hasCv: true,
-        cvFilename: file.filename,
+        cvFilename: publicUrl,
         cvUploadToken: null,
       } as any);
 
@@ -4432,7 +4446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         candidateId: candidate.id,
         action: 'updated',
         changedByUserId: null,
-        changeData: { description: `CV geüpload via directe e-mail link: ${file.filename}` },
+        changeData: { description: `CV geüpload via directe e-mail link: ${publicUrl}` },
         ipAddress: req.ip ?? null,
       });
 
@@ -4463,7 +4477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         birthDate: updated.birthDate,
         phone: updated.phone,
         nationality: updated.nationality,
-        cvFilename: file.filename,
+        cvFilename: publicUrl,
         reviewToken,
         baseUrl: requestBaseUrl,
       }).catch((err: any) => console.error("Fout bij admin-notificatiemail (cv token upload):", err));
@@ -4756,17 +4770,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!candidate || !candidate.cvFilename) {
         return res.status(404).json({ message: "Geen CV gevonden" });
       }
-      const cvPath = path.join(process.cwd(), 'uploads', 'cv', candidate.cvFilename);
-      if (!fs.existsSync(cvPath)) {
-        return res.status(404).json({ message: "CV bestand niet gevonden" });
+      if (!candidate.cvFilename.startsWith('http')) {
+        return res.status(404).json({ message: "CV niet meer beschikbaar (lokale opslag vervangen door Supabase)" });
       }
-      const ext = path.extname(candidate.cvFilename).toLowerCase();
-      const mimeType = ext === '.pdf' ? 'application/pdf'
-        : ext === '.docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        : 'application/msword';
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Content-Disposition', `inline; filename="cv-${id}${ext}"`);
-      res.sendFile(cvPath);
+      return res.redirect(candidate.cvFilename);
     } catch (error) {
       console.error("Error serving CV:", error);
       return res.status(500).json({ message: "Fout bij ophalen CV" });
@@ -4781,17 +4788,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!candidate || !candidate.cvFilename) {
         return res.status(404).json({ message: "Geen CV gevonden" });
       }
-      const cvPath = path.join(process.cwd(), 'uploads', 'cv', candidate.cvFilename);
-      if (!fs.existsSync(cvPath)) {
-        return res.status(404).json({ message: "CV bestand niet gevonden" });
+      if (!candidate.cvFilename.startsWith('http')) {
+        return res.status(404).json({ message: "CV niet meer beschikbaar (lokale opslag vervangen door Supabase)" });
       }
-      const ext = path.extname(candidate.cvFilename).toLowerCase();
+      const ext = candidate.cvFilename.includes('.') ? '.' + candidate.cvFilename.split('.').pop()!.split('?')[0].toLowerCase() : '';
       if (ext !== '.docx' && ext !== '.doc') {
         return res.status(400).json({ message: "Alleen Word-bestanden kunnen worden omgezet" });
       }
 
+      // Haal CV op vanuit Supabase URL
+      const cvResponse = await fetch(candidate.cvFilename);
+      if (!cvResponse.ok) {
+        return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
+      }
+      const cvBuffer = Buffer.from(await cvResponse.arrayBuffer());
+
       // Extract and convert docx to HTML using adm-zip
-      const zip = new AdmZip(cvPath);
+      const zip = new AdmZip(cvBuffer);
       const documentEntry = zip.getEntry("word/document.xml");
       if (!documentEntry) {
         return res.status(500).json({ message: "Ongeldig Word-bestand" });
