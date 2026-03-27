@@ -1034,7 +1034,7 @@ export default function Aanmelden() {
                 <div className="space-y-6">
                   {/* Vraag 1: Nederlands niveau */}
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.dutchLevelQuestion}</Label>
+                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.dutchLevelQuestion}<span className="text-red-500 ml-0.5">*</span></Label>
                     <div className="space-y-2">
                       {[
                         { value: "niet", label: t.langLevelNiet },
@@ -1088,7 +1088,7 @@ export default function Aanmelden() {
 
                   {/* Vraag 3: Werkervaring */}
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">{t.experienceQuestion}</Label>
+                    <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">{t.experienceQuestion}<span className="text-red-500 ml-0.5">*</span></Label>
                     <Select value={formData.experience} onValueChange={(v) => { updateField("experience", v); setShowCvBlocker(false); }}>
                       <SelectTrigger className={`h-12 rounded-xl border-gray-200 ${errors.experience ? "border-red-400" : ""}`}>
                         <SelectValue placeholder={lang === "NL" ? "Selecteer ervaring" : "Select experience"} />
