@@ -397,6 +397,7 @@ export default function DashboardMockup() {
     queryKey: ['/api/admin/candidates'],
     enabled: isAuthenticated && user?.role === 'admin' && twvManualAddOpen,
     staleTime: 30000,
+    select: (data: any) => Array.isArray(data) ? data : (data?.candidates ?? []),
   });
 
   const updateTwvMutation = useMutation({
