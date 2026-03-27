@@ -74,11 +74,13 @@ type TwvCandidate = {
   id: number;
   firstName: string;
   lastName: string;
+  email?: string;
   nationality?: string;
   functionType: string;
   twvStatus?: 'twv_nodig' | 'twv_aangevraagd' | 'info_nodig' | 'twv_verstrekt' | 'twv_verlopen' | null;
   twvStartDate?: string | null;
   twvEndDate?: string | null;
+  twvNotes?: string | null;
   createdAt: string;
 };
 
@@ -226,6 +228,21 @@ export default function DashboardMockup() {
   const [twvEditCandidate, setTwvEditCandidate] = useState<TwvCandidate | null>(null);
   const [twvEditStartDate, setTwvEditStartDate] = useState('');
   const [twvEditEndDate, setTwvEditEndDate] = useState('');
+  // Handmatig toevoegen dialog
+  const [twvManualAddOpen, setTwvManualAddOpen] = useState(false);
+  const [twvAddSearch, setTwvAddSearch] = useState('');
+  const [twvAddSelected, setTwvAddSelected] = useState<any | null>(null);
+  const [twvAddStatus, setTwvAddStatus] = useState('twv_verstrekt');
+  const [twvAddStartDate, setTwvAddStartDate] = useState('');
+  const [twvAddEndDate, setTwvAddEndDate] = useState('');
+  const [twvAddNotes, setTwvAddNotes] = useState('');
+  // CSV import dialog
+  const [twvImportOpen, setTwvImportOpen] = useState(false);
+  const [twvImportResult, setTwvImportResult] = useState<{ imported: number; total: number; results: Array<{ email: string; status: string }> } | null>(null);
+  const [twvImportLoading, setTwvImportLoading] = useState(false);
+  // Notities per kaart (expanded set)
+  const [twvNotesExpanded, setTwvNotesExpanded] = useState<Set<number>>(new Set());
+  const [twvNotesDraft, setTwvNotesDraft] = useState<Record<number, string>>({});
 
   // Sollicitanten tab state
   const [appSearch, setAppSearch] = useState('');
@@ -375,14 +392,38 @@ export default function DashboardMockup() {
     refetchOnWindowFocus: true,
   });
 
+  // Query voor kandidaten-zoekfunctie in handmatig toevoegen dialog
+  const { data: allCandidatesForAdd = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/candidates'],
+    enabled: isAuthenticated && user?.role === 'admin' && twvManualAddOpen,
+    staleTime: 30000,
+  });
+
   const updateTwvMutation = useMutation({
-    mutationFn: (data: { id: number; twvStatus?: string; twvStartDate?: string; twvEndDate?: string }) =>
+    mutationFn: (data: { id: number; twvStatus?: string; twvStartDate?: string; twvEndDate?: string; twvNotes?: string }) =>
       apiRequest('PATCH', `/api/admin/twv/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/twv'] });
-      toast({ title: 'TWV status bijgewerkt' });
+      toast({ title: 'TWV bijgewerkt' });
     },
-    onError: () => toast({ title: 'Fout bij bijwerken TWV status', variant: 'destructive' }),
+    onError: () => toast({ title: 'Fout bij bijwerken TWV', variant: 'destructive' }),
+  });
+
+  const addTwvCandidateMutation = useMutation({
+    mutationFn: (data: { candidateId: number; twvStatus: string; twvStartDate?: string; twvEndDate?: string; twvNotes?: string }) =>
+      apiRequest('POST', '/api/admin/twv/add-candidate', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/twv'] });
+      toast({ title: 'Medewerker toegevoegd aan TWV-beheer' });
+      setTwvManualAddOpen(false);
+      setTwvAddSearch('');
+      setTwvAddSelected(null);
+      setTwvAddStatus('twv_verstrekt');
+      setTwvAddStartDate('');
+      setTwvAddEndDate('');
+      setTwvAddNotes('');
+    },
+    onError: () => toast({ title: 'Fout bij toevoegen aan TWV', variant: 'destructive' }),
   });
 
   const { data: staffingRequestsData = [], isLoading: staffingRequestsLoading } = useQuery<any[]>({
@@ -2823,8 +2864,206 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
+              {/* Handmatig toevoegen dialog */}
+              <Dialog open={twvManualAddOpen} onOpenChange={open => { setTwvManualAddOpen(open); if (!open) { setTwvAddSearch(''); setTwvAddSelected(null); } }}>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Medewerker handmatig toevoegen aan TWV</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-1">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Zoek medewerker</label>
+                      <Input
+                        placeholder="Zoek op naam of e-mail…"
+                        value={twvAddSearch}
+                        onChange={e => { setTwvAddSearch(e.target.value); setTwvAddSelected(null); }}
+                        className="h-9 text-sm"
+                      />
+                      {twvAddSearch.length >= 2 && !twvAddSelected && (
+                        <div className="border rounded-lg mt-1 max-h-44 overflow-y-auto shadow-sm bg-white">
+                          {allCandidatesForAdd
+                            .filter((c: any) => {
+                              const q = twvAddSearch.toLowerCase();
+                              const alreadyInTwv = twvCandidates.some(t => t.id === c.id);
+                              return !alreadyInTwv && (
+                                `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                                (c.email || '').toLowerCase().includes(q)
+                              );
+                            })
+                            .slice(0, 8)
+                            .map((c: any) => (
+                              <button
+                                key={c.id}
+                                className="w-full text-left px-3 py-2 hover:bg-purple-50 text-sm flex items-center gap-2 border-b last:border-b-0"
+                                onClick={() => { setTwvAddSelected(c); setTwvAddSearch(`${c.firstName} ${c.lastName}`); }}
+                              >
+                                <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 shrink-0">
+                                  {c.firstName?.[0]}{c.lastName?.[0]}
+                                </div>
+                                <div>
+                                  <p className="font-medium">{c.firstName} {c.lastName}</p>
+                                  <p className="text-xs text-gray-400">{c.email} · ID #{c.id}</p>
+                                </div>
+                              </button>
+                            ))}
+                          {allCandidatesForAdd.filter((c: any) => {
+                            const q = twvAddSearch.toLowerCase();
+                            const alreadyInTwv = twvCandidates.some(t => t.id === c.id);
+                            return !alreadyInTwv && (
+                              `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                              (c.email || '').toLowerCase().includes(q)
+                            );
+                          }).length === 0 && (
+                            <p className="text-xs text-gray-400 px-3 py-3">Geen resultaten gevonden</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {twvAddSelected && (
+                      <div className="bg-purple-50 rounded-lg p-3 text-sm flex items-center gap-2 border border-purple-200">
+                        <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-xs font-bold text-purple-700">
+                          {twvAddSelected.firstName?.[0]}{twvAddSelected.lastName?.[0]}
+                        </div>
+                        <div>
+                          <p className="font-medium">{twvAddSelected.firstName} {twvAddSelected.lastName}</p>
+                          <p className="text-xs text-gray-500">{twvAddSelected.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">TWV Status</label>
+                      <select
+                        className="w-full h-9 rounded-md border border-gray-200 px-3 text-sm bg-white"
+                        value={twvAddStatus}
+                        onChange={e => setTwvAddStatus(e.target.value)}
+                      >
+                        <option value="twv_verstrekt">TWV Verstrekt</option>
+                        <option value="twv_nodig">TWV Nodig</option>
+                        <option value="twv_aangevraagd">TWV Aangevraagd</option>
+                        <option value="info_nodig">Info nodig</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">Startdatum TWV</label>
+                        <Input type="date" value={twvAddStartDate} onChange={e => setTwvAddStartDate(e.target.value)} className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">Einddatum TWV</label>
+                        <Input type="date" value={twvAddEndDate} onChange={e => setTwvAddEndDate(e.target.value)} className="h-9 text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Notitie (optioneel)</label>
+                      <textarea
+                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        rows={2}
+                        placeholder="Interne notitie over deze TWV…"
+                        value={twvAddNotes}
+                        onChange={e => setTwvAddNotes(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        className="flex-1 bg-purple-600 hover:bg-purple-700"
+                        disabled={!twvAddSelected || addTwvCandidateMutation.isPending}
+                        onClick={() => {
+                          if (!twvAddSelected) return;
+                          addTwvCandidateMutation.mutate({
+                            candidateId: twvAddSelected.id,
+                            twvStatus: twvAddStatus,
+                            twvStartDate: twvAddStartDate || undefined,
+                            twvEndDate: twvAddEndDate || undefined,
+                            twvNotes: twvAddNotes || undefined,
+                          });
+                        }}
+                      >
+                        {addTwvCandidateMutation.isPending ? 'Bezig…' : 'Toevoegen aan TWV'}
+                      </Button>
+                      <Button variant="outline" onClick={() => setTwvManualAddOpen(false)}>Annuleren</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* CSV import dialog */}
+              <Dialog open={twvImportOpen} onOpenChange={open => { setTwvImportOpen(open); if (!open) setTwvImportResult(null); }}>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>TWV-gegevens importeren via CSV</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-1">
+                    <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 border border-gray-200">
+                      <p className="font-semibold mb-1">Verwacht CSV-formaat (komma-gescheiden):</p>
+                      <code className="font-mono text-xs block bg-white rounded p-2 border border-gray-200 whitespace-pre">email,firstName,lastName,twvStatus,twvStartDate,twvEndDate,twvNotes
+jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
+                      <p className="mt-2 text-gray-500">Vereiste kolommen: <strong>email</strong> of <strong>firstName + lastName</strong>. Status-opties: <code>twv_verstrekt</code>, <code>twv_nodig</code>, <code>twv_aangevraagd</code>, <code>info_nodig</code>.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1.5 block">Selecteer CSV-bestand</label>
+                      <input
+                        type="file"
+                        accept=".csv,text/csv"
+                        className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gray-200 file:text-xs file:font-medium file:bg-white hover:file:bg-gray-50"
+                        onChange={async e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setTwvImportLoading(true);
+                          setTwvImportResult(null);
+                          try {
+                            const text = await file.text();
+                            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+                            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+                            const rows = lines.slice(1).map(line => {
+                              const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                              const obj: Record<string, string> = {};
+                              headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+                              return obj;
+                            }).filter(r => r.email || (r.firstname && r.lastname));
+                            const normalizedRows = rows.map(r => ({
+                              email: r.email || undefined,
+                              firstName: r.firstname || r['first_name'] || undefined,
+                              lastName: r.lastname || r['last_name'] || undefined,
+                              twvStatus: r.twvstatus || r['twv_status'] || 'twv_verstrekt',
+                              twvStartDate: r.twvstartdate || r['twv_start_date'] || r.startdate || undefined,
+                              twvEndDate: r.twvenddate || r['twv_end_date'] || r.enddate || undefined,
+                              twvNotes: r.twvnotes || r['twv_notes'] || r.notes || undefined,
+                            }));
+                            const res = await apiRequest('POST', '/api/admin/twv/import', { rows: normalizedRows });
+                            setTwvImportResult(res);
+                            queryClient.invalidateQueries({ queryKey: ['/api/admin/twv'] });
+                          } catch (err) {
+                            toast({ title: 'Fout bij importeren CSV', variant: 'destructive' });
+                          } finally {
+                            setTwvImportLoading(false);
+                          }
+                        }}
+                      />
+                    </div>
+                    {twvImportLoading && <p className="text-sm text-gray-500 text-center">Bezig met importeren…</p>}
+                    {twvImportResult && (
+                      <div className="space-y-2">
+                        <div className={`rounded-lg p-3 text-sm font-medium ${twvImportResult.imported === twvImportResult.total ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-amber-50 border border-amber-200 text-amber-700'}`}>
+                          {twvImportResult.imported} van {twvImportResult.total} rijen succesvol geïmporteerd
+                        </div>
+                        {twvImportResult.results.some(r => r.status !== 'ok') && (
+                          <div className="max-h-32 overflow-y-auto text-xs space-y-1">
+                            {twvImportResult.results.filter(r => r.status !== 'ok').map((r, i) => (
+                              <div key={i} className="text-red-500">⚠ {r.email} — niet gevonden in systeem</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex justify-end pt-1">
+                      <Button variant="outline" onClick={() => setTwvImportOpen(false)}>Sluiten</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               {/* Header */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <div>
                   <h1 className="text-xl font-bold flex items-center gap-2">
                     <ShieldAlert className="h-5 w-5 text-amber-600" />
@@ -2832,7 +3071,7 @@ export default function DashboardMockup() {
                   </h1>
                   <p className="text-sm text-gray-500">Tewerkstellingsvergunningen overzicht en beheer</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -2841,6 +3080,23 @@ export default function DashboardMockup() {
                   >
                     <Download className="h-3.5 w-3.5" />
                     Exporteer CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs h-8 border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={() => setTwvImportOpen(true)}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    CSV importeren
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-xs h-8"
+                    onClick={() => setTwvManualAddOpen(true)}
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Handmatig toevoegen
                   </Button>
                   <Button
                     size="sm"
@@ -3033,6 +3289,52 @@ export default function DashboardMockup() {
                                       → Markeer als verstrekt
                                     </button>
                                   )}
+
+                                  {/* Notities toggle */}
+                                  <div className="mt-2.5 pt-2 border-t border-gray-100">
+                                    <button
+                                      className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors w-full"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setTwvNotesExpanded(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(c.id)) { next.delete(c.id); } else {
+                                            next.add(c.id);
+                                            if (twvNotesDraft[c.id] === undefined) {
+                                              setTwvNotesDraft(d => ({ ...d, [c.id]: c.twvNotes || '' }));
+                                            }
+                                          }
+                                          return next;
+                                        });
+                                      }}
+                                    >
+                                      <span className="text-base leading-none">{twvNotesExpanded.has(c.id) ? '▾' : '▸'}</span>
+                                      <span>{c.twvNotes ? 'Notitie bekijken / bewerken' : 'Notitie toevoegen'}</span>
+                                      {c.twvNotes && <span className="ml-auto inline-block w-1.5 h-1.5 rounded-full bg-amber-400" title="Heeft notitie" />}
+                                    </button>
+                                    {twvNotesExpanded.has(c.id) && (
+                                      <div className="mt-2 space-y-1.5" onClick={e => e.stopPropagation()}>
+                                        <textarea
+                                          className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-text"
+                                          rows={3}
+                                          placeholder="Interne notitie…"
+                                          value={twvNotesDraft[c.id] ?? c.twvNotes ?? ''}
+                                          onChange={e => setTwvNotesDraft(d => ({ ...d, [c.id]: e.target.value }))}
+                                          onMouseDown={e => e.stopPropagation()}
+                                          draggable={false}
+                                        />
+                                        <button
+                                          className="text-xs bg-purple-600 text-white rounded px-2 py-1 hover:bg-purple-700 disabled:opacity-50"
+                                          disabled={updateTwvMutation.isPending}
+                                          onClick={() => {
+                                            updateTwvMutation.mutate({ id: c.id, twvNotes: twvNotesDraft[c.id] ?? '' });
+                                          }}
+                                        >
+                                          Opslaan
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })}

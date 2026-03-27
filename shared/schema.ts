@@ -870,6 +870,7 @@ export const candidates = pgTable("candidates", {
   twvStartDate: date("twv_start_date"),
   twvEndDate: date("twv_end_date"),
   twvReminderSentAt: timestamp("twv_reminder_sent_at"),
+  twvNotes: text("twv_notes"),
   
   // Gesprek planning
   interviewDate: date("interview_date"),

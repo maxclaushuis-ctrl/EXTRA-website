@@ -5586,17 +5586,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      const { twvStatus, twvStartDate, twvEndDate } = req.body;
+      const { twvStatus, twvStartDate, twvEndDate, twvNotes, needsTwv } = req.body;
       const updateData: Record<string, any> = {};
       if (twvStatus !== undefined) updateData.twvStatus = twvStatus;
       if (twvStartDate !== undefined) updateData.twvStartDate = twvStartDate;
       if (twvEndDate !== undefined) updateData.twvEndDate = twvEndDate;
+      if (twvNotes !== undefined) updateData.twvNotes = twvNotes;
+      if (needsTwv !== undefined) updateData.needsTwv = needsTwv;
       const updated = await storage.updateCandidate(id, updateData as any);
       if (!updated) return res.status(404).json({ message: "Kandidaat niet gevonden" });
       return res.json(updated);
     } catch (error) {
       console.error("Fout bij updaten TWV status:", error);
       return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // Handmatig een bestaande kandidaat aan TWV-tracking toevoegen
+  app.post("/api/admin/twv/add-candidate", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { candidateId, twvStatus, twvStartDate, twvEndDate, twvNotes } = req.body;
+      const id = parseInt(candidateId);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig kandidaat ID" });
+      const updateData: Record<string, any> = {
+        needsTwv: true,
+        twvStatus: twvStatus || 'twv_verstrekt',
+      };
+      if (twvStartDate) updateData.twvStartDate = twvStartDate;
+      if (twvEndDate) updateData.twvEndDate = twvEndDate;
+      if (twvNotes) updateData.twvNotes = twvNotes;
+      const updated = await storage.updateCandidate(id, updateData as any);
+      if (!updated) return res.status(404).json({ message: "Kandidaat niet gevonden" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Fout bij handmatig toevoegen TWV:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // Bulk import van TWV-gegevens vanuit CSV (frontend parsed → JSON array)
+  app.post("/api/admin/twv/import", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const rows: Array<{ email?: string; firstName?: string; lastName?: string; twvStatus?: string; twvStartDate?: string; twvEndDate?: string; twvNotes?: string }> = req.body.rows || [];
+      if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({ message: "Geen rijen opgegeven" });
+      const result = await storage.getCandidates();
+      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
+      const results: { email: string; status: 'ok' | 'not_found' | 'error' }[] = [];
+      for (const row of rows) {
+        try {
+          const match = allCandidates.find((c: any) =>
+            (row.email && c.email?.toLowerCase() === row.email.toLowerCase()) ||
+            (row.firstName && row.lastName &&
+              c.firstName?.toLowerCase() === row.firstName.toLowerCase() &&
+              c.lastName?.toLowerCase() === row.lastName.toLowerCase())
+          );
+          if (!match) {
+            results.push({ email: row.email || `${row.firstName} ${row.lastName}`, status: 'not_found' });
+            continue;
+          }
+          const updateData: Record<string, any> = { needsTwv: true, twvStatus: row.twvStatus || 'twv_verstrekt' };
+          if (row.twvStartDate) updateData.twvStartDate = row.twvStartDate;
+          if (row.twvEndDate) updateData.twvEndDate = row.twvEndDate;
+          if (row.twvNotes) updateData.twvNotes = row.twvNotes;
+          await storage.updateCandidate(match.id, updateData as any);
+          results.push({ email: row.email || `${row.firstName} ${row.lastName}`, status: 'ok' });
+        } catch {
+          results.push({ email: row.email || `${row.firstName} ${row.lastName}`, status: 'error' });
+        }
+      }
+      return res.json({ imported: results.filter(r => r.status === 'ok').length, total: rows.length, results });
+    } catch (error) {
+      console.error("Fout bij TWV import:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden bij de import" });
     }
   });
 
