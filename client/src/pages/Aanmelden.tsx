@@ -1010,8 +1010,8 @@ export default function Aanmelden() {
           )}
 
           {step === "skills" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10">
+            <div>
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 max-w-2xl mx-auto">
                 <div className="flex items-center gap-3 mb-6 sm:mb-8">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-white" />
@@ -1140,10 +1140,6 @@ export default function Aanmelden() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <WhyCardComponent text={t.whyLanguage} whyLabel={t.whyWeAsk} />
-                <WhyCardComponent text={t.whyExperience} whyLabel={t.whyWeAsk} />
-              </div>
             </div>
           )}
 

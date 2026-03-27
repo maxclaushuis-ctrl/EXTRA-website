@@ -4401,7 +4401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/aanmelden/cv", registrationLimiter, cvUpload.single('cv'), async (req: Request, res: Response) => {
+  app.post("/api/aanmelden/cv", cvUpload.single('cv'), async (req: Request, res: Response) => {
     try {
       const file = req.file;
       if (!file) {
