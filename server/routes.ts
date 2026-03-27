@@ -74,6 +74,11 @@ import rateLimit from "express-rate-limit";
 const registrationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  skip: (req: Request) => {
+    // @doehetextra.nl e-mailadressen mogen onbeperkt testen
+    const email = (req.body?.email || '').toLowerCase();
+    return email.endsWith('@doehetextra.nl');
+  },
   message: { message: "Te veel aanmeldingen vanaf dit IP-adres. Probeer het over 15 minuten opnieuw." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -3826,7 +3831,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validated = publicRegistrationSchema.parse(req.body);
 
-      if (validated.email) {
+      // Duplicate check: sla over voor @doehetextra.nl zodat testers opnieuw kunnen aanmelden
+      const isTestEmail = validated.email?.toLowerCase().endsWith('@doehetextra.nl') ?? false;
+      if (validated.email && !isTestEmail) {
         const existingByEmail = await db.select({ id: candidatesTable.id })
           .from(candidatesTable)
           .where(eq(candidatesTable.email, validated.email))

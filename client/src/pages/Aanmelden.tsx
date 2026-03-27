@@ -829,16 +829,35 @@ export default function Aanmelden() {
           }),
         });
       } else {
-        await apiRequest("/api/aanmelden", {
+        // Stap A: maak kandidaat aan als partial (nog geen admin-mail)
+        const createRes = await apiRequest("/api/aanmelden", {
           method: "POST",
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ ...payload, partial: true }),
         });
-        // CV upload na POST als er geen savedCandidateId was
-        if (cvFile) {
+        const newCandidateId = createRes?.id ?? null;
+
+        // Stap B: upload CV zodat het beschikbaar is vóór de admin-mail
+        if (cvFile && newCandidateId) {
           const fd = new FormData();
           fd.append("cv", cvFile);
           fd.append("email", formData.email);
+          fd.append("candidateId", String(newCandidateId));
           await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+        }
+
+        // Stap C: rond aanmelding af — triggert nu admin-mail mét CV in DB
+        if (newCandidateId) {
+          await apiRequest(`/api/aanmelden/${newCandidateId}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              email: formData.email,
+              language: payload.language,
+              horecaExperience: payload.horecaExperience,
+              needsTwv: payload.needsTwv,
+              notes: payload.notes,
+              partial: false,
+            }),
+          });
         }
       }
 
