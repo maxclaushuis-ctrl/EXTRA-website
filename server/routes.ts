@@ -3928,6 +3928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 cvFilename: candidate.cvFilename,
                 reviewToken: token,
                 baseUrl: requestBaseUrl,
+                sourceChannel: (candidate as any).sourceChannel,
               });
               console.log(`Admin-notificatiemail met CV (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
             } else {
@@ -3942,6 +3943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 phone: candidate.phone,
                 nationality: candidate.nationality,
                 baseUrl: requestBaseUrl,
+                sourceChannel: (candidate as any).sourceChannel,
               });
               console.log(`Admin-notificatiemail zonder CV (POST) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
             }
@@ -4081,6 +4083,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 cvFilename: (updated as any).cvFilename,
                 reviewToken: token,
                 baseUrl: requestBaseUrl,
+                sourceChannel: (updated as any).sourceChannel,
               });
               console.log(`Admin-notificatiemail met CV (PUT) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
             } catch (err) {
@@ -4102,6 +4105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 phone: updated.phone,
                 nationality: updated.nationality,
                 baseUrl: requestBaseUrl,
+                sourceChannel: (updated as any).sourceChannel,
               });
               console.log(`Admin-notificatiemail zonder CV (PUT) ${sent ? 'verstuurd' : 'NIET verstuurd'}`);
             } catch (err) {
@@ -4487,6 +4491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cvFilename: publicUrl,
         reviewToken,
         baseUrl: requestBaseUrl,
+        sourceChannel: (updated as any).sourceChannel,
       }).catch((err: any) => console.error("Fout bij admin-notificatiemail (cv token upload):", err));
 
       console.log(`CV geüpload via directe link voor kandidaat ${updated.id} (${updated.firstName} ${updated.lastName})`);

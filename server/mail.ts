@@ -458,6 +458,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   cvFilename?: string | null;
   reviewToken?: string | null;
   baseUrl?: string | null;
+  sourceChannel?: string | null;
 }): Promise<boolean> {
   const functionLabels: Record<string, string> = {
     housekeeping: 'Housekeeping medewerker',
@@ -515,6 +516,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
                 ${cell('Geboortedatum', candidate.birthDate ? candidate.birthDate.split('-').reverse().join('-') : null)}
                 ${cell('Nationaliteit', candidate.nationality)}
               </tr>
+              ${candidate.sourceChannel ? `<tr><td colspan="2" style="padding:10px 14px;vertical-align:top;"><div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Binnenkomst via</div><div style="color:#111827;font-size:14px;font-weight:600;">${candidate.sourceChannel}</div></td></tr>` : ''}
             </table>
             ${candidate.cvFilename ? `<div style="margin:16px 0 8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:8px;">
@@ -547,7 +549,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
 </body>
 </html>`;
 
-  const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\n\n✅ Accepteren: ${acceptUrl}\n❌ Afwijzen: ${rejectUrl}`;
+  const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\nBinnenkomst via: ${candidate.sourceChannel || '—'}\n\n✅ Accepteren: ${acceptUrl}\n❌ Afwijzen: ${rejectUrl}`;
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
 
@@ -603,6 +605,7 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
   phone?: string | null;
   nationality?: string | null;
   baseUrl?: string | null;
+  sourceChannel?: string | null;
 }): Promise<boolean> {
   const functionLabels: Record<string, string> = {
     housekeeping: 'Housekeeping medewerker',
@@ -652,6 +655,7 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
                 ${cell('Geboortedatum', candidate.birthDate ? candidate.birthDate.split('-').reverse().join('-') : null)}
                 ${cell('Nationaliteit', candidate.nationality)}
               </tr>
+              ${candidate.sourceChannel ? `<tr><td colspan="2" style="padding:10px 14px;vertical-align:top;"><div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Binnenkomst via</div><div style="color:#111827;font-size:14px;font-weight:600;">${candidate.sourceChannel}</div></td></tr>` : ''}
             </table>
             <div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">
               ⏳ Kandidaat is uitgenodigd om het CV te uploaden. Accepteren of afwijzen is pas mogelijk na ontvangst van het CV.
@@ -676,7 +680,7 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
 </body>
 </html>`;
 
-  const text = `Nieuwe aanmelding ontvangen (nog geen CV)\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\n\nDe kandidaat heeft nog geen CV geüpload. Je ontvangt een tweede e-mail zodra het CV er is.\n\nBekijk in dashboard: ${dashboardUrl}`;
+  const text = `Nieuwe aanmelding ontvangen (nog geen CV)\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\nBinnenkomst via: ${candidate.sourceChannel || '—'}\n\nDe kandidaat heeft nog geen CV geüpload. Je ontvangt een tweede e-mail zodra het CV er is.\n\nBekijk in dashboard: ${dashboardUrl}`;
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
   const results = await Promise.all(recipients.map(to =>
