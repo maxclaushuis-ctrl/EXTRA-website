@@ -807,13 +807,16 @@ export default function Aanmelden() {
         notes: [cvFile ? `CV: ${cvFile.name}` : null, formData.channel ? `Gevonden via: ${formData.channel}` : null].filter(Boolean).join(" | "),
       };
 
-      // Upload CV eerst zodat het beschikbaar is als de admin-notificatiemail wordt verstuurd
+      // Upload CV eerst — als dit mislukt stopt het hele proces (geen admin-mail zonder CV)
       if (savedCandidateId && cvFile) {
         const fd = new FormData();
         fd.append("cv", cvFile);
         fd.append("email", formData.email);
         fd.append("candidateId", String(savedCandidateId));
-        await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+        const cvRes = await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+        if (!cvRes.ok) {
+          throw new Error(lang === "NL" ? "CV uploaden mislukt. Probeer het opnieuw." : "CV upload failed. Please try again.");
+        }
       }
 
       if (savedCandidateId) {
@@ -836,13 +839,16 @@ export default function Aanmelden() {
         });
         const newCandidateId = createRes?.id ?? null;
 
-        // Stap B: upload CV zodat het beschikbaar is vóór de admin-mail
+        // Stap B: upload CV — als dit mislukt stopt het hele proces (geen admin-mail zonder CV)
         if (cvFile && newCandidateId) {
           const fd = new FormData();
           fd.append("cv", cvFile);
           fd.append("email", formData.email);
           fd.append("candidateId", String(newCandidateId));
-          await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+          const cvRes = await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+          if (!cvRes.ok) {
+            throw new Error(lang === "NL" ? "CV uploaden mislukt. Probeer het opnieuw." : "CV upload failed. Please try again.");
+          }
         }
 
         // Stap C: rond aanmelding af — triggert nu admin-mail mét CV in DB

@@ -48,9 +48,19 @@ import { createClient } from '@supabase/supabase-js';
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 function getSupabaseAdmin() {
   if (!_supabaseAdmin) {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_KEY;
+    let url = (process.env.SUPABASE_URL || '').trim();
+    const key = (process.env.SUPABASE_SERVICE_KEY || '').trim();
     if (!url || !key) throw new Error('SUPABASE_URL en SUPABASE_SERVICE_KEY zijn vereist voor CV-upload');
+    // Als de waarde geen protocol heeft, voeg https:// toe
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+    // Als de waarde alleen een project reference ID is (bijv. "abcxyz"), maak volledige Supabase URL
+    // Supabase project refs zijn ~20 tekens en bevatten geen punt (.)
+    if (!url.includes('.')) {
+      url = url + '.supabase.co';
+    }
+    console.log(`[Supabase] Verbinding via: ${url.substring(0, 50)}`);
     _supabaseAdmin = createClient(url, key);
   }
   return _supabaseAdmin;
