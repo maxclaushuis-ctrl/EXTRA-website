@@ -81,6 +81,49 @@ async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 import rateLimit from "express-rate-limit";
 
+// ─── EXTRA Planbord webhook helper ────────────────────────────────────────────
+const PLANBORD_WEBHOOK_URL = 'https://fb2e492b-f790-46d3-b361-647b16a91391-00-26hv39n5ydqms.janeway.replit.dev/api/webhooks/applicant-sync';
+
+async function sendPlanbordWebhook(candidate: { id: number; firstName: string; lastName: string; functionType: string }): Promise<{ success: boolean; error?: string }> {
+  try {
+    const secret = process.env.WEBHOOK_SECRET;
+    if (!secret) {
+      console.warn('[Webhook] WEBHOOK_SECRET niet geconfigureerd, webhook overgeslagen');
+      return { success: false, error: 'WEBHOOK_SECRET ontbreekt' };
+    }
+    const body = JSON.stringify({
+      event: 'applicant.ready',
+      timestamp: new Date().toISOString(),
+      data: {
+        id: String(candidate.id),
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        function: candidate.functionType,
+      },
+    });
+    const response = await fetch(PLANBORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-webhook-secret': secret,
+      },
+      body,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      console.error(`[Webhook] Planbord antwoordde ${response.status}: ${text}`);
+      return { success: false, error: `Planbord: HTTP ${response.status}` };
+    }
+    console.log(`[Webhook] Kandidaat #${candidate.id} (${candidate.firstName} ${candidate.lastName}) doorgestuurd naar Planbord`);
+    return { success: true };
+  } catch (err: any) {
+    console.error('[Webhook] Fout bij versturen naar Planbord:', err?.message ?? err);
+    return { success: false, error: err?.message ?? 'Netwerkfout' };
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const registrationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -4769,7 +4812,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('Fout bij versturen Calendly-mail:', err)
           );
         }
-        return res.json({ message: 'Kandidaat geaccepteerd' });
+        // Stuur webhook naar Planbord
+        const webhookResult = await sendPlanbordWebhook({
+          id,
+          firstName: candidate.firstName!,
+          lastName: candidate.lastName!,
+          functionType: (candidate as any).functionType ?? '',
+        });
+        return res.json({ message: 'Kandidaat geaccepteerd', webhookSent: webhookResult.success, webhookError: webhookResult.error });
       } else {
         await storage.updateCandidateStatus(id, 'afgewezen', undefined);
         if (candidate.email && candidate.firstName) {
@@ -5298,7 +5348,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Fout bij versturen afwijzingsmail:", err)
         );
       }
-      return res.json(updated);
+      // Stuur webhook naar Planbord bij aangenomen/afgerond
+      let webhookResult: { success: boolean; error?: string } | undefined;
+      if (status === 'aangenomen' && updated.firstName && updated.lastName) {
+        webhookResult = await sendPlanbordWebhook({
+          id: updated.id ?? parseInt(req.params.id),
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          functionType: updated.functionType ?? updated.function ?? '',
+        });
+      }
+      return res.json({ ...updated, webhookSent: webhookResult?.success ?? false, webhookError: webhookResult?.error });
     } catch (error) {
       console.error("Error updating application status:", error);
       return res.status(500).json({ message: "Fout bij bijwerken status" });
