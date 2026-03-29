@@ -360,24 +360,9 @@ export default function DashboardMockup() {
   const reviewCandidateMutation = useMutation({
     mutationFn: ({ id, action }: { id: number; action: 'accept' | 'reject' }) =>
       apiRequest('POST', `/api/admin/candidates/${id}/review`, { action }),
-    onSuccess: (data: any, { action }) => {
+    onSuccess: (_: any, { action }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
-      if (action === 'accept') {
-        if (data?.webhookSent) {
-          toast({
-            title: '✅ Kandidaat geaccepteerd & doorgestuurd naar Planbord',
-            description: 'Een Calendly-uitnodiging is verstuurd. De kandidaat verschijnt onder "Nieuw vanuit website" in de Contracten-module.',
-          });
-        } else {
-          toast({
-            title: '✅ Kandidaat geaccepteerd',
-            description: `Calendly-uitnodiging verstuurd. Let op: doorsturen naar Planbord mislukt${data?.webhookError ? ` (${data.webhookError})` : ''}.`,
-            variant: 'destructive',
-          });
-        }
-      } else {
-        toast({ title: '❌ Kandidaat afgewezen', description: 'Een afwijzingsmail is verstuurd.' });
-      }
+      toast({ title: action === 'accept' ? '✅ Kandidaat geaccepteerd' : '❌ Kandidaat afgewezen', description: action === 'accept' ? 'Een Calendly-uitnodiging is verstuurd.' : 'Een afwijzingsmail is verstuurd.' });
     },
     onError: () => { toast({ title: 'Fout', description: 'Er is iets misgegaan.', variant: 'destructive' }); },
   });
@@ -393,25 +378,10 @@ export default function DashboardMockup() {
   const updateAppStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiRequest('PATCH', `/api/admin/applications/${id}/status`, { status }),
-    onSuccess: (data: any, { id, status }) => {
+    onSuccess: (_: any, { id, status }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
       if (selectedApp?.id === id) setSelectedApp((prev: any) => prev ? { ...prev, status } : prev);
-      if (status === 'aangenomen') {
-        if (data?.webhookSent) {
-          toast({
-            title: '✅ Kandidaat aangenomen & doorgestuurd naar Planbord',
-            description: 'De kandidaat verschijnt automatisch onder "Nieuw vanuit website" in de Contracten-module.',
-          });
-        } else {
-          toast({
-            title: 'Kandidaat aangenomen',
-            description: `Let op: doorsturen naar Planbord mislukt${data?.webhookError ? ` (${data.webhookError})` : ''}. Controleer de webhookconfiguratie.`,
-            variant: 'destructive',
-          });
-        }
-      } else {
-        toast({ title: 'Status bijgewerkt' });
-      }
+      toast({ title: 'Status bijgewerkt' });
     },
   });
 

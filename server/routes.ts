@@ -4812,14 +4812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('Fout bij versturen Calendly-mail:', err)
           );
         }
-        // Stuur webhook naar Planbord
-        const webhookResult = await sendPlanbordWebhook({
-          id,
-          firstName: candidate.firstName!,
-          lastName: candidate.lastName!,
-          functionType: (candidate as any).functionType ?? '',
-        });
-        return res.json({ message: 'Kandidaat geaccepteerd', webhookSent: webhookResult.success, webhookError: webhookResult.error });
+        return res.json({ message: 'Kandidaat geaccepteerd' });
       } else {
         await storage.updateCandidateStatus(id, 'afgewezen', undefined);
         if (candidate.email && candidate.firstName) {
@@ -5348,17 +5341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Fout bij versturen afwijzingsmail:", err)
         );
       }
-      // Stuur webhook naar Planbord bij aangenomen/afgerond
-      let webhookResult: { success: boolean; error?: string } | undefined;
-      if (status === 'aangenomen' && updated.firstName && updated.lastName) {
-        webhookResult = await sendPlanbordWebhook({
-          id: updated.id ?? parseInt(req.params.id),
-          firstName: updated.firstName,
-          lastName: updated.lastName,
-          functionType: updated.functionType ?? updated.function ?? '',
-        });
-      }
-      return res.json({ ...updated, webhookSent: webhookResult?.success ?? false, webhookError: webhookResult?.error });
+      return res.json(updated);
     } catch (error) {
       console.error("Error updating application status:", error);
       return res.status(500).json({ message: "Fout bij bijwerken status" });
@@ -5471,7 +5454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dinerScore = computeHorecaSkillScore(data.dinerSkills);
 
       // Also save as an application record with full form data
-      await storage.createApplication({
+      const application = await storage.createApplication({
         candidateId: data.linkedCandidateId || candidate.id,
         functionType: data.functionType,
         interviewer: data.interviewer || null,
@@ -5489,6 +5472,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bedieningScore: bedieningScore ?? undefined,
         dinerScore: dinerScore ?? undefined,
       });
+
+      // Stuur direct door naar Planbord — iedereen die niet afgewezen wordt, is aangenomen
+      sendPlanbordWebhook({
+        id: application.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        functionType: data.functionType ?? '',
+      }).catch(err => console.error('[Webhook] Fout na createApplication:', err));
 
       return res.status(201).json({ 
         message: "Sollicitatie succesvol opgeslagen",
