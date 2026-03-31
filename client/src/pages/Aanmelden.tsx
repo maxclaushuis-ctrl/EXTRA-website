@@ -25,12 +25,12 @@ const EU_EER_COUNTRIES = [
   "Denemarken", "Estland", "Finland", "Frankrijk", "Duitsland", "Griekenland",
   "Hongarije", "Ierland", "Italië", "Letland", "Litouwen", "Luxemburg",
   "Malta", "Polen", "Portugal", "Roemenië", "Slowakije", "Slovenië",
-  "Spanje", "Zweden", "IJsland", "Liechtenstein", "Noorwegen", "Zwitserland"
+  "Spanje", "Zweden", "IJsland", "Liechtenstein", "Noorwegen", "Zwitserland",
+  "Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"
 ];
 
 const ALL_COUNTRIES = [
   "Nederland", ...EU_EER_COUNTRIES.sort(),
-  "Curaçao", "Aruba", "Sint Maarten", "Bonaire",
   "---",
   "Afghanistan", "Albanië", "Algerije", "Angola", "Argentinië", "Armenië",
   "Australië", "Azerbeidzjan", "Bangladesh", "Belarus", "Bhutan", "Bolivia",
@@ -85,8 +85,8 @@ const EXPERIENCE_MAP: Record<string, string> = {
 
 function getFlow(nationality: string): FlowType {
   if (nationality === "Nederland") return "NL";
-  const NL_TERRITORIES = ["Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"];
-  if (NL_TERRITORIES.includes(nationality)) return "NL";
+  const NL_CARIBBEAN = ["Curaçao", "Aruba", "Sint Maarten", "Bonaire", "Sint Eustatius", "Saba"];
+  if (NL_CARIBBEAN.includes(nationality)) return "NL";
   if (EU_EER_COUNTRIES.includes(nationality)) return "EU";
   return "NON_EU";
 }
