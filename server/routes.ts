@@ -536,11 +536,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Debug logging
       console.log("Wachtwoord hash in database:", user.password.substring(0, 30) + "...");
       
-      // Migratie-veilige wachtwoordcheck: ondersteunt zowel oude SHA256 als nieuwe bcrypt hashes
+      // Wachtwoordcheck: alle gebruikers (inclusief admins) worden via bcrypt geverifieerd.
+      // SHA256-pad is alleen behouden voor accounts die nog niet gemigreerd zijn.
+      // TODO: verwijder de SHA256-tak zodra alle bestaande hashes zijn gemigreerd naar bcrypt.
+      //       Auto-migratie vindt al plaats bij elke succesvolle SHA256-login (zie hieronder).
       let isValidPassword = false;
       if (user.password.startsWith('$2')) {
+        // Bcrypt hash — standaard pad voor alle (nieuwe) accounts
         isValidPassword = await bcrypt.compare(password, user.password);
       } else {
+        // TODO: legacy SHA256-hash — wordt automatisch gemigreerd naar bcrypt bij succesvolle login
         const sha256Hash = createHash('sha256').update(password).digest('hex');
         isValidPassword = sha256Hash === user.password;
         if (isValidPassword) {
