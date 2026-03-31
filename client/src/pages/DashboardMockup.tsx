@@ -20,7 +20,7 @@ import {
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
-  Upload, FileSpreadsheet, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
+  Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
   Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
@@ -179,6 +179,7 @@ export default function DashboardMockup() {
   const [kanSortDesc, setKanSortDesc] = useState(true);
   const [showWeekCalendar, setShowWeekCalendar] = useState(false);
   const [weekDayFilter, setWeekDayFilter] = useState<string | null>(null);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedKandidate, setSelectedKandidate] = useState<Candidate | null>(null);
   const [kanDetailOpen, setKanDetailOpen] = useState(false);
@@ -1104,7 +1105,7 @@ export default function DashboardMockup() {
                   <p className="text-xs text-gray-500 hidden sm:block">Alle aanmeldingen via /aanmelden — realtime gesynchroniseerd</p>
                 </div>
                 <button
-                  onClick={() => { setShowWeekCalendar(v => !v); if (showWeekCalendar) setWeekDayFilter(null); }}
+                  onClick={() => { setShowWeekCalendar(v => !v); if (showWeekCalendar) { setWeekDayFilter(null); setWeekOffset(0); } }}
                   className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all duration-200 ${
                     showWeekCalendar
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200'
@@ -1156,7 +1157,7 @@ export default function DashboardMockup() {
                 const today = new Date();
                 const dow = today.getDay();
                 const monday = new Date(today);
-                monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+                monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7);
                 monday.setHours(0, 0, 0, 0);
 
                 const weekDays = Array.from({ length: 5 }, (_, i) => {
@@ -1187,6 +1188,14 @@ export default function DashboardMockup() {
                   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
                 };
 
+                const weekLabel = weekOffset === 0 ? 'Deze week' : weekOffset === 1 ? 'Volgende week' : weekOffset === -1 ? 'Vorige week' : weekOffset > 0 ? `Over ${weekOffset} weken` : `${Math.abs(weekOffset)} weken geleden`;
+
+                const startMonth = monthNames[weekDays[0].getMonth()];
+                const endMonth = monthNames[weekDays[4].getMonth()];
+                const dateRange = startMonth === endMonth
+                  ? `${weekDays[0].getDate()} – ${weekDays[4].getDate()} ${endMonth}`
+                  : `${weekDays[0].getDate()} ${startMonth} – ${weekDays[4].getDate()} ${endMonth}`;
+
                 return (
                   <div className="mb-4">
                     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
@@ -1197,10 +1206,8 @@ export default function DashboardMockup() {
                             <Calendar className="w-3.5 h-3.5 text-blue-600" />
                           </div>
                           <div>
-                            <span className="text-sm font-bold text-gray-900">Deze week</span>
-                            <span className="ml-2 text-xs text-gray-400 font-medium">
-                              {weekDays[0].getDate()} – {weekDays[4].getDate()} {monthNames[weekDays[4].getMonth()]}
-                            </span>
+                            <span className="text-sm font-bold text-gray-900">{weekLabel}</span>
+                            <span className="ml-2 text-xs text-gray-400 font-medium">{dateRange}</span>
                           </div>
                           {totalThisWeek > 0 && (
                             <span className="ml-1 bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -1208,15 +1215,37 @@ export default function DashboardMockup() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {weekDayFilter && (
                             <button
                               onClick={() => setWeekDayFilter(null)}
-                              className="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                              className="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors mr-1"
                             >
                               <X className="w-3 h-3" /> Toon alles
                             </button>
                           )}
+                          <button
+                            onClick={() => { setWeekOffset(o => o - 1); setWeekDayFilter(null); }}
+                            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            title="Vorige week"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          {weekOffset !== 0 && (
+                            <button
+                              onClick={() => { setWeekOffset(0); setWeekDayFilter(null); }}
+                              className="text-xs font-semibold px-2 py-1 rounded-lg border border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            >
+                              Vandaag
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setWeekOffset(o => o + 1); setWeekDayFilter(null); }}
+                            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            title="Volgende week"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
