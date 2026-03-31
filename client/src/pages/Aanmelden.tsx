@@ -901,7 +901,7 @@ export default function Aanmelden() {
           </div>
         </header>
 
-        <main className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-24">
+        <main className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-24" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
           {step !== "success" && step !== "rejected" && <ProgressBarComponent stepNumber={stepNumber} t={t} />}
 
           {step === "basics" && (
@@ -1284,7 +1284,7 @@ export default function Aanmelden() {
               </div>
 
               {/* Submit bar */}
-              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="sm:static sticky bottom-0 bg-white sm:bg-transparent border-t border-gray-100 sm:border-0 -mx-6 sm:mx-0 px-6 sm:px-0 py-4 sm:py-0 mt-0 sm:mt-8 z-10 sm:rounded-3xl sm:shadow-2xl sm:shadow-purple-950/50 sm:border-white/10 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <Button onClick={() => setStep(flow === "NON_EU" ? "twv" : "skills")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300 w-full sm:w-auto">
                   <ChevronLeft className="w-5 h-5 mr-1" /> {t.back}
                 </Button>

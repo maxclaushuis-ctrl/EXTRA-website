@@ -60,21 +60,38 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    cursor: url('/cursors/x-cursor.png') 16 16, crosshair;
   }
-  
+  @media (hover: hover) and (pointer: fine) {
+    html {
+      cursor: url('/cursors/x-cursor.png') 16 16, crosshair;
+    }
+  }
+
   body {
     @apply font-sans bg-background text-foreground antialiased overflow-x-hidden;
+  }
+
+  button, a, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   * {
     @apply border-border;
   }
 
-  a, button, [role="button"], label[for], select,
-  input[type="submit"], input[type="button"], input[type="reset"],
-  .cursor-pointer, [onclick] {
-    cursor: url('/cursors/x-cursor-pointer.png') 16 16, pointer !important;
+  @media (hover: hover) and (pointer: fine) {
+    a, button, [role="button"], label[for], select,
+    input[type="submit"], input[type="button"], input[type="reset"],
+    .cursor-pointer, [onclick] {
+      cursor: url('/cursors/x-cursor-pointer.png') 16 16, pointer !important;
+    }
   }
 
   input, textarea, [contenteditable] {

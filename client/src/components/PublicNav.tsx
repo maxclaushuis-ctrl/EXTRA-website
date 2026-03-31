@@ -89,6 +89,17 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
     setLangOpen(false);
   }, [location]);
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
   const isDark = scrolled || forceDark || mobileOpen;
 
   const handleMouseLeave = () => {
@@ -341,11 +352,12 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
 
           {/* Mobile hamburger */}
           <button
-            className={`lg:hidden p-2 rounded-lg transition-colors ${
+            className={`lg:hidden p-3 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
               isDark ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/15"
             }`}
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Menu openen"
+            aria-label={mobileOpen ? "Menu sluiten" : "Menu openen"}
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -386,7 +398,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className="flex items-center gap-2 py-2.5 text-[14px] font-semibold text-gray-600 hover:text-purple-700"
+                        className="flex items-center gap-3 py-3 px-2 text-[15px] font-semibold text-gray-600 hover:text-purple-700 min-h-[44px]"
                       >
                         <item.icon className="w-3.5 h-3.5 text-purple-400" />
                         {item.label}

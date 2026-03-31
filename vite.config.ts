@@ -6,13 +6,16 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 export default defineConfig({
   plugins: [
     react(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
+    ...(process.env.NODE_ENV !== "production"
       ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
+          runtimeErrorOverlay(),
+          ...(process.env.REPL_ID !== undefined
+            ? [
+                await import("@replit/vite-plugin-cartographer").then((m) =>
+                  m.cartographer()
+                ),
+              ]
+            : []),
         ]
       : []),
   ],
@@ -27,5 +30,22 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-ui": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-select",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-tabs",
+          ],
+          "vendor-motion": ["framer-motion"],
+          "vendor-charts": ["recharts"],
+          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+        },
+      },
+    },
   },
 });
