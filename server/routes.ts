@@ -533,9 +533,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
       
-      // Debug logging
-      console.log("Wachtwoord hash in database:", user.password.substring(0, 30) + "...");
-      
       // Wachtwoordcheck: alle gebruikers (inclusief admins) worden via bcrypt geverifieerd.
       // SHA256-pad is alleen behouden voor accounts die nog niet gemigreerd zijn.
       // TODO: verwijder de SHA256-tak zodra alle bestaande hashes zijn gemigreerd naar bcrypt.
