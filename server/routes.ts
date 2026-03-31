@@ -154,40 +154,18 @@ function parseCookies(cookieString?: string): Record<string, string> {
 
 // Auth middleware
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Debug logging voor sessiegegevens
-  console.log("Sessie in authMiddleware:", req.session);
-  
-  // In productie zou je hier JWT of een robuustere sessieverificatie gebruiken
   if (req.session && req.session.userId) {
-    console.log("Toegang verleend voor gebruiker door sessie:", req.session.userId);
     return next();
   }
-  
-  console.log("Toegang geweigerd: Geen geldige gebruikerssessie of auth header gevonden");
   return res.status(401).json({ message: "Niet ingelogd" });
 }
 
 // Admin middleware
 async function adminMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Debug logging voor sessiegegevens
-  console.log("Sessie in adminMiddleware:", req.session);
-  
-  // Normale sessie validatie
   if (req.session && req.session.userId && req.session.userRole === 'admin') {
-    console.log("Toegang verleend voor admin-gebruiker door sessie:", req.session.userId);
     return next();
   }
-  
-  // Als de gebruiker niet is ingelogd via sessie, stuur 403
-  console.log("Admin toegang geweigerd, geen geldige sessie of ws auth");
-  return res.status(403).json({ 
-    message: "Geen toegang", 
-    sessionInfo: { 
-      hasSession: !!req.session,
-      hasUserId: !!req.session?.userId,
-      role: req.session?.userRole || 'none'
-    } 
-  });
+  return res.status(403).json({ message: "Geen toegang" });
 }
 
 // Plan de dagelijkse verjaardagscontrole (standaard elke dag om 00:05)
