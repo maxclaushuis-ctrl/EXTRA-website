@@ -6596,5 +6596,19 @@ ${posts.map(p => `  <url>
   // ─────────────────────────────────────────────────────────────────────────
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
+
+  // Beveiligde CV-download route — alleen toegankelijk voor ingelogde admins
+  app.get("/api/admin/files/cv/:filename", adminMiddleware, (req: Request, res: Response) => {
+    const filename = req.params.filename;
+    if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return res.status(400).json({ message: "Ongeldig bestandsnaam" });
+    }
+    const filePath = path.join(process.cwd(), 'uploads', 'cv', filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Bestand niet gevonden" });
+    }
+    res.sendFile(filePath);
+  });
+
   return httpServer;
 }
