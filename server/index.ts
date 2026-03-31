@@ -68,7 +68,7 @@ app.use(session({
     tableName: 'session',
     createTableIfMissing: true,
   }),
-  secret: 'extra-rewards-secret',
+  secret: process.env.SESSION_SECRET || 'extra-rewards-fallback-only-for-dev',
   resave: false,
   saveUninitialized: false,
   rolling: true,
