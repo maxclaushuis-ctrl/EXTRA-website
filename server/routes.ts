@@ -660,7 +660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     try {
       if (!req.session.userId) {
-        return res.status(401).json({ message: "Niet ingelogd" });
+        return res.status(200).json(null);
       }
       
       const user = await storage.getUser(req.session.userId);

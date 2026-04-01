@@ -31,29 +31,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     async function loadUser() {
       try {
-        console.log('Controleren of gebruiker is ingelogd...');
-        
         const response = await fetch('/api/auth/me', {
-          credentials: 'include', // Belangrijk: zorgt dat cookies worden meegestuurd
+          credentials: 'include',
         });
-        
-        console.log('Login check response status:', response.status);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Ingelogde gebruiker gevonden:', data);
-          setUser(data);
-          toast({
-            title: 'Welkom terug',
-            description: `Ingelogd als ${data.firstName} ${data.lastName}`,
-          });
-        } else {
-          console.log('Geen ingelogde gebruiker gevonden, status:', response.status);
-          const errorText = await response.text();
-          console.log('Error details:', errorText);
+          if (data) {
+            setUser(data);
+            toast({
+              title: 'Welkom terug',
+              description: `Ingelogd als ${data.firstName} ${data.lastName}`,
+            });
+          }
         }
       } catch (error) {
-        console.error('Error tijdens gebruiker ophalen:', error);
+        // Netwerk-fout, geen actie nodig
       } finally {
         setIsLoading(false);
       }
@@ -104,14 +97,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           
           if (meResponse.ok) {
             const meData = await meResponse.json();
-            console.log('AuthContext - /me check gelukt, gebruikersgegevens:', meData);
-            // Update user met volledige data
-            setUser(meData);
-          } else {
-            console.warn('AuthContext - /me check mislukt maar login was succesvol, vreemd!');
+            if (meData) setUser(meData);
           }
         } catch (meError) {
-          console.error('AuthContext - fout bij controleren van login via /me endpoint:', meError);
+          // Stille fout — login was al succesvol
         }
         
         toast({
