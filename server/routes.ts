@@ -81,6 +81,70 @@ async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 import rateLimit from "express-rate-limit";
 
+// ─── Jaicob.ai webhook helper ─────────────────────────────────────────────────
+async function sendJaicobWebhook(candidate: {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  birthDate?: string | null;
+  nationality?: string | null;
+  functionType?: string;
+  experience?: string | null;
+  dutchLevel?: string | null;
+  englishLevel?: string | null;
+  sourceChannel?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const webhookUrl = process.env.JAICOB_WEBHOOK_URL;
+    const apiKey = process.env.JAICOB_API_KEY;
+    if (!webhookUrl) {
+      console.warn('[Jaicob] JAICOB_WEBHOOK_URL niet geconfigureerd, webhook overgeslagen');
+      return { success: false, error: 'JAICOB_WEBHOOK_URL ontbreekt' };
+    }
+    const body = JSON.stringify({
+      event: 'candidate.created',
+      timestamp: new Date().toISOString(),
+      source: 'EXTRA Horecapersoneel',
+      data: {
+        id: String(candidate.id),
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email ?? null,
+        phone: candidate.phone ?? null,
+        city: candidate.city ?? null,
+        birthDate: candidate.birthDate ?? null,
+        nationality: candidate.nationality ?? null,
+        function: candidate.functionType ?? null,
+        experience: candidate.experience ?? null,
+        dutchLevel: candidate.dutchLevel ?? null,
+        englishLevel: candidate.englishLevel ?? null,
+        sourceChannel: candidate.sourceChannel ?? null,
+      },
+    });
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers,
+      body,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      console.error(`[Jaicob] Antwoordde ${response.status}: ${text}`);
+      return { success: false, error: `Jaicob: HTTP ${response.status}` };
+    }
+    console.log(`[Jaicob] Kandidaat #${candidate.id} (${candidate.firstName} ${candidate.lastName}) doorgestuurd naar Jaicob.ai`);
+    return { success: true };
+  } catch (err: any) {
+    console.error('[Jaicob] Fout bij versturen naar Jaicob.ai:', err?.message ?? err);
+    return { success: false, error: err?.message ?? 'Netwerkfout' };
+  }
+}
+
 // ─── EXTRA Planbord webhook helper ────────────────────────────────────────────
 const PLANBORD_WEBHOOK_URL = 'https://fb2e492b-f790-46d3-b361-647b16a91391-00-26hv39n5ydqms.janeway.replit.dev/api/webhooks/applicant-sync';
 
@@ -4020,6 +4084,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (notifErr) {
           console.error('Fout bij versturen aanmelding-notificatie:', notifErr);
         }
+      }
+
+      // Stuur voltooide aanmelding door naar Jaicob.ai (alleen bij niet-partial, niet-afgewezen)
+      if (!validated.partial && validated.status !== 'afgewezen') {
+        sendJaicobWebhook({
+          id: candidate.id,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          email: candidate.email,
+          phone: candidate.phone,
+          city: candidate.city,
+          birthDate: candidate.birthDate,
+          nationality: candidate.nationality,
+          functionType: candidate.functionType,
+          experience: (candidate as any).horecaExperience,
+          dutchLevel: (candidate as any).dutchLevel,
+          englishLevel: (candidate as any).englishLevel,
+          sourceChannel: (candidate as any).sourceChannel,
+        }).catch(err => console.error('[Jaicob] Fout na aanmelding:', err));
       }
 
       return res.status(201).json({ id: candidate.id, message: "Aanmelding ontvangen" });
