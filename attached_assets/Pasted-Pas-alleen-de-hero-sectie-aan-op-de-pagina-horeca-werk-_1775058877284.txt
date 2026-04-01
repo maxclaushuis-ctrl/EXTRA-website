@@ -1,0 +1,55 @@
+Pas alleen de hero sectie aan op de pagina /horeca-werk.
+
+Gebruik de hero van /front-office-vacatures-amsterdam als exacte visuele leidraad.
+Kopieer de layout, het patroon, de uitlijning en het kleurverloop 1-op-1.
+Verander verder niets aan de rest van de pagina.
+
+═══════════════════════════════════════════════════════════
+VISUELE LEIDRAAD — kopieer exact van /front-office-vacatures-amsterdam
+═══════════════════════════════════════════════════════════
+
+- Donkerpaarse achtergrond met dieptewerking (zelfde gradient)
+- Afbeelding rechts uitgelijnd, geen achtergrond, volle hoogte hero
+- Tekst blok links uitgelijnd, verticaal gecentreerd in de hero
+- Subtiel "X" patroon zichtbaar in de achtergrond (behoud exact dezelfde opaciteit en schaal)
+- Zelfde pill-shaped badges onder de CTA knoppen
+- Zelfde typografie, gewichten en groottes
+- Zelfde knopstijlen en uitlijning
+
+═══════════════════════════════════════════════════════════
+CONTENT — alleen dit aanpassen voor /horeca-werk
+═══════════════════════════════════════════════════════════
+
+Pill badge boven de H1:
+"Horeca vacatures via EXTRA"
+
+H1:
+"Horecawerk
+dat bij jou past."
+
+Subtitel:
+"Werk achter de bar of in de bediening bij de leukste
+horecagelegenheden in Amsterdam. Via EXTRA kies je zelf
+je diensten. Flexibel werken met dagbetaling."
+
+CTA primair: "Meld je aan →"
+CTA secundair: "Bekijk hoe het werkt →"
+
+Pill badges onder de CTA's:
+⚡ Dagbetaling via Jixbee
+🍹 Toplocaties Amsterdam
+📅 Flexibele diensten
+
+Afbeelding rechts:
+Gebruik de bestaande afbeelding BAR_BEDIENING_FINAL_AE_001
+die al in het project staat. Niet vervangen, niet aanpassen.
+
+═══════════════════════════════════════════════════════════
+BELANGRIJK
+═══════════════════════════════════════════════════════════
+
+- Alleen de hero sectie aanpassen — niets anders op de pagina
+- Geen nieuwe dependencies toevoegen
+- Geen stijlwijzigingen buiten de hero
+- Het eindresultaat moet visueel identiek zijn aan de
+  /front-office-vacatures-amsterdam hero, alleen met andere content
