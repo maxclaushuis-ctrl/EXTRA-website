@@ -12,7 +12,7 @@ import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 import frontOffice2Img from "@assets/Front-office_1771842809388.webp";
-import frontOfficeHeroImg from "@assets/PHOTO-2026-03-19-17-40-31_1774004644769.jpg";
+import frontOfficeHeroImg from "@assets/FRONT_OFFICE_FINAL_AE_001_1775059133785.png";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import mercureLogo from "../assets/pitch/logo-mercure.png";
