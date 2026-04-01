@@ -347,7 +347,7 @@ export default function NieuwsArtikel() {
             </div>
 
             <div
-              className="prose prose-lg prose-purple max-w-none
+              className="max-w-none
                 [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:pb-2 [&_h2]:border-b [&_h2]:border-gray-100
                 [&_p]:text-gray-700 [&_p]:leading-relaxed [&_p]:mb-5
                 [&_ul]:my-5 [&_ul]:space-y-2

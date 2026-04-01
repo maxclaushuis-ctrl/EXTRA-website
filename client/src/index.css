@@ -136,6 +136,28 @@
   .bg-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
+
+  /* Vervanging voor @tailwindcss/typography prose klassen */
+  .rich-text { max-width: none; font-size: 0.875rem; line-height: 1.625; color: #374151; }
+  .rich-text h1 { font-size: 1.5rem; font-weight: 700; margin: 1.25rem 0 0.75rem; color: #111827; }
+  .rich-text h2 { font-size: 1.25rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: #111827; }
+  .rich-text h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem; color: #111827; }
+  .rich-text p { margin: 0 0 0.75rem; }
+  .rich-text ul, .rich-text ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+  .rich-text ul { list-style-type: disc; }
+  .rich-text ol { list-style-type: decimal; }
+  .rich-text li { margin-bottom: 0.25rem; }
+  .rich-text strong, .rich-text b { font-weight: 600; color: #111827; }
+  .rich-text em, .rich-text i { font-style: italic; }
+  .rich-text a { color: #7c3aed; text-decoration: underline; }
+  .rich-text a:hover { color: #5b21b6; }
+  .rich-text blockquote { border-left: 3px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 1rem 0; }
+  .rich-text pre { background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.8rem; margin: 0.75rem 0; }
+  .rich-text code { background: #f3f4f6; padding: 0.125rem 0.35rem; border-radius: 0.25rem; font-size: 0.8rem; }
+  .rich-text table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }
+  .rich-text th, .rich-text td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
+  .rich-text th { background: #f9fafb; font-weight: 600; }
+  .rich-text hr { border: none; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
 }
 
 @layer utilities {

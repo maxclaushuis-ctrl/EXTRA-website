@@ -182,7 +182,7 @@ export default function VacatureDetail() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-12">
                 <RevealSection>
-                  <div className="prose prose-invert max-w-none">
+                  <div className="max-w-none">
                     <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 flex items-center gap-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       <span className="w-8 h-1 bg-purple-500 rounded-full inline-block"></span>
                       Over deze functie

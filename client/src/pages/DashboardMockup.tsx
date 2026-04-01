@@ -1042,7 +1042,7 @@ export default function DashboardMockup() {
                           )}
                           {docxHtml && !docxLoading && (
                             <div
-                              className="border border-gray-200 rounded-lg p-6 overflow-y-auto bg-white text-gray-800 text-sm leading-relaxed prose prose-sm max-w-none"
+                              className="border border-gray-200 rounded-lg p-6 overflow-y-auto bg-white text-gray-800 text-sm leading-relaxed rich-text"
                               style={{ maxHeight: '60vh' }}
                               dangerouslySetInnerHTML={{ __html: docxHtml }}
                             />
@@ -4133,7 +4133,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                     </DialogTitle>
                   </DialogHeader>
                   {blogPreviewPost && (
-                    <div className="prose prose-sm max-w-none">
+                    <div className="max-w-none">
                       <div className="bg-gray-50 rounded-lg p-3 mb-4 space-y-1">
                         <div className="text-xs text-gray-500">Meta titel: <span className="text-gray-700 font-medium">{blogPreviewPost.metaTitle || blogPreviewPost.title}</span></div>
                         <div className="text-xs text-gray-500">Meta description: <span className="text-gray-700">{blogPreviewPost.metaDescription || '—'}</span></div>
