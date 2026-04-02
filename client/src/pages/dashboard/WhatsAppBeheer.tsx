@@ -79,6 +79,14 @@ export default function WhatsAppBeheer() {
 
     (['horeca', 'logistiek', 'housekeeping'] as AccountId[]).forEach(laadBerichten);
 
+    // Poll account states every 4 seconds als fallback voor SSE-timing
+    const poll = setInterval(() => {
+      fetch('/api/whatsapp/accounts')
+        .then(r => r.ok ? r.json() : null)
+        .then((data: AccountState[] | null) => { if (data) setAccounts(data); })
+        .catch(() => {});
+    }, 4000);
+
     const sse = new EventSource('/api/whatsapp/stream');
 
     sse.addEventListener('status', (e) => {
@@ -96,7 +104,7 @@ export default function WhatsAppBeheer() {
       setBerichten(prev => ({ ...prev, [id]: [bericht, ...(prev[id] || [])] }));
     });
 
-    return () => sse.close();
+    return () => { sse.close(); clearInterval(poll); };
   }, []);
 
   useEffect(() => {
@@ -220,7 +228,7 @@ export default function WhatsAppBeheer() {
               {actiefAccount ? statusLabel(actiefAccount) : ''}
             </p>
           </div>
-          {actiefAccount?.status === 'disconnected' && (
+          {actiefAccount && actiefAccount.status !== 'connected' && (
             <button
               onClick={() => handleVerbinden(actief)}
               style={{
@@ -228,7 +236,8 @@ export default function WhatsAppBeheer() {
                 padding: '7px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
-              Verbinden
+              {actiefAccount.status === 'connecting' ? 'Vernieuw QR' :
+               actiefAccount.status === 'qr_ready' ? 'Nieuwe QR' : 'Verbinden'}
             </button>
           )}
         </div>
