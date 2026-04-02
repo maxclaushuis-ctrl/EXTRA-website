@@ -12,6 +12,7 @@ interface AccountState {
   lastSeen: string | null;
   berichtenCount: number;
   ongelezen: number;
+  fout?: string | null;
 }
 
 interface Bericht {
@@ -230,17 +231,28 @@ export default function WhatsAppBeheer() {
           </div>
           {actiefAccount && actiefAccount.status !== 'connected' && (
             <button
-              onClick={() => handleVerbinden(actief)}
+              onClick={() => actiefAccount.status !== 'connecting' && handleVerbinden(actief)}
+              disabled={actiefAccount.status === 'connecting'}
               style={{
-                background: '#7C3AED', color: '#fff', border: 'none', borderRadius: 8,
-                padding: '7px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                background: actiefAccount.status === 'connecting' ? '#C4B5FD' : '#7C3AED',
+                color: '#fff', border: 'none', borderRadius: 8,
+                padding: '7px 16px', fontSize: 12, fontWeight: 600,
+                cursor: actiefAccount.status === 'connecting' ? 'not-allowed' : 'pointer',
+                transition: 'background 0.2s',
               }}
             >
-              {actiefAccount.status === 'connecting' ? 'Vernieuw QR' :
+              {actiefAccount.status === 'connecting' ? 'Verbinden...' :
                actiefAccount.status === 'qr_ready' ? 'Nieuwe QR' : 'Verbinden'}
             </button>
           )}
         </div>
+
+        {/* Foutmelding */}
+        {actiefAccount?.fout && actiefAccount.status === 'disconnected' && (
+          <div style={{ margin: '12px 20px 0', padding: '10px 14px', background: '#FEF2F2', borderRadius: 8, border: '1px solid #FECACA' }}>
+            <p style={{ fontSize: 12, color: '#DC2626', margin: 0 }}>⚠ {actiefAccount.fout}</p>
+          </div>
+        )}
 
         {/* QR code */}
         {actiefAccount?.status === 'qr_ready' && actiefAccount?.qr && (
