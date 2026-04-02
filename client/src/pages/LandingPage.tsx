@@ -845,7 +845,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-lg sm:text-xl text-purple-100/90 leading-relaxed font-medium mb-8 max-w-lg">
-              Snel horecapersoneel inzetten of direct aan de slag? Bij EXTRA regelen we het.
+              Flexibel horecapersoneel inzetten of direct aan de slag in de horeca? Bij EXTRA regelen we het.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
