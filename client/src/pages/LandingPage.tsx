@@ -800,7 +800,7 @@ export default function LandingPage() {
             {...{ fetchpriority: "high" } as any}
             decoding="async"
             style={{
-              objectPosition: "50% center",
+              objectPosition: "55% center",
               filter: "contrast(1.05) saturate(1.10) brightness(0.95)",
             }}
           />
@@ -811,7 +811,7 @@ export default function LandingPage() {
           }} />
 
           {/* Gradient links — tekst leesbaar */}
-          <div className="absolute inset-0 hero-text-gradient" />
+          <div className="absolute inset-0 landing-text-gradient" />
 
           {/* Bottom vignette */}
           <div className="absolute bottom-0 left-0 right-0" style={{

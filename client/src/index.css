@@ -214,6 +214,47 @@
   }
 }
 
+/* Landing page — text gradient (iets breder dan hero-text-gradient voor betere leesbaarheid) */
+.landing-text-gradient {
+  background: linear-gradient(to right,
+    rgba(29,5,73,1)   0%,
+    rgba(29,5,73,.98) 22%,
+    rgba(52,10,115,.88) 35%,
+    rgba(68,13,140,.55) 46%,
+    rgba(72,14,148,.18) 54%,
+    rgba(72,14,148,.04) 60%,
+    transparent       66%
+  );
+}
+
+@media (min-width: 1440px) {
+  .landing-text-gradient {
+    background: linear-gradient(to right,
+      rgba(29,5,73,1)   0%,
+      rgba(29,5,73,.98) 18%,
+      rgba(52,10,115,.88) 28%,
+      rgba(68,13,140,.55) 38%,
+      rgba(72,14,148,.18) 46%,
+      rgba(72,14,148,.04) 52%,
+      transparent       57%
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .landing-text-gradient {
+    background: linear-gradient(to right,
+      rgba(29,5,73,1)   0%,
+      rgba(29,5,73,.98) 14%,
+      rgba(52,10,115,.88) 23%,
+      rgba(68,13,140,.55) 32%,
+      rgba(72,14,148,.18) 41%,
+      rgba(72,14,148,.04) 48%,
+      transparent       55%
+    );
+  }
+}
+
 /* Landing page hero gradient */
 .landing-hero-gradient {
   background: linear-gradient(90deg,
