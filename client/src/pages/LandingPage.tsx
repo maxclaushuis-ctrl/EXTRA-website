@@ -800,7 +800,7 @@ export default function LandingPage() {
             {...{ fetchpriority: "high" } as any}
             decoding="async"
             style={{
-              left: "7%",
+              left: "4%",
               objectPosition: "68% center",
               filter: "contrast(1.08) saturate(1.20) brightness(1.08)",
             }}
