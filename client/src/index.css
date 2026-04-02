@@ -214,16 +214,16 @@
   }
 }
 
-/* Landing page — text gradient (iets breder dan hero-text-gradient voor betere leesbaarheid) */
+/* Landing page — text gradient (donker vlak links verder doorgetrokken) */
 .landing-text-gradient {
   background: linear-gradient(to right,
     rgba(29,5,73,1)   0%,
-    rgba(29,5,73,.98) 24%,
-    rgba(52,10,115,.88) 38%,
-    rgba(68,13,140,.55) 50%,
-    rgba(72,14,148,.18) 58%,
-    rgba(72,14,148,.04) 64%,
-    transparent       70%
+    rgba(29,5,73,.98) 30%,
+    rgba(52,10,115,.92) 44%,
+    rgba(68,13,140,.65) 56%,
+    rgba(72,14,148,.22) 65%,
+    rgba(72,14,148,.05) 71%,
+    transparent       76%
   );
 }
 
@@ -231,12 +231,12 @@
   .landing-text-gradient {
     background: linear-gradient(to right,
       rgba(29,5,73,1)   0%,
-      rgba(29,5,73,.98) 20%,
-      rgba(52,10,115,.88) 31%,
-      rgba(68,13,140,.55) 42%,
-      rgba(72,14,148,.18) 51%,
-      rgba(72,14,148,.04) 57%,
-      transparent       62%
+      rgba(29,5,73,.98) 25%,
+      rgba(52,10,115,.92) 37%,
+      rgba(68,13,140,.65) 49%,
+      rgba(72,14,148,.22) 58%,
+      rgba(72,14,148,.05) 64%,
+      transparent       69%
     );
   }
 }
@@ -245,12 +245,12 @@
   .landing-text-gradient {
     background: linear-gradient(to right,
       rgba(29,5,73,1)   0%,
-      rgba(29,5,73,.98) 16%,
-      rgba(52,10,115,.88) 26%,
-      rgba(68,13,140,.55) 36%,
-      rgba(72,14,148,.18) 46%,
-      rgba(72,14,148,.04) 53%,
-      transparent       60%
+      rgba(29,5,73,.98) 20%,
+      rgba(52,10,115,.92) 31%,
+      rgba(68,13,140,.65) 43%,
+      rgba(72,14,148,.22) 53%,
+      rgba(72,14,148,.05) 60%,
+      transparent       66%
     );
   }
 }
