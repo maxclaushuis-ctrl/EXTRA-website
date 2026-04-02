@@ -1,0 +1,60 @@
+Pas alleen de hero sectie aan op de pagina /landing.
+
+Gebruik de hero van /horeca-werk en /housekeeping-werk als exacte 
+visuele leidraad. Kopieer de layout, het patroon, de uitlijning en 
+het kleurverloop 1-op-1.
+Verander verder niets aan de rest van de pagina.
+
+═══════════════════════════════════════════════════════════
+VISUELE LEIDRAAD — kopieer exact van /horeca-werk en /housekeeping-werk
+═══════════════════════════════════════════════════════════
+
+- Donkerpaarse achtergrond met dieptewerking (zelfde gradient)
+- Afbeelding rechts uitgelijnd, volle hoogte hero
+- Tekstblok links uitgelijnd, verticaal gecentreerd in de hero
+- Subtiel "X" patroon zichtbaar in de achtergrond (zelfde opaciteit en schaal)
+- Zelfde pill-shaped badge boven de H1
+- Zelfde typografie, gewichten en groottes
+- Zelfde knopstijlen en uitlijning
+- Zelfde pill badges onder de CTA knoppen
+
+═══════════════════════════════════════════════════════════
+CONTENT — alleen dit aanpassen voor /landing
+═══════════════════════════════════════════════════════════
+
+Pill badge boven de H1:
+"800+ medewerkers actief"
+
+H1:
+"Horeca draait op mensen,
+EXTRA levert ze!"
+
+Subtitel:
+"Snel horecapersoneel inzetten of direct aan de slag?
+Bij EXTRA regelen we het."
+
+USP rij onder de subtitel (behoud de huidige 3 USP's):
+✓ Iedereen in loondienst
+☆ Geselecteerd personeel
+⬡ Dagbetaling mogelijk
+
+CTA primair: "Ik zoek extra personeel →"
+CTA secundair: "Ik zoek extra werk →"
+
+Afbeelding rechts:
+Gebruik GROUP_SHOT_002 die al in het project staat.
+Positioneer de afbeelding zodat alle 4 personen volledig
+zichtbaar zijn van hoofd tot voeten.
+Schaal de afbeelding zodat die de volledige hero hoogte vult
+aan de rechterkant zonder dat personen worden afgesneden.
+
+═══════════════════════════════════════════════════════════
+BELANGRIJK
+═══════════════════════════════════════════════════════════
+
+- Alleen de hero sectie aanpassen — niets anders op de pagina
+- Geen nieuwe dependencies toevoegen
+- Geen stijlwijzigingen buiten de hero
+- Het eindresultaat moet visueel identiek zijn aan de hero's van
+  /horeca-werk en /housekeeping-werk, alleen met andere content
+  en GROUP_SHOT_002 als afbeelding

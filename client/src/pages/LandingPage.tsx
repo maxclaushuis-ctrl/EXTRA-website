@@ -10,7 +10,7 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin, Instagram, Linkedin
 } from "lucide-react";
-import heroBartenderBg from "@assets/GROUP_SHOT_002_1775113554986.png";
+import groupShotHero from "@assets/GROUP_SHOT_002_1775115679180.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
@@ -773,82 +773,96 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       {/* 1. HERO                                          */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="relative min-h-[100svh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 bg-[#3b0d8f]">
-          <div className="absolute right-0 top-0 bottom-0 w-[58%] xl:w-[62%] 2xl:w-[66%] hidden sm:block overflow-hidden">
-            <img
-              src={heroBartenderBg}
-              alt=""
-              className="w-full h-full object-cover object-center"
-              style={{ filter: "contrast(1.05) saturate(1.08) brightness(0.92)" }}
-              loading="eager"
-              {...{ fetchpriority: "high" } as any}
-              decoding="async"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(90deg,
-                  rgba(59,13,143,1) 0%,
-                  rgba(59,13,143,0.55) 28%,
-                  rgba(59,13,143,0.10) 60%,
-                  rgba(59,13,143,0.0) 100%
-                )`
-              }}
-            />
-          </div>
-          <div className="absolute inset-0 landing-hero-gradient" />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
-        </div>
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-          <div className="absolute" style={{ left: "5%", top: "10%", width: 200, height: 200, transform: "rotate(15deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
-          <div className="absolute" style={{ left: "15%", top: "75%", width: 180, height: 180, transform: "rotate(-10deg)", opacity: 0.12, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
+
+        {/* X-patroon achtergrond */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
         </div>
 
-        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 mb-6 sm:mb-10 border border-white/20">
-              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-white/90 text-xs sm:text-sm font-semibold">800+ medewerkers actief</span>
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero foto — volledig scherm */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={groupShotHero}
+            alt="EXTRA horecapersoneel Amsterdam – staffing agency"
+            className="w-full h-full object-cover"
+            loading="eager"
+            {...{ fetchpriority: "high" } as any}
+            decoding="async"
+            style={{
+              objectPosition: "50% center",
+              filter: "contrast(1.05) saturate(1.10) brightness(0.95)",
+            }}
+          />
+
+          {/* Spotlight radial achter de groep */}
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
+          }} />
+
+          {/* Gradient links — tekst leesbaar */}
+          <div className="absolute inset-0 hero-text-gradient" />
+
+          {/* Bottom vignette */}
+          <div className="absolute bottom-0 left-0 right-0" style={{
+            height: "20%",
+            background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)"
+          }} />
+
+          {/* Top vignette — navbar overlay */}
+          <div className="absolute top-0 left-0 right-0" style={{
+            height: "18%",
+            background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)"
+          }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
+          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
+              <Users className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-white/90 text-xs font-semibold">800+ medewerkers actief</span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.08] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
               Horeca draait op mensen,{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">EXTRA</span>
-                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+                <span className="relative z-10">EXTRA levert ze!</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
-              {" "}levert ze!
             </h1>
 
-            <p className="text-lg sm:text-xl text-purple-100/75 leading-relaxed max-w-lg mb-8 sm:mb-10 font-medium">
+            <p className="text-lg sm:text-xl text-purple-100/90 leading-relaxed font-medium mb-8 max-w-lg">
               Snel horecapersoneel inzetten of direct aan de slag? Bij EXTRA regelen we het.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 mb-8 sm:mb-12">
-              {[
-                { icon: Check, text: "Iedereen in loondienst" },
-                { icon: Star, text: "Geselecteerd personeel" },
-                { icon: CreditCard, text: "Dagbetaling mogelijk" },
-              ].map((usp, i) => (
-                <div key={i} className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-                    <usp.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" />
-                  </div>
-                  <span className="text-white/90 text-sm sm:text-base font-medium">{usp.text}</span>
-                </div>
-              ))}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <a href="/personeel-gezocht" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+                Ik zoek extra personeel <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a href="/ik-zoek-extra-werk" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+                Ik zoek extra werk <ArrowRight className="w-5 h-5" />
+              </a>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-16 sm:mb-20">
-              <a href="/personeel-gezocht" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
-                Ik zoek extra personeel
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-              <a href="/ik-zoek-extra-werk" className="group border-2 border-white/30 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-white/10 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
-                Ik zoek extra werk
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
+            <div className="flex flex-wrap gap-2.5">
+              {[
+                { emoji: "✓", label: "Iedereen in loondienst" },
+                { emoji: "☆", label: "Geselecteerd personeel" },
+                { emoji: "⬡", label: "Dagbetaling mogelijk" },
+              ].map(({ emoji, label }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">{emoji} {label}</span>
+              ))}
             </div>
           </div>
         </div>
