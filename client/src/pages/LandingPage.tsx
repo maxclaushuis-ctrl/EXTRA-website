@@ -779,7 +779,7 @@ export default function LandingPage() {
             <img
               src={heroBartenderBg}
               alt=""
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-contain object-right-bottom"
               style={{ filter: "contrast(1.05) saturate(1.08) brightness(0.92)" }}
               loading="eager"
               {...{ fetchpriority: "high" } as any}
