@@ -218,12 +218,12 @@
 .landing-text-gradient {
   background: linear-gradient(to right,
     rgba(29,5,73,1)   0%,
-    rgba(29,5,73,.98) 22%,
-    rgba(52,10,115,.88) 35%,
-    rgba(68,13,140,.55) 46%,
-    rgba(72,14,148,.18) 54%,
-    rgba(72,14,148,.04) 60%,
-    transparent       66%
+    rgba(29,5,73,.98) 24%,
+    rgba(52,10,115,.88) 38%,
+    rgba(68,13,140,.55) 50%,
+    rgba(72,14,148,.18) 58%,
+    rgba(72,14,148,.04) 64%,
+    transparent       70%
   );
 }
 
@@ -231,12 +231,12 @@
   .landing-text-gradient {
     background: linear-gradient(to right,
       rgba(29,5,73,1)   0%,
-      rgba(29,5,73,.98) 18%,
-      rgba(52,10,115,.88) 28%,
-      rgba(68,13,140,.55) 38%,
-      rgba(72,14,148,.18) 46%,
-      rgba(72,14,148,.04) 52%,
-      transparent       57%
+      rgba(29,5,73,.98) 20%,
+      rgba(52,10,115,.88) 31%,
+      rgba(68,13,140,.55) 42%,
+      rgba(72,14,148,.18) 51%,
+      rgba(72,14,148,.04) 57%,
+      transparent       62%
     );
   }
 }
@@ -245,12 +245,12 @@
   .landing-text-gradient {
     background: linear-gradient(to right,
       rgba(29,5,73,1)   0%,
-      rgba(29,5,73,.98) 14%,
-      rgba(52,10,115,.88) 23%,
-      rgba(68,13,140,.55) 32%,
-      rgba(72,14,148,.18) 41%,
-      rgba(72,14,148,.04) 48%,
-      transparent       55%
+      rgba(29,5,73,.98) 16%,
+      rgba(52,10,115,.88) 26%,
+      rgba(68,13,140,.55) 36%,
+      rgba(72,14,148,.18) 46%,
+      rgba(72,14,148,.04) 53%,
+      transparent       60%
     );
   }
 }
