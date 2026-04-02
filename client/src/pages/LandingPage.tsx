@@ -10,7 +10,7 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin, Instagram, Linkedin
 } from "lucide-react";
-import heroBartenderBg from "@assets/hero-bartender-bg.png";
+import heroBartenderBg from "@assets/GROUP_SHOT_002_1775113554986.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
