@@ -247,10 +247,8 @@ export default function FrontOfficeVacaturesAmsterdam() {
             background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Gradient links — stopt vóór de persoon (volledig transparant op 60%) */}
-          <div className="absolute inset-0" style={{
-            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,0.98) 20%, rgba(52,10,115,0.88) 32%, rgba(68,13,140,0.55) 42%, rgba(72,14,148,0.18) 50%, rgba(72,14,148,0.04) 56%, transparent 62%)"
-          }} />
+          {/* Gradient links — tekst leesbaar */}
+          <div className="absolute inset-0 hero-text-gradient" />
 
           {/* Bottom vignette — alleen de alleronderste rand */}
           <div className="absolute bottom-0 left-0 right-0" style={{
@@ -267,7 +265,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
 
         {/* ── Content ── */}
         <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
-          <div className="max-w-xl lg:max-w-[52%]">
+          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
               <ConciergeBell className="w-3.5 h-3.5 text-white/80" />
               <span className="text-white/90 text-xs font-semibold">Front office vacatures via EXTRA</span>

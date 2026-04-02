@@ -775,7 +775,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-[#3b0d8f]">
-          <div className="absolute right-0 top-0 bottom-0 w-[58%] hidden sm:block overflow-hidden">
+          <div className="absolute right-0 top-0 bottom-0 w-[58%] xl:w-[62%] 2xl:w-[66%] hidden sm:block overflow-hidden">
             <img
               src={heroBartenderBg}
               alt=""
@@ -797,18 +797,7 @@ export default function LandingPage() {
               }}
             />
           </div>
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(90deg,
-                rgba(88,22,164,0.97) 0%,
-                rgba(88,22,164,0.93) 38%,
-                rgba(88,22,164,0.50) 56%,
-                rgba(88,22,164,0.08) 78%,
-                rgba(88,22,164,0.0) 100%
-              )`
-            }}
-          />
+          <div className="absolute inset-0 landing-hero-gradient" />
           <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
         </div>
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">

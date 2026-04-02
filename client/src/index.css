@@ -167,6 +167,89 @@
 }
 
 /* ══════════════════════════════════════════════════════════
+   HERO RESPONSIVE GRADIENTS
+   Op 1280px eindigt de gradient op 62%. Op 1440px en 1920px
+   wordt de gradient eerder transparant zodat meer van de
+   afbeelding (persoon) zichtbaar is en de donkere lege zone
+   tussen tekst en persoon verdwijnt.
+   ══════════════════════════════════════════════════════════ */
+
+.hero-text-gradient {
+  background: linear-gradient(to right,
+    rgba(29,5,73,1)   0%,
+    rgba(29,5,73,.98) 20%,
+    rgba(52,10,115,.88) 32%,
+    rgba(68,13,140,.55) 42%,
+    rgba(72,14,148,.18) 50%,
+    rgba(72,14,148,.04) 56%,
+    transparent       62%
+  );
+}
+
+@media (min-width: 1440px) {
+  .hero-text-gradient {
+    background: linear-gradient(to right,
+      rgba(29,5,73,1)   0%,
+      rgba(29,5,73,.98) 15%,
+      rgba(52,10,115,.88) 25%,
+      rgba(68,13,140,.55) 33%,
+      rgba(72,14,148,.18) 40%,
+      rgba(72,14,148,.04) 46%,
+      transparent       52%
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .hero-text-gradient {
+    background: linear-gradient(to right,
+      rgba(29,5,73,1)   0%,
+      rgba(29,5,73,.98) 11%,
+      rgba(52,10,115,.88) 19%,
+      rgba(68,13,140,.55) 26%,
+      rgba(72,14,148,.18) 33%,
+      rgba(72,14,148,.04) 39%,
+      transparent       45%
+    );
+  }
+}
+
+/* Landing page hero gradient */
+.landing-hero-gradient {
+  background: linear-gradient(90deg,
+    rgba(88,22,164,.97) 0%,
+    rgba(88,22,164,.93) 38%,
+    rgba(88,22,164,.50) 56%,
+    rgba(88,22,164,.08) 78%,
+    rgba(88,22,164,.0)  100%
+  );
+}
+
+@media (min-width: 1440px) {
+  .landing-hero-gradient {
+    background: linear-gradient(90deg,
+      rgba(88,22,164,.97) 0%,
+      rgba(88,22,164,.93) 30%,
+      rgba(88,22,164,.50) 44%,
+      rgba(88,22,164,.08) 60%,
+      rgba(88,22,164,.0)  100%
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .landing-hero-gradient {
+    background: linear-gradient(90deg,
+      rgba(88,22,164,.97) 0%,
+      rgba(88,22,164,.93) 23%,
+      rgba(88,22,164,.50) 36%,
+      rgba(88,22,164,.08) 50%,
+      rgba(88,22,164,.0)  100%
+    );
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
    SMALL LAPTOP RESPONSIVE ADJUSTMENTS  (1024px – 1279px)
    Ensures 11-inch screens match the 13-inch layout visually.
    Does NOT affect mobile (< 1024px) or larger screens (≥ 1280px).
