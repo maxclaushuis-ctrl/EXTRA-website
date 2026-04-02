@@ -1,0 +1,626 @@
+Perfect. Nu heb ik alles. Hier is de volledige prompt:
+
+---
+
+**REPLIT PROMPT — EXTRA-website: WhatsApp beheer subtab in /dashboard-mockup**
+
+Voeg een nieuwe subtab "WhatsApp" toe aan de bestaande `/dashboard-mockup` pagina in het EXTRA-website project. Dit is een beheerpagina voor drie WhatsApp nummers (Horeca, Logistiek, Housekeeping) via Baileys.
+
+---
+
+## BACKEND SETUP — BAILEYS
+
+Installeer de benodigde packages in het EXTRA-website project:
+
+```bash
+npm install @whiskeysockets/baileys@latest
+npm install qrcode
+npm install qrcode-terminal
+npm install @hapi/boom
+npm install pino
+```
+
+### Server-side WhatsApp manager
+
+Maak een nieuw bestand `server/whatsapp/manager.js`:
+
+```javascript
+const { default: makeWASocket, DisconnectReason, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
+const QRCode = require('qrcode');
+const path = require('path');
+const fs = require('fs');
+
+// Drie vaste accounts
+const ACCOUNTS = [
+  { id: 'horeca',      label: 'Horeca',      categorie: 'horeca' },
+  { id: 'logistiek',   label: 'Logistiek',   categorie: 'logistiek' },
+  { id: 'housekeeping',label: 'Housekeeping', categorie: 'housekeeping' },
+];
+
+// State per account
+const sockets = {};
+const accountState = {};
+const messageStore = {};
+const qrCodes = {};
+const eventEmitter = require('./events');
+
+ACCOUNTS.forEach(account => {
+  accountState[account.id] = {
+    ...account,
+    status: 'disconnected', // 'disconnected' | 'qr_ready' | 'connecting' | 'connected'
+    telefoon: null,
+    qr: null,
+    lastSeen: null,
+    berichtenCount: 0,
+    ongelezen: 0
+  };
+  messageStore[account.id] = [];
+});
+
+async function connectAccount(accountId) {
+  const account = ACCOUNTS.find(a => a.id === accountId);
+  if (!account) throw new Error('Account niet gevonden');
+
+  // Sessie opslaan per account
+  const sessieMap = path.join(__dirname, `../../sessions/${accountId}`);
+  if (!fs.existsSync(sessieMap)) fs.mkdirSync(sessieMap, { recursive: true });
+
+  const { state, saveCreds } = await useMultiFileAuthState(sessieMap);
+
+  const socket = makeWASocket({
+    auth: state,
+    printQRInTerminal: false,
+    logger: require('pino')({ level: 'silent' }),
+    browser: ['EXTRA Plansysteem', 'Chrome', '1.0.0'],
+  });
+
+  sockets[accountId] = socket;
+  accountState[accountId].status = 'connecting';
+  eventEmitter.emit('status-update', accountId, accountState[accountId]);
+
+  // QR code event
+  socket.ev.on('connection.update', async (update) => {
+    const { connection, lastDisconnect, qr } = update;
+
+    if (qr) {
+      // Genereer QR als base64 afbeelding
+      const qrBase64 = await QRCode.toDataURL(qr);
+      accountState[accountId].status = 'qr_ready';
+      accountState[accountId].qr = qrBase64;
+      eventEmitter.emit('qr-update', accountId, qrBase64);
+      eventEmitter.emit('status-update', accountId, accountState[accountId]);
+    }
+
+    if (connection === 'close') {
+      const shouldReconnect = (lastDisconnect?.error instanceof Boom)
+        ? lastDisconnect.error.output?.statusCode !== DisconnectReason.loggedOut
+        : true;
+
+      accountState[accountId].status = 'disconnected';
+      accountState[accountId].qr = null;
+      eventEmitter.emit('status-update', accountId, accountState[accountId]);
+
+      if (shouldReconnect) {
+        // Wacht 3 seconden dan opnieuw verbinden
+        setTimeout(() => connectAccount(accountId), 3000);
+      }
+    }
+
+    if (connection === 'open') {
+      accountState[accountId].status = 'connected';
+      accountState[accountId].qr = null;
+      accountState[accountId].telefoon = socket.user?.id?.split(':')[0] || null;
+      accountState[accountId].lastSeen = new Date().toISOString();
+      eventEmitter.emit('status-update', accountId, accountState[accountId]);
+    }
+  });
+
+  // Credentials opslaan
+  socket.ev.on('creds.update', saveCreds);
+
+  // Inkomende berichten opslaan
+  socket.ev.on('messages.upsert', ({ messages, type }) => {
+    if (type !== 'notify') return;
+
+    messages.forEach(msg => {
+      if (!msg.message) return;
+      if (msg.key.fromMe) return; // Eigen berichten overslaan
+
+      const bericht = {
+        id:        msg.key.id,
+        accountId,
+        van:       msg.key.remoteJid?.replace('@s.whatsapp.net', ''),
+        naam:      msg.pushName || 'Onbekend',
+        tekst:     msg.message?.conversation ||
+                   msg.message?.extendedTextMessage?.text || '',
+        tijdstip:  new Date(msg.messageTimestamp * 1000).toISOString(),
+        gelezen:   false,
+        inkomend:  true,
+      };
+
+      messageStore[accountId].unshift(bericht);
+      accountState[accountId].berichtenCount++;
+      accountState[accountId].ongelezen++;
+
+      eventEmitter.emit('nieuw-bericht', accountId, bericht);
+    });
+  });
+}
+
+async function stuurBericht(accountId, nummer, tekst) {
+  const socket = sockets[accountId];
+  if (!socket) throw new Error('Account niet verbonden');
+
+  const jid = `${nummer.replace(/[^0-9]/g, '')}@s.whatsapp.net`;
+
+  await socket.sendMessage(jid, { text: tekst });
+
+  // Sla uitgaand bericht op
+  const bericht = {
+    id:        `out_${Date.now()}`,
+    accountId,
+    naar:      nummer,
+    tekst,
+    tijdstip:  new Date().toISOString(),
+    gelezen:   true,
+    inkomend:  false,
+  };
+
+  messageStore[accountId].unshift(bericht);
+  eventEmitter.emit('bericht-verstuurd', accountId, bericht);
+
+  return bericht;
+}
+
+function getAccountStates() {
+  return Object.values(accountState);
+}
+
+function getBerichten(accountId, limit = 50) {
+  return (messageStore[accountId] || []).slice(0, limit);
+}
+
+function markeerGelezen(accountId) {
+  accountState[accountId].ongelezen = 0;
+  eventEmitter.emit('status-update', accountId, accountState[accountId]);
+}
+
+// Start alle accounts bij server-opstart
+async function initAlleAccounts() {
+  for (const account of ACCOUNTS) {
+    await connectAccount(account.id);
+  }
+}
+
+module.exports = {
+  initAlleAccounts,
+  connectAccount,
+  stuurBericht,
+  getAccountStates,
+  getBerichten,
+  markeerGelezen,
+  accountState
+};
+```
+
+### Events file
+
+Maak `server/whatsapp/events.js`:
+
+```javascript
+const EventEmitter = require('events');
+module.exports = new EventEmitter();
+```
+
+### API routes
+
+Voeg toe aan de bestaande Express server:
+
+```javascript
+// server/routes/whatsapp.js
+const router = require('express').Router();
+const wa = require('../whatsapp/manager');
+
+// Haal status van alle accounts op
+router.get('/accounts', (req, res) => {
+  res.json(wa.getAccountStates());
+});
+
+// Verbind een specifiek account
+router.post('/accounts/:id/connect', async (req, res) => {
+  try {
+    await wa.connectAccount(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Haal berichten op per account
+router.get('/accounts/:id/berichten', (req, res) => {
+  const berichten = wa.getBerichten(req.params.id);
+  res.json(berichten);
+});
+
+// Stuur bericht
+router.post('/accounts/:id/stuur', async (req, res) => {
+  const { nummer, tekst } = req.body;
+  if (!nummer || !tekst) {
+    return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
+  }
+  try {
+    const bericht = await wa.stuurBericht(req.params.id, nummer, tekst);
+    res.json(bericht);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Markeer berichten als gelezen
+router.post('/accounts/:id/gelezen', (req, res) => {
+  wa.markeerGelezen(req.params.id);
+  res.json({ success: true });
+});
+
+module.exports = router;
+```
+
+Voeg toe aan `server/index.js`:
+```javascript
+const whatsappRoutes = require('./routes/whatsapp');
+app.use('/api/whatsapp', whatsappRoutes);
+
+// Start WhatsApp bij server-opstart
+const { initAlleAccounts } = require('./whatsapp/manager');
+initAlleAccounts().catch(console.error);
+```
+
+### Server-Sent Events voor realtime updates
+
+```javascript
+// server/routes/whatsapp-sse.js
+const router = require('express').Router();
+const eventEmitter = require('../whatsapp/events');
+
+router.get('/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const stuurUpdate = (event, data) => {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Luister naar alle WhatsApp events
+  const onStatus = (id, state) => stuurUpdate('status', { id, state });
+  const onQR = (id, qr) => stuurUpdate('qr', { id, qr });
+  const onBericht = (id, bericht) => stuurUpdate('bericht', { id, bericht });
+
+  eventEmitter.on('status-update', onStatus);
+  eventEmitter.on('qr-update', onQR);
+  eventEmitter.on('nieuw-bericht', onBericht);
+
+  // Heartbeat elke 30 seconden
+  const heartbeat = setInterval(() => {
+    res.write(': ping\n\n');
+  }, 30000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventEmitter.off('status-update', onStatus);
+    eventEmitter.off('qr-update', onQR);
+    eventEmitter.off('nieuw-bericht', onBericht);
+  });
+});
+
+module.exports = router;
+```
+
+---
+
+## FRONTEND — SUBTAB IN /dashboard-mockup
+
+Voeg "WhatsApp" toe als subtab naast de bestaande subtabs:
+
+```javascript
+// In de dashboard-mockup navigatie
+const subtabs = [
+  { id: 'overzicht',   label: 'Overzicht' },
+  { id: 'sollicitanten', label: 'Sollicitanten' },
+  { id: 'whatsapp',    label: 'WhatsApp', badge: ongelezen > 0 ? ongelezen : null },
+  // ... andere bestaande tabs
+];
+```
+
+### WhatsApp tab component
+
+```jsx
+// src/components/dashboard/WhatsAppBeheer.jsx
+
+import { useState, useEffect, useRef } from 'react';
+
+const ACCOUNT_KLEUREN = {
+  horeca:       { bg: '#FEF3C7', text: '#92400E', dot: '#F59E0B' },
+  logistiek:    { bg: '#DBEAFE', text: '#1E40AF', dot: '#3B82F6' },
+  housekeeping: { bg: '#D1FAE5', text: '#065F46', dot: '#10B981' },
+};
+
+export default function WhatsAppBeheer() {
+  const [accounts, setAccounts] = useState([]);
+  const [actief, setActief] = useState('horeca');
+  const [berichten, setBerichten] = useState({});
+  const [nieuwBericht, setNieuwBericht] = useState('');
+  const [ontvangerNummer, setOntvangerNummer] = useState('');
+  const [loading, setLoading] = useState(false);
+  const berichtenRef = useRef(null);
+
+  // Laad initiële data
+  useEffect(() => {
+    fetch('/api/whatsapp/accounts')
+      .then(r => r.json())
+      .then(setAccounts);
+
+    laadBerichten('horeca');
+    laadBerichten('logistiek');
+    laadBerichten('housekeeping');
+
+    // SSE voor realtime updates
+    const sse = new EventSource('/api/whatsapp/stream');
+
+    sse.addEventListener('status', (e) => {
+      const { id, state } = JSON.parse(e.data);
+      setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...state } : a));
+    });
+
+    sse.addEventListener('qr', (e) => {
+      const { id, qr } = JSON.parse(e.data);
+      setAccounts(prev => prev.map(a => a.id === id ? { ...a, qr, status: 'qr_ready' } : a));
+    });
+
+    sse.addEventListener('bericht', (e) => {
+      const { id, bericht } = JSON.parse(e.data);
+      setBerichten(prev => ({
+        ...prev,
+        [id]: [bericht, ...(prev[id] || [])]
+      }));
+      // Toon browser notificatie indien tab niet actief
+      if (document.hidden) {
+        new Notification(`Nieuw WhatsApp bericht (${id})`, {
+          body: `${bericht.naam}: ${bericht.tekst}`
+        });
+      }
+    });
+
+    return () => sse.close();
+  }, []);
+
+  async function laadBerichten(accountId) {
+    const res = await fetch(`/api/whatsapp/accounts/${accountId}/berichten`);
+    const data = await res.json();
+    setBerichten(prev => ({ ...prev, [accountId]: data }));
+  }
+
+  async function handleAccountKlik(accountId) {
+    setActief(accountId);
+    // Markeer als gelezen
+    await fetch(`/api/whatsapp/accounts/${accountId}/gelezen`, { method: 'POST' });
+    setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, ongelezen: 0 } : a));
+  }
+
+  async function handleStuurBericht(e) {
+    e.preventDefault();
+    if (!nieuwBericht.trim() || !ontvangerNummer.trim()) return;
+
+    setLoading(true);
+    try {
+      await fetch(`/api/whatsapp/accounts/${actief}/stuur`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nummer: ontvangerNummer, tekst: nieuwBericht })
+      });
+      setNieuwBericht('');
+      await laadBerichten(actief);
+    } catch (err) {
+      console.error('Versturen mislukt:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const actiefAccount = accounts.find(a => a.id === actief);
+  const actiefBerichten = berichten[actief] || [];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', height: 'calc(100vh - 180px)', gap: 0, background: '#fff', borderRadius: 12, border: '1px solid #EEEEEE', overflow: 'hidden' }}>
+
+      {/* LINKER KOLOM — Account lijst */}
+      <div style={{ borderRight: '1px solid #EEEEEE', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #F3F3F5' }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: '#1A1730', margin: 0 }}>WhatsApp accounts</p>
+          <p style={{ fontSize: 11, color: '#9590A8', margin: '2px 0 0' }}>3 nummers gekoppeld</p>
+        </div>
+
+        {accounts.map(account => {
+          const kleur = ACCOUNT_KLEUREN[account.id];
+          const isActief = actief === account.id;
+
+          return (
+            <div
+              key={account.id}
+              onClick={() => handleAccountKlik(account.id)}
+              style={{
+                padding: '14px 16px',
+                cursor: 'pointer',
+                background: isActief ? '#F9F8FE' : '#fff',
+                borderBottom: '1px solid #F7F7F7',
+                borderLeft: isActief ? '3px solid #7C3AED' : '3px solid transparent',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              {/* Status dot */}
+              <div style={{
+                width: 10, height: 10, borderRadius: '50%',
+                background: account.status === 'connected' ? '#10B981' :
+                            account.status === 'qr_ready' ? '#F59E0B' : '#D1D5DB',
+                flexShrink: 0
+              }} />
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1730' }}>{account.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 20, background: kleur.bg, color: kleur.text }}>
+                    {account.categorie}
+                  </span>
+                </div>
+                <p style={{ fontSize: 11, color: '#9590A8', margin: '2px 0 0' }}>
+                  {account.status === 'connected' ? `+${account.telefoon}` :
+                   account.status === 'qr_ready' ? 'Scan QR code' :
+                   account.status === 'connecting' ? 'Verbinden...' : 'Niet verbonden'}
+                </p>
+              </div>
+
+              {account.ongelezen > 0 && (
+                <div style={{ background: '#7C3AED', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                  {account.ongelezen}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* RECHTER KOLOM — Chat + QR */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+        {/* Header */}
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #EEEEEE', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#1A1730', margin: 0 }}>{actiefAccount?.label}</p>
+            <p style={{ fontSize: 11, color: actiefAccount?.status === 'connected' ? '#10B981' : '#9590A8', margin: '2px 0 0', fontWeight: 500 }}>
+              {actiefAccount?.status === 'connected' ? '● Verbonden' :
+               actiefAccount?.status === 'qr_ready' ? '● Scan QR code om te verbinden' :
+               actiefAccount?.status === 'connecting' ? '● Verbinden...' : '● Niet verbonden'}
+            </p>
+          </div>
+          {actiefAccount?.status === 'disconnected' && (
+            <button
+              onClick={() => fetch(`/api/whatsapp/accounts/${actief}/connect`, { method: 'POST' })}
+              style={{ background: '#7C3AED', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+            >
+              Verbinden
+            </button>
+          )}
+        </div>
+
+        {/* QR Code weergave */}
+        {actiefAccount?.status === 'qr_ready' && actiefAccount?.qr && (
+          <div style={{ padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, borderBottom: '1px solid #EEEEEE', background: '#FAFAFA' }}>
+            <img src={actiefAccount.qr} alt="QR Code" style={{ width: 200, height: 200, borderRadius: 12 }} />
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1A1730', margin: '0 0 4px' }}>Scan met WhatsApp</p>
+              <p style={{ fontSize: 12, color: '#9590A8', margin: 0 }}>Open WhatsApp → Instellingen → Gekoppelde apparaten → Apparaat koppelen</p>
+            </div>
+          </div>
+        )}
+
+        {/* Berichten lijst */}
+        <div ref={berichtenRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {actiefBerichten.length === 0 && actiefAccount?.status === 'connected' && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#C4BED8', fontSize: 13 }}>
+              Geen berichten — inkomende berichten verschijnen hier automatisch
+            </div>
+          )}
+
+          {actiefBerichten.map(bericht => (
+            <div
+              key={bericht.id}
+              style={{
+                display: 'flex',
+                flexDirection: bericht.inkomend ? 'row' : 'row-reverse',
+                gap: 10,
+                alignItems: 'flex-end',
+              }}
+            >
+              {bericht.inkomend && (
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#F0EEFF', color: '#7C3AED', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {bericht.naam?.charAt(0) || '?'}
+                </div>
+              )}
+              <div style={{ maxWidth: '70%' }}>
+                {bericht.inkomend && (
+                  <p style={{ fontSize: 10, color: '#9590A8', margin: '0 0 3px 4px', fontWeight: 500 }}>
+                    {bericht.naam} · +{bericht.van}
+                  </p>
+                )}
+                <div style={{
+                  background: bericht.inkomend ? '#F9F8FE' : '#7C3AED',
+                  color: bericht.inkomend ? '#1A1730' : '#fff',
+                  borderRadius: bericht.inkomend ? '12px 12px 12px 2px' : '12px 12px 2px 12px',
+                  padding: '10px 14px',
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                }}>
+                  {bericht.tekst}
+                </div>
+                <p style={{ fontSize: 10, color: '#C4BED8', margin: '3px 4px 0', textAlign: bericht.inkomend ? 'left' : 'right' }}>
+                  {new Date(bericht.tijdstip).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Stuur bericht */}
+        {actiefAccount?.status === 'connected' && (
+          <div style={{ padding: '12px 20px', borderTop: '1px solid #EEEEEE', background: '#fff' }}>
+            <form onSubmit={handleStuurBericht} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                value={ontvangerNummer}
+                onChange={e => setOntvangerNummer(e.target.value)}
+                placeholder="Ontvangers nummer (bijv. 31612345678)"
+                style={{ border: '1px solid #EEEEEE', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontFamily: 'Inter, sans-serif', outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={nieuwBericht}
+                  onChange={e => setNieuwBericht(e.target.value)}
+                  placeholder="Typ een bericht..."
+                  style={{ flex: 1, border: '1px solid #EEEEEE', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none' }}
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !nieuwBericht.trim() || !ontvangerNummer.trim()}
+                  style={{ background: '#7C3AED', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: loading ? 0.7 : 1 }}
+                >
+                  {loading ? '...' : 'Stuur'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## BOUWVOLGORDE
+
+1. Installeer Baileys packages
+2. Maak `server/whatsapp/manager.js` + `events.js` aan
+3. Voeg API routes toe aan Express server
+4. Voeg SSE stream route toe
+5. Start `initAlleAccounts()` bij server-opstart
+6. Maak `WhatsAppBeheer` component aan
+7. Voeg "WhatsApp" subtab toe aan `/dashboard-mockup`
+8. Test QR-koppeling met één nummer
+9. Test inkomende berichten weergave
+10. Test uitgaand bericht sturen
+
+**Sessies worden opgeslagen in `/sessions/[accountId]/` — deze map niet committen naar Git (toevoegen aan .gitignore). Commit na elke werkende stap.**

@@ -6680,6 +6680,73 @@ ${posts.map(p => `  <url>
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
+  // ─── WHATSAPP BEHEER ──────────────────────────────────────────────────────
+  const { getAccountStates, getBerichten, stuurBericht: waSendMsg, markeerGelezen, connectAccount } = await import('./whatsapp/manager');
+  const { default: waEventEmitter } = await import('./whatsapp/events');
+
+  // SSE: realtime stream
+  app.get('/api/whatsapp/stream', adminMiddleware, (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const stuurUpdate = (event: string, data: any) => {
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const onStatus = (id: string, state: any) => stuurUpdate('status', { id, state });
+    const onQR    = (id: string, qr: string)  => stuurUpdate('qr',     { id, qr });
+    const onMsg   = (id: string, bericht: any) => stuurUpdate('bericht', { id, bericht });
+
+    waEventEmitter.on('status-update',  onStatus);
+    waEventEmitter.on('qr-update',      onQR);
+    waEventEmitter.on('nieuw-bericht',  onMsg);
+
+    const heartbeat = setInterval(() => res.write(': ping\n\n'), 25000);
+
+    req.on('close', () => {
+      clearInterval(heartbeat);
+      waEventEmitter.off('status-update', onStatus);
+      waEventEmitter.off('qr-update',     onQR);
+      waEventEmitter.off('nieuw-bericht', onMsg);
+    });
+  });
+
+  app.get('/api/whatsapp/accounts', adminMiddleware, (_req: Request, res: Response) => {
+    res.json(getAccountStates());
+  });
+
+  app.post('/api/whatsapp/accounts/:id/connect', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      await connectAccount(req.params.id as any);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/whatsapp/accounts/:id/berichten', adminMiddleware, (req: Request, res: Response) => {
+    res.json(getBerichten(req.params.id as any));
+  });
+
+  app.post('/api/whatsapp/accounts/:id/stuur', adminMiddleware, async (req: Request, res: Response) => {
+    const { nummer, tekst } = req.body;
+    if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
+    try {
+      const bericht = await waSendMsg(req.params.id as any, nummer, tekst);
+      res.json(bericht);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/whatsapp/accounts/:id/gelezen', adminMiddleware, (req: Request, res: Response) => {
+    markeerGelezen(req.params.id as any);
+    res.json({ success: true });
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Beveiligde CV-download route — alleen toegankelijk voor ingelogde admins
   app.get("/api/admin/files/cv/:filename", adminMiddleware, (req: Request, res: Response) => {
     const filename = req.params.filename;

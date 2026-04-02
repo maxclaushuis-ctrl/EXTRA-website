@@ -145,6 +145,11 @@ app.use((req, res, next) => {
 
     scheduleDailyCvReminders();
     scheduleBlogAutoPublish();
+
+    // WhatsApp accounts initialiseren
+    import('./whatsapp/manager').then(({ initAlleAccounts }) => {
+      initAlleAccounts().catch((err: any) => console.error('WhatsApp init mislukt:', err));
+    });
   });
 })();
 

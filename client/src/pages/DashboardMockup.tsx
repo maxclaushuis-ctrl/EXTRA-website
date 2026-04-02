@@ -21,10 +21,11 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
+import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 
 type User = {
   id: number;
@@ -810,6 +811,22 @@ export default function DashboardMockup() {
               </button>
             </>
           )}
+          {/* Group: Communicatie */}
+          <button
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+            onClick={() => setActiveTab('whatsapp')}
+          >
+            <span>Communicatie</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+              activeTab === 'whatsapp' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <MessageSquare className="h-4 w-4" />
+            <span>WhatsApp</span>
+          </button>
         </nav>
 
         <div className="p-2 border-t">
@@ -3386,6 +3403,15 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                 </div>
               </div>
             </div>
+          ) : activeTab === 'whatsapp' ? (
+            <div className="p-6">
+              <div className="mb-5">
+                <h1 className="text-xl font-bold">WhatsApp</h1>
+                <p className="text-sm text-gray-500">Beheer 3 WhatsApp nummers — Horeca, Logistiek en Housekeeping</p>
+              </div>
+              <WhatsAppBeheer />
+            </div>
+
           ) : activeTab === 'crm-leads' ? (
             <CrmLeadsTab />
 
