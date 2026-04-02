@@ -795,11 +795,12 @@ export default function LandingPage() {
           <img
             src={groupShotHero}
             alt="EXTRA horecapersoneel Amsterdam – staffing agency"
-            className="w-full h-full object-cover"
+            className="absolute top-0 bottom-0 right-0 h-full object-cover"
             loading="eager"
             {...{ fetchpriority: "high" } as any}
             decoding="async"
             style={{
+              left: "7%",
               objectPosition: "68% center",
               filter: "contrast(1.08) saturate(1.20) brightness(1.08)",
             }}
