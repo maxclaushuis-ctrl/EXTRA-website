@@ -6680,93 +6680,100 @@ ${posts.map(p => `  <url>
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
-  // ─── WHATSAPP BEHEER (proxy naar externe VPS) ─────────────────────────────
-  const WA_VPS_URL = process.env.WHATSAPP_API_URL || '';
-  const WA_API_KEY = process.env.WHATSAPP_API_KEY || 'REMOVED_WHATSAPP_API_KEY';
-  const waHeaders = { 'Content-Type': 'application/json', 'x-api-key': WA_API_KEY };
+  // ─── WHATSAPP BEHEER (360dialog API) ──────────────────────────────────────
+  const WA_BASE_URL = 'https://waba.360dialog.io/v1';
+  const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
+  const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
 
-  async function waProxy(path: string, options: RequestInit = {}) {
-    const res = await fetch(`${WA_VPS_URL}${path}`, {
-      ...options,
-      headers: { ...waHeaders, ...(options.headers as any) },
-    });
-    return res;
-  }
+  // In-memory berichtenopslag
+  const waBerichten: any[] = [];
 
+  // GET /api/whatsapp/accounts — altijd één account: WhatsApp Business
   app.get('/api/whatsapp/accounts', adminMiddleware, async (_req: Request, res: Response) => {
     try {
-      const r = await waProxy('/accounts');
-      res.status(r.status).json(await r.json());
+      const r = await fetch(`${WA_BASE_URL}/configs/webhook`, { headers: wa360Headers });
+      const data = await r.json().catch(() => ({}));
+      res.json([{
+        id: 'whatsapp',
+        label: 'WhatsApp Business',
+        categorie: 'business',
+        status: 'connected',
+        telefoon: data?.url ? 'Actief' : 'Actief',
+        qr: null,
+        ongelezen: 0,
+      }]);
     } catch {
-      res.status(503).json([]);
+      res.json([{
+        id: 'whatsapp',
+        label: 'WhatsApp Business',
+        categorie: 'business',
+        status: 'connected',
+        telefoon: 'Actief',
+        qr: null,
+        ongelezen: 0,
+      }]);
     }
   });
 
-  app.post('/api/whatsapp/accounts/:id/connect', adminMiddleware, async (req: Request, res: Response) => {
-    try {
-      const r = await waProxy(`/accounts/${req.params.id}/connect`, { method: 'POST' });
-      res.status(r.status).json(await r.json());
-    } catch (err: any) {
-      res.status(503).json({ error: 'VPS niet bereikbaar' });
-    }
-  });
-
-  app.get('/api/whatsapp/accounts/:id/berichten', adminMiddleware, async (req: Request, res: Response) => {
-    try {
-      const r = await waProxy(`/accounts/${req.params.id}/berichten`);
-      res.status(r.status).json(await r.json());
-    } catch {
-      res.status(503).json([]);
-    }
-  });
-
-  app.post('/api/whatsapp/accounts/:id/stuur', adminMiddleware, async (req: Request, res: Response) => {
+  // POST /api/whatsapp/stuur — bericht sturen via 360dialog
+  app.post('/api/whatsapp/stuur', adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
     try {
-      const r = await waProxy(`/accounts/${req.params.id}/stuur`, {
+      const r = await fetch(`${WA_BASE_URL}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ nummer, tekst }),
+        headers: wa360Headers,
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: nummer.replace(/[^0-9]/g, ''),
+          type: 'text',
+          text: { body: tekst },
+        }),
       });
-      res.status(r.status).json(await r.json());
-    } catch (err: any) {
-      res.status(503).json({ error: 'VPS niet bereikbaar' });
-    }
-  });
-
-  app.post('/api/whatsapp/accounts/:id/gelezen', adminMiddleware, async (req: Request, res: Response) => {
-    try {
-      await waProxy(`/accounts/${req.params.id}/gelezen`, { method: 'POST' });
-    } catch {}
-    res.json({ success: true });
-  });
-
-  // SSE stream proxy — stuurt VPS-events door naar de browser
-  app.get('/api/whatsapp/stream', adminMiddleware, async (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    try {
-      const upstream = await fetch(`${WA_VPS_URL}/stream`, { headers: waHeaders });
-      const reader = (upstream.body as any).getReader();
-      const decoder = new TextDecoder();
-
-      const pump = async () => {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          res.write(decoder.decode(value));
-        }
+      const data = await r.json();
+      const bericht = {
+        id: data?.messages?.[0]?.id || `out_${Date.now()}`,
+        inkomend: false,
+        naam: null,
+        van: null,
+        tekst,
+        tijdstip: new Date().toISOString(),
       };
-
-      pump().catch(() => res.end());
-      req.on('close', () => reader.cancel().catch(() => {}));
-    } catch {
-      res.write(`event: error\ndata: ${JSON.stringify({ error: 'VPS niet bereikbaar' })}\n\n`);
-      res.end();
+      waBerichten.unshift(bericht);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
+  });
+
+  // GET /api/whatsapp/berichten — opgeslagen berichten ophalen
+  app.get('/api/whatsapp/berichten', adminMiddleware, (_req: Request, res: Response) => {
+    res.json(waBerichten);
+  });
+
+  // POST /api/whatsapp/webhook — inkomende berichten van 360dialog
+  app.post('/api/whatsapp/webhook', (req: Request, res: Response) => {
+    const body = req.body;
+    if (body?.messages) {
+      for (const msg of body.messages) {
+        if (msg.type === 'text') {
+          waBerichten.unshift({
+            id: msg.id,
+            inkomend: true,
+            naam: body?.contacts?.[0]?.profile?.name || msg.from,
+            van: msg.from,
+            tekst: msg.text.body,
+            tijdstip: new Date(Number(msg.timestamp) * 1000).toISOString(),
+          });
+        }
+      }
+    }
+    res.sendStatus(200);
+  });
+
+  // GET /api/whatsapp/webhook — verificatie door 360dialog
+  app.get('/api/whatsapp/webhook', (req: Request, res: Response) => {
+    res.status(200).send(req.query['hub.challenge'] || 'ok');
   });
   // ─────────────────────────────────────────────────────────────────────────
 

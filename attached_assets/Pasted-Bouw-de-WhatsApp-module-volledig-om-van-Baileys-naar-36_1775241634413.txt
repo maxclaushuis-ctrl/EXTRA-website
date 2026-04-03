@@ -1,0 +1,99 @@
+Bouw de WhatsApp module volledig om van Baileys naar 360dialog. Verwijder alle Baileys code en de VPS/tunnel koppeling.
+360dialog API gegevens:
+
+Base URL: https://waba.360dialog.io/v1
+API key staat in process.env.WHATSAPP_360_API_KEY
+
+Bouw het volgende:
+Backend proxy (server/routes/whatsappProxy.js):
+javascriptconst express = require('express');
+const router = express.Router();
+
+const BASE_URL = 'https://waba.360dialog.io/v1';
+const API_KEY = process.env.WHATSAPP_360_API_KEY;
+
+const headers = {
+  'Content-Type': 'application/json',
+  'D360-API-KEY': API_KEY
+};
+
+// Stuur bericht
+router.post('/stuur', async (req, res) => {
+  const { nummer, tekst } = req.body;
+  if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst verplicht' });
+
+  try {
+    const response = await fetch(`${BASE_URL}/messages`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: nummer.replace(/[^0-9]/g, ''),
+        type: 'text',
+        text: { body: tekst }
+      })
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Webhook voor inkomende berichten
+router.post('/webhook', (req, res) => {
+  const body = req.body;
+  
+  if (body?.messages) {
+    body.messages.forEach(msg => {
+      if (msg.type === 'text') {
+        const bericht = {
+          id: msg.id,
+          van: msg.from,
+          tekst: msg.text.body,
+          tijdstip: new Date(msg.timestamp * 1000).toISOString(),
+          inkomend: true
+        };
+        // Sla op in memory store
+        global.berichten = global.berichten || [];
+        global.berichten.unshift(bericht);
+      }
+    });
+  }
+  res.sendStatus(200);
+});
+
+// Haal berichten op
+router.get('/berichten', (req, res) => {
+  res.json(global.berichten || []);
+});
+
+// Account status
+router.get('/accounts', async (req, res) => {
+  try {
+    const response = await fetch(`${BASE_URL}/configs/webhook`, { headers });
+    const data = await response.json();
+    res.json([
+      { id: 'whatsapp', label: 'WhatsApp Business', status: 'connected', telefoon: data.url ? 'Actief' : 'Inactief' }
+    ]);
+  } catch (err) {
+    res.json([
+      { id: 'whatsapp', label: 'WhatsApp Business', status: 'connected', telefoon: 'Actief' }
+    ]);
+  }
+});
+
+module.exports = router;
+Voeg toe aan hoofdserver:
+javascriptconst whatsappProxy = require('./server/routes/whatsappProxy');
+app.use('/api/whatsapp', whatsappProxy);
+Pas de frontend WhatsApp component aan:
+
+Verwijder de drie aparte accounts (horeca/logistiek/housekeeping)
+Toon één account: "WhatsApp Business" met status "Verbonden"
+Geen QR code meer nodig
+Berichten sturen via /api/whatsapp/stuur
+Berichten ophalen via /api/whatsapp/berichten elke 3 seconden
+Verwijder alle Baileys en VPS gerelateerde code
+
+Commit na voltooiing.
