@@ -6740,6 +6740,34 @@ ${posts.map(p => `  <url>
     } catch {}
     res.json({ success: true });
   });
+
+  // SSE stream proxy — stuurt VPS-events door naar de browser
+  app.get('/api/whatsapp/stream', adminMiddleware, async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    try {
+      const upstream = await fetch(`${WA_VPS_URL}/stream`, { headers: waHeaders });
+      const reader = (upstream.body as any).getReader();
+      const decoder = new TextDecoder();
+
+      const pump = async () => {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(decoder.decode(value));
+        }
+      };
+
+      pump().catch(() => res.end());
+      req.on('close', () => reader.cancel().catch(() => {}));
+    } catch {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: 'VPS niet bereikbaar' })}\n\n`);
+      res.end();
+    }
+  });
   // ─────────────────────────────────────────────────────────────────────────
 
   // Beveiligde CV-download route — alleen toegankelijk voor ingelogde admins

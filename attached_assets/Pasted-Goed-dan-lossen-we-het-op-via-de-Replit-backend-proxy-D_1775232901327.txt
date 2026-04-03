@@ -1,0 +1,186 @@
+Goed, dan lossen we het op via de Replit backend proxy. Dit betekent dat Replit als tussenpersoon fungeert — Replit praat met de VPS, en jouw browser praat met Replit. Zo heb je geen HTTPS probleem.
+
+Stuur deze prompt naar Replit:
+
+---
+
+**REPLIT PROMPT — WhatsApp: backend proxy voor HTTPS**
+
+De VPS draait op HTTP (`http://91.98.115.87:3001`). Browsers blokkeren HTTP vanuit HTTPS. Los dit op door alle WhatsApp API calls via een Replit backend proxy te laten lopen.
+
+**Maak een backend proxy route aan:**
+
+```javascript
+// server/routes/whatsappProxy.js
+const express = require('express');
+const router = express.Router();
+
+const VPS_URL = process.env.WHATSAPP_API_URL || 'http://91.98.115.87:3001';
+const VPS_KEY = process.env.WHATSAPP_API_KEY || 'REMOVED_WHATSAPP_API_KEY';
+
+const vpsHeaders = {
+  'Content-Type': 'application/json',
+  'x-api-key': VPS_KEY
+};
+
+// Proxy alle GET /accounts
+router.get('/accounts', async (req, res) => {
+  try {
+    const response = await fetch(`${VPS_URL}/accounts`, { headers: vpsHeaders });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'VPS niet bereikbaar' });
+  }
+});
+
+// Proxy POST /accounts/:id/connect
+router.post('/accounts/:id/connect', async (req, res) => {
+  try {
+    const response = await fetch(`${VPS_URL}/accounts/${req.params.id}/connect`, {
+      method: 'POST',
+      headers: vpsHeaders
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'VPS niet bereikbaar' });
+  }
+});
+
+// Proxy GET /accounts/:id/berichten
+router.get('/accounts/:id/berichten', async (req, res) => {
+  try {
+    const response = await fetch(`${VPS_URL}/accounts/${req.params.id}/berichten`, { headers: vpsHeaders });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'VPS niet bereikbaar' });
+  }
+});
+
+// Proxy POST /accounts/:id/stuur
+router.post('/accounts/:id/stuur', async (req, res) => {
+  try {
+    const response = await fetch(`${VPS_URL}/accounts/${req.params.id}/stuur`, {
+      method: 'POST',
+      headers: vpsHeaders,
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'VPS niet bereikbaar' });
+  }
+});
+
+// Proxy POST /accounts/:id/gelezen
+router.post('/accounts/:id/gelezen', async (req, res) => {
+  try {
+    const response = await fetch(`${VPS_URL}/accounts/${req.params.id}/gelezen`, {
+      method: 'POST',
+      headers: vpsHeaders
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'VPS niet bereikbaar' });
+  }
+});
+
+// SSE stream proxy
+router.get('/stream', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  try {
+    const response = await fetch(`${VPS_URL}/stream`, { headers: vpsHeaders });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    const pump = async () => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(decoder.decode(value));
+      }
+    };
+
+    pump().catch(() => res.end());
+    req.on('close', () => reader.cancel());
+  } catch (err) {
+    res.write(`event: error\ndata: ${JSON.stringify({ error: 'VPS niet bereikbaar' })}\n\n`);
+    res.end();
+  }
+});
+
+module.exports = router;
+```
+
+**Voeg toe aan de hoofdserver (`server/index.js` of `index.js`):**
+
+```javascript
+const whatsappProxy = require('./server/routes/whatsappProxy');
+app.use('/api/whatsapp', whatsappProxy);
+```
+
+**Update de frontend WhatsApp client (`src/api/whatsappClient.js`):**
+
+Vervang de BASE_URL zodat die naar de Replit backend wijst in plaats van direct naar de VPS:
+
+```javascript
+// Altijd via Replit backend — geen directe VPS calls vanuit browser
+const BASE_URL = '/api/whatsapp';
+const headers = { 'Content-Type': 'application/json' };
+
+export async function haalAccountsOp() {
+  const res = await fetch(`${BASE_URL}/accounts`, { headers });
+  if (!res.ok) throw new Error('Ophalen mislukt');
+  return res.json();
+}
+
+export async function verbindAccount(accountId) {
+  const res = await fetch(`${BASE_URL}/accounts/${accountId}/connect`, {
+    method: 'POST', headers
+  });
+  if (!res.ok) throw new Error('Verbinden mislukt');
+  return res.json();
+}
+
+export async function haalBerichtenOp(accountId) {
+  const res = await fetch(`${BASE_URL}/accounts/${accountId}/berichten`, { headers });
+  if (!res.ok) throw new Error('Berichten ophalen mislukt');
+  return res.json();
+}
+
+export async function stuurBericht(accountId, nummer, tekst) {
+  const res = await fetch(`${BASE_URL}/accounts/${accountId}/stuur`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ nummer, tekst })
+  });
+  if (!res.ok) throw new Error('Versturen mislukt');
+  return res.json();
+}
+
+export async function markeerGelezen(accountId) {
+  await fetch(`${BASE_URL}/accounts/${accountId}/gelezen`, {
+    method: 'POST', headers
+  });
+}
+```
+
+**Zorg dat deze twee Secrets in Replit staan:**
+```
+WHATSAPP_API_URL = http://91.98.115.87:3001
+WHATSAPP_API_KEY = REMOVED_WHATSAPP_API_KEY
+```
+
+**Na implementatie:**
+1. De browser praat alleen met Replit via HTTPS
+2. Replit praat met de VPS via HTTP op de achtergrond
+3. Geen mixed content fout meer
+4. Werkt zowel in ontwikkelomgeving als na deployment
+
+**Commit na voltooiing.**
