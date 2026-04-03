@@ -6681,7 +6681,7 @@ ${posts.map(p => `  <url>
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
   // ─── WHATSAPP BEHEER (proxy naar externe VPS) ─────────────────────────────
-  const WA_VPS_URL = process.env.WHATSAPP_API_URL || 'http://91.98.115.87:3001';
+  const WA_VPS_URL = process.env.WHATSAPP_API_URL || '';
   const WA_API_KEY = process.env.WHATSAPP_API_KEY || 'REMOVED_WHATSAPP_API_KEY';
   const waHeaders = { 'Content-Type': 'application/json', 'x-api-key': WA_API_KEY };
 

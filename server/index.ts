@@ -145,7 +145,7 @@ app.use((req, res, next) => {
 
     scheduleDailyCvReminders();
     scheduleBlogAutoPublish();
-    // WhatsApp wordt beheerd via externe VPS (91.98.115.87:3001)
+    // WhatsApp wordt beheerd via externe VPS (geconfigureerd via WHATSAPP_API_URL secret)
   });
 })();
 

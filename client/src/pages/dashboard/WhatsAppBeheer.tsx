@@ -84,7 +84,7 @@ export default function WhatsAppBeheer() {
       setAccounts(data);
       setFout(null);
     } catch {
-      setFout('VPS niet bereikbaar (91.98.115.87:3001)');
+      setFout('WhatsApp VPS niet bereikbaar — controleer of de server actief is');
     }
   }
 
