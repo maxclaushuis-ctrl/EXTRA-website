@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   haalAccountsOp,
   verbindAccount,
   haalBerichtenOp,
   stuurBericht,
   markeerGelezen,
+  maakStream,
 } from '../../api/whatsappClient';
 
 const KLEUREN: Record<string, { bg: string; text: string }> = {
@@ -41,12 +42,41 @@ export default function WhatsAppBeheer() {
   const [tekst, setTekst] = useState('');
   const [loading, setLoading] = useState(false);
   const [fout, setFout] = useState<string | null>(null);
+  const berichtenRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     laadAlles();
-    const interval = setInterval(laadAlles, 3000);
-    return () => clearInterval(interval);
+    const poll = setInterval(laadAlles, 3000);
+
+    const stopStream = maakStream(
+      (id, state) => {
+        setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...state } : a));
+      },
+      (id, bericht) => {
+        setBerichten(prev => ({
+          ...prev,
+          [id]: [...(prev[id] || []), bericht],
+        }));
+        setAccounts(prev => prev.map(a =>
+          a.id === id && id !== actief
+            ? { ...a, ongelezen: (a.ongelezen ?? 0) + 1 }
+            : a
+        ));
+      }
+    );
+
+    return () => {
+      clearInterval(poll);
+      stopStream();
+    };
   }, []);
+
+  // Scroll naar beneden bij nieuwe berichten
+  useEffect(() => {
+    if (berichtenRef.current) {
+      berichtenRef.current.scrollTop = berichtenRef.current.scrollHeight;
+    }
+  }, [berichten, actief]);
 
   async function laadAlles() {
     try {
@@ -60,7 +90,7 @@ export default function WhatsAppBeheer() {
 
   async function handleAccountKlik(id: string) {
     setActief(id);
-    await markeerGelezen(id).catch(() => {});
+    await markeerGelezen(id);
     setAccounts(prev => prev.map(a => a.id === id ? { ...a, ongelezen: 0 } : a));
     try {
       const data = await haalBerichtenOp(id);
@@ -196,15 +226,19 @@ export default function WhatsAppBeheer() {
                actiefAccount?.status === 'connecting' ? '● Verbinden...' : '● Niet verbonden'}
             </p>
           </div>
-          {actiefAccount && actiefAccount.status === 'disconnected' && (
+          {actiefAccount && actiefAccount.status !== 'connected' && (
             <button
               onClick={() => handleVerbinden(actief)}
+              disabled={actiefAccount.status === 'connecting'}
               style={{
-                background: '#7C3AED', color: '#fff', border: 'none', borderRadius: 8,
-                padding: '7px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                background: actiefAccount.status === 'connecting' ? '#C4B5FD' : '#7C3AED',
+                color: '#fff', border: 'none', borderRadius: 8,
+                padding: '7px 14px', fontSize: 12, fontWeight: 500,
+                cursor: actiefAccount.status === 'connecting' ? 'not-allowed' : 'pointer',
               }}
             >
-              Verbinden
+              {actiefAccount.status === 'connecting' ? 'Verbinden...' :
+               actiefAccount.status === 'qr_ready' ? 'Nieuwe QR' : 'Verbinden'}
             </button>
           )}
         </div>
@@ -213,7 +247,7 @@ export default function WhatsAppBeheer() {
         {actiefAccount?.status === 'qr_ready' && actiefAccount?.qr && (
           <div style={{
             padding: 24, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', gap: 12, borderBottom: '1px solid #EEEEEE', background: '#FAFAFA',
+            alignItems: 'center', gap: 12, borderBottom: '1px solid #EEEEEE', background: '#FAFAFA', flexShrink: 0,
           }}>
             <img src={actiefAccount.qr} alt="QR Code" style={{ width: 200, height: 200, borderRadius: 12 }} />
             <div style={{ textAlign: 'center' }}>
@@ -226,10 +260,10 @@ export default function WhatsAppBeheer() {
         )}
 
         {/* Berichten */}
-        <div style={{
-          flex: 1, overflowY: 'auto', padding: '16px 20px',
-          display: 'flex', flexDirection: 'column', gap: 10,
-        }}>
+        <div
+          ref={berichtenRef}
+          style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}
+        >
           {actiefBerichten.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40, color: '#C4BED8', fontSize: 13 }}>
               {actiefAccount?.status === 'connected'
@@ -279,7 +313,7 @@ export default function WhatsAppBeheer() {
 
         {/* Stuur bericht */}
         {actiefAccount?.status === 'connected' && (
-          <div style={{ padding: '12px 20px', borderTop: '1px solid #EEEEEE' }}>
+          <div style={{ padding: '12px 20px', borderTop: '1px solid #EEEEEE', flexShrink: 0 }}>
             <form onSubmit={handleStuur} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <input
                 value={nummer}
