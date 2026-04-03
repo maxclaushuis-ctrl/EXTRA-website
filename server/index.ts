@@ -145,11 +145,7 @@ app.use((req, res, next) => {
 
     scheduleDailyCvReminders();
     scheduleBlogAutoPublish();
-
-    // WhatsApp accounts initialiseren
-    import('./whatsapp/manager').then(({ initAlleAccounts }) => {
-      initAlleAccounts().catch((err: any) => console.error('WhatsApp init mislukt:', err));
-    });
+    // WhatsApp wordt beheerd via externe VPS (91.98.115.87:3001)
   });
 })();
 

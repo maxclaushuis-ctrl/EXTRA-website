@@ -6680,69 +6680,64 @@ ${posts.map(p => `  <url>
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
-  // ─── WHATSAPP BEHEER ──────────────────────────────────────────────────────
-  const { getAccountStates, getBerichten, stuurBericht: waSendMsg, markeerGelezen, connectAccount } = await import('./whatsapp/manager');
-  const { default: waEventEmitter } = await import('./whatsapp/events');
+  // ─── WHATSAPP BEHEER (proxy naar externe VPS) ─────────────────────────────
+  const WA_VPS_URL = process.env.WHATSAPP_API_URL || 'http://91.98.115.87:3001';
+  const WA_API_KEY = process.env.WHATSAPP_API_KEY || 'REMOVED_WHATSAPP_API_KEY';
+  const waHeaders = { 'Content-Type': 'application/json', 'x-api-key': WA_API_KEY };
 
-  // SSE: realtime stream
-  app.get('/api/whatsapp/stream', adminMiddleware, (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    const stuurUpdate = (event: string, data: any) => {
-      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-    };
-
-    const onStatus = (id: string, state: any) => stuurUpdate('status', { id, state });
-    const onQR    = (id: string, qr: string)  => stuurUpdate('qr',     { id, qr });
-    const onMsg   = (id: string, bericht: any) => stuurUpdate('bericht', { id, bericht });
-
-    waEventEmitter.on('status-update',  onStatus);
-    waEventEmitter.on('qr-update',      onQR);
-    waEventEmitter.on('nieuw-bericht',  onMsg);
-
-    const heartbeat = setInterval(() => res.write(': ping\n\n'), 25000);
-
-    req.on('close', () => {
-      clearInterval(heartbeat);
-      waEventEmitter.off('status-update', onStatus);
-      waEventEmitter.off('qr-update',     onQR);
-      waEventEmitter.off('nieuw-bericht', onMsg);
+  async function waProxy(path: string, options: RequestInit = {}) {
+    const res = await fetch(`${WA_VPS_URL}${path}`, {
+      ...options,
+      headers: { ...waHeaders, ...(options.headers as any) },
     });
-  });
+    return res;
+  }
 
-  app.get('/api/whatsapp/accounts', adminMiddleware, (_req: Request, res: Response) => {
-    res.json(getAccountStates());
+  app.get('/api/whatsapp/accounts', adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const r = await waProxy('/accounts');
+      res.status(r.status).json(await r.json());
+    } catch {
+      res.status(503).json([]);
+    }
   });
 
   app.post('/api/whatsapp/accounts/:id/connect', adminMiddleware, async (req: Request, res: Response) => {
     try {
-      await connectAccount(req.params.id as any);
-      res.json({ success: true });
+      const r = await waProxy(`/accounts/${req.params.id}/connect`, { method: 'POST' });
+      res.status(r.status).json(await r.json());
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      res.status(503).json({ error: 'VPS niet bereikbaar' });
     }
   });
 
-  app.get('/api/whatsapp/accounts/:id/berichten', adminMiddleware, (req: Request, res: Response) => {
-    res.json(getBerichten(req.params.id as any));
+  app.get('/api/whatsapp/accounts/:id/berichten', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const r = await waProxy(`/accounts/${req.params.id}/berichten`);
+      res.status(r.status).json(await r.json());
+    } catch {
+      res.status(503).json([]);
+    }
   });
 
   app.post('/api/whatsapp/accounts/:id/stuur', adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
     try {
-      const bericht = await waSendMsg(req.params.id as any, nummer, tekst);
-      res.json(bericht);
+      const r = await waProxy(`/accounts/${req.params.id}/stuur`, {
+        method: 'POST',
+        body: JSON.stringify({ nummer, tekst }),
+      });
+      res.status(r.status).json(await r.json());
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      res.status(503).json({ error: 'VPS niet bereikbaar' });
     }
   });
 
-  app.post('/api/whatsapp/accounts/:id/gelezen', adminMiddleware, (req: Request, res: Response) => {
-    markeerGelezen(req.params.id as any);
+  app.post('/api/whatsapp/accounts/:id/gelezen', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      await waProxy(`/accounts/${req.params.id}/gelezen`, { method: 'POST' });
+    } catch {}
     res.json({ success: true });
   });
   // ─────────────────────────────────────────────────────────────────────────
