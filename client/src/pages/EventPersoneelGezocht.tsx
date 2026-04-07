@@ -229,15 +229,14 @@ export default function EventPersoneelGezocht() {
               </div>
             </div>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Jouw event verdient{" "}
+              Eventpersoneel nodig?{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">het beste personeel.</span>
+                <span className="relative z-10">Wij shaken het voor elkaar.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-70 rounded-sm" />
               </span>
-              {" "}Wij leveren het.
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              Druk event, weinig tijd, hoge verwachtingen. EXTRA levert binnen 48 uur representatief eventpersoneel dat gewend is aan volle zalen en hoog tempo. Van bediening tot bar, hosts, runners en supervisors. Altijd in loondienst.
+              Van bediening tot bar, EXTRA levert snel eventpersoneel voor elk formaat.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
