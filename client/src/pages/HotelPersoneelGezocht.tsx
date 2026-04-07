@@ -247,8 +247,8 @@ export default function HotelPersoneelGezocht() {
             background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Paars overlay — tekst leesbaar */}
-          <div className="absolute inset-0" style={{ background: "rgba(88, 28, 135, 0.50)" }} />
+          {/* Paars overlay — zo dun mogelijk, foto komt door */}
+          <div className="absolute inset-0" style={{ background: "rgba(88, 28, 135, 0.18)" }} />
 
           {/* Bottom vignette */}
           <div className="absolute bottom-0 left-0 right-0" style={{
