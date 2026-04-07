@@ -249,7 +249,7 @@ export default function HotelPersoneelGezocht() {
 
           {/* Solid paars vak links — tekst leesbaar, daarna zachte overgang naar foto */}
           <div className="absolute inset-0" style={{
-            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 32%, rgba(45,6,99,0.82) 46%, rgba(58,8,128,0.38) 56%, rgba(72,14,148,0.10) 65%, transparent 72%)"
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 26%, rgba(45,6,99,0.82) 40%, rgba(58,8,128,0.38) 51%, rgba(72,14,148,0.10) 60%, transparent 68%)"
           }} />
 
           {/* Bottom vignette */}
