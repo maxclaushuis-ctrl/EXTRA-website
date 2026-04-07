@@ -215,14 +215,14 @@ export default function CateringPersoneelGezocht() {
               </div>
             </div>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl text-white leading-[1.1] mb-5 sm:mb-8" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Cateringpersoneel nodig?{" "}
+              Capes optioneel.{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">EXTRA regelt het.</span>
+                <span className="relative z-10">Cateringpersoneel niet.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-70 rounded-sm" />
               </span>
             </h1>
             <p className="text-base sm:text-xl text-purple-100/90 max-w-xl mb-8 sm:mb-10 leading-relaxed font-medium">
-              EXTRA levert ervaren horecapersoneel voor cateraars en grote events. Flexibel inzetbaar, gewend aan wisselende locaties en altijd representatief. Iedere medewerker persoonlijk geselecteerd en volledig in loondienst.
+              EXTRA levert hero's op elke locatie; flexibel, snel en altijd in loondienst.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
               <a href="/personeelsaanvraag" className="group bg-white text-purple-900 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 whitespace-nowrap">
