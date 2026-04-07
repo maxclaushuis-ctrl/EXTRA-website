@@ -421,9 +421,9 @@ export default function IkZoekExtraWerk() {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
               Extra werk in de horeca.<br />
-              Wanneer het jou{" "}
+              Wanneer het<br />
               <span className="relative inline-block">
-                <span className="relative z-10">uitkomt.</span>
+                <span className="relative z-10">jou uitkomt.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
             </h1>
