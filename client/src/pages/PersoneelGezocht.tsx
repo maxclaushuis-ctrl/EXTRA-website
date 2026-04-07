@@ -12,7 +12,7 @@ import {
   Tag, BarChart3, UserPlus, Search, CalendarCheck,
   AlertCircle, Bell, Lock, CheckCircle2, Flame
 } from "lucide-react";
-import heroBgImage from "@assets/hero-background.webp";
+import heroBgImage from "@assets/GROUP_SHOT_002_1775572320033.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_9066_1773314165933.png";
@@ -278,13 +278,58 @@ export default function PersoneelGezocht() {
       {/* ═══════════════════════════════════════════════════ */}
       {/* 1. HERO                                            */}
       {/* ═══════════════════════════════════════════════════ */}
-      <section className="relative min-h-[100svh] flex items-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroBgImage} alt="" className="absolute inset-0 w-full h-full object-cover object-right sm:object-center" style={{ filter: "contrast(1.03) saturate(1.02)" }} loading="eager" fetchPriority="high" decoding="async" />
-          <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(88,22,164,0.92) 0%, rgba(88,22,164,0.88) 40%, rgba(88,22,164,0.70) 65%, rgba(88,22,164,0.35) 82%, rgba(88,22,164,0.10) 100%)` }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent" />
+      <section className="relative min-h-[100svh] flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
+
+        {/* X-patroon achtergrond */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
         </div>
-        <XPatternBg count={4} opacity={0.12} color="rgba(255,255,255,0.9)" className="z-10" />
+
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero foto — volledig scherm */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={heroBgImage}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
+            style={{
+              objectPosition: "center top",
+              filter: "contrast(1.08) saturate(1.15) brightness(1.04)",
+            }}
+          />
+
+          {/* Spotlight radial achter de personen */}
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
+          }} />
+
+          {/* Solid paars vak links — tekst leesbaar, daarna zachte overgang naar foto */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 26%, rgba(45,6,99,0.82) 40%, rgba(58,8,128,0.38) 51%, rgba(72,14,148,0.10) 60%, transparent 68%)"
+          }} />
+
+          {/* Bottom vignette */}
+          <div className="absolute bottom-0 left-0 right-0" style={{
+            height: "22%",
+            background: "linear-gradient(to top, rgba(29,5,73,0.82) 0%, rgba(29,5,73,0.30) 50%, transparent 100%)"
+          }} />
+
+          {/* Top vignette — navbar overlay */}
+          <div className="absolute top-0 left-0 right-0" style={{
+            height: "18%",
+            background: "linear-gradient(to bottom, rgba(29,5,73,0.50) 0%, transparent 100%)"
+          }} />
+        </div>
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
           <div className="max-w-2xl">
             <div className="flex flex-wrap gap-3 mb-6 sm:mb-10">
