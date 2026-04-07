@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import PublicFooter from "@/components/PublicFooter";
-import FAQSection from "@/components/FAQSection";
 import PublicNav from "@/components/PublicNav";
+import PublicFooter from "@/components/PublicFooter";
 import {
-  ArrowRight, ChevronRight, ChevronDown, Zap, Star, Clock,
-  MapPin, Gift, Users, CheckCircle2, MessageCircle, Building2,
-  UtensilsCrossed, BedDouble, ChefHat, ConciergeBell, Menu, X,
-  UserCheck, Trophy, Sparkles, CalendarCheck, Handshake, Shield
+  ArrowRight, ChevronRight, Zap, Star,
+  Gift, Users, CheckCircle2, MessageCircle, Building2,
+  BedDouble, CalendarCheck, Handshake, Shield, Sparkles
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
+import kamerMeisjeHeroImg from "@assets/KAMER_MEISJE_FINAL_AE_001_1775056600768.png";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import mercureLogo from "../../assets/pitch/logo-mercure.png";
@@ -79,43 +77,22 @@ function XPatternBg() {
   );
 }
 
-function XPatternBgDark() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[
-        { left: "5%", top: "8%", w: 220, rot: 15, op: 0.1 },
-        { left: "78%", top: "52%", w: 260, rot: -20, op: 0.08 },
-      ].map((x, i) => (
-        <div key={i} className="absolute" style={{
-          left: x.left, top: x.top, width: x.w, height: x.w,
-          transform: `rotate(${x.rot}deg)`, opacity: x.op,
-          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
-          WebkitMaskSize: "contain", maskSize: "contain",
-          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-          WebkitMaskPosition: "center", maskPosition: "center",
-          backgroundColor: "rgba(255,255,255,0.9)",
-        }} />
-      ))}
-    </div>
-  );
-}
-
-const functies = [
+const roles = [
   {
     title: "Room Attendant",
     sub: "Hotel rooms · Hospitality · Precision",
     img: housekeepingImg,
-    desc: "Ensure an impeccably clean hotel room. You determine the guest's first impression upon arrival.",
-    bullets: ["Day shifts in top hotels", "Structure and precision", "Fixed pool per hotel"],
+    desc: "Keep hotel rooms immaculately clean. You create the first impression guests have when they arrive.",
+    bullets: ["Day shifts at top hotels", "Structure and precision", "Fixed pool per hotel"],
     color: "from-blue-600 to-indigo-700",
     href: "/aanmelden",
   },
   {
-    title: "Hotel cleaning",
+    title: "Hotel Cleaning",
     sub: "Hotels · Resorts · Boutique",
     img: blogHousekeepingImg,
-    desc: "General cleaning in hotel environments. From rooms to common areas and corridors.",
-    bullets: ["Varied task package", "International hotel chains", "Good daily schedule"],
+    desc: "General cleaning in hotel environments. From guest rooms to communal areas and corridors.",
+    bullets: ["Varied tasks", "International hotel chains", "Well-structured workday"],
     color: "from-teal-500 to-cyan-600",
     href: "/aanmelden",
   },
@@ -123,8 +100,8 @@ const functies = [
     title: "Public Area Cleaning",
     sub: "Lobby · Corridors · Restaurants",
     img: dienstHousekeepingImg,
-    desc: "Cleaning of public spaces such as the lobby, elevators, corridors and hotel restaurant. Always representative.",
-    bullets: ["Morning and evening shifts", "High pace and visible results", "Independent work"],
+    desc: "Cleaning public spaces like the lobby, lifts, corridors and hotel restaurant. Always representing the best.",
+    bullets: ["Morning and evening shifts", "High pace and visible results", "Work independently"],
     color: "from-violet-500 to-purple-700",
     href: "/aanmelden",
   },
@@ -132,106 +109,128 @@ const functies = [
     title: "Linen Service",
     sub: "Linen room · Laundry · Logistics",
     img: hotelImg,
-    desc: "Management and care of hotel linen. From sorting and washing to distribution on the floors.",
-    bullets: ["Organised work pace", "Backstage in top hotels", "Teamwork is central"],
+    desc: "Managing and caring for hotel linen. From sorting and washing to distributing on the floors.",
+    bullets: ["Organised work pace", "Backstage in top hotels", "Teamwork at the core"],
     color: "from-emerald-500 to-teal-600",
     href: "/aanmelden",
   },
 ];
 
 const reviews = [
-  { name: "Fatima A.", functie: "Room Attendant", tekst: "Through EXTRA I work in beautiful hotels and I always know where I stand. The planning is clear and the team is nice.", rating: 5 },
-  { name: "Nadia R.", functie: "Hotel cleaning", tekst: "Same-day pay via Jixbee makes the difference. I immediately see what I earn and it's transferred quickly. That gives peace of mind.", rating: 5 },
-  { name: "Ingrid M.", functie: "Public Area Cleaning", tekst: "I've been working through EXTRA for six months now. The locations are tidy, the work is clear and I can choose when I go.", rating: 5 },
+  { name: "Fatima A.", role: "Room Attendant", text: "Working through EXTRA at beautiful hotels, I always know exactly what to expect. The planning is clear and the team is great.", rating: 5 },
+  { name: "Nadia R.", role: "Hotel cleaning", text: "Same-day pay via Jixbee makes all the difference. I can see straight away what I've earned and it comes in fast. That gives real peace of mind.", rating: 5 },
+  { name: "Ingrid M.", role: "Public Area Cleaning", text: "I've been working via EXTRA for six months now. The venues are well-maintained, the work is clear and I can choose when I go in.", rating: 5 },
 ];
 
 const faqs = [
-  { q: "Do I need experience for housekeeping work?", a: "Experience is a plus, but not always required. We mainly look at your motivation, accuracy and attitude. For some roles we offer a short on-site introduction." },
-  { q: "Will I always work in the same hotel?", a: "In most cases, yes. We try to link you to a fixed pool at one or more hotels, so you know the working method and quickly feel at home in the team." },
-  { q: "Can I choose my own shifts?", a: "Yes. You indicate when you are available and we provide suitable shifts. This way you combine work with other obligations or activities." },
-  { q: "How does the payment work?", a: "After your shift you are paid via Jixbee. The amount is usually in your account the same day. Transparent and fast, without surprises." },
-  { q: "How quickly can I start working?", a: "After your registration and a short introduction, you can often pick up your first shifts within a week. We ensure everything runs quickly and smoothly." },
+  { q: "Do I need experience for housekeeping work?", a: "Experience is a plus, but not always required. We mainly look at your motivation, attention to detail and attitude. For some roles we offer a short on-site introduction." },
+  { q: "Will I always work at the same hotel?", a: "In most cases yes. We try to match you to a fixed pool at one or more hotels, so you know the workflow, feel at home in the team and can be deployed quickly." },
+  { q: "Can I choose my own shifts?", a: "Yes. You let us know your availability and we arrange matching housekeeping shifts. This way you can combine the work with other commitments or activities." },
+  { q: "How does payment work?", a: "After your shift you're paid out via Jixbee. The amount is usually in your account the same day. Transparent and fast, with no surprises." },
+  { q: "How quickly can I start working?", a: "After your sign-up and a short intake, you can often start picking up shifts within a week. We make sure everything runs quickly and smoothly." },
+];
+
+const allLogos = [
+  { src: amrathLogo, alt: "Amrâth Hotels" },
+  { src: mercureLogo, alt: "Mercure Hotels" },
+  { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
+  { src: logoFcUtrecht, alt: "FC Utrecht" },
+  { src: logoFunda, alt: "Funda" },
+  { src: logoHartMuseum, alt: "H'art Museum" },
+  { src: logoHetePeper, alt: "Hete Peper" },
+  { src: hiltonLogo, alt: "Hilton" },
+  { src: marriottLogo, alt: "Marriott" },
+  { src: logoSelectCatering, alt: "Select Catering" },
+  { src: logoAppel, alt: "Appèl" },
 ];
 
 export default function HousekeepingJobsEn() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   useEffect(() => {
-    document.title = "Housekeeping Jobs Amsterdam | Hotel Housekeeping | EXTRA";
+    document.title = "Housekeeping jobs Amsterdam | Work in top hotels | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Looking for housekeeping work in Amsterdam? Work in top hotels as a room attendant or hotel cleaning employee. Flexible shifts and fast payment via EXTRA.");
-    setMeta("og:title", "Housekeeping Jobs Amsterdam | Hotel Housekeeping | EXTRA", true);
+    setMeta("description", "Looking for housekeeping work in Amsterdam? Work as a room attendant or hotel cleaning staff at top hotels. Flexible shifts and fast pay via EXTRA.");
+    setMeta("og:title", "Housekeeping jobs Amsterdam | Work in top hotels | EXTRA", true);
     setMeta("og:type", "website", true);
   }, []);
 
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ══ NAV ══ */}
       <PublicNav />
 
       {/* ══ 1. HERO ══ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
-        <XPatternBgDark />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-400/15 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
+        {/* X-pattern */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
+        </div>
+
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero photo */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={kamerMeisjeHeroImg}
+            alt="Housekeeping staff via EXTRA – room attendant top hotel Amsterdam"
+            className="w-full h-full object-cover"
+            loading="eager"
+            style={{ objectPosition: "60% center", filter: "contrast(1.10) saturate(1.18) brightness(1.05)" }}
+          />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)" }} />
+          <div className="absolute inset-0 hero-text-gradient" />
+          <div className="absolute bottom-0 left-0 right-0" style={{ height: "20%", background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "18%", background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)" }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
+          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
               <BedDouble className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-white/90 text-xs font-semibold">Housekeeping work via EXTRA</span>
+              <span className="text-white/90 text-xs font-semibold">Housekeeping jobs via EXTRA</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Housekeeping work{" "}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              Housekeeping?{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">that fits you.</span>
-                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-yellow-400 to-orange-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+                <span className="relative z-10">You'll fly through it.</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-cyan-400 to-blue-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Work as a room attendant or in hotel cleaning at beautiful hotels in Amsterdam. Through EXTRA you choose when you work. Flexible housekeeping vacancies with same-day payment and clear planning.
+            <p className="text-lg sm:text-xl text-purple-100/90 leading-relaxed font-medium mb-8 max-w-lg">
+              Work as a room attendant or housekeeping staff member at top hotels in Amsterdam. Through EXTRA you choose your own shifts. Flexible work with same-day pay in professional hotel environments.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Sign up <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <a href="#functies" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+                Apply now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a href="#roles" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 See how it works <ChevronRight className="w-5 h-5" />
               </a>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2.5">
-              {[
-                { emoji: "⚡", label: "Same-day pay via Jixbee" },
-                { emoji: "🏨", label: "Top hotels in Amsterdam" },
-                { emoji: "📅", label: "Flexible shifts" },
-              ].map(({ emoji, label }) => (
-                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
-                  {emoji} {label}
-                </span>
+            <div className="flex flex-wrap gap-2.5">
+              {[{ emoji: "⚡", label: "Same-day pay via Jixbee" }, { emoji: "🏨", label: "Top hotels Amsterdam" }, { emoji: "📅", label: "Flexible shifts" }].map(({ emoji, label }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">{emoji} {label}</span>
               ))}
-            </div>
-          </div>
-
-          <div className="relative flex justify-center items-center">
-            <div className="relative w-full max-w-sm">
-              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/40 border-4 border-white/20">
-                <img src={housekeepingImg} alt="Housekeeping employee via EXTRA" className="w-full h-[380px] sm:h-[440px] object-cover" loading="eager" />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent rounded-3xl" />
-              </div>
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-purple-100">
-                💰 Same-day pay active
-              </div>
-              <div className="absolute -bottom-3 -left-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-green-100">
-                🏨 Top hotels Amsterdam
-              </div>
             </div>
           </div>
         </div>
@@ -240,26 +239,14 @@ export default function HousekeepingJobsEn() {
       {/* ══ 2. TRUST STRIP ══ */}
       <section className="py-10 sm:py-14 bg-white border-b border-gray-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Work in hotels you can be proud of</p>
+          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Work at hotels you can be proud of</p>
           <div className="relative overflow-hidden group">
             <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
             <div className="flex animate-marquee-hsw group-hover:[animation-play-state:paused]">
               {[...Array(2)].map((_, setIdx) => (
                 <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
-                  {[
-                    { src: amrathLogo, alt: "Amrâth Hotels" },
-                    { src: mercureLogo, alt: "Mercure Hotels" },
-                    { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
-                    { src: logoFcUtrecht, alt: "FC Utrecht" },
-                    { src: logoFunda, alt: "Funda" },
-                    { src: logoHartMuseum, alt: "H'art Museum" },
-                    { src: logoHetePeper, alt: "Hete Peper" },
-                    { src: hiltonLogo, alt: "Hilton" },
-                    { src: marriottLogo, alt: "Marriott" },
-                    { src: logoSelectCatering, alt: "Select Catering" },
-                    { src: logoAppel, alt: "Appèl" },
-                  ].map((logo) => (
+                  {allLogos.map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
                       <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
                     </div>
@@ -270,35 +257,30 @@ export default function HousekeepingJobsEn() {
           </div>
         </div>
         <style>{`
-          @keyframes marquee-hsw {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee-hsw {
-            animation: marquee-hsw 40s linear infinite;
-          }
+          @keyframes marquee-hsw { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+          .animate-marquee-hsw { animation: marquee-hsw 40s linear infinite; }
         `}</style>
       </section>
 
-      {/* ══ 3. FUNCTIES ══ */}
-      <section id="functies" className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+      {/* ══ 3. ROLES ══ */}
+      <section id="roles" className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Your field</span>
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Your area of expertise</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Which housekeeping roles can you do?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Through EXTRA you can work in various housekeeping roles at hotels in Amsterdam. Think of room attendant, hotel cleaning work, public area cleaning and linen service. Also view{" "}
-                <Link href="/en/hospitality-work" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">hospitality work</Link>,{" "}
-                <Link href="/en/front-office-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">front office work</Link> or{" "}
-                <Link href="/en/chef-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef jobs</Link>. You choose the shifts that fit your schedule.
+                Through EXTRA you can work in various housekeeping roles at hotels in Amsterdam. Think room attendant, hotel cleaning, public area cleaning and linen service. Also check out{" "}
+                <a href="/en/hospitality-work" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">hospitality work</a>,{" "}
+                <a href="/en/front-office-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">front office work</a> or{" "}
+                <a href="/en/chef-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef vacancies</a>. You choose the shifts that fit your schedule.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-            {functies.map((f, i) => (
+            {roles.map((f, i) => (
               <RevealSection key={f.title} delay={i * 70}>
                 <article className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-purple-100 shadow-md hover:shadow-2xl hover:border-purple-200 hover:-translate-y-2 transition-all h-full flex flex-col">
                   <div className={`relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br ${f.color}`}>
@@ -318,9 +300,9 @@ export default function HousekeepingJobsEn() {
                         </li>
                       ))}
                     </ul>
-                    <Link href={f.href} className={`inline-flex items-center gap-1.5 text-xs font-black text-white px-4 py-2 rounded-full bg-gradient-to-r ${f.color} hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
+                    <a href={f.href} className={`inline-flex items-center gap-1.5 text-xs font-black text-white px-4 py-2 rounded-full bg-gradient-to-r ${f.color} hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
                       Sign up <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                    </a>
                   </div>
                 </article>
               </RevealSection>
@@ -338,7 +320,7 @@ export default function HousekeepingJobsEn() {
         </div>
       </section>
 
-      {/* ══ 4. WAAROM EXTRA ══ */}
+      {/* ══ 4. WHY EXTRA ══ */}
       <section className="relative bg-white py-16 sm:py-28 overflow-hidden">
         <XPatternBg />
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-100/60 rounded-full blur-3xl pointer-events-none" />
@@ -349,10 +331,10 @@ export default function HousekeepingJobsEn() {
                 Why EXTRA?
               </span>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Why housekeeping through EXTRA?
+                Why do housekeeping work via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-                EXTRA works differently than traditional staffing agencies. As a housekeeping employee you get clear planning, flexibility in shifts and you work at professional hotels with housekeeping jobs that fit you.
+                EXTRA works differently from traditional staffing agencies. As a housekeeping staff member you get clear scheduling, flexible shifts and work at professional hotels with housekeeping jobs that match you.
               </p>
             </div>
           </RevealSection>
@@ -360,33 +342,33 @@ export default function HousekeepingJobsEn() {
             {[
               {
                 icon: Zap, badge: "Financial freedom", title: "Same-day pay via Jixbee",
-                desc: "After your shift, your payment is processed quickly. This way you don't have to wait until the end of the month.",
+                desc: "After your shift your payment is processed quickly. No waiting until the end of the month.",
                 bg: "from-yellow-50 to-orange-50", border: "border-yellow-200", iconBg: "bg-yellow-100", iconColor: "text-yellow-600", tag: "⚡ Same-day pay",
               },
               {
-                icon: CalendarCheck, badge: "Your own planning", title: "Flexible shifts",
-                desc: "Choose when you work. Ideal if you are looking for part-time or flexible housekeeping work.",
+                icon: CalendarCheck, badge: "Your own schedule", title: "Flexible shifts",
+                desc: "Choose when you work. Perfect if you're looking for part-time or flexible housekeeping work.",
                 bg: "from-violet-50 to-purple-50", border: "border-violet-200", iconBg: "bg-violet-100", iconColor: "text-violet-600", tag: "📅 Fully flexible",
               },
               {
-                icon: Building2, badge: "Premium work environment", title: "Work in top hotels",
-                desc: "Work as a room attendant or hotel cleaning employee at hotels with international guests.",
-                bg: "from-blue-50 to-indigo-50", border: "border-blue-200", iconBg: "bg-blue-100", iconColor: "text-blue-600", tag: "🏨 Top locations",
+                icon: Building2, badge: "Premium work environment", title: "Work at top hotels",
+                desc: "Work as a room attendant or hotel cleaning staff at hotels with international guests.",
+                bg: "from-blue-50 to-indigo-50", border: "border-blue-200", iconBg: "bg-blue-100", iconColor: "text-blue-600", tag: "🏨 Top venues",
               },
               {
-                icon: Shield, badge: "Certainty", title: "Everyone is employed",
-                desc: "You always work with an official contract via EXTRA. No grey constructions, just fair and transparent.",
+                icon: Shield, badge: "Security", title: "Official employment contract",
+                desc: "You always work with an official contract via EXTRA. No grey constructions — just fair and transparent.",
                 bg: "from-green-50 to-emerald-50", border: "border-green-200", iconBg: "bg-green-100", iconColor: "text-green-600", tag: "✅ Safe and fair",
               },
               {
-                icon: Gift, badge: "Exclusive rewards system", title: "EXTRAATJE rewards",
-                desc: "Save points for every shift and exchange them for cool rewards. From gift cards to gadgets.",
+                icon: Gift, badge: "Exclusive reward system", title: "EXTRAATje rewards",
+                desc: "Earn points for every shift and redeem them for great rewards. From gift cards to gadgets.",
                 bg: "from-orange-50 to-amber-50", border: "border-orange-200", iconBg: "bg-orange-100", iconColor: "text-orange-600", tag: "🎁 Earn points",
               },
               {
                 icon: Handshake, badge: "Personal approach", title: "Personal contact",
-                desc: "Our planners know your name and situation. Quickly reachable and always honest about available shifts.",
-                bg: "from-teal-50 to-cyan-50", border: "border-teal-200", iconBg: "bg-teal-100", iconColor: "text-teal-600", tag: "💬 Directly reachable",
+                desc: "Our planners know your name and situation. Quick to reach and always honest about available shifts.",
+                bg: "from-teal-50 to-cyan-50", border: "border-teal-200", iconBg: "bg-teal-100", iconColor: "text-teal-600", tag: "💬 Always reachable",
               },
             ].map(({ icon: Icon, badge, title, desc, bg, border, iconBg, iconColor, tag }, i) => (
               <RevealSection key={title} delay={i * 80}>
@@ -415,20 +397,20 @@ export default function HousekeepingJobsEn() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Top locations</span>
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Top venues</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Hotels you can be proud of
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                As a housekeeping employee through EXTRA you work at hotels with high standards and professional teams. From international hotel chains to boutique hotels in Amsterdam.
+                As a housekeeping staff member via EXTRA you work at hotels with high standards and professional teams. From international hotel chains to boutique hotels in Amsterdam.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-10">
             {[
               { icon: Building2, title: "Five-star hotels", desc: "Work at international hotel chains in Amsterdam, Utrecht and The Hague. Top standards and professional teams.", iconBg: "bg-indigo-100", iconColor: "text-indigo-600", bg: "from-indigo-50 to-blue-50", border: "border-indigo-200" },
-              { icon: Sparkles, title: "Boutique hotels", desc: "Smaller, more personal hotel environments with a high quality standard and attention to detail.", iconBg: "bg-purple-100", iconColor: "text-purple-600", bg: "from-purple-50 to-violet-50", border: "border-purple-200" },
-              { icon: Shield, title: "Fixed hotel pool", desc: "You are linked to a fixed pool so you know the working method, are familiar with the team and can be deployed quickly.", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", bg: "from-emerald-50 to-teal-50", border: "border-emerald-200" },
+              { icon: Sparkles, title: "Boutique hotels", desc: "Smaller, more personal hotel environments with high quality standards and great attention to detail.", iconBg: "bg-purple-100", iconColor: "text-purple-600", bg: "from-purple-50 to-violet-50", border: "border-purple-200" },
+              { icon: Shield, title: "Fixed hotel pool", desc: "You're matched to a fixed pool so you know the workflow, feel at home in the team and can be deployed quickly.", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", bg: "from-emerald-50 to-teal-50", border: "border-emerald-200" },
             ].map(({ icon: Icon, title, desc, iconBg, iconColor, bg, border }, i) => (
               <RevealSection key={title} delay={i * 100}>
                 <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
@@ -464,27 +446,27 @@ export default function HousekeepingJobsEn() {
         </div>
       </section>
 
-      {/* ══ 6. HOE HET WERKT ══ */}
-      <section id="hoe-het-werkt" className="relative bg-white py-16 sm:py-24 overflow-hidden">
+      {/* ══ 6. HOW IT WORKS ══ */}
+      <section id="how-it-works" className="relative bg-white py-16 sm:py-24 overflow-hidden">
         <XPatternBg />
         <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 4 steps</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                How to start with housekeeping work through EXTRA
+                How to start housekeeping work via EXTRA
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                From registration to your first hotel room. Simple, fast and clear.
+                From sign-up to your first hotel room. Simple, fast and clear.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {[
               { step: "01", icon: MessageCircle, title: "Sign up", desc: "Fill in the application form and upload your CV. Takes less than 5 minutes.", color: "from-purple-500 to-violet-600" },
-              { step: "02", icon: Users, title: "Introduction", desc: "We schedule a short meeting. Then we see which hotels suit you best.", color: "from-indigo-500 to-blue-600" },
-              { step: "03", icon: CalendarCheck, title: "Choose your shifts", desc: "You provide your availability and we provide suitable housekeeping shifts.", color: "from-teal-500 to-cyan-600" },
-              { step: "04", icon: Zap, title: "Work and get paid", desc: "Work your shift and receive your payment the same day via Jixbee.", color: "from-orange-500 to-amber-500" },
+              { step: "02", icon: Users, title: "Intake", desc: "We schedule a short call. Then we find out which hotels suit you best.", color: "from-indigo-500 to-blue-600" },
+              { step: "03", icon: CalendarCheck, title: "Set your availability", desc: "You let us know when you're free and we arrange matching housekeeping shifts.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Zap, title: "Work and get paid", desc: "Complete your shift and receive your payment the same day via Jixbee.", color: "from-orange-500 to-amber-500" },
             ].map(({ step, icon: Icon, title, desc, color }, i) => (
               <RevealSection key={step} delay={i * 80}>
                 <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
@@ -500,15 +482,15 @@ export default function HousekeepingJobsEn() {
           </div>
           <RevealSection delay={300}>
             <div className="flex justify-center mt-10">
-              <Link href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
                 Sign up <ArrowRight className="w-5 h-5" />
-              </Link>
+              </a>
             </div>
           </RevealSection>
         </div>
       </section>
 
-      {/* ══ 7. DAGBETALING ══ */}
+      {/* ══ 7. SAME-DAY PAY ══ */}
       <section className="py-16 sm:py-24 lg:py-32" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
@@ -519,14 +501,14 @@ export default function HousekeepingJobsEn() {
                   Money in your account, the same day.
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
-                  After your housekeeping shift, you are paid via Jixbee. You immediately see what you have earned and receive your payment quickly. No waiting times, no lack of clarity.
+                  After your housekeeping shift you're paid out via Jixbee. You can see straight away what you've earned and receive your payment quickly. No waiting, no confusion.
                 </p>
                 <div className="space-y-3 mb-8">
                   {[
-                    "Payment via Jixbee, same day after your shift",
+                    "Payout via Jixbee, same day after your shift",
                     "Always real-time insight into your earned hours",
-                    "Official contract and payroll according to legislation",
-                    "No surprises on your payslip",
+                    "Official contract and payroll, legally compliant",
+                    "No surprises on your pay slip",
                   ].map(item => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -536,9 +518,9 @@ export default function HousekeepingJobsEn() {
                     </div>
                   ))}
                 </div>
-                <Link href="/en/how-we-work" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                <a href="/en/how-we-work" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
                   How does same-day pay work? <ChevronRight className="w-4 h-4" />
-                </Link>
+                </a>
               </div>
               <div className="flex justify-center">
                 <div className="relative flex gap-5 items-end h-[320px] sm:h-[380px]">
@@ -548,7 +530,7 @@ export default function HousekeepingJobsEn() {
                   <div className="relative z-10 -mb-4" style={{ animation: "float-hsw 4s ease-in-out infinite" }}>
                     <img src={jixbeePayout} alt="Jixbee – payout successful" className="w-[155px] sm:w-[190px] drop-shadow-2xl rounded-[2rem]" />
                     <div className="absolute -top-3 -right-10 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-purple-100 whitespace-nowrap">
-                      💸 €680,- paid out
+                      💸 €680 paid out
                     </div>
                     <div className="absolute -bottom-2 -left-8 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-green-100 whitespace-nowrap">
                       ✅ Hours approved
@@ -574,12 +556,12 @@ export default function HousekeepingJobsEn() {
             <div className="text-center mb-10 sm:mb-14">
               <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Experiences</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                What do housekeeping staff say?
+                What our housekeeping staff say
               </h2>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-12">
-            {reviews.map(({ name, functie, tekst, rating }, i) => (
+            {reviews.map(({ name, role, text, rating }, i) => (
               <RevealSection key={name} delay={i * 80}>
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all h-full flex flex-col">
                   <div className="flex mb-3">
@@ -587,14 +569,14 @@ export default function HousekeepingJobsEn() {
                       <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-4 italic">"{tekst}"</p>
+                  <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-4 italic">"{text}"</p>
                   <div className="border-t border-purple-100 pt-3 flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white text-xs font-black">
                       {name.charAt(0)}
                     </div>
                     <div>
                       <p className="text-xs font-black text-gray-900">{name}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">{functie} via EXTRA</p>
+                      <p className="text-[10px] text-gray-400 font-medium">{role} via EXTRA</p>
                     </div>
                   </div>
                 </div>
@@ -609,21 +591,45 @@ export default function HousekeepingJobsEn() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Start today with housekeeping work through EXTRA
+              Start housekeeping work via EXTRA today
             </p>
-            <p className="text-purple-200 text-sm mt-0.5">Do you want to work as a room attendant or in hotel cleaning at beautiful hotels in Amsterdam? Sign up at EXTRA and start quickly with housekeeping shifts.</p>
+            <p className="text-purple-200 text-sm mt-0.5">Want to work as a room attendant or hotel cleaning staff at beautiful hotels in Amsterdam? Sign up with EXTRA and start housekeeping shifts quickly.</p>
           </div>
-          <Link href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
             Start your application <ArrowRight className="w-4 h-4" />
-          </Link>
+          </a>
         </div>
       </div>
 
       {/* ══ 10. FAQ ══ */}
-      <FAQSection
-        heading="Frequently asked questions about housekeeping work through EXTRA"
-        faqs={faqs}
-      />
+      <section className="py-16 sm:py-24 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Frequently asked questions about housekeeping work via EXTRA
+              </h2>
+            </div>
+          </RevealSection>
+          <div className="space-y-3 sm:space-y-4">
+            {faqs.map((faq, i) => (
+              <RevealSection key={i} delay={i * 60}>
+                <div className="bg-white rounded-2xl border border-gray-100 hover:border-purple-200 transition-all duration-300 overflow-hidden shadow-sm">
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-5 sm:p-7 text-left">
+                    <span className="text-base sm:text-lg font-bold text-gray-900 pr-4">{faq.q}</span>
+                    <span className={`text-gray-400 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </span>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-72 pb-5 sm:pb-7" : "max-h-0"}`}>
+                    <p className="px-5 sm:px-7 text-sm sm:text-base text-gray-500 leading-relaxed">{faq.a}</p>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ══ 11. LINK CLOUD ══ */}
       <section className="py-12 bg-white border-t border-purple-100/60">
@@ -631,14 +637,14 @@ export default function HousekeepingJobsEn() {
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">Related pages</p>
           <div className="flex flex-wrap justify-center gap-3">
             {[
-              { label: "Housekeeping jobs Amsterdam", href: "/en/housekeeping-jobs" },
               { label: "Hospitality work", href: "/en/hospitality-work" },
-              { label: "Chef jobs", href: "/en/chef-jobs" },
-              { label: "Front Office jobs", href: "/en/front-office-jobs" },
-              { label: "How does same-day pay work?", href: "/en/how-we-work" },
-              { label: "EXTRAATJE rewards", href: "/en/rewards" },
-            ].map((link) => (
-              <Link key={link.href} href={link.href} className="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-4 py-2 rounded-full border border-purple-200 transition-colors">
+              { label: "Chef vacancies", href: "/en/chef-jobs" },
+              { label: "Front office vacancies", href: "/en/front-office-jobs" },
+              { label: "EXTRAATje rewards", href: "/en/rewards" },
+              { label: "How we work", href: "/en/how-we-work" },
+              { label: "Apply to EXTRA", href: "/aanmelden" },
+            ].map((link, i) => (
+              <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
                 {link.label}
               </Link>
             ))}
