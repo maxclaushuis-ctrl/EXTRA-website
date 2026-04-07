@@ -1757,7 +1757,7 @@ export default function LandingPage() {
                   <p className="text-xs font-bold uppercase tracking-widest text-purple-400 mb-1">Klaar om te starten?</p>
                   <p className="text-base sm:text-lg font-bold text-white">Personeel nodig of op zoek naar extra werk?</p>
                 </div>
-                <div className="flex flex-col xs:flex-row gap-3 shrink-0">
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
                   <a
                     href="/personeelsaanvraag"
                     className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-full text-white text-sm transition-all duration-200 hover:scale-105 hover:-translate-y-0.5"

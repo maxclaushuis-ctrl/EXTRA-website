@@ -291,6 +291,36 @@
 }
 
 /* ══════════════════════════════════════════════════════════
+   MOBILE HERO GRADIENT OVERRIDES  (< 768px)
+   Op kleine schermen (telefoons) is de tekstkolom de volle
+   viewport-breedte. De standaard gradients (solid tot 32-62%)
+   dekken op 375 px slechts ~120–230 px — te weinig voor de
+   langere h1-regels. Deze overrides houden de solid zone op
+   60-65 % zodat alle tekstregels voor een donkere achtergrond
+   staan, ongeacht regelafbreking.
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .hero-text-gradient {
+    background: linear-gradient(to right,
+      rgba(29,5,73,1)     0%,
+      rgba(29,5,73,1)     55%,
+      rgba(52,10,115,.82) 72%,
+      rgba(68,13,140,.35) 88%,
+      transparent         100%
+    );
+  }
+  .landing-text-gradient {
+    background: linear-gradient(to right,
+      rgba(29,5,73,1)     0%,
+      rgba(29,5,73,1)     60%,
+      rgba(52,10,115,.90) 76%,
+      rgba(68,13,140,.32) 90%,
+      transparent         100%
+    );
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
    SMALL LAPTOP RESPONSIVE ADJUSTMENTS  (1024px – 1279px)
    Ensures 11-inch screens match the 13-inch layout visually.
    Does NOT affect mobile (< 1024px) or larger screens (≥ 1280px).

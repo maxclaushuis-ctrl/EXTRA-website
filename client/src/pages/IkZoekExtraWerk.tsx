@@ -140,6 +140,11 @@ export default function IkZoekExtraWerk() {
   }, []);
 
   useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     document.title = "Extra werk in de horeca, wanneer het jou uitkomt | EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
@@ -289,8 +294,12 @@ export default function IkZoekExtraWerk() {
             </div>
 
             {/* Mobile hamburger */}
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className={scrolled ? "text-gray-900" : "text-white"} size={28} /> : <Menu className={scrolled ? "text-gray-900" : "text-white"} size={28} />}
+            <button
+              className="lg:hidden flex items-center justify-center p-3 rounded-xl min-w-[44px] min-h-[44px] transition-colors hover:bg-white/10"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Menu sluiten" : "Menu openen"}
+            >
+              {mobileMenuOpen ? <X className={scrolled ? "text-gray-900" : "text-white"} size={24} /> : <Menu className={scrolled ? "text-gray-900" : "text-white"} size={24} />}
             </button>
           </div>
         </div>
