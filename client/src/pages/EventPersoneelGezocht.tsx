@@ -199,8 +199,10 @@ export default function EventPersoneelGezocht() {
             background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Gradient links — tekst leesbaar */}
-          <div className="absolute inset-0 hero-text-gradient" />
+          {/* Solid paars vak links — tekst leesbaar, daarna zachte overgang naar foto */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 42%, rgba(45,6,99,0.88) 54%, rgba(58,8,128,0.42) 63%, rgba(72,14,148,0.12) 71%, transparent 78%)"
+          }} />
 
           {/* Bottom vignette */}
           <div className="absolute bottom-0 left-0 right-0" style={{
