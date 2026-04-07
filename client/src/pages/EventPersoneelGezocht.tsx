@@ -199,8 +199,8 @@ export default function EventPersoneelGezocht() {
             background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Overlay — links licht voor tekst, rechts nul zodat de bartender eruit springt */}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(88,28,135,0.38) 0%, rgba(88,28,135,0.12) 45%, rgba(88,28,135,0) 62%)" }} />
+          {/* Gradient links — tekst leesbaar */}
+          <div className="absolute inset-0 hero-text-gradient" />
 
           {/* Bottom vignette */}
           <div className="absolute bottom-0 left-0 right-0" style={{
