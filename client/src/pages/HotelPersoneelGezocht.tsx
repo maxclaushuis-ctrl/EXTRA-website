@@ -247,8 +247,10 @@ export default function HotelPersoneelGezocht() {
             background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Overlay — links licht voor tekst, rechts nul zodat de chef eruit springt */}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(88,28,135,0.38) 0%, rgba(88,28,135,0.12) 45%, rgba(88,28,135,0) 62%)" }} />
+          {/* Solid paars vak links — tekst leesbaar, daarna zachte overgang naar foto */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 32%, rgba(45,6,99,0.82) 46%, rgba(58,8,128,0.38) 56%, rgba(72,14,148,0.10) 65%, transparent 72%)"
+          }} />
 
           {/* Bottom vignette */}
           <div className="absolute bottom-0 left-0 right-0" style={{
