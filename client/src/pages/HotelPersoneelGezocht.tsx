@@ -12,7 +12,7 @@ import {
   BedDouble, Utensils, GlassWater, ChefHat, Waves, CookingPot,
   BarChart3
 } from "lucide-react";
-import heroBgImage from "@assets/hero-background.webp";
+import heroBgImage from "@assets/CHEF_FINAL_AE_001_1775562300081.png";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
@@ -237,7 +237,7 @@ export default function HotelPersoneelGezocht() {
             className="w-full h-full object-cover"
             loading="eager"
             style={{
-              objectPosition: "65% center",
+              objectPosition: "center top",
               filter: "contrast(1.08) saturate(1.15) brightness(1.04)",
             }}
           />
@@ -247,8 +247,8 @@ export default function HotelPersoneelGezocht() {
             background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
 
-          {/* Gradient links — tekst leesbaar */}
-          <div className="absolute inset-0 hero-text-gradient" />
+          {/* Paars overlay — tekst leesbaar */}
+          <div className="absolute inset-0" style={{ background: "rgba(88, 28, 135, 0.50)" }} />
 
           {/* Bottom vignette */}
           <div className="absolute bottom-0 left-0 right-0" style={{
