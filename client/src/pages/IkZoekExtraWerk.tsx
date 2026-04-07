@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
+import groupShotHero from "@assets/GROUP_SHOT_002_1775115679180.png";
 import blogHousekeeping from "@/assets/images/blog-housekeeping.jpg";
 import blogCatering from "@/assets/images/blog-catering.jpg";
 import blogBarista from "@/assets/images/blog-barista.jpg";
@@ -360,22 +361,65 @@ export default function IkZoekExtraWerk() {
       {/* ══════════════════════════════════════════════
           1. HERO
       ══════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
-        <XPatternBgDark />
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
 
-        {/* floating glow orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-fuchsia-400/15 rounded-full blur-3xl pointer-events-none" />
+        {/* X-patroon achtergrond */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
+        </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
-          {/* Left */}
-          <div>
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero foto — volledig scherm */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={groupShotHero}
+            alt="EXTRA horecapersoneel Amsterdam – staffing agency"
+            className="absolute top-0 bottom-0 right-0 h-full object-cover"
+            loading="eager"
+            {...{ fetchpriority: "high" } as any}
+            decoding="async"
+            style={{
+              left: "4%",
+              objectPosition: "68% center",
+              filter: "contrast(1.08) saturate(1.20) brightness(1.08)",
+            }}
+          />
+          {/* Spotlight radial achter de groep */}
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
+          }} />
+          {/* Gradient links — tekst leesbaar */}
+          <div className="absolute inset-0 landing-text-gradient" />
+          {/* Bottom vignette */}
+          <div className="absolute bottom-0 left-0 right-0" style={{
+            height: "20%",
+            background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)"
+          }} />
+          {/* Top vignette — navbar overlay */}
+          <div className="absolute top-0 left-0 right-0" style={{
+            height: "18%",
+            background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)"
+          }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
+          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               <span className="text-white/90 text-xs font-semibold">Dagelijks nieuwe shifts beschikbaar</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
               Extra werk in de horeca.<br />
               <span className="relative inline-block">
                 <span className="relative z-10">Wanneer het jou uitkomt.</span>
@@ -387,7 +431,7 @@ export default function IkZoekExtraWerk() {
               Via EXTRA werk je bij hotels, restaurants en events in Amsterdam, Utrecht en Den Haag. Jij kiest wanneer je werkt. Wij regelen de rest.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Schrijf je in <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
@@ -397,7 +441,7 @@ export default function IkZoekExtraWerk() {
             </div>
 
             {/* Micro badges */}
-            <div className="mt-8 flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2.5">
               {[
                 { emoji: "⚡", label: "Dagbetaling mogelijk" },
                 { emoji: "✅", label: "Iedereen in loondienst" },
@@ -407,29 +451,6 @@ export default function IkZoekExtraWerk() {
                   {emoji} {label}
                 </span>
               ))}
-            </div>
-          </div>
-
-          {/* Right – phone mockup stack */}
-          <div className="relative flex justify-center items-end gap-4 h-[340px] sm:h-[420px]">
-            {/* Back phone */}
-            <div className="absolute left-[5%] bottom-0 opacity-70" style={{ transform: "rotate(-8deg) translateY(10px)" }}>
-              <PhoneMockup src={imgBeloningen} alt="EXTRA beloningen" className="w-[130px] sm:w-[160px]" />
-            </div>
-            {/* Front phone */}
-            <div className="relative z-10">
-              <PhoneMockup src={imgDashboard} alt="EXTRA dashboard" className="w-[160px] sm:w-[200px]" />
-              {/* floating badge */}
-              <div className="absolute -top-4 -right-8 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-purple-100">
-                💰 Dagbetaling actief
-              </div>
-              <div className="absolute -bottom-2 -left-10 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-purple-100">
-                🏆 +250 punten verdiend
-              </div>
-            </div>
-            {/* Right phone */}
-            <div className="absolute right-[5%] bottom-0 opacity-70" style={{ transform: "rotate(6deg) translateY(10px)" }}>
-              <PhoneMockup src={imgRanglijst} alt="EXTRA ranglijst" className="w-[130px] sm:w-[160px]" />
             </div>
           </div>
         </div>
