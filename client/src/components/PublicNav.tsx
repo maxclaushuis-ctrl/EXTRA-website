@@ -12,6 +12,7 @@ interface PublicNavProps {
 }
 
 const LANG_MAP: Record<string, string> = {
+  "/landing": "/en",
   "/horeca-personeel-gezocht": "/en/hospitality-staff-amsterdam",
   "/hotelpersoneel-inhuren": "/en/hotel-staffing-amsterdam",
   "/eventpersoneel-inhuren": "/en/event-staff-amsterdam",
@@ -28,6 +29,7 @@ const LANG_MAP: Record<string, string> = {
   "/housekeeping-vacatures-amsterdam": "/en/housekeeping-jobs",
   "/chef-vacatures-amsterdam": "/en/chef-jobs",
   "/front-office-vacatures-amsterdam": "/en/front-office-jobs",
+  "/en": "/landing",
   "/en/hospitality-staff-amsterdam": "/horeca-personeel-gezocht",
   "/en/hotel-staffing-amsterdam": "/hotelpersoneel-inhuren",
   "/en/event-staff-amsterdam": "/eventpersoneel-inhuren",
@@ -47,6 +49,7 @@ const LANG_MAP: Record<string, string> = {
 };
 
 const EN_PATHS = [
+  "/en",
   "/en/hospitality-staff-amsterdam",
   "/en/hotel-staffing-amsterdam",
   "/en/event-staff-amsterdam",
@@ -213,7 +216,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <Link href={isEnglish ? "/en/hospitality-staff-amsterdam" : "/landing"}>
+          <Link href={isEnglish ? "/en" : "/landing"}>
             <img
               src={extraLogoWit}
               alt="EXTRA"
@@ -320,7 +323,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                     {!isEnglish && <div className="ml-auto w-2 h-2 bg-purple-600 rounded-full" />}
                   </Link>
                   <Link
-                    href={isEnglish ? location : (altPath || "/en/hospitality-staff-amsterdam")}
+                    href={isEnglish ? location : (altPath || "/en")}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       isEnglish ? "bg-purple-50 text-purple-700" : "text-gray-600 hover:bg-purple-50 hover:text-purple-700"
                     }`}
@@ -422,7 +425,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
                   🇳🇱 Nederlands
                 </Link>
                 <Link
-                  href={isEnglish ? location : (altPath || "/en/hospitality-staff-amsterdam")}
+                  href={isEnglish ? location : (altPath || "/en")}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center ${
                     isEnglish ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
                   }`}
