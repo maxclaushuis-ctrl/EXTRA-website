@@ -201,7 +201,7 @@ export default function EventPersoneelGezocht() {
 
           {/* Solid paars vak links — tekst leesbaar, daarna zachte overgang naar foto */}
           <div className="absolute inset-0" style={{
-            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 42%, rgba(45,6,99,0.88) 54%, rgba(58,8,128,0.42) 63%, rgba(72,14,148,0.12) 71%, transparent 78%)"
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 32%, rgba(45,6,99,0.82) 46%, rgba(58,8,128,0.38) 56%, rgba(72,14,148,0.10) 65%, transparent 72%)"
           }} />
 
           {/* Bottom vignette */}
