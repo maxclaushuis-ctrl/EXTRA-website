@@ -50,6 +50,7 @@ const BHGGroupPage = lazy(() => import("@/pages/BHGGroupPage"));
 const XebiaPage = lazy(() => import("@/pages/XebiaPage"));
 const Contact = lazy(() => import("@/pages/Contact"));
 
+const LandingPageEn = lazy(() => import("@/pages/en/LandingPageEn"));
 const HospitalityStaffAmsterdam = lazy(() => import("@/pages/en/HospitalityStaffAmsterdam"));
 const HotelStaffingAmsterdam = lazy(() => import("@/pages/en/HotelStaffingAmsterdam"));
 const EventStaffAmsterdam = lazy(() => import("@/pages/en/EventStaffAmsterdam"));
@@ -114,6 +115,7 @@ const PUBLIC_PATHS = [
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
   '/klantcases-horeca', '/contact',
   '/vacatures',
+  '/en',
   '/en/hospitality-staff-amsterdam', '/en/hotel-staffing-amsterdam',
   '/en/event-staff-amsterdam', '/en/catering-staff-amsterdam', '/en/restaurant-staff-amsterdam',
   '/en/about', '/en/our-team', '/en/contact', '/en/client-stories',
@@ -191,6 +193,9 @@ function Router() {
           <Route path="/horeca-personeel-amsterdam" component={HorecaPersoneelAmsterdamPage} />
           <Route path="/horeca-personeel" component={HorecaPersoneelPage} />
           <Route path="/flexibel-horeca-personeel" component={FlexibelHorecaPersoneel} />
+
+          {/* English landing page */}
+          <Route path="/en" component={LandingPageEn} />
 
           {/* English employer pages */}
           <Route path="/en/hospitality-staff-amsterdam" component={HospitalityStaffAmsterdam} />
