@@ -1,2 +1,7 @@
 User-agent: *
-Disallow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /rewards
+Disallow: /history
+
+Sitemap: https://www.doehetextra.nl/sitemap.xml
