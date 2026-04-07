@@ -1,0 +1,50 @@
+**REPLIT PROMPT – Engelse versie website (volledige vertaling + copywriting)**
+
+De website heeft een Nederlandse versie (`/nl`) en een Engelse versie (`/en`). De Engelse versie moet volledig worden herbouwd. Doe het volgende:
+
+---
+
+**STRUCTUUR**
+
+Kopieer elke pagina van de Nederlandse versie 1-op-1 naar de Engelse variant:
+- Identieke layout, sectievolgorde, componenten en fotografie
+- Identieke navigatiestructuur en URL-opbouw (bijv. `/en/hotelpersoneel` → `/en/hotel-staff`)
+- Alle afbeeldingen, iconen en visuele elementen blijven exact hetzelfde
+
+Verander **alleen** de tekst. Geen enkele sectie, component of foto mag verdwijnen of verplaatst worden.
+
+---
+
+**COPYWRITING INSTRUCTIES**
+
+Vertaal de teksten **niet letterlijk**. Schrijf alle teksten opnieuw in natuurlijk, professioneel Engels zoals een native Engelstalige copywriter dat zou doen voor een B2B hospitality staffing bedrijf. Houd daarbij rekening met het volgende:
+
+- **Headers** zijn kort, krachtig en pakkend — gebruik de stijl die gangbaar is in Angelsaksische marketing: actiegericht, direct, licht informeel waar passend
+- **Bodyteksten** zijn helder en to-the-point — vermijd letterlijke vertalingen van Nederlandse uitdrukkingen die in het Engels onnatuurlijk klinken
+- **CTAs** zijn actiegericht en energiek (niet "Request staff" maar bijv. "Get staffed now" of "Find your team")
+- **Trust-elementen** (badges, USP's) klinken zelfverzekerd en concreet
+- De **EXTRA merkstem** blijft intact: energiek, betrouwbaar, no-nonsense
+
+**Voorbeelden van hoe je de toon aanpast:**
+
+| Nederlands | Niet zo | Wel zo |
+|---|---|---|
+| Hotelpersoneel nodig? EXTRA regelt het. | Hotel staff needed? EXTRA arranges it. | Need hotel staff? We've got you covered. |
+| Binnen 48 uur beschikbaar | Available within 48 hours | Ready to work in 48 hours |
+| Iedereen in loondienst | Everyone in employment | All staff on payroll — always |
+| Persoonlijk geselecteerd | Personally selected | Handpicked. Every time. |
+| Vraag personeel aan | Request staff | Get staffed now |
+
+---
+
+**TECHNISCHE INSTRUCTIES**
+
+- Gebruik de bestaande taalswitch (`NL` / `EN`) in de navbar — zorg dat die correct doorlinkt naar de `/en`-versie van elke pagina
+- Alle meta-titles en meta-descriptions op de Engelse pagina's worden ook in het Engels geschreven (SEO-vriendelijk, niet letterlijk vertaald)
+- Sla alle Engelse teksten op in het bestaande vertaalbestand of i18n-systeem van het project (bijv. `en.json`) — gebruik geen hardcoded teksten in de componenten
+- Als er nog geen i18n-systeem bestaat, implementeer dan `i18next` of een equivalent en splits de bestaande Nederlandse teksten direct op in `nl.json` en `en.json`
+- De Engelse URL-slugs worden herschreven naar Engels (geen Nederlandse woorden in de URL)
+
+---
+
+Verander niets aan de Nederlandse versie. Alle wijzigingen gelden uitsluitend voor de `/en` variant.
