@@ -2,17 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
-import FAQSection from "@/components/FAQSection";
 import {
-  ArrowRight, ChevronRight, ChevronDown, Zap, Star, Clock,
+  ArrowRight, ChevronRight, Zap, Star,
   Gift, Users, CheckCircle2, MessageCircle, Building2,
-  UtensilsCrossed, BedDouble, ChefHat, ConciergeBell, Menu, X,
-  UserCheck, Trophy, CalendarCheck, Handshake, Globe, Smile, Moon
+  ConciergeBell, CalendarCheck, Handshake, Globe, Smile
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
 import frontOffice2Img from "@assets/Front-office_1771842809388.webp";
+import frontOfficeHeroImg from "@assets/FRONT_OFFICE_FINAL_AE_001_1775059133785.png";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import mercureLogo from "../../assets/pitch/logo-mercure.png";
@@ -46,7 +44,9 @@ function useScrollReveal() {
   return { ref, visible };
 }
 
-function RevealSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function RevealSection({ children, className = "", delay = 0 }: {
+  children: React.ReactNode; className?: string; delay?: number;
+}) {
   const { ref, visible } = useScrollReveal();
   return (
     <div ref={ref} className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
@@ -58,139 +58,188 @@ function RevealSection({ children, className = "", delay = 0 }: { children: Reac
 function XBg() {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[{ left: "4%", top: "10%", w: 180, rot: 15, op: 0.07 }, { left: "76%", top: "14%", w: 140, rot: -8, op: 0.05 }, { left: "47%", top: "70%", w: 160, rot: 25, op: 0.06 }].map((x, i) => (
-        <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(139,92,246,1)" }} />
+      {[
+        { left: "4%", top: "10%", w: 180, rot: 15, op: 0.07 },
+        { left: "76%", top: "14%", w: 140, rot: -8, op: 0.05 },
+        { left: "47%", top: "70%", w: 160, rot: 25, op: 0.06 },
+      ].map((x, i) => (
+        <div key={i} className="absolute" style={{
+          left: x.left, top: x.top, width: x.w, height: x.w,
+          transform: `rotate(${x.rot}deg)`, opacity: x.op,
+          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          backgroundColor: "rgba(139,92,246,1)",
+        }} />
       ))}
     </div>
   );
 }
 
-function XBgDark() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[{ left: "5%", top: "8%", w: 220, rot: 15, op: 0.1 }, { left: "78%", top: "52%", w: 260, rot: -20, op: 0.08 }].map((x, i) => (
-        <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
-      ))}
-    </div>
-  );
-}
-
-const NAV_ITEMS = [
-  { label: "Hospitality", href: "/en/hospitality-work", icon: UtensilsCrossed },
-  { label: "Housekeeping", href: "/en/housekeeping-jobs", icon: BedDouble },
-  { label: "Chef", href: "/en/chef-jobs", icon: ChefHat },
-  { label: "Front Office", href: "/en/front-office-jobs", icon: ConciergeBell },
-];
-
-const functies = [
-  { title: "Front office employee", sub: "Hotels · Reception · Guest-oriented", img: frontOfficeImg, desc: "Front office jobs in Amsterdam for guest-oriented employees. The first point of contact for hotel guests, from check-in to a perfect welcome.", bullets: ["Front office jobs Amsterdam", "Hospitable and professional", "International work environment"], color: "from-indigo-500 to-blue-700", href: "/aanmelden" },
-  { title: "Hotel receptionist", sub: "Check-in · Reservations · Service", img: frontOffice2Img, desc: "Receptionist jobs at five-star hotels in Amsterdam. Process reservations and guide guests upon arrival for a flawless hotel experience.", bullets: ["Receptionist jobs hotel", "Front-desk experience", "Five-star hotel chains"], color: "from-purple-600 to-violet-700", href: "/aanmelden" },
-  { title: "Guest service employee", sub: "Guest experience · Hospitality · Support", img: dienstFrontOfficeImg, desc: "Front office employee in a guest service role. Support at the reception and guest experience on a flexible basis at hotels and hospitality venues.", bullets: ["Flexible front office shifts", "Guest-oriented work", "Hotels and hospitality venues"], color: "from-teal-500 to-cyan-600", href: "/aanmelden" },
-  { title: "Night receptionist", sub: "Night shift · Oversight · Calm", img: hotelImg, desc: "Hotel receptionist Amsterdam in the night shift. Calm, oversight, and responsibility in a unique and independent role.", bullets: ["Hotel receptionist Amsterdam", "Independent work environment", "Build a steady pool"], color: "from-slate-600 to-gray-700", href: "/aanmelden" },
+const roles = [
+  {
+    title: "Front office agent",
+    sub: "Hotels · Reception · Guest-focused",
+    img: frontOfficeImg,
+    desc: "Front office vacancies in Amsterdam for guest-oriented staff. First point of contact for hotel guests, from check-in to a perfect welcome.",
+    bullets: ["Front office vacancies Amsterdam", "Warm and professional", "International work environment"],
+    color: "from-indigo-500 to-blue-700",
+    href: "/aanmelden",
+  },
+  {
+    title: "Hotel receptionist",
+    sub: "Check-in · Reservations · Service",
+    img: frontOffice2Img,
+    desc: "Receptionist vacancies at five-star hotels in Amsterdam. Handle reservations and guide guests on arrival for a seamless hotel experience.",
+    bullets: ["Hotel receptionist vacancies", "Front-desk experience", "Five-star hotel chains"],
+    color: "from-purple-600 to-violet-700",
+    href: "/aanmelden",
+  },
+  {
+    title: "Guest service agent",
+    sub: "Guest experience · Hospitality · Support",
+    img: dienstFrontOfficeImg,
+    desc: "Front office work in a guest service role. Supporting reception and the guest experience on a flexible basis at hotels and hospitality venues.",
+    bullets: ["Flexible front office shifts", "Guest-focused work", "Hotels and hospitality venues"],
+    color: "from-teal-500 to-cyan-600",
+    href: "/aanmelden",
+  },
+  {
+    title: "Night receptionist",
+    sub: "Night shift · Overview · Independence",
+    img: hotelImg,
+    desc: "Hotel receptionist in the night shift in Amsterdam. Calm, oversight and responsibility in a unique and independent role.",
+    bullets: ["Hotel receptionist Amsterdam", "Independent work environment", "Build a fixed pool"],
+    color: "from-slate-600 to-gray-700",
+    href: "/aanmelden",
+  },
 ];
 
 const reviews = [
-  { name: "Emma L.", functie: "Front office employee", tekst: "Through EXTRA, I work at the desk of beautiful hotels. The atmosphere is professional and the locations are top-notch. Exactly what I was looking for.", rating: 5 },
-  { name: "Thijs K.", functie: "Hotel receptionist", tekst: "Same-day pay via Jixbee makes the difference. The money is in my account right after my shift. No hassle, just clear.", rating: 5 },
-  { name: "Laila B.", functie: "Guest service employee", tekst: "I combine my hospitality studies with front-office work through EXTRA. The scheduling is flexible and the shifts fit well with my schedule.", rating: 5 },
+  { name: "Emma L.", role: "Front office agent", text: "Through EXTRA I work at the reception of beautiful hotels. The atmosphere is professional and the venues are truly top-notch. Exactly what I was looking for.", rating: 5 },
+  { name: "Thijs K.", role: "Hotel receptionist", text: "Same-day pay via Jixbee makes all the difference. Right after my shift the money is there. No hassle, just clear and simple.", rating: 5 },
+  { name: "Laila B.", role: "Guest service agent", text: "I combine my hospitality studies with front office work via EXTRA. The scheduling is flexible and the shifts fit well around my timetable.", rating: 5 },
 ];
 
 const faqs = [
-  { q: "Do I need experience as a receptionist?", a: "Some hospitality experience is a plus, but not always required for front office work. We look at your communication skills, professional appearance, and guest-oriented attitude. For some front office jobs in Amsterdam, we offer a short on-site introduction." },
-  { q: "Will I always work in the same hotel?", a: "In many cases, yes. We try to link you to a steady pool at one or more hotels, so you know the procedures and feel comfortable as a hotel receptionist in the team quickly." },
-  { q: "Can I choose my own shifts?", a: "Yes. You submit your availability and we provide suitable front office shifts. This allows you to combine your work as a front office employee with your studies, another job, or other activities." },
-  { q: "How does payment work?", a: "After your shift, you are paid via Jixbee. The amount is usually in your account the same day. This is how front office work via EXTRA works: transparent, fast, and without surprises." },
-  { q: "How soon can I start?", a: "After your registration and a short introduction, you can often start receptionist work within a week. We do our best to make the start as smooth as possible." },
+  { q: "Do I need experience as a receptionist?", a: "Some hospitality experience is a plus, but not always required for front office work. We look at your communication skills, professional appearance and guest-focused attitude. For some front office vacancies in Amsterdam we offer a short on-site introduction." },
+  { q: "Will I always work at the same hotel?", a: "In most cases yes. We try to match you to a fixed pool at one or more hotels, so you know the procedures and quickly feel at home as a hotel receptionist in the team." },
+  { q: "Can I choose my own shifts?", a: "Yes. You let us know your availability and we arrange matching front office shifts. This way you can combine the work with your studies, another job or other commitments." },
+  { q: "How does payment work?", a: "After your shift you're paid out via Jixbee. The amount is usually in your account the same day. That's how front office work via EXTRA works: transparent, fast and no surprises." },
+  { q: "How quickly can I start?", a: "After your sign-up and a short intake you can often start receptionist work within a week. We do our best to make the start as smooth as possible." },
 ];
 
 const LOGOS = [
-  { src: amrathLogo, alt: "Amrâth Hotels" }, { src: mercureLogo, alt: "Mercure Hotels" }, { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
-  { src: logoFcUtrecht, alt: "FC Utrecht" }, { src: logoFunda, alt: "Funda" },
-  { src: logoHartMuseum, alt: "H'art Museum" }, { src: logoHetePeper, alt: "Hete Peper" }, { src: hiltonLogo, alt: "Hilton" },
-  { src: marriottLogo, alt: "Marriott" }, { src: logoSelectCatering, alt: "Select Catering" }, { src: logoAppel, alt: "Appèl" },
+  { src: amrathLogo, alt: "Amrâth Hotels" },
+  { src: mercureLogo, alt: "Mercure Hotels" },
+  { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
+  { src: logoFcUtrecht, alt: "FC Utrecht" },
+  { src: logoFunda, alt: "Funda" },
+  { src: logoHartMuseum, alt: "H'art Museum" },
+  { src: logoHetePeper, alt: "Hete Peper" },
+  { src: hiltonLogo, alt: "Hilton" },
+  { src: marriottLogo, alt: "Marriott" },
+  { src: logoSelectCatering, alt: "Select Catering" },
+  { src: logoAppel, alt: "Appèl" },
 ];
 
 export default function FrontOfficeJobsEn() {
-  const [scrolled, setScrolled] = useState(false);
-  const ACTIVE = "/en/front-office-jobs";
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    document.title = "Front Office Jobs Amsterdam | Hotel Reception | EXTRA";
+    document.title = "Front office vacancies Amsterdam | Receptionist work via EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Looking for front office jobs or receptionist work in Amsterdam? Through EXTRA, you work in top hotels with flexible shifts and same-day pay.");
-    setMeta("og:title", "Front Office Jobs Amsterdam | Hotel Reception | EXTRA", true);
+    setMeta("description", "Looking for front office vacancies or receptionist work in Amsterdam? Via EXTRA you work in top hotels with flexible shifts and same-day pay.");
+    setMeta("og:title", "Front office vacancies Amsterdam | Receptionist work via EXTRA", true);
+    setMeta("og:type", "website", true);
   }, []);
 
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* NAV */}
       <PublicNav />
 
-      {/* ══ HERO ══ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
-        <XBgDark />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-cyan-400/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
+      {/* ══ 1. HERO ══ */}
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
+
+        {/* X-pattern */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
+        </div>
+
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero photo */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={frontOfficeHeroImg}
+            alt="Front office agent via EXTRA – hotel receptionist Amsterdam"
+            className="w-full h-full object-cover"
+            loading="eager"
+            style={{ objectPosition: "62% center", filter: "contrast(1.12) saturate(1.22) brightness(1.07)" }}
+          />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)" }} />
+          <div className="absolute inset-0 hero-text-gradient" />
+          <div className="absolute bottom-0 left-0 right-0" style={{ height: "20%", background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "18%", background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)" }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
+          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
               <ConciergeBell className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-white/90 text-xs font-semibold">Front office jobs via EXTRA</span>
+              <span className="text-white/90 text-xs font-semibold">Front office vacancies via EXTRA</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Front-office work{" "}
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              Front office work{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">that fits you.</span>
                 <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-cyan-400 to-blue-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
             </h1>
-            <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Work as a hotel receptionist or front office employee at top hotels in Amsterdam. With EXTRA, you choose your own shifts. Flexible front office work with same-day pay and professional hotel environments.
+
+            <p className="text-lg sm:text-xl text-purple-100/90 leading-relaxed font-medium mb-8 max-w-lg">
+              Work as a hotel receptionist or front office agent at top hotels in Amsterdam. Through EXTRA you choose your own shifts. Flexible front office work with same-day pay in professional hotel environments.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Sign up <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Apply now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="#functies" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+              <a href="#roles" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 See how it works <ChevronRight className="w-5 h-5" />
               </a>
             </div>
-            <div className="mt-8 flex flex-wrap gap-2.5">
+
+            <div className="flex flex-wrap gap-2.5">
               {[{ emoji: "⚡", label: "Same-day pay via Jixbee" }, { emoji: "🏨", label: "Top hotels Amsterdam" }, { emoji: "📅", label: "Flexible shifts" }].map(({ emoji, label }) => (
                 <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">{emoji} {label}</span>
               ))}
             </div>
           </div>
-          <div className="relative flex justify-center items-center">
-            <div className="relative w-full max-w-sm">
-              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/40 border-4 border-white/20">
-                <img src={frontOfficeImg} alt="Front office employee via EXTRA – hotel receptionist Amsterdam" className="w-full h-[380px] sm:h-[440px] object-cover" loading="eager" />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent rounded-3xl" />
-              </div>
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-cyan-100">💰 Same-day pay active</div>
-              <div className="absolute -bottom-3 -left-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-green-100">🏨 Hotel receptionist work</div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* ══ TRUST STRIP ══ */}
+      {/* ══ 2. TRUST STRIP ══ */}
       <section className="py-10 sm:py-14 bg-white border-b border-gray-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Work at hotels you can be proud of</p>
+          <p className="text-center text-xs sm:text-base font-bold text-gray-400 uppercase tracking-widest mb-6 sm:mb-10">Work in hotels you can be proud of</p>
           <div className="relative overflow-hidden group">
             <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
@@ -210,189 +259,286 @@ export default function FrontOfficeJobsEn() {
         <style>{`@keyframes marquee-fow { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} } .animate-marquee-fow { animation: marquee-fow 40s linear infinite; }`}</style>
       </section>
 
-      {/* ══ FUNCTIES ══ */}
-      <section id="functies" className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+      {/* ══ 3. ROLES ══ */}
+      <section id="roles" className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="text-center mb-10 sm:mb-14">
-              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Your field</span>
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Your area of expertise</span>
               <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Which front-office roles can you do through EXTRA?
+                Which front office roles can you do via EXTRA?
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
-                Through EXTRA, you work as a hotel receptionist, front office employee, or guest service employee at hotels in Amsterdam. We link you to hotels that match your level and wishes. Also view{" "}
+                Via EXTRA you work as a hotel receptionist, front office agent or guest service agent at hotels in Amsterdam. We match you to hotels that suit your level and preferences. Also check out{" "}
                 <a href="/en/hospitality-work" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">hospitality work</a>,{" "}
                 <a href="/en/housekeeping-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">housekeeping work</a> or{" "}
-                <a href="/en/chef-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef jobs</a>.
+                <a href="/en/chef-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">chef vacancies</a>.
               </p>
             </div>
           </RevealSection>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-            {functies.map((f, i) => (
+            {roles.map((f, i) => (
               <RevealSection key={f.title} delay={i * 70}>
                 <article className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-purple-100 shadow-md hover:shadow-2xl hover:border-purple-200 hover:-translate-y-2 transition-all h-full flex flex-col">
                   <div className={`relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br ${f.color}`}>
-                    <img src={f.img} alt={f.title} className="w-full h-full object-cover mix-blend-overlay group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                  </div>
-                  <div className="p-5 sm:p-7 flex flex-col flex-grow">
-                    <div className="mb-4 flex-grow">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-purple-500 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-100">{f.sub}</span>
-                      <h3 className="text-lg sm:text-xl font-black text-gray-900 mt-2.5">{f.title}</h3>
-                      <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">{f.desc}</p>
+                    <img src={f.img} alt={f.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-luminosity opacity-90" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-3 left-3">
+                      <h3 className="text-white font-black text-lg leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>{f.title}</h3>
+                      <p className="text-white/70 text-[10px] font-semibold">{f.sub}</p>
                     </div>
-                    <ul className="space-y-2 mb-6">
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <p className="text-sm text-gray-500 leading-relaxed mb-3">{f.desc}</p>
+                    <ul className="space-y-1 mb-4 flex-1">
                       {f.bullets.map(b => (
-                        <li key={b} className="flex items-start gap-2 text-[11px] sm:text-[13px] font-bold text-gray-700">
-                          <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500 shrink-0 mt-0.5" />
-                          {b}
+                        <li key={b} className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                          <CheckCircle2 className="w-3 h-3 text-green-500 flex-shrink-0" /> {b}
                         </li>
                       ))}
                     </ul>
-                    <a href={f.href} className="w-full bg-gray-50 hover:bg-purple-600 hover:text-white text-gray-900 font-black py-3 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all flex items-center justify-center gap-2 group/btn text-sm sm:text-base">
-                      Sign up <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    <a href={f.href} className={`inline-flex items-center gap-1.5 text-xs font-black text-white px-4 py-2 rounded-full bg-gradient-to-r ${f.color} hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
+                      Sign up <ArrowRight className="w-3.5 h-3.5" />
                     </a>
                   </div>
                 </article>
               </RevealSection>
             ))}
           </div>
+          <RevealSection delay={400}>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {["Lobby host", "Concierge assistant", "Reservations agent", "Hospitality host"].map((fn) => (
+                <span key={fn} className="bg-purple-50 border border-purple-100 px-5 py-2.5 rounded-full text-sm text-gray-600 font-medium">{fn}</span>
+              ))}
+            </div>
+          </RevealSection>
         </div>
       </section>
 
-      {/* ══ USP SECTION ══ */}
-      <section className="py-20 sm:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-900" />
-        <XBgDark />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <RevealSection>
-              <span className="text-cyan-400 text-sm font-black uppercase tracking-[0.2em] mb-4 block">The EXTRA benefits</span>
-              <h2 className="text-3xl sm:text-5xl font-black text-white leading-[1.1] mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Why work as a receptionist via EXTRA?
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
-                {[
-                  { icon: Zap, title: "Same-day pay", desc: "Work today, get paid today. Transparent via Jixbee." },
-                  { icon: Gift, title: "EXTRAATJE points", desc: "Earn points every shift for cool rewards." },
-                  { icon: Clock, title: "You are in control", desc: "Decide when and where you work at hotels." },
-                  { icon: Trophy, title: "Premium locations", desc: "Work at Marriott, Hilton, or Pulitzer Amsterdam." },
-                  { icon: Users, title: "The best pool", desc: "Join an community of hospitality professionals." },
-                  { icon: UserCheck, title: "Quick start", desc: "Sign up today and start your first shift fast." }
-                ].map((usp, i) => (
-                  <div key={usp.title} className="bg-white/5 backdrop-blur-md border border-white/10 p-5 sm:p-6 rounded-2xl sm:rounded-3xl hover:bg-white/10 transition-colors">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/20">
-                      <usp.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <h3 className="text-white font-black text-base sm:text-lg mb-1.5">{usp.title}</h3>
-                    <p className="text-purple-100/60 text-xs sm:text-sm leading-relaxed">{usp.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </RevealSection>
-            <RevealSection delay={200}>
-              <div className="relative group">
-                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity" />
-                <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] overflow-hidden p-3 sm:p-4">
-                  <div className="aspect-[4/5] rounded-[2rem] overflow-hidden relative">
-                    <img src={frontOffice2Img} alt="Hotel receptionist Amsterdam via EXTRA" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6 sm:bottom-8 sm:left-8 sm:right-8">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex -space-x-2">
-                          {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-purple-200" />)}
-                        </div>
-                        <span className="text-white/90 text-xs font-bold">+120 others active today</span>
-                      </div>
-                      <p className="text-white text-lg sm:text-xl font-black leading-tight">Become the face of Amsterdam's finest hotels.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ JIXBEE SECTION ══ */}
-      <section className="py-20 sm:py-28 bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <RevealSection>
-              <div className="relative group">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-purple-100 rounded-full blur-3xl opacity-50 pointer-events-none" />
-                <div className="relative grid grid-cols-2 gap-4">
-                  <div className="pt-12">
-                    <img src={jixbeeUren} alt="Jixbee app - worked hours" className="rounded-3xl shadow-2xl border border-gray-100 hover:-translate-y-2 transition-transform duration-500" />
-                  </div>
-                  <div>
-                    <img src={jixbeePayout} alt="Jixbee app - same-day payout success" className="rounded-3xl shadow-2xl border border-gray-100 hover:translate-y-2 transition-transform duration-500" />
-                  </div>
-                </div>
-              </div>
-            </RevealSection>
-            <RevealSection delay={200}>
-              <div className="inline-flex items-center gap-2 bg-purple-50 rounded-full px-4 py-1.5 mb-6 border border-purple-100 text-purple-600 text-xs font-black uppercase tracking-widest">
-                <Zap className="w-3.5 h-3.5 fill-purple-600" /> Fast payment
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 leading-[1.1] mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Worked today? <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Paid today.</span>
-              </h2>
-              <p className="text-gray-500 text-base sm:text-lg leading-relaxed mb-8 font-medium">
-                No more waiting for weeks. Through our integration with Jixbee, you get your money right after your shift. Transparent, fast, and automated. So you always have your extra cash on hand.
-              </p>
-              <div className="space-y-4 mb-10">
-                {[
-                  { t: "Automated payouts", d: "Money is deposited directly after shift approval." },
-                  { t: "Full transparency", d: "See exactly what you earned per hour and shift." },
-                  { t: "Directly in your account", d: "No hassle with invoices, it works automatically." }
-                ].map(item => (
-                  <div key={item.t} className="flex gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors">
-                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-gray-900 text-sm sm:text-base">{item.t}</h4>
-                      <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{item.d}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <a href="/aanmelden" className="bg-gray-900 text-white font-black px-8 py-4 rounded-full hover:bg-purple-700 transition-all flex items-center justify-center gap-2 w-fit">
-                Start working via EXTRA <ArrowRight className="w-5 h-5" />
-              </a>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ REVIEWS ══ */}
-      <section className="py-20 sm:py-28 bg-gray-50 relative overflow-hidden">
+      {/* ══ 4. WHY EXTRA ══ */}
+      <section className="relative bg-white py-16 sm:py-28 overflow-hidden">
         <XBg />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-100/60 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
           <RevealSection>
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>What our colleagues say</h2>
-              <p className="text-gray-500 text-base sm:text-lg">Experience the freedom of front office work via EXTRA.</p>
+              <span className="inline-block bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">Why EXTRA?</span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Why do front office work via EXTRA?
+              </h2>
+              <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+                EXTRA gives front office agents and hotel receptionists the freedom to work when it suits them. Flexible front office vacancies in Amsterdam, same-day pay and working at professional hotels without long-term commitments.
+              </p>
             </div>
           </RevealSection>
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
-            {reviews.map((r, i) => (
-              <RevealSection key={r.name} delay={i * 100}>
-                <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-lg border border-purple-50 relative group hover:-translate-y-2 transition-all duration-300">
-                  <div className="absolute top-6 right-8 text-purple-100 group-hover:text-purple-200 transition-colors">
-                    <MessageCircle className="w-10 h-10 fill-current" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+            {[
+              { icon: Zap, badge: "Financial freedom", title: "Same-day pay via Jixbee", desc: "After your shift your money is in your account the same day. No waiting — real-time insight into what you earn.", bg: "from-yellow-50 to-orange-50", border: "border-yellow-200", iconBg: "bg-yellow-100", iconColor: "text-yellow-600", tag: "⚡ Same-day pay" },
+              { icon: CalendarCheck, badge: "Your own schedule", title: "Flexible shifts", desc: "Choose when you work. Day and night shifts, weekends or weekdays — you decide.", bg: "from-violet-50 to-purple-50", border: "border-violet-200", iconBg: "bg-violet-100", iconColor: "text-violet-600", tag: "📅 Fully flexible" },
+              { icon: Building2, badge: "Premium work environment", title: "Work in top hotels", desc: "Front office vacancies at five-star hotels, international chains and boutique hotels in Amsterdam.", bg: "from-blue-50 to-indigo-50", border: "border-blue-200", iconBg: "bg-blue-100", iconColor: "text-blue-600", tag: "🏨 Top venues" },
+              { icon: Globe, badge: "International atmosphere", title: "International work environment", desc: "Work with guests from around the world. Your language skills and guest-focused approach are a real asset here.", bg: "from-teal-50 to-cyan-50", border: "border-teal-200", iconBg: "bg-teal-100", iconColor: "text-teal-600", tag: "🌍 International" },
+              { icon: Gift, badge: "Exclusive reward system", title: "EXTRAATje rewards", desc: "Earn points for every shift and redeem them for great rewards. Consistently good work is always recognised.", bg: "from-orange-50 to-amber-50", border: "border-orange-200", iconBg: "bg-orange-100", iconColor: "text-orange-600", tag: "🎁 Earn points" },
+              { icon: Handshake, badge: "Personal approach", title: "Personal contact", desc: "Our planners know you and your preferences. Always reachable and always honest.", bg: "from-emerald-50 to-teal-50", border: "border-emerald-200", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", tag: "💬 Always reachable" },
+            ].map(({ icon: Icon, badge, title, desc, bg, border, iconBg, iconColor, tag }, i) => (
+              <RevealSection key={title} delay={i * 80}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 sm:p-9 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-6">
+                      <span className={`text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${iconBg} ${iconColor}`}>{badge}</span>
+                      <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                        <Icon className={`w-6 h-6 ${iconColor}`} />
+                      </div>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-3 leading-snug" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5">{desc}</p>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-white/70 border border-white px-3 py-1.5 rounded-full">{tag}</span>
                   </div>
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(r.rating)].map((_, i) => <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 5. HOTELS ══ */}
+      <section className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Top venues</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Hotels you can be proud of
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Via EXTRA you work as a hotel receptionist or front office agent in hotels where quality and hospitality come first. International guests, professional reception teams and a great working atmosphere.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-10">
+            {[
+              { icon: Building2, title: "Five-star hotels", desc: "International hotel chains in Amsterdam, Utrecht and The Hague. Top standards and professional reception teams.", iconBg: "bg-indigo-100", iconColor: "text-indigo-600", bg: "from-indigo-50 to-blue-50", border: "border-indigo-200" },
+              { icon: Globe, title: "International chains", desc: "Work for well-known hotel brands with high quality standards. You'll work with guests from all over the world and build a strong CV.", iconBg: "bg-purple-100", iconColor: "text-purple-600", bg: "from-purple-50 to-violet-50", border: "border-purple-200" },
+              { icon: Smile, title: "Fixed hotel pool", desc: "You're matched to a fixed pool so you know the procedures, get to know the team and quickly feel at home at the venue.", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", bg: "from-emerald-50 to-teal-50", border: "border-emerald-200" },
+            ].map(({ icon: Icon, title, desc, iconBg, iconColor, bg, border }, i) => (
+              <RevealSection key={title} delay={i * 100}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+                  <div className="relative">
+                    <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                      <Icon className={`w-6 h-6 ${iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{desc}</p>
                   </div>
-                  <p className="text-gray-700 italic mb-6 relative z-10 text-sm sm:text-base leading-relaxed">"{r.tekst}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-black text-sm sm:text-base">{r.name[0]}</div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={300}>
+            <div className="text-center">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Partner hotels</p>
+              <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
+                {[
+                  { src: marriottLogo, alt: "Marriott" },
+                  { src: amrathLogo, alt: "Amrath" },
+                  { src: nhLogo, alt: "NH Hotels" },
+                  { src: hiltonLogo, alt: "Hilton" },
+                  { src: mercureLogo, alt: "Mercure Hotels" },
+                  { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
+                ].map(({ src, alt }) => (
+                  <img key={alt} src={src} alt={alt} className="h-6 sm:h-8 w-auto object-contain grayscale opacity-40 hover:opacity-70 hover:grayscale-0 transition-all" loading="lazy" />
+                ))}
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 6. HOW IT WORKS ══ */}
+      <section id="how-it-works" className="relative bg-white py-16 sm:py-24 overflow-hidden">
+        <XBg />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 4 steps</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                How to start as a front office agent via EXTRA
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">From sign-up to your first hotel reception. Simple, fast and clear.</p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {[
+              { step: "01", icon: MessageCircle, title: "Sign up", desc: "Register via the form and upload your CV. Sorted in a matter of minutes.", color: "from-purple-500 to-violet-600" },
+              { step: "02", icon: Users, title: "Intake", desc: "We discuss your experience, preferences and availability. Then we look at which hotels suit you.", color: "from-indigo-500 to-blue-600" },
+              { step: "03", icon: CalendarCheck, title: "Pick your shifts", desc: "You choose the front office shifts that fit your schedule.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Zap, title: "Work and get paid", desc: "Complete your shift and receive your payment the same day via Jixbee.", color: "from-cyan-500 to-blue-500" },
+            ].map(({ step, icon: Icon, title, desc, color }, i) => (
+              <RevealSection key={step} delay={i * 80}>
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
+                  <span className="text-5xl font-black text-purple-100 leading-none mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>{step}</span>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{desc}</p>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={300}>
+            <div className="flex justify-center mt-10">
+              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+                Sign up <ArrowRight className="w-5 h-5" />
+              </a>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 7. SAME-DAY PAY ══ */}
+      <section className="py-16 sm:py-24 lg:py-32" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Financial freedom</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Money in your account, the same day.
+                </h2>
+                <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
+                  After your front office shift you're paid out via Jixbee. No waiting until the end of the month. You can see straight away what you've earned and receive your money the same day.
+                </p>
+                <div className="space-y-3 mb-8">
+                  {[
+                    "Payout via Jixbee, same day after your shift",
+                    "Real-time insight into your worked hours and amount",
+                    "Official contract and payroll, legally compliant",
+                    "No surprises on your pay slip",
+                  ].map(item => (
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      </div>
+                      <span className="text-sm text-gray-700 font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <a href="/en/how-we-work" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                  How does same-day pay work? <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+              <div className="flex justify-center">
+                <div className="relative flex gap-5 items-end h-[320px] sm:h-[380px]">
+                  <div style={{ transform: "rotate(-5deg)", animation: "float-fow 5s ease-in-out infinite" }}>
+                    <img src={jixbeeUren} alt="Jixbee – worked hours overview" className="w-[145px] sm:w-[175px] drop-shadow-2xl rounded-[2rem]" />
+                  </div>
+                  <div className="relative z-10 -mb-4" style={{ animation: "float-fow 4s ease-in-out infinite" }}>
+                    <img src={jixbeePayout} alt="Jixbee – payout successful" className="w-[155px] sm:w-[190px] drop-shadow-2xl rounded-[2rem]" />
+                    <div className="absolute -top-3 -right-10 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-cyan-100 whitespace-nowrap">
+                      💸 €590 paid out
+                    </div>
+                    <div className="absolute -bottom-2 -left-8 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-green-100 whitespace-nowrap">
+                      ✅ Hours approved
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+        <style>{`@keyframes float-fow { 0%,100%{transform:translateY(0px) rotate(-5deg)} 50%{transform:translateY(-12px) rotate(-5deg)} }`}</style>
+      </section>
+
+      {/* ══ 8. REVIEWS ══ */}
+      <section className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Experiences</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                What front office staff say
+              </h2>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6">
+            {reviews.map(({ name, role, text, rating }, i) => (
+              <RevealSection key={name} delay={i * 80}>
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all h-full flex flex-col">
+                  <div className="flex mb-3">
+                    {Array.from({ length: rating }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-4 italic">"{text}"</p>
+                  <div className="border-t border-purple-100 pt-3 flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white text-xs font-black">
+                      {name.charAt(0)}
+                    </div>
                     <div>
-                      <h4 className="font-black text-gray-900 text-sm sm:text-base">{r.name}</h4>
-                      <p className="text-purple-600 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{r.functie}</p>
+                      <p className="text-xs font-black text-gray-900">{name}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">{role} via EXTRA</p>
                     </div>
                   </div>
                 </div>
@@ -402,63 +548,74 @@ export default function FrontOfficeJobsEn() {
         </div>
       </section>
 
-      {/* ══ FAQ ══ */}
-      <section className="py-20 sm:py-28 bg-white relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-5 sm:px-8 relative z-10">
+      {/* ══ 9. CTA STRIP ══ */}
+      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 py-8 sm:py-10">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Start front office work via EXTRA today
+            </p>
+            <p className="text-purple-200 text-sm mt-0.5">Want to work as a hotel receptionist or front office agent in Amsterdam? Sign up with EXTRA and start quickly with shifts at top hotels.</p>
+          </div>
+          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+            Start your application <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+
+      {/* ══ 10. FAQ ══ */}
+      <section className="py-16 sm:py-24 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <RevealSection>
-            <div className="text-center mb-12 sm:mb-16">
-              <span className="text-purple-600 text-sm font-black uppercase tracking-widest mb-4 block">FAQ</span>
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Common questions</h2>
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Frequently asked questions about front office work via EXTRA
+              </h2>
             </div>
           </RevealSection>
-          <div className="space-y-4">
-            {faqs.map((f, i) => (
-              <RevealSection key={i} delay={i * 50}>
-                <details className="group bg-white border-2 border-purple-50 rounded-2xl sm:rounded-3xl overflow-hidden hover:border-purple-100 transition-all shadow-sm shadow-purple-500/5">
-                  <summary className="list-none flex items-center justify-between p-5 sm:p-7 cursor-pointer">
-                    <h3 className="text-base sm:text-lg font-black text-gray-900 pr-4">{f.q}</h3>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-50 flex items-center justify-center group-open:rotate-180 transition-transform duration-300">
-                      <ChevronDown className="w-5 h-5 text-purple-600" />
-                    </div>
-                  </summary>
-                  <div className="px-5 pb-5 sm:px-7 sm:pb-7">
-                    <p className="text-gray-500 text-sm sm:text-base leading-relaxed border-t border-purple-50 pt-5">{f.a}</p>
+          <div className="space-y-3 sm:space-y-4">
+            {faqs.map((faq, i) => (
+              <RevealSection key={i} delay={i * 60}>
+                <div className="bg-white rounded-2xl border border-gray-100 hover:border-purple-200 transition-all duration-300 overflow-hidden shadow-sm">
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-5 sm:p-7 text-left">
+                    <span className="text-base sm:text-lg font-bold text-gray-900 pr-4">{faq.q}</span>
+                    <span className={`text-gray-400 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </span>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-72 pb-5 sm:pb-7" : "max-h-0"}`}>
+                    <p className="px-5 sm:px-7 text-sm sm:text-base text-gray-500 leading-relaxed">{faq.a}</p>
                   </div>
-                </details>
+                </div>
               </RevealSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══ CTA ══ */}
-      <section className="py-20 sm:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-indigo-800" />
-        <XBgDark />
-        <div className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10">
-          <RevealSection>
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-8" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Ready for your <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300">next front-office shift?</span>
-            </h2>
-            <p className="text-purple-100 text-lg sm:text-xl mb-10 max-w-2xl mx-auto font-medium">
-              Join EXTRA today. Work at the most beautiful hotels in Amsterdam, choose your own hours and get paid the same day.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/aanmelden" className="bg-white text-purple-900 font-black px-10 py-5 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Sign up direct <ArrowRight className="w-6 h-6" />
-              </a>
-              <a href="/contact" className="bg-purple-600/30 backdrop-blur-md border-2 border-white/20 text-white font-black px-10 py-5 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Contact us <MessageCircle className="w-6 h-6" />
-              </a>
-            </div>
-          </RevealSection>
+      {/* ══ 11. LINK CLOUD ══ */}
+      <section className="py-12 bg-white border-t border-purple-100/60">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">Related pages</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {[
+              { label: "Front office vacancies Amsterdam", href: "/en/front-office-jobs" },
+              { label: "Hotel receptionist vacancies", href: "/en/front-office-jobs" },
+              { label: "Hospitality work", href: "/en/hospitality-work" },
+              { label: "Housekeeping jobs", href: "/en/housekeeping-jobs" },
+              { label: "Chef vacancies", href: "/en/chef-jobs" },
+              { label: "How does same-day pay work?", href: "/en/how-we-work" },
+              { label: "Apply to EXTRA", href: "/aanmelden" },
+            ].map((link, i) => (
+              <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ══ FOOTER ══ */}
       <PublicFooter />
-
     </div>
   );
 }
