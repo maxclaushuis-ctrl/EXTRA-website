@@ -6,6 +6,7 @@ import { registerRoutes, pingGoogleSitemap } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 import { sendCvReminderEmail } from "./mail";
+import { registerRedirects } from "./redirects";
 
 const PgStore = connectPg(session);
 
@@ -113,6 +114,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Registreer 301 redirects vóór alle andere routes
+  // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
+  registerRedirects(app);
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

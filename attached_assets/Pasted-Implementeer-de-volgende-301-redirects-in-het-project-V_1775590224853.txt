@@ -1,0 +1,95 @@
+Implementeer de volgende 301 redirects in het project.
+Voeg deze toe aan de bestaande redirects die al in het project staan.
+Verwijder of wijzig geen bestaande redirects.
+
+De website migreert van Wix (doehetextra.nl) naar deze Replit-omgeving.
+Elke oude Wix-URL moet permanent doorverwijzen naar de meest
+relevante pagina op de nieuwe site.
+
+═══════════════════════════════════════════════════════════
+NIEUWE 301 REDIRECTS — toevoegen aan bestaande lijst
+═══════════════════════════════════════════════════════════
+
+── HOOFDPAGINA'S ───────────────────────────────────────────
+/horeca-personeel-gezocht          → /horeca-personeel-gezocht (al actief, controleer)
+/over-extra-uitzendbureau          → /over-extra
+/contact-extra-uitzendbureau       → /contact
+/contact-bedrijven                 → /contact
+/veelgestelde-vragen-extra         → /over-extra
+/privacyverklaring                 → /privacyverklaring
+/extraatjes                        → /extraatje
+/beloningssysteem                  → /extraatje
+/kopie-van-amsterdam               → /
+/hoe-werkt-het                     → /onze-werkwijze
+
+── WERKGEVER PAGINA'S ──────────────────────────────────────
+/hotelpersoneel-gezocht            → /hotelpersoneel-inhuren
+/hotel-personeel-amsterdam         → /hotelpersoneel-inhuren
+/evenementen-uitzendbureau         → /eventpersoneel-inhuren
+/horeca-uitzendbureau-amsterdam    → /horeca-personeel-gezocht
+
+── KANDIDAAT / VACATURE PAGINA'S ───────────────────────────
+/vacatures                         → /vacatures
+/vacature-aanmelden                → /aanmelden
+/aanmelden                         → /aanmelden
+/werk-zoeken                       → /horeca-vacatures-amsterdam
+/werk-zoeken-2                     → /horeca-vacatures-amsterdam
+
+── SPECIFIEKE VACATURES ────────────────────────────────────
+/vacatures/hotelpersoneel-amstelhotel              → /hotelpersoneel-inhuren
+/vacatures/chef-gezocht-voor-marriot%2C-nh%2C-mövenpick%2C-mercure-hotels → /chef-vacatures-amsterdam
+/vacatures/horeca-werken-bij-studio-21-in-hilversum → /horeca-werk
+/vacatures/horeca-bijaan-hilton-apollolaan          → /horeca-werk
+/vacatures/hotelpersoneel-mövenpick-amsterdam       → /hotelpersoneel-inhuren
+/vacatures/horeca-bijaan-johan-cruijf-arena         → /horeca-werk
+/vacatures/ontbijtmedewerker                        → /horeca-werk
+/vacatures/horeca-bijaan-hilton-schiphol            → /hotelpersoneel-inhuren
+/vacatures/horeca-medewerker-westergasterras        → /horeca-werk
+/vacatures/werken-bij-fc-utrecht                    → /horeca-werk
+/vacatures/werken-bij-het-hart-museum               → /horeca-werk
+
+── BLOG / NIEUWS ───────────────────────────────────────────
+/blog                              → /blog
+/nieuws                            → /blog
+/post/de-uurtonen-voor-2025        → /blog
+/post/bereken-je-uitzendtarief     → /blog
+/post/tegemoetkomming-studenten-financiele-ondersteuning → /blog
+/post/handhaving-wet-dba-2025-opdrachtgevers-risicos-alternatieven → /blog
+/post/studiebeurs-als-student      → /blog
+
+── REGIO PAGINA'S → HOMEPAGE ───────────────────────────────
+/uitzendbureau-hilversum           → /
+/uitzendbureau-utrecht             → /
+/uitzendbureau-bussum              → /
+/horeca-uitzendbureau-amsterdam    → /horeca-uitzendbureau-amsterdam
+/logistiek-uitzendbureau           → /
+
+── PDF BESTANDEN → HOMEPAGE ────────────────────────────────
+/files/ugd/b0f6ba_187c60847d1f43b0a91d37620bbb413a.pdf → /
+/files/ugd/b0f6ba_0f1721a0a66c46d6b2189339eb90142b.pdf → /
+
+═══════════════════════════════════════════════════════════
+TECHNISCHE EISEN
+═══════════════════════════════════════════════════════════
+
+- Alle redirects moeten 301 (permanent) zijn — geen 302
+- Redirects werken op zowel www als non-www versie
+- Redirects werken met én zonder trailing slash
+  (dus zowel /over-extra-uitzendbureau als /over-extra-uitzendbureau/)
+- Bestaande redirects in het project niet verwijderen of wijzigen
+- Geen redirect-loops creëren
+
+═══════════════════════════════════════════════════════════
+NA IMPLEMENTATIE
+═══════════════════════════════════════════════════════════
+
+Test de volgende redirects handmatig en bevestig dat
+ze correct werken met een 301 statuscode:
+
+1. /over-extra-uitzendbureau → /over-extra
+2. /uitzendbureau-hilversum → /
+3. /vacatures/hotelpersoneel-amstelhotel → /hotelpersoneel-inhuren
+4. /blog → /blog
+5. /aanmelden → /aanmelden
+
+Lever een volledig overzicht op van alle toegevoegde redirects.
