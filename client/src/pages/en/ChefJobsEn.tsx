@@ -2,17 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
-import FAQSection from "@/components/FAQSection";
 import {
-  ArrowRight, ChevronRight, ChevronDown, Zap, Star, Clock,
-  Gift, Users, CheckCircle2, MessageCircle, Building2,
-  UtensilsCrossed, BedDouble, ChefHat, ConciergeBell, Menu, X,
-  UserCheck, Trophy, CalendarCheck, Handshake, Flame, Award,
-  Utensils, Hotel, Banknote, MapPin
+  ArrowRight, ChevronRight, Zap, Star,
+  Gift, Users, CheckCircle2, MessageCircle,
+  UtensilsCrossed, ChefHat, CalendarCheck, Handshake,
+  Flame, Award, Utensils, Hotel
 } from "lucide-react";
-import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import chefImg from "@assets/Chef_1771833440047.webp";
+import chefHeroImg from "@assets/CHEF_FINAL_AE_001_1775057055119.png";
 import marriottLogo from "@assets/Logo_Marriott_1771267205959.webp";
 import amrathLogo from "@assets/Logo_amrath_1771267205959.webp";
 import mercureLogo from "../../assets/pitch/logo-mercure.png";
@@ -80,168 +78,160 @@ function XPatternBg() {
   );
 }
 
-function XPatternBgDark() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[
-        { left: "5%", top: "8%", w: 220, rot: 15, op: 0.1 },
-        { left: "78%", top: "52%", w: 260, rot: -20, op: 0.08 },
-      ].map((x, i) => (
-        <div key={i} className="absolute" style={{
-          left: x.left, top: x.top, width: x.w, height: x.w,
-          transform: `rotate(${x.rot}deg)`, opacity: x.op,
-          WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`,
-          WebkitMaskSize: "contain", maskSize: "contain",
-          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-          WebkitMaskPosition: "center", maskPosition: "center",
-          backgroundColor: "rgba(255,255,255,0.9)",
-        }} />
-      ))}
-    </div>
-  );
-}
-
-const functies = [
+const roles = [
   {
-    title: "Independent Chef",
+    title: "Independent chef",
     sub: "Restaurants · Hotels · Independent",
     img: chefImg,
-    desc: "Independent chef vacancy? Via EXTRA, you can run a kitchen at a high level or provide reinforcement at restaurants and hotels in Amsterdam.",
+    desc: "Looking for independent chef work? Via EXTRA you run a kitchen at a high level or provide reinforcement at restaurants and hotels in Amsterdam.",
     bullets: ["High-level chef vacancies", "Diverse kitchen styles", "Day and evening shifts"],
     color: "from-orange-500 to-red-600",
     href: "/aanmelden",
   },
   {
-    title: "Chef de Partie",
+    title: "Chef de partie",
     sub: "Hotels · Fine Dining · Brigades",
     img: dienstChefImg,
     desc: "Chef de partie vacancy at five-star hotels or fine dining brigades. Responsible for your own section in a professional kitchen.",
-    bullets: ["Chef de partie vacancies Amsterdam", "Work in a brigade", "Growth opportunities"],
+    bullets: ["Chef de partie vacancies Amsterdam", "Working in a brigade", "Room to grow"],
     color: "from-purple-600 to-violet-700",
     href: "/aanmelden",
   },
   {
-    title: "Events and Catering Kitchen",
-    sub: "Gala · Festivals · Corporate",
+    title: "Events & catering kitchen",
+    sub: "Galas · Festivals · Corporate",
     img: cateringImg,
-    desc: "Kitchen vacancies Amsterdam for events and catering. Cooking at unique locations for gala dinners, corporate events, and festivals.",
-    bullets: ["Kitchen vacancies Amsterdam", "Large-scale production", "Day and evening availability"],
+    desc: "Kitchen vacancies at events and catering. Cooking at unique venues for gala dinners, corporate events and festivals.",
+    bullets: ["Kitchen vacancies Amsterdam", "Large-scale production", "Day and evening available"],
     color: "from-teal-500 to-cyan-600",
     href: "/aanmelden",
   },
   {
-    title: "Banqueting Kitchen",
-    sub: "Hotels · Setup · Precision",
+    title: "Banqueting kitchen",
+    sub: "Hotels · Volume · Precision",
     img: hotelImg,
-    desc: "Chef work in a production-oriented hotel kitchen. Banqueting at large hotel groups requires teamwork, speed, and consistency.",
-    bullets: ["Chef work at hotel groups", "Large team, clear structure", "Good guidance"],
+    desc: "Kitchen work in a high-volume hotel kitchen. Banqueting at large hotel groups demands teamwork, speed and consistency.",
+    bullets: ["Kitchen work at hotel groups", "Large team, clear structure", "Good guidance and support"],
     color: "from-indigo-500 to-blue-700",
     href: "/aanmelden",
   },
 ];
 
 const reviews = [
-  { name: "Rik D.", functie: "Independent Chef", tekst: "Through EXTRA, I work in kitchens at my own level. No fixed commitment, but serious work at serious locations.", rating: 5 },
-  { name: "Yusuf A.", functie: "Chef de Partie", tekst: "Daily payment via Jixbee really makes a difference. I don't have to wait until the end of the month. That gives peace of mind.", rating: 5 },
-  { name: "Julia V.", functie: "Events Kitchen", tekst: "I do catering events through EXTRA. Every time a different location, every time a new team. That keeps it fun and challenging.", rating: 5 },
+  { name: "Rik D.", role: "Independent chef", text: "Through EXTRA I work in kitchens that match my level. No long commitment, but serious work at serious venues.", rating: 5 },
+  { name: "Yusuf A.", role: "Chef de partie", text: "Same-day pay via Jixbee really makes a difference. I don't have to wait until the end of the month. That gives real peace of mind.", rating: 5 },
+  { name: "Julia V.", role: "Events kitchen", text: "I do catering events via EXTRA. Every time a different venue, every time a new team. That keeps it fun and challenging.", rating: 5 },
 ];
 
 const faqs = [
-  { q: "Do I need to have experience as a chef?", a: "Yes, for most chef work roles, demonstrable kitchen experience is required. We look at your level and match you with suitable kitchens. For supporting kitchen roles, less experience is sometimes sufficient." },
-  { q: "Can I decide where I work?", a: "You indicate your preference regarding kitchen style and location, and we look for suitable kitchen vacancies. You are not obliged to accept a fixed location." },
-  { q: "How does payment work?", a: "After your shift, you are paid via Jixbee. The amount is usually in your account the same day. That's how chef work through EXTRA works: transparent and without hassle." },
-  { q: "Do I always work at the same location?", a: "That's not necessary. Some chefs choose a fixed pool at a hotel or restaurant, others prefer to pick up varied kitchen vacancies. Both are possible through EXTRA." },
-  { q: "How quickly can I start?", a: "After your registration and a short introduction, you can start your first chef work shifts within a week. We try to keep the threshold as low as possible." },
+  { q: "Do I need experience as a chef?", a: "Yes, for most chef roles demonstrable kitchen experience is required. We look at your level and match you to suitable kitchens. For support kitchen roles, less experience may sometimes suffice." },
+  { q: "Can I choose where I work?", a: "You let us know your preference in terms of kitchen style and location, and we find matching kitchen vacancies. You're not obliged to accept a fixed location." },
+  { q: "How does payment work?", a: "After your shift you're paid out via Jixbee. The amount is usually in your account the same day. That's how chef work via EXTRA works: transparent and hassle-free." },
+  { q: "Will I always work at the same location?", a: "Not necessarily. Some chefs prefer a fixed pool at a hotel or restaurant; others prefer picking up a variety of kitchen vacancies. Both are possible via EXTRA." },
+  { q: "How quickly can I start?", a: "After your sign-up and a short intake you can often pick up your first chef work shifts within a week. We aim to keep the threshold as low as possible." },
+];
+
+const allLogos = [
+  { src: amrathLogo, alt: "Amrâth Hotels" },
+  { src: mercureLogo, alt: "Mercure Hotels" },
+  { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
+  { src: logoFcUtrecht, alt: "FC Utrecht" },
+  { src: logoFunda, alt: "Funda" },
+  { src: logoHartMuseum, alt: "H'art Museum" },
+  { src: logoHetePeper, alt: "Hete Peper" },
+  { src: hiltonLogo, alt: "Hilton" },
+  { src: marriottLogo, alt: "Marriott" },
+  { src: logoSelectCatering, alt: "Select Catering" },
+  { src: logoAppel, alt: "Appèl" },
 ];
 
 export default function ChefJobsEn() {
-  const [scrolled, setScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    document.title = "Chef Jobs Amsterdam | Kitchen Jobs | EXTRA";
+    document.title = "Chef vacancies Amsterdam | Kitchen work via EXTRA";
     const setMeta = (name: string, content: string, prop = false) => {
       const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
       let el = document.querySelector(sel) as HTMLMetaElement;
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-    setMeta("description", "Looking for chef or kitchen work in Amsterdam? Work in hotels, restaurants, and events through EXTRA with flexible shifts and daily payment.");
-    setMeta("og:title", "Chef Jobs Amsterdam | Kitchen Jobs | EXTRA", true);
+    setMeta("description", "Looking for chef or kitchen work in Amsterdam? Work in hotels, restaurants and events via EXTRA with flexible shifts and same-day pay.");
+    setMeta("og:title", "Chef vacancies Amsterdam | Kitchen work via EXTRA", true);
     setMeta("og:type", "website", true);
   }, []);
 
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ══ NAV ══ */}
       <PublicNav />
 
       {/* ══ 1. HERO ══ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(88,22,164,0.97) 0%, rgba(109,40,217,0.93) 50%, rgba(124,58,237,0.88) 100%)" }}>
-        <XPatternBgDark />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-orange-400/15 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
+        {/* X-pattern */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[
+            { left: "3%",  top: "8%",  w: 240, rot:  12, op: 0.10 },
+            { left: "6%",  top: "58%", w: 180, rot: -15, op: 0.07 },
+            { left: "42%", top: "72%", w: 140, rot:  20, op: 0.05 },
+          ].map((x, i) => (
+            <div key={i} className="absolute" style={{ left: x.left, top: x.top, width: x.w, height: x.w, transform: `rotate(${x.rot}deg)`, opacity: x.op, WebkitMaskImage: `url(${xPatroon})`, maskImage: `url(${xPatroon})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", backgroundColor: "rgba(255,255,255,0.9)" }} />
+          ))}
+        </div>
+
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-[38%] -translate-y-1/2 w-[520px] h-[520px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-4 w-72 h-72 bg-violet-800/30 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Hero photo */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={chefHeroImg}
+            alt="Chef via EXTRA – kitchen vacancies Amsterdam top restaurants"
+            className="w-full h-full object-cover"
+            loading="eager"
+            style={{ objectPosition: "60% center", filter: "contrast(1.10) saturate(1.18) brightness(1.05)" }}
+          />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)" }} />
+          <div className="absolute inset-0 hero-text-gradient" />
+          <div className="absolute bottom-0 left-0 right-0" style={{ height: "20%", background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "18%", background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)" }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
+          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
               <ChefHat className="w-3.5 h-3.5 text-white/80" />
               <span className="text-white/90 text-xs font-semibold">Chef vacancies via EXTRA</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
-              Chef work that fits{" "}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
+              Kitchen work{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">your level.</span>
-                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-orange-400 to-yellow-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
+                <span className="relative z-10">that fits you.</span>
+                <span className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2.5 sm:h-3.5 bg-gradient-to-r from-cyan-400 to-blue-400 -skew-x-3 z-0 opacity-80 rounded-sm" />
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-purple-100/90 max-w-xl leading-relaxed font-medium mb-8">
-              Work as a chef or cook at restaurants, hotels, and events in Amsterdam. Through EXTRA, you choose your own shifts. Flexible chef work with daily payment and professional kitchens.
+            <p className="text-lg sm:text-xl text-purple-100/90 leading-relaxed font-medium mb-8 max-w-lg">
+              Work as a chef or cook at top restaurants and hotels in Amsterdam. Through EXTRA you choose your own shifts. Flexible kitchen work with same-day pay and professional environments.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Sign up <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Apply now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="#functies" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+              <a href="#roles" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 See how it works <ChevronRight className="w-5 h-5" />
               </a>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2.5">
-              {[
-                { emoji: "⚡", label: "Daily payment via Jixbee" },
-                { emoji: "🍳", label: "Top-level kitchens" },
-                { emoji: "📅", label: "Flexible shifts" },
-              ].map(({ emoji, label }) => (
-                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
-                  {emoji} {label}
-                </span>
+            <div className="flex flex-wrap gap-2.5">
+              {[{ emoji: "⚡", label: "Same-day pay via Jixbee" }, { emoji: "🍳", label: "Top kitchens Amsterdam" }, { emoji: "📅", label: "Flexible shifts" }].map(({ emoji, label }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">{emoji} {label}</span>
               ))}
-            </div>
-          </div>
-
-          <div className="relative flex justify-center items-center">
-            <div className="relative w-full max-w-sm">
-              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/40 border-4 border-white/20">
-                <img src={chefImg} alt="Chef via EXTRA – chef vacancies Amsterdam" className="w-full h-[380px] sm:h-[440px] object-cover" loading="eager" />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent rounded-3xl" />
-              </div>
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-orange-100">
-                💰 Daily payment active
-              </div>
-              <div className="absolute -bottom-3 -left-4 bg-white rounded-2xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 whitespace-nowrap border border-green-100">
-                🍳 Chef vacancies Amsterdam
-              </div>
             </div>
           </div>
         </div>
@@ -257,19 +247,7 @@ export default function ChefJobsEn() {
             <div className="flex animate-marquee-cw group-hover:[animation-play-state:paused]">
               {[...Array(2)].map((_, setIdx) => (
                 <div key={setIdx} className="flex items-center gap-10 sm:gap-16 lg:gap-20 px-5 sm:px-10 flex-shrink-0">
-                  {[
-                    { src: amrathLogo, alt: "Amrâth Hotels" },
-                    { src: mercureLogo, alt: "Mercure Hotels" },
-                    { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
-                    { src: logoFcUtrecht, alt: "FC Utrecht" },
-                    { src: logoFunda, alt: "Funda" },
-                    { src: logoHartMuseum, alt: "H'art Museum" },
-                    { src: logoHetePeper, alt: "Hete Peper" },
-                    { src: hiltonLogo, alt: "Hilton" },
-                    { src: marriottLogo, alt: "Marriott" },
-                    { src: logoSelectCatering, alt: "Select Catering" },
-                    { src: logoAppel, alt: "Appèl" },
-                  ].map((logo) => (
+                  {allLogos.map((logo) => (
                     <div key={`${setIdx}-${logo.alt}`} className="flex-shrink-0 hover:scale-105 transition-transform duration-300">
                       <img src={logo.src} alt={logo.alt} className="h-16 sm:h-20 lg:h-24 w-auto object-contain" loading="lazy" decoding="async" />
                     </div>
@@ -280,193 +258,326 @@ export default function ChefJobsEn() {
           </div>
         </div>
         <style>{`
-          @keyframes marquee-cw {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee-cw {
-            animation: marquee-cw 40s linear infinite;
+          @keyframes marquee-cw { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+          .animate-marquee-cw { animation: marquee-cw 40s linear infinite; }
+        `}</style>
+      </section>
+
+      {/* ══ 3. ROLES ══ */}
+      <section id="roles" className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Your area of expertise</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Which chef roles can you do via EXTRA?
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Via EXTRA you work as a cook or chef in various types of kitchens. From independent chef to chef de partie or events kitchen. We match you to kitchens that fit your experience and level. Also check out{" "}
+                <a href="/en/hospitality-work" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">hospitality work</a>,{" "}
+                <a href="/en/housekeeping-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">housekeeping work</a> or{" "}
+                <a href="/en/front-office-jobs" className="text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">front office vacancies</a>.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {roles.map((f, i) => (
+              <RevealSection key={f.title} delay={i * 70}>
+                <article className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-purple-100 shadow-md hover:shadow-2xl hover:border-purple-200 hover:-translate-y-2 transition-all h-full flex flex-col">
+                  <div className={`relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br ${f.color}`}>
+                    <img src={f.img} alt={f.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-luminosity opacity-90" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-3 left-3">
+                      <h3 className="text-white font-black text-lg leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>{f.title}</h3>
+                      <p className="text-white/70 text-[10px] font-semibold">{f.sub}</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <p className="text-sm text-gray-500 leading-relaxed mb-3">{f.desc}</p>
+                    <ul className="space-y-1 mb-4 flex-1">
+                      {f.bullets.map(b => (
+                        <li key={b} className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                          <CheckCircle2 className="w-3 h-3 text-green-500 flex-shrink-0" /> {b}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href={f.href} className={`inline-flex items-center gap-1.5 text-xs font-black text-white px-4 py-2 rounded-full bg-gradient-to-r ${f.color} hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
+                      Sign up <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </article>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={400}>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {["Commis de cuisine", "Patissier", "Sous chef", "Production kitchen"].map((fn) => (
+                <span key={fn} className="bg-purple-50 border border-purple-100 px-5 py-2.5 rounded-full text-sm text-gray-600 font-medium">
+                  {fn}
+                </span>
+              ))}
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 4. WHY EXTRA ══ */}
+      <section className="relative bg-white py-16 sm:py-28 overflow-hidden">
+        <XPatternBg />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-100/60 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-12 sm:mb-16">
+              <span className="inline-block bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                Why EXTRA?
+              </span>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Why do chef work via EXTRA?
+              </h2>
+              <p className="text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+                EXTRA gives chefs and cooks the freedom to work at their own level. Flexible shifts, same-day pay and working in professional kitchens without long-term commitments. Ideal for anyone looking for chef vacancies in Amsterdam at their level.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+            {[
+              {
+                icon: Zap, badge: "Financial freedom", title: "Same-day pay via Jixbee",
+                desc: "After your shift your money is in your account the same day. Right after your shift, not at the end of the month.",
+                bg: "from-yellow-50 to-orange-50", border: "border-yellow-200", iconBg: "bg-yellow-100", iconColor: "text-yellow-600", tag: "⚡ Same-day pay",
+              },
+              {
+                icon: CalendarCheck, badge: "Your own schedule", title: "Flexible shifts",
+                desc: "Choose the shifts that work for you. Work full-time, part-time or just a few shifts a week — you decide.",
+                bg: "from-violet-50 to-purple-50", border: "border-violet-200", iconBg: "bg-violet-100", iconColor: "text-violet-600", tag: "📅 Fully flexible",
+              },
+              {
+                icon: Flame, badge: "Quality kitchens", title: "Work in top kitchens",
+                desc: "Kitchen vacancies at five-star hotels, professional catering and high-level restaurants in Amsterdam.",
+                bg: "from-orange-50 to-red-50", border: "border-orange-200", iconBg: "bg-orange-100", iconColor: "text-orange-600", tag: "🍳 Top venues",
+              },
+              {
+                icon: Award, badge: "Growth", title: "Work at your level",
+                desc: "EXTRA matches you to kitchens that suit your experience. From commis to independent chef.",
+                bg: "from-blue-50 to-indigo-50", border: "border-blue-200", iconBg: "bg-blue-100", iconColor: "text-blue-600", tag: "🏆 Level-based matching",
+              },
+              {
+                icon: Gift, badge: "Exclusive reward system", title: "EXTRAATje rewards",
+                desc: "Earn points for every shift and redeem them for rewards. Consistently good work gets recognised.",
+                bg: "from-emerald-50 to-teal-50", border: "border-emerald-200", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", tag: "🎁 Earn points",
+              },
+              {
+                icon: Handshake, badge: "Personal approach", title: "Personal contact",
+                desc: "Our planners work alongside you. They know your preferences and find shifts that genuinely fit you.",
+                bg: "from-teal-50 to-cyan-50", border: "border-teal-200", iconBg: "bg-teal-100", iconColor: "text-teal-600", tag: "💬 Always reachable",
+              },
+            ].map(({ icon: Icon, badge, title, desc, bg, border, iconBg, iconColor, tag }, i) => (
+              <RevealSection key={title} delay={i * 80}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 sm:p-9 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-6">
+                      <span className={`text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${iconBg} ${iconColor}`}>{badge}</span>
+                      <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                        <Icon className={`w-6 h-6 ${iconColor}`} />
+                      </div>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-3 leading-snug" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5">{desc}</p>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-white/70 border border-white px-3 py-1.5 rounded-full">{tag}</span>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 5. KITCHENS ══ */}
+      <section className="py-16 sm:py-24 lg:py-28" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Top venues</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Kitchens you can be proud of
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                Through EXTRA you work in professional kitchens where quality comes first. From hotel restaurants to event venues and catering companies in Amsterdam.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-10">
+            {[
+              { icon: Hotel, title: "Hotel kitchens", desc: "Five-star hotel restaurants and room dining in Amsterdam. Professional brigades and high standards.", iconBg: "bg-indigo-100", iconColor: "text-indigo-600", bg: "from-indigo-50 to-blue-50", border: "border-indigo-200" },
+              { icon: UtensilsCrossed, title: "Restaurants", desc: "From bistros to fine dining. Kitchen vacancies in restaurants where craft and quality take centre stage.", iconBg: "bg-orange-100", iconColor: "text-orange-600", bg: "from-orange-50 to-amber-50", border: "border-orange-200" },
+              { icon: Utensils, title: "Events & catering", desc: "Gala dinners, corporate events and festivals. Cooking at special venues for large numbers of guests.", iconBg: "bg-emerald-100", iconColor: "text-emerald-600", bg: "from-emerald-50 to-teal-50", border: "border-emerald-200" },
+            ].map(({ icon: Icon, title, desc, iconBg, iconColor, bg, border }, i) => (
+              <RevealSection key={title} delay={i * 100}>
+                <div className={`group relative bg-gradient-to-br ${bg} rounded-3xl p-7 border-2 ${border} hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden`}>
+                  <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/60 blur-2xl pointer-events-none" />
+                  <div className="relative">
+                    <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                      <Icon className={`w-6 h-6 ${iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={300}>
+            <div className="text-center">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Partner venues</p>
+              <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
+                {[
+                  { src: marriottLogo, alt: "Marriott" },
+                  { src: amrathLogo, alt: "Amrath" },
+                  { src: nhLogo, alt: "NH Hotels" },
+                  { src: hiltonLogo, alt: "Hilton" },
+                  { src: mercureLogo, alt: "Mercure Hotels" },
+                  { src: pulitzerLogo, alt: "Pulitzer Amsterdam" },
+                ].map(({ src, alt }) => (
+                  <img key={alt} src={src} alt={alt} className="h-6 sm:h-8 w-auto object-contain grayscale opacity-40 hover:opacity-70 hover:grayscale-0 transition-all" loading="lazy" />
+                ))}
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 6. HOW IT WORKS ══ */}
+      <section id="how-it-works" className="relative bg-white py-16 sm:py-24 overflow-hidden">
+        <XPatternBg />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">In 4 steps</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                How to start as a chef via EXTRA
+              </h2>
+              <p className="text-gray-500 max-w-xl mx-auto mt-3 text-base sm:text-lg">
+                From sign-up to your first kitchen. Fast, simple and transparent.
+              </p>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {[
+              { step: "01", icon: MessageCircle, title: "Sign up", desc: "Register via the form and upload your CV. Sorted in a matter of minutes.", color: "from-purple-500 to-violet-600" },
+              { step: "02", icon: Users, title: "Intake", desc: "We discuss your experience, preferences and availability. Then we look at which kitchens suit you.", color: "from-orange-500 to-red-600" },
+              { step: "03", icon: CalendarCheck, title: "Pick your shifts", desc: "You choose the shifts that fit your schedule. Flexible chef work at your level.", color: "from-teal-500 to-cyan-600" },
+              { step: "04", icon: Zap, title: "Work and get paid", desc: "Complete your shift and receive your payment the same day via Jixbee.", color: "from-yellow-500 to-amber-500" },
+            ].map(({ step, icon: Icon, title, desc, color }, i) => (
+              <RevealSection key={step} delay={i * 80}>
+                <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all group h-full flex flex-col">
+                  <span className="text-5xl font-black text-purple-100 leading-none mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>{step}</span>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-black text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{desc}</p>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+          <RevealSection delay={300}>
+            <div className="flex justify-center mt-10">
+              <a href="/aanmelden" className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-full text-white text-base transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+                Sign up <ArrowRight className="w-5 h-5" />
+              </a>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ══ 7. SAME-DAY PAY ══ */}
+      <section className="py-16 sm:py-24 lg:py-32" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div>
+                <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Financial freedom</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mt-3 mb-5 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Money in your account, the same day.
+                </h2>
+                <p className="text-gray-600 leading-relaxed mb-6 text-base sm:text-lg">
+                  After your shift you're paid out via Jixbee. No waiting until the end of the month. You can see straight away what you've earned and receive your money often the same day.
+                </p>
+                <div className="space-y-3 mb-8">
+                  {[
+                    "Payout via Jixbee, same day after your shift",
+                    "Real-time insight into your worked hours and amount",
+                    "Official contract and payroll, legally compliant",
+                    "No surprises on your pay slip",
+                  ].map(item => (
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      </div>
+                      <span className="text-sm text-gray-700 font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <a href="/en/how-we-work" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                  How does same-day pay work? <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+              <div className="flex justify-center">
+                <div className="relative flex gap-5 items-end h-[320px] sm:h-[380px]">
+                  <div style={{ transform: "rotate(-5deg)", animation: "float-cw 5s ease-in-out infinite" }}>
+                    <img src={jixbeeUren} alt="Jixbee – worked hours overview" className="w-[145px] sm:w-[175px] drop-shadow-2xl rounded-[2rem]" />
+                  </div>
+                  <div className="relative z-10 -mb-4" style={{ animation: "float-cw 4s ease-in-out infinite" }}>
+                    <img src={jixbeePayout} alt="Jixbee – payout successful" className="w-[155px] sm:w-[190px] drop-shadow-2xl rounded-[2rem]" />
+                    <div className="absolute -top-3 -right-10 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-orange-100 whitespace-nowrap">
+                      💸 €820 paid out
+                    </div>
+                    <div className="absolute -bottom-2 -left-8 bg-white rounded-xl shadow-xl px-3 py-2 text-xs font-black text-gray-900 border border-green-100 whitespace-nowrap">
+                      ✅ Shift approved
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </RevealSection>
+        </div>
+        <style>{`
+          @keyframes float-cw {
+            0%, 100% { transform: translateY(0px) rotate(-5deg); }
+            50% { transform: translateY(-12px) rotate(-5deg); }
           }
         `}</style>
       </section>
 
-      {/* ══ 3. FUNCTIES ══ */}
-      <section id="functies" className="py-24 sm:py-32 bg-white relative overflow-hidden">
-        <XPatternBg />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <RevealSection className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Chef vacancies for <span className="text-purple-600">every specialty.</span>
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto font-medium">
-              From fine dining to large-scale events. At EXTRA, we have chef work at the level that suits your experience and ambition.
-            </p>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {functies.map((f, i) => (
-              <RevealSection key={i} delay={i * 100} className="group h-full">
-                <div className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 flex flex-col h-full hover:-translate-y-2">
-                  <div className="relative h-56 overflow-hidden">
-                    <img src={f.img} alt={f.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                    <div className="absolute bottom-4 left-6">
-                      <p className="text-white/90 text-xs font-black uppercase tracking-widest">{f.sub}</p>
-                    </div>
-                  </div>
-                  <div className="p-8 flex flex-col flex-grow">
-                    <h3 className="text-xl font-black text-gray-900 mb-4">{f.title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">{f.desc}</p>
-                    <ul className="space-y-3 mb-8">
-                      {f.bullets.map((b, j) => (
-                        <li key={j} className="flex items-center gap-2.5 text-xs font-bold text-gray-700">
-                          <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${f.color}`} />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                    <a href={f.href} className="w-full py-4 rounded-2xl bg-gray-50 text-gray-900 font-bold text-sm text-center group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 border border-gray-100 group-hover:border-purple-600">
-                      Sign up now
-                    </a>
-                  </div>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══ 4. STEPS ══ */}
-      <section className="py-24 sm:py-32 bg-gray-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/extra-pattern.svg')] opacity-5" />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <RevealSection>
-              <h2 className="text-3xl sm:text-5xl font-black text-white mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Start working as a chef <span className="text-orange-400">within a week.</span>
+      {/* ══ 8. REVIEWS ══ */}
+      <section className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, #f9f7ff 0%, #ffffff 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="text-purple-600 text-sm font-bold uppercase tracking-widest">Experiences</span>
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mt-3 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                What chefs and cooks say
               </h2>
-              <div className="space-y-8 sm:space-y-10">
-                {[
-                  { step: "01", title: "Online application", desc: "Fill in your details and experience in 2 minutes via our website." },
-                  { step: "02", title: "Meet & Greet", desc: "We'll invite you for a short introduction to discuss your level and preferences." },
-                  { step: "03", title: "Choose your shifts", desc: "Pick the shifts that suit you in our app and start working immediately." },
-                ].map((s, i) => (
-                  <div key={i} className="flex gap-6">
-                    <div className="text-4xl sm:text-5xl font-black text-white/10 select-none leading-none">{s.step}</div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2">{s.title}</h3>
-                      <p className="text-purple-100/60 leading-relaxed text-sm sm:text-base">{s.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-12">
-                <a href="/aanmelden" className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black px-10 py-4 rounded-full transition-all hover:-translate-y-1 shadow-lg shadow-orange-500/20">
-                  Register now <ArrowRight className="w-5 h-5" />
-                </a>
-              </div>
-            </RevealSection>
-            <RevealSection delay={200} className="relative">
-              <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-[3rem] p-10 sm:p-14 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
-                <div className="relative z-10">
-                  <Flame className="w-16 h-16 text-orange-400 mb-8" />
-                  <h3 className="text-2xl sm:text-3xl font-black text-white mb-6">Why chefs choose EXTRA:</h3>
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    {[
-                      { icon: Banknote, label: "Weekly or Daily pay", desc: "You decide when you want to be paid via Jixbee." },
-                      { icon: Award, label: "Points for prizes", desc: "Every shift earns you points for cool rewards." },
-                      { icon: Clock, label: "Maximum flexibility", desc: "Full control over your own agenda and kitchen style." },
-                      { icon: Hotel, label: "Premium locations", desc: "Work in the best hotels and restaurants in Amsterdam." },
-                    ].map((item, i) => (
-                      <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
-                        <item.icon className="w-6 h-6 text-orange-400 mb-3" />
-                        <h4 className="text-white font-bold text-sm mb-1">{item.label}</h4>
-                        <p className="text-white/60 text-xs leading-relaxed">{item.desc}</p>
-                      </div>
+            </div>
+          </RevealSection>
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 mb-12">
+            {reviews.map(({ name, role, text, rating }, i) => (
+              <RevealSection key={name} delay={i * 80}>
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 border-purple-100 shadow-md hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all h-full flex flex-col">
+                  <div className="flex mb-3">
+                    {Array.from({ length: rating }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                </div>
-              </div>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ 5. JIXBEE DAILY PAY ══ */}
-      <section className="py-24 sm:py-32 bg-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <RevealSection className="order-2 lg:order-1">
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500/10 blur-[80px] rounded-full" />
-                <div className="relative grid grid-cols-2 gap-4">
-                  <img src={jixbeeUren} alt="Jixbee worked hours" className="w-full rounded-2xl shadow-xl transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
-                  <img src={jixbeePayout} alt="Jixbee payout success" className="w-full rounded-2xl shadow-xl transform rotate-3 translate-y-8 hover:rotate-0 transition-transform duration-500" />
-                </div>
-              </div>
-            </RevealSection>
-            <RevealSection className="order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 rounded-full px-4 py-1.5 mb-6 border border-green-200">
-                <Zap className="w-3.5 h-3.5 fill-current" />
-                <span className="text-xs font-black uppercase tracking-widest text-green-700">Instant Payout</span>
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-6 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Paid today for the <span className="text-purple-600">work you did today.</span>
-              </h2>
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed font-medium">
-                No more waiting for the end of the month. Through our partner Jixbee, you can have your earned salary in your account immediately after your shift.
-              </p>
-              <ul className="space-y-4 mb-10">
-                {[
-                  "Decide yourself when you get paid",
-                  "Direct overview of your hours and earnings",
-                  "Transparent and without hidden costs",
-                  "Available for every shift via EXTRA"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-800 font-bold">
-                    <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <a href="/aanmelden" className="inline-flex items-center gap-2 bg-gray-900 text-white font-black px-10 py-4 rounded-full hover:bg-gray-800 transition-all hover:-translate-y-1">
-                Start immediately <ArrowRight className="w-5 h-5" />
-              </a>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ 6. REVIEWS ══ */}
-      <section className="py-24 sm:py-32 bg-purple-50 relative overflow-hidden">
-        <XPatternBg />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <RevealSection className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Chefs about <span className="text-purple-600">EXTRA</span>
-            </h2>
-            <div className="flex items-center justify-center gap-1 mb-4">
-              {[...Array(5)].map((_, i) => <Star key={i} className="w-6 h-6 text-yellow-400 fill-current" />)}
-            </div>
-            <p className="text-gray-600 font-bold uppercase tracking-widest text-sm">Average rating: 4.9/5</p>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {reviews.map((r, i) => (
-              <RevealSection key={i} delay={i * 100}>
-                <div className="bg-white p-10 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 h-full border border-purple-100 flex flex-col">
-                  <div className="flex gap-1 mb-6">
-                    {[...Array(r.rating)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-400 fill-current" />)}
-                  </div>
-                  <p className="text-gray-700 italic mb-8 flex-grow leading-relaxed font-medium">"{r.tekst}"</p>
-                  <div className="flex items-center gap-4 pt-6 border-t border-gray-100">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center font-black text-purple-600 text-lg uppercase">
-                      {r.name.charAt(0)}
+                  <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-4 italic">"{text}"</p>
+                  <div className="border-t border-purple-100 pt-3 flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-black">
+                      {name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-black text-gray-900 text-base">{r.name}</p>
-                      <p className="text-purple-600 text-xs font-bold uppercase tracking-wider">{r.functie}</p>
+                      <p className="text-xs font-black text-gray-900">{name}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">{role} via EXTRA</p>
                     </div>
                   </div>
                 </div>
@@ -476,65 +587,69 @@ export default function ChefJobsEn() {
         </div>
       </section>
 
-      {/* ══ 7. REGIO'S ══ */}
-      <section className="py-24 sm:py-32 bg-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <RevealSection>
-              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Active in the <span className="text-purple-600">entire Amsterdam region.</span>
+      {/* ══ 9. CTA STRIP ══ */}
+      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 py-8 sm:py-10">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-black text-base sm:text-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Start chef work via EXTRA today
+            </p>
+            <p className="text-purple-200 text-sm mt-0.5">Looking for chef or kitchen vacancies in Amsterdam? Sign up with EXTRA and start quickly with shifts at restaurants, hotels and events.</p>
+          </div>
+          <a href="/aanmelden" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-purple-900 font-black px-6 py-3 rounded-full text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all">
+            Start your application <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+
+      {/* ══ 10. FAQ ══ */}
+      <section className="py-16 sm:py-24 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-5 sm:px-8">
+          <RevealSection>
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-3xl sm:text-5xl font-black text-gray-900 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Frequently asked questions about chef work via EXTRA
               </h2>
-              <p className="text-gray-600 text-lg mb-10 leading-relaxed font-medium">
-                Whether you want to work in a hotel in Amsterdam Center, a restaurant in South, or at an event in North. We have the best chef vacancies throughout the city.
-              </p>
-              <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                {[
-                  "Amsterdam Center", "Amsterdam South", "Amsterdam North",
-                  "Amsterdam East", "Amsterdam West", "Amsterdam Schiphol"
-                ].map((regio) => (
-                  <div key={regio} className="flex items-center gap-3 bg-purple-50 rounded-2xl px-5 py-4 border border-purple-100">
-                    <MapPin className="w-5 h-5 text-purple-600 shrink-0" />
-                    <span className="font-bold text-gray-800 text-sm sm:text-base">{regio}</span>
+            </div>
+          </RevealSection>
+          <div className="space-y-3 sm:space-y-4">
+            {faqs.map((faq, i) => (
+              <RevealSection key={i} delay={i * 60}>
+                <div className="bg-white rounded-2xl border border-gray-100 hover:border-purple-200 transition-all duration-300 overflow-hidden shadow-sm">
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-5 sm:p-7 text-left">
+                    <span className="text-base sm:text-lg font-bold text-gray-900 pr-4">{faq.q}</span>
+                    <span className={`text-gray-400 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </span>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-72 pb-5 sm:pb-7" : "max-h-0"}`}>
+                    <p className="px-5 sm:px-7 text-sm sm:text-base text-gray-500 leading-relaxed">{faq.a}</p>
                   </div>
-                ))}
-              </div>
-            </RevealSection>
-            <RevealSection delay={200}>
-              <div className="relative rounded-[3rem] overflow-hidden shadow-2xl">
-                <img src={cateringImg} alt="Kitchen vacancies Amsterdam regions" className="w-full h-[500px] object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 to-transparent" />
-              </div>
-            </RevealSection>
+                </div>
+              </RevealSection>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ══ 8. FAQ ══ */}
-      <FAQSection
-        heading="FAQ Chef work"
-        faqs={faqs}
-      />
-
-      {/* ══ 9. CTA ══ */}
-      <section className="py-24 sm:py-32 bg-gray-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/extra-pattern.svg')] opacity-5" />
-        <div className="max-w-4xl mx-auto px-5 text-center relative z-10">
-          <RevealSection>
-            <h2 className="text-4xl sm:text-6xl font-black text-white mb-8 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Time for a new <span className="text-orange-400 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400">challenge in the kitchen?</span>
-            </h2>
-            <p className="text-purple-100/70 text-lg sm:text-xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
-              Sign up today and start working as a chef at top locations in Amsterdam this week. Choose flexibility, quality, and daily payment.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/aanmelden" className="bg-white text-purple-900 font-black px-12 py-5 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Sign up direct <ArrowRight className="w-6 h-6" />
-              </a>
-              <Link href="/contact" className="border-2 border-white/20 text-white font-bold px-12 py-5 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-                Questions? Contact us
+      {/* ══ 11. LINK CLOUD ══ */}
+      <section className="py-12 bg-white border-t border-purple-100/60">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">Related pages</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {[
+              { label: "Hospitality work", href: "/en/hospitality-work" },
+              { label: "Housekeeping jobs", href: "/en/housekeeping-jobs" },
+              { label: "Front office vacancies", href: "/en/front-office-jobs" },
+              { label: "EXTRAATje rewards", href: "/en/rewards" },
+              { label: "How we work", href: "/en/how-we-work" },
+              { label: "Apply to EXTRA", href: "/aanmelden" },
+            ].map((link, i) => (
+              <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
+                {link.label}
               </Link>
-            </div>
-          </RevealSection>
+            ))}
+          </div>
         </div>
       </section>
 
