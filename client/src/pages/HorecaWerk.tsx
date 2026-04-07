@@ -12,7 +12,7 @@ import {
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
-import barBedieningHeroImg from "@assets/BAR_BEDIENING_FINAL_AE_001_1775058869256.png";
+import barBedieningHeroImg from "@assets/BAR_BEDIENING_FINAL_002_1775574495470.png";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
 import chefImg from "@assets/Chef_1771833440047.webp";
 import frontOfficeImg from "@assets/Front-office_1771842663934.webp";
@@ -293,7 +293,7 @@ export default function HorecaWerk() {
       </nav>
 
       {/* ══ 1. HERO ══ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
+      <section className="relative min-h-[100svh] flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg, #2d0663 0%, #4a0e96 35%, #5b16a8 65%, #6d28d9 100%)" }}>
 
         {/* X-patroon achtergrond */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -318,38 +318,34 @@ export default function HorecaWerk() {
             className="w-full h-full object-cover"
             loading="eager"
             style={{
-              objectPosition: "60% center",
-              filter: "contrast(1.10) saturate(1.18) brightness(1.05)",
+              objectPosition: "center top",
+              filter: "contrast(1.08) saturate(1.15) brightness(1.04)",
             }}
           />
-
-          {/* Spotlight radial achter de persoon */}
           <div className="absolute inset-0" style={{
-            background: "radial-gradient(ellipse 38% 65% at 65% 44%, rgba(255,248,255,0.13) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
+            background: "radial-gradient(ellipse 42% 68% at 68% 46%, rgba(255,248,255,0.12) 0%, rgba(220,180,255,0.04) 55%, transparent 75%)"
           }} />
-
-          {/* Gradient links — tekst leesbaar */}
-          <div className="absolute inset-0 hero-text-gradient" />
-
-          {/* Bottom vignette */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to right, rgba(29,5,73,1) 0%, rgba(29,5,73,1) 32%, rgba(45,6,99,0.82) 46%, rgba(58,8,128,0.38) 56%, rgba(72,14,148,0.10) 65%, transparent 72%)"
+          }} />
           <div className="absolute bottom-0 left-0 right-0" style={{
-            height: "20%",
-            background: "linear-gradient(to top, rgba(29,5,73,0.80) 0%, rgba(29,5,73,0.28) 50%, transparent 100%)"
+            height: "22%",
+            background: "linear-gradient(to top, rgba(29,5,73,0.82) 0%, rgba(29,5,73,0.30) 50%, transparent 100%)"
           }} />
-
-          {/* Top vignette — navbar overlay */}
           <div className="absolute top-0 left-0 right-0" style={{
             height: "18%",
-            background: "linear-gradient(to bottom, rgba(29,5,73,0.48) 0%, transparent 100%)"
+            background: "linear-gradient(to bottom, rgba(29,5,73,0.50) 0%, transparent 100%)"
           }} />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-32 sm:pb-24 w-full">
-          <div className="max-w-xl lg:max-w-[52%] 2xl:max-w-[42%]">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7 border border-white/20">
-              <UtensilsCrossed className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-white/90 text-xs font-semibold">Horeca vacatures via EXTRA</span>
+        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-28 sm:pt-32 pb-36 sm:pb-32">
+          <div className="max-w-2xl">
+            <div className="flex flex-wrap gap-3 mb-6 sm:mb-10">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 py-2 sm:py-2.5 border border-white/20">
+                <UtensilsCrossed className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-white/90 text-xs sm:text-sm font-semibold">Horeca vacatures via EXTRA</span>
+              </div>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white leading-[1.05] mb-6" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900 }}>
