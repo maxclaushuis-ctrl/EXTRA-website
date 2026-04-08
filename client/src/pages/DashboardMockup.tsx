@@ -197,6 +197,10 @@ export default function DashboardMockup() {
   const [adminCreateOpen, setAdminCreateOpen] = useState(false);
   const [adminCreateData, setAdminCreateData] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const [adminCreateLoading, setAdminCreateLoading] = useState(false);
+  const [adminDeleteId, setAdminDeleteId] = useState<number | null>(null);
+  const [adminDeleteNaam, setAdminDeleteNaam] = useState('');
+  const [adminDeleteStep, setAdminDeleteStep] = useState<1 | 2>(1);
+  const [adminDeleteLoading, setAdminDeleteLoading] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [changePwData, setChangePwData] = useState({ current: '', next: '', confirm: '' });
   const [changePwLoading, setChangePwLoading] = useState(false);
@@ -5411,6 +5415,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                           toast({ title: 'Account aangemaakt', description: json.message });
                           setAdminCreateOpen(false);
                           setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' });
+                          queryClient.invalidateQueries({ queryKey: ['/api/users'] });
                         } catch (err: any) {
                           const msg = err?.data?.message || err?.message || 'Er is iets misgegaan.';
                           toast({ title: 'Fout', description: msg, variant: 'destructive' });
@@ -5453,6 +5458,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">E-mail</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Rol</th>
+                            <th className="px-4 py-3"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -5463,6 +5469,17 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               <td className="px-4 py-3 hidden md:table-cell">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Admin</span>
                               </td>
+                              <td className="px-4 py-3 text-right">
+                                {u.email !== 'admin@extra.nl' && (
+                                  <button
+                                    title="Account verwijderen"
+                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                    onClick={() => { setAdminDeleteId(u.id); setAdminDeleteNaam(`${u.firstName} ${u.lastName}`); setAdminDeleteStep(1); }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -5471,6 +5488,48 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   })()}
                 </CardContent>
               </Card>
+
+              {/* Delete admin confirmation dialog */}
+              <Dialog open={adminDeleteId !== null} onOpenChange={(open) => { if (!open) { setAdminDeleteId(null); setAdminDeleteStep(1); } }}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>{adminDeleteStep === 1 ? 'Account verwijderen?' : 'Definitief verwijderen?'}</DialogTitle>
+                  </DialogHeader>
+                  {adminDeleteStep === 1 ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">Weet je zeker dat je het account van <strong>{adminDeleteNaam}</strong> wilt verwijderen?</p>
+                      <div className="flex gap-3 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setAdminDeleteId(null)}>Annuleren</Button>
+                        <Button size="sm" variant="destructive" onClick={() => setAdminDeleteStep(2)}>Ja, verwijderen</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-sm text-red-600 font-medium">Dit kan niet ongedaan worden gemaakt. Het account van <strong>{adminDeleteNaam}</strong> wordt permanent verwijderd.</p>
+                      <div className="flex gap-3 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setAdminDeleteStep(1)}>Terug</Button>
+                        <Button size="sm" variant="destructive" disabled={adminDeleteLoading} onClick={async () => {
+                          setAdminDeleteLoading(true);
+                          try {
+                            await apiRequest('DELETE', `/api/users/${adminDeleteId}`);
+                            toast({ title: 'Account verwijderd', description: `Het account van ${adminDeleteNaam} is verwijderd.` });
+                            setAdminDeleteId(null);
+                            setAdminDeleteStep(1);
+                            queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+                          } catch (err: any) {
+                            const msg = err?.data?.message || 'Er is iets misgegaan.';
+                            toast({ title: 'Fout', description: msg, variant: 'destructive' });
+                          } finally {
+                            setAdminDeleteLoading(false);
+                          }
+                        }}>
+                          {adminDeleteLoading ? 'Verwijderen...' : 'Definitief verwijderen'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
 
           ) : (
