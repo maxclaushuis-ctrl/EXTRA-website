@@ -197,6 +197,10 @@ export default function DashboardMockup() {
   const [adminCreateOpen, setAdminCreateOpen] = useState(false);
   const [adminCreateData, setAdminCreateData] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const [adminCreateLoading, setAdminCreateLoading] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [changePwData, setChangePwData] = useState({ current: '', next: '', confirm: '' });
+  const [changePwLoading, setChangePwLoading] = useState(false);
+  const [changePwError, setChangePwError] = useState('');
 
   useEffect(() => {
     if (!cvPreviewOpen || !cvPreviewCandidate) {
@@ -859,7 +863,14 @@ export default function DashboardMockup() {
         </button>
 
         <div className="p-2 border-t mt-2">
-          <div className="px-3 py-2 text-xs text-gray-400 truncate">{user?.firstName} {user?.lastName}</div>
+          <div className="px-3 py-1.5 text-xs text-gray-400 truncate">{user?.firstName} {user?.lastName}</div>
+          <button
+            onClick={() => { setChangePwData({ current: '', next: '', confirm: '' }); setChangePwError(''); setChangePasswordOpen(true); }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <Settings2 className="h-4 w-4" />
+            <span>Wachtwoord wijzigen</span>
+          </button>
           <button
             onClick={() => logout()}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -868,6 +879,83 @@ export default function DashboardMockup() {
             <span>Uitloggen</span>
           </button>
         </div>
+
+        {/* Wachtwoord wijzigen dialoog */}
+        <Dialog open={changePasswordOpen} onOpenChange={(open) => { setChangePasswordOpen(open); if (!open) setChangePwError(''); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Wachtwoord wijzigen</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-1">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Huidig wachtwoord</label>
+                <input
+                  type="password"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  value={changePwData.current}
+                  onChange={e => setChangePwData(d => ({ ...d, current: e.target.value }))}
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Nieuw wachtwoord</label>
+                <input
+                  type="password"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  value={changePwData.next}
+                  onChange={e => setChangePwData(d => ({ ...d, next: e.target.value }))}
+                  placeholder="Minimaal 8 tekens"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Nieuw wachtwoord bevestigen</label>
+                <input
+                  type="password"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  value={changePwData.confirm}
+                  onChange={e => setChangePwData(d => ({ ...d, confirm: e.target.value }))}
+                  placeholder="••••••••"
+                />
+              </div>
+              {changePwError && <p className="text-xs text-red-600">{changePwError}</p>}
+            </div>
+            <div className="flex gap-3 justify-end pt-1">
+              <Button variant="outline" size="sm" onClick={() => setChangePasswordOpen(false)}>Annuleren</Button>
+              <Button
+                size="sm"
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                disabled={changePwLoading || !changePwData.current || changePwData.next.length < 8}
+                onClick={async () => {
+                  if (changePwData.next !== changePwData.confirm) {
+                    setChangePwError('Nieuwe wachtwoorden komen niet overeen.');
+                    return;
+                  }
+                  setChangePwError('');
+                  setChangePwLoading(true);
+                  try {
+                    const res = await apiRequest('POST', '/api/auth/change-password', {
+                      currentPassword: changePwData.current,
+                      newPassword: changePwData.next,
+                    });
+                    const json = await res.json();
+                    if (res.ok) {
+                      toast({ title: 'Wachtwoord gewijzigd', description: 'Je kunt voortaan inloggen met je nieuwe wachtwoord.' });
+                      setChangePasswordOpen(false);
+                    } else {
+                      setChangePwError(json.message || 'Er is iets misgegaan.');
+                    }
+                  } catch {
+                    setChangePwError('Er is iets misgegaan.');
+                  } finally {
+                    setChangePwLoading(false);
+                  }
+                }}
+              >
+                {changePwLoading ? 'Opslaan...' : 'Wachtwoord opslaan'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </aside>
 
       {/* Main Content */}

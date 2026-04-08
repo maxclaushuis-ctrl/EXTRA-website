@@ -650,6 +650,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  app.post("/api/auth/change-password", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Huidig en nieuw wachtwoord zijn verplicht" });
+      }
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "Nieuw wachtwoord moet minimaal 8 tekens bevatten" });
+      }
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) return res.status(404).json({ message: "Gebruiker niet gevonden" });
+
+      // Verifieer huidig wachtwoord
+      let valid = false;
+      if (user.password.startsWith('$2')) {
+        valid = await bcrypt.compare(currentPassword, user.password);
+      } else {
+        const sha256Hash = createHash('sha256').update(currentPassword).digest('hex');
+        valid = sha256Hash === user.password;
+      }
+      if (!valid) {
+        return res.status(401).json({ message: "Huidig wachtwoord is onjuist" });
+      }
+      const hashedNew = await bcrypt.hash(newPassword, 12);
+      await storage.updateUser(user.id, { password: hashedNew });
+      return res.json({ message: "Wachtwoord succesvol gewijzigd" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     try {
       if (!req.session.userId) {
