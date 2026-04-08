@@ -3,6 +3,7 @@ import { storage } from './storage';
 import { EmailTemplate, User } from '@shared/schema';
 import fs from 'fs';
 import path from 'path';
+import { downloadCvBuffer } from './supabase';
 
 // Configuratie voor de mail service
 let mailService: MailService | null = null;
@@ -553,23 +554,21 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
 
-  // Laad CV bijlage als beschikbaar (vanuit Supabase URL)
+  // Laad CV bijlage via Supabase admin client (werkt ook voor private buckets)
   const attachments: EmailAttachment[] = [];
-  if (candidate.cvFilename && candidate.cvFilename.startsWith('http')) {
+  if (candidate.cvFilename) {
     try {
-      const cvResponse = await fetch(candidate.cvFilename);
-      if (cvResponse.ok) {
-        const cvBuffer = Buffer.from(await cvResponse.arrayBuffer());
-        const ext = candidate.cvFilename.includes('.')
-          ? '.' + candidate.cvFilename.split('.').pop()!.split('?')[0].toLowerCase()
-          : '';
-        const mimeType = ext === '.pdf' ? 'application/pdf'
-          : ext === '.doc' ? 'application/msword'
-          : ext === '.docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      const cvData = await downloadCvBuffer(candidate.cvFilename);
+      if (cvData) {
+        const { buffer: cvBuffer, ext } = cvData;
+        const dotExt = `.${ext}`;
+        const mimeType = ext === 'pdf' ? 'application/pdf'
+          : ext === 'doc' ? 'application/msword'
+          : ext === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
           : 'application/octet-stream';
         attachments.push({
           content: cvBuffer.toString('base64'),
-          filename: `CV_${candidate.firstName}_${candidate.lastName}${ext}`,
+          filename: `CV_${candidate.firstName}_${candidate.lastName}${dotExt}`,
           type: mimeType,
           disposition: 'attachment',
         });
@@ -1104,4 +1103,92 @@ async function getSettingValue(key: string, defaultValue: string): Promise<strin
     console.error(`Fout bij ophalen van instelling ${key}:`, error);
     return defaultValue;
   }
+}
+
+/**
+ * Stuur een welkomstmail naar een nieuw aangemaakt admin-account.
+ * Bevat de inloggegevens en een link naar het admin-portaal.
+ */
+export async function sendAdminWelcomeEmail(params: {
+  to: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  loginUrl: string;
+}): Promise<boolean> {
+  const { to, firstName, lastName, email, password, loginUrl } = params;
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 12px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:0;line-height:0;font-size:0;">
+            <img src="${getEmailBannerSrc()}"
+                 width="600" height="200"
+                 alt="EXTRA"
+                 style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 28px 8px;">
+            <h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">Welkom bij het EXTRA admin-portaal, ${firstName}!</h2>
+            <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6;">
+              Je account is aangemaakt. Hieronder vind je jouw inloggegevens voor het admin-portaal van EXTRA. Bewaar deze goed en deel ze niet met anderen.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:20px;">
+              <tr>
+                <td style="padding:16px 20px;border-bottom:1px solid #e5e7eb;">
+                  <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">E-mailadres</div>
+                  <div style="color:#111827;font-size:15px;font-weight:600;">${email}</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:16px 20px;">
+                  <div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Wachtwoord</div>
+                  <div style="color:#111827;font-size:15px;font-weight:600;font-family:monospace;letter-spacing:1px;">${password}</div>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 16px;font-size:13px;color:#6b7280;line-height:1.5;">
+              Wijzig je wachtwoord direct na de eerste aanmelding via je profielinstellingen.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              <tr>
+                <td>
+                  <a href="${loginUrl}" style="display:block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">
+                    Inloggen in het admin-portaal →
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;">
+            EXTRA · Herengracht 372 · Amsterdam
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Welkom bij het EXTRA admin-portaal, ${firstName}!\n\nJe inloggegevens:\nE-mailadres: ${email}\nWachtwoord: ${password}\n\nInloggen: ${loginUrl}\n\nWijzig je wachtwoord direct na de eerste aanmelding.`;
+
+  return sendEmail({
+    to,
+    from: 'EXTRA <max@doehetextra.nl>',
+    subject: `Welkom bij het EXTRA admin-portaal, ${firstName}!`,
+    html,
+    text,
+  });
 }

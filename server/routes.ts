@@ -34,7 +34,7 @@ import {
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
-import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail } from "./mail";
+import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail, sendAdminWelcomeEmail } from "./mail";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -43,28 +43,7 @@ import { db } from "./db";
 import { users, candidates as candidatesTable } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
-import { createClient } from '@supabase/supabase-js';
-
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (!_supabaseAdmin) {
-    let url = (process.env.SUPABASE_URL || '').trim();
-    const key = (process.env.SUPABASE_SERVICE_KEY || '').trim();
-    if (!url || !key) throw new Error('SUPABASE_URL en SUPABASE_SERVICE_KEY zijn vereist voor CV-upload');
-    // Als de waarde geen protocol heeft, voeg https:// toe
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url;
-    }
-    // Als de waarde alleen een project reference ID is (bijv. "abcxyz"), maak volledige Supabase URL
-    // Supabase project refs zijn ~20 tekens en bevatten geen punt (.)
-    if (!url.includes('.')) {
-      url = url + '.supabase.co';
-    }
-    console.log(`[Supabase] Verbinding via: ${url.substring(0, 50)}`);
-    _supabaseAdmin = createClient(url, key);
-  }
-  return _supabaseAdmin;
-}
+import { getSupabaseAdmin, extractCvStoragePath, downloadCvBuffer } from './supabase';
 
 async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName: string): Promise<string> {
   const ext = path.extname(originalName);
@@ -893,6 +872,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  /**
+   * Maak een nieuw admin-account aan en stuur een welkomstmail met inloggegevens.
+   * Alleen beschikbaar voor admins.
+   */
+  app.post("/api/admin/create-admin-user", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { firstName, lastName, email, password } = req.body;
+      if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ message: "Voornaam, achternaam, e-mailadres en wachtwoord zijn verplicht" });
+      }
+      const existing = await storage.getUserByEmail(email);
+      if (existing) {
+        return res.status(409).json({ message: "Er bestaat al een account met dit e-mailadres" });
+      }
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const user = await storage.createUser({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        role: 'admin',
+      } as any);
+
+      // Stuur welkomstmail
+      const baseUrl = (process.env.BASE_URL || 'https://www.doehetextra.nl').replace(/\/$/, '');
+      const loginUrl = `${baseUrl}/dashboard-mockup`;
+      sendAdminWelcomeEmail({
+        to: email,
+        firstName,
+        lastName,
+        email,
+        password,
+        loginUrl,
+      }).catch(err => console.error('Fout bij verzenden welkomstmail admin:', err));
+
+      return res.status(201).json({
+        message: `Admin-account aangemaakt en welkomstmail verstuurd naar ${email}`,
+        user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: 'admin' },
+      });
+    } catch (error) {
+      console.error("Error creating admin user:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het aanmaken van het admin-account" });
+    }
+  });
+
   app.get("/api/users/search", authMiddleware, async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
@@ -4904,16 +4928,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: 'Er is iets misgegaan' });
     }
   });
-
-  /**
-   * Haalt de Supabase storage-path op uit een opgeslagen publieke CV-URL.
-   * Voorbeeld: https://xxx.supabase.co/storage/v1/object/public/cvs/cv-123.docx
-   *         → cv-123.docx
-   */
-  function extractCvStoragePath(cvFilename: string): string | null {
-    const match = cvFilename.match(/\/storage\/v1\/object\/(?:public|sign|upload)\/cvs\/([^?#]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  }
 
   /**
    * CV downloaden — genereert een signed URL via de service-key zodat

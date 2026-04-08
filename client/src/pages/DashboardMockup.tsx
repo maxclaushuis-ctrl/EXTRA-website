@@ -191,6 +191,12 @@ export default function DashboardMockup() {
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
   const [docxError, setDocxError] = useState<string | null>(null);
+  const [deleteKandidaatId, setDeleteKandidaatId] = useState<number | null>(null);
+  const [deleteKandidaatNaam, setDeleteKandidaatNaam] = useState('');
+  const [deleteKandidaatStep, setDeleteKandidaatStep] = useState<1 | 2>(1);
+  const [adminCreateOpen, setAdminCreateOpen] = useState(false);
+  const [adminCreateData, setAdminCreateData] = useState({ firstName: '', lastName: '', email: '', password: '' });
+  const [adminCreateLoading, setAdminCreateLoading] = useState(false);
 
   useEffect(() => {
     if (!cvPreviewOpen || !cvPreviewCandidate) {
@@ -367,6 +373,17 @@ export default function DashboardMockup() {
       toast({ title: action === 'accept' ? '✅ Kandidaat geaccepteerd' : '❌ Kandidaat afgewezen', description: action === 'accept' ? 'Een Calendly-uitnodiging is verstuurd.' : 'Een afwijzingsmail is verstuurd.' });
     },
     onError: () => { toast({ title: 'Fout', description: 'Er is iets misgegaan.', variant: 'destructive' }); },
+  });
+
+  const deleteKandidaatMutation = useMutation({
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/candidates/${id}`, undefined),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+      setDeleteKandidaatId(null);
+      setDeleteKandidaatStep(1);
+      toast({ title: 'Kandidaat verwijderd', description: 'Het profiel is permanent verwijderd.' });
+    },
+    onError: () => toast({ title: 'Fout', description: 'Verwijderen mislukt.', variant: 'destructive' }),
   });
 
   const { data: applicationsData, isLoading: applicationsLoading, refetch: refetchApplications } = useQuery<{ applications: any[]; total: number }>({
@@ -647,9 +664,6 @@ export default function DashboardMockup() {
               {isLoggingIn ? 'Bezig met inloggen...' : 'Inloggen'}
             </Button>
           </form>
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Standaard: admin@extra.nl / admin123
-          </p>
         </div>
       </div>
     );
@@ -830,7 +844,21 @@ export default function DashboardMockup() {
           )}
         </nav>
 
-        <div className="p-2 border-t">
+        {/* Systeem */}
+        <div className="px-3 mt-3 mb-1">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Systeem</span>
+        </div>
+        <button
+          onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+            activeTab === 'admin-beheer' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <Settings2 className="h-4 w-4" />
+          <span>Admin-accounts</span>
+        </button>
+
+        <div className="p-2 border-t mt-2">
           <div className="px-3 py-2 text-xs text-gray-400 truncate">{user?.firstName} {user?.lastName}</div>
           <button
             onClick={() => logout()}
@@ -997,6 +1025,44 @@ export default function DashboardMockup() {
                       Afwijzen & e-mail sturen
                     </Button>
                   </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Verwijder kandidaat — dubbele bevestiging */}
+              <Dialog open={deleteKandidaatId !== null} onOpenChange={(open) => { if (!open) { setDeleteKandidaatId(null); setDeleteKandidaatStep(1); } }}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle className="text-base font-semibold text-red-700">Kandidaat permanent verwijderen</DialogTitle>
+                  </DialogHeader>
+                  {deleteKandidaatStep === 1 ? (
+                    <>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Weet je zeker dat je <strong>{deleteKandidaatNaam}</strong> wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+                      </p>
+                      <div className="flex gap-3 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => { setDeleteKandidaatId(null); setDeleteKandidaatStep(1); }}>Annuleren</Button>
+                        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setDeleteKandidaatStep(2)}>
+                          Ja, verwijderen
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-700 mb-1 font-medium">Dit is een definitieve actie.</p>
+                      <p className="text-sm text-gray-500 mb-4">Klik op <strong>"Definitief verwijderen"</strong> om het profiel van <strong>{deleteKandidaatNaam}</strong> voor altijd te wissen.</p>
+                      <div className="flex gap-3 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setDeleteKandidaatStep(1)}>Terug</Button>
+                        <Button
+                          size="sm"
+                          className="bg-red-700 hover:bg-red-800 text-white"
+                          disabled={deleteKandidaatMutation.isPending}
+                          onClick={() => { if (deleteKandidaatId !== null) deleteKandidaatMutation.mutate(deleteKandidaatId); }}
+                        >
+                          {deleteKandidaatMutation.isPending ? 'Bezig...' : 'Definitief verwijderen'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </DialogContent>
               </Dialog>
 
@@ -1570,6 +1636,13 @@ export default function DashboardMockup() {
                                           </Button>
                                         </>
                                       )}
+                                      <Button
+                                        variant="ghost" size="icon" className="h-7 w-7 ml-1"
+                                        title="Kandidaat verwijderen"
+                                        onClick={() => { setDeleteKandidaatId(c.id); setDeleteKandidaatNaam(`${c.firstName} ${c.lastName}`); setDeleteKandidaatStep(1); }}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 text-gray-300 hover:text-red-500" />
+                                      </Button>
                                     </div>
                                   ) : (
                                     <div className="flex items-center gap-0.5">
@@ -1589,6 +1662,13 @@ export default function DashboardMockup() {
                                           <Trash2 className="h-3.5 w-3.5 text-red-400" />
                                         </Button>
                                       )}
+                                      <Button
+                                        variant="ghost" size="icon" className="h-7 w-7"
+                                        title="Kandidaat permanent verwijderen"
+                                        onClick={() => { setDeleteKandidaatId(c.id); setDeleteKandidaatNaam(`${c.firstName} ${c.lastName}`); setDeleteKandidaatStep(1); }}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 text-gray-300 hover:text-red-600" />
+                                      </Button>
                                     </div>
                                   )}
                                 </td>
@@ -5176,6 +5256,137 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   </Card>
                 </>
               )}
+            </div>
+
+          ) : activeTab === 'admin-beheer' ? (
+            /* Admin-accounts Tab */
+            <div>
+              {/* Aanmaken-dialoog */}
+              <Dialog open={adminCreateOpen} onOpenChange={(open) => { setAdminCreateOpen(open); if (!open) setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' }); }}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Nieuw admin-account aanmaken</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 py-2">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Voornaam</label>
+                        <input
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={adminCreateData.firstName}
+                          onChange={e => setAdminCreateData(d => ({ ...d, firstName: e.target.value }))}
+                          placeholder="Charlotte"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Achternaam</label>
+                        <input
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          value={adminCreateData.lastName}
+                          onChange={e => setAdminCreateData(d => ({ ...d, lastName: e.target.value }))}
+                          placeholder="De Vries"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block">E-mailadres</label>
+                      <input
+                        type="email"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        value={adminCreateData.email}
+                        onChange={e => setAdminCreateData(d => ({ ...d, email: e.target.value }))}
+                        placeholder="charlotte@doehetextra.nl"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block">Tijdelijk wachtwoord</label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        value={adminCreateData.password}
+                        onChange={e => setAdminCreateData(d => ({ ...d, password: e.target.value }))}
+                        placeholder="Minimaal 8 tekens"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Dit wachtwoord wordt per e-mail verstuurd aan de nieuwe gebruiker.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 justify-end pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setAdminCreateOpen(false)}>Annuleren</Button>
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      disabled={adminCreateLoading || !adminCreateData.firstName || !adminCreateData.lastName || !adminCreateData.email || adminCreateData.password.length < 8}
+                      onClick={async () => {
+                        setAdminCreateLoading(true);
+                        try {
+                          const res = await apiRequest('POST', '/api/admin/create-admin-user', adminCreateData);
+                          const json = await res.json();
+                          if (res.ok) {
+                            toast({ title: 'Account aangemaakt', description: json.message });
+                            setAdminCreateOpen(false);
+                            setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' });
+                          } else {
+                            toast({ title: 'Fout', description: json.message || 'Probeer opnieuw.', variant: 'destructive' });
+                          }
+                        } catch {
+                          toast({ title: 'Fout', description: 'Er is iets misgegaan.', variant: 'destructive' });
+                        } finally {
+                          setAdminCreateLoading(false);
+                        }
+                      }}
+                    >
+                      {adminCreateLoading ? 'Aanmaken...' : 'Account aanmaken & mail sturen'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-xl font-bold">Admin-accounts</h1>
+                  <p className="text-sm text-gray-500">Beheer toegang tot het admin-portaal</p>
+                </div>
+                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white gap-2" onClick={() => setAdminCreateOpen(true)}>
+                  <UserPlus className="h-4 w-4" />
+                  Nieuw admin-account
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold">Huidige admin-gebruikers</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {(() => {
+                    const adminUsers = (allUsers as any[] || []).filter((u: any) => u.role === 'admin');
+                    if (adminUsers.length === 0) {
+                      return <div className="p-8 text-center text-gray-400 text-sm">Geen admin-gebruikers gevonden.</div>;
+                    }
+                    return (
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">E-mail</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Rol</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {adminUsers.map((u: any) => (
+                            <tr key={u.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 font-medium text-gray-900">{u.firstName} {u.lastName}</td>
+                              <td className="px-4 py-3 text-gray-500">{u.email}</td>
+                              <td className="px-4 py-3 hidden md:table-cell">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Admin</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
             </div>
 
           ) : (
