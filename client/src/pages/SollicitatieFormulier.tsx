@@ -32,7 +32,7 @@ interface IntakeCandidate {
 
 const formSchema = z.object({
   interviewer: z.string().min(1, "Selecteer een interviewer"),
-  functionType: z.enum(["horecamedewerker", "chef", "housekeeping", "frontoffice"]),
+  functionType: z.enum(["horecamedewerker", "chef", "housekeeping", "frontoffice", "logistiek"]),
 
   firstName: z.string().min(1, "Voornaam is verplicht"),
   lastName: z.string().min(1, "Achternaam is verplicht"),
@@ -92,6 +92,31 @@ const formSchema = z.object({
   chefStartDate: z.string().optional(),
   chefProfessioneleUitstraling: z.number().min(1).max(5).optional(),
 
+  logLicenseB: z.enum(["ja", "nee"]).optional(),
+  logLicenseCCE: z.enum(["ja", "nee"]).optional(),
+  logHeftruckCert: z.string().optional(),
+  logVCA: z.string().optional(),
+  logOtherCertificates: z.string().optional(),
+  logExperience: z.string().optional(),
+  logWorkEnvironments: z.array(z.string()).default([]),
+  logScanEquipment: z.enum(["ja", "nee"]).optional(),
+  logPhysicalLoad: z.string().optional(),
+  logWorkStyle: z.string().optional(),
+  logOtherJob: z.string().optional(),
+  logReference: z.enum(["ja", "nee"]).optional(),
+  logReferenceContact: z.string().optional(),
+  logReferencePhone: z.string().optional(),
+  logTransport: z.array(z.string()).default([]),
+  logMaxTravelTime: z.string().optional(),
+  logWorkClothing: z.array(z.string()).default([]),
+  logAvailableHours: z.string().optional(),
+  logAvailableFrom: z.string().optional(),
+  logPreferredDays: z.array(z.string()).default([]),
+  logPreferredTimes: z.array(z.string()).default([]),
+  logNightShifts: z.string().optional(),
+  logReliabilityImpression: z.string().optional(),
+  logPhysicalImpression: z.string().optional(),
+
   assessmentRating: z.string().optional(),
   experienceLevel: z.string().optional(),
   appearance: z.string().optional(),
@@ -112,12 +137,14 @@ const functionTypes = [
   { value: "chef", label: "Chef" },
   { value: "housekeeping", label: "Housekeeping" },
   { value: "frontoffice", label: "Front-office" },
+  { value: "logistiek", label: "Logistiek" },
 ];
 
 const sections = [
   { id: "start", title: "Start", icon: User },
   { id: "basic", title: "Basisinformatie", icon: User },
   { id: "background", title: "Achtergrond", icon: Briefcase },
+  { id: "certificates", title: "Certificaten & Rijbewijzen", icon: Star },
   { id: "experience", title: "Ervaring & Vaardigheden", icon: Star },
   { id: "practical", title: "Praktische zaken", icon: Briefcase },
   { id: "availability", title: "Beschikbaarheid", icon: Calendar },
@@ -171,6 +198,11 @@ export default function SollicitatieFormulier() {
       chefKitchenTypes: [],
       chefDiplomas: [],
       chefClothing: [],
+      logWorkEnvironments: [],
+      logTransport: [],
+      logWorkClothing: [],
+      logPreferredDays: [],
+      logPreferredTimes: [],
     },
   });
 
@@ -195,27 +227,34 @@ export default function SollicitatieFormulier() {
       .finally(() => setIntakeCandidatesLoading(false));
   }, [watchedFunctionType]);
 
-  const hkSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Housekeeping ervaring", "Beschikbaarheid & vervoer", "Tags", "Beoordeling", "Afronden"];
-  const chefSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Hard skills en ervaring", "Beschikbaarheid & vervoer", "Kleding", "Tags & Beoordeling", "Afronden"];
+  const isLogistiek = watchedFunctionType === "logistiek";
+  const totalDisplayDots = isLogistiek ? 9 : 8;
+  const displayDotIndex = isLogistiek ? currentSection : (currentSection <= 2 ? currentSection : currentSection - 1);
+
+  const hkSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "", "Housekeeping ervaring", "Beschikbaarheid & vervoer", "Tags", "Beoordeling", "Afronden"];
+  const chefSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "", "Hard skills en ervaring", "Beschikbaarheid & vervoer", "Kleding", "Tags & Beoordeling", "Afronden"];
+  const logistiekSectionTitles = ["Start", "Basisinformatie", "Achtergrond", "Certificaten & Rijbewijzen", "Ervaring & Vaardigheden", "Praktische zaken", "Beschikbaarheid", "Beoordeling", "Afronden"];
   const getSectionTitle = (idx: number) => {
-    if (watchedFunctionType === "housekeeping") return hkSectionTitles[idx] ?? sections[idx].title;
-    if (watchedFunctionType === "chef") return chefSectionTitles[idx] ?? sections[idx].title;
+    if (watchedFunctionType === "housekeeping") return hkSectionTitles[idx] || sections[idx].title;
+    if (watchedFunctionType === "chef") return chefSectionTitles[idx] || sections[idx].title;
+    if (watchedFunctionType === "logistiek") return logistiekSectionTitles[idx] ?? sections[idx].title;
     return sections[idx].title;
   };
 
-  const section3ScoreFields: Record<string, string[]> = {
+  const section4ScoreFields: Record<string, string[]> = {
     horecamedewerker: ["serviceSkills", "barSkills", "dinerSkills"],
-    housekeeping: ["hkBetrouwbaarheid", "hkCommunicatie", "hkRepresentativiteit"],
+    housekeeping: [],
     chef: [],
+    logistiek: [],
   };
-  const section6ScoreFields = ["communicationSkills", "overallImpression", "assessmentRating", "chefProfessioneleUitstraling"];
+  const section7ScoreFields = ["communicationSkills", "overallImpression", "assessmentRating", "chefProfessioneleUitstraling"];
 
   const handleNext = () => {
     if (currentSection < sections.length - 1) {
       const functionType = watch("functionType") as string | undefined;
 
-      if (currentSection === 3 && functionType) {
-        const fieldsToCheck = section3ScoreFields[functionType] || [];
+      if (currentSection === 4 && functionType) {
+        const fieldsToCheck = section4ScoreFields[functionType] || [];
         const missing = fieldsToCheck.filter(f => {
           const val = (watch as any)(f);
           return val === undefined || val === null || val === "" || val === 0;
@@ -233,8 +272,8 @@ export default function SollicitatieFormulier() {
         }
       }
 
-      if (currentSection === 6) {
-        const fieldsToCheck = section6ScoreFields.filter(f => {
+      if (currentSection === 7) {
+        const fieldsToCheck = section7ScoreFields.filter(f => {
           if (f === "chefProfessioneleUitstraling" && functionType !== "chef") return false;
           return true;
         });
@@ -256,14 +295,18 @@ export default function SollicitatieFormulier() {
       }
 
       setScoreErrors([]);
-      setCurrentSection(currentSection + 1);
+      const next = currentSection + 1;
+      const skip3 = !isLogistiek && next === 3;
+      setCurrentSection(skip3 ? 4 : next);
       window.scrollTo(0, 0);
     }
   };
 
   const handlePrev = () => {
     if (currentSection > 0) {
-      setCurrentSection(currentSection - 1);
+      const prev = currentSection - 1;
+      const skip3 = !isLogistiek && prev === 3;
+      setCurrentSection(skip3 ? 2 : prev);
       setScoreErrors([]);
       window.scrollTo(0, 0);
     }
@@ -301,9 +344,9 @@ export default function SollicitatieFormulier() {
         description: `Ontbrekend: ${labels.join(", ")}`,
         variant: "destructive",
       });
-      const sec3Fields = ["serviceSkills", "barSkills", "dinerSkills", "hkBetrouwbaarheid", "hkCommunicatie", "hkRepresentativiteit"];
-      const hasSec3Missing = missing.some(f => sec3Fields.includes(f));
-      setCurrentSection(hasSec3Missing ? 3 : 6);
+      const sec4Fields = ["serviceSkills", "barSkills", "dinerSkills"];
+      const hasSec4Missing = missing.some(f => sec4Fields.includes(f));
+      setCurrentSection(hasSec4Missing ? 4 : 7);
       window.scrollTo(0, 0);
       return;
     }
@@ -339,6 +382,8 @@ export default function SollicitatieFormulier() {
       setIsSubmitting(false);
     }
   };
+
+  
 
   const toggleArrayValue = (field: keyof FormData, value: string) => {
     const currentValues = watch(field) as string[];
@@ -475,17 +520,17 @@ export default function SollicitatieFormulier() {
             <span className="text-base font-semibold tracking-wide">Sollicitatieformulier</span>
           </div>
           <span className="text-purple-200 text-sm font-medium">
-            {currentSection + 1} / {sections.length}
+            {displayDotIndex + 1} / {totalDisplayDots}
           </span>
         </div>
 
         {/* Step dots */}
         <div className="max-w-5xl mx-auto px-6 pb-3 flex items-center gap-2">
-          {sections.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2 flex-1">
+          {Array.from({ length: totalDisplayDots }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2 flex-1">
               <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                i < currentSection ? "bg-green-400" :
-                i === currentSection ? "bg-white" :
+                i < displayDotIndex ? "bg-green-400" :
+                i === displayDotIndex ? "bg-white" :
                 "bg-white/20"
               }`} />
             </div>
@@ -751,8 +796,214 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 3: ERVARING (Housekeeping) ═══ */}
-            {currentSection === 3 && watchedFunctionType === "housekeeping" && (
+            {/* ═══ SECTIE 3: CERTIFICATEN & RIJBEWIJZEN (Logistiek) ═══ */}
+            {currentSection === 3 && isLogistiek && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Rijbewijs B</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[{ v: "ja", l: "Ja" }, { v: "nee", l: "Nee" }].map(o => (
+                        <RadioCard key={o.v} value={o.v} currentValue={watch("logLicenseB")} onSelect={(v) => setValue("logLicenseB", v as any)} id={`logb-${o.v}`}>{o.l}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Rijbewijs C / CE</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[{ v: "ja", l: "Ja" }, { v: "nee", l: "Nee" }].map(o => (
+                        <RadioCard key={o.v} value={o.v} currentValue={watch("logLicenseCCE")} onSelect={(v) => setValue("logLicenseCCE", v as any)} id={`logcce-${o.v}`}>{o.l}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Heftruck certificaat</Label>
+                    <div className="space-y-2.5">
+                      {["Geen", "Intern certifcaat", "Officieel certificaat"].map(opt => (
+                        <RadioCard key={opt} value={opt} currentValue={watch("logHeftruckCert")} onSelect={(v) => setValue("logHeftruckCert", v)} id={`logheft-${opt}`}>{opt}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">VCA certificaat</Label>
+                    <div className="space-y-2.5">
+                      {["Geen", "VCA-basis", "VCA-VOL"].map(opt => (
+                        <RadioCard key={opt} value={opt} currentValue={watch("logVCA")} onSelect={(v) => setValue("logVCA", v)} id={`logvca-${opt}`}>{opt}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Andere certificaten of diploma's</Label>
+                    <Textarea {...register("logOtherCertificates")} placeholder="bijv. ADR, HACCP, lassen..." className="min-h-[100px] text-base rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ SECTIE 4: ERVARING & VAARDIGHEDEN (Logistiek) ═══ */}
+            {currentSection === 4 && isLogistiek && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Logistieke werkervaring *</Label>
+                    <div className="space-y-2.5">
+                      {["Geen ervaring", "< 6 maanden", "6–12 maanden", "1–2 jaar", "2–3 jaar", "3–5 jaar", "5+ jaar"].map(opt => (
+                        <RadioCard key={opt} value={opt} currentValue={watch("logExperience")} onSelect={(v) => setValue("logExperience", v)} id={`logexp-${opt}`}>{opt}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Type werkomgeving</Label>
+                    <div className="space-y-2.5">
+                      {["Distributiecentrum", "Magazijn", "E-commerce fulfillment", "Productielijn", "Koeriers / last-mile", "Haven / terminal", "Anders"].map(opt => (
+                        <CheckCard key={opt} id={`logenv-${opt}`} checked={(watch("logWorkEnvironments") || []).includes(opt)} onToggle={() => toggleArrayValue("logWorkEnvironments", opt)}>{opt}</CheckCard>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Scanapparatuur / RF-scanner</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[{ v: "ja", l: "Ja" }, { v: "nee", l: "Nee" }].map(o => (
+                        <RadioCard key={o.v} value={o.v} currentValue={watch("logScanEquipment")} onSelect={(v) => setValue("logScanEquipment", v as any)} id={`logscan-${o.v}`}>{o.l}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Fysieke belastbaarheid</Label>
+                    <div className="space-y-2.5">
+                      {["Licht (< 10 kg)", "Gemiddeld (10–25 kg)", "Zwaar (25+ kg)"].map(opt => (
+                        <RadioCard key={opt} value={opt} currentValue={watch("logPhysicalLoad")} onSelect={(v) => setValue("logPhysicalLoad", v)} id={`logphys-${opt}`}>{opt}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Zelfstandig of in team</Label>
+                    <div className="space-y-2.5">
+                      {["Zelfstandig", "In teamverband", "Beide"].map(opt => (
+                        <RadioCard key={opt} value={opt} currentValue={watch("logWorkStyle")} onSelect={(v) => setValue("logWorkStyle", v)} id={`logstyle-${opt}`}>{opt}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Andere bijbaan?</Label>
+                    <Input {...register("logOtherJob")} placeholder="Zo ja, welke?" className="h-14 text-base rounded-xl" />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Referentie laatste werkgever beschikbaar?</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[{ v: "ja", l: "Ja" }, { v: "nee", l: "Nee" }].map(o => (
+                        <RadioCard key={o.v} value={o.v} currentValue={watch("logReference")} onSelect={(v) => setValue("logReference", v as any)} id={`logref-${o.v}`}>{o.l}</RadioCard>
+                      ))}
+                    </div>
+                    {watch("logReference") === "ja" && (
+                      <div className="space-y-2 pt-1">
+                        <Input {...register("logReferenceContact")} placeholder="Naam referentie" className="h-12 text-base rounded-xl" />
+                        <Input {...register("logReferencePhone")} placeholder="Telefoonnummer referentie" className="h-12 text-base rounded-xl" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ SECTIE 5: PRAKTISCHE ZAKEN (Logistiek) ═══ */}
+            {currentSection === 5 && isLogistiek && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Eigen vervoer</Label>
+                    <div className="space-y-2.5">
+                      {["Auto", "Brommer / scooter", "Fiets", "OV", "Geen"].map(opt => (
+                        <CheckCard key={opt} id={`logtrans-${opt}`} checked={(watch("logTransport") || []).includes(opt)} onToggle={() => toggleArrayValue("logTransport", opt)}>{opt}</CheckCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Maximale reistijd (enkel)</Label>
+                    <div className="space-y-2.5">
+                      {["< 30 min", "30–45 min", "45–60 min", "60+ min"].map(opt => (
+                        <RadioCard key={opt} value={opt} currentValue={watch("logMaxTravelTime")} onSelect={(v) => setValue("logMaxTravelTime", v)} id={`logtravel-${opt}`}>{opt}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-gray-800">Werkkleding aanwezig</Label>
+                    <div className="space-y-2.5">
+                      {["Veiligheidsschoenen", "Werkbroek", "Reflecterend vest", "Handschoenen"].map(opt => (
+                        <CheckCard key={opt} id={`logcloth-${opt}`} checked={(watch("logWorkClothing") || []).includes(opt)} onToggle={() => toggleArrayValue("logWorkClothing", opt)}>{opt}</CheckCard>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ SECTIE 6: BESCHIKBAARHEID (Logistiek) ═══ */}
+            {currentSection === 6 && isLogistiek && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold">Beschikbaarheid per week (in uren)</Label>
+                    <Input {...register("logAvailableHours")} placeholder="bijv. 24–40 uur" className="h-14 text-base rounded-xl" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold">Beschikbaar vanaf</Label>
+                    <Input {...register("logAvailableFrom")} type="date" className="h-14 text-base rounded-xl" />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Voorkeur werkdagen</Label>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag", "N.v.t."].map(day => (
+                        <CheckCard key={day} id={`logday-${day}`} checked={(watch("logPreferredDays") || []).includes(day)} onToggle={() => toggleArrayValue("logPreferredDays", day)}>{day}</CheckCard>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Voorkeur dagdeel</Label>
+                    <div className="space-y-2.5">
+                      {["Ochtend (06:00–14:00)", "Middag (14:00–22:00)", "Nacht (22:00–06:00)", "Flexibel"].map(opt => (
+                        <CheckCard key={opt} id={`logtime-${opt}`} checked={(watch("logPreferredTimes") || []).includes(opt)} onToggle={() => toggleArrayValue("logPreferredTimes", opt)}>{opt}</CheckCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Nachtdiensten akkoord? *</Label>
+                    <div className="space-y-2.5">
+                      {[{ v: "ja", l: "Ja, geen probleem" }, { v: "nee", l: "Nee, liever niet" }, { v: "soms", l: "Incidenteel / soms" }].map(o => (
+                        <RadioCard key={o.v} value={o.v} currentValue={watch("logNightShifts")} onSelect={(v) => setValue("logNightShifts", v)} id={`lognight-${o.v}`}>{o.l}</RadioCard>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ SECTIE 4: ERVARING (Housekeeping) ═══ */}
+            {currentSection === 4 && watchedFunctionType === "housekeeping" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -808,8 +1059,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 3: ERVARING (Chef) ═══ */}
-            {currentSection === 3 && watchedFunctionType === "chef" && (
+            {/* ═══ SECTIE 4: ERVARING (Chef) ═══ */}
+            {currentSection === 4 && watchedFunctionType === "chef" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-3">
@@ -871,8 +1122,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 3: ERVARING (Horeca / Front-office) ═══ */}
-            {currentSection === 3 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && (
+            {/* ═══ SECTIE 4: ERVARING (Horeca / Front-office) ═══ */}
+            {currentSection === 4 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && !isLogistiek && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -989,8 +1240,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 4: PRAKTISCH (Housekeeping) ═══ */}
-            {currentSection === 4 && watchedFunctionType === "housekeeping" && (
+            {/* ═══ SECTIE 5: PRAKTISCH (Housekeeping) ═══ */}
+            {currentSection === 5 && watchedFunctionType === "housekeeping" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -1034,8 +1285,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 4: PRAKTISCH (Chef) ═══ */}
-            {currentSection === 4 && watchedFunctionType === "chef" && (
+            {/* ═══ SECTIE 5: PRAKTISCH (Chef) ═══ */}
+            {currentSection === 5 && watchedFunctionType === "chef" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -1084,8 +1335,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 4: PRAKTISCH (Horeca / Front-office) ═══ */}
-            {currentSection === 4 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && (
+            {/* ═══ SECTIE 5: PRAKTISCH (Horeca / Front-office) ═══ */}
+            {currentSection === 5 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && !isLogistiek && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-3">
@@ -1133,8 +1384,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 5: BESCHIKBAARHEID (Housekeeping: Tags) ═══ */}
-            {currentSection === 5 && watchedFunctionType === "housekeeping" && (
+            {/* ═══ SECTIE 6: BESCHIKBAARHEID (Housekeeping: Tags) ═══ */}
+            {currentSection === 6 && watchedFunctionType === "housekeeping" && (
               <>
                 <p className="text-sm text-gray-500 bg-purple-50 border border-purple-100 rounded-xl px-5 py-3">
                   Selecteer per categorie welke score van toepassing is op basis van het gesprek.
@@ -1188,8 +1439,8 @@ export default function SollicitatieFormulier() {
               </>
             )}
 
-            {/* ═══ SECTIE 5: KLEDING (Chef) ═══ */}
-            {currentSection === 5 && watchedFunctionType === "chef" && (
+            {/* ═══ SECTIE 6: KLEDING (Chef) ═══ */}
+            {currentSection === 6 && watchedFunctionType === "chef" && (
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Beschikt de chef over de juiste kleding?</Label>
                 <div className="grid grid-cols-2 gap-3">
@@ -1202,8 +1453,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 5: BESCHIKBAARHEID (Horeca / Front-office) ═══ */}
-            {currentSection === 5 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && (
+            {/* ═══ SECTIE 6: BESCHIKBAARHEID (Horeca / Front-office) ═══ */}
+            {currentSection === 6 && watchedFunctionType !== "housekeeping" && watchedFunctionType !== "chef" && !isLogistiek && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -1238,8 +1489,8 @@ export default function SollicitatieFormulier() {
               </div>
             )}
 
-            {/* ═══ SECTIE 6: BEOORDELING ═══ */}
-            {currentSection === 6 && (
+            {/* ═══ SECTIE 7: BEOORDELING ═══ */}
+            {currentSection === 7 && (
               <div className="space-y-8">
                 {watchedFunctionType === "chef" && (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1357,11 +1608,45 @@ export default function SollicitatieFormulier() {
                     </div>
                   </div>
                 )}
+
+                {isLogistiek && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <Label className="text-base font-semibold">Betrouwbaarheidsindruk</Label>
+                      <div className="space-y-2.5">
+                        {[
+                          { value: "stipt_serieus", label: "Stipt en serieus", emoji: "🟢" },
+                          { value: "twijfelachtig", label: "Twijfelachtig", emoji: "🟡" },
+                          { value: "zorgelijk", label: "Zorgelijk", emoji: "🔴" },
+                        ].map(o => (
+                          <RadioCard key={o.value} value={o.value} currentValue={watch("logReliabilityImpression")} onSelect={(v) => setValue("logReliabilityImpression", v)} id={`logrel-${o.value}`}>
+                            {o.emoji} {o.label}
+                          </RadioCard>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-base font-semibold">Fysieke indruk</Label>
+                      <div className="space-y-2.5">
+                        {[
+                          { value: "fit_sterk", label: "Fit en sterk", emoji: "💪" },
+                          { value: "gemiddeld", label: "Gemiddeld", emoji: "➡️" },
+                          { value: "fragiel", label: "Fragiel", emoji: "⚠️" },
+                        ].map(o => (
+                          <RadioCard key={o.value} value={o.value} currentValue={watch("logPhysicalImpression")} onSelect={(v) => setValue("logPhysicalImpression", v)} id={`logphysimp-${o.value}`}>
+                            {o.emoji} {o.label}
+                          </RadioCard>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* ═══ SECTIE 7: AFRONDEN ═══ */}
-            {currentSection === 7 && (
+            {/* ═══ SECTIE 8: AFRONDEN ═══ */}
+            {currentSection === 8 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <Label className="text-base font-semibold">Afgesproken Salaris *</Label>
@@ -1433,13 +1718,13 @@ export default function SollicitatieFormulier() {
             </Button>
 
             <div className="flex items-center gap-2">
-              {sections.map((_, i) => (
+              {Array.from({ length: totalDisplayDots }).map((_, i) => (
                 <div
                   key={i}
                   className={`rounded-full transition-all duration-200 ${
-                    i === currentSection
+                    i === displayDotIndex
                       ? "w-6 h-3 bg-purple-600"
-                      : i < currentSection
+                      : i < displayDotIndex
                       ? "w-3 h-3 bg-green-400"
                       : "w-3 h-3 bg-gray-300"
                   }`}

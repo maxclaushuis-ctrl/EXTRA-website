@@ -3985,7 +3985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nationality: z.string().optional().nullable(),
         city: z.string().optional().nullable(),
         language: z.string().optional().nullable(),
-        functionType: z.enum(["housekeeping", "horecamedewerker", "chef", "frontoffice"]),
+        functionType: z.enum(["housekeeping", "horecamedewerker", "chef", "frontoffice", "logistiek"]),
         horecaExperience: z.string().optional().nullable(),
         needsTwv: z.boolean().optional().default(false),
         interviewDate: z.string().optional().nullable(),

@@ -57,6 +57,7 @@ const FUNCTIONS = [
   { value: "housekeeping", labelNL: "Housekeeping", labelEN: "Housekeeping" },
   { value: "frontoffice", labelNL: "Front-office / receptie", labelEN: "Front-office / reception" },
   { value: "chef", labelNL: "Chef / keuken (kok, souschef, zelfstandig werkend kok)", labelEN: "Chef / kitchen (cook, sous chef)" },
+  { value: "logistiek", labelNL: "Logistiek (magazijn, distributie, fulfillment)", labelEN: "Logistics (warehouse, distribution, fulfillment)" },
 ];
 
 const EXPERIENCE_OPTIONS_NL = [
@@ -135,6 +136,7 @@ interface ExperienceThresholds {
   horecamedewerker: string[];
   frontoffice: string[];
   chef: string[];
+  logistiek: string[];
 }
 
 const NL_THRESHOLDS: ExperienceThresholds = {
@@ -142,6 +144,7 @@ const NL_THRESHOLDS: ExperienceThresholds = {
   horecamedewerker: ["6to12", "1to3", "3plus"],
   frontoffice: ["1to3", "3plus"],
   chef: ["1to3", "3plus"],
+  logistiek: ["1to3", "3plus"],
 };
 
 const EU_THRESHOLDS: ExperienceThresholds = {
@@ -149,6 +152,7 @@ const EU_THRESHOLDS: ExperienceThresholds = {
   horecamedewerker: ["1to3", "3plus"],
   frontoffice: ["1to3", "3plus"],
   chef: ["1to3", "3plus"],
+  logistiek: ["1to3", "3plus"],
 };
 
 const NON_EU_THRESHOLDS: ExperienceThresholds = {
@@ -156,6 +160,7 @@ const NON_EU_THRESHOLDS: ExperienceThresholds = {
   horecamedewerker: ["1to3", "3plus"],
   frontoffice: ["1to3", "3plus"],
   chef: ["1to3", "3plus"],
+  logistiek: ["1to3", "3plus"],
 };
 
 function XPatternBg({ count = 4, opacity = 0.08 }: { count?: number; opacity?: number }) {

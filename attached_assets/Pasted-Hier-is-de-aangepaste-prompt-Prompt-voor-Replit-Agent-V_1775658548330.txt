@@ -1,0 +1,85 @@
+Hier is de aangepaste prompt:
+
+---
+
+**Prompt voor Replit Agent:**
+
+Voeg de functie **"Logistiek"** toe aan het systeem. Dit zijn alle plekken waar aanpassingen nodig zijn:
+
+---
+
+**1. `/sollicitatieformulier` — Stap 1 (Voor welke functie?)**
+Voeg "Logistiek" toe als optie naast de bestaande functies (Horecamedewerker, Chef, Housekeeping, Front-office).
+
+Wanneer "Logistiek" wordt geselecteerd, doorloopt de interviewer **dezelfde stap 1 en stap 2** (Basisinformatie) als bij alle andere functies. Vanaf **stap 3** worden de logistiek-specifieke stappen geladen in plaats van de horeca-stappen. De stappen voor Logistiek zijn:
+
+**Stap 3 — Achtergrond**
+- Taalvaardigheid (checkboxes, meerdere mogelijk): Nederlands, Engels, Pools, Roemeens, Turks, Duits
+- Tewerkstellingsvergunning nodig? (radio): Ja / Nee
+- Nationaliteit (tekstveld, placeholder: "Nederlands")
+
+**Stap 4 — Certificaten & Rijbewijzen**
+Twee kolommen:
+- Rijbewijs B (radio): Ja / Nee
+- Rijbewijs C/CE vrachtwagen (radio): Ja / Nee
+- Heftruck certificaat (radio): Geen / Intern / Officieel (VCA)
+- VCA-basis of VOL (radio): Geen / VCA-basis / VCA-VOL
+- Andere certificaten (tekstveld, placeholder: "bijv. ADR, code 95...")
+
+**Stap 5 — Ervaring & Vaardigheden**
+Twee kolommen:
+- Logistieke ervaring* (radio, verplicht): Geen ervaring / <6 maanden / 6–12 maanden / 1–2 jaar / 2–5 jaar / 5+ jaar
+- Type werkomgeving (checkboxes, meerdere mogelijk): Magazijn / Distributiecentrum / Koelcel & vriesvak / Productielijn / Buitendienst & bezorging / E-commerce fulfilment
+- Scanapparatuur gebruikt? (radio): Ja / Nee
+- Fysieke belastbaarheid (radio): Tot 15 kg / Tot 23 kg / 23 kg of meer / Geen voorkeur
+- Zelfstandig werken? (radio): Ja, zelfstandig / Liever in team / Maakt niet uit
+- Andere bijbaan? (tekstveld, placeholder: "Zo ja, vul de baan in")
+- Referentie laatste werkgever (radio): Ja / Nee — indien Ja: toon twee extra tekstvelden: "Naam contactpersoon" en "Telefoonnummer / e-mail contactpersoon"
+
+**Stap 6 — Praktische zaken**
+Twee kolommen:
+- Eigen vervoer (checkboxes, meerdere mogelijk): Fiets / OV / Auto / Scooter & motor
+- Max. reistijd naar werk (radio): Tot 30 min / Tot 45 min / Tot 60 min / 60 min of meer
+- Werkkleding aanwezig (checkboxes, meerdere mogelijk): Veiligheidsschoenen (S1/S2/S3) / Werkhandschoenen / Koelcel kleding
+
+**Stap 7 — Beschikbaarheid**
+Twee kolommen:
+- Beschikbaarheid per week in uren (tekstveld, placeholder: "bijv. 16–24 uur")
+- Beschikbaar vanaf (datumveld)
+- Voorkeur werkdagen (checkboxes): Maandag / Dinsdag / Woensdag / Donderdag / Vrijdag / Zaterdag / Zondag / N.v.t.
+- Voorkeur dagdeel (checkboxes): Ochtend / Middag / Avond / Nacht / N.v.t.
+- Beschikbaar voor nachtdiensten?* (radio, verplicht): Ja / Nee / Soms
+
+**Stap 8 — Beoordeling**
+Twee kolommen:
+- Beoordeling* (radio, verplicht): ✨ Topper / ✅ Goede indruk / ▶️ Middelmatig
+- Betrouwbaarheidsindruk (radio): 🟢 Stipt en serieus / 🟡 Twijfelachtig / 🔴 Zorgelijk
+- Fysieke indruk (radio): 💪 Fit en sterk / ➡️ Gemiddeld / ⚠️ Fragiel
+- Ervaring indruk (radio): 🏆 Veel ervaring / 🤔 Beperkte ervaring / 🗂️ Geen ervaring
+- Houding (radio): 😀 Super enthousiast / ✋ Spontaan / 😊 Verlegen / 🙂 Ongeïnteresseerd
+- Communicatieve vaardigheden* (sterrenbeoordeling 1–5, verplicht) — label links: "❌ Gesloten", rechts: "⭐ Super vlot"
+- Algehele indruk* (sterrenbeoordeling 1–5, verplicht) — label links: "❌ Onverzorgd", rechts: "⭐ Representatief"
+- Afgesproken salaris* (radio, verplicht): 15 jaar: €8,- / 16 jaar: €9,- / 17 jaar: €10,- / 18 jaar: €11,- / 19 jaar: €12,50 / 20 jaar: €14,- / 21 jaar: €17,29
+- Overige opmerkingen (textarea, placeholder: "Vul hier eventuele opmerkingen in...")
+- Notitie onderaan: "Let op: Na het versturen worden de gegevens direct gekoppeld aan het sollicitanten overzicht in het dashboard."
+
+Het formulier moet dezelfde huisstijl gebruiken als de bestaande sollicitatieformulieren (paars header per stap, progress bar bovenaan, Vorige/Volgende navigatie, dot-indicators).
+
+---
+
+**2. Prefill vanuit `/aanmelden`**
+Als een kandidaat zich heeft aangemeld via de website (`/aanmelden`) en daarna doorverwezen wordt naar het sollicitatieformulier, moeten de velden in **stap 2 (Basisinformatie)** automatisch worden ingevuld met de gegevens uit het aanmeldformulier: Voornaam, Achternaam, Telefoonnummer, E-mailadres, Geboortedatum, Woonplaats, Kanaal. Gebruik hiervoor de bestaande prefill-methode die al geldt voor de andere functies. Pas dit ook toe voor "Logistiek".
+
+---
+
+**3. `/aanmelden` — publiek aanmeldformulier op de website**
+Voeg "Logistiek" toe als keuzeoptie bij het veld "Voor welke functie solliciteer je?" naast de bestaande opties.
+
+---
+
+**4. Subtabblad "Sollicitanten" in het dashboard**
+Voeg "Logistiek" toe als filteroptie/tag in het sollicitanten-overzicht, consistent met hoe de andere functies worden weergegeven. Zorg dat ingediende logistiek-formulieren zichtbaar zijn onder dit filter.
+
+---
+
+Zorg dat alle nieuwe logistiek-velden worden opgeslagen in Supabase in dezelfde structuur als de bestaande sollicitant-records, met `functie: "Logistiek"` zodat filtering correct werkt.

@@ -91,7 +91,9 @@ function getFunctionBadgeColor(functionType: string): string {
     case 'horecamedewerker': return 'bg-orange-100 text-orange-800 border-orange-200';
     case 'chef': return 'bg-gray-100 text-gray-800 border-gray-200';
     case 'receptie':
+    case 'frontoffice':
     case 'front-office': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'logistiek': return 'bg-green-100 text-green-800 border-green-200';
     default: return 'bg-gray-100 text-gray-600 border-gray-200';
   }
 }
@@ -556,6 +558,7 @@ export default function DashboardMockup() {
     housekeeping: activeApplications.filter(a => a.functionType === 'housekeeping').length,
     chef: activeApplications.filter(a => a.functionType === 'chef').length,
     frontoffice: activeApplications.filter(a => a.functionType === 'frontoffice' || a.functionType === 'front-office').length,
+    logistiek: activeApplications.filter(a => a.functionType === 'logistiek').length,
   }), [activeApplications, rejectedApplications]);
 
   const pagedApplications = useMemo(
@@ -1566,6 +1569,7 @@ export default function DashboardMockup() {
                       <SelectItem value="horecamedewerker">Horeca</SelectItem>
                       <SelectItem value="chef">Chef / Kok</SelectItem>
                       <SelectItem value="frontoffice">Front-office</SelectItem>
+                      <SelectItem value="logistiek">Logistiek</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={kandidatenTaalFilter} onValueChange={setKandidatenTaalFilter}>
@@ -2390,6 +2394,7 @@ export default function DashboardMockup() {
                   { val: 'chef',            label: 'Chef',            count: appCounts.chef,            active: 'bg-gray-700 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
                   { val: 'housekeeping',    label: 'Housekeeping',    count: appCounts.housekeeping,    active: 'bg-cyan-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
                   { val: 'frontoffice',     label: 'Front-office',    count: appCounts.frontoffice,     active: 'bg-blue-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { val: 'logistiek',       label: 'Logistiek',       count: appCounts.logistiek,       active: 'bg-green-600 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
                   { val: 'afgewezen',       label: 'Afgewezen',       count: appCounts.afgewezen,       active: 'bg-red-500 text-white',    inactive: 'bg-white border border-red-200 text-red-600' },
                 ].map(({ val, label, count, active, inactive }) => (
                   <button
@@ -2469,6 +2474,7 @@ export default function DashboardMockup() {
                 const fnLabels: Record<string, string> = {
                   horecamedewerker: 'Horeca', housekeeping: 'Housekeeping', chef: 'Chef',
                   frontoffice: 'Front-office', 'front-office': 'Front-office',
+                  logistiek: 'Logistiek',
                 };
 
                 const ActionCell = ({ app }: { app: any }) => (
@@ -2913,6 +2919,98 @@ export default function DashboardMockup() {
                                 <Td>{fd.hkCommunicatie ? `${fd.hkCommunicatie}/5` : '—'}</Td>
                                 <Td>{fd.hkRepresentativiteit ? `${fd.hkRepresentativiteit}/5` : '—'}</Td>
                                 <Td>{app.assessmentRating || '—'}</Td>
+                                <Td>{app.salaryScale || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.remarks || '—'}</Td>
+                                <ActionCell app={app} />
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent></Card>
+                    </div>
+                  </>
+                );
+
+                /* ---- LOGISTIEK tab ---- */
+                if (appTab === 'logistiek') return (
+                  <>
+                    <div className="block md:hidden space-y-2">
+                      {pagedApplications.map(app => <MobileCard key={app.id} app={app} />)}
+                    </div>
+                    <div className="hidden md:block">
+                    <Card><CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b text-left">
+                          <tr>
+                            <Th>Datum</Th>
+                            <Th>Wie</Th>
+                            <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
+                            <SortTh field="softskillsScore">Score</SortTh>
+                            <Th>Telefoon</Th>
+                            <Th>Taal</Th>
+                            <Th>TWV</Th>
+                            <Th>Woonplaats</Th>
+                            <Th>Leeftijd</Th>
+                            <Th>Nationaliteit</Th>
+                            <Th>Log. ervaring</Th>
+                            <Th>Werkomgeving</Th>
+                            <Th>Rijbewijs B</Th>
+                            <Th>Rijbewijs C/CE</Th>
+                            <Th>Heftruck</Th>
+                            <Th>VCA</Th>
+                            <Th>Scanner</Th>
+                            <Th>Fysieke belast.</Th>
+                            <Th>Vervoer</Th>
+                            <Th>Max. reistijd</Th>
+                            <Th>Beschikb. uren</Th>
+                            <Th>Nachtdiensten</Th>
+                            <Th>Beoordeling</Th>
+                            <Th>Houding</Th>
+                            <Th>Communicatie</Th>
+                            <Th>Alg. indruk</Th>
+                            <Th>Betrouwb. indruk</Th>
+                            <Th>Fysieke indruk</Th>
+                            <Th>Salaris</Th>
+                            <Th>Opmerkingen</Th>
+                            <Th></Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pagedApplications.map(app => {
+                            const fd = (app.formData || {}) as any;
+                            return (
+                              <tr key={app.id} className={rowClass(app)} onClick={() => { setSelectedApp(app); setAppDetailOpen(true); }}>
+                                <Td>{new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' })}</Td>
+                                <Td>{app.interviewer || '—'}</Td>
+                                <NameCell app={app} />
+                                <Td><ScoreCell score={app.softskillsScore} /></Td>
+                                <Td>{app.phone || '—'}</Td>
+                                <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
+                                <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
+                                <Td>{app.city || '—'}</Td>
+                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{fd.nationality || '—'}</Td>
+                                <Td>{fd.logExperience || '—'}</Td>
+                                <Td className="max-w-[120px] truncate">{fd.logWorkEnvironments ? (Array.isArray(fd.logWorkEnvironments) ? fd.logWorkEnvironments.join(', ') : fd.logWorkEnvironments) : '—'}</Td>
+                                <Td>{boolCell(fd.logLicenseB)}</Td>
+                                <Td>{boolCell(fd.logLicenseCCE)}</Td>
+                                <Td>{fd.logHeftruckCert || '—'}</Td>
+                                <Td>{fd.logVCA || '—'}</Td>
+                                <Td>{boolCell(fd.logScanEquipment)}</Td>
+                                <Td>{fd.logPhysicalLoad || '—'}</Td>
+                                <Td className="max-w-[100px] truncate">{fd.logTransport ? (Array.isArray(fd.logTransport) ? fd.logTransport.join(', ') : fd.logTransport) : '—'}</Td>
+                                <Td>{fd.logMaxTravelTime || '—'}</Td>
+                                <Td>{fd.logAvailableHours || '—'}</Td>
+                                <Td>{fd.logNightShifts || '—'}</Td>
+                                <Td>{app.assessmentRating || '—'}</Td>
+                                <Td>{fd.attitude || '—'}</Td>
+                                <Td>{fd.communicationSkills ? `${fd.communicationSkills}/5` : '—'}</Td>
+                                <Td>{fd.overallImpression ? `${fd.overallImpression}/5` : '—'}</Td>
+                                <Td>{fd.logReliabilityImpression || '—'}</Td>
+                                <Td>{fd.logPhysicalImpression || '—'}</Td>
                                 <Td>{app.salaryScale || '—'}</Td>
                                 <Td className="max-w-[120px] truncate">{fd.remarks || '—'}</Td>
                                 <ActionCell app={app} />
