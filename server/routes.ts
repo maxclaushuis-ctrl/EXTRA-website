@@ -70,11 +70,25 @@ async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName
   const ext = path.extname(originalName);
   const filename = `cv-${Date.now()}${ext}`;
   const client = getSupabaseAdmin();
+
+  // Zorg dat de bucket bestaat; maak hem aan als dat niet het geval is
+  const { data: buckets } = await client.storage.listBuckets();
+  const bucketExists = buckets?.some((b: { name: string }) => b.name === 'cvs');
+  if (!bucketExists) {
+    const { error: bucketErr } = await client.storage.createBucket('cvs', { public: false });
+    if (bucketErr && !bucketErr.message.includes('already exists')) {
+      throw new Error(`Supabase bucket aanmaken mislukt: ${bucketErr.message}`);
+    }
+  }
+
   const { error } = await client.storage.from('cvs').upload(filename, buffer, {
     contentType: mimetype,
     upsert: false,
   });
   if (error) throw new Error(`Supabase upload fout: ${error.message}`);
+
+  // Sla het pad op als interne referentie (niet de publieke URL, die afhankelijk is van bucket-policy)
+  // We genereren signed URLs on-the-fly bij het downloaden
   const { data } = client.storage.from('cvs').getPublicUrl(filename);
   return data.publicUrl;
 }
@@ -4891,6 +4905,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Haalt de Supabase storage-path op uit een opgeslagen publieke CV-URL.
+   * Voorbeeld: https://xxx.supabase.co/storage/v1/object/public/cvs/cv-123.docx
+   *         → cv-123.docx
+   */
+  function extractCvStoragePath(cvFilename: string): string | null {
+    const match = cvFilename.match(/\/storage\/v1\/object\/(?:public|sign|upload)\/cvs\/([^?#]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  /**
+   * CV downloaden — genereert een signed URL via de service-key zodat
+   * private buckets en gewijzigde bucket-policies geen probleem zijn.
+   */
   app.get("/api/admin/candidates/:id/cv", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -4899,9 +4927,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Geen CV gevonden" });
       }
       if (!candidate.cvFilename.startsWith('http')) {
-        return res.status(404).json({ message: "CV niet meer beschikbaar (lokale opslag vervangen door Supabase)" });
+        return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
-      return res.redirect(candidate.cvFilename);
+
+      const storagePath = extractCvStoragePath(candidate.cvFilename);
+      if (!storagePath) {
+        // Fallback: directe redirect naar opgeslagen URL
+        return res.redirect(candidate.cvFilename);
+      }
+
+      // Genereer signed URL (geldig 1 uur) — werkt ook voor private buckets
+      const { data, error } = await getSupabaseAdmin()
+        .storage.from('cvs')
+        .createSignedUrl(storagePath, 3600, { download: true });
+
+      if (error || !data?.signedUrl) {
+        console.error("Supabase signed URL fout:", error?.message);
+        // Fallback: probeer directe download via server-side proxy
+        const { data: fileBlob, error: dlErr } = await getSupabaseAdmin()
+          .storage.from('cvs').download(storagePath);
+        if (dlErr || !fileBlob) {
+          return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
+        }
+        const ext = storagePath.split('.').pop()?.toLowerCase() ?? 'docx';
+        const mimeType = ext === 'pdf' ? 'application/pdf'
+          : ext === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/octet-stream';
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${storagePath}"`);
+        return res.send(Buffer.from(await fileBlob.arrayBuffer()));
+      }
+
+      return res.redirect(data.signedUrl);
     } catch (error) {
       console.error("Error serving CV:", error);
       return res.status(500).json({ message: "Fout bij ophalen CV" });
@@ -4917,19 +4974,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Geen CV gevonden" });
       }
       if (!candidate.cvFilename.startsWith('http')) {
-        return res.status(404).json({ message: "CV niet meer beschikbaar (lokale opslag vervangen door Supabase)" });
+        return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
       const ext = candidate.cvFilename.includes('.') ? '.' + candidate.cvFilename.split('.').pop()!.split('?')[0].toLowerCase() : '';
       if (ext !== '.docx' && ext !== '.doc') {
         return res.status(400).json({ message: "Alleen Word-bestanden kunnen worden omgezet" });
       }
 
-      // Haal CV op vanuit Supabase URL
-      const cvResponse = await fetch(candidate.cvFilename);
-      if (!cvResponse.ok) {
-        return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
+      // Download via Supabase admin client (werkt voor publieke én private buckets)
+      const storagePath = extractCvStoragePath(candidate.cvFilename);
+      let cvBuffer: Buffer;
+
+      if (storagePath) {
+        const { data: fileBlob, error: dlErr } = await getSupabaseAdmin()
+          .storage.from('cvs').download(storagePath);
+        if (dlErr || !fileBlob) {
+          return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
+        }
+        cvBuffer = Buffer.from(await fileBlob.arrayBuffer());
+      } else {
+        // Fallback: probeer publieke URL
+        const cvResponse = await fetch(candidate.cvFilename);
+        if (!cvResponse.ok) {
+          return res.status(404).json({ message: "CV niet beschikbaar" });
+        }
+        cvBuffer = Buffer.from(await cvResponse.arrayBuffer());
       }
-      const cvBuffer = Buffer.from(await cvResponse.arrayBuffer());
 
       // Extract and convert docx to HTML using adm-zip
       const zip = new AdmZip(cvBuffer);
