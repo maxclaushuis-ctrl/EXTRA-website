@@ -6893,6 +6893,113 @@ ${posts.map(p => `  <url>
   });
   // ─────────────────────────────────────────────────────────────────────────
 
+  // ─── Indeed Apply webhook ────────────────────────────────────────────────
+  // Indeed stuurt POST naar deze URL wanneer iemand via Indeed solliciteert.
+  // Stel in je Indeed-werkgeversaccount in:
+  //   ATS URL: https://www.doehetextra.nl/api/indeed/apply
+  //   Requisition ID per vacature: horecamedewerker / housekeeping / chef / frontoffice / logistiek
+  app.post("/api/indeed/apply", async (req: Request, res: Response) => {
+    try {
+      // Indeed kan data sturen als JSON of als form-encoded veld genaamd `json`
+      let payload: any = req.body;
+      if (typeof payload === 'string') {
+        try { payload = JSON.parse(payload); } catch {}
+      }
+      // Sommige ATS-integraties sturen payload.json als string
+      if (payload && typeof payload.json === 'string') {
+        try { payload = JSON.parse(payload.json); } catch {}
+      }
+
+      const applicant = payload?.applicant || {};
+      const job       = payload?.job       || {};
+
+      // Naam splitsen
+      const fullName  = applicant.fullName || `${applicant.firstName || ''} ${applicant.lastName || ''}`.trim() || 'Onbekend';
+      const nameParts = fullName.trim().split(' ');
+      const firstName = nameParts[0] || 'Onbekend';
+      const lastName  = nameParts.slice(1).join(' ') || '';
+
+      const email     = applicant.email        || null;
+      const phone     = applicant.phoneNumber  || applicant.phone || null;
+
+      // Bepaal functie op basis van requisitionId of job title
+      const FUNCTION_MAP: Record<string, string> = {
+        horecamedewerker:  'horecamedewerker',
+        horeca:            'horecamedewerker',
+        housekeeping:      'housekeeping',
+        schoonmaak:        'housekeeping',
+        chef:              'chef',
+        kok:               'chef',
+        'front-office':    'frontoffice',
+        frontoffice:       'frontoffice',
+        receptie:          'frontoffice',
+        logistiek:         'logistiek',
+        magazijn:          'logistiek',
+        warehouse:         'logistiek',
+      };
+      const rawFn = (job.requisitionId || job.title || '').toLowerCase().trim();
+      let functionType = 'horecamedewerker'; // standaard
+      for (const [key, val] of Object.entries(FUNCTION_MAP)) {
+        if (rawFn.includes(key)) { functionType = val; break; }
+      }
+
+      // Opmerkingen — samengesteld uit beschikbare velden
+      const coverLetter = payload?.coverletter || payload?.coverLetter || '';
+      const resumeInfo  = payload?.resume?.fileName ? `CV bijlage: ${payload.resume.fileName}` : '';
+      const notes       = [
+        `Bron: Indeed Apply`,
+        job.title ? `Functie op Indeed: ${job.title}` : '',
+        job.requisitionId ? `Vacature-ID: ${job.requisitionId}` : '',
+        coverLetter ? `Motivatie: ${coverLetter}` : '',
+        resumeInfo,
+      ].filter(Boolean).join('\n');
+
+      // Kandidaat aanmaken
+      const candidate = await storage.createCandidate({
+        firstName,
+        lastName,
+        email,
+        phone,
+        functionType,
+        status:        'in_behandeling',
+        sourceChannel: 'Indeed',
+        notes,
+      } as any);
+
+      // Ook als applicatie opslaan zodat het in het dashboard verschijnt
+      await storage.createApplication({
+        candidateId:   candidate.id,
+        functionType,
+        firstName,
+        lastName,
+        email,
+        phone,
+        status:        'nieuw',
+        formData:      payload,
+        assessmentRating: null,
+      } as any);
+
+      console.log(`[Indeed] Nieuwe sollicitatie ontvangen: ${firstName} ${lastName} (${functionType})`);
+
+      // Indeed verwacht 200 OK terug; optioneel kun je een redirectURL meegeven
+      return res.status(200).json({
+        result: {
+          status: 'SUCCESS',
+          redirectURL: 'https://www.doehetextra.nl/bedankt',
+        },
+      });
+    } catch (error) {
+      console.error('[Indeed] Fout bij verwerken sollicitatie:', error);
+      return res.status(500).json({ message: 'Verwerking mislukt' });
+    }
+  });
+
+  // Eenvoudige test-endpoint om te controleren of de koppeling actief is
+  app.get("/api/indeed/apply", (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'EXTRA Indeed Apply endpoint actief', url: 'https://www.doehetextra.nl/api/indeed/apply' });
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Beveiligde CV-download route — alleen toegankelijk voor ingelogde admins
   app.get("/api/admin/files/cv/:filename", adminMiddleware, (req: Request, res: Response) => {
     const filename = req.params.filename;
