@@ -5407,17 +5407,13 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                       onClick={async () => {
                         setAdminCreateLoading(true);
                         try {
-                          const res = await apiRequest('POST', '/api/admin/create-admin-user', adminCreateData);
-                          const json = await res.json();
-                          if (res.ok) {
-                            toast({ title: 'Account aangemaakt', description: json.message });
-                            setAdminCreateOpen(false);
-                            setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' });
-                          } else {
-                            toast({ title: 'Fout', description: json.message || 'Probeer opnieuw.', variant: 'destructive' });
-                          }
-                        } catch {
-                          toast({ title: 'Fout', description: 'Er is iets misgegaan.', variant: 'destructive' });
+                          const json = await apiRequest('POST', '/api/admin/create-admin-user', adminCreateData) as any;
+                          toast({ title: 'Account aangemaakt', description: json.message });
+                          setAdminCreateOpen(false);
+                          setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' });
+                        } catch (err: any) {
+                          const msg = err?.data?.message || err?.message || 'Er is iets misgegaan.';
+                          toast({ title: 'Fout', description: msg, variant: 'destructive' });
                         } finally {
                           setAdminCreateLoading(false);
                         }
