@@ -283,6 +283,7 @@ export default function DashboardMockup() {
   const [twvNewLastName, setTwvNewLastName] = useState('');
   const [twvNewEmail, setTwvNewEmail] = useState('');
   const [twvNewNationality, setTwvNewNationality] = useState('');
+  const [twvNewFunctionType, setTwvNewFunctionType] = useState('horecamedewerker');
   // CSV import dialog
   const [twvImportOpen, setTwvImportOpen] = useState(false);
   const [twvImportResult, setTwvImportResult] = useState<{ imported: number; total: number; results: Array<{ email: string; status: string }> } | null>(null);
@@ -486,7 +487,7 @@ export default function DashboardMockup() {
   });
 
   const createAndAddTwvMutation = useMutation({
-    mutationFn: (data: { firstName: string; lastName: string; email?: string; nationality?: string; twvStatus: string; twvStartDate?: string; twvEndDate?: string; twvNotes?: string }) =>
+    mutationFn: (data: { firstName: string; lastName: string; functionType: string; email?: string; nationality?: string; twvStatus: string; twvStartDate?: string; twvEndDate?: string; twvNotes?: string }) =>
       apiRequest('POST', '/api/admin/twv/create-and-add', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/twv'] });
@@ -498,6 +499,7 @@ export default function DashboardMockup() {
       setTwvNewLastName('');
       setTwvNewEmail('');
       setTwvNewNationality('');
+      setTwvNewFunctionType('horecamedewerker');
       setTwvAddStatus('twv_verstrekt');
       setTwvAddStartDate('');
       setTwvAddEndDate('');
@@ -3231,7 +3233,7 @@ export default function DashboardMockup() {
                 if (!open) {
                   setTwvAddSearch(''); setTwvAddSelected(null);
                   setTwvAddMode('search');
-                  setTwvNewFirstName(''); setTwvNewLastName(''); setTwvNewEmail(''); setTwvNewNationality('');
+                  setTwvNewFirstName(''); setTwvNewLastName(''); setTwvNewEmail(''); setTwvNewNationality(''); setTwvNewFunctionType('horecamedewerker');
                   setTwvAddStatus('twv_verstrekt'); setTwvAddStartDate(''); setTwvAddEndDate(''); setTwvAddNotes('');
                 }
               }}>
@@ -3339,6 +3341,19 @@ export default function DashboardMockup() {
                           </div>
                         </div>
                         <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Functie *</label>
+                          <select
+                            className="w-full h-9 rounded-md border border-gray-200 px-3 text-sm bg-white"
+                            value={twvNewFunctionType}
+                            onChange={e => setTwvNewFunctionType(e.target.value)}
+                          >
+                            <option value="horecamedewerker">Horecamedewerker</option>
+                            <option value="chef">Chef</option>
+                            <option value="housekeeping">Housekeeping</option>
+                            <option value="frontoffice">Front office</option>
+                          </select>
+                        </div>
+                        <div>
                           <label className="text-xs font-medium text-gray-500 mb-1 block">E-mail (optioneel)</label>
                           <Input type="email" value={twvNewEmail} onChange={e => setTwvNewEmail(e.target.value)} placeholder="naam@voorbeeld.nl" className="h-9 text-sm" />
                         </div>
@@ -3409,6 +3424,7 @@ export default function DashboardMockup() {
                             createAndAddTwvMutation.mutate({
                               firstName: twvNewFirstName.trim(),
                               lastName: twvNewLastName.trim(),
+                              functionType: twvNewFunctionType,
                               email: twvNewEmail.trim() || undefined,
                               nationality: twvNewNationality.trim() || undefined,
                               twvStatus: twvAddStatus,

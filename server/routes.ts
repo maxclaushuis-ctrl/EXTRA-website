@@ -6000,11 +6000,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Nieuwe medewerker aanmaken en direct aan TWV toevoegen
   app.post("/api/admin/twv/create-and-add", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { firstName, lastName, email, nationality, twvStatus, twvStartDate, twvEndDate, twvNotes } = req.body;
+      const { firstName, lastName, functionType, email, nationality, twvStatus, twvStartDate, twvEndDate, twvNotes } = req.body;
       if (!firstName || !lastName) return res.status(400).json({ message: "Voornaam en achternaam zijn verplicht" });
+      if (!functionType) return res.status(400).json({ message: "Functie is verplicht" });
       const newCandidate = await storage.createCandidate({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        functionType: functionType as any,
         email: email?.trim() || null,
         nationality: nationality?.trim() || null,
         needsTwv: true,
