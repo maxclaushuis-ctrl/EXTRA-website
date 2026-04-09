@@ -4283,9 +4283,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           })();
         } else {
-          // Zonder CV: stuur alleen informatieve admin-mail zonder knoppen
+          // Zonder CV: stuur admin-mail alleen als de cv-reminder die nog niet al heeft verstuurd
+          // (de cv-reminder werkt als vangnet en verstuurt de admin-mail ook — vermijd dubbele mail)
           (async () => {
             try {
+              const freshCandidate = await storage.getCandidate(updated.id);
+              const alreadyNotifiedViaCvReminder = !!(freshCandidate as any)?.cvReminderSentAt;
+              if (alreadyNotifiedViaCvReminder) {
+                console.log(`Admin-notificatiemail zonder CV (PUT) overgeslagen — al verstuurd via cv-reminder`);
+                return;
+              }
               const sent = await sendAdminCandidateNoCvEmail({
                 id: updated.id,
                 firstName: updated.firstName,
@@ -4361,6 +4368,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cvUploadToken: (candidate as any).cvUploadToken,
         baseUrl: process.env.BASE_URL || `${req.protocol}://${req.get('host')}`,
       }).catch(console.error);
+
+      // Stuur ook de admin-notificatiemail als die nog niet eerder verstuurd is
+      // (vangnet als de PATCH /api/aanmelden/:id de server niet bereikte, bv. bij herstart)
+      const alreadyNotified = !!(candidate as any).cvReminderSentAt;
+      if (!alreadyNotified) {
+        const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+        sendAdminCandidateNoCvEmail({
+          id: candidate.id,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
+          functionType: candidate.functionType,
+          city: candidate.city,
+          email: candidate.email,
+          birthDate: candidate.birthDate,
+          phone: candidate.phone,
+          nationality: candidate.nationality,
+          baseUrl: requestBaseUrl,
+          sourceChannel: (candidate as any).sourceChannel,
+        }).then(sent => {
+          console.log(`[CV-reminder] Admin-notificatiemail (geen CV) ${sent ? 'verstuurd' : 'NIET verstuurd'} voor kandidaat ${id}`);
+        }).catch(err => console.error('[CV-reminder] Fout bij admin-notificatiemail:', err));
+      }
+
       await storage.updateCandidate(id, { cvReminderSentAt: new Date() });
       return res.status(200).json({ message: "Cv-reminder verstuurd" });
     } catch (error) {
