@@ -1756,7 +1756,7 @@ export default function SollicitatieFormulier() {
             {currentSection === sections.length - 1 ? (
               <Button
                 type="button"
-                onClick={() => handleSubmit(onSubmit)()}
+                onClick={async () => { await onSubmit(watch() as FormData); }}
                 disabled={isSubmitting}
                 className="flex items-center gap-2 h-14 px-8 text-base rounded-xl bg-green-600 hover:bg-green-700"
               >
