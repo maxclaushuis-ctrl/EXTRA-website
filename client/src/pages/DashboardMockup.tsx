@@ -617,7 +617,7 @@ export default function DashboardMockup() {
   const userGrowth = stats?.changes?.activeUsersChange || '+28';
 
   // Kandidaten tab computed values
-  const hasCV = (c: any) => !!(c.hasCv || c.cvFilename);
+  const hasCV = (c: any) => c != null && !!(c.hasCv || c.cvFilename);
   const kanInProces = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !hasCV(c) && !c.interviewDate), [allCandidates]);
   const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && hasCV(c) && !c.interviewDate), [allCandidates]);
   const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate), [allCandidates]);
