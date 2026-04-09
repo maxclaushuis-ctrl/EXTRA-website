@@ -485,11 +485,9 @@ export default function Aanmelden() {
   const [step, setStep] = useState<WizardStep>("basics");
   const [flow, setFlow] = useState<FlowType>("NL");
   const [rejectionReason, setRejectionReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStep2Loading, setIsStep2Loading] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvUploaded, setCvUploaded] = useState(false);
-  const [showCvBlocker, setShowCvBlocker] = useState(false);
   const [savedCandidateId, setSavedCandidateId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -690,6 +688,68 @@ export default function Aanmelden() {
     }
   }
 
+  async function finalizeSubmission(twvData?: { needsTwv: boolean }) {
+    const phone = formData.phoneCountryCode !== "+other"
+      ? normalizeToE164(formData.phoneCountryCode, formData.phone)
+      : formData.phone;
+
+    const langParts: string[] = [];
+    if (formData.dutchLevel && formData.dutchLevel !== "niet") {
+      const m: Record<string, string> = { basis: "Basis", redelijk: "Redelijk", goed: "Goed" };
+      langParts.push(`${m[formData.dutchLevel] || formData.dutchLevel} Nederlands`);
+    }
+    if (formData.englishLevel && formData.englishLevel !== "niet") {
+      const m: Record<string, string> = { basis: "Basis", redelijk: "Redelijk", goed: "Goed" };
+      langParts.push(`${m[formData.englishLevel] || formData.englishLevel} Engels`);
+    }
+    const language = langParts.join(", ") || "Geen";
+    const horecaExperience = EXPERIENCE_MAP[formData.experience] || formData.experience;
+    const needsTwv = twvData?.needsTwv ?? (flow === "NON_EU" && formData.twvNeeded === "yes");
+    const notes = [cvFile ? `CV: ${cvFile.name}` : null, formData.channel ? `Gevonden via: ${formData.channel}` : null].filter(Boolean).join(" | ");
+
+    let candidateId = savedCandidateId;
+
+    if (!candidateId) {
+      const createRes: any = await apiRequest("/api/aanmelden", {
+        method: "POST",
+        body: JSON.stringify({
+          firstName: formData.firstName, lastName: formData.lastName, email: formData.email,
+          phone, birthDate: formData.birthDate, nationality: formData.nationality, city: formData.city,
+          language, functionType: formData.preferredFunction, horecaExperience, needsTwv,
+          interviewDate: null, interviewTime: null,
+          sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
+          notes, partial: true,
+        }),
+      });
+      candidateId = createRes?.id ?? null;
+      if (candidateId) setSavedCandidateId(candidateId);
+    }
+
+    // Upload CV als aanwezig (optioneel — fout blokkeert niet)
+    if (cvFile && candidateId) {
+      try {
+        const fd = new FormData();
+        fd.append("cv", cvFile);
+        fd.append("email", formData.email);
+        fd.append("candidateId", String(candidateId));
+        await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+      } catch { /* CV upload mislukt, maar aanmelding gaat door */ }
+    } else if (!cvFile && candidateId) {
+      // Geen CV — stuur reminder-mail
+      fetch(`/api/aanmelden/${candidateId}/cv-reminder`, { method: "POST" }).catch(() => {});
+    }
+
+    // Rond aanmelding af (triggert admin-mail)
+    if (candidateId) {
+      await apiRequest(`/api/aanmelden/${candidateId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ email: formData.email, language, horecaExperience, needsTwv, notes, partial: false }),
+      });
+    }
+
+    setStep("cv_schedule");
+  }
+
   async function handleStep2Next() {
     if (!validateStep2()) return;
     setIsStep2Loading(true);
@@ -724,44 +784,21 @@ export default function Aanmelden() {
         return;
       }
 
-      // Kandidaat opslaan (of bestaande bijwerken)
-      const candidateId = await saveCandidate("in_behandeling", true);
-
-      if (!cvUploaded || !cvFile) {
-        // Geen CV geselecteerd — stuur herinnerings-e-mail en ga door
-        if (candidateId) {
-          fetch(`/api/aanmelden/${candidateId}/cv-reminder`, { method: "POST" }).catch(() => {});
-        }
-        setShowCvBlocker(true);
-        setStep(flow === "NON_EU" ? "twv" : "cv_schedule");
+      if (flow === "NON_EU") {
+        // NON_EU: eerst TWV-check, daarna indienen
+        await saveCandidate("in_behandeling", true);
+        setStep("twv");
         return;
       }
 
-      // CV WEL geselecteerd — upload het direct zodat het altijd verwerkt wordt
-      if (candidateId && cvFile) {
-        const fd = new FormData();
-        fd.append("cv", cvFile);
-        fd.append("email", formData.email);
-        fd.append("candidateId", String(candidateId));
-        const cvRes = await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
-        if (!cvRes.ok) {
-          toast({
-            title: lang === "NL" ? "CV uploaden mislukt" : "CV upload failed",
-            description: lang === "NL"
-              ? "Je CV kon nog niet worden opgeslagen. Probeer het opnieuw op de volgende pagina."
-              : "Your CV could not be saved yet. Please try again on the next page.",
-            variant: "destructive",
-          });
-          setCvUploaded(false);
-          setCvFile(null);
-          setShowCvBlocker(true);
-          setStep(flow === "NON_EU" ? "twv" : "cv_schedule");
-          return;
-        }
-      }
-
-      setShowCvBlocker(false);
-      setStep(flow === "NON_EU" ? "twv" : "cv_schedule");
+      // NL / EU: direct indienen
+      await finalizeSubmission();
+    } catch {
+      toast({
+        title: lang === "NL" ? "Er ging iets mis" : "Something went wrong",
+        description: lang === "NL" ? "Probeer het opnieuw" : "Please try again",
+        variant: "destructive",
+      });
     } finally {
       setIsStep2Loading(false);
     }
@@ -777,7 +814,18 @@ export default function Aanmelden() {
       setStep("rejected");
       return;
     }
-    setStep("cv_schedule");
+    setIsStep2Loading(true);
+    try {
+      await finalizeSubmission({ needsTwv: formData.twvNeeded === "yes" });
+    } catch {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsStep2Loading(false);
+    }
   }
 
   function handleCvUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -800,111 +848,6 @@ export default function Aanmelden() {
     setCvUploaded(true);
   }
 
-  async function handleSubmit() {
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phoneCountryCode !== "+other"
-          ? normalizeToE164(formData.phoneCountryCode, formData.phone)
-          : formData.phone,
-        birthDate: formData.birthDate,
-        nationality: formData.nationality,
-        city: formData.city,
-        language: (() => {
-          const parts: string[] = [];
-          if (formData.dutchLevel && formData.dutchLevel !== "niet") {
-            const map: Record<string, string> = { basis: "Basis", redelijk: "Redelijk", goed: "Goed" };
-            parts.push(`${map[formData.dutchLevel] || formData.dutchLevel} Nederlands`);
-          }
-          if (formData.englishLevel && formData.englishLevel !== "niet") {
-            const map: Record<string, string> = { basis: "Basis", redelijk: "Redelijk", goed: "Goed" };
-            parts.push(`${map[formData.englishLevel] || formData.englishLevel} Engels`);
-          }
-          return parts.join(", ") || "Geen";
-        })(),
-        functionType: formData.preferredFunction,
-        horecaExperience: EXPERIENCE_MAP[formData.experience] || formData.experience,
-        needsTwv: flow === "NON_EU" && formData.twvNeeded === "yes",
-        interviewDate: null,
-        interviewTime: null,
-        sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
-        notes: [cvFile ? `CV: ${cvFile.name}` : null, formData.channel ? `Gevonden via: ${formData.channel}` : null].filter(Boolean).join(" | "),
-      };
-
-      // Upload CV eerst — als dit mislukt stopt het hele proces (geen admin-mail zonder CV)
-      if (savedCandidateId && cvFile) {
-        const fd = new FormData();
-        fd.append("cv", cvFile);
-        fd.append("email", formData.email);
-        fd.append("candidateId", String(savedCandidateId));
-        const cvRes = await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
-        if (!cvRes.ok) {
-          throw new Error(lang === "NL" ? "CV uploaden mislukt. Probeer het opnieuw." : "CV upload failed. Please try again.");
-        }
-      }
-
-      if (savedCandidateId) {
-        await apiRequest(`/api/aanmelden/${savedCandidateId}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            email: formData.email,
-            language: payload.language,
-            horecaExperience: payload.horecaExperience,
-            needsTwv: payload.needsTwv,
-            notes: payload.notes,
-            partial: false,
-          }),
-        });
-      } else {
-        // Stap A: maak kandidaat aan als partial (nog geen admin-mail)
-        const createRes = await apiRequest("/api/aanmelden", {
-          method: "POST",
-          body: JSON.stringify({ ...payload, partial: true }),
-        });
-        const newCandidateId = createRes?.id ?? null;
-
-        // Stap B: upload CV — als dit mislukt stopt het hele proces (geen admin-mail zonder CV)
-        if (cvFile && newCandidateId) {
-          const fd = new FormData();
-          fd.append("cv", cvFile);
-          fd.append("email", formData.email);
-          fd.append("candidateId", String(newCandidateId));
-          const cvRes = await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
-          if (!cvRes.ok) {
-            throw new Error(lang === "NL" ? "CV uploaden mislukt. Probeer het opnieuw." : "CV upload failed. Please try again.");
-          }
-        }
-
-        // Stap C: rond aanmelding af — triggert nu admin-mail mét CV in DB
-        if (newCandidateId) {
-          await apiRequest(`/api/aanmelden/${newCandidateId}`, {
-            method: "PATCH",
-            body: JSON.stringify({
-              email: formData.email,
-              language: payload.language,
-              horecaExperience: payload.horecaExperience,
-              needsTwv: payload.needsTwv,
-              notes: payload.notes,
-              partial: false,
-            }),
-          });
-        }
-      }
-
-      setStep("success");
-    } catch (error) {
-      toast({
-        title: lang === "NL" ? "Er ging iets mis" : "Something went wrong",
-        description: lang === "NL" ? "Probeer het opnieuw" : "Please try again",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
 
   return (
     <div className="relative min-h-screen" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
@@ -1075,7 +1018,7 @@ export default function Aanmelden() {
                             name="dutchLevel"
                             value={opt.value}
                             checked={formData.dutchLevel === opt.value}
-                            onChange={(e) => { updateField("dutchLevel", e.target.value); updateField("englishLevel", ""); setShowCvBlocker(false); }}
+                            onChange={(e) => { updateField("dutchLevel", e.target.value); updateField("englishLevel", ""); }}
                             className="accent-purple-600 w-4 h-4"
                           />
                           <span className="text-sm font-medium text-gray-700">{opt.label}</span>
@@ -1102,7 +1045,7 @@ export default function Aanmelden() {
                               name="englishLevel"
                               value={opt.value}
                               checked={formData.englishLevel === opt.value}
-                              onChange={(e) => { updateField("englishLevel", e.target.value); setShowCvBlocker(false); }}
+                              onChange={(e) => { updateField("englishLevel", e.target.value); }}
                               className="accent-purple-600 w-4 h-4"
                             />
                             <span className="text-sm font-medium text-gray-700">{opt.label}</span>
@@ -1116,7 +1059,7 @@ export default function Aanmelden() {
                   {/* Vraag 3: Werkervaring */}
                   <div>
                     <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">{t.experienceQuestion}<span className="text-red-500 ml-0.5">*</span></Label>
-                    <Select value={formData.experience} onValueChange={(v) => { updateField("experience", v); setShowCvBlocker(false); }}>
+                    <Select value={formData.experience} onValueChange={(v) => { updateField("experience", v); }}>
                       <SelectTrigger className={`h-12 rounded-xl border-gray-200 ${errors.experience ? "border-red-400" : ""}`}>
                         <SelectValue placeholder={lang === "NL" ? "Selecteer ervaring" : "Select experience"} />
                       </SelectTrigger>
@@ -1154,13 +1097,6 @@ export default function Aanmelden() {
                     </div>
                   </div>
 
-                  {/* CV blocker melding */}
-                  {showCvBlocker && !cvUploaded && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-amber-800 leading-relaxed">{t.noCvBlocker}</p>
-                    </div>
-                  )}
                 </div>
 
                 <div className="mt-8 flex justify-between">
@@ -1173,8 +1109,10 @@ export default function Aanmelden() {
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         {lang === "NL" ? "Bezig..." : "Please wait..."}
                       </div>
-                    ) : (
+                    ) : flow === "NON_EU" ? (
                       <>{t.continue} <ChevronRight className="w-5 h-5 ml-1" /></>
+                    ) : (
+                      <>{t.submit} <ArrowRight className="w-5 h-5 ml-1" /></>
                     )}
                   </Button>
                 </div>
@@ -1247,99 +1185,77 @@ export default function Aanmelden() {
                 <Button onClick={() => setStep("skills")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300">
                   <ChevronLeft className="w-5 h-5 mr-1" /> {t.back}
                 </Button>
-                <Button onClick={handleTwvNext} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-5 rounded-xl text-base shadow-lg shadow-purple-500/20">
-                  {t.continue} <ChevronRight className="w-5 h-5 ml-1" />
+                <Button onClick={handleTwvNext} disabled={isStep2Loading} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-5 rounded-xl text-base shadow-lg shadow-purple-500/20">
+                  {isStep2Loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      {lang === "NL" ? "Bezig..." : "Please wait..."}
+                    </div>
+                  ) : (
+                    <>{t.submit} <ArrowRight className="w-5 h-5 ml-1" /></>
+                  )}
                 </Button>
               </div>
             </div>
           )}
 
           {step === "cv_schedule" && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 lg:p-12">
-                <div className="flex items-center gap-3 mb-6 sm:mb-8">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>{t.step3Title}</h2>
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-8 sm:p-12 lg:p-14 max-w-2xl mx-auto">
+              {/* Succes header */}
+              <div className="flex flex-col items-center text-center mb-8">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-5 shadow-lg shadow-green-500/20">
+                  <CheckCircle2 className="w-10 h-10 text-white" />
                 </div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  {lang === "NL" ? "Aanmelding ontvangen!" : "Application received!"}
+                </h2>
+                <p className="text-gray-500 text-base leading-relaxed">
+                  {lang === "NL"
+                    ? "Bedankt voor je aanmelding. We nemen zo snel mogelijk contact met je op."
+                    : "Thank you for applying. We will contact you as soon as possible."}
+                </p>
+              </div>
 
-                {/* CV ontbreekt melding */}
-                {showCvBlocker && !cvUploaded && (
-                  <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-amber-800 leading-relaxed font-medium">
-                      {lang === "NL"
-                        ? "Je kunt pas verder in het aanmeldproces als we je cv hebben ontvangen."
-                        : "You can only proceed in the registration process once we have received your CV."}
-                    </p>
-                  </div>
-                )}
-
-                {/* Checklist */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-8 p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className={`flex items-center gap-2.5 text-sm font-semibold ${cvUploaded ? "text-green-600" : "text-amber-600"}`}>
-                    {cvUploaded
-                      ? <CheckCircle2 className="w-5 h-5" />
-                      : <AlertCircle className="w-5 h-5" />}
-                    {lang === "NL"
-                      ? (cvUploaded ? "CV geüpload" : "CV nog niet ontvangen")
-                      : (cvUploaded ? "CV uploaded" : "CV not yet received")}
-                  </div>
-                  <div className="flex items-center gap-2.5 text-sm font-semibold text-green-600">
-                    <CheckCircle2 className="w-5 h-5" />
-                    {lang === "NL" ? "Aanmelding ontvangen" : "Registration received"}
-                  </div>
+              {/* Checklist */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-8 p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-100">
+                <div className={`flex items-center gap-2.5 text-sm font-semibold ${cvUploaded ? "text-green-600" : "text-gray-400"}`}>
+                  {cvUploaded ? <CheckCircle2 className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                  {lang === "NL"
+                    ? (cvUploaded ? "CV geüpload" : "CV wordt later verzonden")
+                    : (cvUploaded ? "CV uploaded" : "CV to be sent later")}
                 </div>
-
-                {/* What happens next */}
-                <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-6 mb-2">
-                  <h3 className="text-base font-bold text-purple-900 mb-3 flex items-center gap-2">
-                    <span className="text-lg">📬</span>
-                    {lang === "NL" ? "Wat gebeurt er nu?" : "What happens next?"}
-                  </h3>
-                  <ol className="space-y-3">
-                    <li className="flex gap-3 text-sm text-purple-800">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">1</span>
-                      <span>{lang === "NL" ? "Ons team bekijkt je aanmelding en CV — dit duurt meestal 1–2 werkdagen." : "Our team reviews your application and CV — this usually takes 1–2 business days."}</span>
-                    </li>
-                    <li className="flex gap-3 text-sm text-purple-800">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">2</span>
-                      <span>{lang === "NL" ? "Als je profiel past, sturen we je een e-mail met een link om direct een gesprekstijd te kiezen." : "If your profile is a match, we'll send you an email with a link to pick an interview time."}</span>
-                    </li>
-                    <li className="flex gap-3 text-sm text-purple-800">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">3</span>
-                      <span>{lang === "NL" ? "Na het gesprek hoor je snel of je welkom bent bij EXTRA!" : "After the interview you'll quickly hear if you're welcome at EXTRA!"}</span>
-                    </li>
-                  </ol>
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-green-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                  {lang === "NL" ? "Aanmelding ontvangen" : "Registration received"}
                 </div>
               </div>
 
-              {/* Submit bar */}
-              <div className="sm:static sticky bottom-0 bg-white sm:bg-transparent border-t border-gray-100 sm:border-0 -mx-6 sm:mx-0 px-6 sm:px-0 py-4 sm:py-0 mt-0 sm:mt-8 z-10 sm:rounded-3xl sm:shadow-2xl sm:shadow-purple-950/50 sm:border-white/10 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <Button onClick={() => setStep(flow === "NON_EU" ? "twv" : "skills")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300 w-full sm:w-auto">
-                  <ChevronLeft className="w-5 h-5 mr-1" /> {t.back}
-                </Button>
+              {/* Wat gebeurt er nu? */}
+              <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-6">
+                <h3 className="text-base font-bold text-purple-900 mb-3 flex items-center gap-2">
+                  <span className="text-lg">📬</span>
+                  {lang === "NL" ? "Wat gebeurt er nu?" : "What happens next?"}
+                </h3>
+                <ol className="space-y-3">
+                  <li className="flex gap-3 text-sm text-purple-800">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">1</span>
+                    <span>{lang === "NL" ? "Ons team bekijkt je aanmelding — dit duurt meestal 1–2 werkdagen." : "Our team reviews your application — this usually takes 1–2 business days."}</span>
+                  </li>
+                  <li className="flex gap-3 text-sm text-purple-800">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">2</span>
+                    <span>{lang === "NL" ? "Als je profiel past, sturen we je een e-mail met een link om direct een gesprekstijd te kiezen." : "If your profile is a match, we'll send you an email with a link to pick an interview time."}</span>
+                  </li>
+                  <li className="flex gap-3 text-sm text-purple-800">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">3</span>
+                    <span>{lang === "NL" ? "Na het gesprek hoor je snel of je welkom bent bij EXTRA!" : "After the interview you'll quickly hear if you're welcome at EXTRA!"}</span>
+                  </li>
+                </ol>
+              </div>
 
-                <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
-                  <Button
-                    onClick={() => handleSubmit()}
-                    disabled={isSubmitting || (showCvBlocker && !cvUploaded)}
-                    title={showCvBlocker && !cvUploaded ? (lang === "NL" ? "Upload eerst je CV om verder te gaan" : "Please upload your CV to continue") : undefined}
-                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-lg shadow-purple-500/20 font-bold px-8 py-5 rounded-xl text-base w-full sm:w-auto transition-all"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        {lang === "NL" ? "Bezig..." : "Sending..."}
-                      </div>
-                    ) : showCvBlocker && !cvUploaded ? (
-                      <>{lang === "NL" ? "Upload je CV om door te gaan" : "Upload your CV to continue"} <ArrowRight className="w-5 h-5 ml-1" /></>
-                    ) : (
-                      <>{t.submit} <ArrowRight className="w-5 h-5 ml-1" /></>
-                    )}
-                  </Button>
-                </div>
+              <div className="mt-8 flex justify-center">
+                <a href="/landing" className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 font-semibold text-sm transition-colors">
+                  {t.backToHome} <ArrowRight className="w-4 h-4" />
+                </a>
               </div>
             </div>
           )}
