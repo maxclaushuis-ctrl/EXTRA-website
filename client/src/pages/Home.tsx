@@ -19,17 +19,14 @@ export default function Home() {
   // Redirect logic
   useEffect(() => {
     if (!isLoading) {
-      if (isAuthenticated && user) {
-        // User is already logged in, redirect to appropriate dashboard
-        if (user.role === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/mijn-dashboard');
-        }
-      } else {
-        // User is not logged in, redirect to landing page
+      if (isAuthenticated && user && user.role !== 'admin') {
+        // Medewerkers gaan naar hun eigen dashboard
+        navigate('/mijn-dashboard');
+      } else if (!isAuthenticated) {
+        // Niet ingelogd → landingspagina
         navigate('/landing');
       }
+      // Admins blijven op de landingspagina (geen automatische redirect naar /dashboard)
     }
   }, [isAuthenticated, user, isLoading, navigate]);
 
