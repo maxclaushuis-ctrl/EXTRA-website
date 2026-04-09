@@ -125,8 +125,6 @@ app.use((req, res, next) => {
 // Vaste admin-accounts die altijd aanwezig moeten zijn.
 // Wachtwoorden zijn bcrypt-hashes — nooit als plaintext opslaan.
 const REQUIRED_ADMINS = [
-  { email: 'admin@twv.nl',              firstName: 'TWV',       lastName: 'Administrator', password: '$2b$10$c1f09lEGAc3A20ZOzBe13uCLZQSMEn4eC2e8sP0wV0jknpk3LGoY.' },
-  { email: 'hr@twv.nl',                 firstName: 'HR',        lastName: 'Manager',       password: '$2b$10$9m9P.mDTyChWF61adEyyheRNQ4efF8X.RiLhdIeNeenksjPlBOLUK' },
   { email: 'admin@extra.nl',            firstName: 'Admin',     lastName: 'EXTRAATJE',     password: '$2b$10$ZtjnweBSZOPnSgCHevw7/OZTpOAko4RaeAA8nN8L/.NyfO0VvEFd6' },
   { email: 'charlotte@doehetextra.nl',  firstName: 'Charlotte', lastName: '',              password: '$2b$12$XW1Dc.n6YebI/hKMbNWHiO8uXXo7JybIl4z6q5WM7mRgJW8CKIfw6' },
   { email: 'eveline@doehetextra.nl',    firstName: 'Eveline',   lastName: '',              password: '$2b$12$Qi.e2LUmhKppqhQ1XMAxreefN4tlA.6R7BhvufV9tbHlp7dxs/IUi' },
