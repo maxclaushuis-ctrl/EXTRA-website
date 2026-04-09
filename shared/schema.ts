@@ -929,6 +929,7 @@ export const candidates = pgTable("candidates", {
   
   // Herkomst
   sourceChannel: text("source_channel"), // Kanaal: Via ADE, Google, etc.
+  isInternalInterview: boolean("is_internal_interview").default(false), // Aangemaakt via intern sollicitatieformulier (niet via website)
   
   // Opmerkingen
   notes: text("notes"),

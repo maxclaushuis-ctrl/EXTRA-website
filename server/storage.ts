@@ -61,7 +61,7 @@ import {
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
-import { eq, ilike, or, desc, asc, sql, and, gte, lte } from "drizzle-orm";
+import { eq, ilike, or, desc, asc, sql, and, gte, lte, isNull } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -2928,7 +2928,10 @@ export class MemStorage implements IStorage {
     page?: number;
     limit?: number;
   }): Promise<{ candidates: Candidate[]; total: number }> {
-    const conditions: any[] = [];
+    const conditions: any[] = [
+      // Sluit kandidaten uit die via het interne sollicitatieformulier zijn aangemaakt
+      or(eq(candidatesTable.isInternalInterview, false), isNull(candidatesTable.isInternalInterview))
+    ];
     
     if (filters?.functionType) {
       conditions.push(eq(candidatesTable.functionType, filters.functionType as any));

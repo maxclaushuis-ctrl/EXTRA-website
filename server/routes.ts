@@ -5619,6 +5619,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Remarks
         notes: data.remarks || null,
+
+        // Aangemaakt via intern sollicitatieformulier, niet via website-aanmeldflow
+        isInternalInterview: true,
       };
 
       const candidate = await storage.createCandidate(candidateData as any);
