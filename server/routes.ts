@@ -40,7 +40,7 @@ import { initChallengeSyncService, getChallengeSyncService } from "./challenge-s
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
 import { db } from "./db";
-import { users, candidates as candidatesTable } from "@shared/schema";
+import { users, candidates as candidatesTable, applications } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
 import { getSupabaseAdmin, extractCvStoragePath, downloadCvBuffer } from './supabase';
@@ -5542,6 +5542,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating application status:", error);
       return res.status(500).json({ message: "Fout bij bijwerken status" });
+    }
+  });
+
+  // Bulk delete applications by function type
+  app.delete("/api/admin/applications/bulk", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { functionType } = req.body;
+      if (!functionType) return res.status(400).json({ message: "functionType vereist" });
+      const deleted = await db.delete(applications).where(eq(applications.functionType, functionType)).returning({ id: applications.id });
+      return res.json({ deleted: deleted.length });
+    } catch (error) {
+      console.error("Error bulk deleting applications:", error);
+      return res.status(500).json({ message: "Fout bij verwijderen" });
     }
   });
 
