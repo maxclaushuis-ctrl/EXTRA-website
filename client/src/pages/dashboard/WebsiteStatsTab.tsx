@@ -130,13 +130,13 @@ function FunnelBar({ label, count, total, color, note }: { label: string; count:
 // Helper: group candidates by month
 function groupByMonth(candidates: Candidate[]) {
   const map: Record<string, { label: string; aanmeldingen: number; metCv: number; aangenomen: number }> = {};
-  candidates.forEach(c => {
+  candidates.filter(Boolean).forEach(c => {
     const d = new Date(c.createdAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const label = d.toLocaleDateString('nl-NL', { month: 'short', year: '2-digit' });
     if (!map[key]) map[key] = { label, aanmeldingen: 0, metCv: 0, aangenomen: 0 };
     map[key].aanmeldingen++;
-    if (c.hasCv) map[key].metCv++;
+    if (c?.hasCv) map[key].metCv++;
     if (c.status === 'aangenomen') map[key].aangenomen++;
   });
   return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
@@ -153,7 +153,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading }: {
   const aangenomen = candidates.filter(c => c.status === 'aangenomen').length;
   const afgewezen = candidates.filter(c => c.status === 'afgewezen').length;
   const inBehandeling = candidates.filter(c => c.status === 'in_behandeling').length;
-  const metCv = candidates.filter(c => c.hasCv).length;
+  const metCv = candidates.filter(c => c?.hasCv).length;
   const published = blogs.filter(b => b.status === 'published').length;
   const horeca = candidates.filter(c => c.functionType === 'horecamedewerker').length;
   const chef = candidates.filter(c => c.functionType === 'chef').length;
@@ -299,7 +299,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading }: {
 // ─── Tab 2: Formulier conversies ──────────────────────────────────────────────
 
 function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isLoading: boolean }) {
-  const metCv = candidates.filter(c => c.hasCv).length;
+  const metCv = candidates.filter(c => c?.hasCv).length;
   const aangenomen = candidates.filter(c => c.status === 'aangenomen').length;
   const total = candidates.length;
   const cvPct = total > 0 ? Math.round((metCv / total) * 100) : 0;
@@ -685,7 +685,7 @@ export default function WebsiteStatsTab() {
     queryKey: ['/api/admin/staffing-requests'],
   });
 
-  const candidates = candidatesData?.candidates ?? [];
+  const candidates = (candidatesData?.candidates ?? []).filter(Boolean);
   const blogs = blogData?.posts ?? [];
   const staffingRequests = staffingData ?? [];
   const isLoading = candidatesLoading || blogLoading || staffingLoading;

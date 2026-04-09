@@ -524,7 +524,7 @@ export default function DashboardMockup() {
   // This is required by React's Rules of Hooks: hooks must always be called
   // in the same order on every render, never after a conditional return.
 
-  const allCandidates = useMemo(() => candidatesData?.candidates || [], [candidatesData]);
+  const allCandidates = useMemo(() => (candidatesData?.candidates || []).filter(Boolean), [candidatesData]);
 
   const filteredCandidates = useMemo(() => allCandidates.filter(c => {
     const matchesStatus = candidateStatusFilter === 'alle' || c.status === candidateStatusFilter;
