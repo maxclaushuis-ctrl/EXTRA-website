@@ -19,7 +19,7 @@ import {
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
   RefreshCw, Settings2, TrendingUp, Clock, UserPlus, UserCheck, Eye, Star, Trash2,
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
-  Bell, BellOff, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
+  Bell, BellOff, BellRing, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
   Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare
 } from 'lucide-react';
@@ -1048,7 +1048,7 @@ export default function DashboardMockup() {
                 disabled={pushLoading}
                 title={isSubscribed ? 'Notificaties uitschakelen' : 'Notificaties inschakelen'}
               >
-                {isSubscribed ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                {isSubscribed ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
                 {isSubscribed && (
                   <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-green-500 rounded-full" />
                 )}
