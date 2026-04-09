@@ -3,7 +3,7 @@ import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ChevronLeft, ChevronRight, Check, User, Briefcase, Star, Calendar, Tag, Camera, Send, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, User, Briefcase, Star, Calendar, Tag, Camera, Send, AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+
+const DRAFT_KEY = "sollicitatie_form_draft";
 
 interface IntakeCandidate {
   id: number;
@@ -178,6 +180,7 @@ export default function SollicitatieFormulier() {
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [wasRestored, setWasRestored] = useState(false);
   const [intakeCandidates, setIntakeCandidates] = useState<IntakeCandidate[]>([]);
   const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
   const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
@@ -209,8 +212,30 @@ export default function SollicitatieFormulier() {
   useEffect(() => {
     document.title = 'Sollicitatieformulier – EXTRA';
     setIsSubmitted(false);
-    setCurrentSection(0);
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const { section, data } = JSON.parse(saved);
+        form.reset({ ...data });
+        setCurrentSection(typeof section === 'number' ? section : 0);
+        setWasRestored(true);
+      } else {
+        setCurrentSection(0);
+      }
+    } catch {
+      setCurrentSection(0);
+    }
   }, []);
+
+  const allWatchedValues = form.watch();
+  useEffect(() => {
+    if (isSubmitted) return;
+    const data = form.getValues();
+    if (!data.interviewer && !data.functionType && !data.firstName) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ section: currentSection, data }));
+    } catch {}
+  }, [allWatchedValues, currentSection, isSubmitted]);
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedFunctionType = watch("functionType");
@@ -388,6 +413,8 @@ export default function SollicitatieFormulier() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+      localStorage.removeItem(DRAFT_KEY);
+      setWasRestored(false);
       setIsSubmitted(true);
       toast({
         title: "Sollicitatie opgeslagen!",
@@ -513,7 +540,9 @@ export default function SollicitatieFormulier() {
           <p className="text-gray-600 mb-8 text-lg">De sollicitatie is succesvol toegevoegd aan het systeem.</p>
           <Button
             onClick={() => {
+              localStorage.removeItem(DRAFT_KEY);
               setIsSubmitted(false);
+              setWasRestored(false);
               setCurrentSection(0);
               setIntakeCandidates([]);
               setSelectedIntakeId(null);
@@ -574,6 +603,29 @@ export default function SollicitatieFormulier() {
               <h2 className="text-xl font-bold">{getSectionTitle(currentSection)}</h2>
             </div>
           </div>
+
+          {/* Formulier hersteld banner */}
+          {wasRestored && (
+            <div className="mx-6 mt-6 flex items-center justify-between gap-3 bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+              <div className="flex items-center gap-3">
+                <RotateCcw className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <p className="text-sm font-semibold text-blue-700">Formulier hersteld — je gegevens zijn bewaard na de herlaadbeurt.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem(DRAFT_KEY);
+                  setWasRestored(false);
+                  setCurrentSection(0);
+                  setScoreErrors([]);
+                  form.reset();
+                }}
+                className="text-xs text-blue-500 hover:text-blue-700 underline whitespace-nowrap flex-shrink-0"
+              >
+                Opnieuw beginnen
+              </button>
+            </div>
+          )}
 
           {/* Score errors banner */}
           {scoreErrors.length > 0 && (
