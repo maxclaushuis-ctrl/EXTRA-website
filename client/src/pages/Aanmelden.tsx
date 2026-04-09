@@ -486,6 +486,7 @@ export default function Aanmelden() {
   const [flow, setFlow] = useState<FlowType>("NL");
   const [rejectionReason, setRejectionReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStep2Loading, setIsStep2Loading] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvUploaded, setCvUploaded] = useState(false);
   const [showCvBlocker, setShowCvBlocker] = useState(false);
@@ -691,59 +692,78 @@ export default function Aanmelden() {
 
   async function handleStep2Next() {
     if (!validateStep2()) return;
+    setIsStep2Loading(true);
+    try {
+      if (!isLanguageSufficient()) {
+        await saveCandidate("afgewezen", false, "Geen taalvaardigheid Nederlands/Engels");
+        setRejectionReason(t.noLanguage);
+        setStep("rejected");
+        return;
+      }
 
-    if (!isLanguageSufficient()) {
-      await saveCandidate("afgewezen", false, "Geen taalvaardigheid Nederlands/Engels");
-      setRejectionReason(t.noLanguage);
-      setStep("rejected");
-      return;
-    }
+      const fn = formData.preferredFunction as keyof ExperienceThresholds;
+      const thresholds = flow === "NL" ? NL_THRESHOLDS : flow === "EU" ? EU_THRESHOLDS : NON_EU_THRESHOLDS;
+      let allowed = thresholds[fn] || [];
 
-    const fn = formData.preferredFunction as keyof ExperienceThresholds;
-    const thresholds = flow === "NL" ? NL_THRESHOLDS : flow === "EU" ? EU_THRESHOLDS : NON_EU_THRESHOLDS;
-    let allowed = thresholds[fn] || [];
+      if (fn === "horecamedewerker") {
+        const isDutchSpeaking = formData.dutchLevel === "redelijk" || formData.dutchLevel === "goed";
+        allowed = isDutchSpeaking ? ["6to12", "1to3", "3plus"] : ["1to3", "3plus"];
+      }
 
-    // Horecamedewerker: ervaringsdrempel op basis van taalniveau
-    // Nederlandssprekend (redelijk/goed) → minimaal 6 maanden
-    // Niet-Nederlandssprekend → minimaal 1 jaar (lastiger te plaatsen)
-    if (fn === "horecamedewerker") {
-      const isDutchSpeaking = formData.dutchLevel === "redelijk" || formData.dutchLevel === "goed";
-      allowed = isDutchSpeaking ? ["6to12", "1to3", "3plus"] : ["1to3", "3plus"];
-    }
+      if (allowed.length === 0) {
+        await saveCandidate("afgewezen", false, "Functie niet beschikbaar");
+        setRejectionReason(t.roleNotAvailable);
+        setStep("rejected");
+        return;
+      }
 
-    if (allowed.length === 0) {
-      await saveCandidate("afgewezen", false, "Functie niet beschikbaar");
-      setRejectionReason(t.roleNotAvailable);
-      setStep("rejected");
-      return;
-    }
+      if (!allowed.includes(formData.experience)) {
+        await saveCandidate("afgewezen", false, "Onvoldoende ervaring");
+        setRejectionReason(t.notEnoughExperience);
+        setStep("rejected");
+        return;
+      }
 
-    if (!allowed.includes(formData.experience)) {
-      await saveCandidate("afgewezen", false, "Onvoldoende ervaring");
-      setRejectionReason(t.notEnoughExperience);
-      setStep("rejected");
-      return;
-    }
-
-    if (!cvUploaded) {
+      // Kandidaat opslaan (of bestaande bijwerken)
       const candidateId = await saveCandidate("in_behandeling", true);
-      if (candidateId) {
-        fetch(`/api/aanmelden/${candidateId}/cv-reminder`, { method: "POST" }).catch(() => {});
-      }
-      setShowCvBlocker(true);
-      if (flow === "NON_EU") {
-        setStep("twv");
-      } else {
-        setStep("cv_schedule");
-      }
-      return;
-    }
 
-    setShowCvBlocker(false);
-    if (flow === "NON_EU") {
-      setStep("twv");
-    } else {
-      setStep("cv_schedule");
+      if (!cvUploaded || !cvFile) {
+        // Geen CV geselecteerd — stuur herinnerings-e-mail en ga door
+        if (candidateId) {
+          fetch(`/api/aanmelden/${candidateId}/cv-reminder`, { method: "POST" }).catch(() => {});
+        }
+        setShowCvBlocker(true);
+        setStep(flow === "NON_EU" ? "twv" : "cv_schedule");
+        return;
+      }
+
+      // CV WEL geselecteerd — upload het direct zodat het altijd verwerkt wordt
+      if (candidateId && cvFile) {
+        const fd = new FormData();
+        fd.append("cv", cvFile);
+        fd.append("email", formData.email);
+        fd.append("candidateId", String(candidateId));
+        const cvRes = await fetch("/api/aanmelden/cv", { method: "POST", body: fd });
+        if (!cvRes.ok) {
+          toast({
+            title: lang === "NL" ? "CV uploaden mislukt" : "CV upload failed",
+            description: lang === "NL"
+              ? "Je CV kon nog niet worden opgeslagen. Probeer het opnieuw op de volgende pagina."
+              : "Your CV could not be saved yet. Please try again on the next page.",
+            variant: "destructive",
+          });
+          setCvUploaded(false);
+          setCvFile(null);
+          setShowCvBlocker(true);
+          setStep(flow === "NON_EU" ? "twv" : "cv_schedule");
+          return;
+        }
+      }
+
+      setShowCvBlocker(false);
+      setStep(flow === "NON_EU" ? "twv" : "cv_schedule");
+    } finally {
+      setIsStep2Loading(false);
     }
   }
 
@@ -1147,8 +1167,15 @@ export default function Aanmelden() {
                   <Button onClick={() => setStep("basics")} variant="outline" className="font-bold px-6 py-5 rounded-xl text-base border-gray-300">
                     <ChevronLeft className="w-5 h-5 mr-1" /> {t.back}
                   </Button>
-                  <Button onClick={handleStep2Next} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-5 rounded-xl text-base shadow-lg shadow-purple-500/20">
-                    {t.continue} <ChevronRight className="w-5 h-5 ml-1" />
+                  <Button onClick={handleStep2Next} disabled={isStep2Loading} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-5 rounded-xl text-base shadow-lg shadow-purple-500/20">
+                    {isStep2Loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        {lang === "NL" ? "Bezig..." : "Please wait..."}
+                      </div>
+                    ) : (
+                      <>{t.continue} <ChevronRight className="w-5 h-5 ml-1" /></>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -1297,14 +1324,17 @@ export default function Aanmelden() {
                 <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
                   <Button
                     onClick={() => handleSubmit()}
-                    disabled={isSubmitting}
-                    className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 font-bold px-8 py-5 rounded-xl text-base w-full sm:w-auto transition-all"
+                    disabled={isSubmitting || (showCvBlocker && !cvUploaded)}
+                    title={showCvBlocker && !cvUploaded ? (lang === "NL" ? "Upload eerst je CV om verder te gaan" : "Please upload your CV to continue") : undefined}
+                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-lg shadow-purple-500/20 font-bold px-8 py-5 rounded-xl text-base w-full sm:w-auto transition-all"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         {lang === "NL" ? "Bezig..." : "Sending..."}
                       </div>
+                    ) : showCvBlocker && !cvUploaded ? (
+                      <>{lang === "NL" ? "Upload je CV om door te gaan" : "Upload your CV to continue"} <ArrowRight className="w-5 h-5 ml-1" /></>
                     ) : (
                       <>{t.submit} <ArrowRight className="w-5 h-5 ml-1" /></>
                     )}

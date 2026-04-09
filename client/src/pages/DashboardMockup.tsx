@@ -193,6 +193,8 @@ export default function DashboardMockup() {
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
   const [docxError, setDocxError] = useState<string | null>(null);
+  const [cvBlobUrl, setCvBlobUrl] = useState<string | null>(null);
+  const [cvBlobLoading, setCvBlobLoading] = useState(false);
   const [deleteKandidaatId, setDeleteKandidaatId] = useState<number | null>(null);
   const [deleteKandidaatNaam, setDeleteKandidaatNaam] = useState('');
   const [deleteKandidaatStep, setDeleteKandidaatStep] = useState<1 | 2>(1);
@@ -213,30 +215,52 @@ export default function DashboardMockup() {
       setDocxHtml(null);
       setDocxError(null);
       setDocxLoading(false);
+      // Revoke blob URL om geheugen vrij te maken
+      if (cvBlobUrl) { URL.revokeObjectURL(cvBlobUrl); setCvBlobUrl(null); }
+      setCvBlobLoading(false);
       return;
     }
     const filename = cvPreviewCandidate.cvFilename || '';
+    const isPdf = filename.toLowerCase().endsWith('.pdf');
     const isDocx = filename.toLowerCase().endsWith('.docx') || filename.toLowerCase().endsWith('.doc');
-    if (!isDocx || !hasCV(cvPreviewCandidate)) return;
 
-    setDocxLoading(true);
-    setDocxHtml(null);
-    setDocxError(null);
+    if (!hasCV(cvPreviewCandidate)) return;
 
-    const cvHtmlUrl = `/api/admin/candidates/${cvPreviewCandidate.id}/cv-html`;
-    fetch(cvHtmlUrl, { credentials: 'include' })
-      .then(r => {
-        if (!r.ok) throw new Error('Fout bij laden');
-        return r.text();
-      })
-      .then(html => {
-        setDocxHtml(html);
-        setDocxLoading(false);
-      })
-      .catch(() => {
-        setDocxError('Het bestand kon niet worden geladen.');
-        setDocxLoading(false);
-      });
+    if (isPdf) {
+      // PDF: fetch als blob met authenticatie zodat inline preview werkt
+      setCvBlobLoading(true);
+      setCvBlobUrl(null);
+      fetch(`/api/admin/candidates/${cvPreviewCandidate.id}/cv?preview=1`, { credentials: 'include' })
+        .then(r => {
+          if (!r.ok) throw new Error('Fout bij laden');
+          return r.blob();
+        })
+        .then(blob => {
+          setCvBlobUrl(URL.createObjectURL(blob));
+          setCvBlobLoading(false);
+        })
+        .catch(() => {
+          setCvBlobLoading(false);
+        });
+    } else if (isDocx) {
+      setDocxLoading(true);
+      setDocxHtml(null);
+      setDocxError(null);
+      const cvHtmlUrl = `/api/admin/candidates/${cvPreviewCandidate.id}/cv-html`;
+      fetch(cvHtmlUrl, { credentials: 'include' })
+        .then(r => {
+          if (!r.ok) throw new Error('Fout bij laden');
+          return r.text();
+        })
+        .then(html => {
+          setDocxHtml(html);
+          setDocxLoading(false);
+        })
+        .catch(() => {
+          setDocxError('Het bestand kon niet worden geladen.');
+          setDocxLoading(false);
+        });
+    }
   }, [cvPreviewOpen, cvPreviewCandidate]);
 
   // TWV tab state
@@ -1240,37 +1264,26 @@ export default function DashboardMockup() {
 
                     return (
                       <div className="flex flex-col gap-3">
-                        <div className="w-full rounded-lg overflow-hidden border border-gray-200" style={{ height: '65vh' }}>
-                          <object
-                            data={cvPreviewUrl}
-                            type="application/pdf"
-                            className="w-full h-full"
-                          >
-                            {/* Fallback voor browsers die PDF niet inline kunnen tonen */}
+                        <div className="w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center" style={{ height: '65vh' }}>
+                          {cvBlobLoading ? (
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                              <p className="text-gray-500 text-sm">PDF laden…</p>
+                            </div>
+                          ) : cvBlobUrl ? (
                             <iframe
-                              src={cvPreviewUrl}
+                              src={cvBlobUrl}
                               className="w-full h-full border-0"
-                              title={`CV ${cvPreviewCandidate?.firstName}`}
-                            >
-                              <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50">
-                                <FileText className="h-8 w-8 text-gray-400 mb-3" />
-                                <p className="text-gray-600 text-sm mb-3">PDF kan niet worden voorvertoond in jouw browser.</p>
-                                <a href={cvPreviewUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
-                                  Openen in nieuw tabblad
-                                </a>
-                              </div>
-                            </iframe>
-                          </object>
+                              title={`CV ${cvPreviewCandidate?.firstName} ${cvPreviewCandidate?.lastName}`}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center gap-3 p-8 text-center">
+                              <FileText className="h-8 w-8 text-gray-400" />
+                              <p className="text-gray-600 text-sm">PDF kan niet worden voorvertoond. Gebruik de downloadknop.</p>
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-end gap-2">
-                          <a
-                            href={cvPreviewUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 border border-purple-200 text-purple-700 hover:bg-purple-50 text-sm font-medium rounded-lg"
-                          >
-                            Openen in nieuw tabblad
-                          </a>
                           <a
                             href={cvUrl}
                             download
