@@ -1,10 +1,62 @@
-import makeWASocket, { DisconnectReason, useMultiFileAuthState, type WASocket } from '@whiskeysockets/baileys';
+import makeWASocket, { DisconnectReason, initAuthCreds, BufferJSON, type WASocket } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import QRCode from 'qrcode';
-import path from 'path';
-import fs from 'fs';
 import eventEmitter from './events';
 import pino from 'pino';
+import { storage } from '../storage';
+
+async function makeDatabaseAuthState(accountId: string) {
+  const stored = await storage.getWhatsappSession(accountId);
+
+  let creds: any;
+  let keys: Record<string, any> = {};
+
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored, BufferJSON.reviver);
+      creds = parsed.creds;
+      keys = parsed.keys ?? {};
+    } catch {
+      creds = initAuthCreds();
+    }
+  } else {
+    creds = initAuthCreds();
+  }
+
+  async function saveState() {
+    const json = JSON.stringify({ creds, keys }, BufferJSON.replacer);
+    await storage.saveWhatsappSession(accountId, json);
+  }
+
+  return {
+    state: {
+      creds,
+      keys: {
+        get: async (type: string, ids: string[]) => {
+          const data: Record<string, any> = {};
+          for (const id of ids) {
+            const value = keys[`${type}-${id}`];
+            if (value !== undefined) data[id] = value;
+          }
+          return data;
+        },
+        set: async (data: Record<string, Record<string, any>>) => {
+          for (const [type, typeData] of Object.entries(data)) {
+            for (const [id, value] of Object.entries(typeData)) {
+              if (value != null) {
+                keys[`${type}-${id}`] = value;
+              } else {
+                delete keys[`${type}-${id}`];
+              }
+            }
+          }
+          await saveState();
+        },
+      },
+    },
+    saveCreds: saveState,
+  };
+}
 
 const ACCOUNTS = [
   { id: 'horeca',       label: 'Horeca',       categorie: 'horeca' },
@@ -89,12 +141,9 @@ export async function connectAccount(accountId: AccountId) {
 
   console.log(`[WA:${accountId}] Verbinding starten...`);
 
-  const sessieMap = path.join(process.cwd(), `sessions/${accountId}`);
-  if (!fs.existsSync(sessieMap)) fs.mkdirSync(sessieMap, { recursive: true });
-
   let socket: WASocket;
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(sessieMap);
+    const { state, saveCreds } = await makeDatabaseAuthState(accountId);
 
     socket = makeWASocket({
       auth: state,

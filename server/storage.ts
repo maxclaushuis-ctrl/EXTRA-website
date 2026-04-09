@@ -57,6 +57,7 @@ import {
   type CrmContact, type InsertCrmContact,
   type CrmNote, type InsertCrmNote,
   type CrmReminder, type InsertCrmReminder,
+  whatsappSessions as whatsappSessionsTable,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -396,6 +397,10 @@ export interface IStorage {
   createCrmReminder(data: InsertCrmReminder): Promise<CrmReminder>;
   updateCrmReminder(id: number, data: Partial<InsertCrmReminder>): Promise<CrmReminder | undefined>;
   deleteCrmReminder(id: number): Promise<boolean>;
+
+  // WhatsApp sessie-opslag
+  getWhatsappSession(accountId: string): Promise<string | null>;
+  saveWhatsappSession(accountId: string, credentialsJson: string): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -3782,6 +3787,20 @@ export class MemStorage implements IStorage {
   async deleteCrmReminder(id: number): Promise<boolean> {
     const result = await db.delete(crmRemindersTable).where(eq(crmRemindersTable.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async getWhatsappSession(accountId: string): Promise<string | null> {
+    const [row] = await db.select().from(whatsappSessionsTable).where(eq(whatsappSessionsTable.accountId, accountId));
+    return row?.credentialsJson ?? null;
+  }
+
+  async saveWhatsappSession(accountId: string, credentialsJson: string): Promise<void> {
+    await db.insert(whatsappSessionsTable)
+      .values({ accountId, credentialsJson })
+      .onConflictDoUpdate({
+        target: whatsappSessionsTable.accountId,
+        set: { credentialsJson, updatedAt: new Date() },
+      });
   }
 }
 

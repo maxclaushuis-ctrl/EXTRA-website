@@ -1312,3 +1312,10 @@ export type CrmNote = typeof crmNotes.$inferSelect;
 export const insertCrmReminderSchema = createInsertSchema(crmReminders).omit({ id: true, createdAt: true });
 export type InsertCrmReminder = z.infer<typeof insertCrmReminderSchema>;
 export type CrmReminder = typeof crmReminders.$inferSelect;
+
+// ─── WhatsApp sessie-opslag ───────────────────────────────────────────────────
+export const whatsappSessions = pgTable("whatsapp_sessions", {
+  accountId: text("account_id").primaryKey(),
+  credentialsJson: text("credentials_json").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
