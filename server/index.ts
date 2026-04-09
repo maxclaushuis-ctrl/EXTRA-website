@@ -49,16 +49,24 @@ app.use((req, res, next) => {
 
 
 // CORS headers toevoegen om cross-domain problemen te voorkomen
+const ALLOWED_ORIGINS = [
+  'https://www.doehetextra.nl',
+  'https://doehetextra.nl',
+  process.env.BASE_URL,
+].filter(Boolean) as string[];
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  const isAllowed = !origin || ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV !== 'production';
+  if (isAllowed) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-ws-auth');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-  
   next();
 });
 
