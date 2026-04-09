@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useFormPersistence } from "@/hooks/use-form-persistence";
 
 const DRAFT_KEY = "sollicitatie_form_draft";
 
@@ -180,7 +181,6 @@ export default function SollicitatieFormulier() {
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [wasRestored, setWasRestored] = useState(false);
   const [intakeCandidates, setIntakeCandidates] = useState<IntakeCandidate[]>([]);
   const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
   const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
@@ -209,33 +209,19 @@ export default function SollicitatieFormulier() {
     },
   });
 
+  const { wasRestored, clearDraft } = useFormPersistence({
+    draftKey: DRAFT_KEY,
+    form,
+    currentSection,
+    setCurrentSection,
+    isSubmitted,
+    maxSection: sections.length - 1,
+  });
+
   useEffect(() => {
     document.title = 'Sollicitatieformulier – EXTRA';
     setIsSubmitted(false);
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) {
-        const { section, data } = JSON.parse(saved);
-        form.reset({ ...data });
-        setCurrentSection(typeof section === 'number' ? section : 0);
-        setWasRestored(true);
-      } else {
-        setCurrentSection(0);
-      }
-    } catch {
-      setCurrentSection(0);
-    }
   }, []);
-
-  const allWatchedValues = form.watch();
-  useEffect(() => {
-    if (isSubmitted) return;
-    const data = form.getValues();
-    if (!data.interviewer && !data.functionType && !data.firstName) return;
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ section: currentSection, data }));
-    } catch {}
-  }, [allWatchedValues, currentSection, isSubmitted]);
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedFunctionType = watch("functionType");
@@ -413,8 +399,7 @@ export default function SollicitatieFormulier() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
-      localStorage.removeItem(DRAFT_KEY);
-      setWasRestored(false);
+      clearDraft();
       setIsSubmitted(true);
       toast({
         title: "Sollicitatie opgeslagen!",
@@ -540,9 +525,8 @@ export default function SollicitatieFormulier() {
           <p className="text-gray-600 mb-8 text-lg">De sollicitatie is succesvol toegevoegd aan het systeem.</p>
           <Button
             onClick={() => {
-              localStorage.removeItem(DRAFT_KEY);
+              clearDraft();
               setIsSubmitted(false);
-              setWasRestored(false);
               setCurrentSection(0);
               setIntakeCandidates([]);
               setSelectedIntakeId(null);
@@ -614,8 +598,7 @@ export default function SollicitatieFormulier() {
               <button
                 type="button"
                 onClick={() => {
-                  localStorage.removeItem(DRAFT_KEY);
-                  setWasRestored(false);
+                  clearDraft();
                   setCurrentSection(0);
                   setScoreErrors([]);
                   form.reset();
