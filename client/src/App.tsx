@@ -139,9 +139,9 @@ function Router() {
   const { isAuthenticated, user } = useAuth();
   const [location] = useLocation();
 
-  const isEmployeeDashboard = location === '/dashboard' && user?.role !== 'admin';
+  const isEmployeeDashboard = location === '/mijn-dashboard';
   const isPlanningPage = location.startsWith('/planning');
-  const isDashboardMockup = location.startsWith('/dashboard-mockup');
+  const isDashboardMockup = location.startsWith('/dashboard');
   const isPublicPage = PUBLIC_PATHS.some(p => location === p || location.startsWith(p + '/'));
 
   return (
@@ -248,10 +248,10 @@ function Router() {
           <Route path="/vacatures" component={Vacatures} />
           <Route path="/vacatures/:slug" component={VacatureDetail} />
           <Route path="/contact" component={Contact} />
-          <Route path="/dashboard-mockup" component={DashboardMockup} />
+          <Route path="/dashboard" component={DashboardMockup} />
 
           {/* Beschermde routes */}
-          <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
+          <Route path="/mijn-dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
           <Route path="/profile">{() => <ProtectedRoute component={UserProfile} />}</Route>
           <Route path="/rewards">{() => <ProtectedRoute component={Rewards} />}</Route>
           <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>

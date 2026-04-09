@@ -199,7 +199,7 @@ class PushNotificationService {
       data: {
         type: 'candidate',
         action: 'view_candidate',
-        url: '/dashboard-mockup',
+        url: '/mijn-dashboard',
         candidateId,
       },
       actions: [
@@ -221,7 +221,7 @@ class PushNotificationService {
       data: {
         type: 'candidate',
         action: 'view_dashboard',
-        url: '/dashboard-mockup',
+        url: '/mijn-dashboard',
       },
       actions: [
         { action: 'view_dashboard', title: 'Bekijk dashboard' },
@@ -246,7 +246,7 @@ class PushNotificationService {
       data: {
         type: 'achievement',
         action: 'view_dashboard',
-        url: '/dashboard',
+        url: '/mijn-dashboard',
         points: achievement.points
       },
       actions: [
@@ -371,7 +371,7 @@ class PushNotificationService {
       data: {
         type: 'social',
         action: 'view_dashboard',
-        url: '/dashboard'
+        url: '/mijn-dashboard'
       },
       actions: [
         {
@@ -399,7 +399,7 @@ class PushNotificationService {
       data: {
         type: 'challenge',
         action: 'view_dashboard',
-        url: '/dashboard'
+        url: '/mijn-dashboard'
       },
       actions: [
         {
@@ -423,7 +423,7 @@ class PushNotificationService {
       data: {
         type: 'candidate',
         action: 'view_twv',
-        url: '/dashboard-mockup',
+        url: '/mijn-dashboard',
         candidateId,
       },
       actions: [

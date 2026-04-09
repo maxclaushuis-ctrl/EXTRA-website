@@ -940,7 +940,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Stuur welkomstmail
       const baseUrl = (process.env.BASE_URL || 'https://www.doehetextra.nl').replace(/\/$/, '');
-      const loginUrl = `${baseUrl}/dashboard-mockup`;
+      const loginUrl = `${baseUrl}/dashboard`;
       sendAdminWelcomeEmail({
         to: email,
         firstName,
@@ -4900,7 +4900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (candidate.email && candidate.firstName) {
         await sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email });
       }
-      const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard-mockup`;
+      const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard`;
       return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} geaccepteerd!</h2><p>Een Calendly-uitnodiging is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="${dashboardUrl}" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
     } catch (err) {
       console.error('Accept kandidaat fout:', err);
@@ -4929,7 +4929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Fout bij versturen afwijzingsmail:', err)
         );
       }
-      const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard-mockup`;
+      const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard`;
       return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#dc2626;">❌ ${candidate.firstName} ${candidate.lastName} afgewezen.</h2><p>Een afwijzingsmail is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="${dashboardUrl}" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
     } catch (err) {
       console.error('Reject kandidaat fout:', err);

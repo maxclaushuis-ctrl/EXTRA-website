@@ -472,10 +472,10 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   const baseUrl = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
   const acceptUrl = candidate.reviewToken
     ? `${baseUrl}/api/candidates/${candidate.id}/accept?token=${candidate.reviewToken}`
-    : `${baseUrl}/dashboard-mockup`;
+    : `${baseUrl}/dashboard`;
   const rejectUrl = candidate.reviewToken
     ? `${baseUrl}/api/candidates/${candidate.id}/reject?token=${candidate.reviewToken}`
-    : `${baseUrl}/dashboard-mockup`;
+    : `${baseUrl}/dashboard`;
 
   const cell = (label: string, value: string | null | undefined) =>
     `<td style="padding:10px 14px;vertical-align:top;width:50%;border-bottom:1px solid #f3f4f6;">
@@ -533,7 +533,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
               </tr>
               <tr>
                 <td style="text-align:center;padding-bottom:4px;">
-                  <a href="${baseUrl}/dashboard-mockup" style="display:inline-block;color:#7c3aed;text-decoration:underline;font-size:13px;">Bekijk in dashboard</a>
+                  <a href="${baseUrl}/dashboard" style="display:inline-block;color:#7c3aed;text-decoration:underline;font-size:13px;">Bekijk in dashboard</a>
                 </td>
               </tr>
             </table>
@@ -614,7 +614,7 @@ export async function sendAdminCandidateNoCvEmail(candidate: {
   };
   const functionLabel = functionLabels[candidate.functionType] || candidate.functionType;
   const baseUrl = candidate.baseUrl || process.env.BASE_URL || 'https://brochure.doehetextra.nl';
-  const dashboardUrl = `${baseUrl}/dashboard-mockup`;
+  const dashboardUrl = `${baseUrl}/dashboard`;
 
   const cell = (label: string, value: string | null | undefined) =>
     `<td style="padding:10px 14px;vertical-align:top;width:50%;border-bottom:1px solid #f3f4f6;">
@@ -1064,7 +1064,7 @@ export async function sendTwvExpiryReminderEmail(candidate: {
             </div>
             <p style="margin:24px 0 0;font-size:15px;color:#374151;line-height:1.6;">Bekijk het TWV-overzicht in het dashboard voor meer details.</p>
             <div style="text-align:center;margin:28px 0;">
-              <a href="${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard-mockup" style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
+              <a href="${process.env.BASE_URL || 'https://brochure.doehetextra.nl'}/dashboard" style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;padding:14px 36px;border-radius:12px;">Open TWV-dashboard &rarr;</a>
             </div>
             <p style="margin:24px 0 0;font-size:15px;color:#374151;">Groet,<br><strong>Team EXTRA – Geautomatiseerde melding</strong></p>
           </td>

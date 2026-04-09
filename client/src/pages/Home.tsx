@@ -22,9 +22,9 @@ export default function Home() {
       if (isAuthenticated && user) {
         // User is already logged in, redirect to appropriate dashboard
         if (user.role === 'admin') {
-          navigate('/dashboard-mockup');
-        } else {
           navigate('/dashboard');
+        } else {
+          navigate('/mijn-dashboard');
         }
       } else {
         // User is not logged in, redirect to landing page
