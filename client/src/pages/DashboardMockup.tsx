@@ -26,6 +26,7 @@ import {
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
+import NotificationCenter from '@/components/NotificationCenter';
 
 type User = {
   id: number;
@@ -1052,6 +1053,7 @@ export default function DashboardMockup() {
                   <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-green-500 rounded-full" />
                 )}
               </Button>
+              <NotificationCenter />
               <Avatar className="h-8 w-8 bg-purple-600">
                 <AvatarFallback className="bg-purple-600 text-white text-xs">
                   {getInitials(user?.firstName || 'A', user?.lastName || 'D')}

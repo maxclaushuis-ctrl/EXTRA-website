@@ -1320,3 +1320,28 @@ export const whatsappSessions = pgTable("whatsapp_sessions", {
   credentialsJson: text("credentials_json").notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// ─── Admin notificaties ───────────────────────────────────────────────────────
+export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
+  "new_candidate",       // Nieuwe aanmelding
+  "cv_uploaded",         // CV opgestuurd
+  "sollicitatie_form",   // Intern sollicitatieformulier ingestuurd
+  "twv_expiry",          // TWV dreigt te verlopen
+  "staffing_request",    // Nieuwe aanvraag van een bedrijf
+  "interview_reminder",  // Gesprek vandaag
+]);
+
+export const adminNotifications = pgTable("admin_notifications", {
+  id: serial("id").primaryKey(),
+  type: adminNotificationTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  link: text("link"),
+  candidateId: integer("candidate_id"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAdminNotificationSchema = createInsertSchema(adminNotifications).omit({ id: true, createdAt: true });
+export type InsertAdminNotification = z.infer<typeof insertAdminNotificationSchema>;
+export type AdminNotification = typeof adminNotifications.$inferSelect;

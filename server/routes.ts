@@ -4160,6 +4160,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (notifErr) {
           console.error('Fout bij versturen aanmelding-notificatie:', notifErr);
         }
+
+        // Admin notificatie in DB opslaan
+        storage.createAdminNotification({
+          type: 'new_candidate',
+          title: 'Nieuwe aanmelding',
+          message: `${candidate.firstName} ${candidate.lastName} heeft zich aangemeld als ${candidate.functionType}${candidate.city ? ` (${candidate.city})` : ''}.`,
+          link: '/dashboard?tab=kandidaten',
+          candidateId: candidate.id,
+        }).catch((e: any) => console.error('[Notif] Fout bij aanmelding-notificatie:', e));
       }
 
       // Stuur voltooide aanmelding door naar Jaicob.ai (alleen bij niet-partial, niet-afgewezen)
@@ -4640,6 +4649,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (candidateId && !isNaN(candidateId)) {
         try {
           await storage.updateCandidate(candidateId, { hasCv: true, cvFilename: publicUrl });
+          // Admin notificatie
+          const cand = await storage.getCandidate(candidateId);
+          if (cand) {
+            storage.createAdminNotification({
+              type: 'cv_uploaded',
+              title: 'CV ontvangen',
+              message: `${cand.firstName} ${cand.lastName} heeft een CV geüpload.`,
+              link: '/dashboard?tab=kandidaten',
+              candidateId: cand.id,
+            }).catch((e: any) => console.error('[Notif] CV-notificatie fout:', e));
+          }
         } catch (err) {
           console.error("Fout bij markeren hasCv:", err);
         }
@@ -4686,6 +4706,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Haal bijgewerkte kandidaat op voor de admin-notificatiemail
       const updated = await storage.getCandidate(candidate.id);
       if (!updated) return res.status(500).json({ message: "Fout bij ophalen kandidaat" });
+
+      // Admin notificatie: CV ontvangen via e-mail link
+      storage.createAdminNotification({
+        type: 'cv_uploaded',
+        title: 'CV ontvangen',
+        message: `${updated.firstName} ${updated.lastName} heeft een CV geüpload via de e-mail link.`,
+        link: '/dashboard?tab=kandidaten',
+        candidateId: updated.id,
+      }).catch((e: any) => console.error('[Notif] CV token-notificatie fout:', e));
 
       const requestBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
@@ -4743,6 +4772,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==========================================
   // SOLLICITANTEN (Candidates) API Routes
   // ==========================================
+
+  // ─── Admin notificaties ────────────────────────────────────────────────────
+  app.get("/api/admin/notifications", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const notifications = await storage.getAdminNotifications(60);
+      return res.json(notifications);
+    } catch (err) {
+      console.error("Fout bij ophalen notificaties:", err);
+      return res.status(500).json({ message: "Fout bij ophalen notificaties" });
+    }
+  });
+
+  app.patch("/api/admin/notifications/read-all", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      await storage.markAllAdminNotificationsRead();
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Fout bij markeren notificaties:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.patch("/api/admin/notifications/:id/read", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      await storage.markAdminNotificationRead(id);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Fout bij markeren notificatie:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
 
   // Intake lookup — returns candidates by functionType for admin intake form
   app.get("/api/intake/candidates", authMiddleware, async (req: Request, res: Response) => {
@@ -5656,6 +5718,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const candidate = await storage.createCandidate(candidateData as any);
 
+      // Admin notificatie: intern sollicitatieformulier ingestuurd
+      storage.createAdminNotification({
+        type: 'sollicitatie_form',
+        title: 'Sollicitatieformulier ingestuurd',
+        message: `Intake van ${candidate.firstName} ${candidate.lastName} (${candidate.functionType}) is opgeslagen.`,
+        link: '/dashboard?tab=kandidaten',
+        candidateId: candidate.id,
+      }).catch((e: any) => console.error('[Notif] Sollicitatie-notificatie fout:', e));
+
       // Compute scores
       const computeHorecaSkillScore = (rating: number | undefined): number | null => {
         const r = parseInt(String(rating));
@@ -5760,6 +5831,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Vul alle verplichte velden in." });
       }
       const [result] = await db.insert(staffingRequests).values(data).returning();
+
+      // Admin notificatie: nieuwe aanvraag
+      storage.createAdminNotification({
+        type: 'staffing_request',
+        title: 'Nieuwe personeelsaanvraag',
+        message: `${data.companyName} heeft een aanvraag ingediend${data.functions?.length ? ` voor ${data.functions.join(', ')}` : ''}.`,
+        link: '/dashboard?tab=aanvragen',
+      }).catch((e: any) => console.error('[Notif] Staffing-notificatie fout:', e));
 
       // Auto-create CRM lead from staffing request
       try {
@@ -6047,6 +6126,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Mark reminder as sent
           await storage.updateCandidate(candidate.id, { twvReminderSentAt: new Date() } as any);
+
+          // Admin notificatie: TWV dreigt te verlopen
+          storage.createAdminNotification({
+            type: 'twv_expiry',
+            title: 'TWV dreigt te verlopen',
+            message: `De TWV van ${candidate.firstName} ${candidate.lastName} verloopt over ${daysLeft} dag${daysLeft === 1 ? '' : 'en'}.`,
+            link: '/dashboard?tab=kandidaten',
+            candidateId: candidate.id,
+          }).catch((e: any) => console.error('[Notif] TWV-notificatie fout:', e));
+
           remindersSent++;
         }
       }
@@ -6072,6 +6161,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   scheduleTwvCheck();
+
+  // ─── Gesprek-herinnering scheduler (dagelijks om 8:00) ─────────────────────
+  async function checkInterviewReminders(): Promise<void> {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const result = await storage.getCandidates({ limit: 500 });
+      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
+      const todayInterviews = allCandidates.filter((c: any) => c.interviewDate === today);
+      for (const cand of todayInterviews) {
+        const time = cand.interviewTime ? ` om ${cand.interviewTime.slice(0, 5)}` : '';
+        storage.createAdminNotification({
+          type: 'interview_reminder',
+          title: 'Gesprek vandaag',
+          message: `${cand.firstName} ${cand.lastName} heeft vandaag${time} een gesprek ingepland.`,
+          link: '/dashboard?tab=kandidaten',
+          candidateId: cand.id,
+        }).catch((e: any) => console.error('[Notif] Interview-notificatie fout:', e));
+      }
+      if (todayInterviews.length > 0) {
+        console.log(`[Interview] ${todayInterviews.length} gesprek-herinnering(en) aangemaakt voor vandaag`);
+      }
+    } catch (err) {
+      console.error('[Interview] Fout bij gesprek-herinneringen:', err);
+    }
+  }
+
+  function scheduleInterviewReminders() {
+    const now = new Date();
+    const next8am = new Date(now);
+    next8am.setHours(8, 0, 0, 0);
+    if (next8am <= now) next8am.setDate(next8am.getDate() + 1);
+    const msUntil = next8am.getTime() - now.getTime();
+    setTimeout(async () => {
+      await checkInterviewReminders();
+      scheduleInterviewReminders();
+    }, msUntil);
+  }
+  scheduleInterviewReminders();
 
   // ─── XLSX Import routes ───────────────────────────────────────────────────
   const xlsxUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });

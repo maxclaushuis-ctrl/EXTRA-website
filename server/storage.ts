@@ -58,6 +58,8 @@ import {
   type CrmNote, type InsertCrmNote,
   type CrmReminder, type InsertCrmReminder,
   whatsappSessions as whatsappSessionsTable,
+  adminNotifications as adminNotificationsTable,
+  type AdminNotification, type InsertAdminNotification,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -401,6 +403,12 @@ export interface IStorage {
   // WhatsApp sessie-opslag
   getWhatsappSession(accountId: string): Promise<string | null>;
   saveWhatsappSession(accountId: string, credentialsJson: string): Promise<void>;
+
+  // Admin notificaties
+  createAdminNotification(data: InsertAdminNotification): Promise<AdminNotification>;
+  getAdminNotifications(limit?: number): Promise<AdminNotification[]>;
+  markAdminNotificationRead(id: number): Promise<void>;
+  markAllAdminNotificationsRead(): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -3804,6 +3812,29 @@ export class MemStorage implements IStorage {
         target: whatsappSessionsTable.accountId,
         set: { credentialsJson, updatedAt: new Date() },
       });
+  }
+
+  async createAdminNotification(data: InsertAdminNotification): Promise<AdminNotification> {
+    const [row] = await db.insert(adminNotificationsTable).values(data).returning();
+    return row;
+  }
+
+  async getAdminNotifications(limit = 50): Promise<AdminNotification[]> {
+    return db.select().from(adminNotificationsTable)
+      .orderBy(desc(adminNotificationsTable.createdAt))
+      .limit(limit);
+  }
+
+  async markAdminNotificationRead(id: number): Promise<void> {
+    await db.update(adminNotificationsTable)
+      .set({ readAt: new Date() })
+      .where(eq(adminNotificationsTable.id, id));
+  }
+
+  async markAllAdminNotificationsRead(): Promise<void> {
+    await db.update(adminNotificationsTable)
+      .set({ readAt: new Date() })
+      .where(isNull(adminNotificationsTable.readAt));
   }
 }
 
