@@ -217,7 +217,7 @@ export default function DashboardMockup() {
     }
     const filename = cvPreviewCandidate.cvFilename || '';
     const isDocx = filename.toLowerCase().endsWith('.docx') || filename.toLowerCase().endsWith('.doc');
-    if (!isDocx || !cvPreviewCandidate.hasCv) return;
+    if (!isDocx || !hasCV(cvPreviewCandidate)) return;
 
     setDocxLoading(true);
     setDocxHtml(null);
@@ -593,8 +593,9 @@ export default function DashboardMockup() {
   const userGrowth = stats?.changes?.activeUsersChange || '+28';
 
   // Kandidaten tab computed values
-  const kanInProces = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !c.hasCv && !c.interviewDate), [allCandidates]);
-  const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !!c.hasCv && !c.interviewDate), [allCandidates]);
+  const hasCV = (c: any) => !!(c.hasCv || c.cvFilename);
+  const kanInProces = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !hasCV(c) && !c.interviewDate), [allCandidates]);
+  const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && hasCV(c) && !c.interviewDate), [allCandidates]);
   const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate), [allCandidates]);
   const kanAfgewezen = useMemo(() => allCandidates.filter(c => c.status === 'afgewezen'), [allCandidates]);
   const kanSubset = useMemo(() => {
@@ -1170,7 +1171,7 @@ export default function DashboardMockup() {
                     </DialogTitle>
                   </DialogHeader>
                   {(() => {
-                    if (!cvPreviewCandidate?.hasCv) {
+                    if (!hasCV(cvPreviewCandidate)) {
                       return (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                           <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-3">
@@ -1182,6 +1183,7 @@ export default function DashboardMockup() {
                       );
                     }
                     const cvUrl = `/api/admin/candidates/${cvPreviewCandidate.id}/cv`;
+                    const cvPreviewUrl = `/api/admin/candidates/${cvPreviewCandidate.id}/cv?preview=1`;
                     const filename = cvPreviewCandidate.cvFilename || '';
                     const isPdf = filename.toLowerCase().endsWith('.pdf');
 
@@ -1240,22 +1242,29 @@ export default function DashboardMockup() {
                       <div className="flex flex-col gap-3">
                         <div className="w-full rounded-lg overflow-hidden border border-gray-200" style={{ height: '65vh' }}>
                           <object
-                            data={cvUrl}
+                            data={cvPreviewUrl}
                             type="application/pdf"
                             className="w-full h-full"
                           >
-                            <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50">
-                              <FileText className="h-8 w-8 text-gray-400 mb-3" />
-                              <p className="text-gray-600 text-sm mb-3">PDF kan niet worden voorvertoond in jouw browser.</p>
-                              <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
-                                Openen in nieuw tabblad
-                              </a>
-                            </div>
+                            {/* Fallback voor browsers die PDF niet inline kunnen tonen */}
+                            <iframe
+                              src={cvPreviewUrl}
+                              className="w-full h-full border-0"
+                              title={`CV ${cvPreviewCandidate?.firstName}`}
+                            >
+                              <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50">
+                                <FileText className="h-8 w-8 text-gray-400 mb-3" />
+                                <p className="text-gray-600 text-sm mb-3">PDF kan niet worden voorvertoond in jouw browser.</p>
+                                <a href={cvPreviewUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg">
+                                  Openen in nieuw tabblad
+                                </a>
+                              </div>
+                            </iframe>
                           </object>
                         </div>
                         <div className="flex justify-end gap-2">
                           <a
-                            href={cvUrl}
+                            href={cvPreviewUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2 border border-purple-200 text-purple-700 hover:bg-purple-50 text-sm font-medium rounded-lg"
@@ -1701,9 +1710,9 @@ export default function DashboardMockup() {
                                       <Button
                                         variant="ghost" size="icon" className="h-7 w-7"
                                         onClick={() => { setCvPreviewCandidate(c); setCvPreviewOpen(true); }}
-                                        title={c.hasCv ? "CV bekijken" : "Geen CV"}
+                                        title={hasCV(c) ? "CV bekijken" : "Geen CV"}
                                       >
-                                        <Eye className={`h-3.5 w-3.5 ${c.hasCv ? 'text-green-500' : 'text-gray-300'}`} />
+                                        <Eye className={`h-3.5 w-3.5 ${hasCV(c) ? 'text-green-500' : 'text-gray-300'}`} />
                                       </Button>
                                       {c.status === 'aangenomen' ? (
                                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-200 whitespace-nowrap">
@@ -1745,9 +1754,9 @@ export default function DashboardMockup() {
                                       <Button
                                         variant="ghost" size="icon" className="h-7 w-7"
                                         onClick={() => { setCvPreviewCandidate(c); setCvPreviewOpen(true); }}
-                                        title={c.hasCv ? "CV bekijken" : "Geen CV geüpload"}
+                                        title={hasCV(c) ? "CV bekijken" : "Geen CV geüpload"}
                                       >
-                                        <Eye className={`h-3.5 w-3.5 ${c.hasCv ? 'text-green-500' : 'text-red-400'}`} />
+                                        <Eye className={`h-3.5 w-3.5 ${hasCV(c) ? 'text-green-500' : 'text-red-400'}`} />
                                       </Button>
                                       {kandidatenSubtab !== 'afgewezen' && (
                                         <Button

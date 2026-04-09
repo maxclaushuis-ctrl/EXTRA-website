@@ -363,6 +363,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start de verjaardagscontrole planning
   scheduleBirthdayCheck();
 
+  // Auto-herstel: zet has_cv=true voor kandidaten die een cv_filename hebben maar has_cv=false
+  (async () => {
+    try {
+      const { isNotNull, sql: drizzleSql } = await import('drizzle-orm');
+      await db.execute(drizzleSql`UPDATE candidates SET has_cv = true WHERE cv_filename IS NOT NULL AND has_cv = false`);
+      console.log('[CV-fix] has_cv auto-herstel uitgevoerd');
+    } catch (e) {
+      console.error('[CV-fix] Onverwachte fout:', e);
+    }
+  })();
+
   async function scheduleGdprCleanup() {
     const now = new Date();
     const next = new Date(now);
@@ -4976,35 +4987,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
 
+      // preview=1 → inline weergave (geen download-header); anders forceer download
+      const isPreview = req.query.preview === '1';
+
       const storagePath = extractCvStoragePath(candidate.cvFilename);
       if (!storagePath) {
-        // Fallback: directe redirect naar opgeslagen URL
         return res.redirect(candidate.cvFilename);
       }
 
-      // Genereer signed URL (geldig 1 uur) — werkt ook voor private buckets
-      const { data, error } = await getSupabaseAdmin()
-        .storage.from('cvs')
-        .createSignedUrl(storagePath, 3600, { download: true });
+      const ext = storagePath.split('.').pop()?.toLowerCase() ?? 'bin';
+      const mimeType = ext === 'pdf'
+        ? 'application/pdf'
+        : ext === 'docx'
+          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/octet-stream';
 
-      if (error || !data?.signedUrl) {
-        console.error("Supabase signed URL fout:", error?.message);
-        // Fallback: probeer directe download via server-side proxy
-        const { data: fileBlob, error: dlErr } = await getSupabaseAdmin()
-          .storage.from('cvs').download(storagePath);
-        if (dlErr || !fileBlob) {
+      // Altijd server-side proxy: haal het bestand op en stuur het zelf door.
+      // Dit voorkomt CORS-problemen en geeft ons volledige controle over Content-Disposition.
+      const { data: fileBlob, error: dlErr } = await getSupabaseAdmin()
+        .storage.from('cvs').download(storagePath);
+
+      if (dlErr || !fileBlob) {
+        // Laatste fallback: probeer signed URL
+        const { data, error } = await getSupabaseAdmin()
+          .storage.from('cvs')
+          .createSignedUrl(storagePath, 3600, { download: !isPreview });
+        if (error || !data?.signedUrl) {
+          console.error("Supabase signed URL fout:", error?.message);
           return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
         }
-        const ext = storagePath.split('.').pop()?.toLowerCase() ?? 'docx';
-        const mimeType = ext === 'pdf' ? 'application/pdf'
-          : ext === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          : 'application/octet-stream';
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `attachment; filename="${storagePath}"`);
-        return res.send(Buffer.from(await fileBlob.arrayBuffer()));
+        return res.redirect(data.signedUrl);
       }
 
-      return res.redirect(data.signedUrl);
+      const safeName = encodeURIComponent(storagePath.split('/').pop() || 'cv');
+      res.setHeader('Content-Type', mimeType);
+      if (isPreview) {
+        // Inline: laat de browser het bestand tonen i.p.v. downloaden
+        res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
+      } else {
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
+      }
+      return res.send(Buffer.from(await fileBlob.arrayBuffer()));
     } catch (error) {
       console.error("Error serving CV:", error);
       return res.status(500).json({ message: "Fout bij ophalen CV" });
