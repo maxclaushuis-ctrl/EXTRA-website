@@ -154,6 +154,20 @@ async function ensureAdminAccounts() {
   // Zorg dat alle admin-accounts altijd bestaan (ook na DB-reset of nieuw deployment)
   await ensureAdminAccounts();
 
+  // Herstel: zet is_internal_interview = true voor alle handmatig via TWV aangemaakte kandidaten
+  // zodat ze niet in het Kandidaten-overzicht verschijnen
+  try {
+    const result = await pool.query(
+      `UPDATE candidates SET is_internal_interview = true
+       WHERE source_channel = 'handmatig' AND needs_twv = true AND (is_internal_interview IS NULL OR is_internal_interview = false)`
+    );
+    if (result.rowCount && result.rowCount > 0) {
+      log(`[twv-fix] ${result.rowCount} handmatige TWV-kandidaten uit Kandidaten-overzicht gefilterd`);
+    }
+  } catch (err) {
+    console.error('[twv-fix] Fout bij TWV kandidaten herstel:', err);
+  }
+
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);
