@@ -139,7 +139,7 @@ async function sendJaicobWebhook(candidate: {
 }
 
 // ─── EXTRA Planbord webhook helper ────────────────────────────────────────────
-const PLANBORD_WEBHOOK_URL = 'https://fb2e492b-f790-46d3-b361-647b16a91391-00-26hv39n5ydqms.janeway.replit.dev/api/webhooks/applicant-sync';
+const PLANBORD_WEBHOOK_URL = process.env.PLANBORD_WEBHOOK_URL || '';
 
 async function sendPlanbordWebhook(candidate: { id: number; firstName: string; lastName: string; functionType: string }): Promise<{ success: boolean; error?: string }> {
   try {
