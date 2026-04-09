@@ -5944,9 +5944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all TWV candidates (needsTwv = true)
   app.get("/api/admin/twv", adminMiddleware, async (_req: Request, res: Response) => {
     try {
-      const result = await storage.getCandidates();
-      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
-      const twvCandidates = allCandidates.filter((c: any) => c.needsTwv === true);
+      const twvCandidates = await storage.getTwvCandidates();
       return res.json(twvCandidates);
     } catch (error) {
       console.error("Fout bij ophalen TWV kandidaten:", error);
@@ -6066,9 +6064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export TWV candidates as CSV for arbeidsinspectie
   app.get("/api/admin/twv/export", adminMiddleware, async (_req: Request, res: Response) => {
     try {
-      const result = await storage.getCandidates();
-      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
-      const twvCandidates = allCandidates.filter((c: any) => c.needsTwv === true);
+      const twvCandidates = await storage.getTwvCandidates();
       const statusLabels: Record<string, string> = {
         twv_nodig: 'TWV Nodig',
         twv_aangevraagd: 'TWV Aangevraagd',
@@ -6115,9 +6111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function checkTwvReminders(): Promise<number> {
     let remindersSent = 0;
     try {
-      const result = await storage.getCandidates();
-      const allCandidates = Array.isArray(result) ? result : (result as any).candidates ?? [];
-      const twvCandidates = allCandidates.filter((c: any) => c.needsTwv === true && c.twvStatus === 'twv_verstrekt' && c.twvEndDate);
+      const allTwv = await storage.getTwvCandidates();
+      const twvCandidates = allTwv.filter((c: any) => c.twvStatus === 'twv_verstrekt' && c.twvEndDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 

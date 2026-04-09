@@ -2982,6 +2982,17 @@ export class MemStorage implements IStorage {
     return { candidates, total };
   }
 
+  async getTwvCandidates(): Promise<Candidate[]> {
+    // Haalt ALLE kandidaten op met needsTwv = true, ook als isInternalInterview = true
+    // zodat handmatig toegevoegde TWV-medewerkers wel in het TWV-overzicht verschijnen
+    // maar niet in het Kandidaten-overzicht (gefilterd door getCandidates)
+    return await db
+      .select()
+      .from(candidatesTable)
+      .where(eq(candidatesTable.needsTwv, true))
+      .orderBy(desc(candidatesTable.createdAt));
+  }
+
   async getCandidate(id: number): Promise<CandidateWithDetails | undefined> {
     const [candidate] = await db
       .select()
