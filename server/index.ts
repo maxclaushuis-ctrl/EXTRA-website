@@ -5,6 +5,7 @@ import connectPg from "connect-pg-simple";
 import { registerRoutes, pingGoogleSitemap } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
+import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
 
@@ -121,7 +122,40 @@ app.use((req, res, next) => {
   next();
 });
 
+// Vaste admin-accounts die altijd aanwezig moeten zijn.
+// Wachtwoorden zijn bcrypt-hashes — nooit als plaintext opslaan.
+const REQUIRED_ADMINS = [
+  { email: 'admin@twv.nl',              firstName: 'TWV',       lastName: 'Administrator', password: '$2b$10$c1f09lEGAc3A20ZOzBe13uCLZQSMEn4eC2e8sP0wV0jknpk3LGoY.' },
+  { email: 'hr@twv.nl',                 firstName: 'HR',        lastName: 'Manager',       password: '$2b$10$9m9P.mDTyChWF61adEyyheRNQ4efF8X.RiLhdIeNeenksjPlBOLUK' },
+  { email: 'admin@extra.nl',            firstName: 'Admin',     lastName: 'EXTRAATJE',     password: '$2b$10$ZtjnweBSZOPnSgCHevw7/OZTpOAko4RaeAA8nN8L/.NyfO0VvEFd6' },
+  { email: 'charlotte@doehetextra.nl',  firstName: 'Charlotte', lastName: '',              password: '$2b$12$XW1Dc.n6YebI/hKMbNWHiO8uXXo7JybIl4z6q5WM7mRgJW8CKIfw6' },
+  { email: 'eveline@doehetextra.nl',    firstName: 'Eveline',   lastName: '',              password: '$2b$12$Qi.e2LUmhKppqhQ1XMAxreefN4tlA.6R7BhvufV9tbHlp7dxs/IUi' },
+  { email: 'lea@doehetextra.nl',        firstName: 'Lea',       lastName: '',              password: '$2b$12$sBP9rhd28Vop79JuhgVE8en3bmSKPWy5I2.OqXS7cWUnXAI3B1Yr.' },
+  { email: 'max@doehetextra.nl',        firstName: 'Max',       lastName: '',              password: '$2b$12$sBP9rhd28Vop79JuhgVE8en3bmSKPWy5I2.OqXS7cWUnXAI3B1Yr.' },
+];
+
+async function ensureAdminAccounts() {
+  try {
+    for (const admin of REQUIRED_ADMINS) {
+      const { rows } = await pool.query('SELECT id FROM users WHERE email = $1', [admin.email]);
+      if (rows.length === 0) {
+        await pool.query(
+          `INSERT INTO users (email, password, first_name, last_name, role, status, points, monthly_points)
+           VALUES ($1, $2, $3, $4, 'admin', 'active', 0, 0)`,
+          [admin.email, admin.password, admin.firstName, admin.lastName]
+        );
+        log(`[admin-guard] Admin-account hersteld: ${admin.email}`);
+      }
+    }
+  } catch (err) {
+    console.error('[admin-guard] Fout bij herstellen admin-accounts:', err);
+  }
+}
+
 (async () => {
+  // Zorg dat alle admin-accounts altijd bestaan (ook na DB-reset of nieuw deployment)
+  await ensureAdminAccounts();
+
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);
