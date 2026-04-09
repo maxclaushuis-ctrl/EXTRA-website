@@ -5997,6 +5997,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Nieuwe medewerker aanmaken en direct aan TWV toevoegen
+  app.post("/api/admin/twv/create-and-add", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { firstName, lastName, email, nationality, twvStatus, twvStartDate, twvEndDate, twvNotes } = req.body;
+      if (!firstName || !lastName) return res.status(400).json({ message: "Voornaam en achternaam zijn verplicht" });
+      const newCandidate = await storage.createCandidate({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email?.trim() || null,
+        nationality: nationality?.trim() || null,
+        needsTwv: true,
+        twvStatus: twvStatus || 'twv_verstrekt',
+        twvStartDate: twvStartDate || null,
+        twvEndDate: twvEndDate || null,
+        twvNotes: twvNotes || null,
+        status: 'in_behandeling',
+        sourceChannel: 'handmatig',
+        isInternalInterview: false,
+        partialForm: false,
+      } as any);
+      return res.json(newCandidate);
+    } catch (error) {
+      console.error("Fout bij aanmaken en toevoegen TWV:", error);
+      return res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
   // Bulk import van TWV-gegevens vanuit CSV (frontend parsed → JSON array)
   app.post("/api/admin/twv/import", adminMiddleware, async (req: Request, res: Response) => {
     try {

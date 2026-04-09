@@ -278,6 +278,11 @@ export default function DashboardMockup() {
   const [twvAddStartDate, setTwvAddStartDate] = useState('');
   const [twvAddEndDate, setTwvAddEndDate] = useState('');
   const [twvAddNotes, setTwvAddNotes] = useState('');
+  const [twvAddMode, setTwvAddMode] = useState<'search' | 'new'>('search');
+  const [twvNewFirstName, setTwvNewFirstName] = useState('');
+  const [twvNewLastName, setTwvNewLastName] = useState('');
+  const [twvNewEmail, setTwvNewEmail] = useState('');
+  const [twvNewNationality, setTwvNewNationality] = useState('');
   // CSV import dialog
   const [twvImportOpen, setTwvImportOpen] = useState(false);
   const [twvImportResult, setTwvImportResult] = useState<{ imported: number; total: number; results: Array<{ email: string; status: string }> } | null>(null);
@@ -478,6 +483,27 @@ export default function DashboardMockup() {
       setTwvAddNotes('');
     },
     onError: () => toast({ title: 'Fout bij toevoegen aan TWV', variant: 'destructive' }),
+  });
+
+  const createAndAddTwvMutation = useMutation({
+    mutationFn: (data: { firstName: string; lastName: string; email?: string; nationality?: string; twvStatus: string; twvStartDate?: string; twvEndDate?: string; twvNotes?: string }) =>
+      apiRequest('POST', '/api/admin/twv/create-and-add', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/twv'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+      toast({ title: 'Nieuwe medewerker aangemaakt en toegevoegd aan TWV' });
+      setTwvManualAddOpen(false);
+      setTwvAddMode('search');
+      setTwvNewFirstName('');
+      setTwvNewLastName('');
+      setTwvNewEmail('');
+      setTwvNewNationality('');
+      setTwvAddStatus('twv_verstrekt');
+      setTwvAddStartDate('');
+      setTwvAddEndDate('');
+      setTwvAddNotes('');
+    },
+    onError: () => toast({ title: 'Fout bij aanmaken medewerker', variant: 'destructive' }),
   });
 
   const { data: staffingRequestsData = [], isLoading: staffingRequestsLoading } = useQuery<any[]>({
@@ -3200,71 +3226,130 @@ export default function DashboardMockup() {
               </Dialog>
 
               {/* Handmatig toevoegen dialog */}
-              <Dialog open={twvManualAddOpen} onOpenChange={open => { setTwvManualAddOpen(open); if (!open) { setTwvAddSearch(''); setTwvAddSelected(null); } }}>
+              <Dialog open={twvManualAddOpen} onOpenChange={open => {
+                setTwvManualAddOpen(open);
+                if (!open) {
+                  setTwvAddSearch(''); setTwvAddSelected(null);
+                  setTwvAddMode('search');
+                  setTwvNewFirstName(''); setTwvNewLastName(''); setTwvNewEmail(''); setTwvNewNationality('');
+                  setTwvAddStatus('twv_verstrekt'); setTwvAddStartDate(''); setTwvAddEndDate(''); setTwvAddNotes('');
+                }
+              }}>
                 <DialogContent className="max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>Medewerker handmatig toevoegen aan TWV</DialogTitle>
+                    <DialogTitle>Medewerker toevoegen aan TWV</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-1">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Zoek medewerker</label>
-                      <Input
-                        placeholder="Zoek op naam of e-mail…"
-                        value={twvAddSearch}
-                        onChange={e => { setTwvAddSearch(e.target.value); setTwvAddSelected(null); }}
-                        className="h-9 text-sm"
-                      />
-                      {twvAddSearch.length >= 2 && !twvAddSelected && (
-                        <div className="border rounded-lg mt-1 max-h-44 overflow-y-auto shadow-sm bg-white">
-                          {allCandidatesForAdd
-                            .filter((c: any) => {
-                              const q = twvAddSearch.toLowerCase();
-                              const alreadyInTwv = twvCandidates.some(t => t.id === c.id);
-                              return !alreadyInTwv && (
-                                `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-                                (c.email || '').toLowerCase().includes(q)
-                              );
-                            })
-                            .slice(0, 8)
-                            .map((c: any) => (
-                              <button
-                                key={c.id}
-                                className="w-full text-left px-3 py-2 hover:bg-purple-50 text-sm flex items-center gap-2 border-b last:border-b-0"
-                                onClick={() => { setTwvAddSelected(c); setTwvAddSearch(`${c.firstName} ${c.lastName}`); }}
-                              >
-                                <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 shrink-0">
-                                  {c.firstName?.[0]}{c.lastName?.[0]}
-                                </div>
-                                <div>
-                                  <p className="font-medium">{c.firstName} {c.lastName}</p>
-                                  <p className="text-xs text-gray-400">{c.email} · ID #{c.id}</p>
-                                </div>
-                              </button>
-                            ))}
-                          {allCandidatesForAdd.filter((c: any) => {
+
+                    {/* Mode toggle */}
+                    <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
+                      <button
+                        type="button"
+                        onClick={() => { setTwvAddMode('search'); setTwvNewFirstName(''); setTwvNewLastName(''); setTwvNewEmail(''); setTwvNewNationality(''); }}
+                        className={`flex-1 py-2 transition-colors ${twvAddMode === 'search' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        Bestaand in systeem
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setTwvAddMode('new'); setTwvAddSearch(''); setTwvAddSelected(null); }}
+                        className={`flex-1 py-2 transition-colors ${twvAddMode === 'new' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        Nieuwe medewerker
+                      </button>
+                    </div>
+
+                    {/* Bestaand: zoekfunctie */}
+                    {twvAddMode === 'search' && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">Zoek medewerker</label>
+                        <Input
+                          placeholder="Zoek op naam of e-mail…"
+                          value={twvAddSearch}
+                          onChange={e => { setTwvAddSearch(e.target.value); setTwvAddSelected(null); }}
+                          className="h-9 text-sm"
+                        />
+                        {twvAddSearch.length >= 2 && !twvAddSelected && (() => {
+                          const filtered = allCandidatesForAdd.filter((c: any) => {
                             const q = twvAddSearch.toLowerCase();
                             const alreadyInTwv = twvCandidates.some(t => t.id === c.id);
                             return !alreadyInTwv && (
                               `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
                               (c.email || '').toLowerCase().includes(q)
                             );
-                          }).length === 0 && (
-                            <p className="text-xs text-gray-400 px-3 py-3">Geen resultaten gevonden</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {twvAddSelected && (
-                      <div className="bg-purple-50 rounded-lg p-3 text-sm flex items-center gap-2 border border-purple-200">
-                        <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-xs font-bold text-purple-700">
-                          {twvAddSelected.firstName?.[0]}{twvAddSelected.lastName?.[0]}
+                          });
+                          return (
+                            <div className="border rounded-lg mt-1 max-h-44 overflow-y-auto shadow-sm bg-white">
+                              {filtered.slice(0, 8).map((c: any) => (
+                                <button
+                                  key={c.id}
+                                  className="w-full text-left px-3 py-2 hover:bg-purple-50 text-sm flex items-center gap-2 border-b last:border-b-0"
+                                  onClick={() => { setTwvAddSelected(c); setTwvAddSearch(`${c.firstName} ${c.lastName}`); }}
+                                >
+                                  <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 shrink-0">
+                                    {c.firstName?.[0]}{c.lastName?.[0]}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{c.firstName} {c.lastName}</p>
+                                    <p className="text-xs text-gray-400">{c.email} · ID #{c.id}</p>
+                                  </div>
+                                </button>
+                              ))}
+                              {filtered.length === 0 && (
+                                <div className="px-3 py-3">
+                                  <p className="text-xs text-gray-400 mb-2">Geen resultaten gevonden in het systeem.</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setTwvAddMode('new'); setTwvNewFirstName(twvAddSearch); setTwvAddSearch(''); }}
+                                    className="text-xs text-purple-600 hover:text-purple-800 font-medium underline"
+                                  >
+                                    + Nieuwe medewerker aanmaken
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                        {twvAddSelected && (
+                          <div className="bg-purple-50 rounded-lg p-3 mt-2 text-sm flex items-center gap-2 border border-purple-200">
+                            <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-xs font-bold text-purple-700">
+                              {twvAddSelected.firstName?.[0]}{twvAddSelected.lastName?.[0]}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium">{twvAddSelected.firstName} {twvAddSelected.lastName}</p>
+                              <p className="text-xs text-gray-500">{twvAddSelected.email}</p>
+                            </div>
+                            <button type="button" onClick={() => { setTwvAddSelected(null); setTwvAddSearch(''); }} className="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Nieuw: invulformulier */}
+                    {twvAddMode === 'new' && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 mb-1 block">Voornaam *</label>
+                            <Input value={twvNewFirstName} onChange={e => setTwvNewFirstName(e.target.value)} placeholder="Voornaam" className="h-9 text-sm" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 mb-1 block">Achternaam *</label>
+                            <Input value={twvNewLastName} onChange={e => setTwvNewLastName(e.target.value)} placeholder="Achternaam" className="h-9 text-sm" />
+                          </div>
                         </div>
                         <div>
-                          <p className="font-medium">{twvAddSelected.firstName} {twvAddSelected.lastName}</p>
-                          <p className="text-xs text-gray-500">{twvAddSelected.email}</p>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">E-mail (optioneel)</label>
+                          <Input type="email" value={twvNewEmail} onChange={e => setTwvNewEmail(e.target.value)} placeholder="naam@voorbeeld.nl" className="h-9 text-sm" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Nationaliteit (optioneel)</label>
+                          <Input value={twvNewNationality} onChange={e => setTwvNewNationality(e.target.value)} placeholder="bijv. Marokkaans, Turks…" className="h-9 text-sm" />
                         </div>
                       </div>
                     )}
+
+                    {/* Gedeelde TWV velden */}
                     <div>
                       <label className="text-xs font-medium text-gray-500 mb-1 block">TWV Status</label>
                       <select
@@ -3299,22 +3384,43 @@ export default function DashboardMockup() {
                       />
                     </div>
                     <div className="flex gap-2 pt-1">
-                      <Button
-                        className="flex-1 bg-purple-600 hover:bg-purple-700"
-                        disabled={!twvAddSelected || addTwvCandidateMutation.isPending}
-                        onClick={() => {
-                          if (!twvAddSelected) return;
-                          addTwvCandidateMutation.mutate({
-                            candidateId: twvAddSelected.id,
-                            twvStatus: twvAddStatus,
-                            twvStartDate: twvAddStartDate || undefined,
-                            twvEndDate: twvAddEndDate || undefined,
-                            twvNotes: twvAddNotes || undefined,
-                          });
-                        }}
-                      >
-                        {addTwvCandidateMutation.isPending ? 'Bezig…' : 'Toevoegen aan TWV'}
-                      </Button>
+                      {twvAddMode === 'search' ? (
+                        <Button
+                          className="flex-1 bg-purple-600 hover:bg-purple-700"
+                          disabled={!twvAddSelected || addTwvCandidateMutation.isPending}
+                          onClick={() => {
+                            if (!twvAddSelected) return;
+                            addTwvCandidateMutation.mutate({
+                              candidateId: twvAddSelected.id,
+                              twvStatus: twvAddStatus,
+                              twvStartDate: twvAddStartDate || undefined,
+                              twvEndDate: twvAddEndDate || undefined,
+                              twvNotes: twvAddNotes || undefined,
+                            });
+                          }}
+                        >
+                          {addTwvCandidateMutation.isPending ? 'Bezig…' : 'Toevoegen aan TWV'}
+                        </Button>
+                      ) : (
+                        <Button
+                          className="flex-1 bg-purple-600 hover:bg-purple-700"
+                          disabled={!twvNewFirstName.trim() || !twvNewLastName.trim() || createAndAddTwvMutation.isPending}
+                          onClick={() => {
+                            createAndAddTwvMutation.mutate({
+                              firstName: twvNewFirstName.trim(),
+                              lastName: twvNewLastName.trim(),
+                              email: twvNewEmail.trim() || undefined,
+                              nationality: twvNewNationality.trim() || undefined,
+                              twvStatus: twvAddStatus,
+                              twvStartDate: twvAddStartDate || undefined,
+                              twvEndDate: twvAddEndDate || undefined,
+                              twvNotes: twvAddNotes || undefined,
+                            });
+                          }}
+                        >
+                          {createAndAddTwvMutation.isPending ? 'Bezig…' : 'Aanmaken & toevoegen aan TWV'}
+                        </Button>
+                      )}
                       <Button variant="outline" onClick={() => setTwvManualAddOpen(false)}>Annuleren</Button>
                     </div>
                   </div>
