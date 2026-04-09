@@ -19,7 +19,7 @@ export function useAnalytics() {
     
     // Example implementation with Google Analytics (if it was added to the page)
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('config', 'GA-TRACKING-ID', {
+      (window as any).gtag('config', 'G-097EFEQ8YN', {
         page_path: data.path,
         page_title: document.title,
         page_variant: data.variant || 'default'
