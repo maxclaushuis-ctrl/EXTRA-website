@@ -6016,7 +6016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         twvNotes: twvNotes || null,
         status: 'in_behandeling',
         sourceChannel: 'handmatig',
-        isInternalInterview: false,
+        isInternalInterview: true,
         partialForm: false,
       } as any);
       return res.json(newCandidate);
