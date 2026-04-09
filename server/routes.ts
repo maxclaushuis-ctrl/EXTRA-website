@@ -570,8 +570,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email en wachtwoord zijn vereist" });
       }
 
-      console.log("Login poging:", email);
-
       // Voor reguliere users
       const user = await storage.getUserByEmail(email);
       
@@ -597,8 +595,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log("Finale wachtwoord verificatie resultaat:", isValidPassword);
-      
       if (!isValidPassword) {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
       }
@@ -610,7 +606,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userRole = user.role;
       
       console.log("Medewerker sessie ingesteld, nu opslaan...");
-      console.log("Sessie inhoud voor medewerker:", req.session);
       
       // Expliciete sessie opslaan
       req.session.save((err) => {
