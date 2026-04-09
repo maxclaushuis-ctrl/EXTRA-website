@@ -4,7 +4,6 @@ import { useState, useEffect, lazy, Suspense, Component, ReactNode } from "react
 
 const Home = lazy(() => import("@/pages/Home"));
 const NotFound = lazy(() => import("@/pages/not-found"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
 const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
 const Brochure = lazy(() => import("@/pages/Brochure"));
@@ -179,14 +178,13 @@ function Router() {
   const { isAuthenticated, user } = useAuth();
   const [location] = useLocation();
 
-  const isEmployeeDashboard = location === '/mijn-dashboard';
   const isPlanningPage = location.startsWith('/planning');
   const isDashboardMockup = location.startsWith('/dashboard');
   const isPublicPage = PUBLIC_PATHS.some(p => location === p || location.startsWith(p + '/'));
 
   return (
     <>
-      {isAuthenticated && !isEmployeeDashboard && !isPlanningPage && !isDashboardMockup && !isPublicPage && (
+      {isAuthenticated && !isPlanningPage && !isDashboardMockup && !isPublicPage && (
         <NotificationToast />
       )}
 
@@ -291,7 +289,6 @@ function Router() {
           <Route path="/dashboard" component={DashboardMockup} />
 
           {/* Beschermde routes */}
-          <Route path="/mijn-dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
           <Route path="/profile">{() => <ProtectedRoute component={UserProfile} />}</Route>
           <Route path="/rewards">{() => <ProtectedRoute component={Rewards} />}</Route>
           <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>

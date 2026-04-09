@@ -5,7 +5,7 @@ import { useAnalytics } from "@/hooks/use-analytics";
 
 export default function Home() {
   const [_, navigate] = useLocation();
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { trackPageView } = useAnalytics();
   
   // Track page view
@@ -16,19 +16,12 @@ export default function Home() {
     });
   }, [trackPageView]);
   
-  // Redirect logic
+  // Niet ingelogde bezoekers gaan naar de landingspagina
   useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated && user && user.role !== 'admin') {
-        // Medewerkers gaan naar hun eigen dashboard
-        navigate('/mijn-dashboard');
-      } else if (!isAuthenticated) {
-        // Niet ingelogd → landingspagina
-        navigate('/landing');
-      }
-      // Admins blijven op de landingspagina (geen automatische redirect naar /dashboard)
+    if (!isLoading && !isAuthenticated) {
+      navigate('/landing');
     }
-  }, [isAuthenticated, user, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading) {
     return (
