@@ -272,6 +272,25 @@ export default function SollicitatieFormulier() {
         }
       }
 
+      if (currentSection === 6 && functionType === "housekeeping") {
+        const hkFields = ["hkBetrouwbaarheid", "hkCommunicatie", "hkRepresentativiteit"];
+        const missing = hkFields.filter(f => {
+          const val = (watch as any)(f);
+          return val === undefined || val === null || val === "" || val === 0;
+        });
+        if (missing.length > 0) {
+          const labels = missing.map(f => scoreFieldLabels[f] || f);
+          setScoreErrors(labels);
+          toast({
+            title: "Vul alle verplichte scores in",
+            description: `Ontbrekend: ${labels.join(", ")}`,
+            variant: "destructive",
+          });
+          window.scrollTo(0, 0);
+          return;
+        }
+      }
+
       if (currentSection === 7) {
         const fieldsToCheck = section7ScoreFields.filter(f => {
           if (f === "chefProfessioneleUitstraling" && functionType !== "chef") return false;
@@ -345,8 +364,10 @@ export default function SollicitatieFormulier() {
         variant: "destructive",
       });
       const sec4Fields = ["serviceSkills", "barSkills", "dinerSkills"];
+      const hkSec6Fields = ["hkBetrouwbaarheid", "hkCommunicatie", "hkRepresentativiteit"];
       const hasSec4Missing = missing.some(f => sec4Fields.includes(f));
-      setCurrentSection(hasSec4Missing ? 4 : 7);
+      const hasHkSec6Missing = missing.some(f => hkSec6Fields.includes(f));
+      setCurrentSection(hasSec4Missing ? 4 : hasHkSec6Missing ? 6 : 7);
       window.scrollTo(0, 0);
       return;
     }
