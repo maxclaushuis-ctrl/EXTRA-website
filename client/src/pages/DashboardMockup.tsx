@@ -197,7 +197,6 @@ export default function DashboardMockup() {
   const [cvBlobLoading, setCvBlobLoading] = useState(false);
   const [deleteKandidaatId, setDeleteKandidaatId] = useState<number | null>(null);
   const [deleteKandidaatNaam, setDeleteKandidaatNaam] = useState('');
-  const [deleteKandidaatStep, setDeleteKandidaatStep] = useState<1 | 2>(1);
   const [adminCreateOpen, setAdminCreateOpen] = useState(false);
   const [adminCreateData, setAdminCreateData] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const [adminCreateLoading, setAdminCreateLoading] = useState(false);
@@ -1148,41 +1147,26 @@ export default function DashboardMockup() {
                 </DialogContent>
               </Dialog>
 
-              {/* Verwijder kandidaat — dubbele bevestiging */}
-              <Dialog open={deleteKandidaatId !== null} onOpenChange={(open) => { if (!open) { setDeleteKandidaatId(null); setDeleteKandidaatStep(1); } }}>
+              {/* Verwijder kandidaat — enkele bevestiging */}
+              <Dialog open={deleteKandidaatId !== null} onOpenChange={(open) => { if (!open) setDeleteKandidaatId(null); }}>
                 <DialogContent className="max-w-sm">
                   <DialogHeader>
                     <DialogTitle className="text-base font-semibold text-red-700">Kandidaat permanent verwijderen</DialogTitle>
                   </DialogHeader>
-                  {deleteKandidaatStep === 1 ? (
-                    <>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Weet je zeker dat je <strong>{deleteKandidaatNaam}</strong> wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
-                      </p>
-                      <div className="flex gap-3 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => { setDeleteKandidaatId(null); setDeleteKandidaatStep(1); }}>Annuleren</Button>
-                        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setDeleteKandidaatStep(2)}>
-                          Ja, verwijderen
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm text-gray-700 mb-1 font-medium">Dit is een definitieve actie.</p>
-                      <p className="text-sm text-gray-500 mb-4">Klik op <strong>"Definitief verwijderen"</strong> om het profiel van <strong>{deleteKandidaatNaam}</strong> voor altijd te wissen.</p>
-                      <div className="flex gap-3 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setDeleteKandidaatStep(1)}>Terug</Button>
-                        <Button
-                          size="sm"
-                          className="bg-red-700 hover:bg-red-800 text-white"
-                          disabled={deleteKandidaatMutation.isPending}
-                          onClick={() => { if (deleteKandidaatId !== null) deleteKandidaatMutation.mutate(deleteKandidaatId); }}
-                        >
-                          {deleteKandidaatMutation.isPending ? 'Bezig...' : 'Definitief verwijderen'}
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                  <p className="text-sm text-gray-600 mb-4">
+                    Weet je zeker dat je <strong>{deleteKandidaatNaam}</strong> wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+                  </p>
+                  <div className="flex gap-3 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setDeleteKandidaatId(null)}>Annuleren</Button>
+                    <Button
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      disabled={deleteKandidaatMutation.isPending}
+                      onClick={() => { if (deleteKandidaatId !== null) deleteKandidaatMutation.mutate(deleteKandidaatId); }}
+                    >
+                      {deleteKandidaatMutation.isPending ? 'Bezig...' : 'Ja, verwijderen'}
+                    </Button>
+                  </div>
                 </DialogContent>
               </Dialog>
 
