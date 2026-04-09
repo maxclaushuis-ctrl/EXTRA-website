@@ -1630,6 +1630,7 @@ export default function DashboardMockup() {
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Telefoon</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Nat.</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Taal</th>
+                            <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Kanaal</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase">CV</th>
                           </tr>
                         </thead>
@@ -1701,6 +1702,14 @@ export default function DashboardMockup() {
                                 {/* VOERTAAL */}
                                 <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden xl:table-cell">
                                   {c.language || '—'}
+                                </td>
+                                {/* KANAAL */}
+                                <td className="px-3 py-3 text-xs whitespace-nowrap hidden lg:table-cell">
+                                  {c.sourceChannel ? (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 max-w-[120px] truncate" title={c.sourceChannel}>
+                                      {c.sourceChannel}
+                                    </span>
+                                  ) : '—'}
                                 </td>
                                 {/* CV + ACTIES */}
                                 <td className="px-3 py-3">

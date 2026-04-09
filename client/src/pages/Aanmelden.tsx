@@ -140,25 +140,25 @@ interface ExperienceThresholds {
 }
 
 const NL_THRESHOLDS: ExperienceThresholds = {
-  housekeeping: ["3plus"],
+  housekeeping: ["1to3", "3plus"],
   horecamedewerker: ["6to12", "1to3", "3plus"],
-  frontoffice: ["1to3", "3plus"],
+  frontoffice: ["6to12", "1to3", "3plus"],
   chef: ["1to3", "3plus"],
   logistiek: ["1to3", "3plus"],
 };
 
 const EU_THRESHOLDS: ExperienceThresholds = {
-  housekeeping: ["3plus"],
+  housekeeping: ["1to3", "3plus"],
   horecamedewerker: ["1to3", "3plus"],
-  frontoffice: ["1to3", "3plus"],
+  frontoffice: ["6to12", "1to3", "3plus"],
   chef: ["1to3", "3plus"],
   logistiek: ["1to3", "3plus"],
 };
 
 const NON_EU_THRESHOLDS: ExperienceThresholds = {
-  housekeeping: ["3plus"],
+  housekeeping: ["1to3", "3plus"],
   horecamedewerker: ["1to3", "3plus"],
-  frontoffice: ["1to3", "3plus"],
+  frontoffice: ["6to12", "1to3", "3plus"],
   chef: ["1to3", "3plus"],
   logistiek: ["1to3", "3plus"],
 };
