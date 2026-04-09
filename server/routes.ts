@@ -183,7 +183,7 @@ async function sendPlanbordWebhook(candidate: { id: number; firstName: string; l
 
 const registrationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50,
   skip: (req: Request) => {
     // @doehetextra.nl e-mailadressen mogen onbeperkt testen
     const email = (req.body?.email || '').toLowerCase();
