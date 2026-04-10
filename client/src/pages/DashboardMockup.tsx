@@ -2228,17 +2228,9 @@ export default function DashboardMockup() {
                           <Card className="bg-gray-50 border-0">
                             <CardContent className="p-3 text-sm">
                               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Beoordeling</p>
-                              {selectedApp.assessmentRating ? (
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-gray-500">Eindoordeel</span>
-                                  <span className="flex gap-0.5">
-                                    {[1,2,3,4,5].map(i => (
-                                      <Star key={i} className={`h-4 w-4 ${i <= parseInt(selectedApp.assessmentRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
-                                    ))}
-                                  </span>
-                                </div>
-                              ) : <p className="text-gray-400 text-xs">Nog geen eindoordeel</p>}
-                              {fd.remarks && <p className="text-gray-600 text-xs mt-2 italic">"{fd.remarks}"</p>}
+                              {fd.remarks
+                                ? <p className="text-gray-600 text-xs italic">"{fd.remarks}"</p>
+                                : <p className="text-gray-400 text-xs">Geen opmerkingen</p>}
                             </CardContent>
                           </Card>
                         </div>
