@@ -2227,7 +2227,7 @@ export default function DashboardMockup() {
                           </Card>
                           <Card className="bg-gray-50 border-0">
                             <CardContent className="p-3 text-sm">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Beoordeling</p>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Notities</p>
                               {fd.remarks
                                 ? <p className="text-gray-600 text-xs italic">"{fd.remarks}"</p>
                                 : <p className="text-gray-400 text-xs">Geen opmerkingen</p>}
@@ -2758,6 +2758,7 @@ export default function DashboardMockup() {
                                 <th className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap bg-gray-50 sticky left-0">Naam</th>
                                 <Th>Functie</Th>
                                 <Th>Woonplaats</Th>
+                                <Th>Referentie</Th>
                                 <Th>E-mail</Th>
                                 <Th>Telefoonnummer</Th>
                                 <Th>Interviewer</Th>
@@ -2771,6 +2772,7 @@ export default function DashboardMockup() {
                                   <NameCell app={app} />
                                   <Td><Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(app.functionType)}`}>{fnLabels[app.functionType] || app.functionType}</Badge></Td>
                                   <Td>{app.city || '—'}</Td>
+                                  <Td>{app.adminNotes ? <span className="text-green-600 font-medium text-xs">Ja</span> : <span className="text-gray-400 text-xs">Nee</span>}</Td>
                                   <Td>{app.email || '—'}</Td>
                                   <Td>{app.phone || '—'}</Td>
                                   <Td>{app.interviewer || '—'}</Td>
