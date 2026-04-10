@@ -264,6 +264,7 @@ export default function DashboardMockup() {
   }, [cvPreviewOpen, cvPreviewCandidate]);
 
   // TWV tab state
+  const [twvStatusTab, setTwvStatusTab] = useState<string>('alle');
   const [twvSearch, setTwvSearch] = useState('');
   const [twvDragOver, setTwvDragOver] = useState<string | null>(null);
   const [twvEditOpen, setTwvEditOpen] = useState(false);
@@ -3566,51 +3567,14 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                 </div>
               </div>
 
-              {/* Search */}
-              <div className="relative mb-5">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Zoek op naam of ID…"
-                  value={twvSearch}
-                  onChange={e => setTwvSearch(e.target.value)}
-                  className="pl-9 h-9 text-sm bg-white"
-                />
-              </div>
-
               {(() => {
-                const TWV_COLUMNS: { key: TwvCandidate['twvStatus']; label: string; color: string; bg: string; border: string }[] = [
-                  { key: 'twv_nodig', label: 'TWV Nodig', color: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200' },
-                  { key: 'twv_aangevraagd', label: 'TWV Aangevraagd', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
-                  { key: 'info_nodig', label: 'Info nodig', color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200' },
-                  { key: 'twv_verstrekt', label: 'TWV Verstrekt', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
-                  { key: 'twv_verlopen', label: 'TWV Verlopen', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
-                ];
-
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
-                function getTwvColor(c: TwvCandidate): 'green' | 'orange' | 'red' | null {
-                  if (c.twvStatus !== 'twv_verstrekt' || !c.twvEndDate) return null;
-                  const end = new Date(c.twvEndDate);
-                  end.setHours(0, 0, 0, 0);
-                  const days = Math.round((end.getTime() - today.getTime()) / 86400000);
-                  if (days < 0) return 'red';
-                  if (days <= 30) return 'orange';
-                  return 'green';
-                }
-
                 const searchLower = twvSearch.toLowerCase();
-                const filtered = twvCandidates.filter(c => {
-                  if (!searchLower) return true;
-                  return (
-                    c.firstName.toLowerCase().includes(searchLower) ||
-                    c.lastName.toLowerCase().includes(searchLower) ||
-                    String(c.id).includes(searchLower)
-                  );
-                });
 
-                // Auto-move expired to twv_verlopen column visually
-                const displayCandidates = filtered.map(c => {
+                // Auto-move expired to twv_verlopen visually
+                const displayCandidates = twvCandidates.map(c => {
                   if (c.twvStatus === 'twv_verstrekt' && c.twvEndDate) {
                     const end = new Date(c.twvEndDate);
                     end.setHours(0, 0, 0, 0);
@@ -3619,202 +3583,248 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   return c;
                 });
 
-                const byColumn = (key: TwvCandidate['twvStatus']) =>
-                  displayCandidates.filter(c => (c.twvStatus ?? 'twv_nodig') === key);
+                const filtered = displayCandidates.filter(c => {
+                  if (!searchLower) return true;
+                  return (
+                    c.firstName.toLowerCase().includes(searchLower) ||
+                    c.lastName.toLowerCase().includes(searchLower) ||
+                    String(c.id).includes(searchLower) ||
+                    (c.nationality || '').toLowerCase().includes(searchLower)
+                  );
+                });
 
-                function handleDrop(e: React.DragEvent, targetStatus: string) {
-                  e.preventDefault();
-                  const id = parseInt(e.dataTransfer.getData('candidateId'));
-                  if (!id) return;
-                  setTwvDragOver(null);
-                  updateTwvMutation.mutate({ id, twvStatus: targetStatus });
+                const TWV_TABS = [
+                  { key: 'alle',           label: 'Alle',             active: 'bg-purple-600 text-white',  inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { key: 'twv_nodig',      label: 'TWV Nodig',        active: 'bg-gray-700 text-white',    inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { key: 'twv_aangevraagd',label: 'TWV Aangevraagd',  active: 'bg-blue-600 text-white',    inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { key: 'info_nodig',     label: 'Info nodig',       active: 'bg-amber-500 text-white',   inactive: 'bg-white border border-amber-200 text-amber-700' },
+                  { key: 'twv_verstrekt',  label: 'TWV Verstrekt',    active: 'bg-green-600 text-white',   inactive: 'bg-white border border-gray-200 text-gray-600' },
+                  { key: 'twv_verlopen',   label: 'TWV Verlopen',     active: 'bg-red-500 text-white',     inactive: 'bg-white border border-red-200 text-red-600' },
+                ];
+
+                const countFor = (key: string) => key === 'alle'
+                  ? filtered.length
+                  : filtered.filter(c => (c.twvStatus ?? 'twv_nodig') === key).length;
+
+                const visibleCandidates = twvStatusTab === 'alle'
+                  ? filtered
+                  : filtered.filter(c => (c.twvStatus ?? 'twv_nodig') === twvStatusTab);
+
+                const STATUS_LABELS: Record<string, string> = {
+                  twv_nodig: 'TWV Nodig',
+                  twv_aangevraagd: 'TWV Aangevraagd',
+                  info_nodig: 'Info nodig',
+                  twv_verstrekt: 'TWV Verstrekt',
+                  twv_verlopen: 'TWV Verlopen',
+                };
+
+                function statusBadge(c: TwvCandidate) {
+                  const s = c.twvStatus ?? 'twv_nodig';
+                  const classes: Record<string, string> = {
+                    twv_nodig: 'bg-gray-100 text-gray-700',
+                    twv_aangevraagd: 'bg-blue-100 text-blue-700',
+                    info_nodig: 'bg-amber-100 text-amber-700',
+                    twv_verstrekt: 'bg-green-100 text-green-700',
+                    twv_verlopen: 'bg-red-100 text-red-700',
+                  };
+                  return (
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${classes[s] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {STATUS_LABELS[s] ?? s}
+                    </span>
+                  );
                 }
 
+                function expiryBadge(c: TwvCandidate) {
+                  if (c.twvStatus !== 'twv_verstrekt' || !c.twvEndDate) return null;
+                  const end = new Date(c.twvEndDate);
+                  end.setHours(0, 0, 0, 0);
+                  const days = Math.round((end.getTime() - today.getTime()) / 86400000);
+                  if (days < 0) return <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600"><AlertTriangle className="h-3.5 w-3.5" /> Verlopen</span>;
+                  if (days <= 30) return <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600"><AlertTriangle className="h-3.5 w-3.5" /> {days} dagen</span>;
+                  return <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 className="h-3.5 w-3.5" /> Geldig</span>;
+                }
+
+                const FUNCTION_LABELS: Record<string, string> = {
+                  horecamedewerker: 'Horeca',
+                  housekeeping: 'Housekeeping',
+                  chef: 'Chef',
+                  frontoffice: 'Front office',
+                };
+
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {TWV_COLUMNS.map(col => {
-                      const cards = byColumn(col.key);
-                      return (
-                        <div
-                          key={col.key}
-                          className={`rounded-xl border-2 ${col.border} ${col.bg} min-h-[400px] transition-all ${twvDragOver === col.key ? 'ring-2 ring-purple-400 scale-[1.01]' : ''}`}
-                          onDragOver={e => { e.preventDefault(); setTwvDragOver(col.key as string); }}
-                          onDragLeave={() => setTwvDragOver(null)}
-                          onDrop={e => handleDrop(e, col.key as string)}
+                  <>
+                    {/* Status tabs */}
+                    <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+                      {TWV_TABS.map(({ key, label, active, inactive }) => (
+                        <button
+                          key={key}
+                          onClick={() => setTwvStatusTab(key)}
+                          className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${twvStatusTab === key ? active : inactive}`}
                         >
-                          {/* Column header */}
-                          <div className={`px-3 py-2.5 border-b ${col.border} flex items-center justify-between`}>
-                            <span className={`text-sm font-semibold ${col.color}`}>{col.label}</span>
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${col.bg} ${col.color} border ${col.border}`}>
-                              {cards.length}
-                            </span>
+                          {label}
+                          <span className={`text-xs font-bold rounded-full px-1.5 py-0.5 ${twvStatusTab === key ? 'bg-white/20' : key === 'info_nodig' ? 'bg-amber-50 text-amber-600' : key === 'twv_verlopen' ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
+                            {countFor(key)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative mb-4">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Zoek op naam, ID of nationaliteit…"
+                        value={twvSearch}
+                        onChange={e => setTwvSearch(e.target.value)}
+                        className="pl-9 bg-white"
+                      />
+                    </div>
+
+                    {/* Table */}
+                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                      {/* Table header */}
+                      <div className="grid grid-cols-[2fr_1fr_1fr_1.5fr_1fr_1.2fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <span>Medewerker</span>
+                        <span>Nationaliteit</span>
+                        <span>Functie</span>
+                        <span>TWV periode</span>
+                        <span>Geldigheid</span>
+                        <span>Status / Acties</span>
+                      </div>
+
+                      {twvLoading ? (
+                        <div className="p-6 space-y-3">
+                          {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}
+                        </div>
+                      ) : visibleCandidates.length === 0 ? (
+                        <div className="py-16 text-center text-gray-400">
+                          <ShieldAlert className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                          <p className="text-sm">Geen medewerkers gevonden</p>
+                        </div>
+                      ) : visibleCandidates.map((c, idx) => (
+                        <div
+                          key={c.id}
+                          className={`grid grid-cols-[2fr_1fr_1fr_1.5fr_1fr_1.2fr] gap-4 px-5 py-4 items-center transition-colors hover:bg-gray-50 ${idx > 0 ? 'border-t border-gray-100' : ''}`}
+                        >
+                          {/* Medewerker */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-purple-700 shrink-0">
+                              {c.firstName[0]}{c.lastName[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">{c.firstName} {c.lastName}</p>
+                              <p className="text-xs text-gray-400">ID #{c.id}</p>
+                            </div>
                           </div>
 
-                          {/* Cards */}
-                          <div className="p-2 space-y-2">
-                            {twvLoading ? (
-                              <div className="space-y-2 p-2">
-                                {[1,2].map(i => <div key={i} className="h-20 bg-white rounded-lg animate-pulse" />)}
+                          {/* Nationaliteit */}
+                          <div className="text-sm text-gray-600">
+                            {c.nationality ? <span>🌍 {c.nationality}</span> : <span className="text-gray-300">—</span>}
+                          </div>
+
+                          {/* Functie */}
+                          <div className="text-sm text-gray-600">
+                            {FUNCTION_LABELS[(c as any).functionType] ?? (c as any).functionType ?? <span className="text-gray-300">—</span>}
+                          </div>
+
+                          {/* TWV periode */}
+                          <div className="text-sm text-gray-600">
+                            {(c.twvStartDate || c.twvEndDate) ? (
+                              <div>
+                                <div>{c.twvStartDate ? new Date(c.twvStartDate).toLocaleDateString('nl-NL') : '—'}</div>
+                                <div className="text-xs text-gray-400">t/m {c.twvEndDate ? new Date(c.twvEndDate).toLocaleDateString('nl-NL') : '—'}</div>
                               </div>
-                            ) : cards.length === 0 ? (
-                              <div className="text-center py-8 text-xs text-gray-400">Geen medewerkers</div>
-                            ) : cards.map(c => {
-                              const twvColor = getTwvColor(c);
-                              const daysLeft = c.twvEndDate ? Math.round((new Date(c.twvEndDate).setHours(0,0,0,0) - today.getTime()) / 86400000) : null;
+                            ) : (
+                              <button
+                                className="text-xs text-purple-500 hover:text-purple-700 hover:underline"
+                                onClick={() => { setTwvEditCandidate(c); setTwvEditStartDate(''); setTwvEditEndDate(''); setTwvEditOpen(true); }}
+                              >
+                                + Datums instellen
+                              </button>
+                            )}
+                          </div>
 
-                              // Compacte horizontale kaart voor TWV Verstrekt
-                              if (col.key === 'twv_verstrekt') {
-                                return (
-                                  <div
-                                    key={c.id}
-                                    draggable
-                                    onDragStart={e => { e.dataTransfer.setData('candidateId', String(c.id)); }}
-                                    className="bg-white rounded-lg border border-gray-200 px-3 py-2 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
-                                  >
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-700 shrink-0">
-                                        {c.firstName[0]}{c.lastName[0]}
-                                      </div>
-                                      <span className="text-sm font-semibold leading-tight truncate flex-1">{c.firstName} {c.lastName}</span>
-                                      <span className="text-[10px] text-gray-400 shrink-0">#{c.id}</span>
-                                      <GripVertical className="h-3.5 w-3.5 text-gray-300 shrink-0" />
-                                    </div>
-                                    <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500">
-                                      {c.nationality && (
-                                        <span className="shrink-0">🌍 {c.nationality}</span>
-                                      )}
-                                      {(c.twvStartDate || c.twvEndDate) && (
-                                        <span className="shrink-0 text-gray-600">
-                                          {c.twvStartDate ? new Date(c.twvStartDate).toLocaleDateString('nl-NL') : '—'}
-                                          {' → '}
-                                          {c.twvEndDate ? new Date(c.twvEndDate).toLocaleDateString('nl-NL') : '—'}
-                                        </span>
-                                      )}
-                                      {twvColor && (
-                                        <span className={`shrink-0 flex items-center gap-0.5 font-medium ${
-                                          twvColor === 'green' ? 'text-green-600' :
-                                          twvColor === 'orange' ? 'text-amber-600' : 'text-red-600'
-                                        }`}>
-                                          {twvColor === 'green' && <><CheckCircle2 className="h-3 w-3" /> Geldig</>}
-                                          {twvColor === 'orange' && <><AlertTriangle className="h-3 w-3" /> {daysLeft}d</>}
-                                          {twvColor === 'red' && <><AlertTriangle className="h-3 w-3" /> Verlopen</>}
-                                        </span>
-                                      )}
-                                      <button
-                                        className="ml-auto shrink-0 text-[10px] text-purple-500 hover:text-purple-700 hover:underline"
-                                        onClick={() => {
-                                          setTwvEditCandidate(c);
-                                          setTwvEditStartDate(c.twvStartDate || '');
-                                          setTwvEditEndDate(c.twvEndDate || '');
-                                          setTwvEditOpen(true);
-                                        }}
-                                      >
-                                        Datums aanpassen
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              }
+                          {/* Geldigheid */}
+                          <div>
+                            {expiryBadge(c) ?? statusBadge(c)}
+                            {(c.twvStartDate || c.twvEndDate) && (
+                              <button
+                                className="block text-[11px] text-purple-500 hover:text-purple-700 hover:underline mt-1"
+                                onClick={() => { setTwvEditCandidate(c); setTwvEditStartDate(c.twvStartDate || ''); setTwvEditEndDate(c.twvEndDate || ''); setTwvEditOpen(true); }}
+                              >
+                                Datums aanpassen
+                              </button>
+                            )}
+                          </div>
 
-                              // Standaard kaart voor overige kolommen
-                              return (
-                                <div
-                                  key={c.id}
-                                  draggable
-                                  onDragStart={e => { e.dataTransfer.setData('candidateId', String(c.id)); }}
-                                  className="bg-white rounded-lg border border-gray-200 px-3 py-2 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
-                                >
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 shrink-0">
-                                      {c.firstName[0]}{c.lastName[0]}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium leading-tight truncate">{c.firstName} {c.lastName}</p>
-                                      <p className="text-[10px] text-gray-400">ID #{c.id}</p>
-                                    </div>
-                                    <GripVertical className="h-3.5 w-3.5 text-gray-300 shrink-0" />
-                                  </div>
-                                  {c.nationality && (
-                                    <div className="text-xs text-gray-500 mb-1">🌍 {c.nationality}</div>
-                                  )}
-                                  {col.key === 'twv_aangevraagd' && (
-                                    <button
-                                      className="text-xs text-orange-600 hover:underline mt-1 block"
-                                      onClick={() => updateTwvMutation.mutate({ id: c.id, twvStatus: 'info_nodig' })}
-                                    >
-                                      → Info nodig
-                                    </button>
-                                  )}
-                                  {col.key === 'info_nodig' && (
-                                    <button
-                                      className="text-xs text-green-600 hover:underline mt-1 block"
-                                      onClick={() => updateTwvMutation.mutate({ id: c.id, twvStatus: 'twv_verstrekt' })}
-                                    >
-                                      → Markeer als verstrekt
-                                    </button>
-                                  )}
-                                  <div className="mt-1.5 pt-1.5 border-t border-gray-100">
-                                    <button
-                                      className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors w-full"
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        setTwvNotesExpanded(prev => {
-                                          const next = new Set(prev);
-                                          if (next.has(c.id)) { next.delete(c.id); } else {
-                                            next.add(c.id);
-                                            if (twvNotesDraft[c.id] === undefined) {
-                                              setTwvNotesDraft(d => ({ ...d, [c.id]: c.twvNotes || '' }));
-                                            }
-                                          }
-                                          return next;
-                                        });
-                                      }}
-                                    >
-                                      <span className="text-sm leading-none">{twvNotesExpanded.has(c.id) ? '▾' : '▸'}</span>
-                                      <span>{c.twvNotes ? 'Notitie bekijken / bewerken' : 'Notitie toevoegen'}</span>
-                                      {c.twvNotes && <span className="ml-auto inline-block w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                                    </button>
-                                    {twvNotesExpanded.has(c.id) && (
-                                      <div className="mt-1.5 space-y-1.5" onClick={e => e.stopPropagation()}>
-                                        <textarea
-                                          className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-text"
-                                          rows={2}
-                                          placeholder="Interne notitie…"
-                                          value={twvNotesDraft[c.id] ?? c.twvNotes ?? ''}
-                                          onChange={e => setTwvNotesDraft(d => ({ ...d, [c.id]: e.target.value }))}
-                                          onMouseDown={e => e.stopPropagation()}
-                                          draggable={false}
-                                        />
-                                        <button
-                                          className="text-xs bg-purple-600 text-white rounded px-2 py-1 hover:bg-purple-700 disabled:opacity-50"
-                                          disabled={updateTwvMutation.isPending}
-                                          onClick={() => updateTwvMutation.mutate({ id: c.id, twvNotes: twvNotesDraft[c.id] ?? '' })}
-                                        >
-                                          Opslaan
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          {/* Status / Acties */}
+                          <div className="flex flex-col gap-1.5">
+                            <select
+                              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-pointer"
+                              value={c.twvStatus ?? 'twv_nodig'}
+                              onChange={e => updateTwvMutation.mutate({ id: c.id, twvStatus: e.target.value })}
+                            >
+                              <option value="twv_nodig">TWV Nodig</option>
+                              <option value="twv_aangevraagd">TWV Aangevraagd</option>
+                              <option value="info_nodig">Info nodig</option>
+                              <option value="twv_verstrekt">TWV Verstrekt</option>
+                              <option value="twv_verlopen">TWV Verlopen</option>
+                            </select>
+                            <button
+                              className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                              onClick={() => {
+                                setTwvNotesExpanded(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(c.id)) { next.delete(c.id); } else {
+                                    next.add(c.id);
+                                    if (twvNotesDraft[c.id] === undefined) {
+                                      setTwvNotesDraft(d => ({ ...d, [c.id]: c.twvNotes || '' }));
+                                    }
+                                  }
+                                  return next;
+                                });
+                              }}
+                            >
+                              {c.twvNotes && <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
+                              {twvNotesExpanded.has(c.id) ? '▾' : '▸'} {c.twvNotes ? 'Notitie' : 'Notitie toevoegen'}
+                            </button>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+
+                      {/* Inline notes (below expanded rows) */}
+                      {visibleCandidates.map(c => twvNotesExpanded.has(c.id) && (
+                        <div key={`notes-${c.id}`} className="px-5 pb-4 border-t border-gray-100 bg-amber-50/40">
+                          <p className="text-xs font-semibold text-gray-500 mb-1.5 pt-3">Notitie voor {c.firstName} {c.lastName}</p>
+                          <div className="flex gap-2">
+                            <textarea
+                              className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-purple-400"
+                              rows={2}
+                              placeholder="Interne notitie…"
+                              value={twvNotesDraft[c.id] ?? c.twvNotes ?? ''}
+                              onChange={e => setTwvNotesDraft(d => ({ ...d, [c.id]: e.target.value }))}
+                            />
+                            <button
+                              className="text-sm bg-purple-600 text-white rounded-lg px-4 py-2 hover:bg-purple-700 disabled:opacity-50 self-end"
+                              disabled={updateTwvMutation.isPending}
+                              onClick={() => updateTwvMutation.mutate({ id: c.id, twvNotes: twvNotesDraft[c.id] ?? '' })}
+                            >
+                              Opslaan
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Legend */}
+                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500" /> TWV ruim geldig</div>
+                      <div className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500" /> Verloopt binnen 30 dagen</div>
+                      <div className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" /> Verlopen</div>
+                    </div>
+                  </>
                 );
               })()}
-
-              {/* Legend */}
-              <div className="mt-5 flex flex-wrap gap-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500" /> TWV ruim geldig</div>
-                <div className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500" /> Verloopt binnen 30 dagen — automatische herinnering verzonden</div>
-                <div className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" /> Verlopen</div>
-                <div className="ml-auto flex items-center gap-1.5 text-gray-400">
-                  <GripVertical className="h-3.5 w-3.5" /> Sleep kaarten tussen kolommen om status te wijzigen
-                </div>
-              </div>
             </div>
           ) : activeTab === 'whatsapp' ? (
             <div className="p-6">
