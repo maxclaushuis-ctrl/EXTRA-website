@@ -2220,6 +2220,7 @@ export default function DashboardMockup() {
                               {selectedApp.email && <div className="flex items-center gap-2 text-gray-700"><Mail className="h-3.5 w-3.5 text-gray-400" />{selectedApp.email}</div>}
                               {selectedApp.phone && <div className="flex items-center gap-2 text-gray-700"><Phone className="h-3.5 w-3.5 text-gray-400" />{selectedApp.phone}</div>}
                               {selectedApp.city && <div className="flex items-center gap-2 text-gray-700"><Building2 className="h-3.5 w-3.5 text-gray-400" />{selectedApp.city}</div>}
+                              {fd.birthDate && <div className="flex items-center gap-2 text-gray-700"><Calendar className="h-3.5 w-3.5 text-gray-400" />Geboortedatum: <span className="font-medium">{new Date(fd.birthDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>}
                               {selectedApp.interviewer && <div className="flex items-center gap-2 text-gray-700"><Users className="h-3.5 w-3.5 text-gray-400" />Interviewer: <span className="font-medium">{selectedApp.interviewer}</span></div>}
                               {selectedApp.salaryScale && <div className="flex items-center gap-2 text-gray-700"><Receipt className="h-3.5 w-3.5 text-gray-400" />Salariswens: <span className="font-medium">{selectedApp.salaryScale}</span></div>}
                             </CardContent>
@@ -2548,6 +2549,23 @@ export default function DashboardMockup() {
                   return isNaN(age) ? '—' : String(age);
                 };
 
+                const formatBirthDateCell = (birthDate: string | undefined) => {
+                  if (!birthDate) return <span className="text-gray-300">—</span>;
+                  const d = new Date(birthDate);
+                  if (isNaN(d.getTime())) return <span className="text-gray-300">—</span>;
+                  const dateStr = d.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                  const today = new Date();
+                  let age = today.getFullYear() - d.getFullYear();
+                  const m = today.getMonth() - d.getMonth();
+                  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+                  return (
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-xs font-medium">{dateStr}</span>
+                      {!isNaN(age) && <span className="text-[10px] text-gray-400">({age} jr)</span>}
+                    </span>
+                  );
+                };
+
                 const ScoreCell = ({ score }: { score: number | null | undefined }) => {
                   if (score === null || score === undefined) return <span className="text-gray-300 text-xs">—</span>;
                   if (score === 100) return <span className="text-xs font-bold text-yellow-600">⭐ 100%</span>;
@@ -2798,7 +2816,7 @@ export default function DashboardMockup() {
                             <Th>Taal</Th>
                             <Th>TWV</Th>
                             <Th>Woonplaats</Th>
-                            <Th>Leeftijd</Th>
+                            <Th>Geboortedatum</Th>
                             <Th>Nationaliteit</Th>
                             <Th>Horeca erv.</Th>
                             <Th>Bediening vaard.</Th>
@@ -2845,7 +2863,7 @@ export default function DashboardMockup() {
                                 <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
                                 <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
                                 <Td>{app.city || '—'}</Td>
-                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{formatBirthDateCell(fd.birthDate)}</Td>
                                 <Td>{fd.nationality || '—'}</Td>
                                 <Td>{fd.horecaExperience || '—'}</Td>
                                 <Td>{fd.serviceSkills ? `${fd.serviceSkills}/5` : '—'}</Td>
@@ -2905,7 +2923,7 @@ export default function DashboardMockup() {
                             <Th>Taal</Th>
                             <Th>TWV</Th>
                             <Th>Woonplaats</Th>
-                            <Th>Leeftijd</Th>
+                            <Th>Geboortedatum</Th>
                             <Th>Nationaliteit</Th>
                             <Th>Keuken typen</Th>
                             <Th>Diploma</Th>
@@ -2932,7 +2950,7 @@ export default function DashboardMockup() {
                                 <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
                                 <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
                                 <Td>{app.city || '—'}</Td>
-                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{formatBirthDateCell(fd.birthDate)}</Td>
                                 <Td>{fd.nationality || '—'}</Td>
                                 <Td className="max-w-[120px] truncate">{fd.chefKitchenTypes ? (Array.isArray(fd.chefKitchenTypes) ? fd.chefKitchenTypes.join(', ') : fd.chefKitchenTypes) : '—'}</Td>
                                 <Td>{fd.chefDiploma || '—'}</Td>
@@ -2975,7 +2993,7 @@ export default function DashboardMockup() {
                             <Th>Taal</Th>
                             <Th>TWV</Th>
                             <Th>Woonplaats</Th>
-                            <Th>Leeftijd</Th>
+                            <Th>Geboortedatum</Th>
                             <Th>Nationaliteit</Th>
                             <Th>HK ervaring (jr)</Th>
                             <Th>Hotel sterren</Th>
@@ -3001,7 +3019,7 @@ export default function DashboardMockup() {
                                 <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
                                 <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
                                 <Td>{app.city || '—'}</Td>
-                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{formatBirthDateCell(fd.birthDate)}</Td>
                                 <Td>{fd.nationality || '—'}</Td>
                                 <Td>{fd.hkExperienceYears || '—'}</Td>
                                 <Td>{fd.hkHotelStars ? `${fd.hkHotelStars}★` : '—'}</Td>
@@ -3043,7 +3061,7 @@ export default function DashboardMockup() {
                             <Th>Taal</Th>
                             <Th>TWV</Th>
                             <Th>Woonplaats</Th>
-                            <Th>Leeftijd</Th>
+                            <Th>Geboortedatum</Th>
                             <Th>Nationaliteit</Th>
                             <Th>Log. ervaring</Th>
                             <Th>Werkomgeving</Th>
@@ -3081,7 +3099,7 @@ export default function DashboardMockup() {
                                 <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
                                 <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
                                 <Td>{app.city || '—'}</Td>
-                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{formatBirthDateCell(fd.birthDate)}</Td>
                                 <Td>{fd.nationality || '—'}</Td>
                                 <Td>{fd.logExperience || '—'}</Td>
                                 <Td className="max-w-[120px] truncate">{fd.logWorkEnvironments ? (Array.isArray(fd.logWorkEnvironments) ? fd.logWorkEnvironments.join(', ') : fd.logWorkEnvironments) : '—'}</Td>
@@ -3135,7 +3153,7 @@ export default function DashboardMockup() {
                             <Th>Taal</Th>
                             <Th>TWV</Th>
                             <Th>Woonplaats</Th>
-                            <Th>Leeftijd</Th>
+                            <Th>Geboortedatum</Th>
                             <Th>Nationaliteit</Th>
                             <Th>Horeca erv.</Th>
                             <Th>Beoordeling</Th>
@@ -3164,7 +3182,7 @@ export default function DashboardMockup() {
                                 <Td>{fd.languages ? (Array.isArray(fd.languages) ? fd.languages.join(', ') : fd.languages) : '—'}</Td>
                                 <Td>{fd.needsWorkPermit === 'ja' ? <span className="text-amber-600 font-medium text-xs">Ja</span> : 'Nee'}</Td>
                                 <Td>{app.city || '—'}</Td>
-                                <Td>{calculateAge(fd.birthDate)}</Td>
+                                <Td>{formatBirthDateCell(fd.birthDate)}</Td>
                                 <Td>{fd.nationality || '—'}</Td>
                                 <Td>{fd.horecaExperience || '—'}</Td>
                                 <Td>{app.assessmentRating || '—'}</Td>
