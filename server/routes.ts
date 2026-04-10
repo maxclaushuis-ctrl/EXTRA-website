@@ -5649,6 +5649,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update admin notes (referenties) voor een sollicitatie
+  app.patch("/api/admin/applications/:id/notes", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { adminNotes } = req.body;
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const [updated] = await db.update(applications)
+        .set({ adminNotes })
+        .where(eq(applications.id, id))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "Sollicitatie niet gevonden" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating application notes:", error);
+      return res.status(500).json({ message: "Fout bij opslaan notities" });
+    }
+  });
+
   // Bulk delete applications by function type
   app.delete("/api/admin/applications/bulk", adminMiddleware, async (req: Request, res: Response) => {
     try {

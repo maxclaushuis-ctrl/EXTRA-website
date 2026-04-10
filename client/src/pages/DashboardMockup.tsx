@@ -304,6 +304,11 @@ export default function DashboardMockup() {
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [appDetailOpen, setAppDetailOpen] = useState(false);
   const [appRejectConfirmApp, setAppRejectConfirmApp] = useState<any | null>(null);
+  const [appNotesDraft, setAppNotesDraft] = useState<string>('');
+  // Reset draft when a different application card is opened
+  useEffect(() => {
+    setAppNotesDraft(selectedApp?.adminNotes ?? '');
+  }, [selectedApp?.id]);
 
   // Import modal state
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -442,6 +447,16 @@ export default function DashboardMockup() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
       if (selectedApp?.id === id) setSelectedApp((prev: any) => prev ? { ...prev, status } : prev);
       toast({ title: 'Status bijgewerkt' });
+    },
+  });
+
+  const saveAppNotesMutation = useMutation({
+    mutationFn: ({ id, adminNotes }: { id: number; adminNotes: string }) =>
+      apiRequest('PATCH', `/api/admin/applications/${id}/notes`, { adminNotes }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
+      setSelectedApp((prev: any) => prev ? { ...prev, adminNotes: data?.adminNotes ?? '' } : prev);
+      toast({ title: 'Referentie opgeslagen' });
     },
   });
 
@@ -2299,13 +2314,6 @@ export default function DashboardMockup() {
                               ['Communicatie', fd.hkCommunicatie],
                               ['Representativiteit', fd.hkRepresentativiteit],
                             ]} />
-                            <RatingSection title="Beoordeling interviewer" rows={[
-                              ['Ervaringsniveau', fd.experienceLevel],
-                              ['Verschijning', fd.appearance],
-                              ['Attitude', fd.attitude],
-                              ['Communicatie', fd.communicationSkills],
-                              ['Algemene indruk', fd.overallImpression],
-                            ]} />
                           </>
                         )}
 
@@ -2360,6 +2368,42 @@ export default function DashboardMockup() {
                       </>
                     );
                   })()}
+
+                  {/* Referenties sectie — altijd zichtbaar onderaan de kaart */}
+                  {selectedApp && (
+                    <div className="mt-4 border-t border-gray-100 pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                          <span className="text-purple-600 text-[10px] font-bold">R</span>
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-800">Referentie</h3>
+                        {selectedApp.adminNotes && (
+                          <span className="ml-auto text-[11px] text-green-600 font-medium">✓ Opgeslagen</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mb-2">
+                        Voeg hier de referentiegegevens toe die je hebt ontvangen (naam, telefoonnummer, bedrijf, relatie).
+                      </p>
+                      <textarea
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-700 placeholder-gray-300"
+                        rows={3}
+                        placeholder="Bijv. Jan de Vries, 06-12345678, Hotel Arena – Leidinggevende F&B"
+                        value={appNotesDraft}
+                        onChange={e => setAppNotesDraft(e.target.value)}
+                      />
+                      <div className="flex justify-end mt-2">
+                        <button
+                          className="text-sm bg-purple-600 text-white rounded-lg px-4 py-2 hover:bg-purple-700 disabled:opacity-50 font-medium"
+                          disabled={saveAppNotesMutation.isPending}
+                          onClick={() => {
+                            saveAppNotesMutation.mutate({ id: selectedApp.id, adminNotes: appNotesDraft });
+                          }}
+                        >
+                          {saveAppNotesMutation.isPending ? 'Opslaan…' : 'Referentie opslaan'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </DialogContent>
               </Dialog>
 

@@ -1136,6 +1136,7 @@ export const applications = pgTable("applications", {
   dinerScore: integer("diner_score"),
   source: text("source").default("form"),
   importBatchId: text("import_batch_id"),
+  adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
