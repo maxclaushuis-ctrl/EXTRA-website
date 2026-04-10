@@ -2113,7 +2113,7 @@ export default function DashboardMockup() {
 
               {/* Detail Modal */}
               <Dialog open={appDetailOpen} onOpenChange={setAppDetailOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" hideClose>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                   {selectedApp && (() => {
                     const fd = selectedApp.formData || {};
                     const fn = selectedApp.functionType;
@@ -2195,20 +2195,6 @@ export default function DashboardMockup() {
                                 </div>
                               </div>
                             </div>
-                            <Select
-                              value={selectedApp.status}
-                              onValueChange={(s) => updateAppStatusMutation.mutate({ id: selectedApp.id, status: s })}
-                            >
-                              <SelectTrigger className="w-36 h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="nieuw">Nieuw</SelectItem>
-                                <SelectItem value="beoordeeld">Beoordeeld</SelectItem>
-                                <SelectItem value="aangenomen">Aangenomen</SelectItem>
-                                <SelectItem value="afgewezen">Afgewezen</SelectItem>
-                              </SelectContent>
-                            </Select>
                           </div>
                         </DialogHeader>
 
