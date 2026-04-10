@@ -2113,7 +2113,7 @@ export default function DashboardMockup() {
 
               {/* Detail Modal */}
               <Dialog open={appDetailOpen} onOpenChange={setAppDetailOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" hideClose>
                   {selectedApp && (() => {
                     const fd = selectedApp.formData || {};
                     const fn = selectedApp.functionType;
