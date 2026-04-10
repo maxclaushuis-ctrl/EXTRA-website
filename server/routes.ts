@@ -726,10 +726,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get("/api/users", adminMiddleware, async (_req: Request, res: Response) => {
     try {
-      const users = await storage.getUsers();
+      // Query de database direct zodat alle gebruikers altijd zichtbaar zijn,
+      // ook na een herstart waarbij de MemStorage nog leeg is.
+      const dbUsers = await db.select().from(users);
       
       // Strip sensitive info
-      const sanitizedUsers = users.map(user => ({
+      const sanitizedUsers = dbUsers.map(user => ({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -888,10 +890,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/users/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.id);
-      
-      // Check if user exists
-      const user = await storage.getUser(userId);
-      
+
+      // Zoek gebruiker direct in de database
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
       if (!user) {
         return res.status(404).json({ message: "Gebruiker niet gevonden" });
       }
@@ -904,17 +906,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'lea@doehetextra.nl',
         'max@doehetextra.nl',
       ];
-      if (PROTECTED_ADMIN_EMAILS.includes((user as any).email)) {
+      if (PROTECTED_ADMIN_EMAILS.includes(user.email)) {
         return res.status(403).json({ message: "Dit account is beveiligd en kan niet worden verwijderd." });
       }
-      
-      // Delete user
-      const success = await storage.deleteUser(userId);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Er is iets misgegaan bij het verwijderen van de gebruiker" });
-      }
-      
+
+      // Verwijder uit database én MemStorage
+      await db.delete(users).where(eq(users.id, userId));
+      await storage.deleteUser(userId);
+
       return res.status(200).json({ message: "Gebruiker succesvol verwijderd" });
     } catch (error) {
       console.error(`Error deleting user ${req.params.id}:`, error);
