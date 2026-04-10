@@ -135,14 +135,25 @@ const REQUIRED_ADMINS = [
 async function ensureAdminAccounts() {
   try {
     for (const admin of REQUIRED_ADMINS) {
-      const { rows } = await pool.query('SELECT id FROM users WHERE email = $1', [admin.email]);
+      const { rows } = await pool.query('SELECT id, role, status FROM users WHERE email = $1', [admin.email]);
       if (rows.length === 0) {
+        // Account bestaat niet — aanmaken
         await pool.query(
           `INSERT INTO users (email, password, first_name, last_name, role, status, points, monthly_points)
            VALUES ($1, $2, $3, $4, 'admin', 'active', 0, 0)`,
           [admin.email, admin.password, admin.firstName, admin.lastName]
         );
-        log(`[admin-guard] Admin-account hersteld: ${admin.email}`);
+        log(`[admin-guard] Admin-account aangemaakt: ${admin.email}`);
+      } else {
+        const existing = rows[0];
+        // Account bestaat maar is mogelijk gedegradeerd of gedeactiveerd — herstellen
+        if (existing.role !== 'admin' || existing.status !== 'active') {
+          await pool.query(
+            `UPDATE users SET role = 'admin', status = 'active' WHERE email = $1`,
+            [admin.email]
+          );
+          log(`[admin-guard] Admin-account hersteld (rol/status): ${admin.email}`);
+        }
       }
     }
   } catch (err) {
@@ -153,6 +164,9 @@ async function ensureAdminAccounts() {
 (async () => {
   // Zorg dat alle admin-accounts altijd bestaan (ook na DB-reset of nieuw deployment)
   await ensureAdminAccounts();
+
+  // Hercontrole elke 10 minuten — ook als accounts tussentijds worden verwijderd
+  setInterval(() => ensureAdminAccounts(), 10 * 60 * 1000);
 
   // Herstel: zet is_internal_interview = true voor alle handmatig via TWV aangemaakte kandidaten
   // zodat ze niet in het Kandidaten-overzicht verschijnen

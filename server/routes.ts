@@ -895,6 +895,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "Gebruiker niet gevonden" });
       }
+
+      // Blokkeer verwijdering van vaste admin-accounts
+      const PROTECTED_ADMIN_EMAILS = [
+        'admin@extra.nl',
+        'charlotte@doehetextra.nl',
+        'eveline@doehetextra.nl',
+        'lea@doehetextra.nl',
+        'max@doehetextra.nl',
+      ];
+      if (PROTECTED_ADMIN_EMAILS.includes((user as any).email)) {
+        return res.status(403).json({ message: "Dit account is beveiligd en kan niet worden verwijderd." });
+      }
       
       // Delete user
       const success = await storage.deleteUser(userId);
