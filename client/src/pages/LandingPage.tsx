@@ -10,7 +10,7 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin, Instagram, Linkedin
 } from "lucide-react";
-import groupShotHero from "@assets/GROUP_SHOT_002_1775115679180.webp";
+const groupShotHero = "/hero.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
@@ -26,11 +26,11 @@ import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoWestweelde from "../assets/pitch/logo-westweelde-clean.webp";
-import blogHousekeeping from "../assets/images/blog-housekeeping.jpg";
-import blogCatering from "../assets/images/blog-catering.jpg";
-import blogBarista from "../assets/images/blog-barista.jpg";
-import blogTeam from "../assets/images/blog-team.jpg";
-import blogHotel from "../assets/images/blog-hotel.jpg";
+import blogHousekeeping from "../assets/images/blog-housekeeping.webp";
+import blogCatering from "../assets/images/blog-catering.webp";
+import blogBarista from "../assets/images/blog-barista.webp";
+import blogTeam from "../assets/images/blog-team.webp";
+import blogHotel from "../assets/images/blog-hotel.webp";
 import dienstChefPng from "@assets/Chef_1771833440047.webp";
 import dienstHoreca from "@assets/Horecamedewerker_1771836004844.webp";
 import dienstFrontoffice from "@assets/Front-office_1771842809388.webp";

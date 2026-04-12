@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
-import groupShotHero from "@assets/GROUP_SHOT_002_1775115679180.webp";
-import blogHousekeeping from "@/assets/images/blog-housekeeping.jpg";
-import blogCatering from "@/assets/images/blog-catering.jpg";
-import blogBarista from "@/assets/images/blog-barista.jpg";
+const groupShotHero = "/hero.webp";
+import blogHousekeeping from "@/assets/images/blog-housekeeping.webp";
+import blogCatering from "@/assets/images/blog-catering.webp";
+import blogBarista from "@/assets/images/blog-barista.webp";
 import horecaImg from "@assets/Horecamedewerker_1771836004844.webp";
 import housekeepingImg from "@assets/Housekeeping_1771842919384.webp";
 import chefImg from "@assets/Chef_1771833440047.webp";

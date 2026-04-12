@@ -27,8 +27,8 @@ import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp"
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import jixbeeUren from "@assets/Jixbee_Gewerkte_uren_1772454264961.webp";
 import jixbeePayout from "@assets/Jixbee_Payout_succes_1772454264961.webp";
-import dienstFrontOfficeImg from "@/assets/images/dienst-frontoffice.jpg";
-import hotelImg from "@/assets/images/blog-hotel.jpg";
+import dienstFrontOfficeImg from "@/assets/images/dienst-frontoffice.webp";
+import hotelImg from "@/assets/images/blog-hotel.webp";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);

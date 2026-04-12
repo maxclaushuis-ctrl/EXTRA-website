@@ -7,11 +7,11 @@ import { ArrowLeft, Clock, Calendar, ArrowRight, Tag } from "lucide-react";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import extraLogoDark from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
-import blogHousekeeping from "../assets/images/blog-housekeeping.jpg";
-import blogCatering from "../assets/images/blog-catering.jpg";
-import blogBarista from "../assets/images/blog-barista.jpg";
-import blogTeam from "../assets/images/blog-team.jpg";
-import blogHotel from "../assets/images/blog-hotel.jpg";
+import blogHousekeeping from "../assets/images/blog-housekeeping.webp";
+import blogCatering from "../assets/images/blog-catering.webp";
+import blogBarista from "../assets/images/blog-barista.webp";
+import blogTeam from "../assets/images/blog-team.webp";
+import blogHotel from "../assets/images/blog-hotel.webp";
 
 function XPatternBg({ count = 3, opacity = 0.08, color = "rgba(139,92,246,1)" }: { count?: number; opacity?: number; color?: string }) {
   const positions = [
