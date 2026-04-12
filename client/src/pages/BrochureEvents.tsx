@@ -22,21 +22,21 @@ import {
   PartyPopper
 } from "lucide-react";
 
-import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
-import extraXShape from "../assets/pitch/extra-x-shape.png";
+import extraLogoWit from "../assets/pitch/extra-logo-wit.webp";
+import extraXShape from "../assets/pitch/extra-x-shape.webp";
 
-import extraatjeApp from "../assets/pitch/extraatje-app.png";
-import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
-import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
-import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
-import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
+import extraatjeApp from "../assets/pitch/extraatje-app.webp";
+import extraatjeChallenges from "../assets/pitch/extraatje-challenges.webp";
+import adminGebruikers from "../assets/pitch/admin-gebruikers.webp";
+import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.webp";
+import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.webp";
 
-import logoHartMuseum from "../assets/pitch/logo-hart-museum.png";
-import logoWih from "../assets/pitch/logo-wih.png";
+import logoHartMuseum from "../assets/pitch/logo-hart-museum.webp";
+import logoWih from "../assets/pitch/logo-wih.webp";
 import logoFoodLineup from "../assets/pitch/logo-food-lineup.webp";
-import logoHetePeper from "../assets/pitch/logo-hete-peper.png";
+import logoHetePeper from "../assets/pitch/logo-hete-peper.webp";
 import logoScheepvaartMuseum from "../assets/pitch/logo-scheepvaart-museum.webp";
-import logoFcUtrecht from "../assets/pitch/logo-fc-utrecht.png";
+import logoFcUtrecht from "../assets/pitch/logo-fc-utrecht.webp";
 
 export default function BrochureEvents() {
   const [currentSlide, setCurrentSlide] = useState(0);

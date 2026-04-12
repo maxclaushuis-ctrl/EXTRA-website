@@ -7,11 +7,11 @@ import {
   MessageSquare, Zap, Award, Building2
 } from "lucide-react";
 
-import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
+import extraLogoWit from "../assets/pitch/extra-logo-wit.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import heroBgImage from "@assets/hero-background.webp";
 
-import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
+import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.webp";
 import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
 import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
 import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";

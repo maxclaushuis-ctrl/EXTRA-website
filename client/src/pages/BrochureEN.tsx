@@ -21,23 +21,23 @@ import {
   BarChart3
 } from "lucide-react";
 
-import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
-import extraXShape from "../assets/pitch/extra-x-shape.png";
+import extraLogoWit from "../assets/pitch/extra-logo-wit.webp";
+import extraXShape from "../assets/pitch/extra-x-shape.webp";
 
-import nhLogo from "../assets/pitch/nh-hotels-logo.png";
-import marriottLogo from "../assets/pitch/marriott-logo.png";
-import amrathLogo from "../assets/pitch/amrath-logo.png";
+import nhLogo from "../assets/pitch/nh-hotels-logo.webp";
+import marriottLogo from "../assets/pitch/marriott-logo.webp";
+import amrathLogo from "../assets/pitch/amrath-logo.webp";
 
-import extraatjeApp from "../assets/pitch/extraatje-app.png";
-import extraatjeChallenges from "../assets/pitch/extraatje-challenges.png";
-import scoringDashboardNew from "../assets/pitch/scoring-dashboard-new.png";
-import intakeBeoordeling from "../assets/pitch/intake-beoordeling.png";
-import adminGebruikers from "../assets/pitch/admin-gebruikers.png";
-import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.png";
-import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.png";
-import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.png";
-import logoRadisson from "../assets/pitch/logo-radisson.png";
-import logoHilton from "../assets/pitch/logo-hilton.png";
+import extraatjeApp from "../assets/pitch/extraatje-app.webp";
+import extraatjeChallenges from "../assets/pitch/extraatje-challenges.webp";
+import scoringDashboardNew from "../assets/pitch/scoring-dashboard-new.webp";
+import intakeBeoordeling from "../assets/pitch/intake-beoordeling.webp";
+import adminGebruikers from "../assets/pitch/admin-gebruikers.webp";
+import beoordelingenStatistieken from "../assets/pitch/beoordelingen-statistieken.webp";
+import ipadIntakeComplete from "../assets/pitch/ipad-intake-complete.webp";
+import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.webp";
+import logoRadisson from "../assets/pitch/logo-radisson.webp";
+import logoHilton from "../assets/pitch/logo-hilton.webp";
 
 export default function BrochureEN() {
   const [currentSlide, setCurrentSlide] = useState(0);

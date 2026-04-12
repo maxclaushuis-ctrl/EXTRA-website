@@ -8,21 +8,21 @@ import {
   Check, Bell, ArrowRight, Heart, CookingPot, ClipboardList
 } from "lucide-react";
 
-import extraLogoWit from "../assets/pitch/extra-logo-wit.png";
-import extraLogoBlauw from "../assets/pitch/extra-logo-blauw.png";
+import extraLogoWit from "../assets/pitch/extra-logo-wit.webp";
+import extraLogoBlauw from "../assets/pitch/extra-logo-blauw.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import heroBgImage from "@assets/hero-background.webp";
 
-import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.png";
-import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.png";
+import sollicitatieformulier from "@assets/Sollicitatieformulier_1772893764120.webp";
+import dashboardKandidaten from "@assets/Dashboard_kandidaten_1772893764120.webp";
 import scoreSnippet from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.31.00_1773311517193.png";
 import poulesMatches from "@assets/Scherm\u00adafbeelding_2026-03-12_om_10.22.20_1773311761908.png";
 import poulesButton from "@assets/Scherm\u00adafbeelding_2026-03-12_om_11.36.42_1773311845901.png";
 
-import screenDashboard from "@assets/IMG_9066_1773314165933.png";
-import screenRewards from "@assets/IMG_9067_1773314165933.png";
-import screenRanglijst from "@assets/IMG_9068_1773314165933.png";
-import screenUitdagingen from "@assets/IMG_9071_1773316943369.png";
+import screenDashboard from "@assets/IMG_9066_1773314165933.webp";
+import screenRewards from "@assets/IMG_9067_1773314165933.webp";
+import screenRanglijst from "@assets/IMG_9068_1773314165933.webp";
+import screenUitdagingen from "@assets/IMG_9071_1773316943369.webp";
 
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
@@ -30,12 +30,12 @@ import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
-import logoMercure from "../assets/pitch/logo-mercure.png";
-import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.png";
+import logoMercure from "../assets/pitch/logo-mercure.webp";
+import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.webp";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHetePeper from "@assets/Logo_hetepeper_1771267205959.webp";
-import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
+import logoWestweelde from "../assets/pitch/logo-westweelde-clean.webp";
 
 const TOTAL_SLIDES = 11;
 

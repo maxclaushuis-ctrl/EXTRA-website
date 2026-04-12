@@ -9,7 +9,7 @@ import PublicNav from "@/components/PublicNav";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
-import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.png";
+import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";

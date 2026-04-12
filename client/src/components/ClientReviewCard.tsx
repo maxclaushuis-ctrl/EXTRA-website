@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Quote, Star, Building2 } from "lucide-react";
 import type { ClientReview } from "@/data/reviews";
-import logoAmrath from "../assets/pitch/amrath-logo.png";
-import logoMarriott from "../assets/pitch/marriott-logo.png";
-import logoRadisson from "../assets/pitch/logo-radisson.png";
-import logoHart from "../assets/pitch/logo-hart-museum.png";
-import logoWestweelde from "../assets/pitch/logo-westweelde-clean.png";
+import logoAmrath from "../assets/pitch/amrath-logo.webp";
+import logoMarriott from "../assets/pitch/marriott-logo.webp";
+import logoRadisson from "../assets/pitch/logo-radisson.webp";
+import logoHart from "../assets/pitch/logo-hart-museum.webp";
+import logoWestweelde from "../assets/pitch/logo-westweelde-clean.webp";
 
 const LOGOS: Record<string, string> = {
   amrath: logoAmrath,

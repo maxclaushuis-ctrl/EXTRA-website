@@ -10,13 +10,13 @@ import {
   Building2, UtensilsCrossed, PartyPopper, Wine, MessageCircle,
   Mail, MapPin
 } from "lucide-react";
-import groupShotHero from "@assets/GROUP_SHOT_002_1775115679180.png";
+import groupShotHero from "@assets/GROUP_SHOT_002_1775115679180.webp";
 import xPatroon from "@assets/X_patroon_1771260543289.webp";
 import extraLogoWit from "@assets/EXTRA_LOGO_WIT_1771406959468.webp";
 import screenDashboard from "@assets/IMG_8971_1772395165096.webp";
 import logoAmrath from "@assets/Logo_amrath_1771267205959.webp";
-import logoMercure from "../../assets/pitch/logo-mercure.png";
-import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.png";
+import logoMercure from "../../assets/pitch/logo-mercure.webp";
+import logoPulitzer from "@assets/Logo_Pulitzer_1773389329669.webp";
 import logoFcUtrecht from "@assets/Logo_FcUtrecht_1771267205959.webp";
 import logoFunda from "@assets/Logo_funda_1771267205959.webp";
 import logoHartMuseum from "@assets/Logo_H'art-museum_1771267205959.webp";
@@ -25,7 +25,7 @@ import logoHilton from "@assets/Logo_Hilton_1771267205959.webp";
 import logoMarriott from "@assets/Logo_Marriott_1771267205959.webp";
 import logoSelectCatering from "@assets/Logo_select-catering_1771267205959.webp";
 import logoAppel from "@assets/Logo-Appel_1771267205959.webp";
-import logoWestweelde from "../../assets/pitch/logo-westweelde-clean.png";
+import logoWestweelde from "../../assets/pitch/logo-westweelde-clean.webp";
 import dienstChefPng from "@assets/Chef_1771833440047.webp";
 import dienstHoreca from "@assets/Horecamedewerker_1771836004844.webp";
 import dienstFrontoffice from "@assets/Front-office_1771842809388.webp";
