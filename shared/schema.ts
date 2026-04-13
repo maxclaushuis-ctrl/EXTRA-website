@@ -835,7 +835,7 @@ export type UserBadgeWithDetails = UserBadge & {
 export const candidateStatusEnum = pgEnum('candidate_status', ['in_behandeling', 'aangenomen', 'afgewezen']);
 
 // Functie types voor sollicitanten
-export const candidateFunctionEnum = pgEnum('candidate_function', ['housekeeping', 'horecamedewerker', 'chef', 'frontoffice']);
+export const candidateFunctionEnum = pgEnum('candidate_function', ['housekeeping', 'horecamedewerker', 'chef', 'frontoffice', 'logistiek']);
 
 // Audit action types
 export const candidateAuditActionEnum = pgEnum('candidate_audit_action', ['created', 'updated', 'status_changed', 'imported', 'anonymized', 'deleted', 'photo_uploaded', 'interview_scheduled']);
