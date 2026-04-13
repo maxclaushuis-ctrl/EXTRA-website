@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Bell, X, Check, UserPlus, FileText, ClipboardList, AlertTriangle, Building2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 type NotificationType = 'new_candidate' | 'cv_uploaded' | 'sollicitatie_form' | 'twv_expiry' | 'staffing_request' | 'interview_reminder';
 
@@ -132,7 +131,7 @@ export default function NotificationCenter() {
           </div>
 
           {/* Lijst */}
-          <ScrollArea className="max-h-[420px]">
+          <div className="overflow-y-auto max-h-[480px] overscroll-contain">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -172,7 +171,7 @@ export default function NotificationCenter() {
                 })}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </div>
       )}
     </div>
