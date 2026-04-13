@@ -4817,6 +4817,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Verjaardagen opdrachtgevers ─────────────────────────────────────────
+  app.get("/api/admin/client-birthdays", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const birthdays = await storage.getClientBirthdays();
+      return res.json(birthdays);
+    } catch (err) {
+      console.error("Fout bij ophalen verjaardagen:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.post("/api/admin/client-birthdays", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { insertClientBirthdaySchema } = await import("@shared/schema");
+      const parsed = insertClientBirthdaySchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige gegevens", errors: parsed.error.errors });
+      const birthday = await storage.createClientBirthday(parsed.data);
+      return res.status(201).json(birthday);
+    } catch (err) {
+      console.error("Fout bij aanmaken verjaardag:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.patch("/api/admin/client-birthdays/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const updated = await storage.updateClientBirthday(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Niet gevonden" });
+      return res.json(updated);
+    } catch (err) {
+      console.error("Fout bij bijwerken verjaardag:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.delete("/api/admin/client-birthdays/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      await storage.deleteClientBirthday(id);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Fout bij verwijderen verjaardag:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
   // Intake lookup — returns candidates by functionType for admin intake form
   app.get("/api/intake/candidates", authMiddleware, async (req: Request, res: Response) => {
     try {
@@ -6214,6 +6263,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   scheduleTwvCheck();
+
+  // ─── Verjaardag-herinnering opdrachtgevers (dagelijks om 8:00) ─────────────
+  async function checkClientBirthdayReminders(): Promise<void> {
+    try {
+      const birthdays = await storage.getClientBirthdays();
+      const today = new Date();
+      for (const b of birthdays) {
+        const target = new Date(today.getFullYear(), b.birthMonth - 1, b.birthDay);
+        if (target < today) target.setFullYear(today.getFullYear() + 1);
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const daysLeft = Math.round((target.getTime() - todayMidnight.getTime()) / 86400000);
+        if (daysLeft !== 3) continue;
+        // Check if we already sent this notification today for this person
+        const existing = await storage.getAdminNotifications(200);
+        const alreadySent = existing.some(n =>
+          n.type === 'staffing_request' &&
+          n.message.includes(`[verjaardag-${b.id}]`) &&
+          n.createdAt >= new Date(todayMidnight)
+        );
+        if (alreadySent) continue;
+        const monthNames = ['', 'januari', 'februari', 'maart', 'april', 'mei', 'juni',
+          'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+        storage.createAdminNotification({
+          type: 'staffing_request',
+          title: `🎂 ${b.name} is binnenkort jarig`,
+          message: `${b.name}${b.company ? ` (${b.company})` : ''} is over 3 dagen jarig (${b.birthDay} ${monthNames[b.birthMonth]}). Stuur iets leuks! [verjaardag-${b.id}]`,
+          link: '/dashboard?tab=bedrijven-verjaardagen',
+          candidateId: null,
+        }).catch((e: any) => console.error('[Verjaardag] Notificatie fout:', e));
+        console.log(`[Verjaardag] Herinnering aangemaakt voor ${b.name}`);
+      }
+    } catch (err) {
+      console.error('[Verjaardag] Fout bij verwerken herinneringen:', err);
+    }
+  }
+
+  function scheduleClientBirthdayCheck() {
+    const now = new Date();
+    const next8am = new Date(now);
+    next8am.setHours(8, 0, 0, 0);
+    if (next8am <= now) next8am.setDate(next8am.getDate() + 1);
+    const msUntil = next8am.getTime() - now.getTime();
+    setTimeout(async () => {
+      await checkClientBirthdayReminders();
+      scheduleClientBirthdayCheck();
+    }, msUntil);
+  }
+
+  scheduleClientBirthdayCheck();
 
   // ─── Gesprek-herinnering scheduler (dagelijks om 8:00) ─────────────────────
   async function checkInterviewReminders(): Promise<void> {

@@ -1346,3 +1346,22 @@ export const adminNotifications = pgTable("admin_notifications", {
 export const insertAdminNotificationSchema = createInsertSchema(adminNotifications).omit({ id: true, createdAt: true });
 export type InsertAdminNotification = z.infer<typeof insertAdminNotificationSchema>;
 export type AdminNotification = typeof adminNotifications.$inferSelect;
+
+// ─── Verjaardagen opdrachtgevers ─────────────────────────────────────────────
+export const clientBirthdays = pgTable("client_birthdays", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  company: text("company"),
+  role: text("role"),
+  birthDay: integer("birth_day").notNull(),
+  birthMonth: integer("birth_month").notNull(),
+  birthYear: integer("birth_year"),
+  email: text("email"),
+  phone: text("phone"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertClientBirthdaySchema = createInsertSchema(clientBirthdays).omit({ id: true, createdAt: true });
+export type InsertClientBirthday = z.infer<typeof insertClientBirthdaySchema>;
+export type ClientBirthday = typeof clientBirthdays.$inferSelect;

@@ -60,6 +60,8 @@ import {
   whatsappSessions as whatsappSessionsTable,
   adminNotifications as adminNotificationsTable,
   type AdminNotification, type InsertAdminNotification,
+  clientBirthdays as clientBirthdaysTable,
+  type ClientBirthday, type InsertClientBirthday,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -409,6 +411,12 @@ export interface IStorage {
   getAdminNotifications(limit?: number): Promise<AdminNotification[]>;
   markAdminNotificationRead(id: number): Promise<void>;
   markAllAdminNotificationsRead(): Promise<void>;
+
+  // Verjaardagen opdrachtgevers
+  getClientBirthdays(): Promise<ClientBirthday[]>;
+  createClientBirthday(data: InsertClientBirthday): Promise<ClientBirthday>;
+  updateClientBirthday(id: number, data: Partial<InsertClientBirthday>): Promise<ClientBirthday | undefined>;
+  deleteClientBirthday(id: number): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -3846,6 +3854,24 @@ export class MemStorage implements IStorage {
     await db.update(adminNotificationsTable)
       .set({ readAt: new Date() })
       .where(isNull(adminNotificationsTable.readAt));
+  }
+
+  async getClientBirthdays(): Promise<ClientBirthday[]> {
+    return db.select().from(clientBirthdaysTable).orderBy(asc(clientBirthdaysTable.birthMonth), asc(clientBirthdaysTable.birthDay));
+  }
+
+  async createClientBirthday(data: InsertClientBirthday): Promise<ClientBirthday> {
+    const [row] = await db.insert(clientBirthdaysTable).values(data).returning();
+    return row;
+  }
+
+  async updateClientBirthday(id: number, data: Partial<InsertClientBirthday>): Promise<ClientBirthday | undefined> {
+    const [row] = await db.update(clientBirthdaysTable).set(data).where(eq(clientBirthdaysTable.id, id)).returning();
+    return row;
+  }
+
+  async deleteClientBirthday(id: number): Promise<void> {
+    await db.delete(clientBirthdaysTable).where(eq(clientBirthdaysTable.id, id));
   }
 }
 
