@@ -84,20 +84,22 @@ export default function NotificationCenter() {
 
   return (
     <div className="relative" ref={ref}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 relative text-gray-500 hover:text-gray-700"
+      <button
         onClick={() => setOpen(v => !v)}
         title="Notificaties"
+        className={`relative h-9 w-9 rounded-xl flex items-center justify-center transition-colors ${
+          unreadCount > 0
+            ? 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+        }`}
       >
-        <Bell className="h-4 w-4" />
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none shadow-sm">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </Button>
+      </button>
 
       {open && (
         <div className="absolute right-0 top-10 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">

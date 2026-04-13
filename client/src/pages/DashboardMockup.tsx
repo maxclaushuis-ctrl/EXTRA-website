@@ -1048,13 +1048,6 @@ export default function DashboardMockup() {
               >
                 <Menu className="h-5 w-5" />
               </button>
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hidden md:flex">
-                <Mail className="h-4 w-4 text-gray-500" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-base">Welkom terug!</h2>
-                <p className="text-xs text-gray-400">Dit is wat er vandaag gebeurt</p>
-              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button
