@@ -139,7 +139,6 @@ const functionTypes = [
   { value: "horecamedewerker", label: "Horecamedewerker" },
   { value: "chef", label: "Chef" },
   { value: "housekeeping", label: "Housekeeping" },
-  { value: "frontoffice", label: "Front-office" },
   { value: "logistiek", label: "Logistiek" },
 ];
 
