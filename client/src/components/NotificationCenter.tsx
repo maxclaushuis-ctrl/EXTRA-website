@@ -146,15 +146,17 @@ export default function NotificationCenter() {
                   const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.new_candidate;
                   const isUnread = !n.readAt;
                   return (
-                    <button
+                    <div
                       key={n.id}
-                      className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors ${isUnread ? 'bg-blue-50/40' : ''}`}
-                      onClick={() => handleNotificationClick(n)}
+                      className={`group w-full px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors ${isUnread ? 'bg-blue-50/40' : ''}`}
                     >
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full ${cfg.bg} ${cfg.color} flex items-center justify-center mt-0.5`}>
                         {cfg.icon}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <button
+                        className="flex-1 min-w-0 text-left"
+                        onClick={() => handleNotificationClick(n)}
+                      >
                         <div className="flex items-start justify-between gap-2">
                           <p className={`text-sm font-semibold leading-tight ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>
                             {n.title}
@@ -162,11 +164,23 @@ export default function NotificationCenter() {
                           <span className="text-xs text-gray-400 flex-shrink-0 mt-0.5">{formatTime(n.createdAt)}</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">{n.message}</p>
+                      </button>
+                      <div className="flex-shrink-0 flex items-center ml-1">
+                        {isUnread ? (
+                          <button
+                            title="Markeer als gelezen"
+                            onClick={(e) => { e.stopPropagation(); markOneRead.mutate(n.id); }}
+                            className="w-6 h-6 rounded-full bg-blue-500 hover:bg-green-500 flex items-center justify-center transition-colors"
+                          >
+                            <Check className="h-3.5 w-3.5 text-white" />
+                          </button>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center">
+                            <Check className="h-3.5 w-3.5 text-gray-300" />
+                          </div>
+                        )}
                       </div>
-                      {isUnread && (
-                        <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2" />
-                      )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
