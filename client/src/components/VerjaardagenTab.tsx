@@ -179,6 +179,18 @@ export default function VerjaardagenTab() {
   const upcoming = sorted.filter(b => daysUntilBirthday(b.birthDay, b.birthMonth) <= 14);
   const todayBirthdays = sorted.filter(b => daysUntilBirthday(b.birthDay, b.birthMonth) === 0);
 
+  // Bouw de komende 7 dagen op
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const jarigen = birthdays.filter(b => b.birthDay === day && b.birthMonth === month);
+    const isToday = i === 0;
+    const weekday = d.toLocaleDateString('nl-NL', { weekday: 'short' });
+    return { day, month, jarigen, isToday, weekday, label: `${day} ${MONTHS[month].slice(0, 3)}` };
+  });
+
   function getBadge(days: number) {
     if (days === 0) return <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 text-xs">🎂 Vandaag!</Badge>;
     if (days <= 3) return <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">Over {days} dag{days !== 1 ? 'en' : ''}</Badge>;
@@ -208,32 +220,90 @@ export default function VerjaardagenTab() {
         </Button>
       </div>
 
-      {/* Binnenkort jarig */}
+      {/* Deze week jarig — weekstrip */}
+      <div className="mb-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 flex items-center gap-1.5">
+          <Calendar className="h-3.5 w-3.5" /> Deze week
+        </p>
+        <div className="grid grid-cols-7 gap-2">
+          {weekDays.map(({ day, month, weekday, label, jarigen, isToday }) => {
+            const hasJarige = jarigen.length > 0;
+            return (
+              <div
+                key={`${day}-${month}`}
+                className={`rounded-xl p-2.5 flex flex-col items-center gap-1.5 border transition-colors ${
+                  isToday
+                    ? 'bg-purple-600 border-purple-600 text-white'
+                    : hasJarige
+                    ? 'bg-yellow-50 border-yellow-300'
+                    : 'bg-gray-50 border-gray-200'
+                }`}
+              >
+                <span className={`text-[10px] font-semibold uppercase tracking-wide ${isToday ? 'text-purple-200' : 'text-gray-400'}`}>
+                  {weekday}
+                </span>
+                <span className={`text-lg font-bold leading-none ${isToday ? 'text-white' : hasJarige ? 'text-yellow-700' : 'text-gray-700'}`}>
+                  {day}
+                </span>
+                {hasJarige ? (
+                  <div className="flex flex-col items-center gap-0.5 w-full">
+                    {jarigen.map(b => (
+                      <div key={b.id} className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-white text-[10px] font-bold" title={b.name}>
+                        {b.name.charAt(0).toUpperCase()}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-purple-400' : 'bg-gray-300'}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Namen onder de strip */}
+        {weekDays.some(d => d.jarigen.length > 0) && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {weekDays.filter(d => d.jarigen.length > 0).map(({ label, jarigen, isToday }) =>
+              jarigen.map(b => (
+                <span key={b.id} className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                  isToday ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'
+                }`}>
+                  {isToday ? '🎂' : '🎁'} {b.name}
+                  <span className="text-gray-400 font-normal">{label}</span>
+                </span>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Binnenkort jarig — komende 14 dagen */}
       {upcoming.length > 0 && (
-        <Card className="mb-5 border-purple-200 bg-purple-50/50">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold text-purple-700 flex items-center gap-2">
-              <PartyPopper className="h-4 w-4" />
-              Binnenkort jarig (komende 14 dagen)
+        <Card className="mb-5 border-purple-100 bg-purple-50/30">
+          <CardHeader className="pb-2 pt-3 px-4">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-purple-600 flex items-center gap-2">
+              <PartyPopper className="h-3.5 w-3.5" />
+              Komende 14 dagen
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="space-y-2">
+          <CardContent className="px-4 pb-3">
+            <div className="space-y-1.5">
               {upcoming.map(b => {
                 const days = daysUntilBirthday(b.birthDay, b.birthMonth);
                 return (
-                  <div key={b.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-purple-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm">
+                  <div key={b.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-purple-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">
                         {b.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">{b.name}</p>
-                        {b.company && <p className="text-xs text-gray-500">{b.company}{b.role ? ` · ${b.role}` : ''}</p>}
+                        <p className="text-sm font-semibold text-gray-800 leading-tight">{b.name}</p>
+                        {b.company && <p className="text-xs text-gray-400">{b.company}{b.role ? ` · ${b.role}` : ''}</p>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500">{formatBirthday(b.birthDay, b.birthMonth, b.birthYear)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{formatBirthday(b.birthDay, b.birthMonth)}</span>
                       {getBadge(days)}
                     </div>
                   </div>
@@ -242,19 +312,6 @@ export default function VerjaardagenTab() {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* Vandaag jarig banner */}
-      {todayBirthdays.length > 0 && (
-        <div className="mb-5 bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center gap-3">
-          <span className="text-2xl">🎉</span>
-          <div>
-            <p className="font-semibold text-yellow-800 text-sm">
-              {todayBirthdays.map(b => b.name).join(' & ')} {todayBirthdays.length === 1 ? 'is' : 'zijn'} vandaag jarig!
-            </p>
-            <p className="text-xs text-yellow-600">Vergeet niet om iets leuks op te sturen.</p>
-          </div>
-        </div>
       )}
 
       {/* Zoekbalk + lijst */}
