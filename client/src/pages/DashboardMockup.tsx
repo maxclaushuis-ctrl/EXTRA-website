@@ -2177,6 +2177,7 @@ export default function DashboardMockup() {
                                 fn === 'housekeeping' ? 'bg-cyan-100 text-cyan-700' :
                                 fn === 'chef' ? 'bg-gray-100 text-gray-700' :
                                 fn === 'horecamedewerker' ? 'bg-orange-100 text-orange-700' :
+                                fn === 'logistiek' ? 'bg-green-100 text-green-700' :
                                 'bg-blue-100 text-blue-700'
                               }`}>
                                 {getInitials(selectedApp.firstName, selectedApp.lastName)}
@@ -2187,7 +2188,8 @@ export default function DashboardMockup() {
                                   <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(fn)}`}>
                                     {fn === 'horecamedewerker' ? 'Horecamedewerker' :
                                      fn === 'housekeeping' ? 'Housekeeping' :
-                                     fn === 'chef' ? 'Chef' : 'Front-office'}
+                                     fn === 'chef' ? 'Chef' :
+                                     fn === 'logistiek' ? 'Logistiek medewerker' : 'Front-office'}
                                   </Badge>
                                   <span className="text-xs text-gray-400">
                                     {new Date(selectedApp.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -2330,6 +2332,55 @@ export default function DashboardMockup() {
                               ['Algemene indruk', fd.overallImpression],
                             ]} />
                             <RatingSection title="Beoordeling interviewer" rows={[
+                              ['Ervaringsniveau', fd.experienceLevel],
+                              ['Verschijning', fd.appearance],
+                              ['Attitude', fd.attitude],
+                            ]} />
+                          </>
+                        )}
+
+                        {fn === 'logistiek' && (
+                          <>
+                            <Section title="Achtergrond" rows={[
+                              ['Nationaliteit', fd.nationality],
+                              ['Werkvergunning nodig', fd.needsWorkPermit],
+                              ['Taal', fd.languages],
+                            ]} />
+                            <Section title="Certificaten & Rijbewijzen" rows={[
+                              ['Rijbewijs B', fd.logLicenseB],
+                              ['Rijbewijs C/CE', fd.logLicenseCCE],
+                              ['Heftruck certificaat', fd.logHeftruckCert],
+                              ['VCA certificaat', fd.logVCA],
+                              ['Overige certificaten', fd.logOtherCertificates],
+                            ]} />
+                            <Section title="Ervaring & Vaardigheden" rows={[
+                              ['Werkervaring logistiek', fd.logExperience],
+                              ['Werkomgeving', fd.logWorkEnvironments],
+                              ['Scanapparatuur / RF', fd.logScanEquipment],
+                              ['Fysieke belastbaarheid', fd.logPhysicalLoad],
+                              ['Zelfstandig / team', fd.logWorkStyle],
+                              ['Andere bijbaan', fd.logOtherJob],
+                              ['Referentie beschikbaar', fd.logReference],
+                              ['Naam referentie', fd.logReferenceContact],
+                              ['Tel. referentie', fd.logReferencePhone],
+                            ]} />
+                            <Section title="Praktische zaken" rows={[
+                              ['Eigen vervoer', fd.logTransport],
+                              ['Max. reistijd', fd.logMaxTravelTime],
+                              ['Werkkleding aanwezig', fd.logWorkClothing],
+                            ]} />
+                            <Section title="Beschikbaarheid" rows={[
+                              ['Uren per week', fd.logAvailableHours],
+                              ['Beschikbaar vanaf', fd.logAvailableFrom],
+                              ['Voorkeur diensten', fd.logShiftPreference],
+                              ['Voorkeursdagen', fd.preferredDays],
+                            ]} />
+                            <RatingSection title="Beoordeling interviewer" rows={[
+                              ['Communicatie', fd.communicationSkills],
+                              ['Algemene indruk', fd.overallImpression],
+                            ]} />
+                            <Section title="Eindoordeel" rows={[
+                              ['Beoordeling', fd.assessmentRating],
                               ['Ervaringsniveau', fd.experienceLevel],
                               ['Verschijning', fd.appearance],
                               ['Attitude', fd.attitude],
