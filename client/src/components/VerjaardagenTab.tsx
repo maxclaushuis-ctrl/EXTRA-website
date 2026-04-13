@@ -73,8 +73,10 @@ export default function VerjaardagenTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/admin/client-birthdays', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/client-birthdays'] });
+    onSuccess: (newBirthday: any) => {
+      queryClient.setQueryData(['/api/admin/client-birthdays'], (old: any) =>
+        [...(old ?? []), newBirthday]
+      );
       toast({ title: 'Persoon toegevoegd' });
       closeModal();
     },
@@ -84,8 +86,10 @@ export default function VerjaardagenTab() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiRequest('PATCH', `/api/admin/client-birthdays/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/client-birthdays'] });
+    onSuccess: (updated: any) => {
+      queryClient.setQueryData(['/api/admin/client-birthdays'], (old: any) =>
+        (old ?? []).map((b: any) => b.id === updated.id ? updated : b)
+      );
       toast({ title: 'Gewijzigd' });
       closeModal();
     },
@@ -94,8 +98,10 @@ export default function VerjaardagenTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/client-birthdays/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/client-birthdays'] });
+    onSuccess: (_: any, deletedId: number) => {
+      queryClient.setQueryData(['/api/admin/client-birthdays'], (old: any) =>
+        (old ?? []).filter((b: any) => b.id !== deletedId)
+      );
       toast({ title: 'Verwijderd' });
       setDeleteConfirm(null);
     },
