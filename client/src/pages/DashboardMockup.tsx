@@ -1104,7 +1104,7 @@ export default function DashboardMockup() {
           </div>
         </header>
 
-        <div className="p-3 sm:p-6">
+        <div className={activeTab === 'prospect-campagnes' ? '' : 'p-3 sm:p-6'}>
           {activeTab === 'kandidaten' ? (
             <div>
               {/* Kandidaat detail dialog */}
@@ -3938,7 +3938,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             <VerjaardagenTab />
 
           ) : activeTab === 'prospect-campagnes' ? (
-            <ProspectCampagnesTab />
+            <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
+              <ProspectCampagnesTab />
+            </div>
 
           ) : activeTab === 'bedrijven-aanvragen' ? (
             /* ─── PERSONEELSAANVRAGEN tab ─── */
