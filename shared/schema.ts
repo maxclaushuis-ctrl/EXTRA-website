@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time, real, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1512,3 +1512,44 @@ export type MailEvent = typeof mailEvents.$inferSelect;
 export const insertUnsubscribeTokenSchema = createInsertSchema(unsubscribeTokens).omit({ id: true });
 export type InsertUnsubscribeToken = z.infer<typeof insertUnsubscribeTokenSchema>;
 export type UnsubscribeToken = typeof unsubscribeTokens.$inferSelect;
+
+// ─── Flow Builder — Stap 5 ────────────────────────────────────────────────────
+
+// De stappen binnen een flow-campagne
+export const flowSteps = pgTable("flow_steps", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'cascade' }).notNull(),
+  stapId: text("stap_id").notNull(),           // unieke string ID binnen de flow, bijv. "stap_1"
+  type: text("type").notNull(),                // trigger | email | wait | condition | tag_action | end
+  label: text("label"),
+  config: text("config").default('{}'),        // JSON met stap-specifieke instellingen
+  nextStapId: text("next_stap_id"),            // volgende stap (lineair of conditie=nee)
+  nextStapIdYes: text("next_stap_id_yes"),     // volgende stap bij conditie=ja
+  volgorde: integer("volgorde").default(0),
+  posX: real("pos_x").default(0),             // canvas X positie
+  posY: real("pos_y").default(0),             // canvas Y positie
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// De voortgang van elk contact door een flow
+export const flowContactProgress = pgTable("flow_contact_progress", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'cascade' }).notNull(),
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'cascade' }).notNull(),
+  huidigeStapId: text("huidige_stap_id").notNull(),
+  status: text("status").default('actief').notNull(),  // actief | voltooid | gestopt | error
+  wachtTot: timestamp("wacht_tot"),
+  foutMelding: text("fout_melding"),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+  bijgewerktOp: timestamp("bijgewerkt_op").defaultNow().notNull(),
+}, (table) => ({
+  uniqueProgress: uniqueIndex("unique_campaign_contact_progress").on(table.campaignId, table.contactId),
+}));
+
+export const insertFlowStepSchema = createInsertSchema(flowSteps).omit({ id: true, createdAt: true });
+export type InsertFlowStep = z.infer<typeof insertFlowStepSchema>;
+export type FlowStep = typeof flowSteps.$inferSelect;
+
+export const insertFlowContactProgressSchema = createInsertSchema(flowContactProgress).omit({ id: true, aangemaaktOp: true });
+export type InsertFlowContactProgress = z.infer<typeof insertFlowContactProgressSchema>;
+export type FlowContactProgress = typeof flowContactProgress.$inferSelect;

@@ -1,0 +1,347 @@
+# Replit Prompt — Stap 6: A/B Testing
+
+## Wat je gaat doen
+Bouw de volledige A/B test functionaliteit uit. De basis is al gelegd in stap 2 (campagne-instellingen), stap 3 (variant B editor) en stap 4 (variant-toewijzing bij verzending). In deze stap voeg je de automatische winnaarbepaling, de winnaar-doorstuurlogica en de volledige A/B rapportage toe.
+
+---
+
+## 1. Database — uitbreiding bestaande tabellen
+
+Voeg de volgende kolommen toe aan de `campaigns` tabel als ze nog niet bestaan:
+
+```sql
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS ab_winnaar_variant TEXT;
+-- opties: null (nog niet bepaald), 'A', 'B'
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS ab_winnaar_bepaald_op DATETIME;
+-- timestamp waarop de winnaar automatisch is gekozen
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS ab_test_fase TEXT DEFAULT 'test';
+-- opties: test (bezig met splitverzending), bepaling (winnaar wordt bepaald), 
+--         doorgestuurd (winnaar naar rest gestuurd), voltooid
+```
+
+Voeg toe aan `mail_sends`:
+```sql
+ALTER TABLE mail_sends ADD COLUMN IF NOT EXISTS is_ab_test_send INTEGER DEFAULT 1;
+-- 1 = onderdeel van de A/B test split
+-- 0 = winnaar-verzending naar de rest van de lijst
+```
+
+---
+
+## 2. A/B test verzendlogica — uitbreiding op stap 4
+
+Pas de `sendCampaignBatch` functie uit stap 4 aan voor A/B campagnes:
+
+### Fase 1: Test split verzending
+```
+1. Haal alle matchende contacten op (op basis van segmentfilters)
+2. Filter uitgeschreven/geblokkeerde contacten eruit
+3. Schud de lijst willekeurig door elkaar (shuffle)
+4. Bereken split:
+   - Aantal voor variant A = Math.floor(totaal * (ab_split_pct / 100))
+   - Aantal voor variant B = totaal - aantal_A
+   - MAAR: stuur de test alleen naar een deel van de lijst
+     - Testgroep = Math.min(totaal, Math.ceil(totaal * 0.4))
+     - Max 40% van de totale lijst doet mee aan de A/B test
+     - De overige 60% wacht op de winnaar
+     - Uitzondering: als totaal <= 20 contacten, stuur A/B test naar iedereen
+5. Wijs variant toe:
+   - Eerste helft van testgroep → variant A (is_ab_test_send = 1)
+   - Tweede helft van testgroep → variant B (is_ab_test_send = 1)
+   - Rest van de lijst → nog geen mail_send record (wacht op winnaar)
+6. Verzend de testgroep via sendSingleMail
+7. Update campagne ab_test_fase naar 'test'
+8. Plan de winnaarbepaling: sla op wanneer de winnaar bepaald moet worden
+   (ab_winnaar_na_uren uur na de eerste verzending)
+```
+
+---
+
+## 3. Automatische winnaarbepaling
+
+### Scheduler uitbreiding
+Voeg toe aan de bestaande scheduler (elke 5 minuten check):
+
+```javascript
+async function checkABWinners() {
+  // Haal alle campagnes op waarbij:
+  // - ab_test_actief = 1
+  // - ab_test_fase = 'test'
+  // - eerste verzending was meer dan ab_winnaar_na_uren uur geleden
+  
+  for (const campagne of campagnes) {
+    await bepaalABWinnaar(campagne.id);
+  }
+}
+```
+
+### `bepaalABWinnaar(campaignId)`
+```
+1. Haal statistieken op voor variant A en B uit mail_events:
+   
+   Voor elke variant:
+   - verzonden = COUNT mail_sends WHERE variant = X AND is_ab_test_send = 1 AND status = 'sent'
+   - geopend = COUNT DISTINCT mail_send_id FROM mail_events 
+               WHERE type = 'open' AND mail_send.variant = X AND mail_send.is_ab_test_send = 1
+   - geklikt = COUNT DISTINCT mail_send_id FROM mail_events 
+               WHERE type = 'click' AND mail_send.variant = X AND mail_send.is_ab_test_send = 1
+   - open_rate = geopend / verzonden
+   - click_rate = geklikt / verzonden
+
+2. Bepaal winnaar op basis van ab_winnaar_op instelling:
+   - 'open_rate': winnaar = variant met hoogste open_rate
+   - 'click_rate': winnaar = variant met hoogste click_rate
+   - Bij gelijke stand: winnaar = variant A (default)
+
+3. Minimale drempel: als beide varianten 0% hebben (niemand heeft geopend/geklikt),
+   wacht dan nog eens ab_winnaar_na_uren uur voor een tweede check.
+   Na twee checks zonder resultaat: kies variant A als winnaar.
+
+4. Sla winnaar op:
+   - UPDATE campaigns SET ab_winnaar_variant = 'A' of 'B',
+     ab_winnaar_bepaald_op = NOW(),
+     ab_test_fase = 'doorgestuurd'
+
+5. Stuur winnaar naar de rest van de lijst (verstuurWinnaarNaarRest)
+```
+
+### `verstuurWinnaarNaarRest(campaignId, winnaarVariant)`
+```
+1. Haal alle contacten op die voldoen aan segmentfilters
+2. Filter contacten die al een mail_send record hebben voor deze campagne eruit
+3. Maak mail_send records aan voor overgebleven contacten met:
+   - variant = winnaarVariant
+   - is_ab_test_send = 0
+4. Verstuur in batches van 50 (zelfde als stap 4)
+5. Update campagne status naar 'voltooid' na verzending
+6. Stuur notificatie naar de gebruiker (zie sectie 7)
+```
+
+---
+
+## 4. A/B resultaten weergave — campagne detailpagina
+
+Vervang de statistieken tab bij A/B campagnes met een uitgebreide A/B rapportage:
+
+### Bovenaan: Winnaarstatus banner
+
+**Tijdens test (fase = 'test'):**
+```
+🔬 A/B test loopt
+Variant A wordt getest bij X contacten · Variant B bij X contacten
+Winnaar wordt bepaald op [datum + tijd] op basis van [open rate / click rate]
+[Progressbalk die de verstreken tijd tot winnaarbepaling toont]
+```
+
+**Winnaar bepaald (fase = 'doorgestuurd' of 'voltooid'):**
+```
+🏆 Winnaar: Variant A  (of B)
+Bepaald op [datum] op basis van open rate
+Variant A: 32.4% open rate vs Variant B: 18.1% open rate
+Winnaar verzonden naar X contacten
+```
+
+---
+
+### Hoofd statistieken — twee kolommen naast elkaar
+
+**Variant A** (linker kolom, paarse header)
+```
+Onderwerp: "[onderwerp variant A]"
+
+[Verzonden: X]  [Geopend: X%]  [Geklikt: X%]
+[Progressbar open rate: ████████░░ 32.4%]
+[Progressbar click rate: ███░░░░░░░ 12.1%]
+```
+
+**Variant B** (rechter kolom, blauwe header)
+```
+Onderwerp: "[onderwerp variant B]"
+
+[Verzonden: X]  [Geopend: X%]  [Geklikt: X%]
+[Progressbar open rate: █████░░░░░ 18.1%]
+[Progressbar click rate: ██░░░░░░░░ 7.3%]
+```
+
+Winnende variant heeft een groene checkmark badge rechtsboven in de kolom.
+Verliezende variant heeft een lichte rode tint op de kaart.
+
+---
+
+### Grafiek: Prestaties over tijd
+
+Een simpele lijn- of staafgrafiek die toont:
+- X-as: tijd (uren na verzending: 0, 1, 2, 4, 8, 12, 24 uur)
+- Y-as: cumulatieve open rate %
+- Twee lijnen: variant A (paars) en variant B (blauw)
+- Toon ook click rate als tweede grafiek eronder
+
+Gebruik een lichtgewicht charting library die al beschikbaar is in het project (Chart.js of vergelijkbaar).
+
+---
+
+### Detailtabel: Opens en clicks per uur
+
+Opvouwbaar paneel "Gedetailleerde tijdlijn":
+
+| Tijdstip | Variant A opens | Variant B opens | Variant A clicks | Variant B clicks |
+|----------|----------------|----------------|-----------------|-----------------|
+| 0–1 uur  | 12 (8.0%)      | 8 (5.3%)       | 3 (2.0%)        | 2 (1.3%)        |
+| 1–2 uur  | 18 (12.0%)     | 10 (6.7%)      | 5 (3.3%)        | 3 (2.0%)        |
+| ...      | ...            | ...            | ...             | ...             |
+
+Data wordt berekend door mail_events te groeperen op tijdstip relatief aan verzonden_op.
+
+---
+
+## 5. A/B instellingen bewerkbaar maken
+
+In de campagne detailpagina → Overzicht tab, toon de A/B instellingen als bewerkbare sectie (alleen als fase = 'test' nog niet gestart):
+
+```
+A/B Test instellingen
+─────────────────────
+Split:          [Variant A: 50%] — [Variant B: 50%]
+Winnaar op:     [Open rate ▼]
+Bepaal na:      [24] uur
+Testgrootte:    40% van de lijst (automatisch)
+
+[Wijzigingen opslaan]
+```
+
+Zodra de campagne actief is (fase ≠ concept): toon instellingen als read-only.
+
+---
+
+## 6. Handmatige winnaar kiezen
+
+Voeg een knop toe in de A/B rapportage (zichtbaar tijdens test-fase):
+
+**"Winnaar nu bepalen"** knop:
+- Opent een modaal met de huidige tussenstand
+- Twee keuze-knoppen: "Kies Variant A als winnaar" en "Kies Variant B als winnaar"
+- Plus een derde optie: "Automatisch bepalen op basis van huidige data"
+- Bevestiging → roept `bepaalABWinnaar` aan maar slaat de minimale drempel over
+
+---
+
+## 7. Notificaties bij winnaarbepaling
+
+Wanneer de winnaar automatisch bepaald is, toon een notificatie in de UI:
+
+**In-app notificatie (notificatiebel rechtsboven in de hoofdnavigatie):**
+```
+🏆 A/B winnaar bepaald
+Campagne "Hotels April 2026": Variant A wint met 32.4% open rate
+Winnaar wordt nu verzonden naar 287 contacten
+[Bekijk resultaten →]
+```
+
+Sla notificaties op in een aparte tabel:
+```sql
+CREATE TABLE IF NOT EXISTS notificaties (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL,           -- ab_winnaar, campagne_voltooid, etc.
+  titel TEXT NOT NULL,
+  bericht TEXT NOT NULL,
+  link TEXT,                    -- bijv. /campaigns/123
+  gelezen INTEGER DEFAULT 0,
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+Notificatiebel in de navigatie:
+- Badge met aantal ongelezen notificaties (rood bolletje)
+- Klik opent dropdown met laatste 10 notificaties
+- "Alles als gelezen markeren" knop
+
+---
+
+## 8. A/B test voor flows (uitbreiding stap 5)
+
+Voeg A/B test toe aan e-mail nodes in de flow builder:
+
+In het eigenschappenpaneel van een e-mail node:
+- Toggle: "A/B test voor deze stap"
+- Bij activatie: twee tabbladen verschijnen (Variant A / Variant B) in de node
+- Split instelling: slider 50/50 (of aanpasbaar)
+- Winnaar bepalen na: X uur (instelbaar)
+- Winnaar op: open rate / click rate
+
+De flow engine verwerkt dit als volgt:
+- Bij bereiken van de e-mail node: stuur variant A of B op basis van willekeurige split
+- Sla op welke variant het contact ontving in flow_contact_progress (extra kolom `ab_varianten` als JSON)
+- Winnaarbepaling werkt zelfde als bij bulk campagnes maar dan per flow-stap
+
+---
+
+## 9. API endpoints
+
+### GET /api/campaigns/:id/ab-stats
+```
+Geeft uitgebreide A/B statistieken terug:
+{
+  fase: 'test' | 'doorgestuurd' | 'voltooid',
+  winnaar: null | 'A' | 'B',
+  winnaar_bepaald_op: datetime | null,
+  variant_a: {
+    verzonden, geopend, geopend_pct, geklikt, geklikt_pct,
+    tijdlijn: [{ uur: 0, opens: 0, clicks: 0 }, ...]
+  },
+  variant_b: {
+    verzonden, geopend, geopend_pct, geklikt, geklikt_pct,
+    tijdlijn: [{ uur: 0, opens: 0, clicks: 0 }, ...]
+  }
+}
+```
+
+### POST /api/campaigns/:id/ab-pick-winner
+```
+Body: { variant: 'A' | 'B' | 'auto' }
+Handmatig een winnaar kiezen of automatisch bepalen op basis van huidige data.
+```
+
+### GET /api/notificaties
+```
+Geeft laatste 20 notificaties terug (gelezen en ongelezen).
+```
+
+### PUT /api/notificaties/markeer-gelezen
+```
+Markeert alle notificaties als gelezen.
+```
+
+---
+
+## 10. Validatie & randgevallen
+
+Behandel de volgende randgevallen correct:
+
+- **Te weinig contacten**: Als totaal < 10 contacten, schakel A/B test automatisch uit en stuur iedereen variant A. Toon waarschuwing: "Te weinig contacten voor een betrouwbare A/B test. Variant A wordt naar iedereen gestuurd."
+
+- **Gelijke stand**: Bij exacte gelijkstand altijd variant A kiezen als winnaar.
+
+- **Campagne gestopt tijdens test**: Als een campagne gestopt wordt terwijl de A/B test loopt, stuur geen winnaar meer. Toon in rapportage: "Campagne gestopt — geen winnaar bepaald."
+
+- **Variant B zonder inhoud**: Als variant B geen content heeft maar A/B test staat aan, toon foutmelding bij activatie: "Variant B heeft nog geen e-mailinhoud. Vul variant B in via de e-mail builder."
+
+- **Meerdere opens per contact**: Tel elke unieke contact slechts één keer mee voor open rate berekening (gebruik DISTINCT mail_send_id).
+
+---
+
+## Stijlrichtlijnen A/B rapportage
+
+- Variant A kleur: #7C3AED (paars) — consistent met bestaande huisstijl
+- Variant B kleur: #2563EB (blauw)
+- Winnaar badge: groene achtergrond (#059669), witte tekst "🏆 Winnaar"
+- Verliezer tint: lichte rode achtergrond (#FEF2F2) op de kaart
+- Progressbars: afgerond, 8px hoog, gekleurde fill
+- Grafieken: minimalistisch, geen gridlijnen behalve horizontaal, lichte tooltip bij hover
+- Winnaarstatus banner: lichte groene achtergrond (#F0FDF4) met groene rand links (4px)
+- Test-loopt banner: lichte blauwe achtergrond (#EFF6FF) met blauwe rand links (4px)
+
+---
+
+*Stap 6 van 8 — EXTRA E-mailmarketing Module*

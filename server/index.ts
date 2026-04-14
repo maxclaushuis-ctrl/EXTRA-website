@@ -218,6 +218,7 @@ async function ensureAdminAccounts() {
 
     scheduleDailyCvReminders();
     scheduleBlogAutoPublish();
+    scheduleFlowEngine();
     // WhatsApp wordt beheerd via externe VPS (geconfigureerd via WHATSAPP_API_URL secret)
   });
 })();
@@ -309,4 +310,25 @@ function scheduleBlogAutoPublish() {
   runPublishCheck();
   setInterval(runPublishCheck, MS_PER_HOUR);
   log("Blog auto-publish scheduler actief (elk uur)");
+}
+
+function scheduleFlowEngine() {
+  const MS_PER_5MIN = 5 * 60 * 1000;
+
+  async function runCheck() {
+    try {
+      const { runFlowScheduler } = await import('./flowEngine');
+      await runFlowScheduler();
+    } catch (err) {
+      console.error("[FlowEngine] Scheduler fout:", err);
+    }
+  }
+
+  // Start na 10 seconden, daarna elke 5 minuten
+  setTimeout(() => {
+    runCheck();
+    setInterval(runCheck, MS_PER_5MIN);
+  }, 10_000);
+
+  log("Flow engine scheduler actief (elke 5 minuten)");
 }

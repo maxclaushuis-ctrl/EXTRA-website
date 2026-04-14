@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EmailBuilderPage from "@/components/EmailBuilderPage";
+import FlowBuilderPage from "@/components/FlowBuilderPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -608,6 +609,121 @@ function CampaignWizard({ open, onClose, onCreated }: {
   );
 }
 
+// ─── Flow Voortgang Tab ───────────────────────────────────────────────────────
+
+interface FlowStats {
+  actief: number; voltooid: number; gestopt: number; error: number;
+  perStap: Array<{ stapId: string; wachtHier: number; doorgelopen: number }>;
+  contacten: Array<{
+    id: number; contactId: number; huidigeStapId: string;
+    status: string; wachtTot: string | null; bijgewerktOp: string;
+    foutMelding: string | null;
+  }>;
+}
+
+function FlowVoortgangTab({ campaignId }: { campaignId: number }) {
+  const { data: stats, isLoading, refetch } = useQuery<FlowStats>({
+    queryKey: ['/api/admin/prospect-campaigns', campaignId, 'flow-stats'],
+    queryFn: () => fetch(`/api/admin/prospect-campaigns/${campaignId}/flow-stats`, { credentials: 'include' }).then(r => r.json()),
+    refetchInterval: 30_000,
+  });
+
+  const STATUS_COLOR: Record<string, string> = {
+    actief: 'bg-blue-100 text-blue-700',
+    voltooid: 'bg-green-100 text-green-700',
+    gestopt: 'bg-gray-100 text-gray-600',
+    error: 'bg-red-100 text-red-600',
+  };
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20 text-sm text-slate-400">Voortgang laden...</div>
+  );
+
+  if (!stats) return (
+    <div className="flex items-center justify-center py-20 text-sm text-slate-400">Geen flow gegevens beschikbaar. Activeer de flow eerst.</div>
+  );
+
+  const total = stats.actief + stats.voltooid + stats.gestopt + stats.error;
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      {/* Statistieken kaarten */}
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: 'Actief', value: stats.actief, color: 'border-blue-200 bg-blue-50 text-blue-700' },
+          { label: 'Voltooid', value: stats.voltooid, color: 'border-green-200 bg-green-50 text-green-700' },
+          { label: 'Gestopt', value: stats.gestopt, color: 'border-gray-200 bg-gray-50 text-gray-600' },
+          { label: 'Fout', value: stats.error, color: 'border-red-200 bg-red-50 text-red-600' },
+        ].map(s => (
+          <div key={s.label} className={`rounded-xl border p-4 text-center ${s.color}`}>
+            <div className="text-2xl font-bold">{s.value}</div>
+            <div className="text-xs font-medium mt-0.5">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Per stap overzicht */}
+      {stats.perStap.length > 0 && (
+        <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Per stap</p>
+          <div className="space-y-2">
+            {stats.perStap.map(s => (
+              <div key={s.stapId} className="flex items-center gap-3">
+                <span className="text-xs text-slate-500 w-36 truncate">{s.stapId}</span>
+                <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div className="h-2 bg-purple-500 rounded-full" style={{ width: `${total > 0 ? Math.round((s.wachtHier / total) * 100) : 0}%` }} />
+                </div>
+                <span className="text-xs text-slate-500 w-12 text-right">{s.wachtHier} wacht</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Contact voortgang tabel */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Contacten ({total})</p>
+          <button onClick={() => refetch()} className="text-xs text-purple-600 hover:underline">Vernieuwen</button>
+        </div>
+        {(stats.contacten || []).length === 0 ? (
+          <div className="text-center py-8 text-sm text-slate-400">Nog geen contacten in de flow.</div>
+        ) : (
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-600">Contact ID</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-600">Huidige stap</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-600">Status</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-600">Wacht tot</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-600">Bijgewerkt</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {(stats.contacten || []).map(p => (
+                  <tr key={p.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-2.5 text-slate-700">{p.contactId}</td>
+                    <td className="px-4 py-2.5 text-slate-600 font-mono">{p.huidigeStapId}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLOR[p.status] || 'bg-gray-100 text-gray-600'}`}>{p.status}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-slate-500">{p.wachtTot ? new Date(p.wachtTot).toLocaleString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                    <td className="px-4 py-2.5 text-slate-400">{new Date(p.bijgewerktOp).toLocaleString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {stats.error > 0 && (
+          <p className="text-xs text-red-500 mt-2">⚠ {stats.error} contact(en) met een fout — controleer de flow configuratie.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main module ──────────────────────────────────────────────────────────────
 export default function ProspectCampagnesTab() {
   const { toast } = useToast();
@@ -618,6 +734,7 @@ export default function ProspectCampagnesTab() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('alle');
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [flowBuilderOpen, setFlowBuilderOpen] = useState(false);
 
   // ── Queries
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
@@ -856,10 +973,16 @@ export default function ProspectCampagnesTab() {
               <p className="text-xs text-gray-500 mt-0.5 truncate">{selectedCampaign.subject}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Button size="sm" variant="outline" className="gap-1" onClick={() => setBuilderOpen(true)}>
-                <Pencil className="h-3.5 w-3.5" />E-mail opmaken
-              </Button>
-              {['concept','draft'].includes(selectedCampaign.status) && (
+              {selectedCampaign.campagneType === 'flow' ? (
+                <Button size="sm" variant="outline" className="gap-1 border-purple-300 text-purple-700 hover:bg-purple-50" onClick={() => setFlowBuilderOpen(true)}>
+                  <Zap className="h-3.5 w-3.5" />Flow opmaken
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" className="gap-1" onClick={() => setBuilderOpen(true)}>
+                  <Pencil className="h-3.5 w-3.5" />E-mail opmaken
+                </Button>
+              )}
+              {['concept','draft'].includes(selectedCampaign.status) && selectedCampaign.campagneType !== 'flow' && (
                 <Button size="sm" className="gap-1.5 bg-purple-600 hover:bg-purple-700"
                   disabled={!selectedCampaign.htmlContent || sendMut.isPending}
                   onClick={() => { if (window.confirm(`Campagne '${selectedCampaign.name}' activeren en verzenden?`)) sendMut.mutate(selectedCampaign.id); }}>
@@ -880,9 +1003,10 @@ export default function ProspectCampagnesTab() {
               <TabsList className="h-9 bg-transparent gap-0 p-0">
                 {[
                   { v: 'overzicht', label: 'Overzicht', icon: FileText },
-                  { v: 'statistieken', label: 'Statistieken', icon: BarChart2 },
-                  { v: 'ontvangers', label: 'Ontvangers', icon: Users },
-                ].map(t => (
+                  { v: 'statistieken', label: 'Statistieken', icon: BarChart2, hide: selectedCampaign?.campagneType === 'flow' },
+                  { v: 'ontvangers', label: 'Ontvangers', icon: Users, hide: selectedCampaign?.campagneType === 'flow' },
+                  { v: 'voortgang', label: 'Flow voortgang', icon: Zap, hide: selectedCampaign?.campagneType !== 'flow' },
+                ].filter(t => !t.hide).map(t => (
                   <TabsTrigger key={t.v} value={t.v}
                     className="h-9 text-xs data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-700 data-[state=active]:bg-transparent data-[state=inactive]:text-slate-400 rounded-none px-4 gap-1.5">
                     <t.icon className="h-3 w-3" />{t.label}
@@ -1093,6 +1217,14 @@ export default function ProspectCampagnesTab() {
                 </div>
               </ScrollArea>
             </TabsContent>
+
+            {/* Flow voortgang tab */}
+            {selectedCampaign?.campagneType === 'flow' && (
+              <TabsContent value="voortgang" className="flex-1 overflow-auto p-6">
+                <FlowVoortgangTab campaignId={selectedCampaign.id} />
+              </TabsContent>
+            )}
+
           </Tabs>
         </div>
       )}
@@ -1102,6 +1234,19 @@ export default function ProspectCampagnesTab() {
         <EmailBuilderPage
           campaign={selectedCampaign}
           onClose={() => setBuilderOpen(false)}
+        />
+      )}
+
+      {/* ── Flow Builder (full-page) ── */}
+      {flowBuilderOpen && selectedCampaign && (
+        <FlowBuilderPage
+          campaignId={selectedCampaign.id}
+          campaignName={selectedCampaign.name}
+          onClose={() => setFlowBuilderOpen(false)}
+          onActivate={() => {
+            setFlowBuilderOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
+          }}
         />
       )}
 

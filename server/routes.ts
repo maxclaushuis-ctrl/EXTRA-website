@@ -5293,6 +5293,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Flow Builder routes (Stap 5) ────────────────────────────────────────
+
+  // GET flow steps voor een campagne
+  app.get("/api/admin/prospect-campaigns/:id/flow-steps", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const steps = await storage.getFlowSteps(id);
+      return res.json(steps);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // PUT (vervang) alle flow steps voor een campagne
+  app.put("/api/admin/prospect-campaigns/:id/flow-steps", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { steps } = req.body as { steps: any[] };
+      if (!Array.isArray(steps)) return res.status(400).json({ message: "steps array vereist" });
+      const withCampaignId = steps.map(s => ({ ...s, campaignId: id }));
+      const saved = await storage.replaceFlowSteps(id, withCampaignId);
+      return res.json(saved);
+    } catch (err) {
+      console.error("[FlowSteps] Fout opslaan:", err);
+      return res.status(500).json({ message: "Fout bij opslaan" });
+    }
+  });
+
+  // POST flow activeren
+  app.post("/api/admin/prospect-campaigns/:id/flow-activate", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { activateFlow } = await import('./flowEngine');
+      const result = await activateFlow(id);
+      return res.json(result);
+    } catch (err: any) {
+      console.error("[FlowActivate] Fout:", err);
+      return res.status(500).json({ message: err?.message || "Fout" });
+    }
+  });
+
+  // GET flow voortgang statistieken
+  app.get("/api/admin/prospect-campaigns/:id/flow-stats", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [stats, progresses] = await Promise.all([
+        storage.getFlowStats(id),
+        storage.getFlowContactProgresses(id),
+      ]);
+      return res.json({ ...stats, contacten: progresses.slice(0, 50) });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
   // ─── Tracking endpoints (public) ─────────────────────────────────────────
   // Open pixel
   app.get("/api/track/open/:token", async (req: Request, res: Response) => {

@@ -74,6 +74,10 @@ import {
   type MailSend, type InsertMailSend,
   type MailEvent, type InsertMailEvent,
   type UnsubscribeToken,
+  flowSteps as flowStepsTable,
+  flowContactProgress as flowContactProgressTable,
+  type FlowStep, type InsertFlowStep,
+  type FlowContactProgress, type InsertFlowContactProgress,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -473,6 +477,27 @@ export interface IStorage {
   }>;
   getOrCreateUnsubscribeToken(contactId: number, token: string): Promise<UnsubscribeToken>;
   getUnsubscribeTokenByContact(contactId: number): Promise<UnsubscribeToken | undefined>;
+
+  // ─── Flow Steps ───────────────────────────────────────────────────────────
+  getFlowSteps(campaignId: number): Promise<FlowStep[]>;
+  getFlowStep(id: number): Promise<FlowStep | undefined>;
+  getFlowStepByStapId(campaignId: number, stapId: string): Promise<FlowStep | undefined>;
+  createFlowStep(data: InsertFlowStep): Promise<FlowStep>;
+  updateFlowStep(id: number, data: Partial<InsertFlowStep>): Promise<FlowStep | undefined>;
+  deleteFlowStep(id: number): Promise<void>;
+  replaceFlowSteps(campaignId: number, steps: InsertFlowStep[]): Promise<FlowStep[]>;
+
+  // ─── Flow Contact Progress ────────────────────────────────────────────────
+  getFlowContactProgresses(campaignId: number): Promise<FlowContactProgress[]>;
+  getFlowContactProgress(campaignId: number, contactId: number): Promise<FlowContactProgress | undefined>;
+  getFlowContactProgressById(id: number): Promise<FlowContactProgress | undefined>;
+  createFlowContactProgress(data: InsertFlowContactProgress): Promise<FlowContactProgress>;
+  updateFlowContactProgress(id: number, data: Partial<InsertFlowContactProgress>): Promise<FlowContactProgress | undefined>;
+  getActiveFlowProgresses(): Promise<FlowContactProgress[]>;
+  getFlowStats(campaignId: number): Promise<{
+    actief: number; voltooid: number; gestopt: number; error: number;
+    perStap: Array<{ stapId: string; wachtHier: number; doorgelopen: number }>;
+  }>;
 }
 
 // In-memory storage implementation
@@ -4229,6 +4254,117 @@ export class MemStorage implements IStorage {
     const [row] = await db.select().from(unsubscribeTokensTable)
       .where(eq(unsubscribeTokensTable.contactId, contactId));
     return row;
+  }
+
+  // ─── Flow Steps ────────────────────────────────────────────────────────────
+
+  async getFlowSteps(campaignId: number): Promise<FlowStep[]> {
+    return db.select().from(flowStepsTable)
+      .where(eq(flowStepsTable.campaignId, campaignId))
+      .orderBy(asc(flowStepsTable.volgorde));
+  }
+
+  async getFlowStep(id: number): Promise<FlowStep | undefined> {
+    const [row] = await db.select().from(flowStepsTable).where(eq(flowStepsTable.id, id));
+    return row;
+  }
+
+  async getFlowStepByStapId(campaignId: number, stapId: string): Promise<FlowStep | undefined> {
+    const [row] = await db.select().from(flowStepsTable)
+      .where(and(eq(flowStepsTable.campaignId, campaignId), eq(flowStepsTable.stapId, stapId)));
+    return row;
+  }
+
+  async createFlowStep(data: InsertFlowStep): Promise<FlowStep> {
+    const [row] = await db.insert(flowStepsTable).values(data).returning();
+    return row;
+  }
+
+  async updateFlowStep(id: number, data: Partial<InsertFlowStep>): Promise<FlowStep | undefined> {
+    const [row] = await db.update(flowStepsTable).set(data).where(eq(flowStepsTable.id, id)).returning();
+    return row;
+  }
+
+  async deleteFlowStep(id: number): Promise<void> {
+    await db.delete(flowStepsTable).where(eq(flowStepsTable.id, id));
+  }
+
+  async replaceFlowSteps(campaignId: number, steps: InsertFlowStep[]): Promise<FlowStep[]> {
+    await db.delete(flowStepsTable).where(eq(flowStepsTable.campaignId, campaignId));
+    if (steps.length === 0) return [];
+    return db.insert(flowStepsTable).values(steps).returning();
+  }
+
+  // ─── Flow Contact Progress ─────────────────────────────────────────────────
+
+  async getFlowContactProgresses(campaignId: number): Promise<FlowContactProgress[]> {
+    return db.select().from(flowContactProgressTable)
+      .where(eq(flowContactProgressTable.campaignId, campaignId))
+      .orderBy(desc(flowContactProgressTable.bijgewerktOp));
+  }
+
+  async getFlowContactProgress(campaignId: number, contactId: number): Promise<FlowContactProgress | undefined> {
+    const [row] = await db.select().from(flowContactProgressTable)
+      .where(and(
+        eq(flowContactProgressTable.campaignId, campaignId),
+        eq(flowContactProgressTable.contactId, contactId)
+      ));
+    return row;
+  }
+
+  async getFlowContactProgressById(id: number): Promise<FlowContactProgress | undefined> {
+    const [row] = await db.select().from(flowContactProgressTable)
+      .where(eq(flowContactProgressTable.id, id));
+    return row;
+  }
+
+  async createFlowContactProgress(data: InsertFlowContactProgress): Promise<FlowContactProgress> {
+    const [row] = await db.insert(flowContactProgressTable).values(data).returning();
+    return row;
+  }
+
+  async updateFlowContactProgress(id: number, data: Partial<InsertFlowContactProgress>): Promise<FlowContactProgress | undefined> {
+    const [row] = await db.update(flowContactProgressTable)
+      .set({ ...data, bijgewerktOp: new Date() })
+      .where(eq(flowContactProgressTable.id, id))
+      .returning();
+    return row;
+  }
+
+  async getActiveFlowProgresses(): Promise<FlowContactProgress[]> {
+    const now = new Date();
+    return db.select().from(flowContactProgressTable)
+      .where(
+        and(
+          eq(flowContactProgressTable.status, 'actief'),
+          or(
+            isNull(flowContactProgressTable.wachtTot),
+            lte(flowContactProgressTable.wachtTot, now)
+          )
+        )
+      );
+  }
+
+  async getFlowStats(campaignId: number): Promise<{
+    actief: number; voltooid: number; gestopt: number; error: number;
+    perStap: Array<{ stapId: string; wachtHier: number; doorgelopen: number }>;
+  }> {
+    const all = await db.select().from(flowContactProgressTable)
+      .where(eq(flowContactProgressTable.campaignId, campaignId));
+
+    const actief = all.filter(p => p.status === 'actief').length;
+    const voltooid = all.filter(p => p.status === 'voltooid').length;
+    const gestopt = all.filter(p => p.status === 'gestopt').length;
+    const error = all.filter(p => p.status === 'error').length;
+
+    const steps = await this.getFlowSteps(campaignId);
+    const perStap = steps.map(s => ({
+      stapId: s.stapId,
+      wachtHier: all.filter(p => p.status === 'actief' && p.huidigeStapId === s.stapId).length,
+      doorgelopen: all.filter(p => p.huidigeStapId !== s.stapId || p.status !== 'actief').length,
+    }));
+
+    return { actief, voltooid, gestopt, error, perStap };
   }
 }
 
