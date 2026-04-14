@@ -78,6 +78,8 @@ import {
   flowContactProgress as flowContactProgressTable,
   type FlowStep, type InsertFlowStep,
   type FlowContactProgress, type InsertFlowContactProgress,
+  notificaties as notificatiesTable,
+  type Notificatie, type InsertNotificatie,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -477,6 +479,25 @@ export interface IStorage {
   }>;
   getOrCreateUnsubscribeToken(contactId: number, token: string): Promise<UnsubscribeToken>;
   getUnsubscribeTokenByContact(contactId: number): Promise<UnsubscribeToken | undefined>;
+
+  // ─── A/B Test queries ────────────────────────────────────────────────────
+  getCampaignsForABCheck(): Promise<ProspectCampaign[]>;
+  getABStats(campaignId: number): Promise<{
+    fase: string; winnaar: string | null; winnaarBepaaldOp: Date | null;
+    variantA: { verzonden: number; geopend: number; geopendPct: number; geklikt: number; gekliktPct: number; eersteVerzondenOp: Date | null };
+    variantB: { verzonden: number; geopend: number; geopendPct: number; geklikt: number; gekliktPct: number; eersteVerzondenOp: Date | null };
+    restAantal: number;
+  }>;
+  getABTijdlijn(campaignId: number): Promise<Array<{
+    uur: number;
+    aOpens: number; bOpens: number; aClicks: number; bClicks: number;
+  }>>;
+
+  // ─── Notificaties ─────────────────────────────────────────────────────────
+  createNotificatie(data: InsertNotificatie): Promise<Notificatie>;
+  getNotificaties(limit?: number): Promise<Notificatie[]>;
+  getOngelezenCount(): Promise<number>;
+  markeerAlleGelezen(): Promise<void>;
 
   // ─── Flow Steps ───────────────────────────────────────────────────────────
   getFlowSteps(campaignId: number): Promise<FlowStep[]>;
@@ -4365,6 +4386,139 @@ export class MemStorage implements IStorage {
     }));
 
     return { actief, voltooid, gestopt, error, perStap };
+  }
+
+  // ─── A/B Test queries ──────────────────────────────────────────────────────
+
+  async getCampaignsForABCheck(): Promise<ProspectCampaign[]> {
+    // Campagnes waarbij A/B test actief is en fase = 'test'
+    return db.select().from(prospectCampaignsTable)
+      .where(
+        and(
+          eq(prospectCampaignsTable.abTestActief, true),
+          eq(prospectCampaignsTable.abTestFase as any, 'test')
+        )
+      );
+  }
+
+  async getABStats(campaignId: number): Promise<{
+    fase: string; winnaar: string | null; winnaarBepaaldOp: Date | null;
+    variantA: { verzonden: number; geopend: number; geopendPct: number; geklikt: number; gekliktPct: number; eersteVerzondenOp: Date | null };
+    variantB: { verzonden: number; geopend: number; geopendPct: number; geklikt: number; gekliktPct: number; eersteVerzondenOp: Date | null };
+    restAantal: number;
+  }> {
+    const campaign = await this.getProspectCampaign(campaignId);
+    if (!campaign) throw new Error('Campagne niet gevonden');
+
+    const allSends = await this.getMailSendsByCampaign(campaignId);
+
+    const aSends = allSends.filter(s => s.variant === 'A' && s.isAbTestSend === 1);
+    const bSends = allSends.filter(s => s.variant === 'B' && s.isAbTestSend === 1);
+    const restSends = allSends.filter(s => s.isAbTestSend === 0);
+
+    const countVariantStats = async (sends: typeof allSends) => {
+      const sentSends = sends.filter(s => s.status === 'sent');
+      let geopend = 0;
+      let geklikt = 0;
+      for (const s of sentSends) {
+        const events = await this.getMailEventsByMailSend(s.id);
+        if (events.some(e => e.type === 'open')) geopend++;
+        if (events.some(e => e.type === 'click')) geklikt++;
+      }
+      const verzonden = sentSends.length;
+      const eersteVerzondenOp = sentSends.reduce((min: Date | null, s) => {
+        if (!s.verzondenOp) return min;
+        return !min || s.verzondenOp < min ? s.verzondenOp : min;
+      }, null);
+      return {
+        verzonden,
+        geopend,
+        geopendPct: verzonden > 0 ? Math.round((geopend / verzonden) * 1000) / 10 : 0,
+        geklikt,
+        gekliktPct: verzonden > 0 ? Math.round((geklikt / verzonden) * 1000) / 10 : 0,
+        eersteVerzondenOp,
+      };
+    };
+
+    const [variantA, variantB] = await Promise.all([
+      countVariantStats(aSends),
+      countVariantStats(bSends),
+    ]);
+
+    return {
+      fase: (campaign as any).abTestFase || 'concept',
+      winnaar: campaign.abWinnaarVariant || null,
+      winnaarBepaaldOp: (campaign as any).abWinnaarBepaaldOp || null,
+      variantA,
+      variantB,
+      restAantal: restSends.length,
+    };
+  }
+
+  async getABTijdlijn(campaignId: number): Promise<Array<{
+    uur: number;
+    aOpens: number; bOpens: number; aClicks: number; bClicks: number;
+  }>> {
+    const allSends = await this.getMailSendsByCampaign(campaignId);
+    const testSends = allSends.filter(s => s.isAbTestSend === 1 && s.verzondenOp);
+    if (testSends.length === 0) return [];
+
+    const eersteVerzending = testSends.reduce((min: Date, s) => {
+      return s.verzondenOp! < min ? s.verzondenOp! : min;
+    }, testSends[0].verzondenOp!);
+
+    const urens = [0, 1, 2, 4, 8, 12, 24, 48];
+    const result: Array<{ uur: number; aOpens: number; bOpens: number; aClicks: number; bClicks: number }> = [];
+
+    for (let i = 0; i < urens.length - 1; i++) {
+      const vanUur = urens[i];
+      const totUur = urens[i + 1];
+      const vanMs = vanUur * 3600000;
+      const totMs = totUur * 3600000;
+
+      let aOpens = 0, bOpens = 0, aClicks = 0, bClicks = 0;
+
+      for (const s of testSends) {
+        const events = await this.getMailEventsByMailSend(s.id);
+        for (const e of events) {
+          const msNaVerzending = e.timestamp.getTime() - eersteVerzending.getTime();
+          if (msNaVerzending >= vanMs && msNaVerzending < totMs) {
+            if (s.variant === 'A' && e.type === 'open') aOpens++;
+            if (s.variant === 'B' && e.type === 'open') bOpens++;
+            if (s.variant === 'A' && e.type === 'click') aClicks++;
+            if (s.variant === 'B' && e.type === 'click') bClicks++;
+          }
+        }
+      }
+
+      result.push({ uur: vanUur, aOpens, bOpens, aClicks, bClicks });
+    }
+
+    return result;
+  }
+
+  // ─── Notificaties ──────────────────────────────────────────────────────────
+
+  async createNotificatie(data: InsertNotificatie): Promise<Notificatie> {
+    const [row] = await db.insert(notificatiesTable).values(data).returning();
+    return row;
+  }
+
+  async getNotificaties(limit = 20): Promise<Notificatie[]> {
+    return db.select().from(notificatiesTable)
+      .orderBy(desc(notificatiesTable.aangemaaktOp))
+      .limit(limit);
+  }
+
+  async getOngelezenCount(): Promise<number> {
+    const rows = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(notificatiesTable)
+      .where(eq(notificatiesTable.gelezen, 0));
+    return Number(rows[0]?.count ?? 0);
+  }
+
+  async markeerAlleGelezen(): Promise<void> {
+    await db.update(notificatiesTable).set({ gelezen: 1 }).where(eq(notificatiesTable.gelezen, 0));
   }
 }
 

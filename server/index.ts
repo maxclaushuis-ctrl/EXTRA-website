@@ -322,13 +322,20 @@ function scheduleFlowEngine() {
     } catch (err) {
       console.error("[FlowEngine] Scheduler fout:", err);
     }
+    // Check A/B winners in same cycle
+    try {
+      const { checkABWinners } = await import('./abEngine');
+      await checkABWinners();
+    } catch (err) {
+      console.error("[ABEngine] Scheduler fout:", err);
+    }
   }
 
-  // Start na 10 seconden, daarna elke 5 minuten
+  // Start na 15 seconden, daarna elke 5 minuten
   setTimeout(() => {
     runCheck();
     setInterval(runCheck, MS_PER_5MIN);
-  }, 10_000);
+  }, 15_000);
 
-  log("Flow engine scheduler actief (elke 5 minuten)");
+  log("Flow + A/B scheduler actief (elke 5 minuten)");
 }

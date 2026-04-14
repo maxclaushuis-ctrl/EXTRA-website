@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EmailBuilderPage from "@/components/EmailBuilderPage";
@@ -42,7 +45,8 @@ type Campaign = {
   htmlContent: string; textContent: string | null;
   scheduledAt: string | null; sentAt: string | null;
   sentCount: number; failedCount: number; openCount: number; clickCount: number;
-  abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number; abWinnaarVariant: string | null;
+  abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number;
+  abWinnaarVariant: string | null; abWinnaarBepaaldOp: string | null; abTestFase: string | null;
   alleenWerkdagen: boolean; tijdvensterStart: string; tijdvensterEind: string;
   createdAt: string; updatedAt: string;
 };
@@ -609,6 +613,327 @@ function CampaignWizard({ open, onClose, onCreated }: {
   );
 }
 
+// ─── A/B Rapportage Tab ───────────────────────────────────────────────────────
+
+interface ABStats {
+  fase: string; winnaar: string | null; winnaarBepaaldOp: string | null;
+  variantA: { verzonden: number; geopend: number; geopendPct: number; geklikt: number; gekliktPct: number; eersteVerzondenOp: string | null };
+  variantB: { verzonden: number; geopend: number; geopendPct: number; geklikt: number; gekliktPct: number; eersteVerzondenOp: string | null };
+  restAantal: number;
+  tijdlijn: Array<{ uur: number; aOpens: number; bOpens: number; aClicks: number; bClicks: number }>;
+}
+
+function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  return (
+    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+      <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+    </div>
+  );
+}
+
+function ABRapportageTab({ campaign }: { campaign: Campaign }) {
+  const { toast } = useToast();
+  const [winModal, setWinModal] = useState(false);
+  const [tijdlijnOpen, setTijdlijnOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
+
+  const { data: stats, isLoading, refetch } = useQuery<ABStats>({
+    queryKey: ['/api/admin/prospect-campaigns', campaign.id, 'ab-stats'],
+    queryFn: () => fetch(`/api/admin/prospect-campaigns/${campaign.id}/ab-stats`, { credentials: 'include' }).then(r => r.json()),
+    refetchInterval: 60_000,
+    enabled: campaign.abTestActief,
+  });
+
+  const pickWinnaar = async (variant: 'A' | 'B' | 'auto') => {
+    setPicking(true);
+    try {
+      const result: any = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/ab-pick-winner`, { variant });
+      toast({ title: `Winnaar variant ${result.winnaar} bepaald ✓` });
+      setWinModal(false);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
+    } catch (e: any) {
+      toast({ title: e?.data?.message || 'Mislukt', variant: 'destructive' });
+    } finally {
+      setPicking(false);
+    }
+  };
+
+  if (!campaign.abTestActief) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="text-center">
+          <FlaskConical className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+          <p className="text-slate-400 text-sm">A/B test is uitgeschakeld voor deze campagne</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-48">
+      <RefreshCw className="h-6 w-6 text-slate-300 animate-spin" />
+    </div>
+  );
+
+  const fase = stats?.fase || campaign.abTestFase || 'concept';
+  const winnaar = stats?.winnaar || campaign.abWinnaarVariant;
+  const a = stats?.variantA || { verzonden: 0, geopend: 0, geopendPct: 0, geklikt: 0, gekliktPct: 0, eersteVerzondenOp: null };
+  const b = stats?.variantB || { verzonden: 0, geopend: 0, geopendPct: 0, geklikt: 0, gekliktPct: 0, eersteVerzondenOp: null };
+  const maxOpen = Math.max(a.geopendPct, b.geopendPct, 1);
+  const maxClick = Math.max(a.gekliktPct, b.gekliktPct, 1);
+
+  // Winnaarstatus banner
+  const WinnaarBanner = () => {
+    if (fase === 'concept' || fase === null) return null;
+
+    if (!winnaar && (fase === 'test' || !fase)) {
+      const eersteVerzending = a.eersteVerzondenOp;
+      const bepaalOp = eersteVerzending
+        ? new Date(new Date(eersteVerzending).getTime() + (campaign.abWinnaarNaUren || 24) * 3600000)
+        : null;
+      return (
+        <div className="border-l-4 border-blue-400 bg-blue-50 rounded-r-xl p-4 mb-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <FlaskConical className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-semibold text-blue-800">A/B test loopt</span>
+              </div>
+              <p className="text-xs text-blue-600">
+                Variant A getest bij {a.verzonden} contacten · Variant B bij {b.verzonden} contacten
+              </p>
+              {bepaalOp && (
+                <p className="text-xs text-blue-500 mt-1">
+                  Winnaar bepaald op <strong>{bepaalOp.toLocaleString('nl-NL', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}</strong> op basis van {campaign.abWinnaarOp === 'click_rate' ? 'click rate' : 'open rate'}
+                </p>
+              )}
+              {stats?.restAantal != null && stats.restAantal > 0 && (
+                <p className="text-xs text-blue-400 mt-1">{stats.restAantal} contacten wachten op winnaar</p>
+              )}
+            </div>
+            <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100 text-xs" onClick={() => setWinModal(true)}>
+              Winnaar nu bepalen
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (winnaar) {
+      const winnaarData = winnaar === 'A' ? a : b;
+      const verliezerData = winnaar === 'A' ? b : a;
+      const score = campaign.abWinnaarOp === 'click_rate' ? `${winnaarData.gekliktPct}% click rate` : `${winnaarData.geopendPct}% open rate`;
+      const verliezerScore = campaign.abWinnaarOp === 'click_rate' ? `${verliezerData.gekliktPct}%` : `${verliezerData.geopendPct}%`;
+      return (
+        <div className="border-l-4 border-green-400 bg-green-50 rounded-r-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">🏆</span>
+            <span className="text-sm font-semibold text-green-800">Winnaar: Variant {winnaar}</span>
+          </div>
+          <p className="text-xs text-green-600">
+            {campaign.abWinnaarBepaaldOp && `Bepaald op ${new Date(campaign.abWinnaarBepaaldOp).toLocaleString('nl-NL', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })} · `}
+            Variant {winnaar}: {score} vs Variant {winnaar === 'A' ? 'B' : 'A'}: {verliezerScore}
+          </p>
+          {stats?.restAantal === 0 && fase === 'voltooid' && (
+            <p className="text-xs text-green-500 mt-1">Winnaar verzonden naar alle resterende contacten ✓</p>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Grafiek data
+  const chartData = (stats?.tijdlijn || []).map(t => ({
+    name: `${t.uur}u`,
+    'Variant A opens': t.aOpens,
+    'Variant B opens': t.bOpens,
+    'Variant A clicks': t.aClicks,
+    'Variant B clicks': t.bClicks,
+  }));
+
+  return (
+    <div className="max-w-3xl space-y-6">
+      <WinnaarBanner />
+
+      {/* Twee kolommen vergelijking */}
+      <div className="grid grid-cols-2 gap-4">
+        {[
+          { label: 'Variant A', data: a, color: '#7C3AED', bgHeader: 'bg-purple-600', isWinnaar: winnaar === 'A', isVerliezer: !!winnaar && winnaar !== 'A' },
+          { label: 'Variant B', data: b, color: '#2563EB', bgHeader: 'bg-blue-600', isWinnaar: winnaar === 'B', isVerliezer: !!winnaar && winnaar !== 'B' },
+        ].map(v => (
+          <div key={v.label} className={`rounded-xl border overflow-hidden ${v.isVerliezer ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
+            <div className={`${v.bgHeader} px-4 py-3 flex items-center justify-between`}>
+              <span className="text-white font-semibold text-sm">{v.label}</span>
+              {v.isWinnaar && (
+                <span className="bg-white text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">🏆 Winnaar</span>
+              )}
+              {v.isVerliezer && (
+                <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">Verliezer</span>
+              )}
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Onderwerp */}
+              <p className="text-xs text-slate-500 truncate">
+                {v.label === 'Variant A' ? campaign.subject : (campaign.subject + ' (B)')}
+              </p>
+
+              {/* KPI rij */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Verzonden', value: v.data.verzonden },
+                  { label: 'Geopend', value: `${v.data.geopendPct}%` },
+                  { label: 'Geklikt', value: `${v.data.gekliktPct}%` },
+                ].map(s => (
+                  <div key={s.label} className="text-center">
+                    <p className="text-lg font-bold" style={{ color: v.color }}>{s.value}</p>
+                    <p className="text-xs text-slate-400">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Progressbars */}
+              <div className="space-y-2">
+                <div>
+                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                    <span>Open rate</span><span>{v.data.geopendPct}%</span>
+                  </div>
+                  <ProgressBar value={v.data.geopendPct} max={maxOpen} color={v.color} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                    <span>Click rate</span><span>{v.data.gekliktPct}%</span>
+                  </div>
+                  <ProgressBar value={v.data.gekliktPct} max={maxClick} color={v.color} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Grafiek */}
+      {chartData.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <p className="text-sm font-semibold text-slate-700 mb-4">Opens over tijd</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94A3B8' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="Variant A opens" stroke="#7C3AED" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Variant B opens" stroke="#2563EB" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Tijdlijn detailtabel */}
+      {(stats?.tijdlijn || []).length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <button
+            className="w-full flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            onClick={() => setTijdlijnOpen(v => !v)}
+          >
+            Gedetailleerde tijdlijn
+            <ChevronRight className={`h-4 w-4 text-slate-400 transition-transform ${tijdlijnOpen ? 'rotate-90' : ''}`} />
+          </button>
+          {tijdlijnOpen && (
+            <div className="overflow-x-auto border-t border-slate-100">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="text-left px-4 py-2.5 font-semibold text-slate-500">Tijdstip</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-purple-600">A opens</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-blue-600">B opens</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-purple-600">A clicks</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-blue-600">B clicks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(stats?.tijdlijn || []).map((t, idx) => (
+                    <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50">
+                      <td className="px-4 py-2 text-slate-500">{t.uur}–{[1,2,4,8,12,24,48][idx] ?? '48+'}u</td>
+                      <td className="px-4 py-2 text-right text-purple-600 font-medium">{t.aOpens}</td>
+                      <td className="px-4 py-2 text-right text-blue-600 font-medium">{t.bOpens}</td>
+                      <td className="px-4 py-2 text-right text-purple-400">{t.aClicks}</td>
+                      <td className="px-4 py-2 text-right text-blue-400">{t.bClicks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      <button
+        onClick={() => refetch()}
+        className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1"
+      >
+        <RefreshCw className="h-3 w-3" />Vernieuwen
+      </button>
+
+      {/* Winnaar bepalen modal */}
+      <Dialog open={winModal} onOpenChange={setWinModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-purple-600" />
+              Winnaar bepalen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">Tussenstand op dit moment:</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Variant A', data: a, color: 'purple' },
+                { label: 'Variant B', data: b, color: 'blue' },
+              ].map(v => (
+                <div key={v.label} className={`rounded-xl border-2 p-3 ${v.color === 'purple' ? 'border-purple-200 bg-purple-50' : 'border-blue-200 bg-blue-50'}`}>
+                  <p className={`text-xs font-bold mb-2 ${v.color === 'purple' ? 'text-purple-700' : 'text-blue-700'}`}>{v.label}</p>
+                  <p className={`text-xl font-bold ${v.color === 'purple' ? 'text-purple-600' : 'text-blue-600'}`}>{v.data.geopendPct}%</p>
+                  <p className="text-xs text-slate-400">open rate</p>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2 pt-2">
+              <Button
+                className="w-full gap-2 bg-purple-600 hover:bg-purple-700"
+                disabled={picking}
+                onClick={() => pickWinnaar('A')}
+              >
+                Kies Variant A als winnaar
+              </Button>
+              <Button
+                className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                disabled={picking}
+                onClick={() => pickWinnaar('B')}
+              >
+                Kies Variant B als winnaar
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                disabled={picking}
+                onClick={() => pickWinnaar('auto')}
+              >
+                <FlaskConical className="h-3.5 w-3.5" />
+                Automatisch bepalen (huidig data)
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 // ─── Flow Voortgang Tab ───────────────────────────────────────────────────────
 
 interface FlowStats {
@@ -1003,7 +1328,8 @@ export default function ProspectCampagnesTab() {
               <TabsList className="h-9 bg-transparent gap-0 p-0">
                 {[
                   { v: 'overzicht', label: 'Overzicht', icon: FileText },
-                  { v: 'statistieken', label: 'Statistieken', icon: BarChart2, hide: selectedCampaign?.campagneType === 'flow' },
+                  { v: 'statistieken', label: 'Statistieken', icon: BarChart2, hide: selectedCampaign?.campagneType === 'flow' || !!selectedCampaign?.abTestActief },
+                  { v: 'ab-rapport', label: 'A/B Rapport', icon: FlaskConical, hide: !selectedCampaign?.abTestActief || selectedCampaign?.campagneType === 'flow' },
                   { v: 'ontvangers', label: 'Ontvangers', icon: Users, hide: selectedCampaign?.campagneType === 'flow' },
                   { v: 'voortgang', label: 'Flow voortgang', icon: Zap, hide: selectedCampaign?.campagneType !== 'flow' },
                 ].filter(t => !t.hide).map(t => (
@@ -1167,6 +1493,13 @@ export default function ProspectCampagnesTab() {
                 </div>
               )}
             </TabsContent>
+
+            {/* A/B Rapport */}
+            {selectedCampaign?.abTestActief && (
+              <TabsContent value="ab-rapport" className="flex-1 overflow-auto p-6">
+                <ABRapportageTab campaign={selectedCampaign} />
+              </TabsContent>
+            )}
 
             {/* Ontvangers */}
             <TabsContent value="ontvangers" className="flex-1 overflow-hidden flex flex-col">

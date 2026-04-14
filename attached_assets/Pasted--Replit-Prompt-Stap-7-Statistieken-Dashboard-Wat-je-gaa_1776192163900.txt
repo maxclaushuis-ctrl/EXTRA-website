@@ -1,0 +1,340 @@
+# Replit Prompt — Stap 7: Statistieken Dashboard
+
+## Wat je gaat doen
+Bouw een volledig statistieken dashboard als aparte sectie in het platform. Dit dashboard geeft inzicht in de prestaties van alle campagnes gecombineerd, per branche, per periode en per campagne afzonderlijk. De data komt uit de bestaande `mail_sends` en `mail_events` tabellen die in stap 4 zijn aangemaakt.
+
+---
+
+## 1. Navigatie — dashboard toevoegen
+
+Voeg "Statistieken" toe als derde tab/sectie in de hoofdnavigatie (naast Campagnes en Contacten):
+- Icoon: grafiek/bar chart icoon
+- Label: "Statistieken"
+- Badge: geen
+
+---
+
+## 2. Dashboard layout
+
+```
+[Topbalk: "Statistieken" titel | periode-filter | branche-filter | exportknop]
+
+[Rij 1: 4 KPI kaarten]
+
+[Rij 2: Hoofdgrafiek (open/click rate over tijd) — volle breedte]
+
+[Rij 3 links: Campagne ranglijst]  [Rij 3 rechts: Branche prestaties]
+
+[Rij 4: Recente activiteit feed]
+```
+
+---
+
+## 3. Periode- en branchefilter (topbalk)
+
+**Periode dropdown:**
+- Laatste 7 dagen
+- Laatste 30 dagen (standaard)
+- Laatste 90 dagen
+- Dit jaar
+- Aangepast (toont datumpicker: van — tot)
+
+**Branche filter (pills, multiselect):**
+- Alle branches (standaard)
+- Hotel
+- Restaurant
+- Cateraar
+- Evenementenlocatie
+- Logistiek
+
+Alle grafieken en kaarten op de pagina updaten bij wijziging van filters.
+
+**Exportknop:**
+- Knop "⬇ Exporteren" rechtsboven
+- Dropdown: "Exporteer als CSV" / "Exporteer als PDF"
+- CSV exporteert de ruwe statistieken per campagne
+- PDF exporteert een overzichtsrapport (zie sectie 9)
+
+---
+
+## 4. KPI kaarten (rij 1)
+
+Vier kaarten naast elkaar, elk met:
+- Groot getal (bold, 36px)
+- Label (grijs, 14px)
+- Trend indicator: pijl omhoog/omlaag + % verschil t.o.v. vorige periode
+- Kleurcodering trend: groen = beter, rood = slechter
+
+**Kaart 1: Totaal verzonden**
+- Waarde: totaal aantal verzonden mails in geselecteerde periode
+- Trend: vergeleken met zelfde periode daarvoor
+
+**Kaart 2: Gemiddelde open rate**
+- Waarde: X.X%
+- Kleurindicator in de kaart zelf:
+  - > 25%: groene rand
+  - 15–25%: oranje rand
+  - < 15%: rode rand
+- Trend t.o.v. vorige periode
+
+**Kaart 3: Gemiddelde click rate**
+- Waarde: X.X%
+- Zelfde kleurindicator als open rate maar drempels: >5% groen, 2–5% oranje, <2% rood
+
+**Kaart 4: Uitschrijvingen**
+- Waarde: totaal aantal uitschrijvingen in periode
+- Trend: rood als meer dan vorige periode, groen als minder
+
+---
+
+## 5. Hoofdgrafiek: prestaties over tijd (rij 2)
+
+Een gecombineerde lijn + staafgrafiek over de geselecteerde periode:
+
+- **Staafgrafiek (primaire Y-as links):** aantal verzonden mails per dag/week
+- **Lijngrafiek (secundaire Y-as rechts):** open rate % per dag/week
+- **Tweede lijn:** click rate % per dag/week
+
+**Tijdsindeling:**
+- Periode ≤ 14 dagen: per dag
+- Periode 15–90 dagen: per week
+- Periode > 90 dagen: per maand
+
+**Interactie:**
+- Hover over een punt toont een tooltip:
+  ```
+  Week 14 (1–7 apr)
+  Verzonden: 234
+  Geopend: 67 (28.6%)
+  Geklikt: 23 (9.8%)
+  ```
+- Klik op een staaf: filtert de campagne-ranglijst (rij 3) op die periode
+
+**Legenda** onderaan de grafiek:
+- Blauw blok: Verzonden
+- Paarse lijn: Open rate
+- Groene lijn: Click rate
+
+Gebruik Chart.js of de charting library die al in het project aanwezig is.
+
+---
+
+## 6. Campagne ranglijst (rij 3 links)
+
+Een tabel met alle campagnes in de geselecteerde periode, gesorteerd op open rate (aflopend):
+
+| # | Campagne | Type | Verzonden | Open rate | Click rate | Datum |
+|---|----------|------|-----------|-----------|------------|-------|
+| 1 | Hotels April | Bulk | 234 | 32.4% 🟢 | 12.1% 🟢 | 3 apr |
+| 2 | Restaurants Q2 | Flow | 187 | 24.8% 🟢 | 8.3% 🟢 | 28 mrt |
+| 3 | Logistiek intro | Bulk | 95 | 14.2% 🟡 | 3.1% 🟡 | 15 mrt |
+
+**Kleurbolletjes per metric:**
+- Open rate: 🟢 > 25%, 🟡 15–25%, 🔴 < 15%
+- Click rate: 🟢 > 5%, 🟡 2–5%, 🔴 < 2%
+
+**Interactie:**
+- Klik op een rij → navigeer naar de statistieken tab van die campagne
+- Sorteerbaar op alle kolommen (klik op kolomhoofd)
+- Paginering: 10 per pagina met "Volgende" / "Vorige"
+
+**Leeg state:**
+- "Nog geen campagnes verzonden in deze periode"
+
+---
+
+## 7. Branche prestaties (rij 3 rechts)
+
+Een horizontale staafgrafiek die per branche de gemiddelde open rate toont:
+
+```
+Hotel              ████████████████░░░░  32.1%
+Restaurant         █████████████░░░░░░░  27.4%
+Evenementenlocatie ██████████░░░░░░░░░░  21.8%
+Cateraar           ████████░░░░░░░░░░░░  18.2%
+Logistiek          ██████░░░░░░░░░░░░░░  14.6%
+```
+
+Elke balk:
+- Paarse kleur (#7C3AED) voor open rate
+- Groene kleur (#059669) voor click rate (als tweede balk ernaast of eronder)
+- Percentage als label rechts van de balk
+- Tooltip bij hover: "X campagnes · Y contacten bereikt"
+
+Onder de grafiek: kleine tabel met absolute aantallen per branche:
+| Branche | Campagnes | Contacten bereikt | Gem. open rate | Gem. click rate |
+|---------|-----------|-------------------|----------------|-----------------|
+
+---
+
+## 8. Recente activiteit feed (rij 4)
+
+Een chronologische feed van de laatste 20 mail-events:
+
+```
+👁️  Jan de Vries (Hotel Okura) opende "Hotels April 2026"          — 2 min geleden
+🖱️  Maria Santos (Catering Co) klikte op "Hotels April 2026"       — 5 min geleden  
+📨  Campagne "Restaurants Q2" verzonden naar 187 contacten         — 1 uur geleden
+🚫  Pieter Bakker (Restaurant X) schreef zich uit                  — 2 uur geleden
+🏆  A/B winnaar bepaald: "Hotels April" — Variant A (32.4% open)   — 3 uur geleden
+```
+
+**Icoontjes per event type:**
+- 👁️ Open
+- 🖱️ Click
+- 📨 Verzending
+- 🚫 Uitschrijving
+- 🏆 A/B winnaar
+
+**Privacyoverweging:** toon voornaam + achternaam alleen als het contact bestaat in de database. Toon anders alleen het bedrijf of "Onbekend contact".
+
+Knop "Meer laden" onderaan voor de volgende 20 events.
+
+Auto-refresh: elke 60 seconden als er actieve campagnes zijn.
+
+---
+
+## 9. CSV export
+
+Bij klik op "Exporteer als CSV":
+
+Genereer een CSV bestand met de volgende kolommen:
+```
+Campagnenaam, Type, Status, Branche_filter, Verzonden_op, 
+Totaal_verzonden, Geopend, Open_rate_pct, Geklikt, Click_rate_pct, 
+Uitgeschreven, Mislukt
+```
+
+Elke rij = één campagne.
+
+Bestandsnaam: `EXTRA-statistieken-[datum].csv`
+
+Implementeer als een server-side endpoint:
+### GET /api/stats/export/csv
+- Query parameters: `vanaf`, `tot`, `branche`
+- Geeft CSV terug met juiste headers:
+  ```
+  Content-Type: text/csv
+  Content-Disposition: attachment; filename="EXTRA-statistieken-2026-04-14.csv"
+  ```
+
+---
+
+## 10. Backend API endpoints
+
+### GET /api/stats/overview
+```
+Query parameters: vanaf (date), tot (date), branche (array)
+
+Geeft terug:
+{
+  kpi: {
+    totaal_verzonden: X,
+    totaal_verzonden_vorige: X,
+    gem_open_rate: X.X,
+    gem_open_rate_vorige: X.X,
+    gem_click_rate: X.X,
+    gem_click_rate_vorige: X.X,
+    uitschrijvingen: X,
+    uitschrijvingen_vorige: X
+  },
+  tijdlijn: [
+    { periode: '2026-04-01', verzonden: X, open_rate: X.X, click_rate: X.X },
+    ...
+  ],
+  per_branche: [
+    { branche: 'Hotel', campagnes: X, bereikt: X, open_rate: X.X, click_rate: X.X },
+    ...
+  ]
+}
+```
+
+### GET /api/stats/campaigns
+```
+Query parameters: vanaf, tot, branche, sort_by, sort_dir, page, per_page
+
+Geeft gepagineerde lijst van campagne-statistieken terug.
+```
+
+### GET /api/stats/activity
+```
+Query parameters: limit (default 20), offset
+
+Geeft recente mail-events terug met contact- en campagnenaam erbij (JOIN).
+```
+
+### GET /api/stats/export/csv
+```
+Zie sectie 9.
+```
+
+---
+
+## 11. Statistieken per campagne — uitbreiding bestaande tab
+
+De statistieken tab die al bestaat in de campagne detailpagina (aangemaakt in stap 4) uitbreiden met:
+
+**Onderwerpregel prestatie:**
+- Toon de onderwerpregel van de campagne
+- Kleine analyse: "Onderwerpregels met een naam-personalisatie hebben gemiddeld 18% hogere open rates"
+  (statische tip, niet dynamisch berekend)
+
+**Uitschrijvingen over tijd:**
+- Kleine grafiek: uitschrijvingen per dag na verzending
+- Piek op dag 1 is normaal, aanhoudende uitschrijvingen na dag 3 kunnen duiden op irrelevante inhoud
+
+**Klik-analyse:**
+- Tabel van alle links die geklikt zijn in de mail:
+  | URL | Aantal kliks | Unieke kliks |
+  |-----|-------------|--------------|
+  | https://doehetextra.nl/contact | 23 | 19 |
+  | https://doehetextra.nl/diensten | 8 | 7 |
+
+**Contacten die geopend hebben:**
+- Opvouwbare lijst: "X contacten openden deze mail"
+- Tabel: Naam | Bedrijf | Geopend op | Geklikt
+
+**Contacten die niet geopend hebben:**
+- Opvouwbare lijst: "X contacten openden deze mail niet"
+- Knop: "Maak follow-up campagne voor deze groep"
+  → Opent nieuw campagne aanmaak modaal (stap 2) met deze contacten als segment (opgeslagen als tijdelijke tag "niet-geopend-[campagne-id]")
+
+---
+
+## 12. Lege states & laadstates
+
+**Lege state — geen campagnes nog:**
+```
+[Grafiek-icoon]
+Nog geen statistieken beschikbaar
+Verstuur je eerste campagne om statistieken te zien
+[Knop: Ga naar Campagnes →]
+```
+
+**Lege state — geen data in geselecteerde periode:**
+```
+Geen campagnes verzonden in deze periode
+Probeer een andere periode te selecteren
+```
+
+**Laadstates:**
+- Skeleton loaders voor alle kaarten en grafieken tijdens het laden
+- Spinner in de exportknop tijdens genereren
+- Grafieken tonen een "Laden..." placeholder
+
+---
+
+## Stijlrichtlijnen dashboard
+
+- Paginaachtergrond: #F9FAFB
+- KPI kaarten: wit, afgeronde hoeken (12px), subtiele schaduw
+- Trendpijl omhoog: groen (#059669)
+- Trendpijl omlaag bij negatieve metric (uitschrijvingen omhoog): rood (#DC2626)
+- Trendpijl omlaag bij positieve metric (open rate omhoog): groen
+- Grafieken: witte achtergrond, paarse primaire kleur, groene secundaire kleur
+- Activiteit feed: lichtgrijze achtergrond (#F9FAFB), witte kaartjes per item
+- Responsief tot 1024px breedte — op smallere schermen stapelen de kolommen
+
+---
+
+*Stap 7 van 8 — EXTRA E-mailmarketing Module*

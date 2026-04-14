@@ -5293,6 +5293,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── A/B Test routes (Stap 6) ────────────────────────────────────────────
+
+  app.get("/api/admin/prospect-campaigns/:id/ab-stats", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const [stats, tijdlijn] = await Promise.all([
+        storage.getABStats(id),
+        storage.getABTijdlijn(id),
+      ]);
+      return res.json({ ...stats, tijdlijn });
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || "Fout" });
+    }
+  });
+
+  app.post("/api/admin/prospect-campaigns/:id/ab-pick-winner", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { variant } = req.body as { variant: 'A' | 'B' | 'auto' };
+      const { bepaalABWinnaar, verstuurWinnaarNaarRest } = await import('./abEngine');
+
+      if (variant === 'auto') {
+        const result = await bepaalABWinnaar(id, true);
+        return res.json(result || { winnaar: 'A', reden: 'Automatisch gekozen (geen data)' });
+      } else if (variant === 'A' || variant === 'B') {
+        await storage.updateProspectCampaign(id, {
+          abWinnaarVariant: variant,
+          abWinnaarBepaaldOp: new Date(),
+          abTestFase: 'doorgestuurd',
+        } as any);
+        await verstuurWinnaarNaarRest(id, variant);
+        return res.json({ winnaar: variant, reden: 'Handmatig gekozen' });
+      } else {
+        return res.status(400).json({ message: "Ongeldige variant. Kies A, B of auto." });
+      }
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || "Fout" });
+    }
+  });
+
+  // ─── Notificaties routes (Stap 6) ─────────────────────────────────────────
+
+  app.get("/api/admin/notificaties", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const [notifs, ongelezen] = await Promise.all([
+        storage.getNotificaties(20),
+        storage.getOngelezenCount(),
+      ]);
+      return res.json({ notificaties: notifs, ongelezen });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.put("/api/admin/notificaties/markeer-gelezen", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      await storage.markeerAlleGelezen();
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
   // ─── Flow Builder routes (Stap 5) ────────────────────────────────────────
 
   // GET flow steps voor een campagne

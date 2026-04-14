@@ -1412,7 +1412,9 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   abSplitPct: integer("ab_split_pct").default(50),
   abWinnaarOp: text("ab_winnaar_op").default("open_rate"),  // open_rate | click_rate
   abWinnaarNaUren: integer("ab_winnaar_na_uren").default(24),
-  abWinnaarVariant: text("ab_winnaar_variant"),              // A | B
+  abWinnaarVariant: text("ab_winnaar_variant"),              // A | B | null
+  abWinnaarBepaaldOp: timestamp("ab_winnaar_bepaald_op"),    // wanneer winnaar is gekozen
+  abTestFase: text("ab_test_fase").default("concept"),       // concept | test | doorgestuurd | voltooid | gestopt
   // Verzendvenster
   alleenWerkdagen: boolean("alleen_werkdagen").default(true),
   tijdvensterStart: text("tijdvenster_start").default("08:00"),
@@ -1478,6 +1480,7 @@ export const mailSends = pgTable("mail_sends", {
   contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
   email: text("email").notNull(),
   variant: text("variant").default('A').notNull(), // A | B
+  isAbTestSend: integer("is_ab_test_send").default(1), // 1 = AB test split, 0 = winnaar verzending
   verzondenOp: timestamp("verzonden_op"),
   status: text("status").default('pending').notNull(), // pending | sent | failed
   foutMelding: text("fout_melding"),
@@ -1553,3 +1556,19 @@ export type FlowStep = typeof flowSteps.$inferSelect;
 export const insertFlowContactProgressSchema = createInsertSchema(flowContactProgress).omit({ id: true, aangemaaktOp: true });
 export type InsertFlowContactProgress = z.infer<typeof insertFlowContactProgressSchema>;
 export type FlowContactProgress = typeof flowContactProgress.$inferSelect;
+
+// ─── Notificaties — Stap 6 ─────────────────────────────────────────────────────
+
+export const notificaties = pgTable("notificaties", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(),          // ab_winnaar | campagne_voltooid | etc.
+  titel: text("titel").notNull(),
+  bericht: text("bericht").notNull(),
+  link: text("link"),                    // bijv. /campaigns/123
+  gelezen: integer("gelezen").default(0),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+});
+
+export const insertNotificatieSchema = createInsertSchema(notificaties).omit({ id: true, aangemaaktOp: true });
+export type InsertNotificatie = z.infer<typeof insertNotificatieSchema>;
+export type Notificatie = typeof notificaties.$inferSelect;

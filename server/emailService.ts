@@ -249,26 +249,66 @@ export async function sendCampaignBatch(
 
   if (targets.length === 0) return { totaal: 0, verzonden: 0, mislukt: 0 };
 
-  // A/B split
-  const splitPct = campaign.abSplitPct || 50;
-  const splitIdx = campaign.abTestActief ? Math.ceil(targets.length * splitPct / 100) : targets.length;
+  // ── A/B Test: 40% testgroep logica ──────────────────────────────────────────
+  const isABTest = campaign.abTestActief && !!campaign.contentB;
 
-  // Create all mail_send records first
+  // Validatie: te weinig contacten voor A/B test
+  if (isABTest && targets.length < 10) {
+    console.log(`[EmailService] Te weinig contacten (${targets.length}) voor A/B test — variant A naar iedereen`);
+    // Stuur iedereen variant A
+    const mailSendIds: number[] = [];
+    for (const contact of targets) {
+      const ms = await storage.createMailSend({
+        campaignId, contactId: contact.id ?? null, email: contact.email!,
+        variant: 'A', isAbTestSend: 0, status: 'pending', verzondenOp: null, foutMelding: null, linkMap: null,
+      } as any);
+      mailSendIds.push(ms.id);
+    }
+    let verzonden = 0, mislukt = 0;
+    for (let i = 0; i < mailSendIds.length; i += 50) {
+      const batch = mailSendIds.slice(i, i + 50);
+      const results = await Promise.allSettled(batch.map(id => sendSingleMail(id, baseUrl)));
+      for (const r of results) { if (r.status === 'fulfilled' && r.value) verzonden++; else mislukt++; }
+      onProgress?.(verzonden, targets.length, mislukt);
+    }
+    await storage.updateProspectCampaign(campaignId, { status: 'voltooid', abTestFase: 'voltooid' } as any);
+    return { totaal: targets.length, verzonden, mislukt };
+  }
+
+  // Schud de lijst willekeurig
+  const shuffled = [...targets].sort(() => Math.random() - 0.5);
+
+  // Bereken testgroep (max 40%, min bij kleine lijsten)
+  const testGroepAantal = shuffled.length <= 20 ? shuffled.length : Math.min(shuffled.length, Math.ceil(shuffled.length * 0.4));
+  const testGroep = shuffled.slice(0, testGroepAantal);
+
+  // A/B split binnen testgroep
+  const splitPct = campaign.abSplitPct || 50;
+  const splitIdx = isABTest ? Math.ceil(testGroepAantal * splitPct / 100) : testGroepAantal;
+
+  // Maak mail_send records aan voor testgroep
   const mailSendIds: number[] = [];
-  for (let i = 0; i < targets.length; i++) {
-    const contact = targets[i];
-    const variant: 'A' | 'B' = (campaign.abTestActief && i >= splitIdx) ? 'B' : 'A';
+  for (let i = 0; i < testGroep.length; i++) {
+    const contact = testGroep[i];
+    const variant: 'A' | 'B' = (isABTest && i >= splitIdx) ? 'B' : 'A';
     const ms = await storage.createMailSend({
       campaignId,
       contactId: contact.id ?? null,
       email: contact.email!,
       variant,
+      isAbTestSend: isABTest ? 1 : 0,
       status: 'pending',
       verzondenOp: null,
       foutMelding: null,
       linkMap: null,
-    });
+    } as any);
     mailSendIds.push(ms.id);
+  }
+
+  if (isABTest) {
+    // Update campagne fase naar 'test'
+    await storage.updateProspectCampaign(campaignId, { abTestFase: 'test' } as any);
+    console.log(`[EmailService] A/B test: ${testGroepAantal}/${shuffled.length} contacten in testgroep, ${shuffled.length - testGroepAantal} wachten op winnaar`);
   }
 
   // Send in batches of 50 with 200ms between batches
@@ -283,14 +323,18 @@ export async function sendCampaignBatch(
       if (r.status === 'fulfilled' && r.value) verzonden++;
       else mislukt++;
     }
-    onProgress?.(verzonden, targets.length, mislukt);
+    onProgress?.(verzonden, testGroep.length, mislukt);
     if (i + BATCH_SIZE < mailSendIds.length) {
       await new Promise(resolve => setTimeout(resolve, 200));
     }
   }
 
-  console.log(`[EmailService] Campagne ${campaignId} klaar: ${verzonden}/${targets.length} verzonden, ${mislukt} mislukt`);
-  return { totaal: targets.length, verzonden, mislukt };
+  if (!isABTest) {
+    await storage.updateProspectCampaign(campaignId, { status: 'voltooid' } as any);
+  }
+
+  console.log(`[EmailService] Campagne ${campaignId} klaar: ${verzonden}/${testGroep.length} verzonden, ${mislukt} mislukt${isABTest ? ` (A/B test, ${shuffled.length - testGroepAantal} wachten)` : ''}`);
+  return { totaal: testGroep.length, verzonden, mislukt };
 }
 
 // ─── Tracking pixel GIF ───────────────────────────────────────────────────────

@@ -30,6 +30,7 @@ import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 import NotificationCenter from '@/components/NotificationCenter';
+import NotificatieBel from '@/components/NotificatieBel';
 
 type User = {
   id: number;
@@ -1097,6 +1098,7 @@ export default function DashboardMockup() {
                 )}
               </Button>
               <NotificationCenter />
+              <NotificatieBel onNavigate={(tab) => setActiveTab(tab)} />
               <Avatar className="h-8 w-8 bg-purple-600">
                 <AvatarFallback className="bg-purple-600 text-white text-xs">
                   {getInitials(user?.firstName || 'A', user?.lastName || 'D')}
