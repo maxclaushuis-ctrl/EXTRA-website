@@ -1,0 +1,187 @@
+# Replit Prompt — Stap 1: Contactenbeheer Uitbreiding
+
+## Wat je gaat doen
+Breid de bestaande contactenmodule uit. Pas het database schema, de API-routes én de frontend aan op basis van onderstaande specificaties. Behoud de bestaande EXTRA huisstijl (#7C3AED, Inter/Outfit, pill-componenten, sidebar layout).
+
+---
+
+## 1. Database schema — pas de contacts-tabel aan
+
+Vervang of migreer de bestaande contacts-tabel naar het volgende schema. Zorg dat bestaande data niet verloren gaat als er al records zijn.
+
+```sql
+CREATE TABLE IF NOT EXISTS contacts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  voornaam TEXT NOT NULL,
+  achternaam TEXT NOT NULL,
+  bedrijf TEXT NOT NULL,
+  functietitel TEXT,
+  email TEXT NOT NULL UNIQUE,
+  telefoon TEXT,
+  stad TEXT,
+  taal TEXT DEFAULT 'Nederlands', -- opties: Nederlands, Engels, Anders
+  branche TEXT, -- opties: Hotel, Restaurant, Cateraar, Evenementenlocatie, Logistiek
+  functiegroep TEXT, -- vrij tekstveld, bijv. housekeeping, bediening, orderpicker
+  type TEXT DEFAULT 'prospect', -- opties: prospect, klant
+  tags TEXT DEFAULT '[]', -- JSON array van strings, bijv. ["VIP", "Warme lead"]
+  status TEXT DEFAULT 'actief', -- opties: actief, uitgeschreven, geblokkeerd
+  notities TEXT,
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 2. Backend API — pas de contacten-routes aan
+
+Zorg dat de volgende endpoints bestaan en correct werken:
+
+### GET /api/contacts
+- Geeft alle contacten terug
+- Ondersteunt query parameters voor filtering:
+  - `?branche=Hotel`
+  - `?type=prospect` of `?type=klant`
+  - `?status=actief`
+  - `?taal=Nederlands`
+  - `?functiegroep=housekeeping`
+  - `?tag=VIP` (filtert op contacten die deze tag bevatten)
+  - `?q=zoekterm` (zoekt in voornaam, achternaam, bedrijf, email)
+- Ondersteunt sortering via `?sort=naam`, `?sort=bedrijf`, `?sort=aangemaakt_op`
+- Geeft terug: id, voornaam, achternaam, bedrijf, functietitel, email, telefoon, stad, taal, branche, functiegroep, type, tags (geparsed als array), status, notities, aangemaakt_op
+
+### GET /api/contacts/:id
+- Geeft één contact terug op basis van id
+- Inclusief alle velden
+
+### POST /api/contacts
+- Maakt een nieuw contact aan
+- Verplichte velden: voornaam, achternaam, bedrijf, email
+- Valideer: email is uniek, email heeft geldig formaat
+- Tags worden opgeslagen als JSON-string
+
+### PUT /api/contacts/:id
+- Updatet een bestaand contact
+- Zelfde validatieregels als POST
+- Updatet automatisch bijgewerkt_op naar huidige timestamp
+
+### DELETE /api/contacts/:id
+- Verwijdert een contact
+- Geeft een bevestiging terug
+
+### POST /api/contacts/import
+- Accepteert een JSON-array van contacten (na CSV-parsing op de frontend)
+- Verwerkt elk contact: sla op als nieuw, sla over als email al bestaat (geef terug welke overgeslagen zijn)
+- Geeft terug: { aangemaakt: X, overgeslagen: X, fouten: [...] }
+
+### GET /api/contacts/tags
+- Geeft een lijst van alle unieke tags terug die in gebruik zijn over alle contacten
+
+---
+
+## 3. Frontend — pas de Contacten-tab aan
+
+### Contactenlijst (linker paneel)
+- Toon contacten als kaartjes of rijen met: volledige naam, bedrijf, branche-pill, type-badge
+- Type-badge: "Prospect" (blauw/paars omrand) of "Klant" (groen gevuld)
+- Statuskleur: uitgeschreven = grijs, geblokkeerd = rood
+- Zoekbalk bovenaan (filtert live op naam, bedrijf, email)
+- Filterknop die een dropdown/paneel opent met:
+  - Branche (multiselect pills: Hotel, Restaurant, Cateraar, Evenementenlocatie, Logistiek)
+  - Type (Prospect / Klant / Alles)
+  - Status (Actief / Uitgeschreven / Geblokkeerd / Alles)
+  - Taal (Nederlands / Engels / Anders / Alles)
+  - Tag (multiselect van bestaande tags)
+- Sortering: dropdown met Naam A-Z, Naam Z-A, Bedrijf, Nieuwste eerst
+- Teller bovenaan: "X contacten" (past aan op actieve filters)
+
+### Contact toevoegen — modaal
+Knop "+ Toevoegen" opent een modaal met het volgende formulier:
+
+**Sectie: Persoonsgegevens**
+- Voornaam* (tekstveld)
+- Achternaam* (tekstveld)
+- E-mailadres* (tekstveld met validatie)
+- Telefoonnummer (tekstveld, optioneel)
+
+**Sectie: Bedrijfsgegevens**
+- Bedrijfsnaam* (tekstveld)
+- Functietitel (tekstveld)
+- Stad (tekstveld)
+- Branche (dropdown: Hotel, Restaurant, Cateraar, Evenementenlocatie, Logistiek)
+- Functiegroep (tekstveld, bijv. housekeeping, bediening, orderpicker)
+
+**Sectie: Classificatie**
+- Type (radio of toggle: Prospect / Klant)
+- Voertaal (dropdown: Nederlands, Engels, Anders)
+- Tags (vrij toevoegen: type en druk enter, bestaande tags verschijnen als suggesties)
+- Notities (textarea, optioneel)
+
+Knoppen onderaan: "Annuleren" en "Contact opslaan" (#7C3AED)
+Inline validatie op verplichte velden en e-mailformaat.
+
+### CSV Import — modaal
+Downloadknop (naast "+ Toevoegen") opent een importmodaal met drie stappen:
+
+**Stap 1: Upload**
+- Drag & drop of bestandskiezer voor .csv bestand
+- Toon verwachte kolomnamen als voorbeeld:
+  `voornaam, achternaam, email, bedrijf, functietitel, telefoon, stad, taal, branche, functiegroep, type, tags`
+
+**Stap 2: Preview**
+- Toon eerste 5 rijen van de CSV in een tabel
+- Kolom-mapper: koppel CSV-kolommen aan systeemvelden (dropdown per kolom)
+- Markeer rijen met ontbrekende verplichte velden (rood) of dubbele emails (oranje)
+
+**Stap 3: Resultaat**
+- Na import: toon "X contacten aangemaakt, X overgeslagen (dubbele email), X fouten"
+- Toon lijst van overgeslagen/fout-rijen
+
+### Contact detailpaneel (rechter paneel / slide-over)
+Klik op een contact in de lijst opent een zijpaneel (slide-over van rechts) met:
+
+**Header:**
+- Volledige naam + bedrijf
+- Type-badge + status-badge
+- Bewerkknop (potloodicon) + verwijderknop (prullenbakicon, met bevestigingsmodal)
+
+**Inhoud in tabbladen:**
+
+Tab "Gegevens":
+- Alle contactvelden overzichtelijk weergegeven in twee kolommen
+- Inline bewerkbaar via de bewerkknop
+
+Tab "Campagnehistorie":
+- Tabel: Campagnenaam | Verzonden op | Geopend | Geklikt | Status
+- Leeg state: "Nog geen campagnes verzonden naar dit contact"
+
+Tab "Notities":
+- Notitieveld, bewerkbaar en opslaanbaar
+
+---
+
+## 4. Statistieken balk (bestaande header uitbreiden)
+
+De bestaande statistiekenbalk bovenaan de contactenpagina (Totaal contacten / Actief / Uitgeschreven) uitbreiden met:
+- Totaal contacten
+- Actief
+- Prospects
+- Klanten
+- Uitgeschreven
+
+Elk als een klikbare kaart die de lijst filtert op die status/type.
+
+---
+
+## Stijlrichtlijnen
+- Gebruik de bestaande #7C3AED paarse kleur voor primaire knoppen en actieve states
+- Pills/badges: afgeronde border-radius (9999px), kleine font-size
+- Prospect-badge: paarse border, paarse tekst, transparante achtergrond
+- Klant-badge: groene achtergrond, witte tekst
+- Slide-over paneel: wit, schaduw links, 420px breed, sluit met X of klik buiten paneel
+- Toasts bij: contact opgeslagen, contact verwijderd, import geslaagd
+- Bevestigingsmodal bij verwijderen: "Weet je zeker dat je [naam] wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
+
+---
+
+*Stap 1 van 8 — EXTRA E-mailmarketing Module*
