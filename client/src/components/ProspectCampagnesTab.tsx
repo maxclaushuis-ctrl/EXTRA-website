@@ -23,7 +23,7 @@ import {
   Mail, Plus, Trash2, Send, Users, FileText, BarChart2, ChevronRight, Pencil,
   AlertTriangle, Building2, User, RefreshCw, Tag, Filter, Search, Download,
   Eye, MousePointer, CheckCircle, XCircle, Clock, X, UserPlus, Megaphone,
-  SlidersHorizontal, MailOpen, ExternalLink, MoreVertical,
+  SlidersHorizontal, MailOpen, ExternalLink, MoreVertical, Upload, ImageIcon,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -193,14 +193,21 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
     onChange([...blocks, defaultBlock(type)]);
     setSelected(blocks.length);
   }
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>, i: number) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => update(i, { url: ev.target?.result as string });
+    reader.readAsDataURL(file);
+  }
 
-  const ADD_BLOCKS: { type: Block['type']; label: string; icon: any }[] = [
-    { type: 'heading', label: 'Koptekst', icon: FileText },
-    { type: 'text', label: 'Paragraaf', icon: FileText },
-    { type: 'button', label: 'Knop', icon: MousePointer },
-    { type: 'divider', label: 'Lijn', icon: SlidersHorizontal },
-    { type: 'spacer', label: 'Ruimte', icon: SlidersHorizontal },
-    { type: 'image', label: 'Afbeelding', icon: Eye },
+  const ADD_BLOCKS: { type: Block['type']; label: string }[] = [
+    { type: 'heading', label: 'Koptekst' },
+    { type: 'text', label: 'Paragraaf' },
+    { type: 'button', label: 'Knop' },
+    { type: 'divider', label: 'Lijn' },
+    { type: 'spacer', label: 'Ruimte' },
+    { type: 'image', label: 'Afbeelding' },
   ];
 
   return (
@@ -216,7 +223,7 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
           {blocks.map((block, i) => (
             <div key={i}
               onClick={() => setSelected(i)}
-              className={`relative group rounded-lg transition-all cursor-pointer ${selected === i ? 'ring-2 ring-purple-500 ring-offset-1' : 'hover:ring-1 hover:ring-slate-300'}`}>
+              className={`relative group rounded-lg transition-all ${selected === i ? 'ring-2 ring-purple-500 ring-offset-1' : 'hover:ring-1 hover:ring-slate-300'}`}>
               {/* Block toolbar */}
               <div className={`absolute -top-3 right-2 flex gap-1 z-10 ${selected === i ? 'flex' : 'hidden group-hover:flex'}`}>
                 <button onClick={e => { e.stopPropagation(); move(i, -1); }}
@@ -226,13 +233,28 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
                 <button onClick={e => { e.stopPropagation(); remove(i); }}
                   className="bg-white border border-red-200 rounded px-1.5 py-0.5 text-xs text-red-400 hover:bg-red-50 shadow-sm"><X className="h-2.5 w-2.5" /></button>
               </div>
-              {/* Preview */}
+              {/* Inline-editable content */}
               <div className="p-2">
                 {block.type === 'heading' && (
-                  <h2 style={{ textAlign: block.align }} className="font-bold text-slate-800 text-lg">{block.text}</h2>
+                  <input
+                    type="text"
+                    value={block.text}
+                    onChange={e => update(i, { text: e.target.value })}
+                    onFocus={() => setSelected(i)}
+                    style={{ textAlign: block.align }}
+                    className="w-full font-bold text-slate-800 text-lg border-none outline-none bg-transparent cursor-text placeholder:text-slate-300"
+                    placeholder="Kopregel..."
+                  />
                 )}
                 {block.type === 'text' && (
-                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{block.text}</p>
+                  <textarea
+                    value={block.text}
+                    onChange={e => update(i, { text: e.target.value })}
+                    onFocus={() => setSelected(i)}
+                    rows={Math.max(2, (block.text.match(/\n/g) || []).length + 2)}
+                    className="w-full text-sm text-slate-600 leading-relaxed resize-none border-none outline-none bg-transparent cursor-text placeholder:text-slate-300"
+                    placeholder="Schrijf je tekst hier... Gebruik {{naam}} en {{bedrijf}} voor personalisatie."
+                  />
                 )}
                 {block.type === 'button' && (
                   <div className="text-center py-2">
@@ -242,10 +264,31 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
                   </div>
                 )}
                 {block.type === 'divider' && <hr className="border-slate-200 my-2" />}
-                {block.type === 'spacer' && <div style={{ height: Math.min(block.height, 40) }} className="bg-slate-50 rounded border border-dashed border-slate-200 text-center text-xs text-slate-300 flex items-center justify-center">{block.height}px</div>}
+                {block.type === 'spacer' && (
+                  <div style={{ height: Math.min(block.height, 40) }} className="bg-slate-50 rounded border border-dashed border-slate-200 text-center text-xs text-slate-300 flex items-center justify-center">
+                    {block.height}px
+                  </div>
+                )}
                 {block.type === 'image' && (
-                  block.url ? <img src={block.url} alt={block.alt} className="max-w-full rounded-lg mx-auto block" /> :
-                  <div className="bg-slate-100 rounded-lg h-24 flex items-center justify-center text-slate-400 text-sm">Afbeelding URL invoeren →</div>
+                  block.url ? (
+                    <div className="relative group/img">
+                      <img src={block.url} alt={block.alt} className="max-w-full rounded-lg mx-auto block" />
+                      <button
+                        onClick={e => { e.stopPropagation(); update(i, { url: '' }); }}
+                        className="absolute top-1 right-1 bg-white border border-red-200 rounded px-1.5 py-0.5 text-xs text-red-400 hover:bg-red-50 shadow-sm opacity-0 group-hover/img:opacity-100 transition-opacity">
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      className="bg-slate-100 rounded-lg h-28 flex flex-col items-center justify-center text-slate-400 text-sm cursor-pointer hover:bg-purple-50 hover:text-purple-500 transition-colors gap-2 border-2 border-dashed border-slate-200 hover:border-purple-300"
+                      onClick={e => e.stopPropagation()}>
+                      <ImageIcon className="h-6 w-6" />
+                      <span className="text-xs font-medium">Klik om afbeelding te uploaden</span>
+                      <span className="text-xs text-slate-300">JPG, PNG, GIF, WebP</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={e => { setSelected(i); handleImageUpload(e, i); }} />
+                    </label>
+                  )
                 )}
               </div>
             </div>
@@ -262,31 +305,23 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
             {(() => {
               const b = blocks[selected];
               if (b.type === 'heading') return (
-                <>
-                  <div>
-                    <Label className="text-xs text-slate-500">Tekst</Label>
-                    <Input value={b.text} onChange={e => update(selected, { text: e.target.value })} className="h-7 text-sm mt-0.5" />
+                <div>
+                  <Label className="text-xs text-slate-500">Uitlijning</Label>
+                  <div className="flex gap-1 mt-0.5">
+                    {(['left', 'center', 'right'] as const).map(a => (
+                      <button key={a} onClick={() => update(selected, { align: a })}
+                        className={`flex-1 text-xs py-1 rounded border transition-colors ${b.align === a ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-slate-200 text-slate-500'}`}>
+                        {a === 'left' ? '← L' : a === 'center' ? '| M' : 'R →'}
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <Label className="text-xs text-slate-500">Uitlijning</Label>
-                    <div className="flex gap-1 mt-0.5">
-                      {(['left', 'center', 'right'] as const).map(a => (
-                        <button key={a} onClick={() => update(selected, { align: a })}
-                          className={`flex-1 text-xs py-1 rounded border transition-colors ${b.align === a ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-slate-200 text-slate-500'}`}>
-                          {a === 'left' ? 'L' : a === 'center' ? 'M' : 'R'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                </div>
               );
               if (b.type === 'text') return (
-                <div>
-                  <Label className="text-xs text-slate-500">Tekst</Label>
-                  <Textarea value={b.text} onChange={e => update(selected, { text: e.target.value })}
-                    className="text-xs mt-0.5 min-h-[80px]" />
-                  <p className="text-xs text-slate-400 mt-1">Gebruik {"{{naam}}"} en {"{{bedrijf}}"}</p>
-                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Klik op de tekst in de editor om direct te typen.<br />
+                  Gebruik <code className="bg-slate-100 px-1 rounded">{"{{naam}}"}</code> en <code className="bg-slate-100 px-1 rounded">{"{{bedrijf}}"}</code> voor personalisatie.
+                </p>
               );
               if (b.type === 'button') return (
                 <>
@@ -309,8 +344,19 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
               );
               if (b.type === 'image') return (
                 <>
-                  <div><Label className="text-xs text-slate-500">URL</Label><Input value={b.url} onChange={e => update(selected, { url: e.target.value })} className="h-7 text-xs mt-0.5" placeholder="https://..." /></div>
-                  <div><Label className="text-xs text-slate-500">Alt-tekst</Label><Input value={b.alt} onChange={e => update(selected, { alt: e.target.value })} className="h-7 text-sm mt-0.5" /></div>
+                  {!b.url && (
+                    <div>
+                      <Label className="text-xs text-slate-500">Of voer URL in</Label>
+                      <Input value={b.url} onChange={e => update(selected, { url: e.target.value })} className="h-7 text-xs mt-0.5" placeholder="https://..." />
+                    </div>
+                  )}
+                  <div><Label className="text-xs text-slate-500">Alt-tekst</Label><Input value={b.alt} onChange={e => update(selected, { alt: e.target.value })} className="h-7 text-sm mt-0.5" placeholder="Beschrijving…" /></div>
+                  {b.url && (
+                    <button onClick={() => update(selected, { url: '' })}
+                      className="w-full text-xs text-red-500 hover:text-red-700 border border-red-200 rounded-lg py-1 hover:bg-red-50 transition-colors">
+                      Afbeelding verwijderen
+                    </button>
+                  )}
                 </>
               );
               return null;
