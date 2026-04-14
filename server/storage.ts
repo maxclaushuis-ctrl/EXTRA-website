@@ -71,7 +71,7 @@ import {
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
-import { eq, ilike, or, desc, asc, sql, and, gte, lte, isNull } from "drizzle-orm";
+import { eq, ilike, or, desc, asc, sql, and, gte, lte, isNull, inArray } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -440,8 +440,9 @@ export interface IStorage {
   getProspectContactCampaignHistory(contactId: number): Promise<any[]>;
 
   // B2B Prospect Campagnes
-  getProspectCampaigns(): Promise<ProspectCampaign[]>;
+  getProspectCampaigns(filters?: { status?: string; type?: string }): Promise<ProspectCampaign[]>;
   getProspectCampaign(id: number): Promise<ProspectCampaign | undefined>;
+  getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[] }): Promise<number>;
   createProspectCampaign(data: InsertProspectCampaign): Promise<ProspectCampaign>;
   updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
   deleteProspectCampaign(id: number): Promise<void>;
@@ -4016,8 +4017,43 @@ export class MemStorage implements IStorage {
   }
 
   // ─── Prospect Campagnes ──────────────────────────────────────────────────
-  async getProspectCampaigns(): Promise<ProspectCampaign[]> {
-    return db.select().from(prospectCampaignsTable).orderBy(desc(prospectCampaignsTable.createdAt));
+  async getProspectCampaigns(filters?: { status?: string; type?: string }): Promise<ProspectCampaign[]> {
+    let query = db.select().from(prospectCampaignsTable).$dynamic();
+    const conds = [];
+    if (filters?.status) conds.push(eq(prospectCampaignsTable.status, filters.status));
+    if (filters?.type) conds.push(eq(prospectCampaignsTable.campagneType, filters.type));
+    if (conds.length > 0) query = query.where(and(...conds));
+    return query.orderBy(desc(prospectCampaignsTable.createdAt));
+  }
+
+  async getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[] }): Promise<number> {
+    const conds: any[] = [
+      eq(prospectContactsTable.contactStatus, 'actief'),
+      eq(prospectContactsTable.unsubscribed, false),
+    ];
+    // Branche filter
+    if (filters.brancheFilter && filters.brancheFilter.length > 0) {
+      conds.push(inArray(prospectContactsTable.branche, filters.brancheFilter));
+    }
+    // Type filter
+    if (filters.typeFilter && filters.typeFilter !== 'alles') {
+      conds.push(eq(prospectContactsTable.contactType, filters.typeFilter));
+    }
+    // Taal filter
+    if (filters.taalFilter && filters.taalFilter !== 'alles') {
+      conds.push(eq(prospectContactsTable.taal, filters.taalFilter));
+    }
+    // Tag filter (JSON array)
+    if (filters.tagFilter && filters.tagFilter.length > 0) {
+      const tagConds = filters.tagFilter.map(tag =>
+        sql`${prospectContactsTable.customTags}::jsonb @> ${JSON.stringify([tag])}::jsonb`
+      );
+      conds.push(or(...tagConds));
+    }
+    const [{ count }] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(prospectContactsTable)
+      .where(and(...conds));
+    return count;
   }
 
   async getProspectCampaign(id: number): Promise<ProspectCampaign | undefined> {

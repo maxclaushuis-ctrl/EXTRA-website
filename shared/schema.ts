@@ -1383,20 +1383,40 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   subject: text("subject").notNull(),
+  // Campagne type
+  campagneType: text("campagne_type").default("bulk"),  // bulk | flow
   // Visual editor: stored as JSON blocks; htmlContent derived on send
-  editorBlocks: text("editor_blocks"),               // JSON string of visual blocks
-  htmlContent: text("html_content").notNull(),
+  editorBlocks: text("editor_blocks"),               // JSON string of visual blocks (legacy / variant A)
+  htmlContent: text("html_content").notNull().default(""),
   textContent: text("text_content"),
-  // Targeting filters
-  brancheFilter: text("branche_filter").array().default([]), // empty = all
-  functieFilter: text("functie_filter").array().default([]), // empty = all
-  status: text("status").default("draft").notNull(), // draft | sent | scheduled
+  // Content variants
+  contentA: text("content_a"),                       // JSON blocks variant A
+  contentB: text("content_b"),                       // JSON blocks variant B (A/B test)
+  // Targeting filters (legacy array)
+  brancheFilter: text("branche_filter").array().default([]),
+  functieFilter: text("functie_filter").array().default([]),
+  // Extended targeting filters
+  typeFilter: text("type_filter").default("alles"),  // alles | prospect | klant
+  taalFilter: text("taal_filter").default("alles"),  // alles | Nederlands | Engels | Anders
+  tagFilter: text("tag_filter").default("[]"),       // JSON array
+  // Status: concept | gepland | actief | voltooid | gestopt | draft | sent | scheduled
+  status: text("status").default("concept").notNull(),
   scheduledAt: timestamp("scheduled_at"),
   sentAt: timestamp("sent_at"),
   sentCount: integer("sent_count").default(0),
   failedCount: integer("failed_count").default(0),
   openCount: integer("open_count").default(0),
   clickCount: integer("click_count").default(0),
+  // A/B test
+  abTestActief: boolean("ab_test_actief").default(false),
+  abSplitPct: integer("ab_split_pct").default(50),
+  abWinnaarOp: text("ab_winnaar_op").default("open_rate"),  // open_rate | click_rate
+  abWinnaarNaUren: integer("ab_winnaar_na_uren").default(24),
+  abWinnaarVariant: text("ab_winnaar_variant"),              // A | B
+  // Verzendvenster
+  alleenWerkdagen: boolean("alleen_werkdagen").default(true),
+  tijdvensterStart: text("tijdvenster_start").default("08:00"),
+  tijdvensterEind: text("tijdvenster_eind").default("18:00"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

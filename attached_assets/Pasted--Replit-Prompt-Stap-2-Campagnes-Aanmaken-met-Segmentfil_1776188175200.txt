@@ -1,0 +1,231 @@
+# Replit Prompt — Stap 2: Campagnes Aanmaken met Segmentfilters & Live Telling
+
+## Wat je gaat doen
+Breid de bestaande campagnemodule uit. Pas het database schema, de API-routes én het campagne-aanmaakmodaal aan. De e-mail builder zelf wordt in stap 3 uitgebreid — focus hier op het aanmaken, segmenteren en beheren van campagnes.
+
+---
+
+## 1. Database schema — pas de campaigns-tabel aan
+
+Vervang of migreer de bestaande campaigns-tabel naar het volgende schema:
+
+```sql
+CREATE TABLE IF NOT EXISTS campaigns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  naam TEXT NOT NULL,
+  onderwerp TEXT NOT NULL,
+  type TEXT DEFAULT 'bulk', -- opties: bulk, flow
+  status TEXT DEFAULT 'concept', -- opties: concept, gepland, actief, voltooid, gestopt
+  
+  -- Segmentatie
+  branche_filter TEXT DEFAULT '[]',    -- JSON array, bijv. ["Hotel", "Restaurant"]
+  functie_filter TEXT DEFAULT '[]',    -- JSON array, bijv. ["housekeeping", "bediening"]
+  type_filter TEXT DEFAULT 'alles',    -- opties: alles, prospect, klant
+  taal_filter TEXT DEFAULT 'alles',    -- opties: alles, Nederlands, Engels, Anders
+  tag_filter TEXT DEFAULT '[]',        -- JSON array van tags
+
+  -- E-mail inhoud (wordt ingevuld in stap 3)
+  content_a TEXT,                      -- JSON van e-mailblokken variant A
+  content_b TEXT,                      -- JSON van e-mailblokken variant B (A/B test)
+
+  -- A/B test instellingen
+  ab_test_actief INTEGER DEFAULT 0,    -- 0 = nee, 1 = ja
+  ab_split_pct INTEGER DEFAULT 50,     -- % dat variant A krijgt (rest krijgt B)
+  ab_winnaar_op TEXT DEFAULT 'open_rate', -- opties: open_rate, click_rate
+  ab_winnaar_na_uren INTEGER DEFAULT 24,
+  ab_winnaar_variant TEXT,             -- wordt ingevuld als winnaar bepaald is: A of B
+
+  -- Verzending
+  verzend_op DATETIME,                 -- null = direct bij activatie
+  alleen_werkdagen INTEGER DEFAULT 1,  -- 0 = nee, 1 = ja
+  tijdvenster_start TEXT DEFAULT '08:00',
+  tijdvenster_eind TEXT DEFAULT '18:00',
+
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 2. Backend API — campagne-routes
+
+### GET /api/campaigns
+- Geeft alle campagnes terug
+- Ondersteunt filtering: `?status=concept`, `?type=bulk`, `?branche=Hotel`
+- Geeft per campagne ook mee: aantal ontvangers op basis van huidige segmentfilters (berekend uit contacts-tabel)
+
+### GET /api/campaigns/:id
+- Geeft één campagne terug met alle velden
+
+### POST /api/campaigns
+- Maakt een nieuwe campagne aan als concept
+- Verplichte velden: naam, onderwerp
+- Sla segmentfilters op als JSON-strings
+
+### PUT /api/campaigns/:id
+- Updatet een bestaande campagne
+- Updatet bijgewerkt_op automatisch
+
+### DELETE /api/campaigns/:id
+- Verwijdert een campagne (alleen mogelijk als status = concept)
+- Geeft foutmelding als campagne al verzonden is
+
+### GET /api/campaigns/segment-count
+- Query parameters: branche_filter, functie_filter, type_filter, taal_filter, tag_filter
+- Berekent hoeveel actieve contacten matchen met de opgegeven filters
+- Geeft terug: { count: X }
+- Dit endpoint wordt live aangeroepen terwijl de gebruiker filters instelt
+
+---
+
+## 3. Frontend — campagne-aanmaakmodaal volledig herbouwen
+
+Het bestaande modaal uitbreiden naar een **meerstaps modaal** (wizard) met 3 stappen. Bovenaan een stappenbalk tonen (Stap 1 / 2 / 3) met voortgangsindicator.
+
+---
+
+### Stap 1: Basisgegevens
+
+**Velden:**
+- Campagnenaam* (tekstveld, placeholder: bijv. "Hotels April 2026")
+- Onderwerpregel* (tekstveld, placeholder: bijv. "Flexibel horeca-personeel voor {{bedrijf}}")
+  - Kleine hint onder het veld: "Gebruik {{voornaam}} en {{bedrijf}} voor personalisatie"
+- Campagnetype (toggle of radio):
+  - "Eenmalige campagne" (bulk)
+  - "Geautomatiseerde flow" (flow)
+- Knoppen: "Annuleren" | "Volgende →"
+
+---
+
+### Stap 2: Doelgroep & Segmentatie
+
+**Sectie: Contacttype**
+- Toggle/radio: Iedereen / Alleen prospects / Alleen klanten
+
+**Sectie: Branche**
+- Multiselect pills: Hotel, Restaurant, Cateraar, Evenementenlocatie, Logistiek
+- Leeg = alle branches
+
+**Sectie: Functiegroep**
+- Multiselect met autocomplete op basis van bestaande functiegroepen in de contacten-database
+- Leeg = alle functiegroepen
+
+**Sectie: Voertaal**
+- Dropdown: Iedereen / Nederlands / Engels / Anders
+
+**Sectie: Tags**
+- Multiselect van bestaande tags in de database
+- Leeg = geen tagfilter
+
+**Live teller (prominent weergeven):**
+- Direct onder de filters een kaart of banner:
+  ```
+  📬 Deze campagne wordt verzonden naar X contacten
+  ```
+- De X wordt live bijgewerkt (debounced API-call naar /api/campaigns/segment-count) terwijl de gebruiker filters aanpast
+- Als X = 0: toon oranje waarschuwing "Geen contacten gevonden met deze filters"
+- Als geen filters actief: toon totaal aantal actieve contacten
+
+**Knoppen:** "← Terug" | "Volgende →"
+
+---
+
+### Stap 3: Verzendopties
+
+**Sectie: Wanneer versturen?**
+- Radio:
+  - "Direct na aanmaken" 
+  - "Inplannen op datum en tijdstip" → toont datetime picker
+
+**Sectie: Verzendvenster**
+- Checkbox: "Alleen verzenden op werkdagen (ma–vr)" (standaard aangevinkt)
+- Tijdvenster: "Tussen [08:00] en [18:00]" (twee tijdvelden)
+- Kleine toelichting: "Mails die buiten dit venster vallen worden automatisch verschoven naar het volgende beschikbare moment"
+
+**Sectie: A/B Test (optioneel, achter een "Activeer A/B test" toggle)**
+- Verschijnt als de toggle aan staat:
+  - Split: "Variant A [50]% — Variant B [50]%" (slider of twee inputvelden die optellen naar 100)
+  - Winnaar bepalen op: open rate / click rate (radio)
+  - Winnaar bepalen na: [24] uur (numinput)
+  - Info: "De winnende variant wordt automatisch naar de rest van de lijst gestuurd"
+
+**Knoppen:** "← Terug" | "Campagne aanmaken" (#7C3AED)
+
+Na klikken op "Campagne aanmaken":
+- Sla campagne op als concept (status = concept)
+- Sluit modaal
+- Navigeer direct naar de campagne in de editor (voor inhoud — stap 3)
+- Toon toast: "Campagne '[naam]' aangemaakt ✓"
+
+---
+
+## 4. Campagne-overzicht — linker sidebar uitbreiden
+
+De bestaande campagnelijst in de sidebar uitbreiden:
+
+**Per campagne in de lijst tonen:**
+- Campagnenaam
+- Type-badge: "Bulk" (blauw) of "Flow" (paars)
+- Status-badge:
+  - Concept → grijs
+  - Gepland → blauw
+  - Actief → groen
+  - Voltooid → donkergrijs
+  - Gestopt → rood
+- Snel-stats (alleen tonen als status = voltooid of actief):
+  - "Verzonden: X | Geopend: X% | Geklikt: X%"
+
+**Filteropties boven de lijst:**
+- Kleine filterpills: Alle / Concept / Gepland / Actief / Voltooid
+- Zoekbalk op campagnenaam
+
+**Actiemenu per campagne (drie-stippen icoon bij hover):**
+- Bewerken (opent modaal in bewerkingsmodus)
+- Dupliceren (maakt kopie als concept)
+- Verwijderen (alleen bij concept, met bevestigingsmodal)
+- Stoppen (alleen bij actief/gepland)
+
+---
+
+## 5. Campagne detailpagina (rechter paneel)
+
+Klik op een campagne in de lijst toont een detailpagina (rechter paneel) met:
+
+**Header:**
+- Campagnenaam + status-badge
+- Onderwerpregel
+- Bewerkknop + actiemenu
+
+**Tabs:**
+
+Tab "Overzicht":
+- Doelgroep samenvatting: "Branches: Hotel, Restaurant | Type: Prospects | Tags: VIP"
+- Aantal ontvangers
+- Verzendmoment (of "Direct na activatie")
+- Werkdagen-instelling + tijdvenster
+- A/B test samenvatting (indien actief)
+- Grote knop: "✏️ E-mail opmaken" → navigeert naar e-mail builder (stap 3)
+- Grote knop (indien concept en inhoud ingevuld): "🚀 Campagne activeren" → bevestigingsmodal → zet status op gepland of actief
+
+Tab "Statistieken":
+- Leeg state als nog niet verzonden: "Statistieken beschikbaar na verzending"
+- Na verzending (stap 4): open rate, click rate, unsubscribes
+
+Tab "Ontvangers":
+- Tabel van contacten die deze campagne ontvangen (op basis van segmentfilters)
+- Kolommen: Naam | Bedrijf | Branche | Type | Status (na verzending: Verzonden/Geopend/Geklikt)
+
+---
+
+## Stijlrichtlijnen
+- Wizard-stappenbalk: genummerde cirkels (1, 2, 3) verbonden met een lijn, actieve stap = #7C3AED gevuld, voltooid = vinkje, toekomstig = grijs
+- Live teller prominente weergave: lichte paarse achtergrond (#F5F3FF), paarse tekst, afgerond, met e-mail icoon
+- Nul-waarschuwing: oranje achtergrond (#FFF7ED), oranje tekst
+- A/B sectie: lichte grijze achtergrond om het visueel te scheiden
+- Alle pills/badges: border-radius 9999px
+- Toasts rechtsboven, 3 seconden zichtbaar
+
+---
+
+*Stap 2 van 8 — EXTRA E-mailmarketing Module*

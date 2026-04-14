@@ -1,0 +1,278 @@
+# Replit Prompt — Stap 3: E-mail Builder Uitbreiding
+
+## Wat je gaat doen
+Breid de bestaande e-mail builder uit die al aanwezig is in het campagne-aanmaakmodaal. De builder wordt een volwaardige pagina/view die geopend wordt vanuit de campagne detailpagina ("✏️ E-mail opmaken"). Behoud de bestaande blokstructuur en breidt deze significant uit met plain text modus, taalvarianten, A/B varianten en een live preview.
+
+---
+
+## 1. Builder architectuur — van modaal naar volledige pagina
+
+De e-mail builder wordt een aparte view/pagina die de volledige breedte gebruikt. Navigatie:
+- Vanuit campagne detailpagina → knop "✏️ E-mail opmaken" → opent builder view
+- Terug-knop linksboven → terug naar campagne detailpagina
+- Auto-save: sla content op na elke wijziging (debounced, 1.5 seconden na laatste wijziging)
+- Handmatige opslaan-knop rechtsboven: "Opslaan" + timestamp van laatste opslag ("Opgeslagen om 14:32")
+
+**Layout van de builder:**
+```
+[Topbalk: campagnenaam | modus-toggle | variant-tabs | opslaan]
+[Linker paneel: blokkenlijst + instellingen (300px)]
+[Midden: canvas/preview van de e-mail]
+[Rechter paneel: eigenschappen van geselecteerd blok (280px)]
+```
+
+---
+
+## 2. Modus-toggle: HTML vs Plain Text
+
+Rechtsboven in de topbalk een prominente toggle:
+
+**HTML modus** (standaard):
+- Volledige blokken-editor met opmaak
+- Ondersteunt alle bloktypen (zie sectie 3)
+- Rendered als gestylede HTML-mail
+
+**Plain text modus:**
+- Vereenvoudigde editor: alleen tekstblokken, geen afbeeldingen, geen knoppen
+- Geen opmaakopties (geen vet, cursief, kleur)
+- Uitstraling: persoonlijke e-mail van Max, niet een nieuwsbrief
+- Preview toont de mail als plain text (monospace font, geen styling)
+- Kleine toelichting bij activatie: "Plain text mails komen persoonlijker over en hebben vaak een hogere open rate in B2B"
+
+Bij wisselen van modus: toon bevestigingsmodal "Wil je wisselen naar plain text? Opmaakblokken (afbeeldingen, knoppen) worden verwijderd uit de inhoud."
+
+---
+
+## 3. Blokken — uitbreiding bestaande set
+
+### Bestaande blokken behouden:
+- Koptekst
+- Paragraaf
+- Knop
+- Lijn
+- Ruimte
+- Afbeelding
+
+### Nieuwe blokken toevoegen:
+
+**Handtekening-blok:**
+- Vaste opmaak: naam, functie, telefoonnummer, e-mailadres, website
+- Standaard vooringevuld met EXTRA-gegevens (configureerbaar in instellingen)
+- Niet bewerkbaar in de canvas zelf, alleen via instellingen
+
+**Taalvariant-blok:**
+- Speciaal blok met twee tabbladen: "Nederlands" en "Engels"
+- Gebruiker schrijft per taal een andere versie van de tekst
+- Bij verzending stuurt het systeem automatisch de juiste taalvariant op basis van het veld `taal` van het contact
+- Visueel onderscheid in canvas: lichtblauw kader met label "Taalvariant 🌐"
+- Werkt als wrapper: elk gewoon tekstblok kan omgezet worden naar een taalvariant-blok via een "Taalvariant toevoegen" knop in het eigenschappenpaneel
+
+**Gepersonaliseerde aanhef-blok:**
+- Genereert automatisch een aanhef op basis van taal:
+  - Nederlands: "Beste {{voornaam}},"
+  - Engels: "Hi {{voornaam}},"
+- Taalkeuze volgt automatisch het `taal` veld van het contact
+- Bewerkbaar (gebruiker kan de aanhef aanpassen)
+
+---
+
+## 4. Personalisatie-tags
+
+Overal in tekstblokken én in de onderwerpregel zijn de volgende tags beschikbaar:
+
+| Tag | Betekenis |
+|-----|-----------|
+| `{{voornaam}}` | Voornaam van het contact |
+| `{{achternaam}}` | Achternaam van het contact |
+| `{{naam}}` | Volledige naam (voornaam + achternaam) |
+| `{{bedrijf}}` | Bedrijfsnaam |
+| `{{functietitel}}` | Functietitel van het contact |
+| `{{stad}}` | Stad van het contact |
+
+**Tag-invoeg-knop:**
+- In de tekstbalk van elk tekstblok een knop "{{}}" die een dropdown opent met alle beschikbare tags
+- Klik op een tag → wordt ingevoegd op de cursorpositie
+
+**Fallback-waarden:**
+- Als een tag geen waarde heeft voor een contact, gebruik dan een fallback:
+  - `{{voornaam}}` → "daar" (bijv. "Beste daar,")
+  - `{{bedrijf}}` → "uw organisatie"
+  - Andere tags → lege string
+- Fallbacks zijn configureerbaar per tag in de builder instellingen
+
+---
+
+## 5. A/B Variant editor
+
+Als A/B test actief is voor de campagne (ingesteld in stap 2), toont de builder bovenaan twee tabs:
+
+```
+[Variant A]  [Variant B]
+```
+
+- Variant A en B zijn volledig onafhankelijk bewerkbaar
+- Beide varianten hebben dezelfde blokkenset beschikbaar
+- Variant B start als een kopie van Variant A (bij eerste aanmaken)
+- Boven de tabs een label: "A/B Test actief — [50%] ontvangt variant A, [50%] variant B"
+- Variant-tabs hebben een kleurcodering: A = paars (#7C3AED), B = blauw (#2563EB)
+
+---
+
+## 6. Live preview
+
+**Preview paneel (midden canvas):**
+- Toont een realtime weergave van hoe de e-mail eruitziet
+- Twee weergavemodi (schakelbaar met icoontjes rechtsboven het canvas):
+  - 🖥️ Desktop (600px breed, gecentreerd)
+  - 📱 Mobiel (375px breed, gecentreerd)
+
+**Preview met testdata:**
+- Knop "👁️ Voorvertoning" rechtsboven opent een fullscreen modal
+- In de modal: dropdown "Voorvertoning als contact" → kies een bestaand contact uit de database
+- De preview toont dan de mail met ingevulde personalisatie-tags van dat contact
+- Schakelaar: HTML preview / Plain text preview
+
+**Testmail versturen:**
+- Knop "📨 Testmail sturen" in de topbalk
+- Opent een klein modal: "Stuur testmail naar: [e-mailadres invoerveld]" (standaard ingevuld met max@doehetextra.nl)
+- Optie: "Gebruik testcontact voor personalisatie" → dropdown van contacten
+- Verstuur via SendGrid (zelfde integratie als stap 4, maar gemarkeerd als testmail in het onderwerp: "[TEST] origineel onderwerp")
+
+---
+
+## 7. Blok-editor eigenschappen (rechter paneel)
+
+Bij selectie van een blok toont het rechter paneel de bewerkbare eigenschappen:
+
+**Koptekst-blok:**
+- Tekst (rijke teksteditor: vet, cursief, link)
+- Grootte: H1 / H2 / H3
+- Uitlijning: links / midden / rechts
+- Tekstkleur (colorpicker)
+
+**Paragraaf-blok:**
+- Tekst (rijke teksteditor: vet, cursief, link, lijsten)
+- Uitlijning: links / midden / rechts
+- Tekstkleur (colorpicker)
+- Knop "{{}}" voor personalisatie-tags invoegen
+
+**Knop-blok:**
+- Knoptekst
+- URL (link)
+- Achtergrondkleur (standaard #7C3AED)
+- Tekstkleur (standaard wit)
+- Uitlijning: links / midden / rechts
+
+**Afbeelding-blok:**
+- Upload afbeelding of URL invoeren
+- Alt-tekst
+- Uitlijning
+- Breedte (% of px)
+- Link (optioneel, afbeelding wordt klikbaar)
+
+**Ruimte-blok:**
+- Hoogte in px (slider: 8px – 80px)
+
+**Lijn-blok:**
+- Kleur
+- Dikte (1px – 4px)
+
+**Taalvariant-blok:**
+- Twee teksteditors naast elkaar (NL / EN tabbladen)
+
+---
+
+## 8. Globale e-mailinstellingen (linker paneel — bovenaan)
+
+Vouwbaar paneel "E-mailinstellingen" bovenaan het linker paneel:
+
+- **Achtergrondkleur e-mail:** colorpicker (standaard #F9FAFB)
+- **Achtergrondkleur inhoud:** colorpicker (standaard #FFFFFF)
+- **Max breedte:** 600px (vast, niet wijzigbaar maar wel zichtbaar)
+- **Standaard lettertype:** dropdown (Inter, Outfit, Arial, Georgia)
+- **Standaard tekstkleur:** colorpicker (standaard #111827)
+- **Unsubscribe-tekst:** tekstveld (standaard: "Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.")
+  - De unsubscribe-link wordt automatisch toegevoegd aan elke mail — gebruiker kan de tekst aanpassen maar kan de link niet verwijderen
+
+---
+
+## 9. Opslaan & content structuur
+
+De e-mailinhoud wordt opgeslagen als JSON in het `content_a` (en `content_b`) veld van de campaigns-tabel:
+
+```json
+{
+  "modus": "html",
+  "instellingen": {
+    "achtergrond_email": "#F9FAFB",
+    "achtergrond_inhoud": "#FFFFFF",
+    "lettertype": "Inter",
+    "tekstkleur": "#111827",
+    "unsubscribe_tekst": "Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven."
+  },
+  "blokken": [
+    {
+      "id": "blok_1",
+      "type": "aanhef",
+      "inhoud": { "nl": "Beste {{voornaam}},", "en": "Hi {{voornaam}}," }
+    },
+    {
+      "id": "blok_2",
+      "type": "paragraaf",
+      "inhoud": "Wij zijn EXTRA, gespecialiseerd in flexibel horeca-personeel voor {{bedrijf}}.",
+      "stijl": { "uitlijning": "links", "kleur": "#111827" }
+    },
+    {
+      "id": "blok_3",
+      "type": "knop",
+      "inhoud": { "tekst": "Plan een kennismaking", "url": "https://doehetextra.nl/contact" },
+      "stijl": { "achtergrond": "#7C3AED", "tekstkleur": "#FFFFFF", "uitlijning": "links" }
+    },
+    {
+      "id": "blok_4",
+      "type": "handtekening"
+    }
+  ]
+}
+```
+
+---
+
+## 10. HTML-generatie voor verzending
+
+Schrijf een server-side functie `generateEmailHTML(content, contact)` die:
+
+1. De JSON-content omzet naar een volledig gestylede HTML-mail
+2. Alle personalisatie-tags vervangt door de waarden van het opgegeven contact (met fallbacks)
+3. Voor taalvariant-blokken: de juiste taalversie kiest op basis van `contact.taal`
+4. De trackingpixel invoegt (wordt ingevuld in stap 4): `<img src="/track/open/{{mailId}}" width="1" height="1" />`
+5. Alle links vervangt door trackinglinks (wordt ingevuld in stap 4)
+6. De unsubscribe-link toevoegt onderaan: `/unsubscribe/{{contactId}}/{{token}}`
+7. Een volledig valide HTML-document teruggeeft met:
+   - DOCTYPE, html, head, body tags
+   - Inline CSS (geen externe stylesheets — e-mailclients ondersteunen die niet)
+   - Max-width 600px, gecentreerd, responsive
+   - Preheader tekst (eerste 100 tekens van de mail als verborgen preheader)
+
+Schrijf ook een functie `generateEmailPlainText(content, contact)` voor plain text mails die:
+1. Alle blokken omzet naar plain text
+2. Tags vervangt
+3. Links toont als volledige URLs
+4. Unsubscribe-link onderaan toevoegt als plain text URL
+
+---
+
+## Stijlrichtlijnen builder UI
+- Topbalk: wit, dunne onderborder, hoogte 56px
+- Linker paneel: lichtgrijs (#F9FAFB), 300px, scrollbaar
+- Canvas: middelgrijs (#F3F4F6) als achtergrond, e-mail gecentreerd als wit blok met schaduw
+- Rechter paneel: wit, 280px, scrollbaar
+- Geselecteerd blok in canvas: paarse outline (#7C3AED), 2px
+- Blok hover: lichte paarse achtergrond tint
+- Drag handles links van elk blok (zes-punts icoon), omhoog/omlaag pijlen, verwijder icoon
+- Auto-save indicator: kleine groene stip + "Opgeslagen" tekst in topbalk
+- Niet-opgeslagen wijzigingen: oranje stip + "Niet opgeslagen"
+
+---
+
+*Stap 3 van 8 — EXTRA E-mailmarketing Module*

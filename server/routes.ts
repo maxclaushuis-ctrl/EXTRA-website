@@ -5032,9 +5032,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ─── B2B Prospect E-mail Campagnes ───────────────────────────────────────
-  app.get("/api/admin/prospect-campaigns", adminMiddleware, async (_req: Request, res: Response) => {
+  app.get("/api/admin/prospect-campaigns", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const campaigns = await storage.getProspectCampaigns();
+      const { status, type } = req.query as Record<string, string>;
+      const campaigns = await storage.getProspectCampaigns({ status, type });
       return res.json(campaigns);
     } catch (err) {
       console.error("[ProspectCampaign] Fout ophalen:", err);
@@ -5042,12 +5043,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // segment-count MUST be before /:id
+  app.get("/api/admin/prospect-campaigns/segment-count", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { branche_filter, functie_filter, type_filter, taal_filter, tag_filter } = req.query as Record<string, string>;
+      const brancheFilter = branche_filter ? JSON.parse(branche_filter) : [];
+      const functieFilter = functie_filter ? JSON.parse(functie_filter) : [];
+      const tagFilter = tag_filter ? JSON.parse(tag_filter) : [];
+      const count = await storage.getProspectCampaignSegmentCount({
+        brancheFilter, functieFilter,
+        typeFilter: type_filter || 'alles',
+        taalFilter: taal_filter || 'alles',
+        tagFilter,
+      });
+      return res.json({ count });
+    } catch (err) {
+      console.error("[ProspectCampaign] Segment-count fout:", err);
+      return res.status(500).json({ count: 0 });
+    }
+  });
+
   app.post("/api/admin/prospect-campaigns", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { insertProspectCampaignSchema } = await import("@shared/schema");
-      const parsed = insertProspectCampaignSchema.safeParse(req.body);
-      if (!parsed.success) return res.status(400).json({ message: "Ongeldige gegevens", errors: parsed.error.errors });
-      const campaign = await storage.createProspectCampaign(parsed.data);
+      const {
+        name, subject, campagneType, status,
+        brancheFilter, functieFilter, typeFilter, taalFilter, tagFilter,
+        contentA, contentB, editorBlocks, htmlContent,
+        abTestActief, abSplitPct, abWinnaarOp, abWinnaarNaUren,
+        alleenWerkdagen, tijdvensterStart, tijdvensterEind, scheduledAt,
+      } = req.body;
+      if (!name || !subject) return res.status(400).json({ message: "Naam en onderwerp zijn verplicht" });
+      const campaign = await storage.createProspectCampaign({
+        name,
+        subject,
+        campagneType: campagneType || 'bulk',
+        status: status || 'concept',
+        brancheFilter: brancheFilter || [],
+        functieFilter: functieFilter || [],
+        typeFilter: typeFilter || 'alles',
+        taalFilter: taalFilter || 'alles',
+        tagFilter: typeof tagFilter === 'string' ? tagFilter : JSON.stringify(tagFilter || []),
+        contentA: contentA || null,
+        contentB: contentB || null,
+        editorBlocks: editorBlocks || contentA || null,
+        htmlContent: htmlContent || '',
+        textContent: null,
+        abTestActief: abTestActief || false,
+        abSplitPct: abSplitPct || 50,
+        abWinnaarOp: abWinnaarOp || 'open_rate',
+        abWinnaarNaUren: abWinnaarNaUren || 24,
+        abWinnaarVariant: null,
+        alleenWerkdagen: alleenWerkdagen !== false,
+        tijdvensterStart: tijdvensterStart || '08:00',
+        tijdvensterEind: tijdvensterEind || '18:00',
+        scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+        sentAt: null,
+        sentCount: 0,
+        failedCount: 0,
+        openCount: 0,
+        clickCount: 0,
+      });
       return res.status(201).json(campaign);
     } catch (err) {
       console.error("[ProspectCampaign] Fout aanmaken:", err);
@@ -5059,6 +5114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      // Serialize tagFilter if array
+      if (Array.isArray(req.body.tagFilter)) req.body.tagFilter = JSON.stringify(req.body.tagFilter);
       const updated = await storage.updateProspectCampaign(id, req.body);
       if (!updated) return res.status(404).json({ message: "Niet gevonden" });
       return res.json(updated);
@@ -5072,6 +5129,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      // Only allow delete if concept/draft
+      const campaign = await storage.getProspectCampaign(id);
+      if (campaign && !['concept', 'draft'].includes(campaign.status)) {
+        return res.status(400).json({ message: "Alleen conceptcampagnes kunnen worden verwijderd" });
+      }
       await storage.deleteProspectCampaign(id);
       return res.json({ success: true });
     } catch (err) {
