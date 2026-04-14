@@ -157,6 +157,8 @@ export async function initInstellingen(): Promise<void> {
     'verzend_tijdvenster_start': '08:00',
     'verzend_tijdvenster_eind': '18:00',
     'tijdzone': 'Europe/Amsterdam',
+    'email_from_address': 'max@doehetextra.nl',
+    'email_from_name': 'EXTRA',
   };
   for (const [sleutel, waarde] of Object.entries(defaults)) {
     await db.execute(sql`

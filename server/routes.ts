@@ -5227,6 +5227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { sendEmail } = await import('./mail');
       const { generateEmailHTML, generateEmailPlainText } = await import('./emailGenerator');
+      const { getInstelling } = await import('./schedulerUtils');
+
+      const fromEmail = await getInstelling('email_from_address', 'max@doehetextra.nl');
+      const fromName = await getInstelling('email_from_name', 'EXTRA');
 
       const testContact = { voornaam: 'Max', naam: 'Max van der Berg', bedrijf: 'EXTRA', taal: 'nl', email };
       const html = generateEmailHTML(campaign.contentA, testContact);
@@ -5234,6 +5238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const ok = await sendEmail({
         to: email,
+        from: `${fromName} <${fromEmail}>`,
         subject: `[TEST] ${campaign.subject}`,
         html,
         text,
