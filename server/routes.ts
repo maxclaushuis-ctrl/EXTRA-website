@@ -5116,6 +5116,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
       // Serialize tagFilter if array
       if (Array.isArray(req.body.tagFilter)) req.body.tagFilter = JSON.stringify(req.body.tagFilter);
+      // Auto-generate htmlContent from new-format contentA if provided
+      if (req.body.contentA && !req.body.htmlContent) {
+        try {
+          const { generateEmailHTML, generateEmailPlainText } = await import('./emailGenerator');
+          const dummyContact = { voornaam: '{{voornaam}}', naam: '{{naam}}', bedrijf: '{{bedrijf}}', taal: 'nl' };
+          req.body.htmlContent = generateEmailHTML(req.body.contentA, dummyContact);
+          req.body.textContent = generateEmailPlainText(req.body.contentA, dummyContact);
+        } catch (genErr) {
+          console.warn("[ProspectCampaign] HTML generatie mislukt:", genErr);
+        }
+      }
       const updated = await storage.updateProspectCampaign(id, req.body);
       if (!updated) return res.status(404).json({ message: "Niet gevonden" });
       return res.json(updated);
@@ -5200,6 +5211,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ imported });
     } catch (err) {
       console.error("[ProspectCampaign] Fout CRM import:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Testmail sturen
+  app.post("/api/admin/prospect-campaigns/:id/send-test", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getProspectCampaign(campaignId);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "E-mailadres is verplicht" });
+
+      const { sendEmail } = await import('./mail');
+      const { generateEmailHTML, generateEmailPlainText } = await import('./emailGenerator');
+
+      const testContact = { voornaam: 'Max', naam: 'Max van der Berg', bedrijf: 'EXTRA', taal: 'nl', email };
+      const html = generateEmailHTML(campaign.contentA, testContact);
+      const text = generateEmailPlainText(campaign.contentA, testContact);
+
+      const ok = await sendEmail({
+        to: email,
+        subject: `[TEST] ${campaign.subject}`,
+        html,
+        text,
+      });
+
+      if (!ok) return res.status(500).json({ message: "Versturen mislukt" });
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("[ProspectCampaign] Testmail fout:", err);
       return res.status(500).json({ message: "Fout" });
     }
   });

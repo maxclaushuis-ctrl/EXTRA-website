@@ -1,0 +1,371 @@
+# Replit Prompt — Stap 4: SendGrid Verzending & Zelf-gehoste Tracking
+
+## Wat je gaat doen
+Bouw de volledige verzendinfrastructuur. Dit omvat de SendGrid-integratie, zelf-gehoste open/click/unsubscribe tracking, de verzendlogica met batching, en de opslag van alle mail-events in de database. Dit is de ruggengraat waar stap 7 (statistieken) op voortbouwt.
+
+---
+
+## 1. Omgevingsvariabelen
+
+Zorg dat de volgende omgevingsvariabelen geconfigureerd zijn en gebruikt worden (nooit hardcoden):
+
+```
+SENDGRID_API_KEY=SG.xxxxx
+SENDGRID_FROM_EMAIL=max@doehetextra.nl
+SENDGRID_FROM_NAME=Max van EXTRA
+BASE_URL=https://jouw-replit-url.repl.co  -- gebruikt voor tracking links
+UNSUBSCRIBE_SECRET=een-willekeurige-geheime-string  -- voor HMAC token generatie
+```
+
+---
+
+## 2. Database schema — nieuwe tabellen
+
+Voeg de volgende tabellen toe aan de bestaande database:
+
+```sql
+-- Elke individuele verzending naar één contact
+CREATE TABLE IF NOT EXISTS mail_sends (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL,
+  contact_id INTEGER NOT NULL,
+  variant TEXT DEFAULT 'A',              -- A of B bij A/B test, anders altijd A
+  verzonden_op DATETIME,
+  status TEXT DEFAULT 'pending',         -- pending, sent, failed
+  fout_melding TEXT,                     -- bij status = failed
+  FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+  FOREIGN KEY (contact_id) REFERENCES contacts(id)
+);
+
+-- Elk tracking-event (open, click, unsubscribe)
+CREATE TABLE IF NOT EXISTS mail_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  mail_send_id INTEGER NOT NULL,
+  type TEXT NOT NULL,                    -- open, click, unsubscribe
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  url TEXT,                              -- ingevuld bij type = click (originele URL)
+  ip_adres TEXT,                         -- optioneel, voor diagnostiek
+  FOREIGN KEY (mail_send_id) REFERENCES mail_sends(id)
+);
+
+-- Unsubscribe tokens (voor veilige uitschrijflinks)
+CREATE TABLE IF NOT EXISTS unsubscribe_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  contact_id INTEGER NOT NULL UNIQUE,
+  token TEXT NOT NULL UNIQUE,
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (contact_id) REFERENCES contacts(id)
+);
+```
+
+---
+
+## 3. Unsubscribe token systeem
+
+### Token generatie
+Schrijf een functie `generateUnsubscribeToken(contactId)`:
+- Genereer een HMAC-SHA256 hash van `contactId + UNSUBSCRIBE_SECRET`
+- Sla op in de `unsubscribe_tokens` tabel (of update als al bestaat)
+- Geef de token terug als hex-string
+
+### Token validatie
+Schrijf een functie `validateUnsubscribeToken(contactId, token)`:
+- Genereer de verwachte token opnieuw
+- Vergelijk met de opgegeven token (timing-safe vergelijking met `crypto.timingSafeEqual`)
+- Geef `true` of `false` terug
+
+---
+
+## 4. Tracking link generatie
+
+### Open tracking pixel
+Schrijf een functie `generateTrackingPixel(mailSendId)`:
+```
+<img src="${BASE_URL}/track/open/${mailSendId}" width="1" height="1" style="display:block;border:0;" alt="" />
+```
+- Voeg deze pixel in als allerlaatste element vóór de `</body>` tag in elke HTML-mail
+
+### Click tracking
+Schrijf een functie `wrapLinksWithTracking(htmlContent, mailSendId)`:
+- Zoek alle `<a href="...">` tags in de HTML (behalve de unsubscribe-link zelf)
+- Vervang elke URL door:
+  ```
+  ${BASE_URL}/track/click/${mailSendId}/${linkIndex}?url=${encodeURIComponent(origineleUrl)}
+  ```
+- Sla een mapping op van linkIndex → origineleUrl per mail_send (opslaan als JSON in een extra kolom `link_map` op mail_sends, of als aparte records)
+- Doe dit NIET voor mailto: links
+
+### Unsubscribe link
+Schrijf een functie `generateUnsubscribeLink(contactId, token)`:
+```
+${BASE_URL}/unsubscribe/${contactId}/${token}
+```
+
+---
+
+## 5. Tracking endpoints (server-side routes)
+
+### GET /track/open/:mailSendId
+```
+1. Zoek mail_send op basis van mailSendId
+2. Als gevonden: voeg een record toe aan mail_events (type = 'open', mail_send_id, timestamp, ip_adres)
+   - Sla alleen het EERSTE open-event op per mail_send (duplicaten negeren)
+3. Stuur altijd terug: een 1x1 transparante GIF (geen redirect, geen fout)
+   - Content-Type: image/gif
+   - Body: Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
+4. Stel cache-control headers in zodat de pixel niet gecached wordt:
+   Cache-Control: no-cache, no-store, must-revalidate
+```
+
+### GET /track/click/:mailSendId/:linkIndex
+```
+Query parameter: ?url=...
+
+1. Zoek mail_send op basis van mailSendId
+2. Haal de originele URL op uit de link_map
+3. Als gevonden: voeg een record toe aan mail_events (type = 'click', url = originele URL)
+   - Meerdere clicks per mail mogen wel opgeslagen worden (elke klik telt)
+4. Redirect de gebruiker naar de originele URL (302 redirect)
+5. Als URL niet gevonden: redirect naar BASE_URL als fallback
+```
+
+### GET /unsubscribe/:contactId/:token
+```
+1. Valideer het token met validateUnsubscribeToken(contactId, token)
+2. Als ongeldig: toon een foutpagina "Deze link is niet geldig."
+3. Als geldig:
+   a. Update contact status naar 'uitgeschreven' in de contacts-tabel
+   b. Voeg mail_event toe (type = 'unsubscribe') als er een actieve mail_send is
+   c. Toon een bevestigingspagina (zie sectie 6)
+4. Idempotent: als contact al uitgeschreven is, toon gewoon de bevestiging opnieuw
+```
+
+---
+
+## 6. Uitschrijfpagina (server-side rendered HTML)
+
+Toon een eenvoudige, gestylede pagina na uitschrijving:
+
+```html
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uitgeschreven — EXTRA</title>
+  <style>
+    body {
+      font-family: Inter, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #F9FAFB;
+      color: #111827;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 48px;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+    p { color: #6B7280; line-height: 1.6; }
+    .footer { margin-top: 32px; font-size: 13px; color: #9CA3AF; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✓</div>
+    <h1>Je bent uitgeschreven</h1>
+    <p>Je ontvangt geen e-mails meer van EXTRA. 
+       Je kunt dit venster sluiten.</p>
+    <div class="footer">
+      EXTRA B.V. — Amsterdam<br>
+      <a href="https://doehetextra.nl" style="color: #7C3AED;">doehetextra.nl</a>
+    </div>
+  </div>
+</body>
+</html>
+```
+
+---
+
+## 7. E-mail verzendservice
+
+Schrijf een service `emailService.js` (of vergelijkbaar) met de volgende functies:
+
+### `prepareMail(campaignId, contactId, variant)`
+```
+1. Haal campagne op uit database
+2. Haal contact op uit database
+3. Kies de juiste content (variant A of B)
+4. Genereer unsubscribe token voor dit contact (generateUnsubscribeToken)
+5. Roep generateEmailHTML(content, contact) aan uit stap 3
+6. Voeg tracking pixel in (generateTrackingPixel)
+7. Vervang links door trackinglinks (wrapLinksWithTracking)
+8. Voeg unsubscribe-link toe aan de HTML (vervang placeholder)
+9. Genereer ook plain text versie (generateEmailPlainText)
+10. Geef terug: { to, subject, html, text, mailSendId }
+```
+
+### `sendSingleMail(mailSendId)`
+```
+1. Haal mail_send op
+2. Roep prepareMail aan
+3. Verstuur via SendGrid:
+   - npm package: @sendgrid/mail
+   - msg = {
+       to: contact.email,
+       from: { email: SENDGRID_FROM_EMAIL, name: SENDGRID_FROM_NAME },
+       subject: onderwerp (met tags vervangen),
+       html: html,
+       text: plaintext,
+       headers: {
+         'List-Unsubscribe': `<${unsubscribeUrl}>`,
+         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+       }
+     }
+4. Bij succes: update mail_send status naar 'sent', sla verzonden_op op
+5. Bij fout: update mail_send status naar 'failed', sla fout_melding op
+6. Log resultaat naar console (campagneId, contactId, status)
+```
+
+### `sendCampaignBatch(campaignId)`
+```
+1. Haal alle contacten op die voldoen aan de segmentfilters van de campagne
+2. Filter: contacten met status = 'uitgeschreven' of 'geblokkeerd' overslaan
+3. Maak voor elk contact een mail_send record aan (status = pending)
+4. Bij A/B test:
+   - Bereken split: eerste X% krijgt variant A, rest variant B
+   - Wijs variant toe bij aanmaken mail_send record
+5. Verwerk in batches van 50 contacten tegelijk:
+   - Gebruik Promise.allSettled() per batch
+   - Wacht 200ms tussen batches (rate limiting)
+6. Geef voortgang terug (voor logging): { totaal, verzonden, mislukt }
+```
+
+---
+
+## 8. API endpoint voor handmatige activatie
+
+### POST /api/campaigns/:id/send
+```
+Body: { test: false }
+
+1. Controleer of campagne status = 'concept' of 'gepland'
+2. Controleer of content_a ingevuld is
+3. Update campagne status naar 'actief'
+4. Roep sendCampaignBatch(campaignId) aan
+5. Na voltooiing: update campagne status naar 'voltooid'
+6. Geef terug: { verzonden: X, mislukt: X }
+```
+
+### POST /api/campaigns/:id/send-test
+```
+Body: { email: 'test@email.nl', contactId: 123 }
+
+1. Sla GEEN mail_send record op
+2. Genereer de mail met het opgegeven contact als testdata
+3. Pas het onderwerp aan: "[TEST] " + origineel onderwerp
+4. Verstuur naar het opgegeven e-mailadres
+5. Geef terug: { success: true } of foutmelding
+```
+
+---
+
+## 9. Statistieken berekeningen
+
+Schrijf een service-functie `getCampaignStats(campaignId)` die de volgende data berekent uit de database:
+
+```javascript
+{
+  verzonden: // COUNT mail_sends WHERE status = 'sent'
+  geopend: // COUNT DISTINCT mail_send_id FROM mail_events WHERE type = 'open'
+  geopend_pct: // geopend / verzonden * 100 (1 decimaal)
+  geklikt: // COUNT DISTINCT mail_send_id FROM mail_events WHERE type = 'click'
+  geklikt_pct: // geklikt / verzonden * 100 (1 decimaal)
+  uitgeschreven: // COUNT mail_events WHERE type = 'unsubscribe'
+  uitgeschreven_pct: // uitgeschreven / verzonden * 100 (1 decimaal)
+  mislukt: // COUNT mail_sends WHERE status = 'failed'
+  
+  // Bij A/B test:
+  variant_a: {
+    verzonden, geopend, geopend_pct, geklikt, geklikt_pct
+  },
+  variant_b: {
+    verzonden, geopend, geopend_pct, geklikt, geklikt_pct
+  }
+}
+```
+
+Maak ook een endpoint:
+### GET /api/campaigns/:id/stats
+- Roept getCampaignStats aan en geeft het resultaat terug
+- Wordt gebruikt door het statistieken-tabblad in de campagne detailpagina (stap 7)
+
+---
+
+## 10. Campagne detailpagina — statistieken tab updaten
+
+Vul de al bestaande "Statistieken" tab in de campagne detailpagina (gebouwd in stap 2) met echte data:
+
+**Bij status = concept of gepland:**
+- Leeg state: "Statistieken zijn beschikbaar nadat de campagne is verzonden"
+
+**Bij status = actief of voltooid:**
+Vier statistiekenkaarten naast elkaar:
+```
+[📨 Verzonden: X]  [👁️ Geopend: X (X%)]  [🖱️ Geklikt: X (X%)]  [🚫 Uitgeschreven: X]
+```
+
+Elke kaart:
+- Wit vlak, afgeronde hoeken, subtiele schaduw
+- Groot getal (32px, bold)
+- Label eronder (14px, grijs)
+- Percentage in een gekleurde pill:
+  - Groen als open rate > 20%
+  - Oranje als open rate 10–20%
+  - Rood als open rate < 10%
+
+Automatisch verversen: elke 30 seconden als campagne status = actief (via polling)
+
+**Verzendknop in de Overzicht-tab updaten:**
+- Voeg een laadstate toe: bij klikken op "🚀 Campagne activeren" toont de knop een spinner
+- Toon voortgang: "Bezig met verzenden... (X van Y)"
+- Na voltooiing: toast "Campagne verzonden naar X contacten ✓"
+
+---
+
+## 11. Installatie & configuratie
+
+Installeer de benodigde npm packages:
+```bash
+npm install @sendgrid/mail
+```
+
+De `crypto` module is ingebouwd in Node.js — geen installatie nodig.
+
+Zorg dat alle tracking routes geregistreerd zijn VÓÓR eventuele catch-all routes in de Express-app.
+
+Zorg dat de `BASE_URL` omgevingsvariabele correct is ingesteld op de publieke Replit-URL van het project, zodat tracking links werken vanuit e-mails die buiten Replit worden geopend.
+
+---
+
+## Volgorde van implementatie binnen deze stap
+
+1. Database tabellen aanmaken (mail_sends, mail_events, unsubscribe_tokens)
+2. Token generatie en validatie functies
+3. Tracking endpoints (/track/open, /track/click, /unsubscribe)
+4. Uitschrijfpagina
+5. emailService.js (prepareMail, sendSingleMail, sendCampaignBatch)
+6. API endpoints (/send, /send-test, /stats)
+7. Statistieken tab in campagne detailpagina
+
+---
+
+*Stap 4 van 8 — EXTRA E-mailmarketing Module*

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import EmailBuilderPage from "@/components/EmailBuilderPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -616,8 +617,7 @@ export default function ProspectCampagnesTab() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('alle');
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editorBlocks, setEditorBlocks] = useState<Block[]>([]);
+  const [builderOpen, setBuilderOpen] = useState(false);
 
   // ── Queries
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
@@ -667,20 +667,6 @@ export default function ProspectCampagnesTab() {
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiRequest('PUT', `/api/admin/prospect-campaigns/${id}`, { status }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] }); },
-  });
-
-  const saveEditorMut = useMutation({
-    mutationFn: ({ id, blocks }: { id: number; blocks: Block[] }) => {
-      const html = blocksToHtml(blocks);
-      return apiRequest('PUT', `/api/admin/prospect-campaigns/${id}`, {
-        contentA: JSON.stringify(blocks), editorBlocks: JSON.stringify(blocks), htmlContent: html,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
-      setEditorOpen(false);
-      toast({ title: 'E-mail opgeslagen' });
-    },
   });
 
   const sendMut = useMutation({
@@ -734,14 +720,6 @@ export default function ProspectCampagnesTab() {
       (statusFilter === 'voltooid' && ['voltooid','sent'].includes(c.status));
     return matchSearch && matchStatus;
   });
-
-  // ── Open editor for selected campaign
-  function openEditor(c: Campaign) {
-    let blocks: Block[] = [];
-    try { blocks = c.contentA ? JSON.parse(c.contentA) : c.editorBlocks ? JSON.parse(c.editorBlocks) : []; } catch { blocks = []; }
-    setEditorBlocks(blocks);
-    setEditorOpen(true);
-  }
 
   // ── Segment summary text
   function getSegmentSummary(c: Campaign): string {
@@ -887,7 +865,7 @@ export default function ProspectCampagnesTab() {
               <p className="text-xs text-gray-500 mt-0.5 truncate">{selectedCampaign.subject}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Button size="sm" variant="outline" className="gap-1" onClick={() => openEditor(selectedCampaign)}>
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => setBuilderOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />E-mail opmaken
               </Button>
               {['concept','draft'].includes(selectedCampaign.status) && (
@@ -975,7 +953,7 @@ export default function ProspectCampagnesTab() {
                     </div>
                     <Button size="sm" variant={selectedCampaign.htmlContent ? 'outline' : 'default'}
                       className={selectedCampaign.htmlContent ? '' : 'bg-purple-600 hover:bg-purple-700'}
-                      onClick={() => openEditor(selectedCampaign)}>
+                      onClick={() => setBuilderOpen(true)}>
                       <Pencil className="h-3.5 w-3.5 mr-1.5" />E-mail opmaken
                     </Button>
                   </div>
@@ -1082,27 +1060,12 @@ export default function ProspectCampagnesTab() {
         </div>
       )}
 
-      {/* ── Email Editor overlay ── */}
-      {editorOpen && selectedCampaign && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col">
-          <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-white shadow-sm">
-            <div>
-              <h2 className="font-semibold text-slate-800">E-mail opmaken — {selectedCampaign.name}</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Onderwerp: {selectedCampaign.subject}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => setEditorOpen(false)}>Annuleren</Button>
-              <Button onClick={() => saveEditorMut.mutate({ id: selectedCampaign.id, blocks: editorBlocks })}
-                disabled={saveEditorMut.isPending} className="gap-1.5 bg-purple-600 hover:bg-purple-700">
-                {saveEditorMut.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                Opslaan
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden p-4">
-            <EmailEditor blocks={editorBlocks} onChange={setEditorBlocks} />
-          </div>
-        </div>
+      {/* ── Email Builder (full-page) ── */}
+      {builderOpen && selectedCampaign && (
+        <EmailBuilderPage
+          campaign={selectedCampaign}
+          onClose={() => setBuilderOpen(false)}
+        />
       )}
 
       {/* ── Wizard modal ── */}
