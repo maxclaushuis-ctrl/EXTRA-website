@@ -5247,83 +5247,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verzenden via SendGrid
+  // Verzenden via emailService (nieuwe tracking infrastructuur)
   app.post("/api/admin/prospect-campaigns/:id/send", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const campaignId = parseInt(req.params.id);
       const campaign = await storage.getProspectCampaign(campaignId);
       if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
-      if (campaign.status === 'sent') return res.status(400).json({ message: "Campagne is al verzonden" });
-
-      const recipients = await storage.getProspectCampaignRecipients(campaignId);
-      const pending = recipients.filter(r => r.status === 'pending');
-      if (pending.length === 0) return res.status(400).json({ message: "Geen ontvangers" });
-
-      const { sendEmail } = await import('./mail');
-      const { randomUUID } = await import('crypto');
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      let sentCount = 0, failedCount = 0;
-
-      for (const recipient of pending) {
-        try {
-          // Generate unique tracking token
-          const token = randomUUID();
-          await storage.updateProspectCampaignRecipient(recipient.id, { trackingToken: token });
-
-          // Tracking pixel URL (1x1 transparent GIF)
-          const pixelUrl = `${baseUrl}/api/track/open/${token}`;
-          // Tracking click URL (wraps the main CTA link if present)
-          const clickUrl = `${baseUrl}/api/track/click/${token}`;
-
-          // Personalise content
-          let html = campaign.htmlContent
-            .replace(/\{\{naam\}\}/gi, recipient.name || 'daar')
-            .replace(/\{\{bedrijf\}\}/gi, recipient.company || '')
-            .replace(/\{\{klik_link\}\}/gi, clickUrl);
-
-          // Inject tracking pixel before </body>
-          const trackingPixel = `<img src="${pixelUrl}" width="1" height="1" style="display:none" alt="" />`;
-          html = html.includes('</body>') ? html.replace('</body>', `${trackingPixel}</body>`) : html + trackingPixel;
-
-          // Add unsubscribe link
-          const unsubUrl = `${baseUrl}/api/track/unsubscribe/${token}`;
-          html += `<p style="font-size:11px;color:#999;text-align:center;margin-top:24px"><a href="${unsubUrl}" style="color:#999">Uitschrijven</a></p>`;
-
-          const text = (campaign.textContent || '')
-            .replace(/\{\{naam\}\}/gi, recipient.name || 'daar')
-            .replace(/\{\{bedrijf\}\}/gi, recipient.company || '');
-
-          const ok = await sendEmail({
-            to: recipient.email,
-            from: 'info@doehetextra.nl',
-            subject: campaign.subject,
-            html,
-            text: text || undefined,
-          });
-
-          if (ok) {
-            await storage.updateProspectCampaignRecipient(recipient.id, { status: 'sent', sentAt: new Date() });
-            sentCount++;
-          } else {
-            await storage.updateProspectCampaignRecipient(recipient.id, { status: 'failed', errorMessage: 'Verzending mislukt' });
-            failedCount++;
-          }
-        } catch (e: any) {
-          await storage.updateProspectCampaignRecipient(recipient.id, { status: 'failed', errorMessage: String(e.message) });
-          failedCount++;
-        }
+      if (campaign.status === 'sent' || campaign.status === 'voltooid') {
+        return res.status(400).json({ message: "Campagne is al verzonden" });
       }
+      if (!campaign.contentA) return res.status(400).json({ message: "Geen e-mailinhoud ingesteld" });
 
-      const updated = await storage.updateProspectCampaign(campaignId, {
-        status: 'sent', sentAt: new Date(),
-        sentCount: (campaign.sentCount || 0) + sentCount,
-        failedCount: (campaign.failedCount || 0) + failedCount,
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+
+      // Update status to actief
+      await storage.updateProspectCampaign(campaignId, { status: 'actief' });
+
+      const { sendCampaignBatch } = await import('./emailService');
+      const result = await sendCampaignBatch(campaignId, baseUrl);
+
+      // Update to voltooid
+      await storage.updateProspectCampaign(campaignId, {
+        status: 'voltooid', sentAt: new Date(),
+        sentCount: result.verzonden,
+        failedCount: result.mislukt,
       });
 
-      return res.json({ success: true, sentCount, failedCount, campaign: updated });
+      return res.json({ success: true, verzonden: result.verzonden, mislukt: result.mislukt, totaal: result.totaal });
     } catch (err) {
       console.error("[ProspectCampaign] Fout verzenden:", err);
       return res.status(500).json({ message: "Fout bij verzenden" });
+    }
+  });
+
+  // Statistieken per campagne
+  app.get("/api/admin/prospect-campaigns/:id/stats", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const stats = await storage.getCampaignMailStats(id);
+      return res.json(stats);
+    } catch (err) {
+      console.error("[ProspectCampaign] Stats fout:", err);
+      return res.status(500).json({ message: "Fout" });
     }
   });
 
@@ -7905,6 +7871,70 @@ ${posts.map(p => `  <url>
       return res.status(404).json({ message: "Bestand niet gevonden" });
     }
     res.sendFile(filePath);
+  });
+
+  // ─── Nieuwe tracking routes (Stap 4) — publiek toegankelijk ────────────────
+
+  // Open-pixel: registreert geopende mail
+  app.get("/track/open/:mailSendId", async (req: Request, res: Response) => {
+    res.set({
+      'Content-Type': 'image/gif',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Pragma': 'no-cache',
+    });
+    const { TRANSPARENT_GIF } = await import('./emailService');
+    res.end(TRANSPARENT_GIF);
+
+    const id = parseInt(req.params.mailSendId);
+    if (!isNaN(id)) {
+      try {
+        const ms = await storage.getMailSend(id);
+        if (ms) {
+          await storage.createMailEvent({ mailSendId: id, type: 'open', ipAdres: req.ip || null, url: null });
+        }
+      } catch (e) { /* silent */ }
+    }
+  });
+
+  // Click-tracking: slaat klik op en redirect naar echte URL
+  app.get("/track/click/:mailSendId/:linkIndex", async (req: Request, res: Response) => {
+    const id = parseInt(req.params.mailSendId);
+    const { url } = req.query as { url?: string };
+    const targetUrl = url || 'https://doehetextra.nl';
+
+    if (!isNaN(id)) {
+      try {
+        await storage.createMailEvent({
+          mailSendId: id, type: 'click',
+          ipAdres: req.ip || null,
+          url: targetUrl,
+        });
+      } catch (e) { /* silent */ }
+    }
+
+    return res.redirect(302, targetUrl);
+  });
+
+  // Uitschrijven — pagina weergeven
+  app.get("/unsubscribe/:contactId/:token", async (req: Request, res: Response) => {
+    const { unsubscribePageHtml, validateUnsubscribeToken } = await import('./emailService');
+    const contactId = parseInt(req.params.contactId);
+    const { token } = req.params;
+
+    if (isNaN(contactId) || !validateUnsubscribeToken(contactId, token)) {
+      return res.status(400).send(unsubscribePageHtml(true));
+    }
+
+    try {
+      const contact = await storage.getProspectContact(contactId);
+      if (!contact) return res.status(404).send(unsubscribePageHtml(true));
+
+      // Mark as unsubscribed
+      await storage.updateProspectContact(contactId, { unsubscribed: true, contactStatus: 'uitgeschreven' });
+      return res.send(unsubscribePageHtml(false));
+    } catch (e) {
+      return res.status(500).send(unsubscribePageHtml(true));
+    }
   });
 
   return httpServer;

@@ -68,6 +68,12 @@ import {
   type ProspectContact, type InsertProspectContact,
   type ProspectCampaign, type InsertProspectCampaign,
   type ProspectCampaignRecipient, type InsertProspectCampaignRecipient,
+  mailSends as mailSendsTable,
+  mailEvents as mailEventsTable,
+  unsubscribeTokens as unsubscribeTokensTable,
+  type MailSend, type InsertMailSend,
+  type MailEvent, type InsertMailEvent,
+  type UnsubscribeToken,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -451,6 +457,22 @@ export interface IStorage {
   deleteProspectCampaignRecipient(id: number): Promise<void>;
   updateProspectCampaignRecipient(id: number, data: Partial<InsertProspectCampaignRecipient>): Promise<void>;
   getProspectCampaignRecipientByToken(token: string): Promise<ProspectCampaignRecipient | undefined>;
+
+  // Mail Tracking
+  createMailSend(data: InsertMailSend): Promise<MailSend>;
+  getMailSend(id: number): Promise<MailSend | undefined>;
+  getMailSendsByCampaign(campaignId: number): Promise<MailSend[]>;
+  updateMailSend(id: number, data: Partial<InsertMailSend>): Promise<MailSend | undefined>;
+  createMailEvent(data: InsertMailEvent): Promise<MailEvent>;
+  getMailEventsByMailSend(mailSendId: number): Promise<MailEvent[]>;
+  getCampaignMailStats(campaignId: number): Promise<{
+    verzonden: number; geopend: number; geklikt: number; uitgeschreven: number; mislukt: number;
+    geopend_pct: number; geklikt_pct: number; uitgeschreven_pct: number;
+    variant_a: { verzonden: number; geopend: number; geopend_pct: number; geklikt: number; geklikt_pct: number };
+    variant_b: { verzonden: number; geopend: number; geopend_pct: number; geklikt: number; geklikt_pct: number };
+  }>;
+  getOrCreateUnsubscribeToken(contactId: number, token: string): Promise<UnsubscribeToken>;
+  getUnsubscribeTokenByContact(contactId: number): Promise<UnsubscribeToken | undefined>;
 }
 
 // In-memory storage implementation
@@ -4100,6 +4122,112 @@ export class MemStorage implements IStorage {
   async getProspectCampaignRecipientByToken(token: string): Promise<ProspectCampaignRecipient | undefined> {
     const [row] = await db.select().from(prospectCampaignRecipientsTable)
       .where(eq(prospectCampaignRecipientsTable.trackingToken, token));
+    return row;
+  }
+
+  // ─── Mail Tracking ────────────────────────────────────────────────────────
+
+  async createMailSend(data: InsertMailSend): Promise<MailSend> {
+    const [row] = await db.insert(mailSendsTable).values(data).returning();
+    return row;
+  }
+
+  async getMailSend(id: number): Promise<MailSend | undefined> {
+    const [row] = await db.select().from(mailSendsTable).where(eq(mailSendsTable.id, id));
+    return row;
+  }
+
+  async getMailSendsByCampaign(campaignId: number): Promise<MailSend[]> {
+    return db.select().from(mailSendsTable).where(eq(mailSendsTable.campaignId, campaignId));
+  }
+
+  async updateMailSend(id: number, data: Partial<InsertMailSend>): Promise<MailSend | undefined> {
+    const [row] = await db.update(mailSendsTable).set(data).where(eq(mailSendsTable.id, id)).returning();
+    return row;
+  }
+
+  async createMailEvent(data: InsertMailEvent): Promise<MailEvent> {
+    const [row] = await db.insert(mailEventsTable).values(data).returning();
+    return row;
+  }
+
+  async getMailEventsByMailSend(mailSendId: number): Promise<MailEvent[]> {
+    return db.select().from(mailEventsTable).where(eq(mailEventsTable.mailSendId, mailSendId));
+  }
+
+  async getCampaignMailStats(campaignId: number): Promise<{
+    verzonden: number; geopend: number; geklikt: number; uitgeschreven: number; mislukt: number;
+    geopend_pct: number; geklikt_pct: number; uitgeschreven_pct: number;
+    variant_a: { verzonden: number; geopend: number; geopend_pct: number; geklikt: number; geklikt_pct: number };
+    variant_b: { verzonden: number; geopend: number; geopend_pct: number; geklikt: number; geklikt_pct: number };
+  }> {
+    // All sends for this campaign
+    const sends = await db.select().from(mailSendsTable).where(eq(mailSendsTable.campaignId, campaignId));
+    const sendIds = sends.map(s => s.id);
+
+    const verzonden = sends.filter(s => s.status === 'sent').length;
+    const mislukt = sends.filter(s => s.status === 'failed').length;
+
+    let geopend = 0, geklikt = 0, uitgeschreven = 0;
+    if (sendIds.length > 0) {
+      // Opened: distinct mail_send_id with type='open'
+      const openRows = await db.select({ mailSendId: mailEventsTable.mailSendId })
+        .from(mailEventsTable)
+        .where(and(eq(mailEventsTable.type, 'open'), inArray(mailEventsTable.mailSendId, sendIds)));
+      geopend = new Set(openRows.map(r => r.mailSendId)).size;
+
+      // Clicked: distinct mail_send_id with type='click'
+      const clickRows = await db.select({ mailSendId: mailEventsTable.mailSendId })
+        .from(mailEventsTable)
+        .where(and(eq(mailEventsTable.type, 'click'), inArray(mailEventsTable.mailSendId, sendIds)));
+      geklikt = new Set(clickRows.map(r => r.mailSendId)).size;
+
+      // Unsubscribed: count unsubscribe events
+      const unsubRows = await db.select({ id: mailEventsTable.id })
+        .from(mailEventsTable)
+        .where(and(eq(mailEventsTable.type, 'unsubscribe'), inArray(mailEventsTable.mailSendId, sendIds)));
+      uitgeschreven = unsubRows.length;
+    }
+
+    const pct = (n: number, d: number) => d > 0 ? Math.round(n / d * 1000) / 10 : 0;
+
+    // Per variant
+    const calcVariant = async (variant: string) => {
+      const vs = sends.filter(s => s.variant === variant && s.status === 'sent');
+      const vIds = vs.map(s => s.id);
+      if (vIds.length === 0) return { verzonden: 0, geopend: 0, geopend_pct: 0, geklikt: 0, geklikt_pct: 0 };
+      const vo = await db.select({ mailSendId: mailEventsTable.mailSendId })
+        .from(mailEventsTable)
+        .where(and(eq(mailEventsTable.type, 'open'), inArray(mailEventsTable.mailSendId, vIds)));
+      const vc = await db.select({ mailSendId: mailEventsTable.mailSendId })
+        .from(mailEventsTable)
+        .where(and(eq(mailEventsTable.type, 'click'), inArray(mailEventsTable.mailSendId, vIds)));
+      const vg = new Set(vo.map(r => r.mailSendId)).size;
+      const vk = new Set(vc.map(r => r.mailSendId)).size;
+      return { verzonden: vs.length, geopend: vg, geopend_pct: pct(vg, vs.length), geklikt: vk, geklikt_pct: pct(vk, vs.length) };
+    };
+
+    const [variant_a, variant_b] = await Promise.all([calcVariant('A'), calcVariant('B')]);
+
+    return {
+      verzonden, geopend, geklikt, uitgeschreven, mislukt,
+      geopend_pct: pct(geopend, verzonden),
+      geklikt_pct: pct(geklikt, verzonden),
+      uitgeschreven_pct: pct(uitgeschreven, verzonden),
+      variant_a, variant_b,
+    };
+  }
+
+  async getOrCreateUnsubscribeToken(contactId: number, token: string): Promise<UnsubscribeToken> {
+    const existing = await this.getUnsubscribeTokenByContact(contactId);
+    if (existing) return existing;
+    const [row] = await db.insert(unsubscribeTokensTable).values({ contactId, token }).returning();
+    return row;
+  }
+
+  async getUnsubscribeTokenByContact(contactId: number): Promise<UnsubscribeToken | undefined> {
+    const [row] = await db.select().from(unsubscribeTokensTable)
+      .where(eq(unsubscribeTokensTable.contactId, contactId));
     return row;
   }
 }

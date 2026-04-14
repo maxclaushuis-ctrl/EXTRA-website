@@ -1469,3 +1469,46 @@ export const clientBirthdays = pgTable("client_birthdays", {
 export const insertClientBirthdaySchema = createInsertSchema(clientBirthdays).omit({ id: true, createdAt: true });
 export type InsertClientBirthday = z.infer<typeof insertClientBirthdaySchema>;
 export type ClientBirthday = typeof clientBirthdays.$inferSelect;
+
+// ─── Mail Tracking Tables ─────────────────────────────────────────────────────
+
+export const mailSends = pgTable("mail_sends", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'cascade' }).notNull(),
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
+  email: text("email").notNull(),
+  variant: text("variant").default('A').notNull(), // A | B
+  verzondenOp: timestamp("verzonden_op"),
+  status: text("status").default('pending').notNull(), // pending | sent | failed
+  foutMelding: text("fout_melding"),
+  linkMap: text("link_map"), // JSON: { [index]: url }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const mailEvents = pgTable("mail_events", {
+  id: serial("id").primaryKey(),
+  mailSendId: integer("mail_send_id").references(() => mailSends.id, { onDelete: 'cascade' }).notNull(),
+  type: text("type").notNull(), // open | click | unsubscribe
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  url: text("url"), // for click events: the original URL
+  ipAdres: text("ip_adres"),
+});
+
+export const unsubscribeTokens = pgTable("unsubscribe_tokens", {
+  id: serial("id").primaryKey(),
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'cascade' }).notNull().unique(),
+  token: text("token").notNull().unique(),
+  aangemaaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+});
+
+export const insertMailSendSchema = createInsertSchema(mailSends).omit({ id: true, createdAt: true });
+export type InsertMailSend = z.infer<typeof insertMailSendSchema>;
+export type MailSend = typeof mailSends.$inferSelect;
+
+export const insertMailEventSchema = createInsertSchema(mailEvents).omit({ id: true });
+export type InsertMailEvent = z.infer<typeof insertMailEventSchema>;
+export type MailEvent = typeof mailEvents.$inferSelect;
+
+export const insertUnsubscribeTokenSchema = createInsertSchema(unsubscribeTokens).omit({ id: true });
+export type InsertUnsubscribeToken = z.infer<typeof insertUnsubscribeTokenSchema>;
+export type UnsubscribeToken = typeof unsubscribeTokens.$inferSelect;

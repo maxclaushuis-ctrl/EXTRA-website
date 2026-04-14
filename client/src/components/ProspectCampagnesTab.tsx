@@ -632,6 +632,19 @@ export default function ProspectCampagnesTab() {
     queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/recipients`, { credentials: 'include' }).then(r => r.json()),
   });
 
+  type CampaignStats = {
+    verzonden: number; geopend: number; geklikt: number; uitgeschreven: number; mislukt: number;
+    geopend_pct: number; geklikt_pct: number; uitgeschreven_pct: number;
+    variant_a: { verzonden: number; geopend: number; geopend_pct: number; geklikt: number; geklikt_pct: number };
+    variant_b: { verzonden: number; geopend: number; geopend_pct: number; geklikt: number; geklikt_pct: number };
+  };
+  const { data: campaignStats, isLoading: statsLoading } = useQuery<CampaignStats>({
+    queryKey: ['/api/admin/prospect-campaigns', selectedId, 'stats'],
+    enabled: !!selectedId && detailTab === 'statistieken' && isSentStatus(selectedCampaign?.status ?? ''),
+    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/stats`, { credentials: 'include' }).then(r => r.json()),
+    refetchInterval: 30000,
+  });
+
   // ── Mutations
   const deleteMut = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/prospect-campaigns/${id}`),
@@ -973,7 +986,7 @@ export default function ProspectCampagnesTab() {
 
             {/* Statistieken */}
             <TabsContent value="statistieken" className="flex-1 overflow-auto p-6">
-              {!isSentStatus(selectedCampaign.status) && (selectedCampaign.sentCount ?? 0) === 0 ? (
+              {!isSentStatus(selectedCampaign.status) ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <BarChart2 className="h-12 w-12 text-slate-200 mx-auto mb-3" />
@@ -981,14 +994,20 @@ export default function ProspectCampagnesTab() {
                     <p className="text-xs text-slate-300 mt-1">Activeer en verzend de campagne om statistieken te zien</p>
                   </div>
                 </div>
+              ) : statsLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <RefreshCw className="h-6 w-6 text-slate-300 animate-spin" />
+                </div>
               ) : (
-                <div className="max-w-xl">
-                  <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="max-w-2xl space-y-6">
+                  {/* Main KPI cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
-                      { label: 'Verzonden', value: selectedCampaign.sentCount, icon: Send, color: 'text-blue-600', bg: 'bg-blue-50' },
-                      { label: 'Geopend', value: `${selectedCampaign.sentCount > 0 ? Math.round(selectedCampaign.openCount / selectedCampaign.sentCount * 100) : 0}%`, sub: `${selectedCampaign.openCount} absoluut`, icon: MailOpen, color: 'text-green-600', bg: 'bg-green-50' },
-                      { label: 'Geklikt', value: `${selectedCampaign.sentCount > 0 ? Math.round(selectedCampaign.clickCount / selectedCampaign.sentCount * 100) : 0}%`, sub: `${selectedCampaign.clickCount} absoluut`, icon: MousePointer, color: 'text-purple-600', bg: 'bg-purple-50' },
-                      { label: 'Mislukt', value: selectedCampaign.failedCount, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50' },
+                      { label: 'Verzonden', value: campaignStats?.verzonden ?? selectedCampaign.sentCount ?? 0, icon: Send, color: 'text-blue-600', bg: 'bg-blue-50' },
+                      { label: 'Geopend', value: `${campaignStats?.geopend_pct ?? 0}%`, sub: `${campaignStats?.geopend ?? 0} uniek`, icon: MailOpen, color: 'text-green-600', bg: 'bg-green-50' },
+                      { label: 'Geklikt', value: `${campaignStats?.geklikt_pct ?? 0}%`, sub: `${campaignStats?.geklikt ?? 0} uniek`, icon: MousePointer, color: 'text-purple-600', bg: 'bg-purple-50' },
+                      { label: 'Uitgeschreven', value: `${campaignStats?.uitgeschreven_pct ?? 0}%`, sub: `${campaignStats?.uitgeschreven ?? 0} totaal`, icon: X, color: 'text-orange-500', bg: 'bg-orange-50' },
+                      { label: 'Mislukt', value: campaignStats?.mislukt ?? selectedCampaign.failedCount ?? 0, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50' },
                     ].map(stat => (
                       <div key={stat.label} className={`${stat.bg} rounded-xl p-4 border border-white`}>
                         <div className="flex items-center gap-2 mb-1">
@@ -1000,6 +1019,45 @@ export default function ProspectCampagnesTab() {
                       </div>
                     ))}
                   </div>
+
+                  {/* A/B Test vergelijking */}
+                  {selectedCampaign.abTestActief && campaignStats && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <FlaskConical className="h-4 w-4 text-slate-500" />
+                        <p className="text-sm font-semibold text-slate-700">A/B Test Vergelijking</p>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-xs text-slate-400 border-b border-slate-200">
+                              <th className="text-left py-2 font-medium">Variant</th>
+                              <th className="text-right py-2 font-medium">Verzonden</th>
+                              <th className="text-right py-2 font-medium">Open %</th>
+                              <th className="text-right py-2 font-medium">Klik %</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              { label: 'Variant A', data: campaignStats.variant_a, winner: campaignStats.variant_a.geopend_pct >= campaignStats.variant_b.geopend_pct },
+                              { label: 'Variant B', data: campaignStats.variant_b, winner: campaignStats.variant_b.geopend_pct > campaignStats.variant_a.geopend_pct },
+                            ].map(v => (
+                              <tr key={v.label} className="border-b border-slate-100 last:border-0">
+                                <td className="py-2.5 font-medium text-slate-700 flex items-center gap-2">
+                                  {v.label}
+                                  {v.winner && v.data.verzonden > 0 && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">Winnaar</span>}
+                                </td>
+                                <td className="py-2.5 text-right text-slate-600">{v.data.verzonden}</td>
+                                <td className={`py-2.5 text-right font-semibold ${v.winner ? 'text-green-600' : 'text-slate-500'}`}>{v.data.geopend_pct}%</td>
+                                <td className="py-2.5 text-right text-slate-600">{v.data.geklikt_pct}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedCampaign.sentAt && (
                     <p className="text-xs text-gray-400">Verzonden op: {new Date(selectedCampaign.sentAt).toLocaleString('nl-NL')}</p>
                   )}
