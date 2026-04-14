@@ -1,7 +1,7 @@
 # EXTRAATJE - Test Environment
 
 ## Overview
-This project is the EXTRAATJE test environment, a complete replica of the EXTRA Rewards platform. Its primary purpose is to provide a safe space for testing and development without impacting the production system. It includes all core functionalities of the main system, such as challenges with progress bars, leaderboards, and a comprehensive reward system. The vision is to enable robust feature development and integration, eventually leading to production deployment with features like automated point allocation based on external planning systems.
+The EXTRAATJE Test Environment is a replica of the EXTRA Rewards platform, designed for robust testing and development. Its primary goal is to facilitate feature development and integration without affecting the production system. Key capabilities include managing challenges with progress bars, leaderboards, and a comprehensive reward system. The long-term vision involves integrating with external planning systems for automated point allocation and eventual production deployment.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,57 +9,47 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Core Design
-The application utilizes a monorepo structure, organizing code into `client/` for the React frontend, `server/` for the Express backend, and `shared/` for common TypeScript schemas.
+The application follows a monorepo structure, separating the React frontend (`client/`), Express backend (`server/`), and shared TypeScript schemas (`shared/`).
 
 ### Tech Stack
--   **Frontend**: React with TypeScript, Vite
--   **UI**: Radix UI, shadcn/ui, Tailwind CSS
--   **Backend**: Express.js with TypeScript
--   **Database**: PostgreSQL with Drizzle ORM
--   **Session Management**: Express-session with connect-pg-simple
--   **Real-time**: WebSockets
+-   **Frontend**: React with TypeScript, Vite, Radix UI, shadcn/ui, Tailwind CSS.
+-   **Backend**: Express.js with TypeScript.
+-   **Database**: PostgreSQL with Drizzle ORM.
+-   **Session Management**: Express-session with connect-pg-simple.
+-   **Real-time**: WebSockets.
 
 ### Key Features
--   **User Management**: Employee roles (admin/employee), TWV (Work Permit) tracking, points.
--   **Rewards System**: Physical rewards, partner discounts (QR-code or discount code based), and a comprehensive point transaction audit trail.
--   **Challenges**: Configurable challenges including one-time and progressive types with step-by-step progression and visual progress bars.
--   **Leaderboard**: Real-time monthly leaderboard with position badges for top performers.
+-   **User Management**: Employee roles (admin/employee), TWV tracking, points.
+-   **Rewards System**: Physical rewards, partner discounts, and a point transaction audit trail.
+-   **Challenges**: Configurable one-time and progressive challenges with visual progress bars.
+-   **Leaderboard**: Real-time monthly leaderboard with position badges.
 -   **Authentication & Authorization**: Session-based with role-based access control and WebSocket authentication.
--   **Marketing & Communications**: Email template system, campaign management, and automation triggers (e.g., birthdays).
--   **Sollicitanten Import**: XLSX import feature per function tab (Horecamedewerker, Chef, Housekeeping). Accessible via green "Import .xlsx" button in the tab header. Modal with dry-run preview, column-mapping summary, and commit. Backend in `server/import-xlsx.ts` with fuzzy header matching, score parsing (%, 0-1 floats, integers), duplicate detection (email/phone/name+date), and upsert. Scores stored in `softskills_score`, `bar_score`, `bediening_score`, `diner_score` columns. Applications tagged with `source='xlsx_import'` and `import_batch_id`.
--   **Candidate Management**: Comprehensive pre-onboarding system for candidates, including skills assessment, availability, and GDPR compliance features. Aanmeldflow (step 2 Skills) now uses Dutch/English proficiency radio buttons (Niet/Basis/Redelijk/Goed) with conditional English question, CV upload required in step 2 before proceeding to step 3. Step 3 now shows "what happens next" info (no Calendly widget) — admins decide via email buttons. Candidates without CV receive an initial email + daily reminders until CV is uploaded (`hasCv`, `cvReminderSentAt` fields on candidates table).
--   **Admin Email Review Flow**: When a candidate completes the form, an internal notification email is sent to role-based recipients (horecamedewerker/chef → lea@, eveline@, max@; housekeeping → eveline@, charlotte@, max@). The email includes: candidate details table, CV as email attachment (if uploaded), and two action buttons (✅ Accept → sends Calendly invite to candidate; ❌ Reject → sends rejection email to candidate). Buttons use secure one-time tokens (`reviewToken` on candidates table). Token-based endpoints: `GET /api/candidates/:id/accept?token=...` and `GET /api/candidates/:id/reject?token=...`. Accepted candidates receive `sendCalendlyInviteEmail` with a Calendly link.
--   **Engelstalige werkgeverspagina's**: 5 Engelse pagina's op `/en/` prefix: `/en/hospitality-staff-amsterdam` (hub, equivalent van /horeca-personeel-gezocht), `/en/hotel-staffing-amsterdam`, `/en/event-staff-amsterdam`, `/en/catering-staff-amsterdam`, `/en/restaurant-staff-amsterdam`. Native English copywriting, SEO meta tags, hreflang alternates. Bestanden in `client/src/pages/en/`. Taalwisselaar (dropdown met 🇳🇱/🇬🇧 vlaggen) in PublicNav met automatische NL/EN URL-mapping via LANG_MAP. Op EN-pagina's toont nav alleen "Hire hospitality staff" dropdown (niet kandidaat- of over-routes).
--   **Public Website Pages**: Complete SEO-geoptimaliseerde websitestructuur met gedeelde `PublicNav` (dropdown navigatie) en `PublicFooter` (4-kolom). Werkgever routes: `/horeca-personeel-inhuren`, `/hotel-personeel-amsterdam`, `/evenementen-personeel-amsterdam`, `/catering-personeel-amsterdam`, `/restaurant-personeel-amsterdam`. **Personeel-gezocht pagina's (5 stuks)**: `/horeca-personeel-gezocht` (hub, redirect van `/personeel-gezocht`), `/hotelpersoneel-inhuren` (hotel, redirect van `/hotel-personeel-gezocht`), `/eventpersoneel-inhuren` (event, redirect van `/event-personeel-gezocht`), `/cateringpersoneel-inhuren` (catering, redirect van `/cateringpersoneel-gezocht`), `/horecapersoneel-restaurants` (restaurant, redirect van `/horecapersoneel-gezocht`). PublicNav "Ik zoek extra personeel" linkt naar `/personeel-gezocht`; subnavigatie naar branchepagina's met nieuwe SEO URLs. Kandidaat routes: `/horeca-vacatures-amsterdam`, `/horeca-werk-amsterdam`, `/housekeeping-vacatures-amsterdam`, `/chef-vacatures-amsterdam`, `/front-office-vacatures-amsterdam`. SEO pillar pagina's (900-1200+ woorden): `/horeca-uitzendbureau-amsterdam` (hoofdpillar), `/horeca-personeel-amsterdam`, `/horeca-personeel`, `/flexibel-horeca-personeel`. Werkwijze pagina: `/horeca-uitzendbureau-amsterdam-werkwijze` (WerkwijzePage.tsx) — 10 secties: hero, intro, werkgever-stappen (4), selectieproces, data+technologie, favorietenpoule, wetgeving, medewerker-stappen (4), social proof logo's, CTA. Overige: `/klantcases-horeca`, `/contact`. Aliassen: `/blog`=NieuwsPage, `/onze-werkwijze`=HoeExtraWerkt, `/beloningssysteem`=Extraatje, `/ons-team`=OnsTeam. Legacy: `/landing`, `/over-extra`, `/hoe-extra-werkt`, `/ik-zoek-extra-werk`, `/extraatje`.
--   **Horeca Werk pagina**: `/horeca-werk` — volledige kandidaatgerichte pagina met 9 secties: Hero (met badges en twee CTAs), Werkzaamheden (6 taakaarten), Locaties (4 types plus logo grid van Hilton/Marriott/Amrâth etc.), Stappen (5-stap visueel proces), Waarom EXTRA (6 voordelen), Regio's (Amsterdam/Utrecht/Den Haag met stats), Testimonials (3 medewerker reviews), FAQ accordion (5 vragen), CTA banner. Route geregistreerd in App.tsx, sitemap bijgewerkt.
--   **Vacatures Systeem**: `/vacatures` overzichtspagina met filter sidebar (regio, functie, type, werkplek) + `/vacatures/:slug` detailpagina's. 10 statische vacatures in `client/src/data/vacatures.ts`. JobPosting JSON-LD structured data op beide pagina's. Footer link in PublicFooter + LandingPage. "Bekijk alle vacatures" knop op /ik-zoek-extra-werk. Filters werken client-side met native HTML checkboxes (geen shadcn Checkbox).
--   **Vacatures CMS**: Volledig DB-backed CMS voor vacaturebeheer. Tabel `vacancy_posts` met alle velden (titel, slug, functionType, serviceType, location, region, workplace, client, salaryMin, shortDescription, introductionText, aboutRole, responsibilities[], requirements[], offer[], workEnvironment, faqItems, SEO velden, status). Admin beheer via "Vacatures & SEO" tab in dashboard sidebar onder "Marketing & SEO". CRUD + publish/pause/archive/duplicate acties. SEO-scorebalk per vacature. 4-tabblad create/edit modal (Basisinfo, Inhoud, SEO, Publiceren) met auto-slug generatie. Publieke API `/api/vacatures` (alleen published) en detail via `/api/vacatures/:slug`. VacatureDetail.tsx fetcht DB-first met fallback naar statische data.
--   **Client Review Systeem**: Gestructureerd reviewsysteem met 6 echte klantreviews. Data in `client/src/data/reviews.ts` (velden: id, quote, author, role, company, companyType, categories[], logoKey). Herbruikbare `ClientReviewCard` component (`client/src/components/ClientReviewCard.tsx`) met `light`/`dark` varianten. Categorieën: hotels (Amrâth/D.Koops, Marriott/G.Di Domenico, Radisson/A.Schoenmaker), events (Westweelde/D.Sarda, Art Zoo/F.de Visser, H'ART Museum/T.Bakkenes), museums (Art Zoo, H'ART). Plaatsing: `/hotelpersoneel-inhuren` → hotels, `/eventpersoneel-inhuren` → events, `/klantcases-horeca` → alle categorieën in secties, `/landing` Klanten-tab → Amrâth + Westweelde + H'ART.
--   **KPI & Rapportage**: Admin dashboard tab onder "Marketing & SEO" in de sidebar. Endpoint `GET /api/admin/kpi` (met optionele `?from=&to=` datumfilters) aggregeert kandidaatdata uit de `candidates` tabel. UI toont: 4 sleutelcijfer-kaarten (totaal aanmeldingen, gesprekken gepland, aangenomen, gem. doorlooptijd), conversietrechter (aangemeld→CV→gesprek→aangenomen→afgewezen als horizontale balkgrafiek met percentages), maandelijkse trend-barchart (laatste 12 maanden: aanmeldingen/gesprekken/aangenomen), bronverdeling (sourceChannel als horizontale balkgrafiek), functieverdeling (per functionType met aangenomen/afgewezen counts), top nationaliteiten grid. CSV export-knop genereert een volledig rapport als `.csv` bestand met BOM voor Excel compatibiliteit.
--   **CRM Systeem (V1)**: Volledig CRM voor B2B relatiebeheer. DB-tabellen: `crm_companies`, `crm_contacts`, `crm_notes`, `crm_reminders`. Sidebar onder "Bedrijven": "Leads & Prospects" (tab: `crm-leads`), "Bestaande klanten" (tab: `crm-klanten`), "Reminders" (tab: `crm-reminders`). Bedrijfsbeheer: type (hotel/restaurant/eventlocatie/cateraar), fase (9 stappen voor prospects), A/B/C classificatie voor klanten, eigenaar/account owner (max/eveline/charlotte/lea), potentie, bron, vestigingen, risico-flagging. Bedrijfsdetail-drawer met 5 tabs: Overzicht, Contacten, Notities (tijdlijn met types: note/call/email/meeting/follow_up), Reminders (met auto-overdue detectie), Vestigingen. Reminder e-mail notificaties via SendGrid op aanmaak. Fase-update direct via dropdown in drawer header. CrmDashboardWidgets tonen verlopen/vandaagse reminders + nieuwe leads op de hoofddashboard-pagina. Component: `client/src/components/crm/CrmModule.tsx`. API routes: `/api/admin/crm/companies`, `/api/admin/crm/contacts`, `/api/admin/crm/notes`, `/api/admin/crm/reminders`.
--   **Prospect Campagnes Stap 5 — Flow Builder**: ReactFlow v11 gebaseerde visuele flow editor. Tabel `flow_steps` met campagneId, stepType (email/wait/condition), positie (x/y), config (JSON: onderwerp, html, delay, unit), next/nextElse. API routes: `GET/PUT /api/admin/prospect-campaigns/:id/flow-steps`, `POST /api/admin/prospect-campaigns/:id/flow-activate`, `GET /api/admin/prospect-campaigns/:id/flow-stats`. `server/flowEngine.ts` verwerkt actieve contacten (drip-logica), scheduler elke 5 min. FlowBuilderPage.tsx met ReactFlow canvas. "Flow voortgang" tab in campagne detail (actief/voltooid/gestopt/fout per stap).
--   **Prospect Campagnes Stap 6 — A/B Testing**: Volledig A/B test systeem. Schema: `ab_winnaar_bepaald_op`, `ab_test_fase` op `prospect_campaigns`; `is_ab_test_send` op `mail_sends`; `notificaties` tabel (type, titel, bericht, link, gelezen, aangemaaktOp). `server/abEngine.ts`: `bepaalABWinnaar` (op basis van open/click rate), `verstuurWinnaarNaarRest`, `checkABWinners` (automatisch na N uur). 40% testgroep logica in `emailService.ts`: shuffled contacten, 40% krijgt isAbTestSend=1 voor A/B varianten. API routes: `GET /api/admin/prospect-campaigns/:id/ab-stats`, `POST /api/admin/prospect-campaigns/:id/ab-pick-winner`, `GET/PUT /api/admin/notificaties`. Frontend: `ABRapportageTab` (winnaarstatus banner, twee-kolommen vergelijking, recharts tijdlijnsgrafiek, "Winnaar nu bepalen" modal) vervangt statistieken tab voor A/B campagnes. `NotificatieBel` component in dashboard header met badge teller.
--   **SEO Blog Systeem**: Volledig DB-backed CMS voor SEO artikelen. Tabel `blog_posts` met titel, slug, content (HTML), excerpt, meta_title, meta_description, focus_keyword, category, status (draft/scheduled/published), scheduled_at, published_at, image_url, image_alt, author, read_time, tags. Admin beheer via "Blog & SEO" tab in dashboard sidebar onder "Marketing & SEO". Auto-publish scheduler (elk uur). Sitemap via `/sitemap.xml`. Article JSON-LD structured data op artikelpagina's. AI-generatie via OpenAI (blueprint: javascript_openai_ai_integrations). Publieke pagina's: `/nieuws` (lijst, DB + statische fallback) en `/nieuws/:slug` (artikel, DB-first met HTML rendering).
+-   **Marketing & Communications**: Email template system, campaign management, and automation triggers.
+-   **Sollicitanten Import**: XLSX import for candidate data with fuzzy header matching and duplicate detection.
+-   **Candidate Management**: Pre-onboarding system including skills assessment, availability, GDPR, CV upload, and admin review flow for acceptance/rejection.
+-   **Public Website Pages**: SEO-optimized website structure with employer and candidate-focused pages, including dedicated English pages.
+-   **Vacancies System**: Overview and detail pages for job postings with client-side filtering and JobPosting JSON-LD.
+-   **Vacancies CMS**: Database-backed CMS for managing job postings with CRUD operations, SEO fields, and publishing workflow.
+-   **Client Review System**: Structured display of customer reviews with category filtering.
+-   **KPI & Reporting**: Admin dashboard for candidate data analytics, including key metrics, conversion funnel, trends, source distribution, and CSV export.
+-   **CRM System (V1)**: B2B CRM for company, contact, note, and reminder management, with email notifications and dashboard widgets.
+-   **Prospect Campaigns - Flow Builder**: Visual flow editor based on ReactFlow for defining multi-step campaigns (email, wait, condition).
+-   **Prospect Campaigns - A/B Testing**: System for A/B testing email campaigns based on open/click rates, with automated winner determination and reporting.
+-   **Prospect Campaigns - Statistieken Dashboard**: Comprehensive campaign performance dashboard (ProspectStatistiekenDashboard.tsx) with KPI cards (verzonden/open/click/uitschrijvingen), period + branch filters, recharts ComposedChart, campaign rankings table, branch horizontal bars, activity feed, and CSV export. Sidebar nav entry at prospect-statistieken. Plus T003 click-analyse extension in campaign detail statistieken tab: URL click table, collapsible "Geopend door" contact list, and "Niet geopend" contact list with follow-up campaign button.
+-   **SEO Blog System**: Database-backed CMS for blog posts with content management, scheduling, SEO fields, sitemap generation, and AI content generation integration.
 
 ### UI/UX
--   Modern UI built with shadcn/ui.
--   Mobile-optimized layouts for dashboards and leaderboards.
--   Visual progress bars for challenges and celebration animations for milestones.
--   **Admin Dashboard**: Redesigned with sidebar navigation, stats cards (Totaal Gebruikers, Actieve Gebruikers, Uitgegeven Punten, Gebruikersgroei), Top Presteerders widget, Inactieve Gebruikers panel, Te doen action items, and Recente Activiteit feed.
+-   Modern, mobile-optimized UI using shadcn/ui.
+-   Visual progress bars and celebration animations.
+-   Redesigned Admin Dashboard with sidebar navigation, key stats, and activity feeds.
 
 ### Deployment
-Configured for Replit autoscale deployment, utilizing Vite for frontend builds and `tsx` for development. Environment variables are used for configuration (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`).
-
-**Domein configuratie**: Alle e-maillinks en de sitemap.xml gebruiken `BASE_URL` (shared env var). Huidig: `https://brochure.doehetextra.nl`. Bij domeinswitch naar `doehetextra.nl`: wijzig alleen `BASE_URL` naar `https://doehetextra.nl`. Alle fallbacks in code staan ook op `brochure.doehetextra.nl`.
-
-### Important Technical Notes
--   **queryClient (`client/src/lib/queryClient.ts`)**: Has a `defaultQueryFn` that uses `queryKey[0]` as the URL and returns parsed JSON. All `useQuery` calls in DashboardMockup rely on this — do NOT remove it.
--   **apiRequest**: Supports 3 calling patterns: `(url, options)`, `(method, url, body)`, `(url, method, body)`. Returns parsed JSON (not a Response object).
--   **Candidate flow**: Step 1 "Ga verder" triggers `POST /api/aanmelden` with `partial:true`. This creates the candidate immediately in the DB as `status='in_behandeling'`. The admin Kandidaten tab shows them under "In proces". The "Vernieuwen" button and 30-second auto-refresh keep the list current.
+Configured for Replit autoscale deployment with Vite for frontend builds and `tsx` for development. Environment variables are used for configuration (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`). All email links and sitemap.xml use the `BASE_URL` environment variable for domain configuration.
 
 ## External Dependencies
--   **PostgreSQL Database**: Main data store.
--   **SendGrid API**: Email delivery service (with mock mode for development).
--   **External Planning API**: Integration for workforce planning via `user.apiId` field.
--   **Google Analytics**: (Optional) For A/B testing and user behavior.
--   **Canvas Confetti**: (Optional) For celebration animations.
+-   **PostgreSQL Database**: Primary data persistence.
+-   **SendGrid API**: Email delivery services.
+-   **External Planning API**: Integration for workforce planning.
+-   **Google Analytics**: User behavior tracking.
+-   **Canvas Confetti**: Visual celebration effects.
+-   **OpenAI**: AI content generation for the blog system.

@@ -31,6 +31,7 @@ import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 import NotificationCenter from '@/components/NotificationCenter';
 import NotificatieBel from '@/components/NotificatieBel';
+import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
 
 type User = {
   id: number;
@@ -856,6 +857,7 @@ export default function DashboardMockup() {
                 { icon: Gift, label: 'Verjaardagen', tab: 'bedrijven-verjaardagen' },
                 { icon: Users, label: 'Contacten', tab: 'prospect-contacten' },
                 { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
+                { icon: BarChart3, label: 'Statistieken', tab: 'prospect-statistieken' },
               ].map(item => (
                 <button
                   key={item.tab}
@@ -3950,6 +3952,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
               <ProspectCampagnesTab />
             </div>
+
+          ) : activeTab === 'prospect-statistieken' ? (
+            <ProspectStatistiekenDashboard />
 
           ) : activeTab === 'bedrijven-aanvragen' ? (
             /* ─── PERSONEELSAANVRAGEN tab ─── */

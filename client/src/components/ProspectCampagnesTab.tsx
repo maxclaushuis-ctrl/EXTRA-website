@@ -31,7 +31,7 @@ import {
   AlertTriangle, RefreshCw, Search, Eye, MousePointer, CheckCircle, Clock, X,
   Megaphone, MailOpen, MoreVertical, ImageIcon, Play, Square, Copy, Rocket,
   ArrowLeft, ArrowRight, SlidersHorizontal, Calendar, Timer, FlaskConical,
-  Zap, TrendingUp, Tag,
+  Zap, TrendingUp, Tag, ChevronDown, ChevronUp, UserMinus, ExternalLink,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1087,6 +1087,20 @@ export default function ProspectCampagnesTab() {
     refetchInterval: 30000,
   });
 
+  type KlikRegel = { url: string; kliks: number; unieke_kliks: number };
+  type ContactRegel = { id: number; name: string; email: string; company?: string | null };
+  type KlikAnalyseData = { klik_analyse: KlikRegel[]; geopend_door: ContactRegel[]; niet_geopend: ContactRegel[] };
+
+  const { data: klikAnalyse, isLoading: klikLoading } = useQuery<KlikAnalyseData>({
+    queryKey: ['/api/admin/prospect-campaigns', selectedId, 'click-analyse'],
+    enabled: !!selectedId && detailTab === 'statistieken' && isSentStatus(selectedCampaign?.status ?? ''),
+    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/click-analyse`, { credentials: 'include' }).then(r => r.json()),
+  });
+
+  const [klikAnalyseOpen, setKlikAnalyseOpen] = useState(false);
+  const [geopendOpen, setGeopendOpen] = useState(false);
+  const [nietGeopendOpen, setNietGeopendOpen] = useState(false);
+
   // ── Mutations
   const deleteMut = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/prospect-campaigns/${id}`),
@@ -1486,6 +1500,188 @@ export default function ProspectCampagnesTab() {
                       </div>
                     </div>
                   )}
+
+                  {/* ── Klik-analyse tabel ── */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden">
+                    <button
+                      className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+                      onClick={() => setKlikAnalyseOpen(o => !o)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MousePointer className="h-4 w-4 text-purple-500" />
+                        <span className="text-sm font-semibold text-slate-700">URL Klik-analyse</span>
+                        {(klikAnalyse?.klik_analyse?.length ?? 0) > 0 && (
+                          <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">
+                            {klikAnalyse!.klik_analyse.length} URL{klikAnalyse!.klik_analyse.length !== 1 ? "'s" : ''}
+                          </span>
+                        )}
+                      </div>
+                      {klikAnalyseOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                    </button>
+                    {klikAnalyseOpen && (
+                      <div className="p-4">
+                        {klikLoading ? (
+                          <div className="py-6 text-center text-slate-300 text-sm"><RefreshCw className="h-4 w-4 animate-spin mx-auto" /></div>
+                        ) : (klikAnalyse?.klik_analyse?.length ?? 0) === 0 ? (
+                          <div className="py-8 text-center">
+                            <MousePointer className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+                            <p className="text-sm text-slate-400">Nog geen klikken geregistreerd</p>
+                            <p className="text-xs text-slate-300 mt-1">Klikdata wordt bijgehouden zodra ontvangers op links klikken</p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-slate-100 text-slate-400">
+                                  <th className="text-left pb-2 font-semibold">URL</th>
+                                  <th className="text-right pb-2 font-semibold">Totaal</th>
+                                  <th className="text-right pb-2 font-semibold">Uniek</th>
+                                  <th className="text-right pb-2 font-semibold">CTR</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {klikAnalyse!.klik_analyse.map((k, i) => {
+                                  const ctr = campaignStats?.verzonden
+                                    ? ((k.unieke_kliks / campaignStats.verzonden) * 100).toFixed(1)
+                                    : '—';
+                                  return (
+                                    <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors group">
+                                      <td className="py-2.5 pr-4 max-w-[280px]">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="truncate text-slate-600">{k.url}</span>
+                                          <a href={k.url} target="_blank" rel="noopener noreferrer"
+                                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <ExternalLink className="h-3 w-3 text-slate-300 hover:text-purple-500" />
+                                          </a>
+                                        </div>
+                                      </td>
+                                      <td className="py-2.5 text-right font-medium text-slate-700">{k.kliks}</td>
+                                      <td className="py-2.5 text-right text-slate-500">{k.unieke_kliks}</td>
+                                      <td className="py-2.5 text-right font-semibold text-purple-600">{ctr}%</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Geopend door ── */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden">
+                    <button
+                      className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+                      onClick={() => setGeopendOpen(o => !o)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MailOpen className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-semibold text-slate-700">Geopend door</span>
+                        {(klikAnalyse?.geopend_door?.length ?? 0) > 0 && (
+                          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                            {klikAnalyse!.geopend_door.length} contact{klikAnalyse!.geopend_door.length !== 1 ? 'en' : ''}
+                          </span>
+                        )}
+                      </div>
+                      {geopendOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                    </button>
+                    {geopendOpen && (
+                      <div className="p-4">
+                        {klikLoading ? (
+                          <div className="py-4 text-center text-slate-300 text-sm"><RefreshCw className="h-4 w-4 animate-spin mx-auto" /></div>
+                        ) : (klikAnalyse?.geopend_door?.length ?? 0) === 0 ? (
+                          <p className="py-6 text-center text-sm text-slate-400">Nog niemand heeft de e-mail geopend</p>
+                        ) : (
+                          <div className="space-y-1 max-h-64 overflow-y-auto">
+                            {klikAnalyse!.geopend_door.map(c => (
+                              <div key={c.id} className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-green-50/50 transition-colors group">
+                                <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-[10px] font-semibold text-green-600">{c.name[0]?.toUpperCase()}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-slate-700 truncate">{c.name}</p>
+                                  {c.company && <p className="text-[10px] text-slate-400 truncate">{c.company}</p>}
+                                </div>
+                                <span className="text-[10px] text-slate-300 truncate hidden group-hover:block">{c.email}</span>
+                                <CheckCircle className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Niet geopend + follow-up ── */}
+                  <div className="border border-orange-200 rounded-xl overflow-hidden">
+                    <button
+                      className="w-full flex items-center justify-between px-5 py-3.5 bg-orange-50 hover:bg-orange-100/60 transition-colors text-left"
+                      onClick={() => setNietGeopendOpen(o => !o)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <UserMinus className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm font-semibold text-slate-700">Niet geopend</span>
+                        {(klikAnalyse?.niet_geopend?.length ?? 0) > 0 && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">
+                            {klikAnalyse!.niet_geopend.length} contact{klikAnalyse!.niet_geopend.length !== 1 ? 'en' : ''}
+                          </span>
+                        )}
+                      </div>
+                      {nietGeopendOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                    </button>
+                    {nietGeopendOpen && (
+                      <div className="p-4 space-y-3">
+                        {klikLoading ? (
+                          <div className="py-4 text-center text-slate-300 text-sm"><RefreshCw className="h-4 w-4 animate-spin mx-auto" /></div>
+                        ) : (klikAnalyse?.niet_geopend?.length ?? 0) === 0 ? (
+                          <p className="py-6 text-center text-sm text-slate-400">Iedereen heeft de e-mail geopend 🎉</p>
+                        ) : (
+                          <>
+                            <div className="space-y-1 max-h-56 overflow-y-auto">
+                              {klikAnalyse!.niet_geopend.map(c => (
+                                <div key={c.id} className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-orange-50/50 transition-colors">
+                                  <div className="h-6 w-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-[10px] font-semibold text-orange-500">{c.name[0]?.toUpperCase()}</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-700 truncate">{c.name}</p>
+                                    {c.company && <p className="text-[10px] text-slate-400 truncate">{c.company}</p>}
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 truncate max-w-[120px] hidden sm:block">{c.email}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Follow-up knop */}
+                            <div className="border-t border-orange-100 pt-3">
+                              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                                <p className="text-xs text-slate-600 mb-3">
+                                  <span className="font-semibold text-slate-700">{klikAnalyse!.niet_geopend.length} contacten</span> hebben
+                                  {" "}<span className="font-medium">"{selectedCampaign.name}"</span> niet geopend.
+                                  Stuur hen een follow-up herinnering.
+                                </p>
+                                <Button
+                                  size="sm"
+                                  className="bg-orange-500 hover:bg-orange-600 text-white w-full gap-2 text-xs"
+                                  onClick={() => {
+                                    const ids = klikAnalyse!.niet_geopend.map(c => c.id).join(',');
+                                    toast({
+                                      title: 'Follow-up contacten geselecteerd',
+                                      description: `${klikAnalyse!.niet_geopend.length} contacten klaar. Maak een nieuwe campagne aan en selecteer deze contacten.`,
+                                    });
+                                  }}
+                                >
+                                  <Send className="h-3.5 w-3.5" />
+                                  Verstuur follow-up campagne
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {selectedCampaign.sentAt && (
                     <p className="text-xs text-gray-400">Verzonden op: {new Date(selectedCampaign.sentAt).toLocaleString('nl-NL')}</p>

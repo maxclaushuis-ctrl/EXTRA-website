@@ -41,7 +41,7 @@ import { initPushNotificationService, getPushNotificationService, NotificationTe
 import { WebSocketServer, WebSocket } from 'ws';
 import { db } from "./db";
 import { users, candidates as candidatesTable, applications } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
 import { getSupabaseAdmin, extractCvStoragePath, downloadCvBuffer } from './supabase';
 
@@ -5290,6 +5290,432 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err) {
       console.error("[ProspectCampaign] Stats fout:", err);
       return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // ─── Statistieken Dashboard routes (Stap 7) ──────────────────────────────
+
+  // Helper: parse date filters
+  function parsePeriod(vanaf?: string, tot?: string) {
+    const nu = new Date();
+    const tot_dt = tot ? new Date(tot) : nu;
+    tot_dt.setHours(23, 59, 59, 999);
+    const vanaf_dt = vanaf ? new Date(vanaf) : new Date(nu.getTime() - 30 * 86400000);
+    vanaf_dt.setHours(0, 0, 0, 0);
+    const dagVerschil = Math.round((tot_dt.getTime() - vanaf_dt.getTime()) / 86400000);
+    const granularity = dagVerschil <= 14 ? 'day' : dagVerschil <= 90 ? 'week' : 'month';
+    // previous period of same length
+    const prev_tot = new Date(vanaf_dt.getTime() - 1);
+    const prev_vanaf = new Date(vanaf_dt.getTime() - (dagVerschil + 1) * 86400000);
+    return { vanaf_dt, tot_dt, granularity, prev_vanaf, prev_tot };
+  }
+
+  function brancheWhere(alias: string, branches: string[]): string {
+    if (!branches || branches.length === 0) return '';
+    const quoted = branches.map(b => `'${b.replace(/'/g, "''")}'`).join(',');
+    return ` AND (${alias}.branche_filter = '{}' OR ${alias}.branche_filter && ARRAY[${quoted}]::text[])`;
+  }
+
+  app.get("/api/admin/stats/overview", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { vanaf, tot, branche } = req.query as Record<string, any>;
+      const branches: string[] = branche ? (Array.isArray(branche) ? branche : [branche]) : [];
+      const { vanaf_dt, tot_dt, granularity, prev_vanaf, prev_tot } = parsePeriod(vanaf, tot);
+      const bWhere = brancheWhere('pc', branches);
+
+      // KPI current period
+      const kpiSQL = `
+        SELECT
+          COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS totaal_verzonden,
+          COUNT(DISTINCT me_open.mail_send_id) AS geopend,
+          COUNT(DISTINCT me_click.mail_send_id) AS geklikt,
+          COUNT(me_unsub.id) AS uitgeschreven
+        FROM mail_sends ms
+        JOIN prospect_campaigns pc ON pc.id = ms.campaign_id
+        LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
+        WHERE ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        ${bWhere}
+      `;
+
+      // KPI previous period
+      const kpiPrevSQL = `
+        SELECT
+          COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS totaal_verzonden,
+          COUNT(DISTINCT me_open.mail_send_id) AS geopend,
+          COUNT(DISTINCT me_click.mail_send_id) AS geklikt,
+          COUNT(me_unsub.id) AS uitgeschreven
+        FROM mail_sends ms
+        JOIN prospect_campaigns pc ON pc.id = ms.campaign_id
+        LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
+        WHERE ms.verzonden_op >= '${prev_vanaf.toISOString()}' AND ms.verzonden_op <= '${prev_tot.toISOString()}'
+        ${bWhere}
+      `;
+
+      // Tijdlijn (group by period)
+      const tijdlijnSQL = `
+        SELECT
+          DATE_TRUNC('${granularity}', ms.verzonden_op) AS periode,
+          COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS verzonden,
+          COUNT(DISTINCT me_open.mail_send_id) AS geopend,
+          COUNT(DISTINCT me_click.mail_send_id) AS geklikt
+        FROM mail_sends ms
+        JOIN prospect_campaigns pc ON pc.id = ms.campaign_id
+        LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        WHERE ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        ${bWhere}
+        GROUP BY DATE_TRUNC('${granularity}', ms.verzonden_op)
+        ORDER BY periode
+      `;
+
+      // Per branche
+      const brancheSQL = `
+        SELECT
+          UNNEST(pc.branche_filter) AS branche,
+          COUNT(DISTINCT pc.id) AS campagnes,
+          COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS bereikt,
+          COUNT(DISTINCT me_open.mail_send_id) AS geopend,
+          COUNT(DISTINCT me_click.mail_send_id) AS geklikt
+        FROM prospect_campaigns pc
+        LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
+          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        WHERE ARRAY_LENGTH(pc.branche_filter, 1) > 0
+        GROUP BY branche
+        ORDER BY bereikt DESC
+      `;
+
+      const [kpiRows, kpiPrevRows, tijdlijnRows, brancheRows] = await Promise.all([
+        db.execute(sql.raw(kpiSQL)),
+        db.execute(sql.raw(kpiPrevSQL)),
+        db.execute(sql.raw(tijdlijnSQL)),
+        db.execute(sql.raw(brancheSQL)),
+      ]);
+
+      const k = (kpiRows.rows as any[])[0] || {};
+      const kp = (kpiPrevRows.rows as any[])[0] || {};
+      const tv = parseInt(k.totaal_verzonden) || 0;
+      const tvp = parseInt(kp.totaal_verzonden) || 0;
+      const geopend = parseInt(k.geopend) || 0;
+      const geklikt = parseInt(k.geklikt) || 0;
+      const uitgeschreven = parseInt(k.uitgeschreven) || 0;
+      const geopendV = parseInt(kp.geopend) || 0;
+      const gekliktV = parseInt(kp.geklikt) || 0;
+      const uitgeschrevenV = parseInt(kp.uitgeschreven) || 0;
+
+      const tijdlijn = (tijdlijnRows.rows as any[]).map(r => {
+        const v = parseInt(r.verzonden) || 0;
+        const g = parseInt(r.geopend) || 0;
+        const c = parseInt(r.geklikt) || 0;
+        return {
+          periode: r.periode,
+          verzonden: v,
+          open_rate: v > 0 ? Math.round((g / v) * 1000) / 10 : 0,
+          click_rate: v > 0 ? Math.round((c / v) * 1000) / 10 : 0,
+          geopend: g,
+          geklikt: c,
+        };
+      });
+
+      const per_branche = (brancheRows.rows as any[]).map(r => {
+        const ber = parseInt(r.bereikt) || 0;
+        const g = parseInt(r.geopend) || 0;
+        const c = parseInt(r.geklikt) || 0;
+        return {
+          branche: r.branche,
+          campagnes: parseInt(r.campagnes) || 0,
+          bereikt: ber,
+          open_rate: ber > 0 ? Math.round((g / ber) * 1000) / 10 : 0,
+          click_rate: ber > 0 ? Math.round((c / ber) * 1000) / 10 : 0,
+        };
+      });
+
+      return res.json({
+        kpi: {
+          totaal_verzonden: tv,
+          totaal_verzonden_vorige: tvp,
+          gem_open_rate: tv > 0 ? Math.round((geopend / tv) * 1000) / 10 : 0,
+          gem_open_rate_vorige: tvp > 0 ? Math.round((geopendV / tvp) * 1000) / 10 : 0,
+          gem_click_rate: tv > 0 ? Math.round((geklikt / tv) * 1000) / 10 : 0,
+          gem_click_rate_vorige: tvp > 0 ? Math.round((gekliktV / tvp) * 1000) / 10 : 0,
+          uitschrijvingen: uitgeschreven,
+          uitschrijvingen_vorige: uitgeschrevenV,
+        },
+        tijdlijn,
+        per_branche,
+        granularity,
+      });
+    } catch (err: any) {
+      console.error('[stats/overview]', err);
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
+  app.get("/api/admin/stats/campaigns", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { vanaf, tot, branche, sort_by = 'open_rate', sort_dir = 'desc', page = '1', per_page = '10' } = req.query as Record<string, any>;
+      const branches: string[] = branche ? (Array.isArray(branche) ? branche : [branche]) : [];
+      const { vanaf_dt, tot_dt } = parsePeriod(vanaf, tot);
+      const bWhere = brancheWhere('pc', branches);
+      const offset = (parseInt(page) - 1) * parseInt(per_page);
+
+      const validSort: Record<string, string> = {
+        open_rate: 'open_rate', click_rate: 'click_rate',
+        verzonden: 'verzonden', naam: 'pc.name', datum: 'pc.sent_at',
+      };
+      const sortCol = validSort[sort_by] || 'open_rate';
+      const sortDir = sort_dir === 'asc' ? 'ASC' : 'DESC';
+
+      const campagnesSQL = `
+        SELECT
+          pc.id, pc.name, pc.campagne_type, pc.status, pc.sent_at, pc.branche_filter,
+          pc.ab_test_actief,
+          COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS verzonden,
+          COUNT(ms.id) FILTER (WHERE ms.status = 'failed') AS mislukt,
+          COUNT(DISTINCT me_open.mail_send_id) AS geopend,
+          COUNT(DISTINCT me_click.mail_send_id) AS geklikt,
+          COUNT(me_unsub.id) AS uitgeschreven,
+          CASE WHEN COUNT(ms.id) FILTER (WHERE ms.status='sent') > 0
+            THEN ROUND(COUNT(DISTINCT me_open.mail_send_id)::numeric / COUNT(ms.id) FILTER (WHERE ms.status='sent') * 100, 1)
+            ELSE 0 END AS open_rate,
+          CASE WHEN COUNT(ms.id) FILTER (WHERE ms.status='sent') > 0
+            THEN ROUND(COUNT(DISTINCT me_click.mail_send_id)::numeric / COUNT(ms.id) FILTER (WHERE ms.status='sent') * 100, 1)
+            ELSE 0 END AS click_rate
+        FROM prospect_campaigns pc
+        LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
+          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
+        WHERE pc.status NOT IN ('concept', 'draft') OR EXISTS (
+          SELECT 1 FROM mail_sends ms2 WHERE ms2.campaign_id = pc.id
+            AND ms2.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms2.verzonden_op <= '${tot_dt.toISOString()}'
+        )
+        ${bWhere}
+        GROUP BY pc.id
+        ORDER BY ${sortCol} ${sortDir} NULLS LAST
+        LIMIT ${parseInt(per_page)} OFFSET ${offset}
+      `;
+
+      const countSQL = `
+        SELECT COUNT(DISTINCT pc.id) AS total
+        FROM prospect_campaigns pc
+        LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
+          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        WHERE pc.status NOT IN ('concept', 'draft') OR ms.id IS NOT NULL
+        ${bWhere}
+      `;
+
+      const [rows, countRows] = await Promise.all([
+        db.execute(sql.raw(campagnesSQL)),
+        db.execute(sql.raw(countSQL)),
+      ]);
+
+      const campagnes = (rows.rows as any[]).map(r => ({
+        id: r.id, naam: r.name, type: r.campagne_type, status: r.status,
+        datum: r.sent_at, branche_filter: r.branche_filter || [],
+        abTestActief: r.ab_test_actief,
+        verzonden: parseInt(r.verzonden) || 0,
+        mislukt: parseInt(r.mislukt) || 0,
+        geopend: parseInt(r.geopend) || 0,
+        geklikt: parseInt(r.geklikt) || 0,
+        uitgeschreven: parseInt(r.uitgeschreven) || 0,
+        open_rate: parseFloat(r.open_rate) || 0,
+        click_rate: parseFloat(r.click_rate) || 0,
+      }));
+
+      return res.json({
+        campagnes,
+        total: parseInt((countRows.rows as any[])[0]?.total) || 0,
+        page: parseInt(page),
+        per_page: parseInt(per_page),
+      });
+    } catch (err: any) {
+      console.error('[stats/campaigns]', err);
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
+  app.get("/api/admin/stats/activity", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { limit = '20', offset = '0' } = req.query as Record<string, any>;
+
+      const activitySQL = `
+        SELECT
+          me.id, me.type, me.timestamp, me.url,
+          ms.email, ms.campaign_id, ms.variant,
+          pc.name AS campaign_name, pc.ab_test_actief,
+          pc.ab_winnaar_variant, pc.ab_winnaar_bepaald_op,
+          pcon.name AS contact_naam, pcon.company AS contact_bedrijf
+        FROM mail_events me
+        JOIN mail_sends ms ON ms.id = me.mail_send_id
+        JOIN prospect_campaigns pc ON pc.id = ms.campaign_id
+        LEFT JOIN prospect_contacts pcon ON pcon.id = ms.contact_id
+        ORDER BY me.timestamp DESC
+        LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+      `;
+
+      const countSQL = `SELECT COUNT(*) AS total FROM mail_events`;
+
+      const [rows, countRows] = await Promise.all([
+        db.execute(sql.raw(activitySQL)),
+        db.execute(sql.raw(countSQL)),
+      ]);
+
+      const activiteiten = (rows.rows as any[]).map(r => ({
+        id: r.id, type: r.type, timestamp: r.timestamp, url: r.url,
+        email: r.email,
+        campaign_name: r.campaign_name,
+        contact_naam: r.contact_naam || null,
+        contact_bedrijf: r.contact_bedrijf || null,
+        variant: r.variant,
+        ab_winnaar: r.ab_test_actief && r.ab_winnaar_variant ? {
+          variant: r.ab_winnaar_variant,
+          op: r.ab_winnaar_bepaald_op,
+        } : null,
+      }));
+
+      return res.json({
+        activiteiten,
+        total: parseInt((countRows.rows as any[])[0]?.total) || 0,
+      });
+    } catch (err: any) {
+      console.error('[stats/activity]', err);
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
+  app.get("/api/admin/stats/export/csv", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { vanaf, tot, branche } = req.query as Record<string, any>;
+      const branches: string[] = branche ? (Array.isArray(branche) ? branche : [branche]) : [];
+      const { vanaf_dt, tot_dt } = parsePeriod(vanaf, tot);
+      const bWhere = brancheWhere('pc', branches);
+
+      const exportSQL = `
+        SELECT
+          pc.name AS naam, pc.campagne_type AS type, pc.status,
+          pc.branche_filter,
+          pc.sent_at AS verzonden_op,
+          COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS totaal_verzonden,
+          COUNT(DISTINCT me_open.mail_send_id) AS geopend,
+          CASE WHEN COUNT(ms.id) FILTER (WHERE ms.status='sent') > 0
+            THEN ROUND(COUNT(DISTINCT me_open.mail_send_id)::numeric / COUNT(ms.id) FILTER (WHERE ms.status='sent') * 100, 1)
+            ELSE 0 END AS open_rate_pct,
+          COUNT(DISTINCT me_click.mail_send_id) AS geklikt,
+          CASE WHEN COUNT(ms.id) FILTER (WHERE ms.status='sent') > 0
+            THEN ROUND(COUNT(DISTINCT me_click.mail_send_id)::numeric / COUNT(ms.id) FILTER (WHERE ms.status='sent') * 100, 1)
+            ELSE 0 END AS click_rate_pct,
+          COUNT(me_unsub.id) AS uitgeschreven,
+          COUNT(ms.id) FILTER (WHERE ms.status = 'failed') AS mislukt
+        FROM prospect_campaigns pc
+        LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
+          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
+        ${bWhere}
+        GROUP BY pc.id
+        ORDER BY pc.sent_at DESC NULLS LAST
+      `;
+
+      const rows = await db.execute(sql.raw(exportSQL));
+      const header = 'Campagnenaam,Type,Status,Branche_filter,Verzonden_op,Totaal_verzonden,Geopend,Open_rate_pct,Geklikt,Click_rate_pct,Uitgeschreven,Mislukt\n';
+      const csvRows = (rows.rows as any[]).map(r =>
+        [
+          `"${(r.naam || '').replace(/"/g, '""')}"`,
+          r.type || '', r.status || '',
+          `"${(r.branche_filter || []).join('; ')}"`,
+          r.verzonden_op ? new Date(r.verzonden_op).toLocaleDateString('nl-NL') : '',
+          r.totaal_verzonden || 0, r.geopend || 0, r.open_rate_pct || 0,
+          r.geklikt || 0, r.click_rate_pct || 0,
+          r.uitgeschreven || 0, r.mislukt || 0,
+        ].join(',')
+      ).join('\n');
+
+      const datum = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="EXTRA-statistieken-${datum}.csv"`);
+      return res.send('\uFEFF' + header + csvRows);
+    } catch (err: any) {
+      console.error('[stats/export/csv]', err);
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
+  // Click-analyse voor individuele campagne
+  app.get("/api/admin/prospect-campaigns/:id/click-analyse", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+
+      const clickSQL = `
+        SELECT
+          me.url,
+          COUNT(*) AS totaal_kliks,
+          COUNT(DISTINCT ms.id) AS unieke_kliks
+        FROM mail_events me
+        JOIN mail_sends ms ON ms.id = me.mail_send_id
+        WHERE ms.campaign_id = ${id} AND me.type = 'click' AND me.url IS NOT NULL
+        GROUP BY me.url
+        ORDER BY totaal_kliks DESC
+      `;
+
+      const openConSQL = `
+        SELECT
+          pcon.id, pcon.name, pcon.company, pcon.email,
+          MIN(me.timestamp) AS geopend_op,
+          BOOL_OR(me_click.id IS NOT NULL) AS heeft_geklikt
+        FROM mail_sends ms
+        JOIN mail_events me ON me.mail_send_id = ms.id AND me.type = 'open'
+        LEFT JOIN prospect_contacts pcon ON pcon.id = ms.contact_id
+        LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
+        WHERE ms.campaign_id = ${id}
+        GROUP BY pcon.id, pcon.name, pcon.company, pcon.email
+        ORDER BY geopend_op ASC
+        LIMIT 100
+      `;
+
+      const nietOpenSQL = `
+        SELECT
+          pcon.id, pcon.name, pcon.company, pcon.email
+        FROM mail_sends ms
+        LEFT JOIN prospect_contacts pcon ON pcon.id = ms.contact_id
+        WHERE ms.campaign_id = ${id} AND ms.status = 'sent'
+          AND NOT EXISTS (
+            SELECT 1 FROM mail_events me WHERE me.mail_send_id = ms.id AND me.type = 'open'
+          )
+        LIMIT 200
+      `;
+
+      const [clickRows, openConRows, nietOpenRows] = await Promise.all([
+        db.execute(sql.raw(clickSQL)),
+        db.execute(sql.raw(openConSQL)),
+        db.execute(sql.raw(nietOpenSQL)),
+      ]);
+
+      return res.json({
+        klik_analyse: (clickRows.rows as any[]).map(r => ({
+          url: r.url,
+          kliks: parseInt(r.totaal_kliks) || 0,
+          unieke_kliks: parseInt(r.unieke_kliks) || 0,
+        })),
+        geopend_door: (openConRows.rows as any[]).map(r => ({
+          id: r.id, name: r.name, company: r.company, email: r.email,
+          geopend_op: r.geopend_op, heeft_geklikt: r.heeft_geklikt,
+        })),
+        niet_geopend: (nietOpenRows.rows as any[]).map(r => ({
+          id: r.id, name: r.name, company: r.company, email: r.email,
+        })),
+      });
+    } catch (err: any) {
+      console.error('[click-analyse]', err);
+      return res.status(500).json({ message: err?.message || 'Fout' });
     }
   });
 

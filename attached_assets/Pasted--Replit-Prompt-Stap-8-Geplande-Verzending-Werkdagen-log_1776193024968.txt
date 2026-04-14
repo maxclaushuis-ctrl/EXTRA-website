@@ -1,0 +1,600 @@
+# Replit Prompt — Stap 8: Geplande Verzending & Werkdagen-logica
+
+## Wat je gaat doen
+Bouw de volledige geplande verzending infrastructuur. Dit is de laatste stap en maakt het systeem compleet. Campagnes kunnen nu ingepland worden op een specifiek datum en tijdstip, met automatische correctie naar werkdagen en tijdvensters. Een robuuste scheduler controleert continu welke campagnes klaar staan om verzonden te worden.
+
+---
+
+## 1. Database — uitbreiding bestaande tabellen
+
+Voeg de volgende kolommen toe aan de `campaigns` tabel als ze nog niet bestaan:
+
+```sql
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS verzend_op DATETIME;
+-- Het gewenste verzenddatum/-tijdstip (zoals ingesteld door de gebruiker)
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS werkelijk_verzend_op DATETIME;
+-- Het daadwerkelijke verzenddatijdstip na correctie voor werkdagen/tijdvenster
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS tijdzone TEXT DEFAULT 'Europe/Amsterdam';
+-- Tijdzone voor verzendberekeningen
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS verzend_direct INTEGER DEFAULT 0;
+-- 1 = direct verzenden bij activatie, 0 = gebruik verzend_op
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS alleen_werkdagen INTEGER DEFAULT 1;
+-- 1 = alleen ma-vr, 0 = ook weekend
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS tijdvenster_start TEXT DEFAULT '08:00';
+-- Vroegste verzenddtijdstip op een dag (HH:MM formaat)
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS tijdvenster_eind TEXT DEFAULT '18:00';
+-- Laatste verzenddtijdstip op een dag (HH:MM formaat)
+```
+
+Voeg een nieuwe tabel toe voor de scheduler log:
+```sql
+CREATE TABLE IF NOT EXISTS scheduler_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL,           -- campaign_check, flow_check, ab_check, verzending_gestart
+  campaign_id INTEGER,
+  bericht TEXT,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 2. Werkdagen & tijdvenster berekening
+
+Schrijf een utility module `schedulerUtils.js` met de volgende functies:
+
+### `isWerkdag(datum)`
+```javascript
+// Geeft true als de datum een werkdag is (ma-vr)
+// datum = JavaScript Date object
+// Gebruik getDay(): 0 = zondag, 6 = zaterdag
+function isWerkdag(datum) {
+  const dag = datum.getDay();
+  return dag !== 0 && dag !== 6;
+}
+```
+
+### `isBinnenTijdvenster(datum, start, eind)`
+```javascript
+// Geeft true als het tijdstip binnen het ingestelde venster valt
+// start en eind zijn strings in 'HH:MM' formaat
+// Vergelijk uren en minuten van de datum
+function isBinnenTijdvenster(datum, start, eind) {
+  const uren = datum.getHours();
+  const minuten = datum.getMinutes();
+  const [startUur, startMin] = start.split(':').map(Number);
+  const [eindUur, eindMin] = eind.split(':').map(Number);
+  
+  const huidigMinuten = uren * 60 + minuten;
+  const startMinuten = startUur * 60 + startMin;
+  const eindMinuten = eindUur * 60 + eindMin;
+  
+  return huidigMinuten >= startMinuten && huidigMinuten <= eindMinuten;
+}
+```
+
+### `berekenWerkelijkVerzendMoment(gewenstMoment, alleenWerkdagen, tijdvensterStart, tijdvensterEind)`
+```javascript
+// Berekent het daadwerkelijke verzendmoment op basis van:
+// - Het gewenste moment
+// - Of alleen werkdagen toegestaan zijn
+// - Het tijdvenster
+
+// Logica:
+// 1. Start met het gewenste moment
+// 2. Als alleen_werkdagen = true EN het is geen werkdag:
+//    → Verschuif naar de eerstvolgende maandag (behoud tijd)
+// 3. Als het tijdstip vóór tijdvenster_start valt:
+//    → Verschuif tijd naar tijdvenster_start van dezelfde dag
+//    → Als dat een niet-werkdag is, ga naar volgende werkdag
+// 4. Als het tijdstip ná tijdvenster_eind valt:
+//    → Verschuif naar tijdvenster_start van de VOLGENDE dag
+//    → Als die dag een niet-werkdag is, ga naar volgende werkdag
+// 5. Geef het gecorrigeerde moment terug
+
+// Voorbeeld:
+// Gewenst: vrijdag 20:00, tijdvenster 08:00-18:00, alleen werkdagen
+// Resultaat: maandag 08:00
+```
+
+### `getVolgendeWerkdag(datum)`
+```javascript
+// Geeft de eerstvolgende werkdag terug vanaf de gegeven datum
+// Als datum zelf al een werkdag is, geef de dag erna
+```
+
+### `formatNLDatum(datum)`
+```javascript
+// Formatteer datum in Nederlands leesbaar formaat
+// bijv. "maandag 14 april 2026 om 09:00"
+```
+
+---
+
+## 3. Hoofdscheduler — uitbreiding en consolidatie
+
+Consolideer alle bestaande schedulers (flow scheduler uit stap 5, A/B checker uit stap 6) en voeg de campagne-verzendscheduler toe in één centrale `scheduler.js`:
+
+```javascript
+// scheduler.js — Centrale scheduler voor het EXTRA e-mailplatform
+
+import { runFlowScheduler } from './flowEngine.js';
+import { checkABWinners } from './abService.js';
+import { checkGeplandeCampagnes } from './campaignScheduler.js';
+import { logScheduler } from './schedulerUtils.js';
+
+export async function runAllSchedulers() {
+  const startTijd = Date.now();
+  
+  try {
+    // 1. Check geplande campagnes (bulk)
+    await checkGeplandeCampagnes();
+    
+    // 2. Verwerk flow stappen
+    await runFlowScheduler();
+    
+    // 3. Check A/B winnaars
+    await checkABWinners();
+    
+    const duur = Date.now() - startTijd;
+    await logScheduler('scheduler_run', null, `Voltooid in ${duur}ms`);
+    
+  } catch (err) {
+    console.error('Scheduler fout:', err);
+    await logScheduler('scheduler_error', null, err.message);
+  }
+}
+
+// Start de scheduler elke 5 minuten
+setInterval(runAllSchedulers, 5 * 60 * 1000);
+
+// Direct uitvoeren bij server start
+runAllSchedulers();
+```
+
+---
+
+## 4. Campagne verzendscheduler
+
+Schrijf `campaignScheduler.js`:
+
+### `checkGeplandeCampagnes()`
+```javascript
+// Wordt aangeroepen vanuit de hoofdscheduler
+
+async function checkGeplandeCampagnes() {
+  // Haal alle campagnes op waarbij:
+  // - status = 'gepland'
+  // - verzend_direct = 0
+  // - werkelijk_verzend_op <= NOW()
+  
+  for (const campagne of campagnes) {
+    try {
+      await logScheduler('verzending_gestart', campagne.id, 
+        `Starten verzending: ${campagne.naam}`);
+      
+      // Update status naar 'actief'
+      await updateCampagneStatus(campagne.id, 'actief');
+      
+      // Start verzending
+      const resultaat = await sendCampaignBatch(campagne.id);
+      
+      // Update status naar 'voltooid'
+      await updateCampagneStatus(campagne.id, 'voltooid');
+      
+      // Maak notificatie aan (stap 6 notificatiesysteem)
+      await maakNotificatie({
+        type: 'campagne_voltooid',
+        titel: `Campagne verzonden: ${campagne.naam}`,
+        bericht: `Succesvol verzonden naar ${resultaat.verzonden} contacten. 
+                  ${resultaat.mislukt > 0 ? `${resultaat.mislukt} mislukt.` : ''}`,
+        link: `/campaigns/${campagne.id}`
+      });
+      
+    } catch (err) {
+      await updateCampagneStatus(campagne.id, 'gestopt');
+      await logScheduler('verzending_fout', campagne.id, err.message);
+    }
+  }
+}
+```
+
+### `planCampagne(campaignId)`
+```javascript
+// Berekent en slaat het werkelijke verzendmoment op
+
+async function planCampagne(campaignId) {
+  const campagne = await getCampagne(campaignId);
+  
+  if (campagne.verzend_direct) {
+    // Direct verzenden: bereken toch correctie voor tijdvenster
+    const nu = new Date();
+    const werkelijkMoment = berekenWerkelijkVerzendMoment(
+      nu,
+      campagne.alleen_werkdagen,
+      campagne.tijdvenster_start,
+      campagne.tijdvenster_eind
+    );
+    
+    // Als het gecorrigeerde moment meer dan 1 minuut in de toekomst ligt:
+    // sla op als gepland en laat scheduler het oppakken
+    // Anders: direct verzenden
+    const verschilMs = werkelijkMoment - nu;
+    
+    if (verschilMs > 60000) {
+      await updateCampagne(campaignId, {
+        status: 'gepland',
+        werkelijk_verzend_op: werkelijkMoment
+      });
+      return { uitgesteld: true, moment: werkelijkMoment };
+    } else {
+      return { uitgesteld: false };
+    }
+  } else {
+    // Gepland moment: bereken correctie
+    const werkelijkMoment = berekenWerkelijkVerzendMoment(
+      new Date(campagne.verzend_op),
+      campagne.alleen_werkdagen,
+      campagne.tijdvenster_start,
+      campagne.tijdvenster_eind
+    );
+    
+    await updateCampagne(campaignId, {
+      status: 'gepland',
+      werkelijk_verzend_op: werkelijkMoment
+    });
+    
+    return { uitgesteld: true, moment: werkelijkMoment };
+  }
+}
+```
+
+---
+
+## 5. API endpoints — verzendplanning
+
+### POST /api/campaigns/:id/plannen
+```
+Body: {
+  verzend_direct: boolean,
+  verzend_op: datetime | null,      -- null als verzend_direct = true
+  alleen_werkdagen: boolean,
+  tijdvenster_start: string,        -- bijv. "08:00"
+  tijdvenster_eind: string          -- bijv. "18:00"
+}
+
+1. Valideer: als verzend_direct = false, verzend_op mag niet in het verleden zijn
+2. Update campagne-instellingen
+3. Roep planCampagne(campaignId) aan
+4. Geef terug:
+{
+  werkelijk_verzend_op: datetime,
+  verschil_melding: "Je mail is gepland op maandag 14 april om 09:00 
+                     (verschoven van zaterdag 20:00)",
+  gecorrigeerd: boolean  -- true als het moment verschoven is
+}
+```
+
+### PUT /api/campaigns/:id/verzendtijd
+```
+Pas het geplande verzendmoment aan (alleen als status = 'gepland')
+Body: { verzend_op: datetime }
+Herberekent werkelijk_verzend_op en geeft nieuwe bevestiging terug
+```
+
+### POST /api/campaigns/:id/annuleer
+```
+Annuleer een geplande campagne
+Zet status terug naar 'concept'
+Verwijder werkelijk_verzend_op
+Alleen mogelijk als status = 'gepland'
+```
+
+---
+
+## 6. UI — verzendplanning in campagne detailpagina
+
+### Overzicht tab — verzendstatus sectie
+
+**Bij status = concept:**
+```
+Verzendstatus
+─────────────
+Nog niet ingepland
+
+[🚀 Activeren en direct verzenden]
+[📅 Inplannen op datum en tijd]
+```
+
+**Bij klik op "Inplannen"** → inline formulier uitklappen (geen modaal):
+```
+Wanneer versturen?
+○ Direct na activatie
+● Op datum en tijdstip: [14-04-2026] [09:00]
+
+Verzendvenster
+☑ Alleen werkdagen (ma–vr)
+Tussen [08:00] en [18:00]
+
+[Voorbeeld: je mail wordt verzonden op maandag 14 april om 09:00]
+
+[Annuleren]  [Campagne inplannen →]
+```
+
+**Live preview van gecorrigeerd moment:**
+- Terwijl de gebruiker datum/tijd aanpast, roep `/api/campaigns/:id/plannen` aan met `dry_run: true`
+- Toon direct het gecorrigeerde moment als voorbeeld tekst
+- Als het moment verschoven is toon een info-banner:
+  ```
+  ℹ️ Je ingestelde tijdstip (zaterdag 20:00) valt buiten het verzendvenster.
+  De mail wordt automatisch verzonden op maandag 14 april om 08:00.
+  ```
+
+**Bij status = gepland:**
+```
+Verzendstatus
+─────────────
+📅 Gepland
+
+Verzendmoment:  maandag 14 april 2026 om 09:00
+Ontvangers:     287 contacten
+
+[Countdown timer: Verzending over 2 dagen, 4 uur, 23 min]
+
+[✏️ Tijdstip wijzigen]  [✕ Annuleren]
+```
+
+Countdown timer:
+- Update elke seconde
+- Formaat: "Verzending over X dagen, X uur, X min" (of "X uur, X min" als < 1 dag)
+- Kleur: groen als > 24 uur, oranje als < 24 uur, rood als < 1 uur
+
+**Bij status = actief (bezig met verzenden):**
+```
+Verzendstatus
+─────────────
+🔄 Bezig met verzenden...
+
+Gestart om: 14 april 2026 om 09:02
+Voortgang: ████████████░░░░░░░░  187 / 287 verzonden
+
+Geopend tot nu toe: 23 (12.3%)
+```
+
+Voortgangsbalk: update elke 10 seconden via polling op `/api/campaigns/:id/stats`
+
+---
+
+## 7. Campagnelijst — geplande campagnes weergave
+
+In de sidebar campagnelijst (gebouwd in stap 2), toon voor geplande campagnes extra info:
+
+```
+Hotels April 2026
+Bulk  •  📅 Gepland
+14 apr om 09:00  •  287 ontvangers
+```
+
+Sorteeropties uitbreiden:
+- Nieuwste eerst (standaard)
+- Verzendmoment (vroegste eerst) — handig om geplande campagnes bovenaan te zien
+
+Voeg een filter toe boven de lijst:
+```
+[Alle] [Concept] [Gepland ●] [Actief] [Voltooid]
+```
+De "Gepland" pill heeft een badge met het aantal geplande campagnes.
+
+---
+
+## 8. Scheduler status pagina (beheer)
+
+Voeg een kleine "Systeem" sectie toe aan de instellingenpagina (of als apart tabje):
+
+**Scheduler status:**
+```
+Scheduler
+─────────────────────────────────────
+Status:          ● Actief
+Laatste run:     14 april 2026 om 14:37:22
+Volgende run:    14 april 2026 om 14:42:22
+Interval:        Elke 5 minuten
+
+Laatste 10 scheduler runs:
+[Tabel met timestamp, type, campagne, bericht]
+```
+
+**Handmatig uitvoeren:**
+- Knop "▶ Nu uitvoeren" → roept `/api/scheduler/run` aan
+- Handig voor testen of als er iets mis lijkt
+
+### POST /api/scheduler/run
+```
+Voert runAllSchedulers() handmatig uit
+Geeft terug: { uitgevoerd: true, duur_ms: X, verwerkt: { campagnes: X, flows: X, ab: X } }
+```
+
+### GET /api/scheduler/status
+```
+Geeft terug:
+{
+  actief: true,
+  laatste_run: datetime,
+  volgende_run: datetime,
+  log: [ laatste 10 entries uit scheduler_log ]
+}
+```
+
+---
+
+## 9. Notificaties uitbreiding — verzendmeldingen
+
+Breid het notificatiesysteem uit (aangemaakt in stap 6) met verzend-notificaties:
+
+**Bij campagne ingepland:**
+```
+📅 Campagne ingepland
+"Hotels April 2026" wordt verzonden op maandag 14 april om 09:00
+[Bekijk campagne →]
+```
+
+**Bij campagne voltooid:**
+```
+✅ Campagne verzonden
+"Hotels April 2026" is verzonden naar 287 contacten
+Open rate tot nu toe: 12.3%
+[Bekijk statistieken →]
+```
+
+**Bij verzendingsfout:**
+```
+⚠️ Verzendingsfout
+"Hotels April 2026": 23 van 287 mails zijn mislukt
+[Bekijk details →]
+```
+
+**Bij automatische verschuiving:**
+```
+ℹ️ Verzendmoment aangepast
+"Hotels April 2026" is verschoven van zaterdag 20:00 naar maandag 08:00
+vanwege het werkdagen-tijdvenster
+[Bekijk campagne →]
+```
+
+---
+
+## 10. Dry run endpoint
+
+### POST /api/campaigns/:id/plannen-preview
+```
+Body: { verzend_op, alleen_werkdagen, tijdvenster_start, tijdvenster_eind }
+
+Berekent het gecorrigeerde verzendmoment ZONDER iets op te slaan.
+Geeft terug:
+{
+  gewenst_moment: datetime,
+  werkelijk_moment: datetime,
+  gecorrigeerd: boolean,
+  reden: string | null,   -- bijv. "Tijdstip valt in weekend"
+  leesbaar: string        -- bijv. "maandag 14 april 2026 om 08:00"
+}
+
+Wordt aangeroepen vanuit de frontend terwijl de gebruiker het tijdstip aanpast (debounced, 500ms).
+```
+
+---
+
+## 11. Edge cases & foutafhandeling
+
+Behandel de volgende situaties correct:
+
+**Server herstart tijdens geplande campagne:**
+- Bij server-opstart: voer `runAllSchedulers()` direct uit
+- Campagnes met `werkelijk_verzend_op` in het verleden en status = 'gepland' worden direct opgepakt
+
+**Campagne met 0 ontvangers:**
+- Bij activatie of inplannen: controleer of segmentfilters minimaal 1 actief contact opleveren
+- Zo niet: blokkeer activatie met melding "Geen actieve contacten gevonden voor dit segment"
+
+**SendGrid rate limit:**
+- Als SendGrid een 429 (Too Many Requests) teruggeeft:
+  - Wacht 60 seconden en probeer opnieuw (max 3 pogingen)
+  - Na 3 mislukte pogingen: markeer batch als mislukt, log fout, ga door met volgende batch
+  - Update campagne status NIET naar 'voltooid' maar naar 'actief' met een fout-indicator
+
+**Tijdzone correctie:**
+- Alle berekeningen in `schedulerUtils.js` werken in de tijdzone 'Europe/Amsterdam'
+- Gebruik de `Intl` API of een lichte tijdzone library voor correcte zomer/wintertijd afhandeling
+- Sla alle timestamps op in UTC in de database, converteer naar NL tijd alleen voor weergave
+
+**Dubbele verzending voorkomen:**
+- Voeg een database-lock toe bij het starten van een campagneverzending:
+  ```sql
+  UPDATE campaigns SET status = 'actief' 
+  WHERE id = ? AND status = 'gepland'
+  ```
+  Controleer of de update 1 rij heeft gewijzigd. Zo niet: een andere scheduler-instantie is al bezig, sla over.
+
+---
+
+## 12. Instellingen — standaard verzendvoorkeuren
+
+Voeg toe aan de instellingenpagina een sectie "Verzendvoorkeuren":
+
+```
+Standaard verzendvenster
+─────────────────────────
+☑ Alleen verzenden op werkdagen (ma–vr)
+
+Tijdvenster:
+Van:  [08:00 ▼]
+Tot:  [18:00 ▼]
+
+Tijdzone: [Europe/Amsterdam ▼]
+
+[Opslaan]
+```
+
+Deze instellingen worden als standaardwaarden gebruikt bij het aanmaken van nieuwe campagnes. Sla op in een `instellingen` tabel:
+
+```sql
+CREATE TABLE IF NOT EXISTS instellingen (
+  sleutel TEXT PRIMARY KEY,
+  waarde TEXT NOT NULL,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Standaardwaarden invoegen bij eerste start:
+INSERT OR IGNORE INTO instellingen (sleutel, waarde) VALUES
+  ('verzend_alleen_werkdagen', '1'),
+  ('verzend_tijdvenster_start', '08:00'),
+  ('verzend_tijdvenster_eind', '18:00'),
+  ('tijdzone', 'Europe/Amsterdam');
+```
+
+---
+
+## Volgorde van implementatie binnen deze stap
+
+1. `schedulerUtils.js` — werkdag/tijdvenster berekeningen en tests
+2. Database uitbreidingen (kolommen + scheduler_log + instellingen tabellen)
+3. `campaignScheduler.js` — planCampagne + checkGeplandeCampagnes
+4. Centrale `scheduler.js` — consolideer alle schedulers
+5. API endpoints (plannen, preview, annuleer, scheduler status)
+6. UI — verzendplanning sectie in campagne detailpagina
+7. Countdown timer + voortgangsbalk
+8. Campagnelijst uitbreiding (gepland badge, sorteer op verzendmoment)
+9. Notificaties voor verzendgebeurtenissen
+10. Instellingen pagina — standaard verzendvoorkeuren
+11. Scheduler status pagina
+
+---
+
+## Afrondingscheck — volledig systeem
+
+Na implementatie van stap 8 is het volledige EXTRA e-mailmarketing systeem operationeel. Controleer of het volgende werkt end-to-end:
+
+- [ ] Contact aanmaken (handmatig + CSV import)
+- [ ] Campagne aanmaken met segmentfilters en live telling
+- [ ] E-mail opmaken in de builder (HTML + plain text, personalisatie, taalvarianten)
+- [ ] Testmail versturen vanuit de builder
+- [ ] Campagne inplannen op toekomstig werkdagtijdstip
+- [ ] Scheduler pikt de campagne op en verzendt via SendGrid
+- [ ] Open tracking pixel registreert opens
+- [ ] Click tracking registreert kliks en redirect correct
+- [ ] Uitschrijflink werkt en toont bevestigingspagina
+- [ ] A/B test: split verzending, automatische winnaarbepaling, doorsturen winnaar
+- [ ] Flow: contact doorloopt stappen, conditie-nodes vertakken correct
+- [ ] Statistieken dashboard toont correcte data
+- [ ] Notificaties verschijnen bij campagne-events
+- [ ] CSV export downloadt correct
+
+---
+
+*Stap 8 van 8 — EXTRA E-mailmarketing Module — Volledig systeem*
