@@ -204,7 +204,7 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
   ];
 
   return (
-    <div className="flex gap-4 h-full">
+    <div className="flex gap-4" style={{ minHeight: '380px', height: '100%' }}>
       {/* Canvas */}
       <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-auto p-4">
         <div className="max-w-[520px] mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-6 space-y-1">
@@ -254,7 +254,7 @@ function EmailEditor({ blocks, onChange }: { blocks: Block[]; onChange: (b: Bloc
       </div>
 
       {/* Right panel: properties + add blocks */}
-      <div className="w-56 flex-shrink-0 space-y-3">
+      <div className="w-56 flex-shrink-0 space-y-3 overflow-y-auto">
         {/* Properties */}
         {selected !== null && blocks[selected] && (
           <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
@@ -762,19 +762,17 @@ export default function ProspectCampagnesTab() {
             </div>
 
             {/* Editor tab */}
-            <TabsContent value="editor" className="flex-1 overflow-hidden p-4">
+            <TabsContent value="editor" className="flex-1 overflow-auto p-4">
               {editingCampaign ? (
-                <div className="h-full flex flex-col gap-3">
+                <div className="flex flex-col gap-3">
                   <div className="flex gap-4">
                     <div className="flex-1"><Label className="text-xs text-slate-500">Campagnenaam</Label><Input value={cfName} onChange={e => setCfName(e.target.value)} className="mt-0.5" /></div>
                     <div className="flex-1"><Label className="text-xs text-slate-500">Onderwerp e-mail</Label><Input value={cfSubject} onChange={e => setCfSubject(e.target.value)} className="mt-0.5" /></div>
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <EmailEditor blocks={cfBlocks} onChange={setCfBlocks} />
-                  </div>
+                  <EmailEditor blocks={cfBlocks} onChange={setCfBlocks} />
                 </div>
               ) : (
-                <div className="h-full bg-slate-50 rounded-xl border border-slate-100 overflow-auto p-4">
+                <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-auto p-4" style={{ minHeight: '300px' }}>
                   <div className="max-w-[520px] mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                     <div dangerouslySetInnerHTML={{ __html: selectedCampaign.htmlContent }} />
                   </div>
@@ -1011,13 +1009,13 @@ export default function ProspectCampagnesTab() {
 
       {/* ── Create Campaign Dialog ── */}
       <Dialog open={showCreateCampaign} onOpenChange={setShowCreateCampaign}>
-        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nieuwe campagne aanmaken</DialogTitle>
             <DialogDescription>Ontwerp je e-mail en stel je doelgroep in.</DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden flex flex-col gap-4 py-2 min-h-0">
-            <div className="flex gap-4 flex-shrink-0">
+          <div className="flex flex-col gap-4 mt-1">
+            <div className="flex gap-4">
               <div className="flex-1">
                 <Label>Campagnenaam *</Label>
                 <Input value={cfName} onChange={e => setCfName(e.target.value)} placeholder="bijv. Hotels April 2026" className="mt-1" />
@@ -1027,7 +1025,7 @@ export default function ProspectCampagnesTab() {
                 <Input value={cfSubject} onChange={e => setCfSubject(e.target.value)} placeholder="bijv. Flexibel horeca-personeel voor uw hotel" className="mt-1" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 flex-shrink-0">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm">Branche-filter</Label>
                 <p className="text-xs text-slate-400 mb-1">Leeg = iedereen</p>
@@ -1039,14 +1037,12 @@ export default function ProspectCampagnesTab() {
                 <TagInput value={cfFunctieFilter} onChange={setCfFunctieFilter} suggestions={allFunctieTags} placeholder="Selecteer functies…" color="purple" />
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div>
               <Label className="text-sm mb-1 block">E-mail inhoud *</Label>
-              <div className="h-full">
-                <EmailEditor blocks={cfBlocks} onChange={setCfBlocks} />
-              </div>
+              <EmailEditor blocks={cfBlocks} onChange={setCfBlocks} />
             </div>
           </div>
-          <DialogFooter className="flex-shrink-0">
+          <DialogFooter className="mt-4">
             <Button variant="ghost" onClick={() => setShowCreateCampaign(false)}>Annuleren</Button>
             <Button onClick={handleCreateCampaign} disabled={createCampaignMut.isPending} className="bg-purple-600 hover:bg-purple-700">
               {createCampaignMut.isPending ? "Aanmaken…" : "Campagne aanmaken"}
