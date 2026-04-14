@@ -177,6 +177,9 @@ export default function DashboardMockup() {
   const [activeTab, setActiveTab] = useState('kandidaten');
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
   const [bedrijvenExpanded, setBedrijvenExpanded] = useState(true);
+  const [campagnesExpanded, setCampagnesExpanded] = useState(() => {
+    try { return localStorage.getItem('nav_campagnes_ingeklapt') !== '1'; } catch { return true; }
+  });
   const [bedrijvenSearch, setBedrijvenSearch] = useState('');
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
@@ -856,6 +859,36 @@ export default function DashboardMockup() {
                 { icon: Users, label: 'Bestaande klanten', tab: 'crm-klanten' },
                 { icon: Bell, label: 'Reminders', tab: 'crm-reminders' },
                 { icon: Gift, label: 'Verjaardagen', tab: 'bedrijven-verjaardagen' },
+              ].map(item => (
+                <button
+                  key={item.tab}
+                  onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                    activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* Group: Campagnes */}
+          <button
+            onClick={() => {
+              const next = !campagnesExpanded;
+              setCampagnesExpanded(next);
+              try { localStorage.setItem('nav_campagnes_ingeklapt', next ? '0' : '1'); } catch {}
+            }}
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+          >
+            <span>Campagnes</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${campagnesExpanded ? '' : '-rotate-90'}`} />
+          </button>
+          {campagnesExpanded && (
+            <>
+              {[
                 { icon: Users, label: 'Contacten', tab: 'prospect-contacten' },
                 { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
                 { icon: BarChart3, label: 'Statistieken', tab: 'prospect-statistieken' },

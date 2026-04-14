@@ -1,0 +1,118 @@
+# Replit Prompt — Navigatie: Apart "Campagnes" Hoofdtabblad
+
+## Wat je gaat doen
+Voeg een nieuw hoofdtabblad "Campagnes" toe aan de bestaande navigatie. Verplaats de items "Contacten", "E-mail campagnes", "Statistieken" en "Scheduler" uit de huidige Bedrijven sectie naar dit nieuwe tabblad. De bestaande "Bedrijven" sectie blijft verder ongewijzigd — alleen de navigatiestructuur verandert, geen functionaliteit.
+
+---
+
+## 1. Huidige navigatiestructuur (zoals zichtbaar in de sidebar)
+
+```
+BEDRIJVEN
+  Personeelsaanvragen
+  Leads & Prospects
+  Bestaande klanten
+  Reminders
+  Verjaardagen
+  Contacten              ← verplaatsen
+  E-mail campagnes       ← verplaatsen
+  Statistieken           ← verplaatsen
+  Scheduler              ← verplaatsen
+```
+
+---
+
+## 2. Gewenste navigatiestructuur
+
+```
+BEDRIJVEN
+  Personeelsaanvragen
+  Leads & Prospects
+  Bestaande klanten
+  Reminders
+  Verjaardagen
+
+CAMPAGNES                ← nieuw hoofdtabblad
+  Contacten
+  E-mail campagnes
+  Statistieken
+  Scheduler
+```
+
+---
+
+## 3. Navigatie aanpassingen
+
+### Bedrijven sectie
+- Verwijder "Contacten", "E-mail campagnes", "Statistieken" en "Scheduler" uit de Bedrijven sectie
+- De overige items (Personeelsaanvragen, Leads & Prospects, Bestaande klanten, Reminders, Verjaardagen) blijven volledig ongewijzigd
+- De sectietitel "BEDRIJVEN" en het inklapbare chevron-icoon blijven behouden
+
+### Nieuwe Campagnes sectie
+Voeg direct onder de Bedrijven sectie een nieuwe sectie toe met exact dezelfde opmaak en stijl als de Bedrijven sectie:
+
+**Sectietitel:** `CAMPAGNES`
+- Zelfde typografie als "BEDRIJVEN" (kleine letters, grijs, letter-spacing)
+- Zelfde inklapbaar gedrag met chevron-icoon (standaard uitgeklapt)
+
+**Menu-items onder Campagnes (in deze volgorde):**
+
+1. **Contacten**
+   - Icoon: personen-icoon (zelfde als huidig, `oi oi-people` of equivalent)
+   - Route: zelfde route als huidig
+
+2. **E-mail campagnes**
+   - Icoon: vliegtuigje/send-icoon (zelfde als huidig)
+   - Route: zelfde route als huidig
+
+3. **Statistieken**
+   - Icoon: staafdiagram-icoon (zelfde als huidig)
+   - Route: zelfde route als huidig
+
+4. **Scheduler**
+   - Icoon: kalender/klok-icoon (zelfde als huidig)
+   - Route: zelfde route als huidig
+
+---
+
+## 4. Stijl — identiek aan bestaande navigatie
+
+Gebruik exact dezelfde CSS/stijlklassen als de bestaande navigatie-items:
+
+- Sectietitel: grijs (#6B7280), 11px, uppercase, font-weight 600, letter-spacing 0.05em
+- Menu-items: standaard tekstkleur (#374151), 14px, padding links voor icoon
+- Icoon: 20x20px, grijs (#6B7280) in standaard staat
+- Hover staat: lichte grijze achtergrond (#F3F4F6)
+- Actief staat: lichte paarse achtergrond (#F5F3FF), paarse tekst (#7C3AED), paars icoon
+- Ruimte tussen de twee secties: 24px margin-top op de CAMPAGNES sectie
+
+---
+
+## 5. Inklapbaar gedrag
+
+De CAMPAGNES sectie heeft hetzelfde inklapbare gedrag als BEDRIJVEN:
+- Standaard uitgeklapt
+- Klik op sectietitel of chevron klapt in/uit
+- Ingeklapt: alleen sectietitel zichtbaar, chevron draait 180°
+- Status wordt onthouden in localStorage met sleutel `nav_campagnes_ingeklapt`
+
+---
+
+## 6. Routing — geen wijzigingen
+
+De routes van de vier verplaatste items blijven exact hetzelfde. Alleen de navigatiestructuur verandert, de pagina's zelf niet. Zorg dat er geen broken links ontstaan.
+
+---
+
+## 7. Actieve staat bij paginanavigatie
+
+Zorg dat het juiste menu-item actief (paars) is op basis van de huidige URL/route:
+- Contacten pagina → "Contacten" onder CAMPAGNES actief
+- E-mail campagnes pagina → "E-mail campagnes" onder CAMPAGNES actief
+- Statistieken pagina → "Statistieken" onder CAMPAGNES actief
+- Scheduler pagina → "Scheduler" onder CAMPAGNES actief
+- Geen enkel item onder BEDRIJVEN is actief als de gebruiker in de CAMPAGNES sectie zit
+
+---
+
+*Navigatie-aanpassing — EXTRA Platform*
