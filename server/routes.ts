@@ -4817,6 +4817,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── B2B Prospect Contacten ──────────────────────────────────────────────
+  app.get("/api/admin/prospect-contacts", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { branche, functie, search } = req.query as Record<string, string>;
+      const contacts = await storage.getProspectContacts({ branche, functie, search });
+      return res.json(contacts);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.get("/api/admin/prospect-contacts/tags", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const [branche, functie] = await Promise.all([
+        storage.getAllBrancheTags(),
+        storage.getAllFunctieTags(),
+      ]);
+      return res.json({ branche, functie });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.post("/api/admin/prospect-contacts", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { name, email, company, function: fn, brancheTags, functieTags, notes, source } = req.body;
+      if (!name || !email) return res.status(400).json({ message: "Naam en e-mail zijn verplicht" });
+      const contact = await storage.createProspectContact({
+        name, email, company: company || null, function: fn || null,
+        brancheTags: brancheTags || [], functieTags: functieTags || [],
+        notes: notes || null, source: source || 'manual',
+        unsubscribed: false, unsubscribedAt: null, crmContactId: null,
+      });
+      return res.status(201).json(contact);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.put("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateProspectContact(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Niet gevonden" });
+      return res.json(updated);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.delete("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProspectContact(id);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Import CRM contacts into prospect contacts list
+  app.post("/api/admin/prospect-contacts/import-crm", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const companies = await storage.getCrmCompanies();
+      let imported = 0;
+      for (const company of companies) {
+        const contacts = await storage.getCrmContacts(company.id);
+        for (const contact of contacts) {
+          if (!contact.email) continue;
+          // Check existing by email
+          const existing = await storage.getProspectContacts({ search: contact.email });
+          if (existing.some(e => e.email.toLowerCase() === contact.email!.toLowerCase())) continue;
+          await storage.createProspectContact({
+            name: contact.name, email: contact.email,
+            company: company.name, function: contact.function || null,
+            brancheTags: [], functieTags: contact.function ? [contact.function] : [],
+            notes: null, source: 'crm_import', unsubscribed: false, unsubscribedAt: null,
+            crmContactId: contact.id,
+          });
+          imported++;
+        }
+      }
+      return res.json({ imported });
+    } catch (err) {
+      console.error("[ProspectContacts] CRM import fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
   // ─── B2B Prospect E-mail Campagnes ───────────────────────────────────────
   app.get("/api/admin/prospect-campaigns", adminMiddleware, async (_req: Request, res: Response) => {
     try {
@@ -4941,14 +5030,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (pending.length === 0) return res.status(400).json({ message: "Geen ontvangers" });
 
       const { sendEmail } = await import('./mail');
+      const { randomUUID } = await import('crypto');
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
       let sentCount = 0, failedCount = 0;
 
       for (const recipient of pending) {
         try {
+          // Generate unique tracking token
+          const token = randomUUID();
+          await storage.updateProspectCampaignRecipient(recipient.id, { trackingToken: token });
+
+          // Tracking pixel URL (1x1 transparent GIF)
+          const pixelUrl = `${baseUrl}/api/track/open/${token}`;
+          // Tracking click URL (wraps the main CTA link if present)
+          const clickUrl = `${baseUrl}/api/track/click/${token}`;
+
           // Personalise content
           let html = campaign.htmlContent
             .replace(/\{\{naam\}\}/gi, recipient.name || 'daar')
-            .replace(/\{\{bedrijf\}\}/gi, recipient.company || '');
+            .replace(/\{\{bedrijf\}\}/gi, recipient.company || '')
+            .replace(/\{\{klik_link\}\}/gi, clickUrl);
+
+          // Inject tracking pixel before </body>
+          const trackingPixel = `<img src="${pixelUrl}" width="1" height="1" style="display:none" alt="" />`;
+          html = html.includes('</body>') ? html.replace('</body>', `${trackingPixel}</body>`) : html + trackingPixel;
+
+          // Add unsubscribe link
+          const unsubUrl = `${baseUrl}/api/track/unsubscribe/${token}`;
+          html += `<p style="font-size:11px;color:#999;text-align:center;margin-top:24px"><a href="${unsubUrl}" style="color:#999">Uitschrijven</a></p>`;
+
           const text = (campaign.textContent || '')
             .replace(/\{\{naam\}\}/gi, recipient.name || 'daar')
             .replace(/\{\{bedrijf\}\}/gi, recipient.company || '');
@@ -4985,6 +5095,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("[ProspectCampaign] Fout verzenden:", err);
       return res.status(500).json({ message: "Fout bij verzenden" });
     }
+  });
+
+  // ─── Tracking endpoints (public) ─────────────────────────────────────────
+  // Open pixel
+  app.get("/api/track/open/:token", async (req: Request, res: Response) => {
+    try {
+      const r = await storage.getProspectCampaignRecipientByToken(req.params.token);
+      if (r && !r.openedAt) {
+        await storage.updateProspectCampaignRecipient(r.id, { openedAt: new Date() });
+        // Increment campaign open count
+        const campaign = await storage.getProspectCampaign(r.campaignId);
+        if (campaign) await storage.updateProspectCampaign(r.campaignId, { openCount: (campaign.openCount || 0) + 1 });
+      }
+    } catch (_) {}
+    // Return 1x1 transparent GIF
+    const gif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+    res.set({ 'Content-Type': 'image/gif', 'Cache-Control': 'no-store' });
+    return res.send(gif);
+  });
+
+  // Click redirect
+  app.get("/api/track/click/:token", async (req: Request, res: Response) => {
+    try {
+      const r = await storage.getProspectCampaignRecipientByToken(req.params.token);
+      if (r && !r.clickedAt) {
+        await storage.updateProspectCampaignRecipient(r.id, { clickedAt: new Date() });
+        const campaign = await storage.getProspectCampaign(r.campaignId);
+        if (campaign) await storage.updateProspectCampaign(r.campaignId, { clickCount: (campaign.clickCount || 0) + 1 });
+      }
+    } catch (_) {}
+    return res.redirect('https://doehetextra.nl');
+  });
+
+  // Unsubscribe
+  app.get("/api/track/unsubscribe/:token", async (req: Request, res: Response) => {
+    try {
+      const r = await storage.getProspectCampaignRecipientByToken(req.params.token);
+      if (r?.contactId) {
+        await storage.updateProspectContact(r.contactId, { unsubscribed: true, unsubscribedAt: new Date() });
+      }
+    } catch (_) {}
+    return res.send('<html><body style="font-family:sans-serif;text-align:center;padding:60px"><h2>Uitgeschreven</h2><p>Je bent succesvol uitgeschreven van onze mailinglijst.</p></body></html>');
   });
 
   // ─── Verjaardagen opdrachtgevers ─────────────────────────────────────────

@@ -1347,18 +1347,44 @@ export const insertAdminNotificationSchema = createInsertSchema(adminNotificatio
 export type InsertAdminNotification = z.infer<typeof insertAdminNotificationSchema>;
 export type AdminNotification = typeof adminNotifications.$inferSelect;
 
+// ─── B2B Prospect Contacten ──────────────────────────────────────────────────
+// Aparte prospectlijst (los van CRM) met tags voor branche/functie
+export const prospectContacts = pgTable("prospect_contacts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company"),
+  function: text("function"),                          // e.g. "Housekeeping Manager"
+  brancheTags: text("branche_tags").array().default([]), // e.g. ["Hotel", "4/5 sterren"]
+  functieTags: text("functie_tags").array().default([]), // e.g. ["Housekeeping Manager", "HR"]
+  unsubscribed: boolean("unsubscribed").default(false),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  notes: text("notes"),
+  source: text("source").default("manual"),            // manual | crm_import
+  crmContactId: integer("crm_contact_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ─── B2B Prospect E-mail Campagnes ───────────────────────────────────────────
 export const prospectCampaigns = pgTable("prospect_campaigns", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   subject: text("subject").notNull(),
+  // Visual editor: stored as JSON blocks; htmlContent derived on send
+  editorBlocks: text("editor_blocks"),               // JSON string of visual blocks
   htmlContent: text("html_content").notNull(),
   textContent: text("text_content"),
+  // Targeting filters
+  brancheFilter: text("branche_filter").array().default([]), // empty = all
+  functieFilter: text("functie_filter").array().default([]), // empty = all
   status: text("status").default("draft").notNull(), // draft | sent | scheduled
   scheduledAt: timestamp("scheduled_at"),
   sentAt: timestamp("sent_at"),
   sentCount: integer("sent_count").default(0),
   failedCount: integer("failed_count").default(0),
+  openCount: integer("open_count").default(0),
+  clickCount: integer("click_count").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -1366,14 +1392,24 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
 export const prospectCampaignRecipients = pgTable("prospect_campaign_recipients", {
   id: serial("id").primaryKey(),
   campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'cascade' }).notNull(),
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
   email: text("email").notNull(),
   name: text("name"),
   company: text("company"),
+  functieTags: text("functie_tags").array().default([]),
   status: text("status").default("pending").notNull(), // pending | sent | failed
   sentAt: timestamp("sent_at"),
   errorMessage: text("error_message"),
+  // Tracking
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+  trackingToken: text("tracking_token"),              // unique UUID per recipient
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const insertProspectContactSchema = createInsertSchema(prospectContacts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertProspectContact = z.infer<typeof insertProspectContactSchema>;
+export type ProspectContact = typeof prospectContacts.$inferSelect;
 
 export const insertProspectCampaignSchema = createInsertSchema(prospectCampaigns).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProspectCampaign = z.infer<typeof insertProspectCampaignSchema>;

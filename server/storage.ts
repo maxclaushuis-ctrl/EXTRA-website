@@ -62,8 +62,10 @@ import {
   type AdminNotification, type InsertAdminNotification,
   clientBirthdays as clientBirthdaysTable,
   type ClientBirthday, type InsertClientBirthday,
+  prospectContacts as prospectContactsTable,
   prospectCampaigns as prospectCampaignsTable,
   prospectCampaignRecipients as prospectCampaignRecipientsTable,
+  type ProspectContact, type InsertProspectContact,
   type ProspectCampaign, type InsertProspectCampaign,
   type ProspectCampaignRecipient, type InsertProspectCampaignRecipient,
 } from "@shared/schema";
@@ -422,6 +424,15 @@ export interface IStorage {
   updateClientBirthday(id: number, data: Partial<InsertClientBirthday>): Promise<ClientBirthday | undefined>;
   deleteClientBirthday(id: number): Promise<void>;
 
+  // B2B Prospect Contacten
+  getProspectContacts(filters?: { branche?: string; functie?: string; search?: string }): Promise<ProspectContact[]>;
+  getProspectContact(id: number): Promise<ProspectContact | undefined>;
+  createProspectContact(data: InsertProspectContact): Promise<ProspectContact>;
+  updateProspectContact(id: number, data: Partial<InsertProspectContact>): Promise<ProspectContact | undefined>;
+  deleteProspectContact(id: number): Promise<void>;
+  getAllBrancheTags(): Promise<string[]>;
+  getAllFunctieTags(): Promise<string[]>;
+
   // B2B Prospect Campagnes
   getProspectCampaigns(): Promise<ProspectCampaign[]>;
   getProspectCampaign(id: number): Promise<ProspectCampaign | undefined>;
@@ -432,6 +443,7 @@ export interface IStorage {
   addProspectCampaignRecipient(data: InsertProspectCampaignRecipient): Promise<ProspectCampaignRecipient>;
   deleteProspectCampaignRecipient(id: number): Promise<void>;
   updateProspectCampaignRecipient(id: number, data: Partial<InsertProspectCampaignRecipient>): Promise<void>;
+  getProspectCampaignRecipientByToken(token: string): Promise<ProspectCampaignRecipient | undefined>;
 }
 
 // In-memory storage implementation
@@ -3889,6 +3901,59 @@ export class MemStorage implements IStorage {
     await db.delete(clientBirthdaysTable).where(eq(clientBirthdaysTable.id, id));
   }
 
+  // ─── Prospect Contacten ──────────────────────────────────────────────────
+  async getProspectContacts(filters?: { branche?: string; functie?: string; search?: string }): Promise<ProspectContact[]> {
+    let query = db.select().from(prospectContactsTable).$dynamic();
+    const conditions = [];
+    if (filters?.search) {
+      const s = `%${filters.search}%`;
+      conditions.push(or(ilike(prospectContactsTable.name, s), ilike(prospectContactsTable.email, s), ilike(prospectContactsTable.company, s)));
+    }
+    if (conditions.length > 0) query = query.where(and(...conditions));
+    const rows = await query.orderBy(asc(prospectContactsTable.name));
+    let result = rows;
+    if (filters?.branche) result = result.filter(r => (r.brancheTags || []).includes(filters.branche!));
+    if (filters?.functie) result = result.filter(r => (r.functieTags || []).includes(filters.functie!));
+    return result;
+  }
+
+  async getProspectContact(id: number): Promise<ProspectContact | undefined> {
+    const [row] = await db.select().from(prospectContactsTable).where(eq(prospectContactsTable.id, id));
+    return row;
+  }
+
+  async createProspectContact(data: InsertProspectContact): Promise<ProspectContact> {
+    const [row] = await db.insert(prospectContactsTable).values(data).returning();
+    return row;
+  }
+
+  async updateProspectContact(id: number, data: Partial<InsertProspectContact>): Promise<ProspectContact | undefined> {
+    const [row] = await db.update(prospectContactsTable)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(prospectContactsTable.id, id))
+      .returning();
+    return row;
+  }
+
+  async deleteProspectContact(id: number): Promise<void> {
+    await db.delete(prospectContactsTable).where(eq(prospectContactsTable.id, id));
+  }
+
+  async getAllBrancheTags(): Promise<string[]> {
+    const rows = await db.select({ tags: prospectContactsTable.brancheTags }).from(prospectContactsTable);
+    const set = new Set<string>();
+    rows.forEach(r => (r.tags || []).forEach(t => set.add(t)));
+    return Array.from(set).sort();
+  }
+
+  async getAllFunctieTags(): Promise<string[]> {
+    const rows = await db.select({ tags: prospectContactsTable.functieTags }).from(prospectContactsTable);
+    const set = new Set<string>();
+    rows.forEach(r => (r.tags || []).forEach(t => set.add(t)));
+    return Array.from(set).sort();
+  }
+
+  // ─── Prospect Campagnes ──────────────────────────────────────────────────
   async getProspectCampaigns(): Promise<ProspectCampaign[]> {
     return db.select().from(prospectCampaignsTable).orderBy(desc(prospectCampaignsTable.createdAt));
   }
@@ -3932,6 +3997,12 @@ export class MemStorage implements IStorage {
 
   async updateProspectCampaignRecipient(id: number, data: Partial<InsertProspectCampaignRecipient>): Promise<void> {
     await db.update(prospectCampaignRecipientsTable).set(data).where(eq(prospectCampaignRecipientsTable.id, id));
+  }
+
+  async getProspectCampaignRecipientByToken(token: string): Promise<ProspectCampaignRecipient | undefined> {
+    const [row] = await db.select().from(prospectCampaignRecipientsTable)
+      .where(eq(prospectCampaignRecipientsTable.trackingToken, token));
+    return row;
   }
 }
 
