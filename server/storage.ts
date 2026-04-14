@@ -425,13 +425,19 @@ export interface IStorage {
   deleteClientBirthday(id: number): Promise<void>;
 
   // B2B Prospect Contacten
-  getProspectContacts(filters?: { branche?: string; functie?: string; search?: string }): Promise<ProspectContact[]>;
+  getProspectContacts(filters?: {
+    branche?: string; functie?: string; search?: string;
+    type?: string; status?: string; taal?: string; functiegroep?: string; tag?: string;
+    sort?: string;
+  }): Promise<ProspectContact[]>;
   getProspectContact(id: number): Promise<ProspectContact | undefined>;
   createProspectContact(data: InsertProspectContact): Promise<ProspectContact>;
   updateProspectContact(id: number, data: Partial<InsertProspectContact>): Promise<ProspectContact | undefined>;
   deleteProspectContact(id: number): Promise<void>;
   getAllBrancheTags(): Promise<string[]>;
   getAllFunctieTags(): Promise<string[]>;
+  getProspectContactUniqueTags(): Promise<string[]>;
+  getProspectContactCampaignHistory(contactId: number): Promise<any[]>;
 
   // B2B Prospect Campagnes
   getProspectCampaigns(): Promise<ProspectCampaign[]>;
@@ -3902,17 +3908,45 @@ export class MemStorage implements IStorage {
   }
 
   // ─── Prospect Contacten ──────────────────────────────────────────────────
-  async getProspectContacts(filters?: { branche?: string; functie?: string; search?: string }): Promise<ProspectContact[]> {
+  async getProspectContacts(filters?: {
+    branche?: string; functie?: string; search?: string;
+    type?: string; status?: string; taal?: string; functiegroep?: string; tag?: string;
+    sort?: string;
+  }): Promise<ProspectContact[]> {
     let query = db.select().from(prospectContactsTable).$dynamic();
     const conditions = [];
     if (filters?.search) {
       const s = `%${filters.search}%`;
-      conditions.push(or(ilike(prospectContactsTable.name, s), ilike(prospectContactsTable.email, s), ilike(prospectContactsTable.company, s)));
+      conditions.push(or(
+        ilike(prospectContactsTable.name, s),
+        ilike(prospectContactsTable.email, s),
+        ilike(prospectContactsTable.company, s),
+        ilike(prospectContactsTable.voornaam, s),
+        ilike(prospectContactsTable.achternaam, s),
+      ));
     }
+    if (filters?.branche) conditions.push(eq(prospectContactsTable.branche, filters.branche));
+    if (filters?.type) conditions.push(eq(prospectContactsTable.contactType, filters.type));
+    if (filters?.status) conditions.push(eq(prospectContactsTable.contactStatus, filters.status));
+    if (filters?.taal) conditions.push(eq(prospectContactsTable.taal, filters.taal));
+    if (filters?.functiegroep) conditions.push(ilike(prospectContactsTable.functiegroep, `%${filters.functiegroep}%`));
     if (conditions.length > 0) query = query.where(and(...conditions));
-    const rows = await query.orderBy(asc(prospectContactsTable.name));
-    let result = rows;
-    if (filters?.branche) result = result.filter(r => (r.brancheTags || []).includes(filters.branche!));
+    // Sort
+    if (filters?.sort === 'bedrijf') {
+      query = query.orderBy(asc(prospectContactsTable.company));
+    } else if (filters?.sort === 'nieuwste') {
+      query = query.orderBy(desc(prospectContactsTable.createdAt));
+    } else {
+      query = query.orderBy(asc(prospectContactsTable.name));
+    }
+    let result = await query;
+    // Post-filter for tag (JSON array search)
+    if (filters?.tag) {
+      result = result.filter(r => {
+        try { return JSON.parse(r.customTags || '[]').includes(filters.tag!); } catch { return false; }
+      });
+    }
+    // Legacy brancheTags/functieTags filter
     if (filters?.functie) result = result.filter(r => (r.functieTags || []).includes(filters.functie!));
     return result;
   }
@@ -3951,6 +3985,34 @@ export class MemStorage implements IStorage {
     const set = new Set<string>();
     rows.forEach(r => (r.tags || []).forEach(t => set.add(t)));
     return Array.from(set).sort();
+  }
+
+  async getProspectContactUniqueTags(): Promise<string[]> {
+    const rows = await db.select({ tags: prospectContactsTable.customTags }).from(prospectContactsTable);
+    const set = new Set<string>();
+    rows.forEach(r => {
+      try { JSON.parse(r.tags || '[]').forEach((t: string) => set.add(t)); } catch {}
+    });
+    return Array.from(set).sort();
+  }
+
+  async getProspectContactCampaignHistory(contactId: number): Promise<any[]> {
+    const { prospectCampaignRecipients: rcpTable, prospectCampaigns: cmpTable } = await import('@shared/schema');
+    const rows = await db
+      .select({
+        id: rcpTable.id,
+        campaignId: rcpTable.campaignId,
+        campaignName: cmpTable.name,
+        status: rcpTable.status,
+        sentAt: rcpTable.sentAt,
+        openedAt: rcpTable.openedAt,
+        clickedAt: rcpTable.clickedAt,
+      })
+      .from(rcpTable)
+      .leftJoin(cmpTable, eq(rcpTable.campaignId, cmpTable.id))
+      .where(eq(rcpTable.contactId, contactId))
+      .orderBy(desc(rcpTable.sentAt));
+    return rows;
   }
 
   // ─── Prospect Campagnes ──────────────────────────────────────────────────

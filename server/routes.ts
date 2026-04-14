@@ -4820,8 +4820,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ─── B2B Prospect Contacten ──────────────────────────────────────────────
   app.get("/api/admin/prospect-contacts", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { branche, functie, search } = req.query as Record<string, string>;
-      const contacts = await storage.getProspectContacts({ branche, functie, search });
+      const { branche, functie, search, type, status, taal, functiegroep, tag, sort } = req.query as Record<string, string>;
+      const contacts = await storage.getProspectContacts({ branche, functie, search, type, status, taal, functiegroep, tag, sort });
       return res.json(contacts);
     } catch (err) {
       return res.status(500).json({ message: "Fout" });
@@ -4840,18 +4840,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/prospect-contacts/unique-tags", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const tags = await storage.getProspectContactUniqueTags();
+      return res.json(tags);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.get("/api/admin/prospect-contacts/:id/campaign-history", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const history = await storage.getProspectContactCampaignHistory(id);
+      return res.json(history);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.get("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const contact = await storage.getProspectContact(id);
+      if (!contact) return res.status(404).json({ message: "Niet gevonden" });
+      return res.json(contact);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
   app.post("/api/admin/prospect-contacts", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { name, email, company, function: fn, brancheTags, functieTags, notes, source } = req.body;
-      if (!name || !email) return res.status(400).json({ message: "Naam en e-mail zijn verplicht" });
+      const {
+        voornaam, achternaam, email, telefoon, bedrijf, functietitel, stad,
+        branche, functiegroep, type: contactType, taal, tags: customTagsInput, notities,
+        // legacy
+        name, company, function: fn, brancheTags, functieTags, source,
+      } = req.body;
+      // Determine name: prefer voornaam+achternaam, fallback to name
+      const fullName = voornaam && achternaam ? `${voornaam} ${achternaam}` : (name || voornaam || '');
+      const resolvedEmail = email;
+      if (!fullName || !resolvedEmail) return res.status(400).json({ message: "Naam en e-mail zijn verplicht" });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resolvedEmail)) return res.status(400).json({ message: "Ongeldig e-mailadres" });
+      // Check uniqueness
+      const existing = await storage.getProspectContacts({ search: resolvedEmail });
+      if (existing.some(e => e.email.toLowerCase() === resolvedEmail.toLowerCase())) {
+        return res.status(409).json({ message: "Dit e-mailadres is al in gebruik" });
+      }
+      const customTags = Array.isArray(customTagsInput) ? JSON.stringify(customTagsInput) : (customTagsInput || '[]');
       const contact = await storage.createProspectContact({
-        name, email, company: company || null, function: fn || null,
-        brancheTags: brancheTags || [], functieTags: functieTags || [],
-        notes: notes || null, source: source || 'manual',
-        unsubscribed: false, unsubscribedAt: null, crmContactId: null,
+        name: fullName,
+        email: resolvedEmail,
+        company: bedrijf || company || null,
+        function: functietitel || fn || null,
+        brancheTags: branche ? [branche] : (brancheTags || []),
+        functieTags: functiegroep ? [functiegroep] : (functieTags || []),
+        notes: notities || null,
+        source: source || 'manual',
+        unsubscribed: false,
+        unsubscribedAt: null,
+        crmContactId: null,
+        voornaam: voornaam || null,
+        achternaam: achternaam || null,
+        telefoon: telefoon || null,
+        stad: stad || null,
+        taal: taal || 'Nederlands',
+        branche: branche || null,
+        functiegroep: functiegroep || null,
+        contactType: contactType || 'prospect',
+        customTags,
+        contactStatus: 'actief',
       });
       return res.status(201).json(contact);
     } catch (err) {
+      console.error("[ProspectContacts] Aanmaken fout:", err);
       return res.status(500).json({ message: "Fout" });
     }
   });
@@ -4859,7 +4924,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const updated = await storage.updateProspectContact(id, req.body);
+      const body = req.body;
+      // Handle customTags serialization
+      if (Array.isArray(body.customTags)) body.customTags = JSON.stringify(body.customTags);
+      if (Array.isArray(body.tags)) body.customTags = JSON.stringify(body.tags);
+      // Rebuild name if voornaam/achternaam changed
+      if (body.voornaam || body.achternaam) {
+        const existing = await storage.getProspectContact(id);
+        const vn = body.voornaam ?? existing?.voornaam ?? '';
+        const an = body.achternaam ?? existing?.achternaam ?? '';
+        if (vn || an) body.name = `${vn} ${an}`.trim();
+      }
+      const updated = await storage.updateProspectContact(id, body);
       if (!updated) return res.status(404).json({ message: "Niet gevonden" });
       return res.json(updated);
     } catch (err) {
@@ -4877,6 +4953,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CSV Import
+  app.post("/api/admin/prospect-contacts/import", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const rows: any[] = req.body.contacts || [];
+      let aangemaakt = 0, overgeslagen = 0;
+      const fouten: string[] = [];
+      const existing = await storage.getProspectContacts({});
+      const existingEmails = new Set(existing.map(e => e.email.toLowerCase()));
+      for (const row of rows) {
+        const email = (row.email || '').trim().toLowerCase();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          fouten.push(`Ongeldig e-mail: ${row.email || '(leeg)'}`); continue;
+        }
+        const name = row.voornaam && row.achternaam ? `${row.voornaam} ${row.achternaam}` : (row.name || row.voornaam || '');
+        if (!name) { fouten.push(`Naam ontbreekt voor ${email}`); continue; }
+        if (existingEmails.has(email)) { overgeslagen++; continue; }
+        const customTags = Array.isArray(row.tags) ? JSON.stringify(row.tags) : (row.tags ? JSON.stringify(row.tags.split(',').map((t: string) => t.trim()).filter(Boolean)) : '[]');
+        await storage.createProspectContact({
+          name, email,
+          company: row.bedrijf || row.company || null,
+          function: row.functietitel || null,
+          brancheTags: row.branche ? [row.branche] : [],
+          functieTags: row.functiegroep ? [row.functiegroep] : [],
+          notes: row.notities || null,
+          source: 'csv_import',
+          unsubscribed: false, unsubscribedAt: null, crmContactId: null,
+          voornaam: row.voornaam || null,
+          achternaam: row.achternaam || null,
+          telefoon: row.telefoon || null,
+          stad: row.stad || null,
+          taal: row.taal || 'Nederlands',
+          branche: row.branche || null,
+          functiegroep: row.functiegroep || null,
+          contactType: row.type || 'prospect',
+          customTags,
+          contactStatus: 'actief',
+        });
+        existingEmails.add(email);
+        aangemaakt++;
+      }
+      return res.json({ aangemaakt, overgeslagen, fouten });
+    } catch (err) {
+      console.error("[ProspectContacts] Import fout:", err);
+      return res.status(500).json({ message: "Fout bij importeren" });
+    }
+  });
+
   // Import CRM contacts into prospect contacts list
   app.post("/api/admin/prospect-contacts/import-crm", adminMiddleware, async (req: Request, res: Response) => {
     try {
@@ -4886,7 +5009,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const contacts = await storage.getCrmContacts(company.id);
         for (const contact of contacts) {
           if (!contact.email) continue;
-          // Check existing by email
           const existing = await storage.getProspectContacts({ search: contact.email });
           if (existing.some(e => e.email.toLowerCase() === contact.email!.toLowerCase())) continue;
           await storage.createProspectContact({
@@ -4895,6 +5017,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             brancheTags: [], functieTags: contact.function ? [contact.function] : [],
             notes: null, source: 'crm_import', unsubscribed: false, unsubscribedAt: null,
             crmContactId: contact.id,
+            voornaam: null, achternaam: null, telefoon: null, stad: null,
+            taal: 'Nederlands', branche: null, functiegroep: null,
+            contactType: 'prospect', customTags: '[]', contactStatus: 'actief',
           });
           imported++;
         }

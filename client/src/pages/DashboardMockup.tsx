@@ -26,6 +26,7 @@ import {
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import VerjaardagenTab from '@/components/VerjaardagenTab';
 import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
+import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -852,6 +853,7 @@ export default function DashboardMockup() {
                 { icon: Users, label: 'Bestaande klanten', tab: 'crm-klanten' },
                 { icon: Bell, label: 'Reminders', tab: 'crm-reminders' },
                 { icon: Gift, label: 'Verjaardagen', tab: 'bedrijven-verjaardagen' },
+                { icon: Users, label: 'Contacten', tab: 'prospect-contacten' },
                 { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
               ].map(item => (
                 <button
@@ -1104,7 +1106,7 @@ export default function DashboardMockup() {
           </div>
         </header>
 
-        <div className={activeTab === 'prospect-campagnes' ? '' : 'p-3 sm:p-6'}>
+        <div className={(activeTab === 'prospect-campagnes' || activeTab === 'prospect-contacten') ? '' : 'p-3 sm:p-6'}>
           {activeTab === 'kandidaten' ? (
             <div>
               {/* Kandidaat detail dialog */}
@@ -3936,6 +3938,11 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'bedrijven-verjaardagen' ? (
             <VerjaardagenTab />
+
+          ) : activeTab === 'prospect-contacten' ? (
+            <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
+              <ProspectContactenTab />
+            </div>
 
           ) : activeTab === 'prospect-campagnes' ? (
             <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>

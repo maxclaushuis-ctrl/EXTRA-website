@@ -1348,20 +1348,32 @@ export type InsertAdminNotification = z.infer<typeof insertAdminNotificationSche
 export type AdminNotification = typeof adminNotifications.$inferSelect;
 
 // ─── B2B Prospect Contacten ──────────────────────────────────────────────────
-// Aparte prospectlijst (los van CRM) met tags voor branche/functie
+// Aparte prospectlijst (los van CRM) voor B2B e-mail campagnes
 export const prospectContacts = pgTable("prospect_contacts", {
   id: serial("id").primaryKey(),
+  // Legacy velden (behouden voor achterwaartse compatibiliteit met campagnes)
   name: text("name").notNull(),
   email: text("email").notNull(),
   company: text("company"),
-  function: text("function"),                          // e.g. "Housekeeping Manager"
-  brancheTags: text("branche_tags").array().default([]), // e.g. ["Hotel", "4/5 sterren"]
-  functieTags: text("functie_tags").array().default([]), // e.g. ["Housekeeping Manager", "HR"]
+  function: text("function"),
+  brancheTags: text("branche_tags").array().default([]),
+  functieTags: text("functie_tags").array().default([]),
   unsubscribed: boolean("unsubscribed").default(false),
   unsubscribedAt: timestamp("unsubscribed_at"),
-  notes: text("notes"),
-  source: text("source").default("manual"),            // manual | crm_import
+  source: text("source").default("manual"),
   crmContactId: integer("crm_contact_id"),
+  // Nieuwe velden voor uitgebreid contactenbeheer
+  voornaam: text("voornaam"),
+  achternaam: text("achternaam"),
+  telefoon: text("telefoon"),
+  stad: text("stad"),
+  taal: text("taal").default("Nederlands"),
+  branche: text("branche"),                            // Hotel | Restaurant | Cateraar | Evenementenlocatie | Logistiek
+  functiegroep: text("functiegroep"),                  // vrij tekstveld bijv. housekeeping, bediening
+  contactType: text("contact_type").default("prospect"), // prospect | klant
+  customTags: text("custom_tags").default("[]"),       // JSON array van strings bijv. ["VIP","Warme lead"]
+  contactStatus: text("contact_status").default("actief"), // actief | uitgeschreven | geblokkeerd
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
