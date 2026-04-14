@@ -1347,6 +1347,42 @@ export const insertAdminNotificationSchema = createInsertSchema(adminNotificatio
 export type InsertAdminNotification = z.infer<typeof insertAdminNotificationSchema>;
 export type AdminNotification = typeof adminNotifications.$inferSelect;
 
+// ─── B2B Prospect E-mail Campagnes ───────────────────────────────────────────
+export const prospectCampaigns = pgTable("prospect_campaigns", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  htmlContent: text("html_content").notNull(),
+  textContent: text("text_content"),
+  status: text("status").default("draft").notNull(), // draft | sent | scheduled
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  sentCount: integer("sent_count").default(0),
+  failedCount: integer("failed_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const prospectCampaignRecipients = pgTable("prospect_campaign_recipients", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'cascade' }).notNull(),
+  email: text("email").notNull(),
+  name: text("name"),
+  company: text("company"),
+  status: text("status").default("pending").notNull(), // pending | sent | failed
+  sentAt: timestamp("sent_at"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertProspectCampaignSchema = createInsertSchema(prospectCampaigns).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertProspectCampaign = z.infer<typeof insertProspectCampaignSchema>;
+export type ProspectCampaign = typeof prospectCampaigns.$inferSelect;
+
+export const insertProspectCampaignRecipientSchema = createInsertSchema(prospectCampaignRecipients).omit({ id: true, createdAt: true });
+export type InsertProspectCampaignRecipient = z.infer<typeof insertProspectCampaignRecipientSchema>;
+export type ProspectCampaignRecipient = typeof prospectCampaignRecipients.$inferSelect;
+
 // ─── Verjaardagen opdrachtgevers ─────────────────────────────────────────────
 export const clientBirthdays = pgTable("client_birthdays", {
   id: serial("id").primaryKey(),

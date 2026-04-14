@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import VerjaardagenTab from '@/components/VerjaardagenTab';
+import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -851,6 +852,7 @@ export default function DashboardMockup() {
                 { icon: Users, label: 'Bestaande klanten', tab: 'crm-klanten' },
                 { icon: Bell, label: 'Reminders', tab: 'crm-reminders' },
                 { icon: Gift, label: 'Verjaardagen', tab: 'bedrijven-verjaardagen' },
+                { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
               ].map(item => (
                 <button
                   key={item.tab}
@@ -3934,6 +3936,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'bedrijven-verjaardagen' ? (
             <VerjaardagenTab />
+
+          ) : activeTab === 'prospect-campagnes' ? (
+            <ProspectCampagnesTab />
 
           ) : activeTab === 'bedrijven-aanvragen' ? (
             /* ─── PERSONEELSAANVRAGEN tab ─── */

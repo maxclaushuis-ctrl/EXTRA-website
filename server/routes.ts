@@ -4817,6 +4817,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── B2B Prospect E-mail Campagnes ───────────────────────────────────────
+  app.get("/api/admin/prospect-campaigns", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const campaigns = await storage.getProspectCampaigns();
+      return res.json(campaigns);
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout ophalen:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.post("/api/admin/prospect-campaigns", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { insertProspectCampaignSchema } = await import("@shared/schema");
+      const parsed = insertProspectCampaignSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige gegevens", errors: parsed.error.errors });
+      const campaign = await storage.createProspectCampaign(parsed.data);
+      return res.status(201).json(campaign);
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout aanmaken:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.put("/api/admin/prospect-campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const updated = await storage.updateProspectCampaign(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Niet gevonden" });
+      return res.json(updated);
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout bijwerken:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.delete("/api/admin/prospect-campaigns/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      await storage.deleteProspectCampaign(id);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout verwijderen:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Ontvangers
+  app.get("/api/admin/prospect-campaigns/:id/recipients", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const recipients = await storage.getProspectCampaignRecipients(id);
+      return res.json(recipients);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.post("/api/admin/prospect-campaigns/:id/recipients", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const { email, name, company } = req.body;
+      if (!email) return res.status(400).json({ message: "E-mail is verplicht" });
+      const r = await storage.addProspectCampaignRecipient({ campaignId, email, name: name || null, company: company || null, status: 'pending', sentAt: null, errorMessage: null });
+      return res.status(201).json(r);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.delete("/api/admin/prospect-campaigns/:campaignId/recipients/:recipientId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.recipientId);
+      await storage.deleteProspectCampaignRecipient(id);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // CRM contacts importeren als ontvangers
+  app.post("/api/admin/prospect-campaigns/:id/import-crm", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const companies = await storage.getCrmCompanies();
+      let imported = 0;
+      const existing = await storage.getProspectCampaignRecipients(campaignId);
+      const existingEmails = new Set(existing.map(r => r.email.toLowerCase()));
+      for (const company of companies) {
+        const contacts = await storage.getCrmContacts(company.id);
+        for (const contact of contacts) {
+          if (contact.email && !existingEmails.has(contact.email.toLowerCase())) {
+            await storage.addProspectCampaignRecipient({
+              campaignId, email: contact.email,
+              name: contact.name || null, company: company.name || null,
+              status: 'pending', sentAt: null, errorMessage: null,
+            });
+            existingEmails.add(contact.email.toLowerCase());
+            imported++;
+          }
+        }
+      }
+      return res.json({ imported });
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout CRM import:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Verzenden via SendGrid
+  app.post("/api/admin/prospect-campaigns/:id/send", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getProspectCampaign(campaignId);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+      if (campaign.status === 'sent') return res.status(400).json({ message: "Campagne is al verzonden" });
+
+      const recipients = await storage.getProspectCampaignRecipients(campaignId);
+      const pending = recipients.filter(r => r.status === 'pending');
+      if (pending.length === 0) return res.status(400).json({ message: "Geen ontvangers" });
+
+      const { sendEmail } = await import('./mail');
+      let sentCount = 0, failedCount = 0;
+
+      for (const recipient of pending) {
+        try {
+          // Personalise content
+          let html = campaign.htmlContent
+            .replace(/\{\{naam\}\}/gi, recipient.name || 'daar')
+            .replace(/\{\{bedrijf\}\}/gi, recipient.company || '');
+          const text = (campaign.textContent || '')
+            .replace(/\{\{naam\}\}/gi, recipient.name || 'daar')
+            .replace(/\{\{bedrijf\}\}/gi, recipient.company || '');
+
+          const ok = await sendEmail({
+            to: recipient.email,
+            from: 'info@doehetextra.nl',
+            subject: campaign.subject,
+            html,
+            text: text || undefined,
+          });
+
+          if (ok) {
+            await storage.updateProspectCampaignRecipient(recipient.id, { status: 'sent', sentAt: new Date() });
+            sentCount++;
+          } else {
+            await storage.updateProspectCampaignRecipient(recipient.id, { status: 'failed', errorMessage: 'Verzending mislukt' });
+            failedCount++;
+          }
+        } catch (e: any) {
+          await storage.updateProspectCampaignRecipient(recipient.id, { status: 'failed', errorMessage: String(e.message) });
+          failedCount++;
+        }
+      }
+
+      const updated = await storage.updateProspectCampaign(campaignId, {
+        status: 'sent', sentAt: new Date(),
+        sentCount: (campaign.sentCount || 0) + sentCount,
+        failedCount: (campaign.failedCount || 0) + failedCount,
+      });
+
+      return res.json({ success: true, sentCount, failedCount, campaign: updated });
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout verzenden:", err);
+      return res.status(500).json({ message: "Fout bij verzenden" });
+    }
+  });
+
   // ─── Verjaardagen opdrachtgevers ─────────────────────────────────────────
   app.get("/api/admin/client-birthdays", adminMiddleware, async (_req: Request, res: Response) => {
     try {

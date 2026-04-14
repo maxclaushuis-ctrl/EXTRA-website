@@ -62,6 +62,10 @@ import {
   type AdminNotification, type InsertAdminNotification,
   clientBirthdays as clientBirthdaysTable,
   type ClientBirthday, type InsertClientBirthday,
+  prospectCampaigns as prospectCampaignsTable,
+  prospectCampaignRecipients as prospectCampaignRecipientsTable,
+  type ProspectCampaign, type InsertProspectCampaign,
+  type ProspectCampaignRecipient, type InsertProspectCampaignRecipient,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -417,6 +421,17 @@ export interface IStorage {
   createClientBirthday(data: InsertClientBirthday): Promise<ClientBirthday>;
   updateClientBirthday(id: number, data: Partial<InsertClientBirthday>): Promise<ClientBirthday | undefined>;
   deleteClientBirthday(id: number): Promise<void>;
+
+  // B2B Prospect Campagnes
+  getProspectCampaigns(): Promise<ProspectCampaign[]>;
+  getProspectCampaign(id: number): Promise<ProspectCampaign | undefined>;
+  createProspectCampaign(data: InsertProspectCampaign): Promise<ProspectCampaign>;
+  updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
+  deleteProspectCampaign(id: number): Promise<void>;
+  getProspectCampaignRecipients(campaignId: number): Promise<ProspectCampaignRecipient[]>;
+  addProspectCampaignRecipient(data: InsertProspectCampaignRecipient): Promise<ProspectCampaignRecipient>;
+  deleteProspectCampaignRecipient(id: number): Promise<void>;
+  updateProspectCampaignRecipient(id: number, data: Partial<InsertProspectCampaignRecipient>): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -3872,6 +3887,51 @@ export class MemStorage implements IStorage {
 
   async deleteClientBirthday(id: number): Promise<void> {
     await db.delete(clientBirthdaysTable).where(eq(clientBirthdaysTable.id, id));
+  }
+
+  async getProspectCampaigns(): Promise<ProspectCampaign[]> {
+    return db.select().from(prospectCampaignsTable).orderBy(desc(prospectCampaignsTable.createdAt));
+  }
+
+  async getProspectCampaign(id: number): Promise<ProspectCampaign | undefined> {
+    const [row] = await db.select().from(prospectCampaignsTable).where(eq(prospectCampaignsTable.id, id));
+    return row;
+  }
+
+  async createProspectCampaign(data: InsertProspectCampaign): Promise<ProspectCampaign> {
+    const [row] = await db.insert(prospectCampaignsTable).values(data).returning();
+    return row;
+  }
+
+  async updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined> {
+    const [row] = await db.update(prospectCampaignsTable)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(prospectCampaignsTable.id, id))
+      .returning();
+    return row;
+  }
+
+  async deleteProspectCampaign(id: number): Promise<void> {
+    await db.delete(prospectCampaignsTable).where(eq(prospectCampaignsTable.id, id));
+  }
+
+  async getProspectCampaignRecipients(campaignId: number): Promise<ProspectCampaignRecipient[]> {
+    return db.select().from(prospectCampaignRecipientsTable)
+      .where(eq(prospectCampaignRecipientsTable.campaignId, campaignId))
+      .orderBy(asc(prospectCampaignRecipientsTable.createdAt));
+  }
+
+  async addProspectCampaignRecipient(data: InsertProspectCampaignRecipient): Promise<ProspectCampaignRecipient> {
+    const [row] = await db.insert(prospectCampaignRecipientsTable).values(data).returning();
+    return row;
+  }
+
+  async deleteProspectCampaignRecipient(id: number): Promise<void> {
+    await db.delete(prospectCampaignRecipientsTable).where(eq(prospectCampaignRecipientsTable.id, id));
+  }
+
+  async updateProspectCampaignRecipient(id: number, data: Partial<InsertProspectCampaignRecipient>): Promise<void> {
+    await db.update(prospectCampaignRecipientsTable).set(data).where(eq(prospectCampaignRecipientsTable.id, id));
   }
 }
 
