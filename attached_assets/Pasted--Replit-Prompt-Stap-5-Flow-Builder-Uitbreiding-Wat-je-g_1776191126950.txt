@@ -1,0 +1,421 @@
+# Replit Prompt — Stap 5: Flow Builder Uitbreiding
+
+## Wat je gaat doen
+Breid de bestaande visuele flow builder uit naar een volledig werkende geautomatiseerde drip-sequence engine. Dit omvat de uitbreiding van de flow builder UI met nieuwe node-types, de backend flow-execution engine die flows stap voor stap verwerkt op basis van contactgedrag, en de database-structuur om de voortgang per contact bij te houden.
+
+---
+
+## 1. Database schema — nieuwe tabellen
+
+```sql
+-- De stappen binnen een flow-campagne
+CREATE TABLE IF NOT EXISTS flow_steps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL,
+  stap_id TEXT NOT NULL,              -- unieke string ID binnen de flow, bijv. "stap_1"
+  type TEXT NOT NULL,                 -- trigger, email, wait, condition, tag_action, end
+  label TEXT,                         -- weergavenaam in de builder, bijv. "Wacht 3 dagen"
+  config TEXT DEFAULT '{}',           -- JSON met stap-specifieke instellingen (zie sectie 3)
+  next_stap_id TEXT,                  -- volgende stap bij lineaire flow of bij condition = false
+  next_stap_id_yes TEXT,             -- volgende stap bij condition = true
+  volgorde INTEGER DEFAULT 0,
+  FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
+);
+
+-- De voortgang van elk contact door een flow
+CREATE TABLE IF NOT EXISTS flow_contact_progress (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL,
+  contact_id INTEGER NOT NULL,
+  huidige_stap_id TEXT NOT NULL,      -- stap_id van de stap waar het contact nu staat
+  status TEXT DEFAULT 'actief',       -- actief, voltooid, gestopt, error
+  wacht_tot DATETIME,                 -- ingevuld bij wacht-stap: wanneer mag doorgaan
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(campaign_id, contact_id),
+  FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+  FOREIGN KEY (contact_id) REFERENCES contacts(id)
+);
+```
+
+---
+
+## 2. Flow builder UI — volledige pagina
+
+De flow builder is een aparte view/pagina, bereikbaar via:
+- Campagne detailpagina → knop "✏️ Flow opmaken" (alleen zichtbaar bij campagnetype = flow)
+
+**Layout:**
+```
+[Topbalk: campagnenaam | opslaan | activeren]
+[Linker paneel: node-bibliotheek (220px)]
+[Canvas: flow diagram (rest van breedte, scrollbaar)]
+```
+
+**Canvas eigenschappen:**
+- Oneindig scrollbaar canvas
+- Nodes zijn drag & drop positioneerbaar
+- Verbindingen (pijlen) worden getrokken van output-punt van de ene node naar input-punt van de volgende
+- Zoom in/out met muiswiel of +/- knoppen
+- "Fit to screen" knop om alle nodes in beeld te brengen
+- Grid achtergrond (subtiele stippen)
+- Klik op lege ruimte: deselecteer alles
+- Klik op node: toont eigenschappenpaneel rechts (slide-over, 300px)
+
+---
+
+## 3. Node types — gedetailleerde specificaties
+
+### TRIGGER node (groen, één per flow, altijd het startpunt)
+**Visueel:** Afgerond rechthoek, groene achtergrond (#059669), wit label "▶ Flow gestart"
+**Config:**
+```json
+{ "type": "trigger" }
+```
+**Gedrag:** Wordt geactiveerd wanneer een contact aan de flow wordt toegevoegd. Eén uitgaande verbinding.
+
+---
+
+### E-MAIL node (paars)
+**Visueel:** Rechthoek, paarse rand (#7C3AED), envelope icoon, label = campagnenaam of "Stuur e-mail"
+**Config:**
+```json
+{
+  "type": "email",
+  "template_id": null,        -- null = inline inhoud, of ID van opgeslagen template
+  "onderwerp": "",
+  "content": {}               -- zelfde JSON structuur als campagne content (stap 3)
+}
+```
+**Eigenschappenpaneel:**
+- Tekstinvoer voor onderwerp
+- Knop "✏️ E-mail opmaken" → opent de e-mail builder (stap 3) voor deze specifieke stap
+- Knop "Gebruik bestaande template" → dropdown van opgeslagen campagne-inhouden
+**Eén uitgaande verbinding.**
+
+---
+
+### WACHT node (blauw)
+**Visueel:** Rechthoek, blauwe rand (#2563EB), klokicoon, label = "Wacht X dagen"
+**Config:**
+```json
+{
+  "type": "wait",
+  "waarde": 3,
+  "eenheid": "dagen"          -- opties: uren, dagen
+}
+```
+**Eigenschappenpaneel:**
+- Getal invoerveld (1–90)
+- Eenheid dropdown: Uren / Dagen
+- Label update live: "Wacht 3 dagen"
+**Eén uitgaande verbinding.**
+
+---
+
+### CONDITIE node (oranje — splitspunt)
+**Visueel:** Ruit-vorm (diamond), oranje rand (#D97706), vraagteken icoon
+**Twee uitgaande verbindingen:** "Ja ✓" (groen) en "Nee ✗" (grijs)
+
+**Config varianten:**
+
+*Mail geopend:*
+```json
+{
+  "type": "condition",
+  "conditie": "mail_geopend",
+  "referentie_stap_id": "stap_2"   -- welke e-mail stap wordt gecheckt
+}
+```
+
+*Link geklikt:*
+```json
+{
+  "type": "condition",
+  "conditie": "link_geklikt",
+  "referentie_stap_id": "stap_2"
+}
+```
+
+*Geen actie na X dagen:*
+```json
+{
+  "type": "condition",
+  "conditie": "geen_actie",
+  "dagen": 3,
+  "referentie_stap_id": "stap_2"
+}
+```
+
+**Eigenschappenpaneel:**
+- Dropdown "Conditie type": Mail geopend / Link geklikt / Geen actie na X dagen
+- Bij "Geen actie": extra veld voor aantal dagen
+- Dropdown "Controleer e-mail stap": lijst van alle e-mail-nodes in de flow
+
+---
+
+### TAG ACTIE node (geel)
+**Visueel:** Rechthoek, gele rand (#CA8A04), label-icoon
+**Config:**
+```json
+{
+  "type": "tag_action",
+  "actie": "toevoegen",           -- opties: toevoegen, verwijderen
+  "tag": "Warme lead"
+}
+```
+**Eigenschappenpaneel:**
+- Actie: Toevoegen / Verwijderen (radio)
+- Tag: autocomplete op bestaande tags + optie om nieuwe te typen
+**Eén uitgaande verbinding.**
+
+---
+
+### EIND node (donkergrijs)
+**Visueel:** Afgeronde rechthoek, donkergrijze achtergrond (#374151), wit label "⏹ Flow beëindigd"
+**Config:**
+```json
+{ "type": "end" }
+```
+**Geen uitgaande verbindingen.**
+
+---
+
+## 4. Node bibliotheek (linker paneel)
+
+Gesectioned lijst van beschikbare nodes, drag & drop naar het canvas:
+
+```
+STARTEN
+  [▶ Trigger]  — al aanwezig op canvas, kan niet nogmaals toegevoegd worden
+
+ACTIES
+  [✉️ E-mail sturen]
+  [🏷️ Tag toevoegen/verwijderen]
+
+TIMING
+  [⏱️ Wacht]
+
+LOGICA
+  [❓ Conditie]
+
+AFSLUITEN
+  [⏹ Einde]
+```
+
+Elke node in de bibliotheek heeft een korte beschrijving bij hover:
+- E-mail: "Stuur een e-mail naar het contact"
+- Wacht: "Pauzeer de flow voor een bepaalde tijd"
+- Conditie: "Vertак de flow op basis van contactgedrag"
+- Tag actie: "Voeg een tag toe of verwijder een tag"
+- Einde: "Beëindig de flow voor dit contact"
+
+---
+
+## 5. Verbindingen (pijlen)
+
+- Elke node heeft input-punten (bovenaan) en output-punten (onderaan of rechts bij conditie)
+- Conditie-node: "Ja" output rechtsonder (groen), "Nee" output linksonder (grijs)
+- Trek een verbinding door van output-punt naar input-punt te slepen
+- Verbindingen zijn verwijderbaar door erop te klikken + Delete-toets
+- Een node mag maar één inkomende verbinding hebben (behalve merge-punten — niet ondersteund in v1)
+- Circulaire verbindingen zijn niet toegestaan (toon foutmelding bij poging)
+
+**Validatie bij opslaan:**
+- Elke flow moet beginnen bij een trigger-node
+- Elke tak moet eindigen bij een eind-node
+- Geen loshangende nodes (nodes zonder verbinding)
+- Elke e-mail node moet een onderwerp hebben
+- Bij ontbrekende validatie: toon inline foutmeldingen op de nodes én een samenvatting bovenaan
+
+---
+
+## 6. Flow opslaan
+
+Bij opslaan (handmatig of auto-save):
+- Converteer de visuele flow naar `flow_steps` records in de database
+- Elke node wordt één record met stap_id, type, config (JSON), next_stap_id
+- De posities van nodes (x, y coördinaten) worden opgeslagen in de config voor herstel bij opnieuw openen
+- Geef toast: "Flow opgeslagen ✓"
+
+---
+
+## 7. Flow activeren
+
+Knop "🚀 Flow activeren" in de topbalk:
+1. Valideer de flow (zie sectie 5)
+2. Toon bevestigingsmodal:
+   ```
+   "Weet je zeker dat je deze flow wilt activeren?
+   De flow wordt gestart voor X contacten die voldoen aan de segmentfilters."
+   ```
+3. Bij bevestiging:
+   - Update campagne status naar 'actief'
+   - Maak `flow_contact_progress` records aan voor alle matchende contacten (status = actief, huidige_stap_id = trigger stap_id)
+   - Start de flow engine (zie sectie 8)
+
+---
+
+## 8. Flow execution engine (backend)
+
+Schrijf een `flowEngine.js` service met de volgende functies:
+
+### `processFlowStep(progressId)`
+```
+1. Haal flow_contact_progress op (inclusief contact en campagne)
+2. Haal de huidige flow_step op
+3. Voer de stap uit op basis van type:
+
+   TRIGGER:
+   - Ga direct door naar de volgende stap
+
+   EMAIL:
+   - Roep sendSingleMail aan (uit stap 4)
+   - Wacht op resultaat
+   - Ga door naar volgende stap
+
+   WAIT:
+   - Bereken wacht_tot = NOW + waarde (uren of dagen)
+   - Sla wacht_tot op in flow_contact_progress
+   - Stop verwerking (wordt opgepakt door de scheduler)
+
+   CONDITION:
+   - Evalueer de conditie (zie evaluateCondition)
+   - Kies next_stap_id_yes of next_stap_id (nee) op basis van resultaat
+   - Ga direct door naar de gekozen tak
+
+   TAG_ACTION:
+   - Voeg tag toe of verwijder tag van contact
+   - Update contact in database
+   - Ga door naar volgende stap
+
+   END:
+   - Update flow_contact_progress status naar 'voltooid'
+   - Stop verwerking
+
+4. Update huidige_stap_id naar de volgende stap
+5. Bij fout: update status naar 'error', sla foutmelding op
+```
+
+### `evaluateCondition(condition, contactId, referentieStapId)`
+```
+Conditie: mail_geopend
+- Zoek mail_send op voor dit contact + de referentie e-mail stap
+- Controleer of er een mail_event bestaat met type = 'open'
+- Geef true of false terug
+
+Conditie: link_geklikt
+- Zelfde maar type = 'click'
+
+Conditie: geen_actie
+- Zoek mail_send op
+- Controleer of er GEEN open of click events zijn
+- EN of het verzonden_op meer dan X dagen geleden is
+- Geef true of false terug
+```
+
+### `runFlowScheduler()`
+```
+Wordt aangeroepen via een interval (elke 5 minuten):
+
+1. Haal alle flow_contact_progress op met status = 'actief'
+2. Filter: records waarbij wacht_tot IS NULL of wacht_tot <= NOW
+3. Verwerk elk record met processFlowStep
+4. Log voortgang: "Flow scheduler: X contacten verwerkt"
+```
+
+---
+
+## 9. Scheduler integreren
+
+In de hoofdapp (server.js of app.js):
+
+```javascript
+import { runFlowScheduler } from './flowEngine.js';
+
+// Start de scheduler bij opstarten van de server
+setInterval(async () => {
+  try {
+    await runFlowScheduler();
+  } catch (err) {
+    console.error('Flow scheduler fout:', err);
+  }
+}, 5 * 60 * 1000); // elke 5 minuten
+
+// Ook direct uitvoeren bij opstarten
+runFlowScheduler();
+```
+
+---
+
+## 10. Flow monitoring — campagne detailpagina
+
+Voeg een extra tab toe aan de campagne detailpagina (alleen bij type = flow):
+
+**Tab "Flow voortgang":**
+
+Bovenaan statistieken:
+```
+[Actief: X contacten]  [Voltooid: X]  [Gestopt: X]  [Fout: X]
+```
+
+Daaronder een tabel per flow-stap:
+| Stap | Type | Wacht hier | Doorgelopen | 
+|------|------|------------|-------------|
+| Stap 1 | Trigger | 0 | 47 |
+| Stap 2 | E-mail | 3 | 44 |
+| Stap 3 | Wacht 3 dagen | 12 | 32 |
+| Stap 4 | Conditie: geopend? | 0 | 32 |
+
+Contactenlijst onderaan (eerste 20, met "Meer laden"):
+| Contact | Bedrijf | Huidige stap | Status | Bijgewerkt op |
+|---------|---------|--------------|--------|---------------|
+
+Refresh-knop + automatisch verversen elke 60 seconden.
+
+---
+
+## 11. Flow templates
+
+Voeg een "Opslaan als template" knop toe in de flow builder topbalk:
+- Vraagt om een naam voor de template
+- Slaat de volledige flow op als herbruikbare template
+
+Bij aanmaken van een nieuwe flow-campagne:
+- Optie "Start vanuit template" → toont lijst van opgeslagen templates
+- Geselecteerde template wordt gekopieerd naar de nieuwe campagne
+
+**Standaard meegeleverde templates (automatisch aanmaken bij eerste start):**
+
+*Template 1: "Koude outreach — 3 stappen"*
+```
+Trigger → E-mail (introductie) → Wacht 3 dagen → 
+Conditie (geopend?) 
+  Ja → E-mail (follow-up enthousiast) → Einde
+  Nee → Wacht 2 dagen → E-mail (laatste poging) → Einde
+```
+
+*Template 2: "Klant upsell"*
+```
+Trigger → E-mail (upsell aanbod) → Wacht 5 dagen →
+Conditie (geklikt?)
+  Ja → Tag toevoegen (Warme lead) → Einde
+  Nee → E-mail (herinnering) → Einde
+```
+
+---
+
+## Stijlrichtlijnen flow builder
+
+- Canvas achtergrond: #F8F8F8 met subtiel stippengrid (elke 20px, kleur #E5E7EB)
+- Node kleuren zoals beschreven per type
+- Verbindingspijlen: #9CA3AF, 2px, met pijlpunt
+- Actieve/geselecteerde node: extra dikke rand (3px) in #7C3AED
+- Conditie-node uitvoer "Ja": groene pijl (#059669) met label "Ja ✓"
+- Conditie-node uitvoer "Nee": grijze pijl (#6B7280) met label "Nee ✗"
+- Fout-state op node: rode rand + fout-icoon rechtsboven op de node
+- Eigenschappenpaneel: wit, rechter slide-over, 300px, sluit met X
+
+---
+
+*Stap 5 van 8 — EXTRA E-mailmarketing Module*

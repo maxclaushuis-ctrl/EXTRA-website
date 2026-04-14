@@ -80,6 +80,7 @@ interface EmailParams {
   html?: string;
   text?: string;
   attachments?: EmailAttachment[];
+  headers?: Record<string, string>;
 }
 
 // Verzend een e-mail met opgegeven parameters
@@ -117,6 +118,9 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       text: params.text,
       html: params.html,
     };
+    if (params.headers && Object.keys(params.headers).length > 0) {
+      msg.headers = params.headers;
+    }
     if (params.attachments && params.attachments.length > 0) {
       msg.attachments = params.attachments.map(a => ({
         content: a.content,

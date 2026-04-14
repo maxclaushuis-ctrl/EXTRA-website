@@ -7890,7 +7890,12 @@ ${posts.map(p => `  <url>
       try {
         const ms = await storage.getMailSend(id);
         if (ms) {
-          await storage.createMailEvent({ mailSendId: id, type: 'open', ipAdres: req.ip || null, url: null });
+          // Deduplicatie: sla alleen het EERSTE open-event op
+          const bestaandeEvents = await storage.getMailEventsByMailSend(id);
+          const alOpengeregistreerd = bestaandeEvents.some(e => e.type === 'open');
+          if (!alOpengeregistreerd) {
+            await storage.createMailEvent({ mailSendId: id, type: 'open', ipAdres: req.ip || null, url: null });
+          }
         }
       } catch (e) { /* silent */ }
     }
@@ -7899,8 +7904,22 @@ ${posts.map(p => `  <url>
   // Click-tracking: slaat klik op en redirect naar echte URL
   app.get("/track/click/:mailSendId/:linkIndex", async (req: Request, res: Response) => {
     const id = parseInt(req.params.mailSendId);
-    const { url } = req.query as { url?: string };
-    const targetUrl = url || 'https://doehetextra.nl';
+    const linkIdx = parseInt(req.params.linkIndex);
+    const { url: queryUrl } = req.query as { url?: string };
+    let targetUrl = queryUrl || 'https://doehetextra.nl';
+
+    // Probeer URL op te halen uit opgeslagen link_map
+    if (!isNaN(id)) {
+      try {
+        const ms = await storage.getMailSend(id);
+        if (ms?.linkMap) {
+          const linkMap: Record<string, string> = JSON.parse(ms.linkMap);
+          if (linkMap[linkIdx] || linkMap[String(linkIdx)]) {
+            targetUrl = linkMap[linkIdx] || linkMap[String(linkIdx)];
+          }
+        }
+      } catch { /* gebruik query param als fallback */ }
+    }
 
     if (!isNaN(id)) {
       try {

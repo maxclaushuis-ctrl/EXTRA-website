@@ -189,18 +189,21 @@ export async function sendSingleMail(mailSendId: number, baseUrl: string): Promi
       baseUrl
     );
 
-    const campaign = await storage.getProspectCampaign(mailSend.campaignId);
     const unsubUrl = mailSend.contactId
       ? generateUnsubscribeLink(mailSend.contactId, generateUnsubscribeTokenValue(mailSend.contactId), baseUrl)
       : `${baseUrl}/unsubscribe/0/invalid`;
 
     const ok = await sendEmail({
       to,
-      from: FROM_EMAIL,
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       subject,
       html,
       text,
-    } as any);
+      headers: {
+        'List-Unsubscribe': `<${unsubUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
 
     if (ok) {
       await storage.updateMailSend(mailSendId, { status: 'sent', verzondenOp: new Date() });

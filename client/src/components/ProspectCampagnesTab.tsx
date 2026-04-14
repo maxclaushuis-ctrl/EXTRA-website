@@ -683,36 +683,14 @@ export default function ProspectCampagnesTab() {
   });
 
   const sendMut = useMutation({
-    mutationFn: async (id: number) => {
-      const c = campaigns.find(x => x.id === id);
-      if (!c) throw new Error('Campagne niet gevonden');
-      const contacts: any[] = await fetch(`/api/admin/prospect-contacts`, { credentials: 'include' }).then(r => r.json());
-      const bf = c.brancheFilter || [], ff = c.functieFilter || [];
-      const targets = contacts.filter((ct: any) => {
-        if (c.typeFilter && c.typeFilter !== 'alles' && ct.contactType !== c.typeFilter) return false;
-        if (c.taalFilter && c.taalFilter !== 'alles' && ct.taal !== c.taalFilter) return false;
-        if (bf.length > 0 && !bf.some(t => ct.branche === t)) return false;
-        if (ff.length > 0 && !ff.some(t => (ct.functieTags || []).includes(t))) return false;
-        if (ct.unsubscribed || ct.contactStatus === 'uitgeschreven') return false;
-        return true;
-      });
-      const existingR: any[] = await fetch(`/api/admin/prospect-campaigns/${id}/recipients`, { credentials: 'include' }).then(r => r.json());
-      const existing = new Set(existingR.map((r: any) => r.email.toLowerCase()));
-      for (const ct of targets) {
-        if (!existing.has(ct.email.toLowerCase())) {
-          await apiRequest('POST', `/api/admin/prospect-campaigns/${id}/recipients`, {
-            email: ct.email, name: ct.name || `${ct.voornaam || ''} ${ct.achternaam || ''}`.trim(),
-            company: ct.company || ct.bedrijf, contactId: ct.id,
-          });
-        }
-      }
-      return apiRequest('POST', `/api/admin/prospect-campaigns/${id}/send`);
-    },
+    mutationFn: (id: number) => apiRequest('POST', `/api/admin/prospect-campaigns/${id}/send`),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
-      toast({ title: `Verstuurd naar ${data?.sentCount || 0} ontvangers` });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns', selectedId, 'stats'] });
+      const n = data?.verzonden ?? data?.sentCount ?? 0;
+      toast({ title: `Campagne verzonden naar ${n} contacten ✓` });
     },
-    onError: (e: any) => toast({ title: e.message || 'Verzenden mislukt', variant: 'destructive' }),
+    onError: (e: any) => toast({ title: e?.data?.message || e?.message || 'Verzenden mislukt', variant: 'destructive' }),
   });
 
   // ── Filtered list
@@ -883,9 +861,10 @@ export default function ProspectCampagnesTab() {
               </Button>
               {['concept','draft'].includes(selectedCampaign.status) && (
                 <Button size="sm" className="gap-1.5 bg-purple-600 hover:bg-purple-700"
-                  disabled={!selectedCampaign.htmlContent}
+                  disabled={!selectedCampaign.htmlContent || sendMut.isPending}
                   onClick={() => { if (window.confirm(`Campagne '${selectedCampaign.name}' activeren en verzenden?`)) sendMut.mutate(selectedCampaign.id); }}>
-                  <Rocket className="h-3.5 w-3.5" />Activeren
+                  {sendMut.isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Rocket className="h-3.5 w-3.5" />}
+                  {sendMut.isPending ? 'Bezig...' : 'Activeren'}
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 px-2"
@@ -976,9 +955,9 @@ export default function ProspectCampagnesTab() {
                 {['concept','draft'].includes(selectedCampaign.status) && selectedCampaign.htmlContent && (
                   <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700" size="lg"
                     disabled={sendMut.isPending}
-                    onClick={() => { if (window.confirm(`Campagne '${selectedCampaign.name}' activeren en verzenden?`)) sendMut.mutate(selectedCampaign.id); }}>
+                    onClick={() => { if (window.confirm(`Campagne '${selectedCampaign.name}' activeren en verzenden naar alle gefilterde contacten?`)) sendMut.mutate(selectedCampaign.id); }}>
                     {sendMut.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-                    Campagne activeren & verzenden
+                    {sendMut.isPending ? 'Bezig met verzenden...' : 'Campagne activeren & verzenden'}
                   </Button>
                 )}
               </div>
