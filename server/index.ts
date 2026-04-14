@@ -316,20 +316,38 @@ function scheduleFlowEngine() {
   const MS_PER_5MIN = 5 * 60 * 1000;
 
   async function runCheck() {
+    // Check geplande campagnes
+    try {
+      const { checkGeplandeCampagnes } = await import('./campaignScheduler');
+      await checkGeplandeCampagnes();
+    } catch (err) {
+      console.error("[CampaignScheduler] Fout:", err);
+    }
+    // Flow stappen verwerken
     try {
       const { runFlowScheduler } = await import('./flowEngine');
       await runFlowScheduler();
     } catch (err) {
       console.error("[FlowEngine] Scheduler fout:", err);
     }
-    // Check A/B winners in same cycle
+    // Check A/B winners
     try {
       const { checkABWinners } = await import('./abEngine');
       await checkABWinners();
     } catch (err) {
       console.error("[ABEngine] Scheduler fout:", err);
     }
+    // Log scheduler run
+    try {
+      const { logScheduler } = await import('./schedulerUtils');
+      await logScheduler('scheduler_run', null, 'Cyclus voltooid');
+    } catch (_) {}
   }
+
+  // Init instellingen bij start
+  import('./schedulerUtils').then(({ initInstellingen }) => {
+    initInstellingen().catch(console.error);
+  });
 
   // Start na 15 seconden, daarna elke 5 minuten
   setTimeout(() => {

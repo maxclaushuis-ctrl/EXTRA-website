@@ -5719,6 +5719,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Stap 8: Geplande Verzending routes ──────────────────────────────────────
+
+  // Preview (dry-run): bereken werkelijk verzendmoment zonder op te slaan
+  app.post("/api/admin/prospect-campaigns/:id/plannen-preview", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const { verzendDirect, verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind } = req.body;
+      const { planCampagne } = await import('./campaignScheduler');
+      const resultaat = await planCampagne(id, {
+        verzendDirect: !!verzendDirect,
+        verzendOp: verzendOp ? new Date(verzendOp) : null,
+        alleenWerkdagen: alleenWerkdagen !== undefined ? !!alleenWerkdagen : undefined,
+        tijdvensterStart: tijdvensterStart || undefined,
+        tijdvensterEind: tijdvensterEind || undefined,
+        dryRun: true,
+      });
+      return res.json(resultaat);
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout bij preview' });
+    }
+  });
+
+  // Plan campagne definitief in
+  app.post("/api/admin/prospect-campaigns/:id/plannen", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const { verzendDirect, verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind } = req.body;
+      const { planCampagne } = await import('./campaignScheduler');
+      const resultaat = await planCampagne(id, {
+        verzendDirect: !!verzendDirect,
+        verzendOp: verzendOp ? new Date(verzendOp) : null,
+        alleenWerkdagen: alleenWerkdagen !== undefined ? !!alleenWerkdagen : undefined,
+        tijdvensterStart: tijdvensterStart || undefined,
+        tijdvensterEind: tijdvensterEind || undefined,
+        dryRun: false,
+      });
+      return res.json(resultaat);
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout bij inplannen' });
+    }
+  });
+
+  // Verzendtijd bijwerken (voor een al geplande campagne)
+  app.put("/api/admin/prospect-campaigns/:id/verzendtijd", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const { verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind } = req.body;
+      if (!verzendOp) return res.status(400).json({ message: "verzendOp verplicht" });
+      const { planCampagne } = await import('./campaignScheduler');
+      const resultaat = await planCampagne(id, {
+        verzendDirect: false,
+        verzendOp: new Date(verzendOp),
+        alleenWerkdagen: alleenWerkdagen !== undefined ? !!alleenWerkdagen : undefined,
+        tijdvensterStart: tijdvensterStart || undefined,
+        tijdvensterEind: tijdvensterEind || undefined,
+        dryRun: false,
+      });
+      return res.json(resultaat);
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout bij bijwerken' });
+    }
+  });
+
+  // Annuleer planning: zet campagne terug naar concept
+  app.post("/api/admin/prospect-campaigns/:id/annuleer-planning", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      await db.execute(sql`
+        UPDATE prospect_campaigns
+        SET status = 'concept',
+            scheduled_at = NULL,
+            werkelijk_verzend_op = NULL,
+            verzend_direct = FALSE,
+            updated_at = NOW()
+        WHERE id = ${id} AND status = 'gepland'
+      `);
+      const { logScheduler } = await import('./schedulerUtils');
+      await logScheduler('planning_geannuleerd', id, `Planning geannuleerd voor campagne ${id}`);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout bij annuleren' });
+    }
+  });
+
+  // Scheduler status (logs + geplande campagnes)
+  app.get("/api/admin/scheduler/status", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const [logsResult, geplandResult] = await Promise.all([
+        db.execute(sql`
+          SELECT id, type, campaign_id, bericht, timestamp
+          FROM scheduler_log
+          ORDER BY timestamp DESC LIMIT 50
+        `),
+        db.execute(sql`
+          SELECT id, name, status, scheduled_at, werkelijk_verzend_op, alleen_werkdagen, tijdvenster_start, tijdvenster_eind
+          FROM prospect_campaigns
+          WHERE status = 'gepland'
+          ORDER BY werkelijk_verzend_op ASC
+        `),
+      ]);
+      return res.json({
+        logs: logsResult.rows,
+        geplandeCampagnes: geplandResult.rows,
+        serverTijd: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
+  // Handmatig scheduler uitvoeren
+  app.post("/api/admin/scheduler/run", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const { checkGeplandeCampagnes } = await import('./campaignScheduler');
+      const verwerkt = await checkGeplandeCampagnes();
+      const { logScheduler } = await import('./schedulerUtils');
+      await logScheduler('scheduler_run', null, `Handmatig uitgevoerd: ${verwerkt} campagne(s) verwerkt`);
+      return res.json({ success: true, verwerkt });
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout bij uitvoeren' });
+    }
+  });
+
+  // Verzend-instellingen ophalen
+  app.get("/api/admin/instellingen/verzend", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const result = await db.execute(sql`SELECT sleutel, waarde FROM instellingen`);
+      const kv: Record<string, string> = {};
+      for (const row of result.rows as any[]) kv[row.sleutel] = row.waarde;
+      return res.json(kv);
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
+  // Verzend-instellingen bijwerken
+  app.put("/api/admin/instellingen/verzend", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { setInstelling } = await import('./schedulerUtils');
+      const toegestaan = ['verzend_alleen_werkdagen', 'verzend_tijdvenster_start', 'verzend_tijdvenster_eind', 'tijdzone'];
+      for (const [k, v] of Object.entries(req.body)) {
+        if (toegestaan.includes(k) && typeof v === 'string') {
+          await setInstelling(k, v);
+        }
+      }
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err?.message || 'Fout' });
+    }
+  });
+
   // ─── A/B Test routes (Stap 6) ────────────────────────────────────────────
 
   app.get("/api/admin/prospect-campaigns/:id/ab-stats", adminMiddleware, async (req: Request, res: Response) => {

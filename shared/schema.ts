@@ -1419,6 +1419,10 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   alleenWerkdagen: boolean("alleen_werkdagen").default(true),
   tijdvensterStart: text("tijdvenster_start").default("08:00"),
   tijdvensterEind: text("tijdvenster_eind").default("18:00"),
+  tijdzone: text("tijdzone").default("Europe/Amsterdam"),
+  // Geplande verzending
+  verzendDirect: boolean("verzend_direct").default(false),
+  werkelijkVerzendOp: timestamp("werkelijk_verzend_op"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -1572,3 +1576,20 @@ export const notificaties = pgTable("notificaties", {
 export const insertNotificatieSchema = createInsertSchema(notificaties).omit({ id: true, aangemaaktOp: true });
 export type InsertNotificatie = z.infer<typeof insertNotificatieSchema>;
 export type Notificatie = typeof notificaties.$inferSelect;
+
+// ─── Scheduler log ─────────────────────────────────────────────────────────
+export const schedulerLog = pgTable("scheduler_log", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(),          // campaign_check | flow_check | ab_check | verzending_gestart | verzending_fout | scheduler_run | scheduler_error
+  campaignId: integer("campaign_id"),
+  bericht: text("bericht"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+export type SchedulerLog = typeof schedulerLog.$inferSelect;
+
+// ─── Instellingen (key-value store) ─────────────────────────────────────────
+export const instellingen = pgTable("instellingen", {
+  sleutel: text("sleutel").primaryKey(),
+  waarde: text("waarde").notNull(),
+  bijgewerktOp: timestamp("bijgewerkt_op").defaultNow().notNull(),
+});

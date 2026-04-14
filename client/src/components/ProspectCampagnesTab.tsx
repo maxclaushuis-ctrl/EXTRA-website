@@ -32,6 +32,7 @@ import {
   Megaphone, MailOpen, MoreVertical, ImageIcon, Play, Square, Copy, Rocket,
   ArrowLeft, ArrowRight, SlidersHorizontal, Calendar, Timer, FlaskConical,
   Zap, TrendingUp, Tag, ChevronDown, ChevronUp, UserMinus, ExternalLink,
+  CalendarClock, BanIcon, Hourglass, SendHorizontal,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ type Campaign = {
   editorBlocks: string | null; contentA: string | null; contentB: string | null;
   htmlContent: string; textContent: string | null;
   scheduledAt: string | null; sentAt: string | null;
+  werkelijkVerzendOp: string | null; verzendDirect: boolean | null; tijdzone: string | null;
   sentCount: number; failedCount: number; openCount: number; clickCount: number;
   abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number;
   abWinnaarVariant: string | null; abWinnaarBepaaldOp: string | null; abTestFase: string | null;
@@ -1049,6 +1051,349 @@ function FlowVoortgangTab({ campaignId }: { campaignId: number }) {
   );
 }
 
+// ─── Countdown hook ───────────────────────────────────────────────────────────
+function useCountdown(targetDate: string | null): string {
+  const [label, setLabel] = useState('');
+  useEffect(() => {
+    if (!targetDate) { setLabel(''); return; }
+    function update() {
+      const diff = new Date(targetDate).getTime() - Date.now();
+      if (diff <= 0) { setLabel('Wordt verzonden...'); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      if (d > 0) setLabel(`${d}d ${h}u ${m}m`);
+      else if (h > 0) setLabel(`${h}u ${m}m ${s}s`);
+      else setLabel(`${m}m ${s}s`);
+    }
+    update();
+    const iv = setInterval(update, 1000);
+    return () => clearInterval(iv);
+  }, [targetDate]);
+  return label;
+}
+
+// ─── Verzendplanning sectie component ────────────────────────────────────────
+function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; onRefresh: () => void }) {
+  const { toast } = useToast();
+  const [modus, setModus] = useState<'idle' | 'plannen' | 'wijzigen'>('idle');
+  const [verzendOp, setVerzendOp] = useState('');
+  const [alleenWerkdagen, setAlleenWerkdagen] = useState(campaign.alleenWerkdagen ?? true);
+  const [tijdvensterStart, setTijdvensterStart] = useState(campaign.tijdvensterStart || '08:00');
+  const [tijdvensterEind, setTijdvensterEind] = useState(campaign.tijdvensterEind || '18:00');
+  const [preview, setPreview] = useState<{ leesbaar: string; gecorrigeerd: boolean; reden: string | null } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdown = useCountdown(campaign.werkelijkVerzendOp ?? null);
+
+  const isGepland = ['gepland', 'scheduled'].includes(campaign.status);
+  const isConcept = ['concept', 'draft'].includes(campaign.status);
+  const isActief = campaign.status === 'actief';
+
+  // Debounced preview
+  useEffect(() => {
+    if (modus === 'idle') return;
+    if (!verzendOp) { setPreview(null); return; }
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = setTimeout(async () => {
+      setPreviewLoading(true);
+      try {
+        const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen-preview`, {
+          verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, verzendDirect: false,
+        });
+        const data = await res.json();
+        setPreview(data);
+      } catch { setPreview(null); }
+      finally { setPreviewLoading(false); }
+    }, 600);
+    return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
+  }, [verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, modus, campaign.id]);
+
+  const planMut = useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => {
+      const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen`, payload);
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Fout'); }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      onRefresh();
+      setModus('idle');
+      toast({
+        title: data.verzendDirect ? '✅ Campagne wordt direct verzonden' : '📅 Campagne ingepland',
+        description: data.leesbaar ? `Verzending: ${data.leesbaar}` : undefined,
+      });
+    },
+    onError: (err: Error) => toast({ title: 'Fout bij inplannen', description: err.message, variant: 'destructive' }),
+  });
+
+  const wijzigMut = useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => {
+      const res = await apiRequest('PUT', `/api/admin/prospect-campaigns/${campaign.id}/verzendtijd`, payload);
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Fout'); }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      onRefresh();
+      setModus('idle');
+      toast({ title: '📅 Verzendmoment bijgewerkt', description: data.leesbaar ?? undefined });
+    },
+    onError: (err: Error) => toast({ title: 'Fout bij bijwerken', description: err.message, variant: 'destructive' }),
+  });
+
+  const annuleerMut = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/annuleer-planning`, {});
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Fout'); }
+    },
+    onSuccess: () => { onRefresh(); toast({ title: 'Planning geannuleerd', description: 'Campagne is teruggezet naar concept.' }); },
+    onError: (err: Error) => toast({ title: 'Fout', description: err.message, variant: 'destructive' }),
+  });
+
+  function openPlanForm() {
+    const basis = campaign.scheduledAt ? new Date(campaign.scheduledAt) : new Date(Date.now() + 3600000);
+    const local = new Date(basis.getTime() - basis.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    setVerzendOp(local);
+    setAlleenWerkdagen(campaign.alleenWerkdagen ?? true);
+    setTijdvensterStart(campaign.tijdvensterStart || '08:00');
+    setTijdvensterEind(campaign.tijdvensterEind || '18:00');
+    setPreview(null);
+    setModus(isGepland ? 'wijzigen' : 'plannen');
+  }
+
+  function submitPlan() {
+    const payload = { verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, verzendDirect: false };
+    if (modus === 'wijzigen') wijzigMut.mutate(payload);
+    else planMut.mutate(payload);
+  }
+
+  const isPending = planMut.isPending || wijzigMut.isPending;
+
+  // ── Render: Gepland status ──────────────────────────────────────────────────
+  if (isGepland) {
+    const werkelijkDt = campaign.werkelijkVerzendOp ? new Date(campaign.werkelijkVerzendOp) : null;
+    const werkelijkLeesbaar = werkelijkDt
+      ? werkelijkDt.toLocaleString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '—';
+
+    if (modus === 'wijzigen') {
+      return (
+        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 space-y-3">
+          <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center gap-1.5">
+            <CalendarClock className="h-3.5 w-3.5" />Verzendmoment wijzigen
+          </p>
+          <PlanFormVelden
+            verzendOp={verzendOp} setVerzendOp={setVerzendOp}
+            alleenWerkdagen={alleenWerkdagen} setAlleenWerkdagen={setAlleenWerkdagen}
+            tijdvensterStart={tijdvensterStart} setTijdvensterStart={setTijdvensterStart}
+            tijdvensterEind={tijdvensterEind} setTijdvensterEind={setTijdvensterEind}
+            preview={preview} previewLoading={previewLoading}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={!verzendOp || isPending} onClick={submitPlan}>
+              {isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CalendarClock className="h-3.5 w-3.5 mr-1.5" />}
+              Opslaan
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setModus('idle')}>Annuleren</Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center gap-1.5">
+            <CalendarClock className="h-3.5 w-3.5" />Ingepland
+          </p>
+          <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-mono">{countdown}</span>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-blue-900 capitalize">{werkelijkLeesbaar}</p>
+          {campaign.scheduledAt && campaign.werkelijkVerzendOp &&
+            campaign.scheduledAt !== campaign.werkelijkVerzendOp && (
+            <p className="text-xs text-blue-500 mt-0.5 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Gewenst: {new Date(campaign.scheduledAt).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              {' '}— aangepast aan tijdvenster
+            </p>
+          )}
+          <div className="flex gap-3 mt-1.5 text-xs text-blue-500">
+            {campaign.alleenWerkdagen && <span>Alleen werkdagen</span>}
+            <span>Venster: {campaign.tijdvensterStart}–{campaign.tijdvensterEind}</span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100 flex-1" onClick={openPlanForm}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />Wijzigen
+          </Button>
+          <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" disabled={annuleerMut.isPending}
+            onClick={() => { if (window.confirm('Planning annuleren? De campagne wordt teruggezet naar concept.')) annuleerMut.mutate(); }}>
+            {annuleerMut.isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <BanIcon className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Concept zonder email — toon met melding ──────────────────────
+  if (isConcept && !campaign.htmlContent) {
+    return (
+      <div className="rounded-xl p-4 border border-slate-200 bg-slate-50 space-y-2">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+          <Send className="h-3.5 w-3.5" />Verzending
+        </p>
+        <div className="flex gap-2 opacity-50 pointer-events-none">
+          <Button className="flex-1 gap-2 bg-purple-600 hover:bg-purple-700" size="sm" disabled>
+            <SendHorizontal className="h-3.5 w-3.5" />Direct verzenden
+          </Button>
+          <Button variant="outline" className="flex-1 gap-2" size="sm" disabled>
+            <CalendarClock className="h-3.5 w-3.5" />Inplannen op datum
+          </Button>
+        </div>
+        <p className="text-[11px] text-slate-400">Vul eerst de e-mail inhoud in om de campagne in te plannen of te verzenden.</p>
+      </div>
+    );
+  }
+
+  // ── Render: Plannen form open ──────────────────────────────────────────────
+  if (isConcept && modus === 'plannen') {
+    return (
+      <div className="bg-purple-50 rounded-xl p-4 border border-purple-200 space-y-3">
+        <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide flex items-center gap-1.5">
+          <CalendarClock className="h-3.5 w-3.5" />Verzendmoment inplannen
+        </p>
+        <PlanFormVelden
+          verzendOp={verzendOp} setVerzendOp={setVerzendOp}
+          alleenWerkdagen={alleenWerkdagen} setAlleenWerkdagen={setAlleenWerkdagen}
+          tijdvensterStart={tijdvensterStart} setTijdvensterStart={setTijdvensterStart}
+          tijdvensterEind={tijdvensterEind} setTijdvensterEind={setTijdvensterEind}
+          preview={preview} previewLoading={previewLoading}
+        />
+        <div className="flex gap-2">
+          <Button size="sm" className="flex-1 bg-purple-600 hover:bg-purple-700" disabled={!verzendOp || isPending}
+            onClick={submitPlan}>
+            {isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CalendarClock className="h-3.5 w-3.5 mr-1.5" />}
+            Inplannen
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setModus('idle')}>Annuleren</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Concept met email — knoppen ────────────────────────────────────
+  if (isConcept && campaign.htmlContent) {
+    return (
+      <div className="rounded-xl p-4 border border-slate-200 bg-slate-50 space-y-3">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+          <Send className="h-3.5 w-3.5" />Verzending
+        </p>
+        <div className="flex gap-2">
+          <Button className="flex-1 gap-2 bg-purple-600 hover:bg-purple-700" size="sm"
+            disabled={planMut.isPending}
+            onClick={() => planMut.mutate({ verzendDirect: true })}>
+            {planMut.isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <SendHorizontal className="h-3.5 w-3.5" />}
+            Direct verzenden
+          </Button>
+          <Button variant="outline" className="flex-1 gap-2" size="sm" onClick={openPlanForm}>
+            <CalendarClock className="h-3.5 w-3.5" />Inplannen op datum
+          </Button>
+        </div>
+        <p className="text-[11px] text-slate-400">Direct verzenden stuurt nu, inplannen laat je een datum/tijd kiezen.</p>
+      </div>
+    );
+  }
+
+  // ── Render: Actief ─────────────────────────────────────────────────────────
+  if (isActief) {
+    const total = (campaign.sentCount ?? 0) + (campaign.failedCount ?? 0);
+    const pct = total > 0 ? Math.round((campaign.sentCount ?? 0) / total * 100) : 0;
+    return (
+      <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+        <p className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+          <Zap className="h-3.5 w-3.5 animate-pulse" />Verzending actief
+        </p>
+        <div className="w-full bg-green-200 rounded-full h-2 mb-2">
+          <div className="bg-green-600 h-2 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="text-xs text-green-700">{campaign.sentCount ?? 0} van {total} verzonden ({pct}%)</p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ─── Plan form velden ─────────────────────────────────────────────────────────
+function PlanFormVelden({
+  verzendOp, setVerzendOp,
+  alleenWerkdagen, setAlleenWerkdagen,
+  tijdvensterStart, setTijdvensterStart,
+  tijdvensterEind, setTijdvensterEind,
+  preview, previewLoading,
+}: {
+  verzendOp: string; setVerzendOp: (v: string) => void;
+  alleenWerkdagen: boolean; setAlleenWerkdagen: (v: boolean) => void;
+  tijdvensterStart: string; setTijdvensterStart: (v: string) => void;
+  tijdvensterEind: string; setTijdvensterEind: (v: string) => void;
+  preview: { leesbaar: string; gecorrigeerd: boolean; reden: string | null } | null;
+  previewLoading: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs text-slate-600 mb-1 block">Gewenst verzendmoment</Label>
+        <Input
+          type="datetime-local"
+          value={verzendOp}
+          onChange={e => setVerzendOp(e.target.value)}
+          className="text-sm"
+          min={new Date().toISOString().slice(0, 16)}
+        />
+      </div>
+      <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2">
+        <div>
+          <p className="text-xs font-medium text-slate-700">Alleen werkdagen</p>
+          <p className="text-[11px] text-slate-400">Weekend worden overgeslagen</p>
+        </div>
+        <Switch checked={alleenWerkdagen} onCheckedChange={setAlleenWerkdagen} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs text-slate-600 mb-1 block">Tijdvenster start</Label>
+          <Input type="time" value={tijdvensterStart} onChange={e => setTijdvensterStart(e.target.value)} className="text-sm" />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-600 mb-1 block">Tijdvenster eind</Label>
+          <Input type="time" value={tijdvensterEind} onChange={e => setTijdvensterEind(e.target.value)} className="text-sm" />
+        </div>
+      </div>
+
+      {/* Live preview */}
+      {(previewLoading || preview) && (
+        <div className={`rounded-lg px-3 py-2.5 text-xs border ${preview?.gecorrigeerd ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-green-50 border-green-200 text-green-800'}`}>
+          {previewLoading ? (
+            <span className="flex items-center gap-1.5 text-slate-400"><RefreshCw className="h-3 w-3 animate-spin" />Berekening...</span>
+          ) : preview ? (
+            <div className="space-y-0.5">
+              <p className="font-medium flex items-center gap-1.5">
+                {preview.gecorrigeerd
+                  ? <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                  : <CheckCircle className="h-3.5 w-3.5 text-green-600" />}
+                Werkelijk verzendmoment: <span className="capitalize">{preview.leesbaar}</span>
+              </p>
+              {preview.gecorrigeerd && preview.reden && (
+                <p className="text-amber-600 ml-5">{preview.reden}</p>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main module ──────────────────────────────────────────────────────────────
 export default function ProspectCampagnesTab() {
   const { toast } = useToast();
@@ -1150,6 +1495,14 @@ export default function ProspectCampagnesTab() {
   });
 
   // ── Filtered list
+  const statusCounts = {
+    alle: campaigns.length,
+    concept: campaigns.filter(c => ['concept','draft'].includes(c.status)).length,
+    gepland: campaigns.filter(c => ['gepland','scheduled'].includes(c.status)).length,
+    actief: campaigns.filter(c => c.status === 'actief').length,
+    voltooid: campaigns.filter(c => ['voltooid','sent'].includes(c.status)).length,
+  };
+
   const STATUS_FILTER_OPTIONS = [
     { v: 'alle', label: 'Alle' },
     { v: 'concept', label: 'Concept' },
@@ -1166,6 +1519,14 @@ export default function ProspectCampagnesTab() {
       (statusFilter === 'actief' && c.status === 'actief') ||
       (statusFilter === 'voltooid' && ['voltooid','sent'].includes(c.status));
     return matchSearch && matchStatus;
+  }).sort((a, b) => {
+    // Gepland: sorteer op werkelijk verzendmoment (vroegst eerst)
+    if (['gepland','scheduled'].includes(a.status) && ['gepland','scheduled'].includes(b.status)) {
+      const da = a.werkelijkVerzendOp ? new Date(a.werkelijkVerzendOp).getTime() : 0;
+      const db2 = b.werkelijkVerzendOp ? new Date(b.werkelijkVerzendOp).getTime() : 0;
+      return da - db2;
+    }
+    return 0;
   });
 
   // ── Segment summary text
@@ -1201,12 +1562,22 @@ export default function ProspectCampagnesTab() {
 
         {/* Status filter pills */}
         <div className="px-3 py-2 border-b border-slate-100 flex gap-1 flex-wrap bg-white">
-          {STATUS_FILTER_OPTIONS.map(opt => (
-            <button key={opt.v} onClick={() => setStatusFilter(opt.v)}
-              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${statusFilter === opt.v ? 'bg-purple-100 border-purple-300 text-purple-700 font-medium' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-              {opt.label}
-            </button>
-          ))}
+          {STATUS_FILTER_OPTIONS.map(opt => {
+            const count = statusCounts[opt.v as keyof typeof statusCounts] ?? 0;
+            const isActive = statusFilter === opt.v;
+            return (
+              <button key={opt.v} onClick={() => setStatusFilter(opt.v)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${isActive ? 'bg-purple-100 border-purple-300 text-purple-700 font-medium' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                {opt.label}
+                {count > 0 && opt.v !== 'alle' && (
+                  <span className={`text-[10px] px-1 rounded-full ${isActive ? 'bg-purple-200 text-purple-700' : 'bg-slate-200 text-slate-500'}`}>{count}</span>
+                )}
+                {opt.v === 'alle' && (
+                  <span className={`text-[10px] px-1 rounded-full ${isActive ? 'bg-purple-200 text-purple-700' : 'bg-slate-200 text-slate-500'}`}>{count}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Campaign list */}
@@ -1243,6 +1614,12 @@ export default function ProspectCampagnesTab() {
                             <span className="flex items-center gap-0.5"><Send className="h-2.5 w-2.5" />{c.sentCount}</span>
                             <span className="flex items-center gap-0.5"><MailOpen className="h-2.5 w-2.5" />{c.sentCount > 0 ? Math.round(c.openCount / c.sentCount * 100) : 0}%</span>
                             <span className="flex items-center gap-0.5"><MousePointer className="h-2.5 w-2.5" />{c.sentCount > 0 ? Math.round(c.clickCount / c.sentCount * 100) : 0}%</span>
+                          </div>
+                        )}
+                        {['gepland','scheduled'].includes(c.status) && c.werkelijkVerzendOp && (
+                          <div className="flex items-center gap-1 mt-1 text-[10px] text-blue-500">
+                            <CalendarClock className="h-2.5 w-2.5" />
+                            {new Date(c.werkelijkVerzendOp).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </div>
                         )}
                       </div>
@@ -1366,21 +1743,11 @@ export default function ProspectCampagnesTab() {
                   <p className="text-sm text-slate-700">{getSegmentSummary(selectedCampaign)}</p>
                 </div>
 
-                {/* Verzendmoment */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />Verzendmoment
-                  </p>
-                  <p className="text-sm text-slate-700">
-                    {selectedCampaign.scheduledAt
-                      ? new Date(selectedCampaign.scheduledAt).toLocaleString('nl-NL', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                      : 'Direct na activatie'}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {selectedCampaign.alleenWerkdagen ? 'Alleen werkdagen • ' : ''}
-                    Tijdvenster: {selectedCampaign.tijdvensterStart}–{selectedCampaign.tijdvensterEind}
-                  </p>
-                </div>
+                {/* Verzendplanning sectie */}
+                <VerzendplanningSection
+                  campaign={selectedCampaign}
+                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] })}
+                />
 
                 {/* A/B test */}
                 {selectedCampaign.abTestActief && (
@@ -1415,15 +1782,6 @@ export default function ProspectCampagnesTab() {
                   </div>
                 </div>
 
-                {/* Activeer knop */}
-                {['concept','draft'].includes(selectedCampaign.status) && selectedCampaign.htmlContent && (
-                  <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700" size="lg"
-                    disabled={sendMut.isPending}
-                    onClick={() => { if (window.confirm(`Campagne '${selectedCampaign.name}' activeren en verzenden naar alle gefilterde contacten?`)) sendMut.mutate(selectedCampaign.id); }}>
-                    {sendMut.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-                    {sendMut.isPending ? 'Bezig met verzenden...' : 'Campagne activeren & verzenden'}
-                  </Button>
-                )}
               </div>
             </TabsContent>
 

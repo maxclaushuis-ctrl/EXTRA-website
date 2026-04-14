@@ -1,0 +1,121 @@
+# Replit Prompt — Navigatie: Apart "Campagnes" Hoofdtabblad
+
+## Wat je gaat doen
+Voeg een nieuw hoofdtabblad "Campagnes" toe aan de bestaande navigatie. Verplaats de items "Contacten", "E-mail campagnes" en "Statistieken" uit de huidige positie naar dit nieuwe tabblad. De bestaande "Bedrijven" sectie blijft ongewijzigd — alleen de navigatiestructuur verandert, geen functionaliteit.
+
+---
+
+## 1. Huidige navigatiestructuur (ter referentie)
+
+```
+BEDRIJVEN
+  Personeelsaanvragen
+  Leads & Prospects
+  Bestaande klanten
+  Reminders
+  Verjaardagen
+  Contacten              ← verplaatsen
+  E-mail campagnes       ← verplaatsen
+  Statistieken           ← verplaatsen
+```
+
+---
+
+## 2. Gewenste navigatiestructuur
+
+```
+BEDRIJVEN
+  Personeelsaanvragen
+  Leads & Prospects
+  Bestaande klanten
+  Reminders
+  Verjaardagen
+
+CAMPAGNES                ← nieuw hoofdtabblad
+  Contacten
+  E-mail campagnes
+  Statistieken
+```
+
+---
+
+## 3. Navigatie aanpassingen
+
+### Bedrijven sectie
+- Verwijder "Contacten", "E-mail campagnes" en "Statistieken" uit de Bedrijven sectie
+- De overige items (Personeelsaanvragen, Leads & Prospects, Bestaande klanten, Reminders, Verjaardagen) blijven ongewijzigd
+- De sectietitel "BEDRIJVEN" en het inklapbare chevron-icoon blijven behouden
+
+### Nieuwe Campagnes sectie
+Voeg direct onder de Bedrijven sectie een nieuwe sectie toe met exact dezelfde opmaak en stijl als de Bedrijven sectie:
+
+**Sectietitel:** `CAMPAGNES`
+- Zelfde typografie als "BEDRIJVEN" (kleine letters, grijs, letter-spacing)
+- Zelfde inklapbaar gedrag met chevron-icoon (standaard uitgeklapt)
+
+**Menu-items onder Campagnes:**
+
+1. **Contacten**
+   - Icoon: personen-icoon (zelfde als huidig)
+   - Route: zelfde route als huidig
+   - Actieve staat: paarse achtergrond + paarse tekst (zelfde als huidig actief item)
+
+2. **E-mail campagnes**
+   - Icoon: vliegtuigje/send-icoon (zelfde als huidig)
+   - Route: zelfde route als huidig
+
+3. **Statistieken**
+   - Icoon: staafdiagram-icoon (zelfde als huidig)
+   - Route: zelfde route als huidig
+
+---
+
+## 4. Stijl — identiek aan bestaande navigatie
+
+Gebruik exact dezelfde CSS/stijlklassen als de bestaande navigatie-items:
+
+- Sectietitel: grijs (#6B7280), 11px, uppercase, font-weight 600, letter-spacing 0.05em
+- Menu-items: standaard tekstkleur (#374151), 14px, padding links voor icoon
+- Icoon: 20x20px, grijs (#6B7280) in standaard staat
+- Hover staat: lichte grijze achtergrond (#F3F4F6)
+- Actief staat: lichte paarse achtergrond (#F5F3FF), paarse tekst (#7C3AED), paars icoon
+- Actief item heeft geen border of pill — alleen achtergrondkleur (zoals huidig "Contacten" item)
+- Ruimte tussen de twee secties (BEDRIJVEN en CAMPAGNES): 24px margin-top op de nieuwe sectie
+
+---
+
+## 5. Inklapbaar gedrag
+
+De CAMPAGNES sectie is standaard uitgeklapt en heeft hetzelfde inklapbare gedrag als BEDRIJVEN:
+- Klik op de sectietitel of het chevron-icoon klapt de sectie in/uit
+- Ingeklapt: alleen de sectietitel zichtbaar, chevron draait 180°
+- Uitgeklapt: alle menu-items zichtbaar, chevron in standaardpositie
+- Status (ingeklapt/uitgeklapt) wordt onthouden in localStorage met sleutel `nav_campagnes_ingeklapt`
+
+---
+
+## 6. Routing — geen wijzigingen
+
+De routes van de drie verplaatste items blijven exact hetzelfde. Alleen de navigatiestructuur verandert, de pagina's zelf niet. Zorg dat er geen broken links ontstaan.
+
+---
+
+## 7. Actieve staat bij paginanavigatie
+
+Zorg dat het juiste menu-item actief (paars) is op basis van de huidige URL/route:
+- Als de gebruiker op de Contacten pagina zit → "Contacten" onder CAMPAGNES is actief
+- Als de gebruiker op E-mail campagnes zit → "E-mail campagnes" onder CAMPAGNES is actief
+- Als de gebruiker op Statistieken zit → "Statistieken" onder CAMPAGNES is actief
+- Geen enkel item onder BEDRIJVEN is actief als de gebruiker in de CAMPAGNES sectie zit
+
+---
+
+## 8. Mobiele navigatie (indien aanwezig)
+
+Als de applicatie een mobiele navigatie heeft (hamburger menu of bottom navigation):
+- Voeg "Campagnes" toe als apart icoon/item naast "Bedrijven"
+- Gebruik een megafoon of e-mail icoon voor Campagnes
+
+---
+
+*Navigatie-aanpassing — EXTRA Platform*

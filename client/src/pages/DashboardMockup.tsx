@@ -21,7 +21,7 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, BellRing, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare, CalendarClock
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import VerjaardagenTab from '@/components/VerjaardagenTab';
@@ -32,6 +32,7 @@ import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 import NotificationCenter from '@/components/NotificationCenter';
 import NotificatieBel from '@/components/NotificatieBel';
 import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
+import SchedulerStatusTab from '@/components/SchedulerStatusTab';
 
 type User = {
   id: number;
@@ -858,6 +859,7 @@ export default function DashboardMockup() {
                 { icon: Users, label: 'Contacten', tab: 'prospect-contacten' },
                 { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
                 { icon: BarChart3, label: 'Statistieken', tab: 'prospect-statistieken' },
+                { icon: CalendarClock, label: 'Scheduler', tab: 'scheduler-status' },
               ].map(item => (
                 <button
                   key={item.tab}
@@ -3955,6 +3957,11 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'prospect-statistieken' ? (
             <ProspectStatistiekenDashboard />
+
+          ) : activeTab === 'scheduler-status' ? (
+            <div className="overflow-auto" style={{ height: 'calc(100vh - 57px)' }}>
+              <SchedulerStatusTab />
+            </div>
 
           ) : activeTab === 'bedrijven-aanvragen' ? (
             /* ─── PERSONEELSAANVRAGEN tab ─── */
