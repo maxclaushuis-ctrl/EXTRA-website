@@ -539,6 +539,11 @@ export default function Aanmelden() {
     };
   });
 
+  const [channelLocked] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return !!(params.get("utm_source") || params.get("jid"));
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const lang = flow === "NL" ? "NL" : "EN";
@@ -957,13 +962,26 @@ export default function Aanmelden() {
                       {t.channelLabel}
                     </span>
                   </Label>
-                  <Input
-                    type="text"
-                    value={formData.channel}
-                    onChange={(e) => updateField("channel", e.target.value)}
-                    placeholder={t.channelPlaceholder}
-                    className="h-12 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500/20"
-                  />
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={formData.channel}
+                      onChange={(e) => !channelLocked && updateField("channel", e.target.value)}
+                      placeholder={t.channelPlaceholder}
+                      readOnly={channelLocked}
+                      className={`h-12 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 ${channelLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed pr-10' : ''}`}
+                    />
+                    {channelLocked && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  {channelLocked && (
+                    <p className="text-xs text-gray-400 mt-1">Automatisch ingevuld op basis van de link waarvia je hebt aangemeld.</p>
+                  )}
                 </div>
               </div>
 
