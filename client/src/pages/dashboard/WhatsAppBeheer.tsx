@@ -127,7 +127,7 @@ export default function WhatsAppBeheer() {
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#1A1730' }}>360dialog API-verbinding</p>
             <p style={{ fontSize: 11, margin: '2px 0 0', color: '#9590A8' }}>
-              Gebruikt WHATSAPP_360_API_KEY · waba-v2.360dialog.io
+              Gebruikt WHATSAPP_360_API_KEY · waba.360dialog.io/v1
             </p>
           </div>
           <span style={{
