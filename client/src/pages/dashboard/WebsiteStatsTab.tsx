@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
   TrendingUp, TrendingDown, Users, FileText, CheckCircle2, XCircle,
   Clock, BarChart3, Target, AlertCircle, Info, ExternalLink,
@@ -96,7 +96,45 @@ function InsightCard({ type, title, text }: { type: 'warning' | 'success' | 'inf
   );
 }
 
-function Ga4Banner() {
+function Ga4KpiCard({ label, value, prev, color, isLoading, invertGoed }: {
+  label: string; value: string | number; prev?: number; color: KpiColor; isLoading?: boolean; invertGoed?: boolean;
+}) {
+  const c = colorMap[color];
+  const isNum = typeof value === 'number' && typeof prev === 'number' && prev > 0;
+  const trend = isNum ? ((value as number) - (prev as number)) / (prev as number) * 100 : null;
+  const isUp = trend !== null && trend > 0;
+  const isGood = invertGoed ? !isUp : isUp;
+  return (
+    <Card className="border-0 shadow-sm">
+      <CardContent className="p-4">
+        {isLoading ? <Skeleton className="h-7 w-16 mb-1" /> : (
+          <div className={`text-2xl font-bold ${c.text} mb-0.5 leading-none`}>
+            {typeof value === 'number' ? value.toLocaleString('nl-NL') : value}
+          </div>
+        )}
+        <div className="text-xs font-medium text-gray-600">{label}</div>
+        {trend !== null && !isLoading && (
+          <div className={`text-xs mt-1 font-medium ${isGood ? 'text-green-600' : 'text-red-500'}`}>
+            {isUp ? '↑' : '↓'} {Math.abs(Math.round(trend))}% vs vorige periode
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Ga4Banner({ configured = false }: { configured?: boolean }) {
+  if (configured) {
+    return (
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-green-800">Google Analytics 4 is gekoppeld</p>
+          <p className="text-xs text-green-700 mt-0.5">Live websitedata wordt rechtstreeks uit GA4 uitgelezen. Bekijk het tabblad "Google Analytics" voor volledig bezoekersoverzicht.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
       <Info className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
@@ -144,8 +182,8 @@ function groupByMonth(candidates: Candidate[]) {
 
 // ─── Tab 1: Overzicht ──────────────────────────────────────────────────────────
 
-function TabOverzicht({ candidates, staffingRequests, blogs, isLoading }: {
-  candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean;
+function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4Configured }: {
+  candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean; ga4Configured: boolean;
 }) {
   const now = new Date();
   const last7 = candidates.filter(c => (now.getTime() - new Date(c.createdAt).getTime()) < 7 * 86400000).length;
@@ -170,7 +208,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading }: {
 
   return (
     <div className="space-y-8">
-      <Ga4Banner />
+      <Ga4Banner configured={ga4Configured} />
 
       {/* KPIs */}
       <section>
@@ -523,7 +561,7 @@ function TabPaginas() {
 
 // ─── Tab 4: SEO & Content ─────────────────────────────────────────────────────
 
-function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean }) {
+function TabSeo({ blogs, isLoading, ga4Configured }: { blogs: BlogPost[]; isLoading: boolean; ga4Configured: boolean }) {
   const published = blogs.filter(b => b.status === 'published');
   const drafts = blogs.filter(b => b.status === 'draft');
   const scheduled = blogs.filter(b => b.status === 'scheduled');
@@ -632,7 +670,7 @@ function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean })
             <tbody className="divide-y divide-gray-50">
               {[
                 { naam: 'Interne database', info: 'Aanmeldingen, CV uploads, statussen, blogs, personeelsaanvragen', actief: true },
-                { naam: 'Google Analytics 4', info: 'Websitebezoekers, paginaweergaven, bounce rate, apparaten, verkeersbronnen', actief: false },
+                { naam: 'Google Analytics 4', info: 'Websitebezoekers, paginaweergaven, bounce rate, apparaten, verkeersbronnen', actief: ga4Configured },
                 { naam: 'Google Search Console', info: 'Zoekwoorden, posities in Google, impressies, klikken, CTR', actief: false },
                 { naam: 'Hotjar / MS Clarity', info: 'Heatmaps, sessie-opnames, scroll depth, afhakpunten in formulieren', actief: false },
                 { naam: 'Meta Pixel', info: 'Social media campagne-attributie en retargeting', actief: false },
@@ -661,13 +699,207 @@ function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean })
   );
 }
 
+// ─── Tab GA4: Google Analytics ────────────────────────────────────────────────
+
+const GA4_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
+
+function fmtDuration(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}m ${Math.round(s)}s`;
+}
+
+function TabGa4({ overview, trend, sources, pages, devices, isLoading }: {
+  overview: any; trend: any[]; sources: any[]; pages: any[]; devices: any[]; isLoading: boolean;
+}) {
+  const trendData = (trend ?? []).map((t: any) => ({
+    date: `${t.date.slice(4, 6)}/${t.date.slice(6, 8)}`,
+    sessies: t.sessions,
+    gebruikers: t.users,
+  }));
+
+  const hasOverview = overview && overview.sessions;
+  const hasData = !isLoading && hasOverview;
+
+  return (
+    <div className="space-y-8">
+
+      {/* KPI cards */}
+      <section>
+        <SectionTitle>Website overzicht — live GA4 data (laatste 30 dagen)</SectionTitle>
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[...Array(5)].map((_, i) => <Card key={i} className="border-0 shadow-sm"><CardContent className="p-4"><Skeleton className="h-7 w-16 mb-1" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>)}
+          </div>
+        ) : !hasData ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
+            <AlertCircle className="h-8 w-8 text-amber-400 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-amber-800">Geen GA4 data beschikbaar</p>
+            <p className="text-xs text-amber-700 mt-1">Controleer of de GA_PROPERTY_ID correct is ingesteld en het service account toegang heeft als Viewer in Google Analytics.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <Ga4KpiCard label="Sessies"          value={overview.sessions?.value ?? 0}    prev={overview.sessions?.prev}    color="purple" />
+            <Ga4KpiCard label="Gebruikers"       value={overview.users?.value ?? 0}        prev={overview.users?.prev}       color="blue"   />
+            <Ga4KpiCard label="Pageviews"        value={overview.pageviews?.value ?? 0}    prev={overview.pageviews?.prev}   color="green"  />
+            <Ga4KpiCard label="Bounce rate"      value={`${overview.bounceRate?.value ?? 0}%`} color="amber" invertGoed />
+            <Ga4KpiCard label="Gem. sessieduur"  value={fmtDuration(overview.avgDuration?.value ?? 0)} color="purple" />
+          </div>
+        )}
+      </section>
+
+      {/* Trend */}
+      <section>
+        <SectionTitle>Bezoektrend afgelopen 30 dagen</SectionTitle>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-4 px-2 pb-4">
+            {isLoading ? <Skeleton className="h-52 w-full" /> : trendData.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-10">Geen trenddata</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={trendData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="grad-sess" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="grad-user" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="sessies"    stroke="#7c3aed" fill="url(#grad-sess)" strokeWidth={2} name="Sessies"    dot={false} />
+                  <Area type="monotone" dataKey="gebruikers" stroke="#3b82f6" fill="url(#grad-user)" strokeWidth={2} name="Gebruikers" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Sources + Devices */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <section>
+          <SectionTitle>Verkeersbronnen</SectionTitle>
+          <Card className="border-0 shadow-sm h-full">
+            <CardContent className="pt-5 pb-4 px-5">
+              {isLoading ? <Skeleton className="h-48 w-full" /> : (sources ?? []).length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">Geen data</p>
+              ) : (
+                <div className="space-y-3">
+                  {(sources ?? []).map((s: any, i: number) => {
+                    const maxS = Math.max(...(sources ?? []).map((x: any) => x.sessions), 1);
+                    const pct = Math.round((s.sessions / maxS) * 100);
+                    return (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-36 text-xs text-gray-600 shrink-0 truncate">{s.channel}</div>
+                        <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 2)}%`, background: GA4_COLORS[i % GA4_COLORS.length] }} />
+                          <span className="absolute inset-0 flex items-center pl-2 text-xs font-semibold text-white mix-blend-normal" style={{ textShadow: '0 0 3px rgba(0,0,0,0.4)' }}>
+                            {s.sessions.toLocaleString('nl-NL')}
+                          </span>
+                        </div>
+                        <div className="w-10 text-xs text-gray-500 shrink-0 text-right">{pct}%</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        <section>
+          <SectionTitle>Apparaten</SectionTitle>
+          <Card className="border-0 shadow-sm h-full">
+            <CardContent className="pt-5 pb-4">
+              {isLoading ? <Skeleton className="h-48 w-full" /> : (devices ?? []).length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">Geen data</p>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <PieChart>
+                      <Pie data={(devices ?? []).map((d: any) => ({ name: d.device, value: d.sessions }))} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" label={({ name, percent }) => `${name} ${Math.round(percent * 100)}%`} labelLine={false}>
+                        {(devices ?? []).map((_: any, i: number) => <Cell key={i} fill={GA4_COLORS[i % GA4_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(v: any) => v.toLocaleString('nl-NL')} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 mt-3 px-2">
+                    {(devices ?? []).map((d: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-sm" style={{ background: GA4_COLORS[i % GA4_COLORS.length] }} />
+                          <span className="text-gray-600 capitalize">{d.device}</span>
+                        </div>
+                        <span className="font-semibold text-gray-700">{d.sessions.toLocaleString('nl-NL')} sessies</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+
+      {/* Top pagina's */}
+      <section>
+        <SectionTitle>Top pagina's (laatste 30 dagen)</SectionTitle>
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Pagina (pad)</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Pageviews</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Gebruikers</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Gem. duur</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {isLoading ? (
+                  [1,2,3,4,5].map(i => (
+                    <tr key={i}><td colSpan={5} className="px-5 py-3"><Skeleton className="h-5 w-full" /></td></tr>
+                  ))
+                ) : (pages ?? []).length === 0 ? (
+                  <tr><td colSpan={5} className="px-5 py-8 text-center text-gray-400 text-sm">Geen pagina-data beschikbaar</td></tr>
+                ) : (
+                  (pages ?? []).map((p: any, i: number) => (
+                    <tr key={i} className="hover:bg-purple-50/30 transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center">{i + 1}</div>
+                      </td>
+                      <td className="px-4 py-3.5 text-sm font-mono text-gray-600 max-w-xs truncate">{p.path}</td>
+                      <td className="px-4 py-3.5 text-right text-sm font-semibold text-gray-700">{p.pageviews.toLocaleString('nl-NL')}</td>
+                      <td className="px-4 py-3.5 text-right text-sm text-gray-500 hidden sm:table-cell">{p.users.toLocaleString('nl-NL')}</td>
+                      <td className="px-4 py-3.5 text-right text-sm text-gray-500 hidden md:table-cell">{fmtDuration(p.avgDuration)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </section>
+    </div>
+  );
+}
+
 // ─── Main component ─────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'overzicht',   label: 'Overzicht'           },
-  { id: 'conversies',  label: 'Aanmeldingen'         },
-  { id: 'paginas',     label: 'Pagina prestaties'    },
-  { id: 'seo',         label: 'SEO & Content'        },
+  { id: 'overzicht',          label: 'Overzicht'          },
+  { id: 'conversies',         label: 'Aanmeldingen'        },
+  { id: 'google-analytics',   label: 'Google Analytics'   },
+  { id: 'paginas',            label: 'Pagina prestaties'  },
+  { id: 'seo',                label: 'SEO & Content'      },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
@@ -684,6 +916,39 @@ export default function WebsiteStatsTab() {
   const { data: staffingData, isLoading: staffingLoading } = useQuery<StaffingRequest[]>({
     queryKey: ['/api/admin/staffing-requests'],
   });
+
+  const { data: ga4Status } = useQuery<{ configured: boolean; error?: string }>({
+    queryKey: ['/api/admin/ga4/status'],
+    retry: false,
+  });
+  const ga4Configured = ga4Status?.configured ?? false;
+
+  const { data: ga4Overview, isLoading: ga4OverviewLoading } = useQuery<any>({
+    queryKey: ['/api/admin/ga4/overview'],
+    enabled: ga4Configured,
+    retry: false,
+  });
+  const { data: ga4Trend, isLoading: ga4TrendLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/ga4/trend'],
+    enabled: ga4Configured,
+    retry: false,
+  });
+  const { data: ga4Sources, isLoading: ga4SourcesLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/ga4/sources'],
+    enabled: ga4Configured,
+    retry: false,
+  });
+  const { data: ga4Pages, isLoading: ga4PagesLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/ga4/pages'],
+    enabled: ga4Configured,
+    retry: false,
+  });
+  const { data: ga4Devices, isLoading: ga4DevicesLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/ga4/devices'],
+    enabled: ga4Configured,
+    retry: false,
+  });
+  const ga4Loading = ga4OverviewLoading || ga4TrendLoading || ga4SourcesLoading || ga4PagesLoading || ga4DevicesLoading;
 
   const candidates = (candidatesData?.candidates ?? []).filter(Boolean);
   const blogs = blogData?.posts ?? [];
@@ -707,24 +972,28 @@ export default function WebsiteStatsTab() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap flex items-center gap-1.5 ${
                 activeTab === t.id
                   ? 'border-purple-600 text-purple-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               {t.label}
+              {t.id === 'google-analytics' && (
+                <span className={`w-1.5 h-1.5 rounded-full ${ga4Configured ? 'bg-green-400' : 'bg-gray-300'}`} />
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tab content — alleen actieve tab rendert */}
+      {/* Tab content */}
       <div className="p-6 flex-1">
-        {activeTab === 'overzicht'  && <TabOverzicht  candidates={candidates} staffingRequests={staffingRequests} blogs={blogs} isLoading={isLoading} />}
-        {activeTab === 'conversies' && <TabConversies candidates={candidates} isLoading={isLoading} />}
-        {activeTab === 'paginas'    && <TabPaginas />}
-        {activeTab === 'seo'        && <TabSeo blogs={blogs} isLoading={isLoading} />}
+        {activeTab === 'overzicht'        && <TabOverzicht  candidates={candidates} staffingRequests={staffingRequests} blogs={blogs} isLoading={isLoading} ga4Configured={ga4Configured} />}
+        {activeTab === 'conversies'       && <TabConversies candidates={candidates} isLoading={isLoading} />}
+        {activeTab === 'google-analytics' && <TabGa4 overview={ga4Overview} trend={ga4Trend ?? []} sources={ga4Sources ?? []} pages={ga4Pages ?? []} devices={ga4Devices ?? []} isLoading={ga4Loading} />}
+        {activeTab === 'paginas'          && <TabPaginas />}
+        {activeTab === 'seo'              && <TabSeo blogs={blogs} isLoading={isLoading} ga4Configured={ga4Configured} />}
       </div>
     </div>
   );
