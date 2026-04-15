@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { isGa4Configured, fetchGa4Overview, fetchGa4Trend, fetchGa4Sources, fetchGa4TopPages, fetchGa4Devices } from "./ga4";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
@@ -8749,6 +8750,66 @@ ${posts.map(p => `  <url>
       return res.send(unsubscribePageHtml(false));
     } catch (e) {
       return res.status(500).send(unsubscribePageHtml(true));
+    }
+  });
+
+  // ── GA4 Analytics ──────────────────────────────────────────────────────────
+  app.get("/api/admin/ga4/status", adminMiddleware, (_req, res) => {
+    res.json({ configured: isGa4Configured() });
+  });
+
+  app.get("/api/admin/ga4/overview", adminMiddleware, async (req, res) => {
+    if (!isGa4Configured()) return res.json({ error: "not_configured" });
+    try {
+      const days = Number(req.query.days ?? 30);
+      const data = await fetchGa4Overview(days);
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/admin/ga4/trend", adminMiddleware, async (req, res) => {
+    if (!isGa4Configured()) return res.json({ error: "not_configured" });
+    try {
+      const days = Number(req.query.days ?? 30);
+      const data = await fetchGa4Trend(days);
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/admin/ga4/sources", adminMiddleware, async (req, res) => {
+    if (!isGa4Configured()) return res.json({ error: "not_configured" });
+    try {
+      const days = Number(req.query.days ?? 30);
+      const data = await fetchGa4Sources(days);
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/admin/ga4/pages", adminMiddleware, async (req, res) => {
+    if (!isGa4Configured()) return res.json({ error: "not_configured" });
+    try {
+      const days = Number(req.query.days ?? 30);
+      const data = await fetchGa4TopPages(days);
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/admin/ga4/devices", adminMiddleware, async (req, res) => {
+    if (!isGa4Configured()) return res.json({ error: "not_configured" });
+    try {
+      const days = Number(req.query.days ?? 30);
+      const data = await fetchGa4Devices(days);
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
     }
   });
 
