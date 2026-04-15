@@ -19,8 +19,9 @@ export async function stuurBericht(nummer: string, tekst: string) {
     headers,
     body: JSON.stringify({ nummer, tekst }),
   });
-  if (!res.ok) throw new Error('Versturen mislukt');
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || data?.error) throw new Error(data?.error || 'Versturen mislukt');
+  return data;
 }
 
 export async function haalWebhookStatus() {

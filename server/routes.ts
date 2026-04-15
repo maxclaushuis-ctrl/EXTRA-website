@@ -8487,18 +8487,37 @@ ${posts.map(p => `  <url>
   app.post('/api/whatsapp/stuur', adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
+
+    const cleanNummer = nummer.replace(/[^0-9]/g, '');
+
+    // 360dialog v2 — Cloud API formaat (zelfde als Meta Cloud API)
+    const payload = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: cleanNummer,
+      type: 'text',
+      text: { preview_url: false, body: tekst },
+    };
+
     try {
       const r = await fetch(`${WA_BASE_URL}/messages`, {
         method: 'POST',
         headers: wa360Headers,
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: nummer.replace(/[^0-9]/g, ''),
-          type: 'text',
-          text: { body: tekst },
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await r.json();
+      const responseText = await r.text();
+      let data: any = {};
+      try { data = JSON.parse(responseText); } catch {}
+
+      console.log(`360dialog stuur → ${cleanNummer}: HTTP ${r.status} — ${responseText}`);
+
+      // Geef fout terug als 360dialog het bericht afwijst
+      if (!r.ok || data?.error) {
+        const errorMsg = data?.error || data?.message || responseText;
+        return res.status(r.ok ? 400 : r.status).json({ error: `360dialog: ${errorMsg}` });
+      }
+
+      // Alleen opslaan als 360dialog bevestigt
       const bericht = {
         id: data?.messages?.[0]?.id || `out_${Date.now()}`,
         inkomend: false,
@@ -8508,9 +8527,10 @@ ${posts.map(p => `  <url>
         tijdstip: new Date().toISOString(),
       };
       waBerichten.unshift(bericht);
-      res.json(data);
+      return res.json({ success: true, messageId: bericht.id });
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      console.error('Fout bij versturen WhatsApp bericht:', err.message);
+      return res.status(500).json({ error: err.message });
     }
   });
 

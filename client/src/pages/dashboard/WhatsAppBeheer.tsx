@@ -98,8 +98,13 @@ export default function WhatsAppBeheer() {
       await stuurBericht(nummer, tekst);
       setTekst('');
       await laadBerichten();
-    } catch {
-      setFout('Versturen mislukt — controleer het nummer en de API key');
+    } catch (e: any) {
+      const msg = e.message || '';
+      if (msg.includes('template') || msg.includes('window') || msg.includes('opt')) {
+        setFout('WhatsApp staat alleen berichten toe als reactie op een ontvangen bericht (24u-venster). Vraag de ontvanger eerst om jou een bericht te sturen, of gebruik een goedgekeurd berichtsjabloon.');
+      } else {
+        setFout(msg || 'Versturen mislukt — controleer het nummer en de API key');
+      }
     } finally {
       setLoading(false);
     }
