@@ -8449,7 +8449,7 @@ ${posts.map(p => `  <url>
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
   // ─── WHATSAPP BEHEER (360dialog API) ──────────────────────────────────────
-  const WA_BASE_URL = 'https://waba-v2.360dialog.io/v2';
+  const WA_BASE_URL = 'https://waba.360dialog.io/v1';
   const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
   const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
 
@@ -8490,13 +8490,11 @@ ${posts.map(p => `  <url>
 
     const cleanNummer = nummer.replace(/[^0-9]/g, '');
 
-    // 360dialog v2 — Cloud API formaat (zelfde als Meta Cloud API)
+    // 360dialog v1 berichtformaat
     const payload = {
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
       to: cleanNummer,
       type: 'text',
-      text: { preview_url: false, body: tekst },
+      text: { body: tekst },
     };
 
     try {
@@ -8511,9 +8509,9 @@ ${posts.map(p => `  <url>
 
       console.log(`360dialog stuur → ${cleanNummer}: HTTP ${r.status} — ${responseText}`);
 
-      // Geef fout terug als 360dialog het bericht afwijst
-      if (!r.ok || data?.error) {
-        const errorMsg = data?.error || data?.message || responseText;
+      // Geef fout terug als 360dialog het bericht afwijst (v1 gebruikt meta.developer_message)
+      if (!r.ok || data?.error || data?.meta?.success === false) {
+        const errorMsg = data?.meta?.developer_message || data?.error || data?.message || responseText;
         return res.status(r.ok ? 400 : r.status).json({ error: `360dialog: ${errorMsg}` });
       }
 
@@ -8571,13 +8569,13 @@ ${posts.map(p => `  <url>
       return res.status(500).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
     }
 
-    // 360dialog v2 — probeer POST, PUT en PATCH met verschillende body-formaten
+    // 360dialog v1 — probeer PATCH, PUT en POST met correcte body-formaten
     const attempts = [
-      { method: 'POST', body: { url: webhookUrl, headers: {} } },
-      { method: 'PUT',  body: { url: webhookUrl, headers: {} } },
-      { method: 'POST', body: { url: webhookUrl } },
-      { method: 'PUT',  body: { url: webhookUrl } },
       { method: 'PATCH', body: { url: webhookUrl } },
+      { method: 'PUT',   body: { url: webhookUrl, headers: {} } },
+      { method: 'POST',  body: { url: webhookUrl, headers: {} } },
+      { method: 'PUT',   body: { url: webhookUrl } },
+      { method: 'POST',  body: { url: webhookUrl } },
     ];
 
     let lastStatus = 0;
