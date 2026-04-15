@@ -22,3 +22,20 @@ export async function stuurBericht(nummer: string, tekst: string) {
   if (!res.ok) throw new Error('Versturen mislukt');
   return res.json();
 }
+
+export async function haalWebhookStatus() {
+  const res = await fetch(`${BASE_URL}/webhook-status`, { headers });
+  if (!res.ok) throw new Error('Status ophalen mislukt');
+  return res.json();
+}
+
+export async function registreerWebhook(url?: string) {
+  const res = await fetch(`${BASE_URL}/registreer-webhook`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ url }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || 'Registreren mislukt');
+  return data;
+}

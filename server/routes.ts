@@ -8543,6 +8543,46 @@ ${posts.map(p => `  <url>
   app.get('/api/whatsapp/webhook', (req: Request, res: Response) => {
     res.status(200).send(req.query['hub.challenge'] || 'ok');
   });
+
+  // POST /api/whatsapp/registreer-webhook — stel webhook-URL in via 360dialog API
+  app.post('/api/whatsapp/registreer-webhook', adminMiddleware, async (req: Request, res: Response) => {
+    const webhookUrl = req.body?.url || 'https://doehetextra.nl/api/whatsapp/webhook';
+    if (!WA_360_KEY) {
+      return res.status(500).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+    }
+    try {
+      const r = await fetch(`${WA_BASE_URL}/configs/webhook`, {
+        method: 'POST',
+        headers: wa360Headers,
+        body: JSON.stringify({ url: webhookUrl }),
+      });
+      const text = await r.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch {}
+      if (!r.ok) {
+        console.error('360dialog webhook-registratie mislukt:', r.status, text);
+        return res.status(r.status).json({ error: `360dialog fout: ${text}` });
+      }
+      console.log('360dialog webhook geregistreerd:', webhookUrl, data);
+      return res.json({ success: true, url: webhookUrl, response: data });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // GET /api/whatsapp/webhook-status — controleer welke webhook is ingesteld bij 360dialog
+  app.get('/api/whatsapp/webhook-status', adminMiddleware, async (_req: Request, res: Response) => {
+    if (!WA_360_KEY) return res.json({ configured: false, url: null });
+    try {
+      const r = await fetch(`${WA_BASE_URL}/configs/webhook`, { headers: wa360Headers });
+      const text = await r.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch {}
+      return res.json({ configured: r.ok, url: data?.url || null, raw: data });
+    } catch {
+      return res.json({ configured: false, url: null });
+    }
+  });
   // ─────────────────────────────────────────────────────────────────────────
 
   // ─── Indeed Apply webhook ────────────────────────────────────────────────
