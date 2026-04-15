@@ -8550,24 +8550,45 @@ ${posts.map(p => `  <url>
     if (!WA_360_KEY) {
       return res.status(500).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
     }
-    try {
-      const r = await fetch(`${WA_BASE_URL}/configs/webhook`, {
-        method: 'POST',
-        headers: wa360Headers,
-        body: JSON.stringify({ url: webhookUrl }),
-      });
-      const text = await r.text();
-      let data: any = {};
-      try { data = JSON.parse(text); } catch {}
-      if (!r.ok) {
-        console.error('360dialog webhook-registratie mislukt:', r.status, text);
-        return res.status(r.status).json({ error: `360dialog fout: ${text}` });
+
+    // 360dialog v2 — probeer POST, PUT en PATCH met verschillende body-formaten
+    const attempts = [
+      { method: 'POST', body: { url: webhookUrl, headers: {} } },
+      { method: 'PUT',  body: { url: webhookUrl, headers: {} } },
+      { method: 'POST', body: { url: webhookUrl } },
+      { method: 'PUT',  body: { url: webhookUrl } },
+      { method: 'PATCH', body: { url: webhookUrl } },
+    ];
+
+    let lastStatus = 0;
+    let lastBody = '';
+
+    for (const attempt of attempts) {
+      try {
+        const r = await fetch(`${WA_BASE_URL}/configs/webhook`, {
+          method: attempt.method,
+          headers: wa360Headers,
+          body: JSON.stringify(attempt.body),
+        });
+        const text = await r.text();
+        let data: any = {};
+        try { data = JSON.parse(text); } catch {}
+
+        console.log(`360dialog webhook ${attempt.method} (body:${JSON.stringify(attempt.body)}): ${r.status} ${text}`);
+
+        if (r.ok) {
+          console.log('360dialog webhook geregistreerd:', webhookUrl);
+          return res.json({ success: true, url: webhookUrl, method: attempt.method, response: data });
+        }
+        lastStatus = r.status;
+        lastBody = text;
+      } catch (err: any) {
+        lastBody = err.message;
       }
-      console.log('360dialog webhook geregistreerd:', webhookUrl, data);
-      return res.json({ success: true, url: webhookUrl, response: data });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
     }
+
+    console.error('Alle webhook-registratiepogingen mislukt. Laatste fout:', lastStatus, lastBody);
+    return res.status(lastStatus || 500).json({ error: `360dialog fout na alle pogingen: ${lastBody}` });
   });
 
   // GET /api/whatsapp/webhook-status — controleer welke webhook is ingesteld bij 360dialog

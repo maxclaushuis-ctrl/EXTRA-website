@@ -74,7 +74,16 @@ export default function WhatsAppBeheer() {
       setWebhookSucces('Webhook succesvol geregistreerd bij 360dialog');
       setWebhookUrl('https://doehetextra.nl/api/whatsapp/webhook');
     } catch (e: any) {
-      setWebhookFout(e.message || 'Registreren mislukt');
+      const msg = e.message || '';
+      if (msg.includes('Bad request') || msg.includes('400') || msg.includes('permission')) {
+        setWebhookFout(
+          'Webhook instellen is geblokkeerd door 360dialog (accountbeperking). ' +
+          'Stuur een e-mail naar support@360dialog.com of open een ticket en vraag om: ' +
+          '"Please set webhook URL to https://doehetextra.nl/api/whatsapp/webhook for our channel."'
+        );
+      } else {
+        setWebhookFout(msg || 'Registreren mislukt');
+      }
     } finally {
       setWebhookLoading(false);
     }
