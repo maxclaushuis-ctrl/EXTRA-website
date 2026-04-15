@@ -602,8 +602,7 @@ export default function Aanmelden() {
     if (!formData.dutchLevel) {
       newErrors.dutchLevel = lang === "NL" ? "Geef je Nederlands niveau op" : "Please select your Dutch level";
     }
-    const needsEnglish = formData.dutchLevel === "niet" || formData.dutchLevel === "basis";
-    if (needsEnglish && !formData.englishLevel) {
+    if (!formData.englishLevel) {
       newErrors.englishLevel = lang === "NL" ? "Geef je Engels niveau op" : "Please select your English level";
     }
     if (!formData.experience) {
@@ -1058,10 +1057,9 @@ export default function Aanmelden() {
                     {errors.dutchLevel && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.dutchLevel}</p>}
                   </div>
 
-                  {/* Vraag 2: Engels niveau (conditioneel) */}
-                  {(formData.dutchLevel === "niet" || formData.dutchLevel === "basis") && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                      <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.englishLevelQuestion}</Label>
+                  {/* Vraag 2: Engels niveau (altijd verplicht) */}
+                  <div>
+                      <Label className="text-sm font-semibold text-gray-700 mb-3 block">{t.englishLevelQuestion}<span className="text-red-500 ml-0.5">*</span></Label>
                       <div className="space-y-2">
                         {[
                           { value: "niet", label: t.langLevelNiet },
@@ -1083,8 +1081,7 @@ export default function Aanmelden() {
                         ))}
                       </div>
                       {errors.englishLevel && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.englishLevel}</p>}
-                    </div>
-                  )}
+                  </div>
 
                   {/* Vraag 3: Werkervaring */}
                   <div>
