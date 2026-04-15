@@ -55,7 +55,6 @@ const ALL_COUNTRIES = [
 const FUNCTIONS = [
   { value: "horecamedewerker", labelNL: "Horecamedewerker (bediening/bar)", labelEN: "Hospitality staff (service/bar)" },
   { value: "housekeeping", labelNL: "Housekeeping", labelEN: "Housekeeping" },
-  { value: "frontoffice", labelNL: "Front-office / receptie", labelEN: "Front-office / reception" },
   { value: "chef", labelNL: "Chef / keuken (kok, souschef, zelfstandig werkend kok)", labelEN: "Chef / kitchen (cook, sous chef)" },
   { value: "logistiek", labelNL: "Logistiek (magazijn, distributie, fulfillment)", labelEN: "Logistics (warehouse, distribution, fulfillment)" },
 ];
@@ -681,7 +680,7 @@ export default function Aanmelden() {
 
     if (detectedFlow === "NON_EU") {
       const fn = formData.preferredFunction;
-      if (fn === "horecamedewerker" || fn === "frontoffice") {
+      if (fn === "horecamedewerker") {
         await saveCandidate("afgewezen", false, "Functie niet beschikbaar voor non-EU");
         const NL_SPEAKING_COUNTRIES = [
           "Nederland", "België", "Duitsland", "Oostenrijk", "Zwitserland", "Luxemburg",
