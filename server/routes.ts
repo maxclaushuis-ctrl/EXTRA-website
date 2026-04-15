@@ -8449,7 +8449,7 @@ ${posts.map(p => `  <url>
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
   // ─── WHATSAPP BEHEER (360dialog API) ──────────────────────────────────────
-  const WA_BASE_URL = 'https://waba.360dialog.io/v1';
+  const WA_BASE_URL = 'https://waba-v2.360dialog.io/v2';
   const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
   const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
 
