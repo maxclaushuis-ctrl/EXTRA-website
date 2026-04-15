@@ -504,27 +504,39 @@ export default function Aanmelden() {
     }
   }, [step]);
 
+  const [formData, setFormData] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get("utm_source");
+    const jid = params.get("jid");
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    birthDate: "",
-    city: "",
-    postcode: "",
-    phone: "",
-    phoneCountryCode: "+31",
-    email: "",
-    nationality: "",
-    preferredFunction: "",
-    dutchLevel: "",
-    englishLevel: "",
-    experience: "",
-    twvNeeded: "",
-    hasExistingTwv: "",
-    willingToStopTwv: "",
-    preferredDate: "",
-    preferredTime: "",
-    channel: "",
+    let channel = "";
+    if (utmSource) {
+      channel = utmSource.charAt(0).toUpperCase() + utmSource.slice(1).toLowerCase();
+    } else if (jid) {
+      channel = "Jobster";
+    }
+
+    return {
+      firstName: "",
+      lastName: "",
+      birthDate: "",
+      city: "",
+      postcode: "",
+      phone: "",
+      phoneCountryCode: "+31",
+      email: "",
+      nationality: "",
+      preferredFunction: "",
+      dutchLevel: "",
+      englishLevel: "",
+      experience: "",
+      twvNeeded: "",
+      hasExistingTwv: "",
+      willingToStopTwv: "",
+      preferredDate: "",
+      preferredTime: "",
+      channel,
+    };
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});

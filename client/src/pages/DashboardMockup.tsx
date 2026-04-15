@@ -197,6 +197,7 @@ export default function DashboardMockup() {
   const [kandidatenSearch, setKandidatenSearch] = useState('');
   const [kandidatenFunctionFilter, setKandidatenFunctionFilter] = useState('alle');
   const [kandidatenTaalFilter, setKandidatenTaalFilter] = useState('alle');
+  const [kandidatenChannelFilter, setKandidatenChannelFilter] = useState('alle');
   const [kanSortDesc, setKanSortDesc] = useState(true);
   const [showWeekCalendar, setShowWeekCalendar] = useState(false);
   const [weekDayFilter, setWeekDayFilter] = useState<string | null>(null);
@@ -711,13 +712,17 @@ export default function DashboardMockup() {
         const matchTaal = kandidatenTaalFilter === 'alle' ||
           (c.language || '').toLowerCase().includes(kandidatenTaalFilter.toLowerCase());
         const matchDay = !weekDayFilter || (c.interviewDate && c.interviewDate.slice(0, 10) === weekDayFilter);
-        return matchQ && matchFn && matchTaal && matchDay;
+        const ch = (c.sourceChannel || '').toLowerCase();
+        const matchChannel = kandidatenChannelFilter === 'alle' ||
+          (kandidatenChannelFilter === 'jobster' && ch.includes('jobster')) ||
+          (kandidatenChannelFilter === 'overig' && !ch.includes('jobster'));
+        return matchQ && matchFn && matchTaal && matchDay && matchChannel;
       })
       .sort((a, b) => {
         const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         return kanSortDesc ? diff : -diff;
       });
-  }, [kanInProces, kanBeoordelen, kanGesprekGepland, kanAfgewezen, kandidatenSubtab, kandidatenSearch, kandidatenFunctionFilter, kandidatenTaalFilter, weekDayFilter, kanSortDesc]);
+  }, [kanInProces, kanBeoordelen, kanGesprekGepland, kanAfgewezen, kandidatenSubtab, kandidatenSearch, kandidatenFunctionFilter, kandidatenTaalFilter, weekDayFilter, kanSortDesc, kandidatenChannelFilter]);
 
   // ── Conditional early returns (after all hooks) ──
 
@@ -1692,6 +1697,16 @@ export default function DashboardMockup() {
                       <SelectItem value="alle">Alle talen</SelectItem>
                       <SelectItem value="nederlandsstalig">Nederlands</SelectItem>
                       <SelectItem value="english">Engels</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={kandidatenChannelFilter} onValueChange={setKandidatenChannelFilter}>
+                    <SelectTrigger className="flex-1 h-9 text-sm min-w-0">
+                      <SelectValue placeholder="Kanaal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle kanalen</SelectItem>
+                      <SelectItem value="jobster">Jobster</SelectItem>
+                      <SelectItem value="overig">Overig</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm shrink-0" onClick={() => refetchCandidates()}>
