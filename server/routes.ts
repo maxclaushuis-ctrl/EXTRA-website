@@ -7220,6 +7220,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Fout bij versturen personeelsaanvraag-notificatie:', notifErr);
       }
 
+      // E-mail notificatie naar intern team
+      try {
+        const { sendEmail } = await import('./mail');
+        const urgencyLabel: Record<string, string> = {
+          zo_snel_mogelijk: 'Zo snel mogelijk',
+          deze_week: 'Deze week',
+          volgende_week: 'Volgende week',
+          nog_niet_bekend: 'Nog niet bekend',
+        };
+        const locationTypeLabel: Record<string, string> = {
+          hotel: 'Hotel', restaurant: 'Restaurant', eventlocatie: 'Eventlocatie',
+          cateraar: 'Cateraar', catering: 'Catering', event: 'Event', anders: 'Anders',
+        };
+        const rows = [
+          ['Bedrijf', data.companyName],
+          ['Contactpersoon', data.contactName],
+          ['E-mail', data.email],
+          ['Telefoon', data.phone],
+          ['Type locatie', locationTypeLabel[data.locationType] || data.locationType],
+          data.locationTypeOther ? ['Soort locatie (overig)', data.locationTypeOther] : null,
+          ['Functies', data.functions.join(', ')],
+          data.staffCount ? ['Aantal medewerkers', String(data.staffCount)] : null,
+          data.datesPeriod ? ['Periode / data', data.datesPeriod] : null,
+          data.locationAddress ? ['Locatieadres', data.locationAddress] : null,
+          data.locationName ? ['Locatienaam', data.locationName] : null,
+          data.deploymentType ? ['Inzettype', data.deploymentType] : null,
+          data.urgency ? ['Urgentie', urgencyLabel[data.urgency] || data.urgency] : null,
+          ['Terugbelverzoek', data.wantsCallback ? 'Ja' : 'Nee'],
+          ['Favorietenpool', data.wantsFavoritePool ? 'Ja' : 'Nee'],
+          data.notes ? ['Opmerkingen', data.notes] : null,
+        ].filter(Boolean) as [string, string][];
+
+        const tableRows = rows.map(([label, value]) =>
+          `<tr><td style="padding:6px 12px;font-weight:600;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;width:180px;white-space:nowrap;">${label}</td><td style="padding:6px 12px;color:#111827;border:1px solid #e5e7eb;">${value}</td></tr>`
+        ).join('');
+
+        const html = `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+  <div style="background:#7c3aed;padding:20px 24px;border-radius:8px 8px 0 0;">
+    <h2 style="margin:0;color:#fff;font-size:18px;">🏢 Nieuwe personeelsaanvraag</h2>
+    <p style="margin:4px 0 0;color:#ddd6fe;font-size:13px;">Ingediend via doehetextra.nl</p>
+  </div>
+  <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">${tableRows}</table>
+    <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;">
+      Bekijk de aanvraag in het dashboard: <a href="https://doehetextra.nl/dashboard" style="color:#7c3aed;">dashboard openen</a>
+    </p>
+  </div>
+</div>`;
+
+        await sendEmail({
+          to: ['max@doehetextra.nl', 'eveline@doehetextra.nl'],
+          from: 'EXTRA Systeem <max@doehetextra.nl>',
+          subject: `Nieuwe personeelsaanvraag: ${data.companyName} (${data.contactName})`,
+          html,
+          text: `Nieuwe personeelsaanvraag van ${data.companyName}.\nContactpersoon: ${data.contactName}\nE-mail: ${data.email}\nTelefoon: ${data.phone}\nFuncties: ${data.functions.join(', ')}\n${data.notes ? `Opmerkingen: ${data.notes}` : ''}`,
+        });
+        console.log(`[StaffingRequest] E-mail notificatie verzonden voor aanvraag #${result.id} (${data.companyName})`);
+      } catch (emailErr) {
+        console.error('[StaffingRequest] Fout bij e-mail notificatie:', emailErr);
+      }
+
       return res.status(201).json({ success: true, id: result.id });
     } catch (error) {
       console.error("Error saving staffing request:", error);
@@ -7237,6 +7299,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching staffing requests:", error);
       return res.status(500).json({ message: "Fout bij ophalen personeelsaanvragen" });
+    }
+  });
+
+  app.get("/api/admin/staffing-requests/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { staffingRequests } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const id = parseInt(req.params.id);
+      const [result] = await db.select().from(staffingRequests).where(eq(staffingRequests.id, id));
+      if (!result) return res.status(404).json({ message: "Aanvraag niet gevonden" });
+      return res.json(result);
+    } catch (error) {
+      console.error("Error fetching staffing request:", error);
+      return res.status(500).json({ message: "Fout bij ophalen personeelsaanvraag" });
+    }
+  });
+
+  app.patch("/api/admin/staffing-requests/:id/status", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { staffingRequests } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const [result] = await db.update(staffingRequests).set({ status }).where(eq(staffingRequests.id, id)).returning();
+      if (!result) return res.status(404).json({ message: "Aanvraag niet gevonden" });
+      return res.json(result);
+    } catch (error) {
+      console.error("Error updating staffing request status:", error);
+      return res.status(500).json({ message: "Fout bij updaten status" });
     }
   });
 

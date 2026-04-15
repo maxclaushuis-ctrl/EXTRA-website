@@ -181,6 +181,14 @@ export default function DashboardMockup() {
     try { return localStorage.getItem('nav_campagnes_ingeklapt') !== '1'; } catch { return true; }
   });
   const [bedrijvenSearch, setBedrijvenSearch] = useState('');
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [aanvraagFormOpen, setAanvraagFormOpen] = useState(false);
+  const [aanvraagForm, setAanvraagForm] = useState({
+    companyName: '', contactName: '', email: '', phone: '',
+    locationType: 'hotel', locationTypeOther: '', functions: [] as string[],
+    staffCount: '', datesPeriod: '', locationAddress: '', locationName: '',
+    deploymentType: '', urgency: '', notes: '', wantsCallback: false, wantsFavoritePool: false,
+  });
   const [periodFilter, setPeriodFilter] = useState('deze-maand');
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('alle');
@@ -539,6 +547,20 @@ export default function DashboardMockup() {
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 10000,
+  });
+
+  const createAanvraagMutation = useMutation({
+    mutationFn: (payload: any) => apiRequest('POST', '/api/staffing-request', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/staffing-requests'] });
+      toast({ title: 'Aanvraag toegevoegd ✓' });
+      setAanvraagFormOpen(false);
+      setAanvraagForm({ companyName: '', contactName: '', email: '', phone: '',
+        locationType: 'hotel', locationTypeOther: '', functions: [],
+        staffCount: '', datesPeriod: '', locationAddress: '', locationName: '',
+        deploymentType: '', urgency: '', notes: '', wantsCallback: false, wantsFavoritePool: false });
+    },
+    onError: () => toast({ title: 'Fout bij aanmaken aanvraag', variant: 'destructive' }),
   });
 
   const { data: blogData, isLoading: blogLoading, refetch: refetchBlog } = useQuery<{ posts: any[]; total: number }>({
@@ -4004,15 +4026,145 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                   <h1 className="text-xl font-bold">Personeelsaanvragen</h1>
                   <p className="text-sm text-gray-500">Aanvragen van bedrijven via het personeelsaanvraagformulier</p>
                 </div>
-                <a
-                  href="/personeelsaanvraag"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-purple-600 hover:underline flex items-center gap-1"
-                >
-                  <Building2 className="h-3.5 w-3.5" /> Formulier bekijken
-                </a>
+                <div className="flex items-center gap-3">
+                  <a href="/personeelsaanvraag" target="_blank" rel="noreferrer"
+                    className="text-xs text-purple-600 hover:underline flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5" /> Formulier bekijken
+                  </a>
+                  <Button size="sm" className="gap-1.5 bg-purple-600 hover:bg-purple-700 h-8 text-xs"
+                    onClick={() => setAanvraagFormOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" /> Handmatig toevoegen
+                  </Button>
+                </div>
               </div>
+
+              {/* ── Handmatig aanvraag dialog ── */}
+              <Dialog open={aanvraagFormOpen} onOpenChange={v => !v && setAanvraagFormOpen(false)}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Plus className="h-5 w-5 text-purple-600" /> Aanvraag handmatig toevoegen
+                    </DialogTitle>
+                  </DialogHeader>
+                  {(() => {
+                    const f = aanvraagForm;
+                    const set = (k: string, v: any) => setAanvraagForm(prev => ({ ...prev, [k]: v }));
+                    const FUNCTIES = ['Bediening', 'Keuken', 'Bar', 'Schoonmaak', 'Receptie', 'Beveiliging', 'Logistiek', 'Overig'];
+                    return (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Bedrijfsnaam *</label>
+                            <input value={f.companyName} onChange={e => set('companyName', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="Hotel Bakker BV" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Contactpersoon *</label>
+                            <input value={f.contactName} onChange={e => set('contactName', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="Gijs Bodenstaf" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">E-mail *</label>
+                            <input type="email" value={f.email} onChange={e => set('email', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="gijs@bedrijf.nl" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Telefoon *</label>
+                            <input value={f.phone} onChange={e => set('phone', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="06-12345678" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Type locatie</label>
+                            <select value={f.locationType} onChange={e => set('locationType', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                              {['hotel','restaurant','eventlocatie','cateraar','catering','event','anders'].map(t => (
+                                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Aantal medewerkers</label>
+                            <input type="number" value={f.staffCount} onChange={e => set('staffCount', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="5" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Locatienaam</label>
+                            <input value={f.locationName} onChange={e => set('locationName', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="Hotel V Amsterdam" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Adres</label>
+                            <input value={f.locationAddress} onChange={e => set('locationAddress', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="Keizersgracht 123, Amsterdam" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Periode / data</label>
+                            <input value={f.datesPeriod} onChange={e => set('datesPeriod', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="15 t/m 18 april 2026" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Urgentie</label>
+                            <select value={f.urgency} onChange={e => set('urgency', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                              <option value="">Onbekend</option>
+                              <option value="zo_snel_mogelijk">Zo snel mogelijk</option>
+                              <option value="deze_week">Deze week</option>
+                              <option value="volgende_week">Volgende week</option>
+                              <option value="nog_niet_bekend">Nog niet bekend</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 mb-2 block">Functies</label>
+                          <div className="flex flex-wrap gap-2">
+                            {FUNCTIES.map(fn => (
+                              <button key={fn} type="button" onClick={() => {
+                                const has = f.functions.includes(fn);
+                                set('functions', has ? f.functions.filter(x => x !== fn) : [...f.functions, fn]);
+                              }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${f.functions.includes(fn) ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                                {fn}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 mb-1 block">Opmerkingen</label>
+                          <textarea value={f.notes} onChange={e => set('notes', e.target.value)} rows={3}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none" placeholder="Extra informatie over de aanvraag..." />
+                        </div>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="checkbox" checked={f.wantsCallback} onChange={e => set('wantsCallback', e.target.checked)} className="rounded" />
+                            Terugbelverzoek
+                          </label>
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="checkbox" checked={f.wantsFavoritePool} onChange={e => set('wantsFavoritePool', e.target.checked)} className="rounded" />
+                            Wil favorietenpool
+                          </label>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                          <Button variant="ghost" onClick={() => setAanvraagFormOpen(false)}>Annuleren</Button>
+                          <Button onClick={() => {
+                            if (!f.companyName || !f.contactName || !f.email || !f.phone) {
+                              toast({ title: 'Vul alle verplichte velden in (*)', variant: 'destructive' }); return;
+                            }
+                            createAanvraagMutation.mutate({
+                              ...f, staffCount: f.staffCount ? parseInt(f.staffCount) : null,
+                              functions: f.functions.length > 0 ? f.functions : ['Overig'],
+                            });
+                          }} disabled={createAanvraagMutation.isPending}
+                            className="bg-purple-600 hover:bg-purple-700 gap-1.5">
+                            {createAanvraagMutation.isPending ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" />Opslaan...</> : <><Plus className="h-3.5 w-3.5" />Aanvraag toevoegen</>}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </DialogContent>
+              </Dialog>
 
               {/* Search */}
               <div className="relative mb-4 max-w-sm">
@@ -4054,45 +4206,232 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b text-left">
                           <tr>
-                            {['Datum', 'Bedrijf', 'Contactpersoon', 'E-mail', 'Telefoon', 'Plaats', 'Functies', 'Bericht'].map(h => (
+                            {['Datum', 'Bedrijf', 'Contactpersoon', 'E-mail', 'Telefoon', 'Functies', 'Status'].map(h => (
                               <th key={h} className="px-3 py-2.5 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {filtered.map((r: any) => (
-                            <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors">
-                              <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">
-                                {r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
-                              </td>
-                              <td className="px-3 py-2.5 text-xs font-medium text-gray-800 whitespace-nowrap">{r.companyName || '—'}</td>
-                              <td className="px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap">{r.contactName || '—'}</td>
-                              <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">
-                                <a href={`mailto:${r.email}`} className="hover:text-purple-600">{r.email || '—'}</a>
-                              </td>
-                              <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">
-                                {r.phone ? <a href={`tel:${r.phone}`} className="hover:text-purple-600">{r.phone}</a> : '—'}
-                              </td>
-                              <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">{r.locationAddress || r.locationName || '—'}</td>
-                              <td className="px-3 py-2.5 text-xs text-gray-700 max-w-[160px]">
-                                {Array.isArray(r.functions) && r.functions.length > 0
-                                  ? <span className="flex flex-wrap gap-1">
-                                      {r.functions.map((f: string) => (
-                                        <span key={f} className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-medium">{f}</span>
-                                      ))}
-                                    </span>
-                                  : '—'
-                                }
-                              </td>
-                              <td className="px-3 py-2.5 text-xs text-gray-500 max-w-[200px] truncate" title={r.notes || ''}>
-                                {r.notes || '—'}
-                              </td>
-                            </tr>
-                          ))}
+                          {filtered.map((r: any) => {
+                            const statusColors: Record<string, string> = {
+                              new: 'bg-blue-100 text-blue-700',
+                              contacted: 'bg-yellow-100 text-yellow-700',
+                              in_progress: 'bg-purple-100 text-purple-700',
+                              completed: 'bg-green-100 text-green-700',
+                              cancelled: 'bg-gray-100 text-gray-500',
+                            };
+                            const statusLabels: Record<string, string> = {
+                              new: 'Nieuw', contacted: 'Contact gehad', in_progress: 'In behandeling',
+                              completed: 'Afgerond', cancelled: 'Geannuleerd',
+                            };
+                            return (
+                              <tr key={r.id} onClick={() => setSelectedRequestId(r.id)}
+                                className="border-b hover:bg-purple-50 cursor-pointer transition-colors">
+                                <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">
+                                  {r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                </td>
+                                <td className="px-3 py-2.5 text-xs font-semibold text-purple-700 whitespace-nowrap hover:underline">{r.companyName || '—'}</td>
+                                <td className="px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap">{r.contactName || '—'}</td>
+                                <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">{r.email || '—'}</td>
+                                <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">{r.phone || '—'}</td>
+                                <td className="px-3 py-2.5 text-xs text-gray-700 max-w-[160px]">
+                                  {Array.isArray(r.functions) && r.functions.length > 0
+                                    ? <span className="flex flex-wrap gap-1">
+                                        {r.functions.map((f: string) => (
+                                          <span key={f} className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-medium">{f}</span>
+                                        ))}
+                                      </span>
+                                    : '—'
+                                  }
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusColors[r.status] || 'bg-gray-100 text-gray-500'}`}>
+                                    {statusLabels[r.status] || r.status || 'Nieuw'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
                   </CardContent></Card>
+                );
+              })()}
+
+              {/* ── Detail dialog ── */}
+              {(() => {
+                const req = selectedRequestId ? staffingRequestsData.find((r: any) => r.id === selectedRequestId) : null;
+                if (!req) return null;
+
+                const urgencyLabel: Record<string, string> = {
+                  zo_snel_mogelijk: 'Zo snel mogelijk 🔴', deze_week: 'Deze week 🟠',
+                  volgende_week: 'Volgende week 🟡', nog_niet_bekend: 'Nog niet bekend',
+                };
+                const locationTypeLabel: Record<string, string> = {
+                  hotel: 'Hotel', restaurant: 'Restaurant', eventlocatie: 'Eventlocatie',
+                  cateraar: 'Cateraar', catering: 'Catering', event: 'Event', anders: 'Anders',
+                };
+                const statusColors: Record<string, string> = {
+                  new: 'bg-blue-100 text-blue-700', contacted: 'bg-yellow-100 text-yellow-700',
+                  in_progress: 'bg-purple-100 text-purple-700', completed: 'bg-green-100 text-green-700',
+                  cancelled: 'bg-gray-100 text-gray-500',
+                };
+                const statusLabels: Record<string, string> = {
+                  new: 'Nieuw', contacted: 'Contact gehad', in_progress: 'In behandeling',
+                  completed: 'Afgerond', cancelled: 'Geannuleerd',
+                };
+
+                return (
+                  <Dialog open={!!selectedRequestId} onOpenChange={v => !v && setSelectedRequestId(null)}>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg">
+                          <Building2 className="h-5 w-5 text-purple-600" />
+                          {req.companyName}
+                        </DialogTitle>
+                      </DialogHeader>
+
+                      {/* Status + datum */}
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColors[req.status] || 'bg-gray-100 text-gray-500'}`}>
+                            {statusLabels[req.status] || 'Nieuw'}
+                          </span>
+                          {req.urgency && (
+                            <span className="text-xs text-gray-500">{urgencyLabel[req.urgency] || req.urgency}</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {req.createdAt ? new Date(req.createdAt).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                        </span>
+                      </div>
+
+                      <div className="space-y-5">
+                        {/* Contactgegevens */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contactgegevens</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { label: 'Contactpersoon', value: req.contactName },
+                              { label: 'E-mail', value: req.email, href: `mailto:${req.email}` },
+                              { label: 'Telefoon', value: req.phone, href: `tel:${req.phone}` },
+                            ].map(({ label, value, href }) => (
+                              <div key={label} className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">{label}</p>
+                                {href ? (
+                                  <a href={href} className="text-sm font-medium text-purple-700 hover:underline">{value || '—'}</a>
+                                ) : (
+                                  <p className="text-sm font-medium text-gray-800">{value || '—'}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Aanvraagdetails */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Aanvraagdetails</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">Type locatie</p>
+                              <p className="text-sm font-medium text-gray-800">{locationTypeLabel[req.locationType] || req.locationType || '—'}{req.locationTypeOther ? ` (${req.locationTypeOther})` : ''}</p>
+                            </div>
+                            {req.locationName && (
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">Locatienaam</p>
+                                <p className="text-sm font-medium text-gray-800">{req.locationName}</p>
+                              </div>
+                            )}
+                            {req.locationAddress && (
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">Adres</p>
+                                <p className="text-sm font-medium text-gray-800">{req.locationAddress}</p>
+                              </div>
+                            )}
+                            {req.staffCount && (
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">Aantal medewerkers</p>
+                                <p className="text-sm font-medium text-gray-800">{req.staffCount}</p>
+                              </div>
+                            )}
+                            {req.datesPeriod && (
+                              <div className="bg-gray-50 rounded-lg p-3 col-span-2">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">Periode / data</p>
+                                <p className="text-sm font-medium text-gray-800">{req.datesPeriod}</p>
+                              </div>
+                            )}
+                            {req.deploymentType && (
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium mb-0.5">Inzettype</p>
+                                <p className="text-sm font-medium text-gray-800">{req.deploymentType}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Functies */}
+                        {Array.isArray(req.functions) && req.functions.length > 0 && (
+                          <div>
+                            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Gevraagde functies</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {req.functions.map((f: string) => (
+                                <span key={f} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">{f}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Extra opties */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Extra opties</h3>
+                          <div className="flex gap-3">
+                            <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium ${req.wantsCallback ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                              <Phone className="h-3 w-3" /> Terugbelverzoek: {req.wantsCallback ? 'Ja' : 'Nee'}
+                            </div>
+                            <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium ${req.wantsFavoritePool ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                              <Users className="h-3 w-3" /> Favorietenpool: {req.wantsFavoritePool ? 'Ja' : 'Nee'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Opmerkingen */}
+                        {req.notes && (
+                          <div>
+                            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Opmerkingen</h3>
+                            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{req.notes}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Status wijzigen */}
+                        <div className="pt-3 border-t border-gray-100">
+                          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Status wijzigen</h3>
+                          <div className="flex gap-2 flex-wrap">
+                            {['new', 'contacted', 'in_progress', 'completed', 'cancelled'].map(s => (
+                              <button key={s} onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await fetch(`/api/admin/staffing-requests/${req.id}/status`, {
+                                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: s }),
+                                  });
+                                  queryClient.invalidateQueries({ queryKey: ['/api/admin/staffing-requests'] });
+                                  toast({ title: `Status gewijzigd naar "${statusLabels[s]}"` });
+                                } catch {}
+                              }}
+                                className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${
+                                  req.status === s ? (statusColors[s] + ' border-transparent') : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                                }`}>
+                                {statusLabels[s]}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 );
               })()}
             </div>
