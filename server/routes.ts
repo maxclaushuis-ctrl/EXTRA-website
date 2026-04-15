@@ -4491,12 +4491,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).json({ message: "Geen starttijd in payload" });
       }
 
-      // Parse the ISO date string — use UTC to avoid server timezone issues
+      // Parse the ISO date string and convert to Amsterdam local time (Europe/Amsterdam)
       const eventDate = new Date(eventStartTime);
-      const interviewDate = eventDate.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
-      // Extract time from the original string to preserve the local timezone the invitee chose
-      const timeMatch = eventStartTime.match(/T(\d{2}:\d{2})/);
-      const interviewTime = timeMatch ? timeMatch[1] : `${eventDate.getUTCHours().toString().padStart(2, '0')}:${eventDate.getUTCMinutes().toString().padStart(2, '0')}`;
+      const interviewDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' }).format(eventDate);
+      const interviewTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', hour12: false }).format(eventDate);
 
       const inviteeName: string = payload?.invitee?.name || payload?.name || '';
       const eventName: string = payload?.event_type?.name || payload?.scheduled_event?.name || 'Intakegesprek';
@@ -8371,13 +8369,10 @@ ${posts.map(p => `  <url>
           const candidate = candidatesByEmail.get(email.toLowerCase());
           if (!candidate) continue;
 
-          // Parse date and time from the ISO start_time
+          // Parse and convert to Amsterdam local time (Europe/Amsterdam / CEST)
           const eventDate = new Date(startTime);
-          const interviewDate = eventDate.toISOString().split('T')[0];
-          const timeMatch = startTime.match(/T(\d{2}:\d{2})/);
-          const interviewTime = timeMatch
-            ? timeMatch[1]
-            : `${eventDate.getUTCHours().toString().padStart(2, '0')}:${eventDate.getUTCMinutes().toString().padStart(2, '0')}`;
+          const interviewDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' }).format(eventDate);
+          const interviewTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', hour12: false }).format(eventDate);
 
           // Only update if changed
           if (candidate.interviewDate !== interviewDate || candidate.interviewTime !== interviewTime) {
