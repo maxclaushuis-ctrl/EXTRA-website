@@ -832,7 +832,7 @@ export type UserBadgeWithDetails = UserBadge & {
 // ==========================================
 
 // Sollicitant status enum
-export const candidateStatusEnum = pgEnum('candidate_status', ['in_behandeling', 'aangenomen', 'afgewezen']);
+export const candidateStatusEnum = pgEnum('candidate_status', ['in_behandeling', 'gepland', 'aangenomen', 'afgewezen']);
 
 // Functie types voor sollicitanten
 export const candidateFunctionEnum = pgEnum('candidate_function', ['housekeeping', 'horecamedewerker', 'chef', 'frontoffice', 'logistiek']);

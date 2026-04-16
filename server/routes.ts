@@ -4010,7 +4010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         interviewTime: z.string().optional().nullable(),
         sourceChannel: z.string().optional().default("Website"),
         notes: z.string().optional().nullable(),
-        status: z.enum(["in_behandeling", "aangenomen", "afgewezen"]).optional().default("in_behandeling"),
+        status: z.enum(["in_behandeling", "gepland", "aangenomen", "afgewezen"]).optional().default("in_behandeling"),
         partial: z.boolean().optional().default(false),
       });
 
@@ -4220,7 +4220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updateSchema = z.object({
         email: z.string().email(),
-        status: z.enum(["in_behandeling", "aangenomen", "afgewezen"]).optional(),
+        status: z.enum(["in_behandeling", "gepland", "aangenomen", "afgewezen"]).optional(),
         language: z.string().optional().nullable(),
         horecaExperience: z.string().optional().nullable(),
         needsTwv: z.boolean().optional(),
@@ -4500,6 +4500,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const eventName: string = payload?.event_type?.name || payload?.scheduled_event?.name || 'Intakegesprek';
 
       await storage.updateCandidate(candidate.id, { interviewDate, interviewTime });
+      // Zet status op gepland als nog niet verder in het proces
+      if (candidate.status === 'in_behandeling') {
+        await storage.updateCandidateStatus(candidate.id, 'gepland', undefined);
+      }
 
       await storage.createCandidateAuditLog({
         candidateId: candidate.id,
@@ -6220,7 +6224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const { status, rejectionReason } = req.body;
       
-      if (!['in_behandeling', 'aangenomen', 'afgewezen'].includes(status)) {
+      if (!['in_behandeling', 'gepland', 'aangenomen', 'afgewezen'].includes(status)) {
         return res.status(400).json({ message: "Ongeldige status" });
       }
       
@@ -6262,10 +6266,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (tokenExpiry && new Date(tokenExpiry) < new Date()) {
         return res.status(403).send('Deze link is verlopen. Open het dashboard om de kandidaat te beoordelen.');
       }
-      if (candidate.status === 'aangenomen') {
+      if (candidate.status === 'gepland' || candidate.status === 'aangenomen') {
         return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} was al geaccepteerd.</h2><p>Er is al een Calendly-link verstuurd.</p></body></html>`);
       }
-      await storage.updateCandidateStatus(id, 'aangenomen', undefined);
+      await storage.updateCandidateStatus(id, 'gepland', undefined);
       if (candidate.email && candidate.firstName) {
         await sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email });
       }
@@ -6315,17 +6319,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const candidate = await storage.getCandidate(id);
       if (!candidate) return res.status(404).json({ message: 'Kandidaat niet gevonden' });
-      if (candidate.status === 'aangenomen' || candidate.status === 'afgewezen') {
+      if (candidate.status === 'gepland' || candidate.status === 'aangenomen' || candidate.status === 'afgewezen') {
         return res.status(409).json({ message: 'Kandidaat is al beoordeeld' });
       }
       if (action === 'accept') {
-        await storage.updateCandidateStatus(id, 'aangenomen', undefined);
+        await storage.updateCandidateStatus(id, 'gepland', undefined);
         if (candidate.email && candidate.firstName) {
           sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
             console.error('Fout bij versturen Calendly-mail:', err)
           );
         }
-        return res.json({ message: 'Kandidaat geaccepteerd' });
+        return res.json({ message: 'Kandidaat geaccepteerd, Calendly-uitnodiging verstuurd' });
       } else {
         await storage.updateCandidateStatus(id, 'afgewezen', undefined);
         if (candidate.email && candidate.firstName) {

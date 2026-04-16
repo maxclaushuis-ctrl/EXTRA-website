@@ -182,6 +182,15 @@ async function ensureAdminAccounts() {
     console.error('[twv-fix] Fout bij TWV kandidaten herstel:', err);
   }
 
+  // Schema-migratie: voeg 'gepland' toe aan candidate_status enum (veilig, idempotent)
+  try {
+    await pool.query(`ALTER TYPE candidate_status ADD VALUE IF NOT EXISTS 'gepland' AFTER 'in_behandeling'`);
+  } catch (err: any) {
+    if (!err.message?.includes('already exists')) {
+      console.error('[migration] Fout bij toevoegen gepland-status:', err.message);
+    }
+  }
+
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);

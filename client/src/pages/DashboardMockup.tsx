@@ -108,6 +108,7 @@ function getFunctionBadgeColor(functionType: string): string {
 function getStatusBadgeColor(status: string): string {
   switch (status?.toLowerCase()) {
     case 'aangenomen': return 'bg-green-100 text-green-700 border-green-200';
+    case 'gepland': return 'bg-blue-100 text-blue-700 border-blue-200';
     case 'afgewezen': return 'bg-red-100 text-red-700 border-red-200';
     case 'in_behandeling': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
     default: return 'bg-gray-100 text-gray-600 border-gray-200';
@@ -117,6 +118,7 @@ function getStatusBadgeColor(status: string): string {
 function getStatusLabel(status: string): string {
   switch (status?.toLowerCase()) {
     case 'aangenomen': return 'Aangenomen';
+    case 'gepland': return 'Gesprek gepland';
     case 'afgewezen': return 'Afgewezen';
     case 'in_behandeling': return 'In behandeling';
     default: return status;
@@ -694,9 +696,9 @@ export default function DashboardMockup() {
 
   // Kandidaten tab computed values
   const hasCV = (c: any) => c != null && !!(c.hasCv || c.cvFilename);
-  const kanInProces = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !hasCV(c) && !c.interviewDate), [allCandidates]);
-  const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && hasCV(c) && !c.interviewDate), [allCandidates]);
-  const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status !== 'afgewezen' && !!c.interviewDate), [allCandidates]);
+  const kanInProces = useMemo(() => allCandidates.filter(c => c.status === 'in_behandeling' && !hasCV(c) && !c.interviewDate), [allCandidates]);
+  const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status === 'in_behandeling' && hasCV(c) && !c.interviewDate), [allCandidates]);
+  const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status === 'gepland' || (c.status === 'aangenomen' && !!c.interviewDate)), [allCandidates]);
   const kanAfgewezen = useMemo(() => allCandidates.filter(c => c.status === 'afgewezen'), [allCandidates]);
   const kanSubset = useMemo(() => {
     const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, beoordelen: kanBeoordelen, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
