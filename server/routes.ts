@@ -6096,12 +6096,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/intake/candidates", authMiddleware, async (req: Request, res: Response) => {
     try {
       const { functionType } = req.query;
-      const result = await storage.getCandidates({
-        functionType: functionType as string | undefined,
-        status: 'in_behandeling',
-        page: 1,
-        limit: 200
-      });
+      // Haal zowel in_behandeling als gepland op — alleen gepland-kandidaten komen in aanmerking voor het sollicitatieformulier
+      const [resultInBehandeling, resultGepland] = await Promise.all([
+        storage.getCandidates({ functionType: functionType as string | undefined, status: 'in_behandeling', page: 1, limit: 200 }),
+        storage.getCandidates({ functionType: functionType as string | undefined, status: 'gepland', page: 1, limit: 200 }),
+      ]);
+      const result = { candidates: [...resultGepland.candidates, ...resultInBehandeling.candidates] };
       const slim = result.candidates.map((c: any) => ({
         id: c.id,
         firstName: c.firstName,
@@ -6116,6 +6116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         language: c.language,
         horecaExperience: c.horecaExperience,
         experienceLevel: c.experienceLevel,
+        status: c.status,
       }));
       return res.json({ candidates: slim });
     } catch (error) {
@@ -7021,6 +7022,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const candidate = await storage.createCandidate(candidateData as any);
+
+      // Als het formulier gekoppeld is aan een bestaande kandidaat (gepland/uitgenodigd),
+      // zet die kandidaat op 'aangenomen' zodat hij uit "Gesprek gepland" verdwijnt
+      // en als sollicitant wordt geregistreerd.
+      if (data.linkedCandidateId) {
+        try {
+          await storage.updateCandidateStatus(data.linkedCandidateId, 'aangenomen', undefined);
+        } catch (e: any) {
+          console.error('[Sollicitatie] Fout bij updaten status naar aangenomen:', e.message);
+        }
+      }
 
       // Admin notificatie: intern sollicitatieformulier ingestuurd
       storage.createAdminNotification({

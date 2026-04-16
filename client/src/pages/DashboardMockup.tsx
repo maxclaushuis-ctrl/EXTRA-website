@@ -698,7 +698,10 @@ export default function DashboardMockup() {
   const hasCV = (c: any) => c != null && !!(c.hasCv || c.cvFilename);
   const kanInProces = useMemo(() => allCandidates.filter(c => c.status === 'in_behandeling' && !hasCV(c) && !c.interviewDate), [allCandidates]);
   const kanBeoordelen = useMemo(() => allCandidates.filter(c => c.status === 'in_behandeling' && hasCV(c) && !c.interviewDate), [allCandidates]);
-  const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status === 'gepland' || (c.status === 'aangenomen' && !!c.interviewDate)), [allCandidates]);
+  // Uitgenodigd = CV goedgekeurd, Calendly-uitnodiging verstuurd maar nog niet geboekt
+  const kanUitgenodigd = useMemo(() => allCandidates.filter(c => c.status === 'gepland' && !c.interviewDate), [allCandidates]);
+  // Gesprek gepland = Calendly afspraak geboekt (heeft interviewDate)
+  const kanGesprekGepland = useMemo(() => allCandidates.filter(c => c.status === 'gepland' && !!c.interviewDate), [allCandidates]);
   const kanAfgewezen = useMemo(() => allCandidates.filter(c => c.status === 'afgewezen'), [allCandidates]);
   const kanSubset = useMemo(() => {
     const kanSubsetMap: Record<string, Candidate[]> = { in_proces: kanInProces, beoordelen: kanBeoordelen, gesprek_gepland: kanGesprekGepland, afgewezen: kanAfgewezen };
@@ -1412,8 +1415,8 @@ export default function DashboardMockup() {
                 >
                   <Calendar className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Week agenda</span>
-                  {kanGesprekGepland.length > 0 && !showWeekCalendar && (
-                    <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full ml-0.5">{kanGesprekGepland.length}</span>
+                  {(kanGesprekGepland.length + kanUitgenodigd.length) > 0 && !showWeekCalendar && (
+                    <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full ml-0.5">{kanGesprekGepland.length + kanUitgenodigd.length}</span>
                   )}
                 </button>
               </div>
@@ -1438,7 +1441,9 @@ export default function DashboardMockup() {
                   <CardContent className="p-3 sm:p-4">
                     <p className="text-xs text-gray-500 mb-1 leading-tight">Gepland</p>
                     <p className="text-2xl font-bold text-blue-600">{kanGesprekGepland.length}</p>
-                    <p className="text-xs text-gray-400 hidden sm:block">Interview ingepland</p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      {kanUitgenodigd.length > 0 ? `+${kanUitgenodigd.length} wacht op Calendly` : 'Interview ingepland'}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card className="bg-white border-l-4 border-l-red-500">
@@ -1645,7 +1650,7 @@ export default function DashboardMockup() {
                 {([
                   { key: 'in_proces', labelFull: 'In proces', labelShort: 'In proces', count: kanInProces.length, color: 'text-purple-700 border-purple-500' },
                   { key: 'beoordelen', labelFull: 'Beoordelen', labelShort: 'Beoordelen', count: kanBeoordelen.length, color: 'text-amber-600 border-amber-500' },
-                  { key: 'gesprek_gepland', labelFull: 'Gesprek gepland', labelShort: 'Gepland', count: kanGesprekGepland.length, color: 'text-blue-600 border-blue-500' },
+                  { key: 'gesprek_gepland', labelFull: 'Gesprek gepland', labelShort: 'Gepland', count: kanGesprekGepland.length + kanUitgenodigd.length, color: 'text-blue-600 border-blue-500' },
                   { key: 'afgewezen', labelFull: 'Afgewezen', labelShort: 'Afgewezen', count: kanAfgewezen.length, color: 'text-red-600 border-red-500' },
                 ] as const).map(tab => (
                   <button
@@ -1718,6 +1723,33 @@ export default function DashboardMockup() {
                 </div>
               </div>
 
+              {/* Uitgenodigd: wacht op Calendly boeking */}
+              {kandidatenSubtab === 'gesprek_gepland' && kanUitgenodigd.length > 0 && (
+                <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1.5">
+                    <span>⏳</span> Uitgenodigd — wacht op Calendly boeking ({kanUitgenodigd.length})
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {kanUitgenodigd.map(c => (
+                      <div key={c.id} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100 text-xs">
+                        <Avatar className="h-5 w-5 flex-shrink-0">
+                          <AvatarFallback className={`text-[10px] ${getFunctionBadgeColor(c.functionType)}`}>{getInitials(c.firstName, c.lastName)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-gray-800">{c.firstName} {c.lastName}</span>
+                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${getFunctionBadgeColor(c.functionType)}`}>{c.functionType || '—'}</Badge>
+                        <span className="text-gray-400 ml-auto">{c.email || c.phone || '—'}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs text-red-500 hover:bg-red-50"
+                          onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
+                        >✗</Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Table */}
               <Card>
                 <CardContent className="p-0">
@@ -1731,7 +1763,11 @@ export default function DashboardMockup() {
                     <div className="p-12 text-center">
                       <UserCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-600 mb-2">Geen kandidaten</h3>
-                      <p className="text-gray-400 text-sm">Er zijn nog geen kandidaten in dit overzicht.</p>
+                      <p className="text-gray-400 text-sm">
+                        {kandidatenSubtab === 'gesprek_gepland'
+                          ? 'Nog niemand heeft een Calendly-afspraak ingepland.'
+                          : 'Er zijn nog geen kandidaten in dit overzicht.'}
+                      </p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">

@@ -31,6 +31,7 @@ interface IntakeCandidate {
   language?: string;
   horecaExperience?: string;
   experienceLevel?: string;
+  status?: string;
 }
 
 const formSchema = z.object({
@@ -710,6 +711,7 @@ export default function SollicitatieFormulier() {
                         .map(c => {
                           const initials = `${c.firstName?.[0] ?? ''}${c.lastName?.[0] ?? ''}`.toUpperCase();
                           const isSelected = selectedIntakeId === c.id;
+                          const isGepland = c.status === 'gepland';
                           return (
                             <button
                               key={c.id}
@@ -717,12 +719,13 @@ export default function SollicitatieFormulier() {
                               onClick={() => applyIntakeCandidate(c)}
                               className={`w-full text-left px-5 py-4 flex items-center gap-4 transition-colors ${isSelected ? 'bg-purple-50' : 'hover:bg-gray-50'}`}
                             >
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white' : isGepland ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
                                 {initials}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className={`text-base font-semibold truncate ${isSelected ? 'text-purple-900' : 'text-gray-800'}`}>
                                   {c.firstName} {c.lastName}
+                                  {isGepland && <span className="ml-2 text-xs font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">Gesprek gepland</span>}
                                 </p>
                                 <p className="text-sm text-gray-400 truncate">{c.city || '—'} · {c.email}</p>
                               </div>
@@ -736,6 +739,7 @@ export default function SollicitatieFormulier() {
                     {selectedIntakeId && (
                       <div className="px-5 py-3 border-t border-gray-100 bg-green-50">
                         <p className="text-sm text-green-700 font-semibold">✓ Gegevens vooraf ingevuld — je kunt ze nog aanpassen</p>
+                        <p className="text-xs text-green-600 mt-0.5">Na het versturen wordt deze kandidaat automatisch als sollicitant geregistreerd.</p>
                       </div>
                     )}
                   </div>
