@@ -3078,7 +3078,7 @@ export class MemStorage implements IStorage {
     
     const total = Number(countResult?.count || 0);
     const page = filters?.page || 1;
-    const limitVal = filters?.limit || 25;
+    const limitVal = filters?.limit || 500;
     const offset = (page - 1) * limitVal;
 
     const candidates = await db
