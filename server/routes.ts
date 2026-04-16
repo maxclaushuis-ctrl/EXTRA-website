@@ -6134,7 +6134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: status as string | undefined,
         search: search as string | undefined,
         page: page ? parseInt(page as string) : 1,
-        limit: limit ? parseInt(limit as string) : 25
+        limit: limit ? parseInt(limit as string) : 500
       });
       return res.json(result);
     } catch (error) {
