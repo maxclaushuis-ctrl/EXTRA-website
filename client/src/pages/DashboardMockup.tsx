@@ -2523,11 +2523,13 @@ export default function DashboardMockup() {
                     );
                   })()}
 
-                  {/* Aannemen-actie — voor alle sollicitanten met een email */}
-                  {selectedApp && selectedApp.email && (
+                  {/* Aannemen-actie — beschikbaar voor élke functie. Uitgegrijsd zonder e-mailadres. */}
+                  {selectedApp && (
                     <div className="mt-4 border-t border-gray-100 pt-4">
                       <button
                         type="button"
+                        disabled={!selectedApp.email}
+                        title={!selectedApp.email ? 'Vul eerst een e-mailadres in op het sollicitatieformulier' : undefined}
                         onClick={() => {
                           setAannemenForm({
                             functie: selectedApp.functionType || '',
@@ -2539,11 +2541,11 @@ export default function DashboardMockup() {
                           });
                           setAannemenApp(selectedApp);
                         }}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2"
+                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded-lg px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                         data-testid="btn-aannemen-medewerker"
                       >
                         <CheckCircle2 className="h-4 w-4" />
-                        Aannemen als medewerker
+                        {selectedApp.email ? 'Aannemen als medewerker' : 'Aannemen als medewerker (e-mailadres ontbreekt)'}
                       </button>
                     </div>
                   )}
