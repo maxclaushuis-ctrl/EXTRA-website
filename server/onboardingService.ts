@@ -77,13 +77,7 @@ export async function genereerOnboardingHTML(
   // Vervang eventuele unsubscribe-fragmenten die de generator standaard zou kunnen toevoegen
   html = html.replace(/Uitschrijven|Unsubscribe/gi, '');
 
-  // Voeg onboarding footer toe vlak voor </body>
-  const footerHtml = `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:18px 16px;text-align:center;font-family:Arial,sans-serif;border-top:1px solid #e5e7eb;"><tr><td style="font-size:12px;color:#9ca3af;line-height:1.6;">${FOOTER_TEXT}</td></tr></table>`;
-  if (html.includes('</body>')) {
-    html = html.replace('</body>', `${footerHtml}</body>`);
-  } else {
-    html = html + footerHtml;
-  }
+  // Footer wordt nu door generateEmailHTML zelf gerenderd (EXTRA-shell) — geen dubbele footer toevoegen
   return html;
 }
 
