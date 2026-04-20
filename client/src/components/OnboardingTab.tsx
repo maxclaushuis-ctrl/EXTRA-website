@@ -342,12 +342,12 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 pb-4 border-b border-gray-200">
-        <div className="flex-1">
+      <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+        <div className="flex-1 min-w-0">
           <Input
             value={form.naam}
             onChange={e => updateField('naam', e.target.value)}
-            className="text-xl font-bold border-0 shadow-none px-0 focus-visible:ring-0 h-auto"
+            className="text-xl font-bold border-0 shadow-none px-0 focus-visible:ring-0 h-auto w-full"
             data-testid="input-template-naam"
           />
           <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
@@ -355,8 +355,8 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
             {updateMutation.isPending && <span>Opslaan...</span>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 mr-3 px-3 py-1 bg-gray-50 rounded-md">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 mr-1 px-3 py-1 bg-gray-50 rounded-md">
             <Switch
               checked={form.actief}
               onCheckedChange={v => updateField('actief', v)}
