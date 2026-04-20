@@ -12,17 +12,9 @@ import {
   Search, Plus, Mail, MailCheck, X, Pencil, Trash2,
   CheckCircle2, Briefcase, MapPin, Phone, Calendar, Tag, FileText, Send, AlertCircle,
 } from 'lucide-react';
-import type { Employee, OnboardingLog } from '@shared/schema';
+import type { Employee, OnboardingLog, OnboardingTemplate } from '@shared/schema';
 
-// Hardcoded templates voor Stap 1 (echte template-management komt in Stap 3)
-const ONBOARDING_TEMPLATES = [
-  { id: 1, name: 'Welkom Horeca NL', language: 'Nederlands', functie: null, opdrachtgever: null },
-  { id: 2, name: 'Welkom Horeca EN', language: 'Engels', functie: null, opdrachtgever: null },
-  { id: 3, name: 'Welkom Logistiek NL', language: 'Nederlands', functie: 'logistiek', opdrachtgever: null },
-  { id: 4, name: 'Welkom Logistiek EN', language: 'Engels', functie: 'logistiek', opdrachtgever: null },
-  { id: 5, name: 'Welkom Housekeeping NL', language: 'Nederlands', functie: 'housekeeping', opdrachtgever: null },
-  { id: 6, name: 'Welkom Budbee Logistiek', language: 'Nederlands', functie: 'logistiek', opdrachtgever: 'Budbee' },
-];
+type TemplateLite = Pick<OnboardingTemplate, 'id' | 'naam' | 'taal' | 'functiegroep' | 'opdrachtgever'>;
 
 const BRANCHES = ['Hotel', 'Restaurant', 'Cateraar', 'Evenementenlocatie', 'Logistiek'];
 const CONTRACT_TYPES = ['oproepkracht', 'parttimer', 'fulltimer'];
@@ -32,21 +24,6 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   inactief: { label: 'Inactief', cls: 'bg-gray-100 text-gray-700 border-gray-200' },
   uitgestroomd: { label: 'Uitgestroomd', cls: 'bg-red-100 text-red-700 border-red-200' },
 };
-
-function selectTemplateAuto(emp: Partial<Employee>): typeof ONBOARDING_TEMPLATES[number] {
-  const lang = emp.language || 'Nederlands';
-  // 1. Opdrachtgever-specifiek
-  const byOpdracht = ONBOARDING_TEMPLATES.find(t => t.opdrachtgever && emp.opdrachtgever && t.opdrachtgever === emp.opdrachtgever);
-  if (byOpdracht) return byOpdracht;
-  // 2. Functie + taal
-  const byFn = ONBOARDING_TEMPLATES.find(t => t.functie && emp.functie && t.functie === emp.functie && t.language === lang);
-  if (byFn) return byFn;
-  // 3. Taal
-  const byLang = ONBOARDING_TEMPLATES.find(t => !t.functie && !t.opdrachtgever && t.language === lang);
-  if (byLang) return byLang;
-  // 4. Default
-  return ONBOARDING_TEMPLATES[0];
-}
 
 type EmployeeWithLogs = Employee & { onboardingLogs?: OnboardingLog[] };
 
@@ -64,7 +41,7 @@ export default function MedewerkersTab() {
   const [editMode, setEditMode] = useState(false);
   const [profileTab, setProfileTab] = useState<'gegevens' | 'historie' | 'shifts'>('gegevens');
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [sendConfirmTemplate, setSendConfirmTemplate] = useState<typeof ONBOARDING_TEMPLATES[number] | null>(null);
+  const [sendConfirmTemplate, setSendConfirmTemplate] = useState<TemplateLite | null>(null);
 
   const { data: listData, isLoading } = useQuery<{ employees: Employee[]; total: number }>({
     queryKey: ['/api/admin/employees'],
@@ -343,7 +320,7 @@ export default function MedewerkersTab() {
               <p>Versturen aan <strong>{detailData.firstName} {detailData.lastName}</strong></p>
               <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-xs">
                 <div><span className="text-gray-500">E-mailadres:</span> <span className="font-medium">{detailData.email}</span></div>
-                <div><span className="text-gray-500">Template:</span> <span className="font-medium">{sendConfirmTemplate.name}</span></div>
+                <div><span className="text-gray-500">Template:</span> <span className="font-medium">{sendConfirmTemplate.naam}</span></div>
                 <div className="text-gray-400 italic">Bijlagen worden in Stap 3 toegevoegd.</div>
               </div>
               <div className="flex gap-2 justify-end pt-1">
@@ -354,7 +331,7 @@ export default function MedewerkersTab() {
                   onClick={() => sendOnboardingMutation.mutate({
                     id: detailData.id,
                     templateId: sendConfirmTemplate.id,
-                    templateName: sendConfirmTemplate.name,
+                    templateName: sendConfirmTemplate.naam,
                   })}
                   data-testid="btn-confirm-send-onboarding"
                 >
@@ -403,14 +380,41 @@ function EmployeeDetail({
   setProfileTab: (t: 'gegevens' | 'historie' | 'shifts') => void;
   onUpdate: (data: Partial<Employee>) => void;
   onDelete: () => void;
-  onSendOnboarding: (template: typeof ONBOARDING_TEMPLATES[number]) => void;
+  onSendOnboarding: (template: TemplateLite) => void;
   isSaving: boolean;
 }) {
   const st = STATUS_LABELS[employee.status] || STATUS_LABELS.nieuw;
-  const autoTemplate = selectTemplateAuto(employee);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number>(autoTemplate.id);
-  const selectedTemplate = ONBOARDING_TEMPLATES.find(t => t.id === selectedTemplateId) || autoTemplate;
   const [draft, setDraft] = useState<Partial<Employee>>(employee);
+
+  const { data: templates = [] } = useQuery<TemplateLite[]>({
+    queryKey: ['/api/onboarding/templates'],
+  });
+  const activeTemplates = useMemo(
+    () => templates.filter((t: any) => t.actief !== false),
+    [templates]
+  );
+
+  const selecteerParams = new URLSearchParams({
+    taal: employee.language || 'Nederlands',
+    ...(employee.functie ? { functie: employee.functie } : {}),
+    ...(employee.opdrachtgever ? { opdrachtgever: employee.opdrachtgever } : {}),
+  });
+  const { data: autoTemplate } = useQuery<TemplateLite>({
+    queryKey: ['/api/onboarding/templates/selecteer', employee.id, employee.language, employee.functie, employee.opdrachtgever],
+    queryFn: async () => {
+      const res = await fetch(`/api/onboarding/templates/selecteer?${selecteerParams}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Geen template gevonden');
+      return res.json();
+    },
+  });
+
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const effectiveId = selectedTemplateId ?? autoTemplate?.id ?? activeTemplates[0]?.id ?? null;
+  const selectedTemplate =
+    activeTemplates.find(t => t.id === effectiveId) ||
+    autoTemplate ||
+    activeTemplates[0] ||
+    null;
 
   return (
     <>
@@ -449,7 +453,7 @@ function EmployeeDetail({
                 <div className="text-xs text-green-700">Template: "{employee.onboardingLogs[0].templateName}"</div>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => onSendOnboarding(selectedTemplate)}>
+            <Button variant="outline" size="sm" disabled={!selectedTemplate} onClick={() => selectedTemplate && onSendOnboarding(selectedTemplate)}>
               Opnieuw sturen
             </Button>
           </div>
@@ -464,12 +468,18 @@ function EmployeeDetail({
             </div>
           </div>
           <div className="space-y-2 mt-3">
-            <Select value={String(selectedTemplateId)} onValueChange={(v) => setSelectedTemplateId(parseInt(v))}>
-              <SelectTrigger className="bg-white text-sm h-9"><SelectValue /></SelectTrigger>
+            <Select
+              value={effectiveId !== null ? String(effectiveId) : ''}
+              onValueChange={(v) => setSelectedTemplateId(parseInt(v))}
+              disabled={activeTemplates.length === 0}
+            >
+              <SelectTrigger className="bg-white text-sm h-9">
+                <SelectValue placeholder={activeTemplates.length === 0 ? 'Geen templates beschikbaar' : 'Kies template'} />
+              </SelectTrigger>
               <SelectContent>
-                {ONBOARDING_TEMPLATES.map(t => (
+                {activeTemplates.map(t => (
                   <SelectItem key={t.id} value={String(t.id)}>
-                    {t.name} {t.id === autoTemplate.id ? '(auto)' : ''}
+                    {t.naam} {autoTemplate && t.id === autoTemplate.id ? '(auto)' : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -481,7 +491,8 @@ function EmployeeDetail({
             ) : (
               <Button
                 className="w-full bg-purple-600 hover:bg-purple-700"
-                onClick={() => onSendOnboarding(selectedTemplate)}
+                disabled={!selectedTemplate}
+                onClick={() => selectedTemplate && onSendOnboarding(selectedTemplate)}
                 data-testid="btn-send-onboarding"
               >
                 <Mail className="h-4 w-4 mr-1" /> Verstuur onboarding mail

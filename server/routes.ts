@@ -6913,6 +6913,267 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Onboarding Module: templates, bijlagen, koppelingen, statistieken ────
+
+  const ONBOARDING_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads/onboarding-bijlagen');
+  if (!fs.existsSync(ONBOARDING_UPLOAD_DIR)) fs.mkdirSync(ONBOARDING_UPLOAD_DIR, { recursive: true });
+
+  const onboardingBijlageStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, ONBOARDING_UPLOAD_DIR),
+    filename: (_req, file, cb) => {
+      const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      cb(null, `${Date.now()}-${safe}`);
+    },
+  });
+  const onboardingBijlageUpload = multer({
+    storage: onboardingBijlageStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (file.mimetype !== 'application/pdf') return cb(new Error('Alleen PDF bestanden zijn toegestaan'));
+      cb(null, true);
+    },
+  });
+
+  // Templates
+  app.get("/api/onboarding/templates", adminMiddleware, async (req, res) => {
+    try {
+      const { taal, functiegroep, opdrachtgever, actief } = req.query as any;
+      const filters: any = {};
+      if (taal) filters.taal = String(taal);
+      if (functiegroep) filters.functiegroep = String(functiegroep);
+      if (opdrachtgever) filters.opdrachtgever = String(opdrachtgever);
+      if (actief !== undefined) filters.actief = actief === 'true' || actief === '1';
+      const rows = await storage.getOnboardingTemplates(filters);
+      res.json(rows);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij ophalen templates' }); }
+  });
+
+  app.get("/api/onboarding/templates/selecteer", adminMiddleware, async (req, res) => {
+    try {
+      const { taal, functie, opdrachtgever } = req.query as any;
+      const tpl = await storage.selecteerOnboardingTemplate({
+        taal: taal ? String(taal) : null,
+        functie: functie ? String(functie) : null,
+        opdrachtgever: opdrachtgever ? String(opdrachtgever) : null,
+      });
+      if (!tpl) return res.status(404).json({ message: 'Geen passende template gevonden' });
+      res.json(tpl);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij selecteren template' }); }
+  });
+
+  app.get("/api/onboarding/templates/:id", adminMiddleware, async (req, res) => {
+    try {
+      const tpl = await storage.getOnboardingTemplate(parseInt(req.params.id));
+      if (!tpl) return res.status(404).json({ message: 'Template niet gevonden' });
+      res.json(tpl);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout' }); }
+  });
+
+  app.post("/api/onboarding/templates", adminMiddleware, async (req, res) => {
+    try {
+      const data = req.body || {};
+      if (!data.naam || !data.onderwerp) return res.status(400).json({ message: 'naam en onderwerp zijn verplicht' });
+      const tpl = await storage.createOnboardingTemplate(data);
+      res.status(201).json(tpl);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij aanmaken template' }); }
+  });
+
+  app.put("/api/onboarding/templates/:id", adminMiddleware, async (req, res) => {
+    try {
+      const tpl = await storage.updateOnboardingTemplate(parseInt(req.params.id), req.body || {});
+      if (!tpl) return res.status(404).json({ message: 'Template niet gevonden' });
+      res.json(tpl);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij bijwerken template' }); }
+  });
+
+  app.delete("/api/onboarding/templates/:id", adminMiddleware, async (req, res) => {
+    try {
+      const ok = await storage.deleteOnboardingTemplate(parseInt(req.params.id));
+      if (!ok) return res.status(404).json({ message: 'Template niet gevonden' });
+      res.json({ success: true });
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij verwijderen' }); }
+  });
+
+  // Bijlagen
+  app.get("/api/onboarding/bijlagen", adminMiddleware, async (req, res) => {
+    try {
+      const { taal, actief } = req.query as any;
+      const filters: any = {};
+      if (taal) filters.taal = String(taal);
+      if (actief !== undefined) filters.actief = actief === 'true' || actief === '1';
+      const rows = await storage.getOnboardingBijlagen(filters);
+      res.json(rows);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout' }); }
+  });
+
+  app.post("/api/onboarding/bijlagen", adminMiddleware, onboardingBijlageUpload.single('bestand'), async (req, res) => {
+    try {
+      const file = (req as any).file;
+      if (!file) return res.status(400).json({ message: 'Geen PDF bestand ontvangen' });
+      const { naam, taal, versie } = req.body || {};
+      if (!naam) {
+        try { fs.unlinkSync(file.path); } catch {}
+        return res.status(400).json({ message: 'Naam is verplicht' });
+      }
+      const bijlage = await storage.createOnboardingBijlage({
+        naam,
+        bestandsnaam: file.originalname,
+        bestandspad: path.relative(process.cwd(), file.path),
+        bestandsgrootte: file.size,
+        taal: taal || 'alles',
+        versie: versie || null,
+        actief: true,
+      } as any);
+      res.status(201).json(bijlage);
+    } catch (e: any) {
+      console.error(e);
+      res.status(500).json({ message: e?.message || 'Upload mislukt' });
+    }
+  });
+
+  app.get("/api/onboarding/bijlagen/:id/bekijken", adminMiddleware, async (req, res) => {
+    try {
+      const b = await storage.getOnboardingBijlage(parseInt(req.params.id));
+      if (!b) return res.status(404).json({ message: 'Bijlage niet gevonden' });
+      const filePath = path.resolve(process.cwd(), b.bestandspad);
+      if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Bestand niet meer aanwezig' });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${b.bestandsnaam}"`);
+      fs.createReadStream(filePath).pipe(res);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout' }); }
+  });
+
+  app.put("/api/onboarding/bijlagen/:id/vervangen", adminMiddleware, onboardingBijlageUpload.single('bestand'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const file = (req as any).file;
+      if (!file) return res.status(400).json({ message: 'Geen PDF bestand ontvangen' });
+      const oud = await storage.getOnboardingBijlage(id);
+      if (!oud) {
+        try { fs.unlinkSync(file.path); } catch {}
+        return res.status(404).json({ message: 'Bijlage niet gevonden' });
+      }
+      const updated = await storage.updateOnboardingBijlage(id, {
+        bestandsnaam: file.originalname,
+        bestandspad: path.relative(process.cwd(), file.path),
+        bestandsgrootte: file.size,
+        versie: req.body?.versie || oud.versie,
+      } as any);
+      // verwijder oud bestand
+      try {
+        const oudPath = path.resolve(process.cwd(), oud.bestandspad);
+        if (fs.existsSync(oudPath)) fs.unlinkSync(oudPath);
+      } catch {}
+      res.json(updated);
+    } catch (e: any) { console.error(e); res.status(500).json({ message: e?.message || 'Vervangen mislukt' }); }
+  });
+
+  app.delete("/api/onboarding/bijlagen/:id", adminMiddleware, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const b = await storage.getOnboardingBijlage(id);
+      const result = await storage.deleteOnboardingBijlage(id);
+      if (!result.success) {
+        return res.status(409).json({ message: `Bijlage is gekoppeld aan ${result.gekoppeldAanTemplates} actieve template(s)` });
+      }
+      if (b) {
+        try {
+          const filePath = path.resolve(process.cwd(), b.bestandspad);
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch {}
+      }
+      res.json({ success: true });
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij verwijderen' }); }
+  });
+
+  // Koppelingen
+  app.post("/api/onboarding/template-bijlagen", adminMiddleware, async (req, res) => {
+    try {
+      const { template_id, bijlage_id, volgorde } = req.body || {};
+      if (!template_id || !bijlage_id) return res.status(400).json({ message: 'template_id en bijlage_id zijn verplicht' });
+      const koppeling = await storage.koppelBijlageAanTemplate(Number(template_id), Number(bijlage_id), Number(volgorde) || 0);
+      res.status(201).json(koppeling);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij koppelen' }); }
+  });
+
+  app.delete("/api/onboarding/template-bijlagen/:id", adminMiddleware, async (req, res) => {
+    try {
+      const ok = await storage.ontkoppelBijlageVanTemplate(parseInt(req.params.id));
+      if (!ok) return res.status(404).json({ message: 'Koppeling niet gevonden' });
+      res.json({ success: true });
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout' }); }
+  });
+
+  // Statistieken
+  app.get("/api/onboarding/statistieken", adminMiddleware, async (_req, res) => {
+    try {
+      const stats = await storage.getOnboardingStatistieken();
+      res.json(stats);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij statistieken' }); }
+  });
+
+  app.get("/api/onboarding/statistieken/export/csv", adminMiddleware, async (_req, res) => {
+    try {
+      const stats = await storage.getOnboardingStatistieken();
+      const escape = (v: any) => {
+        if (v == null) return '';
+        const s = String(v).replace(/"/g, '""');
+        return /[",\n]/.test(s) ? `"${s}"` : s;
+      };
+      const header = 'Naam,Email,Opdrachtgever,Template,Verstuurd op,Status\n';
+      const rows = stats.laatste50.map((r: any) =>
+        [r.medewerkerNaam, r.medewerkerEmail, r.opdrachtgever || '', r.templateName || '', new Date(r.sentAt).toISOString(), r.status]
+          .map(escape).join(',')
+      ).join('\n');
+      const datum = new Date().toISOString().slice(0, 10);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="EXTRA-onboarding-log-${datum}.csv"`);
+      res.send(header + rows);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij export' }); }
+  });
+
+  // Seed standaard templates bij eerste start
+  (async () => {
+    try {
+      const bestaande = await storage.getOnboardingTemplates();
+      if (bestaande.length === 0) {
+        await storage.createOnboardingTemplate({
+          naam: 'Welkom bij EXTRA (NL)',
+          taal: 'Nederlands',
+          functiegroep: null,
+          opdrachtgever: null,
+          onderwerp: 'Welkom bij het EXTRA team, {{voornaam}}! 🎉',
+          content: JSON.stringify({
+            blokken: [
+              { type: 'tekst', content: 'Hoi {{voornaam}},\n\nWelkom bij EXTRA! We zijn blij dat je bij ons team komt werken als {{functie}}. Hieronder vind je alle informatie die je nodig hebt om goed te kunnen starten.' },
+              { type: 'tekst', content: 'Je startdatum: {{startdatum}}\n\nMocht je vragen hebben, neem dan gerust contact met ons op.\n\nMet vriendelijke groet,\nHet EXTRA team' },
+            ],
+          }),
+          isStandaard: true,
+          actief: true,
+        } as any);
+        await storage.createOnboardingTemplate({
+          naam: 'Welcome to EXTRA (EN)',
+          taal: 'Engels',
+          functiegroep: null,
+          opdrachtgever: null,
+          onderwerp: 'Welcome to the EXTRA team, {{voornaam}}! 🎉',
+          content: JSON.stringify({
+            blokken: [
+              { type: 'tekst', content: 'Hi {{voornaam}},\n\nWelcome to EXTRA! We are excited to have you join our team as {{functie}}. Below you will find all the information you need to get started.' },
+              { type: 'tekst', content: 'Your start date: {{startdatum}}\n\nIf you have any questions, feel free to reach out.\n\nKind regards,\nThe EXTRA team' },
+            ],
+          }),
+          isStandaard: true,
+          actief: true,
+        } as any);
+        console.log('[onboarding] standaard templates geseed');
+      }
+    } catch (e) {
+      console.warn('[onboarding] seed templates overgeslagen:', e);
+    }
+  })();
+
   // KPI Rapportage endpoint
   app.get("/api/admin/kpi", adminMiddleware, async (req: Request, res: Response) => {
     try {

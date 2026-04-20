@@ -1,0 +1,956 @@
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Plus, Trash2, Copy, Star, FileText, Eye, RotateCcw, Upload, Download,
+  Mail, Paperclip, Save, CheckCircle2, AlertCircle, X, GripVertical,
+} from 'lucide-react';
+import type { OnboardingTemplate, OnboardingBijlage, OnboardingTemplateMetBijlagen } from '@shared/schema';
+
+const PERSONALISATIE_TAGS = [
+  { tag: '{{voornaam}}', uitleg: 'Voornaam medewerker' },
+  { tag: '{{achternaam}}', uitleg: 'Achternaam medewerker' },
+  { tag: '{{naam}}', uitleg: 'Volledige naam' },
+  { tag: '{{functie}}', uitleg: 'Functie, bijv. "housekeeping"' },
+  { tag: '{{opdrachtgever}}', uitleg: 'Opdrachtgever, bijv. "Budbee"' },
+  { tag: '{{startdatum}}', uitleg: 'Startdatum, bijv. "14 april 2026"' },
+];
+
+const FUNCTIE_OPTIES = ['housekeeping', 'horeca', 'logistiek', 'evenementen', 'overig'];
+
+function formatBytes(b?: number | null) {
+  if (!b) return '—';
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+  return `${(b / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function blokkenNaarTekst(content?: string | null): string {
+  if (!content) return '';
+  try {
+    const json = JSON.parse(content);
+    if (json?.blokken && Array.isArray(json.blokken)) {
+      return json.blokken.map((b: any) => b.content || '').join('\n\n');
+    }
+  } catch {}
+  return content;
+}
+
+function tekstNaarBlokken(tekst: string): string {
+  return JSON.stringify({
+    blokken: tekst.split(/\n{2,}/).filter(s => s.trim()).map(content => ({ type: 'tekst', content })),
+  });
+}
+
+export default function OnboardingTab() {
+  const [activeTab, setActiveTab] = useState<'templates' | 'bijlagen' | 'statistieken'>('templates');
+
+  return (
+    <div className="overflow-auto bg-gray-50" style={{ height: 'calc(100vh - 57px)' }}>
+      <div className="bg-white border-b border-gray-200 px-6 pt-5 pb-0">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">Onboarding</h1>
+        </div>
+        <div className="flex gap-1">
+          {[
+            { id: 'templates', label: 'Templates' },
+            { id: 'bijlagen', label: 'Bijlagen' },
+            { id: 'statistieken', label: 'Statistieken' },
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              data-testid={`tab-${t.id}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                activeTab === t.id
+                  ? 'border-purple-600 text-purple-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="p-6">
+        {activeTab === 'templates' && <TemplatesTab />}
+        {activeTab === 'bijlagen' && <BijlagenTab />}
+        {activeTab === 'statistieken' && <StatistiekenTab />}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TEMPLATES TAB
+// ============================================================================
+
+function TemplatesTab() {
+  const { toast } = useToast();
+  const [filterTaal, setFilterTaal] = useState<string>('alles');
+  const [filterFunctie, setFilterFunctie] = useState<string>('alles');
+  const [filterOpdrachtgever, setFilterOpdrachtgever] = useState<string>('alles');
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+
+  const { data: templates = [], isLoading } = useQuery<OnboardingTemplate[]>({
+    queryKey: ['/api/onboarding/templates'],
+  });
+
+  const opdrachtgeverOpties = useMemo(
+    () => Array.from(new Set(templates.map(t => t.opdrachtgever).filter(Boolean))) as string[],
+    [templates]
+  );
+
+  const filtered = templates.filter(t => {
+    if (filterTaal !== 'alles' && t.taal !== filterTaal) return false;
+    if (filterFunctie !== 'alles' && t.functiegroep !== filterFunctie) return false;
+    if (filterOpdrachtgever !== 'alles' && t.opdrachtgever !== filterOpdrachtgever) return false;
+    return true;
+  });
+
+  useEffect(() => {
+    if (selectedId === null && filtered.length > 0) setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
+
+  return (
+    <div className="grid gap-4" style={{ gridTemplateColumns: '300px 1fr' }}>
+      {/* Linker paneel: lijst */}
+      <div className="bg-white border border-gray-200 rounded-lg p-3 h-fit">
+        <Button
+          onClick={() => setShowCreate(true)}
+          className="w-full mb-3 bg-purple-600 hover:bg-purple-700"
+          data-testid="button-nieuwe-template"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Nieuwe template
+        </Button>
+
+        <div className="space-y-2 mb-3">
+          <Select value={filterTaal} onValueChange={setFilterTaal}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alles">Alle talen</SelectItem>
+              <SelectItem value="Nederlands">Nederlands</SelectItem>
+              <SelectItem value="Engels">Engels</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterFunctie} onValueChange={setFilterFunctie}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alles">Alle functies</SelectItem>
+              {FUNCTIE_OPTIES.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {opdrachtgeverOpties.length > 0 && (
+            <Select value={filterOpdrachtgever} onValueChange={setFilterOpdrachtgever}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alles">Alle opdrachtgevers</SelectItem>
+                {opdrachtgeverOpties.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="space-y-1 max-h-[calc(100vh-340px)] overflow-y-auto">
+          {isLoading && <div className="text-sm text-gray-400 p-2">Laden...</div>}
+          {!isLoading && filtered.length === 0 && (
+            <div className="text-sm text-gray-400 p-2">Geen templates gevonden</div>
+          )}
+          {filtered.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setSelectedId(t.id)}
+              data-testid={`template-item-${t.id}`}
+              className={`w-full text-left p-2 rounded-md border transition-colors ${
+                selectedId === t.id
+                  ? 'bg-purple-50 border-purple-300'
+                  : 'border-transparent hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <div className="font-semibold text-sm text-gray-900 line-clamp-1 flex-1">
+                  {t.naam}
+                </div>
+                {t.isStandaard && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
+              </div>
+              <div className="flex flex-wrap items-center gap-1">
+                <Badge variant="outline" className="text-[10px] h-4 px-1.5 rounded-full">
+                  {t.taal === 'Nederlands' ? 'NL' : 'EN'}
+                </Badge>
+                {!t.actief && (
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 rounded-full bg-gray-100 text-gray-500">
+                    inactief
+                  </Badge>
+                )}
+              </div>
+              <div className="text-[11px] text-gray-500 mt-0.5">
+                {t.functiegroep || 'Alle functies'} · {t.opdrachtgever || 'Alle opdrachtgevers'}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Rechter paneel: detail */}
+      <div>
+        {selectedId ? (
+          <TemplateDetail templateId={selectedId} onDeleted={() => setSelectedId(null)} />
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center text-gray-400">
+            Selecteer een template links of maak een nieuwe aan
+          </div>
+        )}
+      </div>
+
+      <NieuweTemplateModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={(id) => { setSelectedId(id); setShowCreate(false); }}
+      />
+    </div>
+  );
+}
+
+function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDeleted: () => void }) {
+  const { toast } = useToast();
+  const { data: tpl, isLoading } = useQuery<OnboardingTemplateMetBijlagen>({
+    queryKey: ['/api/onboarding/templates', templateId],
+  });
+
+  const [form, setForm] = useState<any>(null);
+  const [bodyTekst, setBodyTekst] = useState('');
+  const [showBijlagePicker, setShowBijlagePicker] = useState(false);
+  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (tpl) {
+      setForm({
+        naam: tpl.naam,
+        taal: tpl.taal,
+        functiegroep: tpl.functiegroep || '',
+        opdrachtgever: tpl.opdrachtgever || '',
+        onderwerp: tpl.onderwerp,
+        isStandaard: tpl.isStandaard,
+        actief: tpl.actief,
+      });
+      setBodyTekst(blokkenNaarTekst(tpl.content));
+    }
+  }, [tpl]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('PUT', `/api/onboarding/templates/${templateId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+      setSavedAt(new Date());
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => apiRequest('DELETE', `/api/onboarding/templates/${templateId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      toast({ title: 'Template verwijderd' });
+      onDeleted();
+    },
+  });
+
+  const dupliceerMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/onboarding/templates', {
+      naam: `${form.naam} (kopie)`,
+      taal: form.taal,
+      functiegroep: form.functiegroep || null,
+      opdrachtgever: form.opdrachtgever || null,
+      onderwerp: form.onderwerp,
+      content: tekstNaarBlokken(bodyTekst),
+      isStandaard: false,
+      actief: form.actief,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      toast({ title: 'Template gedupliceerd ✓' });
+    },
+  });
+
+  const ontkoppelMutation = useMutation({
+    mutationFn: (koppelingId: number) => apiRequest('DELETE', `/api/onboarding/template-bijlagen/${koppelingId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] }),
+  });
+
+  // Auto-save
+  const triggerAutoSave = (next: any, body?: string) => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      updateMutation.mutate({
+        ...next,
+        functiegroep: next.functiegroep || null,
+        opdrachtgever: next.opdrachtgever || null,
+        content: tekstNaarBlokken(body !== undefined ? body : bodyTekst),
+      });
+    }, 1500);
+  };
+
+  const updateField = (field: string, value: any) => {
+    const next = { ...form, [field]: value };
+    setForm(next);
+    triggerAutoSave(next);
+  };
+
+  const updateBody = (val: string) => {
+    setBodyTekst(val);
+    triggerAutoSave(form, val);
+  };
+
+  if (isLoading || !form || !tpl) {
+    return <div className="bg-white border border-gray-200 rounded-lg p-12 text-center text-gray-400">Laden...</div>;
+  }
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 pb-4 border-b border-gray-200">
+        <div className="flex-1">
+          <Input
+            value={form.naam}
+            onChange={e => updateField('naam', e.target.value)}
+            className="text-xl font-bold border-0 shadow-none px-0 focus-visible:ring-0 h-auto"
+            data-testid="input-template-naam"
+          />
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            {savedAt && <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Opgeslagen om {savedAt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}</span>}
+            {updateMutation.isPending && <span>Opslaan...</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mr-3 px-3 py-1 bg-gray-50 rounded-md">
+            <Switch
+              checked={form.actief}
+              onCheckedChange={v => updateField('actief', v)}
+              data-testid="switch-actief"
+            />
+            <span className="text-sm">{form.actief ? 'Actief' : 'Inactief'}</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => dupliceerMutation.mutate()} data-testid="button-dupliceer">
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline" size="sm"
+            onClick={() => { if (confirm(`Template "${form.naam}" verwijderen?`)) deleteMutation.mutate(); }}
+            data-testid="button-verwijder"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Instellingen */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Instellingen</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs text-gray-600">Taal</Label>
+            <Select value={form.taal} onValueChange={v => updateField('taal', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Nederlands">Nederlands</SelectItem>
+                <SelectItem value="Engels">Engels</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs text-gray-600">Functiegroep <span className="text-gray-400">(leeg = alle)</span></Label>
+            <Select value={form.functiegroep || 'alles'} onValueChange={v => updateField('functiegroep', v === 'alles' ? '' : v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alles">— Alle functies —</SelectItem>
+                {FUNCTIE_OPTIES.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label className="text-xs text-gray-600">Opdrachtgever <span className="text-gray-400">(leeg = alle)</span></Label>
+            <Input
+              value={form.opdrachtgever}
+              onChange={e => updateField('opdrachtgever', e.target.value)}
+              placeholder="bijv. Budbee"
+              data-testid="input-opdrachtgever"
+            />
+          </div>
+          <div className="col-span-2 flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded-md">
+            <input
+              type="checkbox"
+              checked={form.isStandaard}
+              onChange={e => updateField('isStandaard', e.target.checked)}
+              className="mt-1"
+              data-testid="checkbox-standaard"
+            />
+            <div className="text-sm">
+              <div className="font-medium text-amber-900">Gebruik als standaard fallback voor deze taal</div>
+              <div className="text-xs text-amber-700 mt-0.5">
+                Als geen specifiekere template gevonden wordt, wordt deze gebruikt voor alle medewerkers met deze taal.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* E-mail inhoud */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">E-mail inhoud</h3>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs text-gray-600">Onderwerp</Label>
+            <Input
+              value={form.onderwerp}
+              onChange={e => updateField('onderwerp', e.target.value)}
+              data-testid="input-onderwerp"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Gebruik <code className="bg-gray-100 px-1 rounded">{`{{voornaam}}`}</code>, <code className="bg-gray-100 px-1 rounded">{`{{opdrachtgever}}`}</code> etc. voor personalisatie
+            </p>
+          </div>
+          <div>
+            <Label className="text-xs text-gray-600">Body <span className="text-gray-400">(scheid blokken met een lege regel)</span></Label>
+            <Textarea
+              value={bodyTekst}
+              onChange={e => updateBody(e.target.value)}
+              rows={10}
+              className="font-mono text-sm"
+              placeholder="Hoi {{voornaam}},&#10;&#10;Welkom bij EXTRA!..."
+              data-testid="textarea-body"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Bijlagen */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <Paperclip className="h-4 w-4" /> Bijlagen
+        </h3>
+        <div className="space-y-2">
+          {(tpl.bijlagen || []).length === 0 && (
+            <div className="text-sm text-gray-400 italic">Nog geen bijlagen gekoppeld</div>
+          )}
+          {(tpl.bijlagen || []).map(b => (
+            <div key={b.koppelingId} className="flex items-center gap-3 p-2 border border-gray-200 rounded-md">
+              <GripVertical className="h-4 w-4 text-gray-300" />
+              <FileText className="h-5 w-5 text-red-600" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">{b.naam}</div>
+                <div className="text-xs text-gray-500">{b.bestandsnaam} · {formatBytes(b.bestandsgrootte)}</div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => ontkoppelMutation.mutate(b.koppelingId)}>
+                <X className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => setShowBijlagePicker(true)} data-testid="button-bijlage-toevoegen">
+            <Plus className="h-4 w-4 mr-1" /> Bijlage toevoegen
+          </Button>
+        </div>
+      </section>
+
+      {/* Personalisatie tags */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Beschikbare personalisatie-tags</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {PERSONALISATIE_TAGS.map(p => (
+            <div key={p.tag} className="flex items-center gap-3 text-xs">
+              <code className="bg-gray-100 text-purple-700 px-2 py-1 rounded font-mono whitespace-nowrap">{p.tag}</code>
+              <span className="text-gray-500">{p.uitleg}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <BijlagePickerModal
+        open={showBijlagePicker}
+        onClose={() => setShowBijlagePicker(false)}
+        templateId={templateId}
+        alGekoppeld={(tpl.bijlagen || []).map(b => b.id)}
+      />
+    </div>
+  );
+}
+
+function NieuweTemplateModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (id: number) => void }) {
+  const { toast } = useToast();
+  const [form, setForm] = useState({
+    naam: '',
+    taal: 'Nederlands',
+    functiegroep: '',
+    opdrachtgever: '',
+    isStandaard: false,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/onboarding/templates', {
+      naam: form.naam,
+      taal: form.taal,
+      functiegroep: form.functiegroep || null,
+      opdrachtgever: form.opdrachtgever || null,
+      onderwerp: `Welkom bij EXTRA, {{voornaam}}!`,
+      content: tekstNaarBlokken('Hoi {{voornaam}},\n\nWelkom bij EXTRA!'),
+      isStandaard: form.isStandaard,
+      actief: true,
+    }),
+    onSuccess: async (res: any) => {
+      const tpl = await res.json();
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      toast({ title: `Template '${form.naam}' aangemaakt ✓` });
+      setForm({ naam: '', taal: 'Nederlands', functiegroep: '', opdrachtgever: '', isStandaard: false });
+      onCreated(tpl.id);
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Template aanmaken</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Naam *</Label>
+            <Input value={form.naam} onChange={e => setForm({ ...form, naam: e.target.value })} placeholder="bijv. Welkom Horeca NL" data-testid="input-nieuw-naam" />
+          </div>
+          <div>
+            <Label>Taal *</Label>
+            <Select value={form.taal} onValueChange={v => setForm({ ...form, taal: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Nederlands">Nederlands</SelectItem>
+                <SelectItem value="Engels">Engels</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Functiegroep</Label>
+            <Select value={form.functiegroep || 'leeg'} onValueChange={v => setForm({ ...form, functiegroep: v === 'leeg' ? '' : v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="leeg">— Geen specifieke —</SelectItem>
+                {FUNCTIE_OPTIES.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Opdrachtgever</Label>
+            <Input value={form.opdrachtgever} onChange={e => setForm({ ...form, opdrachtgever: e.target.value })} placeholder="bijv. Budbee" />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.isStandaard} onChange={e => setForm({ ...form, isStandaard: e.target.checked })} />
+            <span>Standaard fallback voor deze taal</span>
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button
+            onClick={() => createMutation.mutate()}
+            disabled={!form.naam || createMutation.isPending}
+            className="bg-purple-600 hover:bg-purple-700"
+            data-testid="button-template-aanmaken"
+          >
+            Template aanmaken →
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BijlagePickerModal({ open, onClose, templateId, alGekoppeld }: { open: boolean; onClose: () => void; templateId: number; alGekoppeld: number[] }) {
+  const { data: bijlagen = [] } = useQuery<OnboardingBijlage[]>({
+    queryKey: ['/api/onboarding/bijlagen'],
+    enabled: open,
+  });
+  const koppelMutation = useMutation({
+    mutationFn: (bijlageId: number) => apiRequest('POST', '/api/onboarding/template-bijlagen', { template_id: templateId, bijlage_id: bijlageId, volgorde: alGekoppeld.length }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+      onClose();
+    },
+  });
+  const beschikbaar = bijlagen.filter(b => !alGekoppeld.includes(b.id));
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Bijlage koppelen</DialogTitle></DialogHeader>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {beschikbaar.length === 0 && <div className="text-sm text-gray-400 p-4 text-center">Geen beschikbare bijlagen — upload eerst een PDF in de tab Bijlagen.</div>}
+          {beschikbaar.map(b => (
+            <button
+              key={b.id}
+              onClick={() => koppelMutation.mutate(b.id)}
+              className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-md hover:bg-purple-50 hover:border-purple-300 text-left"
+            >
+              <FileText className="h-5 w-5 text-red-600" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">{b.naam}</div>
+                <div className="text-xs text-gray-500">{b.bestandsnaam} · {formatBytes(b.bestandsgrootte)} · {b.taal}</div>
+              </div>
+              <Plus className="h-4 w-4 text-purple-600" />
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
+// BIJLAGEN TAB
+// ============================================================================
+
+function BijlagenTab() {
+  const { toast } = useToast();
+  const [showUpload, setShowUpload] = useState(false);
+  const [vervangenId, setVervangenId] = useState<number | null>(null);
+  const { data: bijlagen = [], isLoading } = useQuery<OnboardingBijlage[]>({
+    queryKey: ['/api/onboarding/bijlagen'],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/onboarding/bijlagen/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/bijlagen'] });
+      toast({ title: 'Bijlage verwijderd' });
+    },
+    onError: (e: any) => {
+      toast({ title: 'Verwijderen niet mogelijk', description: e?.message || 'Bijlage is gekoppeld aan actieve templates', variant: 'destructive' });
+    },
+  });
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold">Bijlagen bibliotheek</h2>
+        <Button onClick={() => setShowUpload(true)} className="bg-purple-600 hover:bg-purple-700" data-testid="button-upload-bijlage">
+          <Upload className="h-4 w-4 mr-2" /> Bijlage uploaden
+        </Button>
+      </div>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs text-gray-500 uppercase tracking-wider bg-gray-50">
+            <th className="px-4 py-2">Naam</th>
+            <th className="px-4 py-2">Bestandsnaam</th>
+            <th className="px-4 py-2">Taal</th>
+            <th className="px-4 py-2">Grootte</th>
+            <th className="px-4 py-2">Versie</th>
+            <th className="px-4 py-2">Geüpload</th>
+            <th className="px-4 py-2 text-right">Acties</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading && <tr><td colSpan={7} className="p-6 text-center text-gray-400">Laden...</td></tr>}
+          {!isLoading && bijlagen.length === 0 && (
+            <tr><td colSpan={7} className="p-6 text-center text-gray-400">Nog geen bijlagen</td></tr>
+          )}
+          {bijlagen.map((b, i) => (
+            <tr key={b.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <td className="px-4 py-3 font-medium">{b.naam}</td>
+              <td className="px-4 py-3 text-gray-600 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-red-600" /> {b.bestandsnaam}
+              </td>
+              <td className="px-4 py-3"><Badge variant="outline" className="text-[10px] rounded-full">{b.taal}</Badge></td>
+              <td className="px-4 py-3 text-gray-600">{formatBytes(b.bestandsgrootte)}</td>
+              <td className="px-4 py-3 text-gray-600">{b.versie || '—'}</td>
+              <td className="px-4 py-3 text-gray-600">{new Date(b.geuploadOp).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}</td>
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-1 justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => window.open(`/api/onboarding/bijlagen/${b.id}/bekijken`, '_blank')} title="Bekijken">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setVervangenId(b.id)} title="Vervangen">
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => { if (confirm(`Bijlage "${b.naam}" verwijderen?`)) deleteMutation.mutate(b.id); }} title="Verwijderen">
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <BijlageUploadModal
+        open={showUpload}
+        onClose={() => setShowUpload(false)}
+      />
+      <BijlageVervangenModal
+        bijlageId={vervangenId}
+        onClose={() => setVervangenId(null)}
+      />
+    </div>
+  );
+}
+
+function BijlageUploadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const [naam, setNaam] = useState('');
+  const [taal, setTaal] = useState('alles');
+  const [versie, setVersie] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const reset = () => { setNaam(''); setTaal('alles'); setVersie(''); setFile(null); };
+
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!file) throw new Error('Geen bestand');
+      const fd = new FormData();
+      fd.append('bestand', file);
+      fd.append('naam', naam);
+      fd.append('taal', taal);
+      if (versie) fd.append('versie', versie);
+      const res = await fetch('/api/onboarding/bijlagen', { method: 'POST', body: fd, credentials: 'include' });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || 'Upload mislukt');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/bijlagen'] });
+      toast({ title: 'Bijlage geüpload ✓' });
+      reset();
+      onClose();
+    },
+    onError: (e: any) => toast({ title: 'Upload mislukt', description: e?.message, variant: 'destructive' }),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Bijlage uploaden</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setDragOver(false);
+              const f = e.dataTransfer.files[0];
+              if (f && f.type === 'application/pdf') {
+                setFile(f);
+                if (!naam) setNaam(f.name.replace(/\.pdf$/i, ''));
+              }
+            }}
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              dragOver ? 'border-purple-600 bg-purple-50' : 'border-gray-300 bg-gray-50'
+            }`}
+            style={{ minHeight: '160px' }}
+          >
+            {file ? (
+              <div className="flex items-center justify-center gap-3">
+                <FileText className="h-8 w-8 text-red-600" />
+                <div className="text-left">
+                  <div className="font-medium text-sm">{file.name}</div>
+                  <div className="text-xs text-gray-500">{formatBytes(file.size)}</div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setFile(null)}><X className="h-4 w-4" /></Button>
+              </div>
+            ) : (
+              <>
+                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">Drag & drop of klik om een PDF te selecteren</p>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setFile(f);
+                      if (!naam) setNaam(f.name.replace(/\.pdf$/i, ''));
+                    }
+                  }}
+                  className="text-xs"
+                  data-testid="input-file"
+                />
+                <p className="text-xs text-gray-400 mt-2">Alleen PDF, max 10 MB</p>
+              </>
+            )}
+          </div>
+          <div>
+            <Label>Naam *</Label>
+            <Input value={naam} onChange={e => setNaam(e.target.value)} placeholder="bijv. Afmeldprotocol" data-testid="input-bijlage-naam" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Taal</Label>
+              <Select value={taal} onValueChange={setTaal}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="alles">Alles</SelectItem>
+                  <SelectItem value="Nederlands">Nederlands</SelectItem>
+                  <SelectItem value="Engels">Engels</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Versie</Label>
+              <Input value={versie} onChange={e => setVersie(e.target.value)} placeholder="bijv. v2.0" />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Annuleren</Button>
+          <Button
+            onClick={() => uploadMutation.mutate()}
+            disabled={!file || !naam || uploadMutation.isPending}
+            className="bg-purple-600 hover:bg-purple-700"
+            data-testid="button-upload-bevestig"
+          >
+            {uploadMutation.isPending ? 'Uploaden...' : 'Uploaden'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BijlageVervangenModal({ bijlageId, onClose }: { bijlageId: number | null; onClose: () => void }) {
+  const { toast } = useToast();
+  const [file, setFile] = useState<File | null>(null);
+  const [versie, setVersie] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!file || !bijlageId) throw new Error('Geen bestand');
+      const fd = new FormData();
+      fd.append('bestand', file);
+      if (versie) fd.append('versie', versie);
+      const res = await fetch(`/api/onboarding/bijlagen/${bijlageId}/vervangen`, { method: 'PUT', body: fd, credentials: 'include' });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || 'Vervangen mislukt');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/bijlagen'] });
+      toast({ title: 'Bijlage vervangen ✓' });
+      setFile(null); setVersie('');
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open={bijlageId !== null} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Bijlage vervangen</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600">Upload een nieuwe versie. Koppelingen met templates blijven behouden.</p>
+          <input type="file" accept="application/pdf" onChange={e => setFile(e.target.files?.[0] || null)} />
+          <div>
+            <Label>Nieuwe versie</Label>
+            <Input value={versie} onChange={e => setVersie(e.target.value)} placeholder="bijv. v2.1" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button onClick={() => mutation.mutate()} disabled={!file || mutation.isPending} className="bg-purple-600 hover:bg-purple-700">
+            Vervangen
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
+// STATISTIEKEN TAB
+// ============================================================================
+
+function StatistiekenTab() {
+  const { data, isLoading } = useQuery<{
+    totaalVerstuurd: number;
+    dezeMaand: number;
+    meestGebruikteTemplate: { naam: string; aantal: number } | null;
+    laatste50: Array<any>;
+  }>({ queryKey: ['/api/onboarding/statistieken'] });
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Totaal verstuurd</div>
+            <div className="text-3xl font-bold mt-1">{data?.totaalVerstuurd ?? '—'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Deze maand</div>
+            <div className="text-3xl font-bold mt-1">{data?.dezeMaand ?? '—'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Meest gebruikt</div>
+            <div className="text-lg font-semibold mt-1 line-clamp-1">{data?.meestGebruikteTemplate?.naam || '—'}</div>
+            {data?.meestGebruikteTemplate && (
+              <div className="text-xs text-gray-500">{data.meestGebruikteTemplate.aantal}× gebruikt</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold">Laatste 50 verzendingen</h2>
+          <Button
+            variant="outline"
+            onClick={() => window.open('/api/onboarding/statistieken/export/csv', '_blank')}
+            data-testid="button-csv-export"
+          >
+            <Download className="h-4 w-4 mr-2" /> Exporteer als CSV
+          </Button>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-gray-500 uppercase tracking-wider bg-gray-50">
+              <th className="px-4 py-2">Medewerker</th>
+              <th className="px-4 py-2">Template</th>
+              <th className="px-4 py-2">Opdrachtgever</th>
+              <th className="px-4 py-2">Verstuurd op</th>
+              <th className="px-4 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && <tr><td colSpan={5} className="p-6 text-center text-gray-400">Laden...</td></tr>}
+            {!isLoading && (data?.laatste50?.length ?? 0) === 0 && (
+              <tr><td colSpan={5} className="p-6 text-center text-gray-400">Nog geen onboarding mails verstuurd</td></tr>
+            )}
+            {data?.laatste50?.map((r: any, i: number) => (
+              <tr key={r.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="px-4 py-3">
+                  <div className="font-medium">{r.medewerkerNaam}</div>
+                  <div className="text-xs text-gray-500">{r.medewerkerEmail}</div>
+                </td>
+                <td className="px-4 py-3">{r.templateName || '—'}</td>
+                <td className="px-4 py-3 text-gray-600">{r.opdrachtgever || '—'}</td>
+                <td className="px-4 py-3 text-gray-600">{new Date(r.sentAt).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                <td className="px-4 py-3">
+                  <Badge className={r.status === 'verzonden' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                    {r.status === 'verzonden' ? '✓ Verzonden' : r.status}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

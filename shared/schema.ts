@@ -1665,3 +1665,65 @@ export type InsertOnboardingLog = z.infer<typeof insertOnboardingLogSchema>;
 export type OnboardingLog = typeof onboardingLogs.$inferSelect;
 
 export type EmployeeWithLogs = Employee & { onboardingLogs?: OnboardingLog[] };
+
+// ============================================================================
+// Onboarding Module (Stap 2): templates, bijlagen en koppelingen
+// ============================================================================
+
+export const onboardingTemplates = pgTable("onboarding_templates", {
+  id: serial("id").primaryKey(),
+  naam: text("naam").notNull(),
+  taal: text("taal").default('Nederlands').notNull(),
+  functiegroep: text("functiegroep"),
+  opdrachtgever: text("opdrachtgever"),
+  onderwerp: text("onderwerp").notNull(),
+  content: text("content"),
+  isStandaard: boolean("is_standaard").default(false).notNull(),
+  actief: boolean("actief").default(true).notNull(),
+  aangemaaktOp: timestamp("aangemaakt_op").defaultNow().notNull(),
+  bijgewerktOp: timestamp("bijgewerkt_op").defaultNow().notNull(),
+});
+
+export const onboardingBijlagen = pgTable("onboarding_bijlagen", {
+  id: serial("id").primaryKey(),
+  naam: text("naam").notNull(),
+  bestandsnaam: text("bestandsnaam").notNull(),
+  bestandspad: text("bestandspad").notNull(),
+  bestandsgrootte: integer("bestandsgrootte"),
+  taal: text("taal").default('alles').notNull(),
+  versie: text("versie"),
+  actief: boolean("actief").default(true).notNull(),
+  geuploadOp: timestamp("geupload_op").defaultNow().notNull(),
+  bijgewerktOp: timestamp("bijgewerkt_op").defaultNow().notNull(),
+});
+
+export const onboardingTemplateBijlagen = pgTable("onboarding_template_bijlagen", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => onboardingTemplates.id, { onDelete: 'cascade' }),
+  bijlageId: integer("bijlage_id").notNull().references(() => onboardingBijlagen.id, { onDelete: 'cascade' }),
+  volgorde: integer("volgorde").default(0).notNull(),
+});
+
+export const insertOnboardingTemplateSchema = createInsertSchema(onboardingTemplates).omit({
+  id: true,
+  aangemaaktOp: true,
+  bijgewerktOp: true,
+});
+export type InsertOnboardingTemplate = z.infer<typeof insertOnboardingTemplateSchema>;
+export type OnboardingTemplate = typeof onboardingTemplates.$inferSelect;
+
+export const insertOnboardingBijlageSchema = createInsertSchema(onboardingBijlagen).omit({
+  id: true,
+  geuploadOp: true,
+  bijgewerktOp: true,
+});
+export type InsertOnboardingBijlage = z.infer<typeof insertOnboardingBijlageSchema>;
+export type OnboardingBijlage = typeof onboardingBijlagen.$inferSelect;
+
+export const insertOnboardingTemplateBijlageSchema = createInsertSchema(onboardingTemplateBijlagen).omit({ id: true });
+export type InsertOnboardingTemplateBijlage = z.infer<typeof insertOnboardingTemplateBijlageSchema>;
+export type OnboardingTemplateBijlage = typeof onboardingTemplateBijlagen.$inferSelect;
+
+export type OnboardingTemplateMetBijlagen = OnboardingTemplate & {
+  bijlagen?: (OnboardingBijlage & { koppelingId: number; volgorde: number })[];
+};

@@ -4,3 +4,5 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Onboarding bijlagen uploads
+uploads/onboarding-bijlagen/

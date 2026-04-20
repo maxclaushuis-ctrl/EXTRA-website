@@ -85,6 +85,13 @@ import {
   type Employee, type InsertEmployee,
   type OnboardingLog, type InsertOnboardingLog,
   type EmployeeWithLogs,
+  onboardingTemplates as onboardingTemplatesTable,
+  onboardingBijlagen as onboardingBijlagenTable,
+  onboardingTemplateBijlagen as onboardingTemplateBijlagenTable,
+  type OnboardingTemplate, type InsertOnboardingTemplate,
+  type OnboardingBijlage, type InsertOnboardingBijlage,
+  type OnboardingTemplateBijlage,
+  type OnboardingTemplateMetBijlagen,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -393,6 +400,32 @@ export interface IStorage {
   markEmployeeOnboardingSent(id: number, templateId: number, templateName?: string): Promise<Employee | undefined>;
   createOnboardingLog(log: InsertOnboardingLog): Promise<OnboardingLog>;
   getOnboardingLogs(employeeId: number): Promise<OnboardingLog[]>;
+
+  // ==========================================
+  // ONBOARDING MODULE (Stap 2): templates + bijlagen
+  // ==========================================
+  getOnboardingTemplates(filters?: { taal?: string; functiegroep?: string; opdrachtgever?: string; actief?: boolean }): Promise<OnboardingTemplate[]>;
+  getOnboardingTemplate(id: number): Promise<OnboardingTemplateMetBijlagen | undefined>;
+  createOnboardingTemplate(data: InsertOnboardingTemplate): Promise<OnboardingTemplate>;
+  updateOnboardingTemplate(id: number, data: Partial<InsertOnboardingTemplate>): Promise<OnboardingTemplate | undefined>;
+  deleteOnboardingTemplate(id: number): Promise<boolean>;
+  selecteerOnboardingTemplate(opts: { taal?: string | null; functie?: string | null; opdrachtgever?: string | null }): Promise<OnboardingTemplateMetBijlagen | undefined>;
+
+  getOnboardingBijlagen(filters?: { taal?: string; actief?: boolean }): Promise<OnboardingBijlage[]>;
+  getOnboardingBijlage(id: number): Promise<OnboardingBijlage | undefined>;
+  createOnboardingBijlage(data: InsertOnboardingBijlage): Promise<OnboardingBijlage>;
+  updateOnboardingBijlage(id: number, data: Partial<InsertOnboardingBijlage>): Promise<OnboardingBijlage | undefined>;
+  deleteOnboardingBijlage(id: number): Promise<{ success: boolean; gekoppeldAanTemplates?: number }>;
+
+  koppelBijlageAanTemplate(templateId: number, bijlageId: number, volgorde?: number): Promise<OnboardingTemplateBijlage>;
+  ontkoppelBijlageVanTemplate(koppelingId: number): Promise<boolean>;
+
+  getOnboardingStatistieken(): Promise<{
+    totaalVerstuurd: number;
+    dezeMaand: number;
+    meestGebruikteTemplate: { naam: string; aantal: number } | null;
+    laatste50: Array<OnboardingLog & { medewerkerNaam: string; medewerkerEmail: string; opdrachtgever: string | null }>;
+  }>;
 
   // ==========================================
   // SOLLICITATIES (Applications) methods
@@ -4617,6 +4650,176 @@ export class MemStorage implements IStorage {
     return db.select().from(onboardingLogsTable)
       .where(eq(onboardingLogsTable.employeeId, employeeId))
       .orderBy(desc(onboardingLogsTable.sentAt));
+  }
+
+  // ─── Onboarding Module: templates + bijlagen ───────────────────────────────
+
+  async getOnboardingTemplates(filters?: { taal?: string; functiegroep?: string; opdrachtgever?: string; actief?: boolean }): Promise<OnboardingTemplate[]> {
+    const cond: any[] = [];
+    if (filters?.taal) cond.push(eq(onboardingTemplatesTable.taal, filters.taal));
+    if (filters?.functiegroep) cond.push(eq(onboardingTemplatesTable.functiegroep, filters.functiegroep));
+    if (filters?.opdrachtgever) cond.push(eq(onboardingTemplatesTable.opdrachtgever, filters.opdrachtgever));
+    if (filters?.actief !== undefined) cond.push(eq(onboardingTemplatesTable.actief, filters.actief));
+    const q = db.select().from(onboardingTemplatesTable);
+    const rows = cond.length ? await q.where(and(...cond)).orderBy(desc(onboardingTemplatesTable.bijgewerktOp)) : await q.orderBy(desc(onboardingTemplatesTable.bijgewerktOp));
+    return rows;
+  }
+
+  async getOnboardingTemplate(id: number): Promise<OnboardingTemplateMetBijlagen | undefined> {
+    const [tpl] = await db.select().from(onboardingTemplatesTable).where(eq(onboardingTemplatesTable.id, id));
+    if (!tpl) return undefined;
+    const koppelingen = await db.select().from(onboardingTemplateBijlagenTable)
+      .where(eq(onboardingTemplateBijlagenTable.templateId, id))
+      .orderBy(asc(onboardingTemplateBijlagenTable.volgorde));
+    const bijlagen: any[] = [];
+    for (const k of koppelingen) {
+      const [b] = await db.select().from(onboardingBijlagenTable).where(eq(onboardingBijlagenTable.id, k.bijlageId));
+      if (b) bijlagen.push({ ...b, koppelingId: k.id, volgorde: k.volgorde });
+    }
+    return { ...tpl, bijlagen };
+  }
+
+  async createOnboardingTemplate(data: InsertOnboardingTemplate): Promise<OnboardingTemplate> {
+    if (data.isStandaard && data.taal) {
+      await db.update(onboardingTemplatesTable)
+        .set({ isStandaard: false, bijgewerktOp: new Date() })
+        .where(and(eq(onboardingTemplatesTable.taal, data.taal), eq(onboardingTemplatesTable.isStandaard, true)));
+    }
+    const [row] = await db.insert(onboardingTemplatesTable).values(data as any).returning();
+    return row;
+  }
+
+  async updateOnboardingTemplate(id: number, data: Partial<InsertOnboardingTemplate>): Promise<OnboardingTemplate | undefined> {
+    if (data.isStandaard) {
+      const [bestaand] = await db.select().from(onboardingTemplatesTable).where(eq(onboardingTemplatesTable.id, id));
+      const taal = data.taal || bestaand?.taal;
+      if (taal) {
+        await db.update(onboardingTemplatesTable)
+          .set({ isStandaard: false, bijgewerktOp: new Date() })
+          .where(and(eq(onboardingTemplatesTable.taal, taal), eq(onboardingTemplatesTable.isStandaard, true)));
+      }
+    }
+    const [row] = await db.update(onboardingTemplatesTable)
+      .set({ ...(data as any), bijgewerktOp: new Date() })
+      .where(eq(onboardingTemplatesTable.id, id)).returning();
+    return row;
+  }
+
+  async deleteOnboardingTemplate(id: number): Promise<boolean> {
+    await db.delete(onboardingTemplateBijlagenTable).where(eq(onboardingTemplateBijlagenTable.templateId, id));
+    const result = await db.delete(onboardingTemplatesTable).where(eq(onboardingTemplatesTable.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async selecteerOnboardingTemplate(opts: { taal?: string | null; functie?: string | null; opdrachtgever?: string | null }): Promise<OnboardingTemplateMetBijlagen | undefined> {
+    const taal = opts.taal || 'Nederlands';
+    const functie = opts.functie || null;
+    const opdrachtgever = opts.opdrachtgever || null;
+    const kandidaten = await db.select().from(onboardingTemplatesTable).where(eq(onboardingTemplatesTable.actief, true));
+
+    const match = (
+      // 1. opdrachtgever + functie + taal
+      (opdrachtgever && functie && kandidaten.find(t => t.opdrachtgever === opdrachtgever && t.functiegroep === functie && t.taal === taal)) ||
+      // 2. opdrachtgever + taal (geen functie filter)
+      (opdrachtgever && kandidaten.find(t => t.opdrachtgever === opdrachtgever && !t.functiegroep && t.taal === taal)) ||
+      // 3. functie + taal
+      (functie && kandidaten.find(t => !t.opdrachtgever && t.functiegroep === functie && t.taal === taal)) ||
+      // 4. standaard voor deze taal
+      kandidaten.find(t => !t.opdrachtgever && !t.functiegroep && t.taal === taal && t.isStandaard) ||
+      // 5. NL standaard fallback
+      kandidaten.find(t => t.taal === 'Nederlands' && t.isStandaard) ||
+      undefined
+    );
+
+    if (!match) return undefined;
+    return this.getOnboardingTemplate(match.id);
+  }
+
+  async getOnboardingBijlagen(filters?: { taal?: string; actief?: boolean }): Promise<OnboardingBijlage[]> {
+    const cond: any[] = [];
+    if (filters?.taal) cond.push(eq(onboardingBijlagenTable.taal, filters.taal));
+    if (filters?.actief !== undefined) cond.push(eq(onboardingBijlagenTable.actief, filters.actief));
+    const q = db.select().from(onboardingBijlagenTable);
+    return cond.length ? q.where(and(...cond)).orderBy(desc(onboardingBijlagenTable.geuploadOp)) : q.orderBy(desc(onboardingBijlagenTable.geuploadOp));
+  }
+
+  async getOnboardingBijlage(id: number): Promise<OnboardingBijlage | undefined> {
+    const [row] = await db.select().from(onboardingBijlagenTable).where(eq(onboardingBijlagenTable.id, id));
+    return row;
+  }
+
+  async createOnboardingBijlage(data: InsertOnboardingBijlage): Promise<OnboardingBijlage> {
+    const [row] = await db.insert(onboardingBijlagenTable).values(data as any).returning();
+    return row;
+  }
+
+  async updateOnboardingBijlage(id: number, data: Partial<InsertOnboardingBijlage>): Promise<OnboardingBijlage | undefined> {
+    const [row] = await db.update(onboardingBijlagenTable)
+      .set({ ...(data as any), bijgewerktOp: new Date() })
+      .where(eq(onboardingBijlagenTable.id, id)).returning();
+    return row;
+  }
+
+  async deleteOnboardingBijlage(id: number): Promise<{ success: boolean; gekoppeldAanTemplates?: number }> {
+    const koppelingen = await db.select().from(onboardingTemplateBijlagenTable)
+      .where(eq(onboardingTemplateBijlagenTable.bijlageId, id));
+    if (koppelingen.length > 0) {
+      const templateIds = Array.from(new Set(koppelingen.map(k => k.templateId)));
+      const actieveKoppelingen: number[] = [];
+      for (const tid of templateIds) {
+        const [t] = await db.select().from(onboardingTemplatesTable).where(eq(onboardingTemplatesTable.id, tid));
+        if (t?.actief) actieveKoppelingen.push(tid);
+      }
+      if (actieveKoppelingen.length > 0) {
+        return { success: false, gekoppeldAanTemplates: actieveKoppelingen.length };
+      }
+    }
+    await db.delete(onboardingTemplateBijlagenTable).where(eq(onboardingTemplateBijlagenTable.bijlageId, id));
+    const result = await db.delete(onboardingBijlagenTable).where(eq(onboardingBijlagenTable.id, id)).returning();
+    return { success: result.length > 0 };
+  }
+
+  async koppelBijlageAanTemplate(templateId: number, bijlageId: number, volgorde = 0): Promise<OnboardingTemplateBijlage> {
+    const [row] = await db.insert(onboardingTemplateBijlagenTable).values({ templateId, bijlageId, volgorde } as any).returning();
+    return row;
+  }
+
+  async ontkoppelBijlageVanTemplate(koppelingId: number): Promise<boolean> {
+    const result = await db.delete(onboardingTemplateBijlagenTable).where(eq(onboardingTemplateBijlagenTable.id, koppelingId)).returning();
+    return result.length > 0;
+  }
+
+  async getOnboardingStatistieken() {
+    const [{ count: totaalVerstuurd }] = await db.select({ count: sql<number>`COUNT(*)::int` }).from(onboardingLogsTable);
+    const startMaand = new Date();
+    startMaand.setDate(1);
+    startMaand.setHours(0, 0, 0, 0);
+    const [{ count: dezeMaand }] = await db.select({ count: sql<number>`COUNT(*)::int` })
+      .from(onboardingLogsTable)
+      .where(gte(onboardingLogsTable.sentAt, startMaand));
+
+    const meestRows = await db.select({
+      naam: onboardingLogsTable.templateName,
+      aantal: sql<number>`COUNT(*)::int`,
+    }).from(onboardingLogsTable)
+      .groupBy(onboardingLogsTable.templateName)
+      .orderBy(sql`COUNT(*) DESC`)
+      .limit(1);
+    const meest = meestRows[0]?.naam ? { naam: meestRows[0].naam, aantal: Number(meestRows[0].aantal) } : null;
+
+    const logs = await db.select().from(onboardingLogsTable).orderBy(desc(onboardingLogsTable.sentAt)).limit(50);
+    const laatste50: any[] = [];
+    for (const l of logs) {
+      const [emp] = await db.select().from(employeesTable).where(eq(employeesTable.id, l.employeeId));
+      laatste50.push({
+        ...l,
+        medewerkerNaam: emp ? `${emp.firstName} ${emp.lastName}` : '—',
+        medewerkerEmail: emp?.email || '—',
+        opdrachtgever: emp?.opdrachtgever || null,
+      });
+    }
+
+    return { totaalVerstuurd: Number(totaalVerstuurd) || 0, dezeMaand: Number(dezeMaand) || 0, meestGebruikteTemplate: meest, laatste50 };
   }
 
   // ─── Notificaties ──────────────────────────────────────────────────────────

@@ -21,7 +21,7 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, BellRing, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare, CalendarClock
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare, CalendarClock, MailCheck
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import VerjaardagenTab from '@/components/VerjaardagenTab';
@@ -34,6 +34,7 @@ import NotificatieBel from '@/components/NotificatieBel';
 import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
 import SchedulerStatusTab from '@/components/SchedulerStatusTab';
 import MedewerkersTab from '@/components/MedewerkersTab';
+import OnboardingTab from '@/components/OnboardingTab';
 
 type User = {
   id: number;
@@ -927,6 +928,7 @@ export default function DashboardMockup() {
               {[
                 { icon: Users, label: 'Contacten', tab: 'prospect-contacten' },
                 { icon: Send, label: 'E-mail campagnes', tab: 'prospect-campagnes' },
+                { icon: MailCheck, label: 'Onboarding', tab: 'onboarding' },
                 { icon: BarChart3, label: 'Statistieken', tab: 'prospect-statistieken' },
                 { icon: CalendarClock, label: 'Scheduler', tab: 'scheduler-status' },
               ].map(item => (
@@ -4199,6 +4201,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             <div className="overflow-auto" style={{ height: 'calc(100vh - 57px)' }}>
               <SchedulerStatusTab />
             </div>
+
+          ) : activeTab === 'onboarding' ? (
+            <OnboardingTab />
 
           ) : activeTab === 'bedrijven-aanvragen' ? (
             /* ─── PERSONEELSAANVRAGEN tab ─── */
