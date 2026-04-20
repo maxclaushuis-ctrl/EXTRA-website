@@ -1,6 +1,8 @@
 // ─── E-mail Generator ─────────────────────────────────────────────────────────
 // Server-side HTML + plain text generation for prospect campaigns.
 
+import { getEmailBannerSrc } from './mail';
+
 export type ContactData = {
   voornaam?: string | null;
   achternaam?: string | null;
@@ -132,19 +134,21 @@ export function generateEmailHTML(
     .replace(/<[^>]+>/g, '')
     .slice(0, 100);
 
-  // EXTRA branded shell (header + footer) — kan uitgezet via lay_out: 'geen'
+  // EXTRA branded shell — gebruikt EXACT dezelfde banner-afbeelding als de andere mails
+  const bannerSrc = getEmailBannerSrc();
   const headerHtml = layOut === 'extra'
-    ? `<tr><td style="background:${headerKleur};padding:36px 28px;text-align:center;border-radius:8px 8px 0 0">
-         <div style="font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:42px;letter-spacing:0.04em;color:#ffffff;line-height:1">${headerTekst}</div>
+    ? `<tr><td style="padding:0;line-height:0;font-size:0">
+         <img src="${bannerSrc}" width="600" height="200" alt="EXTRA"
+              style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:0;text-decoration:none" />
        </td></tr>`
     : '';
 
   const footerHtml = layOut === 'extra'
-    ? `<tr><td style="padding:18px 28px;text-align:center;font-size:11px;color:#9ca3af;font-family:${font}">${footerTekst}</td></tr>`
+    ? `<tr><td style="padding:14px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center;font-family:${font}">${footerTekst}</td></tr>`
     : '';
 
-  const contentRadius = layOut === 'extra' ? '0 0 8px 8px' : '8px';
-  const contentPadding = layOut === 'extra' ? '32px 28px 24px' : '32px 28px';
+  const contentRadius = layOut === 'extra' ? '0' : '8px';
+  const contentPadding = layOut === 'extra' ? '28px 28px 20px' : '32px 28px';
 
   return `<!DOCTYPE html>
 <html lang="${nl ? 'nl' : 'en'}">

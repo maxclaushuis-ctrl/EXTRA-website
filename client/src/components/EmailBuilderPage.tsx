@@ -487,33 +487,16 @@ function SettingsPanel({ settings, onChange }: { settings: BuilderSettings; onCh
               </Select>
             </div>
             {(settings.lay_out ?? 'extra') === 'extra' && (
-              <>
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Header tekst</Label>
-                  <input
-                    type="text"
-                    value={settings.header_tekst ?? 'EXTRA'}
-                    onChange={e => onChange({ header_tekst: e.target.value })}
-                    className="w-full h-8 text-xs px-2 rounded border border-gray-200"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Header kleur</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={settings.header_kleur ?? '#5b2eb5'} onChange={e => onChange({ header_kleur: e.target.value })} className="h-8 w-10 rounded border cursor-pointer" />
-                    <span className="text-xs text-gray-500">{settings.header_kleur ?? '#5b2eb5'}</span>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Footer tekst</Label>
-                  <input
-                    type="text"
-                    value={settings.footer_tekst ?? 'EXTRA · Herengracht 372 · Amsterdam'}
-                    onChange={e => onChange({ footer_tekst: e.target.value })}
-                    className="w-full h-8 text-xs px-2 rounded border border-gray-200"
-                  />
-                </div>
-              </>
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Footer tekst</Label>
+                <input
+                  type="text"
+                  value={settings.footer_tekst ?? 'EXTRA · Herengracht 372 · Amsterdam'}
+                  onChange={e => onChange({ footer_tekst: e.target.value })}
+                  className="w-full h-8 text-xs px-2 rounded border border-gray-200"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">De EXTRA banner-afbeelding wordt automatisch gebruikt — gelijk aan alle andere mails.</p>
+              </div>
             )}
           </div>
         </div>

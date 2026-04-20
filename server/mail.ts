@@ -12,7 +12,7 @@ let mockMailLog: any[] = [];
 
 // Banner als base64 data URI — laad eenmalig bij eerste gebruik
 let _emailBannerDataUri = '';
-function getEmailBannerSrc(): string {
+export function getEmailBannerSrc(): string {
   if (!_emailBannerDataUri) {
     try {
       const p = path.join(process.cwd(), 'client', 'public', 'email-banner-extra.jpg');

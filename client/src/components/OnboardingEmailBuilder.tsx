@@ -181,17 +181,11 @@ export default function OnboardingEmailBuilder({
               }}
             >
               {(value.instellingen.lay_out ?? 'extra') === 'extra' && (
-                <div
-                  style={{
-                    background: value.instellingen.header_kleur || '#5b2eb5',
-                    padding: '28px 20px',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 32, letterSpacing: '0.04em', lineHeight: 1 }}>
-                    {value.instellingen.header_tekst || 'EXTRA'}
-                  </div>
-                </div>
+                <img
+                  src="/email-banner-extra.jpg"
+                  alt="EXTRA"
+                  style={{ display: 'block', width: '100%', height: 'auto' }}
+                />
               )}
 
               <div style={{ padding: '28px 24px', background: value.instellingen.achtergrond_inhoud }}>
