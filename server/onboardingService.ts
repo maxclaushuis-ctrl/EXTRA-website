@@ -171,6 +171,7 @@ export async function verstuurOnboardingMail(
   const onderwerp = vervangTags(template.onderwerp || '', medewerker) || `Welkom bij EXTRA, ${medewerker.firstName || ''}`;
 
   const { attachments, ontbrekend } = await haalBijlagenOp(template);
+  console.log(`[Onboarding] Template ${template.id} (${template.naam}) → ${medewerker.email}: ${template.bijlagen?.length || 0} gekoppeld in DB, ${attachments.length} bijlage(n) ingelezen${attachments.length ? ' (' + attachments.map(a => `${a.bestandsnaam} ${(a.bestandsgrootte/1024).toFixed(0)}KB`).join(', ') + ')' : ''}${ontbrekend.length ? ', ontbrekend op disk: ' + ontbrekend.join(', ') : ''}`);
   const sizeCheck = controleerBijlagenGrootte(attachments);
   if (!sizeCheck.geldig) throw new Error(sizeCheck.melding);
 
