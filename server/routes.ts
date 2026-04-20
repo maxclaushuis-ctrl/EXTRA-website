@@ -7160,6 +7160,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (e) { console.error(e); res.status(500).json({ message: 'Fout' }); }
   });
 
+  app.patch("/api/onboarding/template-bijlagen/:id", adminMiddleware, async (req, res) => {
+    try {
+      const { volgorde } = req.body || {};
+      if (typeof volgorde !== 'number') return res.status(400).json({ message: 'volgorde (number) is verplicht' });
+      const row = await storage.setKoppelingVolgorde(parseInt(req.params.id), volgorde);
+      if (!row) return res.status(404).json({ message: 'Koppeling niet gevonden' });
+      res.json(row);
+    } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij volgorde wijzigen' }); }
+  });
+
   // Statistieken
   app.get("/api/onboarding/statistieken", adminMiddleware, async (_req, res) => {
     try {

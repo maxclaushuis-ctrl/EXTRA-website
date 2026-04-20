@@ -1,0 +1,173 @@
+# Replit Prompt — Onboarding Correcties & Verbeteringen
+
+## Wat je gaat doen
+Verwerk de volgende verbeteringen en fixes in de bestaande onboarding module. Dit zijn geen nieuwe features maar correcties op de huidige implementatie op basis van review van de live versie.
+
+---
+
+## 1. Taal-veld verplicht maken in template
+
+In de template detailpagina staat het Taal-veld momenteel leeg bij bestaande templates. Dit veld is verplicht voor de automatische selectielogica.
+
+**Aanpassingen:**
+- Maak het Taal-veld verplicht bij zowel het aanmaken als bewerken van een template
+- Voeg inline validatie toe: als Taal leeg is en de gebruiker probeert op te slaan, toon rode foutmelding onder het veld: "Taal is verplicht"
+- Blokkeer opslaan zolang Taal leeg is
+- Bij bestaande templates zonder taal: markeer ze visueel in de lijst met een oranje waarschuwingsicoon ⚠️ en tooltip "Taal ontbreekt — template wordt niet automatisch geselecteerd"
+- Toon bovenaan de templatelijst een banner als er templates zonder taal zijn:
+  ```
+  ⚠️ X templates hebben geen taal ingesteld en worden niet automatisch geselecteerd.
+  [Templates bekijken →]
+  ```
+
+---
+
+## 2. Bijlagen koppelen aan templates — sectie werkt maar optimaliseer
+
+De bijlagen-sectie in de template is zichtbaar (screenshot 1 bevestigt dit). Zorg dat het volgende correct werkt:
+
+- Knop "+ Bijlage toevoegen" opent een picker-modaal met alle bijlagen uit de bijlagenbibliotheek
+- Per bijlage in de picker: naam, bestandsnaam, taal-badge, grootte
+- Meerdere bijlagen tegelijk selecteren via checkboxes
+- Na selectie: bijlagen verschijnen in de template als sleepbare lijst met verwijder-icoon
+- Volgorde aanpasbaar via drag & drop (of omhoog/omlaag pijltjes als fallback)
+- Koppeling wordt direct opgeslagen bij toevoegen/verwijderen (geen aparte opslaan-knop nodig)
+- Toon bij de template in de lijst (linker paneel) een klein paperclip-icoon met het aantal bijlagen: "📎 2"
+
+---
+
+## 3. Dubbele verzending voorkomen
+
+In de statistieken zijn meerdere dubbele verzendingen zichtbaar naar dezelfde medewerker. Verwerk de volgende fix:
+
+**Bij individuele verzending via envelop-icoon:**
+- Controleer vóór verzending of `onboarding_verstuurd = 1` voor deze medewerker
+- Zo ja: toon een bevestigingsmodal:
+  ```
+  Deze medewerker heeft al een onboarding mail ontvangen
+  ──────────────────────────────────────────────────────
+  Eerder verstuurd: [datum en tijd]
+  Template: [naam]
+
+  Weet je zeker dat je opnieuw wilt versturen?
+
+  [Annuleren]  [Opnieuw versturen]
+  ```
+- Zo nee: stuur direct (met bevestigingsmodal zoals al gebouwd)
+
+**Bij bulk verzending:**
+- De knop "Selecteer alle nog niet verstuurde" selecteert automatisch alleen medewerkers waarbij `onboarding_verstuurd = 0`
+- Medewerkers waarbij `onboarding_verstuurd = 1` krijgen een groen envelop-icoon ✉️ in de lijst (al verstuurd)
+- Medewerkers waarbij `onboarding_verstuurd = 0` krijgen een grijs envelop-icoon (nog te sturen)
+- Bij handmatige selectie van een medewerker die al een mail heeft ontvangen: toon inline waarschuwing naast de checkbox: "Al verstuurd op [datum]"
+
+---
+
+## 4. Bulk onboarding flow optimaliseren
+
+De huidige bulk flow toont checkboxes en een Verstuur-knop. Verbeter dit als volgt:
+
+**Stap 1: Selectie**
+- Bestaande checkbox-selectie blijft behouden
+- "Selecteer alle nog niet verstuurde" selecteert automatisch de juiste groep
+- Teller in de actiebalk: "X medewerkers geselecteerd (Y al eerder ontvangen)"
+
+**Stap 2: Verstuur-knop → opent preview modaal (NIEUW)**
+
+Bij klik op "Verstuur" verschijnt een preview modaal voordat er iets verzonden wordt:
+
+```
+Bulk onboarding versturen
+─────────────────────────────────────────────────
+X medewerkers ontvangen een onboarding mail
+
+Per medewerker automatisch geselecteerde template:
+
+┌─────────────────┬──────────────────────┬──────────┐
+│ Medewerker      │ Template             │ Bijlagen │
+├─────────────────┼──────────────────────┼──────────┤
+│ Jan de Vries    │ Welkom Horeca NL     │ 📎 2     │
+│ Maria Santos    │ Welcome EXTRA (EN)   │ 📎 2     │
+│ Piet Janssen    │ ⚠️ Geen template     │ —        │
+└─────────────────┴──────────────────────┴──────────┘
+
+⚠️ 1 medewerker heeft geen passende template en wordt overgeslagen.
+
+[Annuleren]  [✉️ Verstuur naar X medewerkers]
+```
+
+- Medewerkers zonder passende template worden oranje gemarkeerd en overgeslagen bij verzending
+- De gebruiker kan per medewerker handmatig een andere template kiezen via een dropdown in de tabel
+- Na bevestiging: verzending start, progressbalk zichtbaar, toast bij voltooiing
+
+**Stap 3: Na verzending**
+- Toast: "Onboarding mail verstuurd naar X medewerkers ✓"
+- Bij fouten: "X verstuurd, Y mislukt — [Bekijk details]"
+- Envelop-iconen in de lijst updaten direct naar groen
+
+---
+
+## 5. Medewerkersprofiel — onboarding banner toevoegen
+
+Bij klik op een medewerker in de lijst opent een detailpaneel (slide-over rechts, 500px). Voeg bovenaan dit paneel de onboarding-banner toe:
+
+**Nog niet verstuurd (blauw):**
+```
+┌──────────────────────────────────────────────────────┐
+│ 📧 Onboarding mail nog niet verstuurd                │
+│ Stuur [voornaam] een welkomstmail om te starten      │
+│                                                       │
+│ Template: [Welkom Horeca NL ▼]                       │
+│ Bijlagen: 📎 Afmeldprotocol.pdf, Jixbee uitleg.pdf  │
+│                                                       │
+│          [✉️ Verstuur onboarding mail]               │
+└──────────────────────────────────────────────────────┘
+```
+- Achtergrond: #EFF6FF, rand links 4px #2563EB
+- Template wordt automatisch geselecteerd via `selecteerOnboardingTemplate(medewerker)`
+- Gebruiker kan template handmatig wijzigen via de dropdown
+- Bij klik op de knop: toon bevestigingsmodal met ontvanger + template + bijlagen
+- Laadspinner op de knop tijdens verzending
+
+**Al verstuurd (groen):**
+```
+┌──────────────────────────────────────────────────────┐
+│ ✅ Onboarding mail verstuurd                         │
+│ Verzonden op: maandag 14 april 2026 om 09:32         │
+│ Template: "Welkom Horeca NL"                         │
+│                               [Opnieuw versturen]    │
+└──────────────────────────────────────────────────────┘
+```
+- Achtergrond: #F0FDF4, rand links 4px #059669
+- "Opnieuw versturen" toont de dubbele-verzending bevestigingsmodal (zie punt 3)
+
+**Onder de banner:** tabs met Gegevens / Onboarding historie / Notities
+- Onboarding historie toont tabel van alle verzendingen naar deze medewerker:
+  | Template | Verstuurd op | Status |
+  |----------|-------------|--------|
+  | Welkom Horeca NL | 14 apr 09:32 | ✓ Verzonden |
+
+---
+
+## 6. Envelop-icoon gedrag in de lijst verfijnen
+
+Het envelop-icoon rechts in elke medewerkerrij heeft momenteel onduidelijk gedrag. Vervang dit door:
+
+- **Grijs envelop** = onboarding nog niet verstuurd → klik opent direct de bevestigingsmodal met automatisch geselecteerde template
+- **Groen envelop** = al verstuurd → klik toont tooltip "Verstuurd op [datum]" + optie "Opnieuw versturen?"
+- Hover op het icoon toont altijd een tooltip met de huidige status
+
+---
+
+## Volgorde van implementatie
+
+1. Taal-veld verplicht + validatie (punt 1)
+2. Dubbele verzending check bij individueel versturen (punt 3)
+3. Medewerkersprofiel slide-over met onboarding banner (punt 5)
+4. Envelop-icoon gedrag verfijnen (punt 6)
+5. Bijlagen koppeling optimaliseren (punt 2)
+6. Bulk preview modaal (punt 4)
+
+---
+
+*Onboarding Correcties — EXTRA Platform*

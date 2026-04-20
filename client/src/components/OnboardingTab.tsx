@@ -232,6 +232,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   const [form, setForm] = useState<any>(null);
   const [bodyTekst, setBodyTekst] = useState('');
   const [showBijlagePicker, setShowBijlagePicker] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
 
@@ -287,8 +288,28 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
 
   const ontkoppelMutation = useMutation({
     mutationFn: (koppelingId: number) => apiRequest('DELETE', `/api/onboarding/template-bijlagen/${koppelingId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: async ({ koppelingId, volgorde }: { koppelingId: number; volgorde: number }) =>
+      apiRequest('PATCH', `/api/onboarding/template-bijlagen/${koppelingId}`, { volgorde }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] }),
   });
+
+  const swapBijlagen = async (idx: number, dir: -1 | 1) => {
+    const list = tpl?.bijlagen || [];
+    const a = list[idx];
+    const b = list[idx + dir];
+    if (!a || !b) return;
+    await Promise.all([
+      reorderMutation.mutateAsync({ koppelingId: a.koppelingId, volgorde: b.volgorde }),
+      reorderMutation.mutateAsync({ koppelingId: b.koppelingId, volgorde: a.volgorde }),
+    ]);
+  };
 
   // Auto-save
   const triggerAutoSave = (next: any, body?: string) => {
@@ -348,13 +369,24 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
           </Button>
           <Button
             variant="outline" size="sm"
-            onClick={() => { if (confirm(`Template "${form.naam}" verwijderen?`)) deleteMutation.mutate(); }}
+            onClick={() => setShowDeleteConfirm(true)}
             data-testid="button-verwijder"
           >
             <Trash2 className="h-4 w-4 text-red-500" />
           </Button>
         </div>
       </div>
+
+      {/* Taal-validatie waarschuwing */}
+      {!form.taal && (
+        <div className="rounded-md bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <div className="text-xs text-amber-800">
+            <strong>Taal ontbreekt.</strong> Kies een taal hieronder — zonder taal kan deze template
+            niet automatisch worden geselecteerd voor medewerkers.
+          </div>
+        </div>
+      )}
 
       {/* Instellingen */}
       <section>
@@ -440,26 +472,48 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
       <section>
         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
           <Paperclip className="h-4 w-4" /> Bijlagen
+          {(tpl.bijlagen?.length || 0) > 0 && (
+            <Badge variant="outline" className="text-[10px] h-5">
+              {tpl.bijlagen!.length}
+            </Badge>
+          )}
         </h3>
         <div className="space-y-2">
           {(tpl.bijlagen || []).length === 0 && (
             <div className="text-sm text-gray-400 italic">Nog geen bijlagen gekoppeld</div>
           )}
-          {(tpl.bijlagen || []).map(b => (
-            <div key={b.koppelingId} className="flex items-center gap-3 p-2 border border-gray-200 rounded-md">
-              <GripVertical className="h-4 w-4 text-gray-300" />
+          {(tpl.bijlagen || []).map((b, idx, arr) => (
+            <div key={b.koppelingId} className="flex items-center gap-2 p-2 border border-gray-200 rounded-md">
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  disabled={idx === 0 || reorderMutation.isPending}
+                  onClick={() => swapBijlagen(idx, -1)}
+                  className="text-gray-400 hover:text-purple-600 disabled:opacity-30 disabled:cursor-not-allowed leading-none"
+                  title="Naar boven"
+                  data-testid={`btn-bijlage-up-${b.koppelingId}`}
+                >▲</button>
+                <button
+                  type="button"
+                  disabled={idx === arr.length - 1 || reorderMutation.isPending}
+                  onClick={() => swapBijlagen(idx, 1)}
+                  className="text-gray-400 hover:text-purple-600 disabled:opacity-30 disabled:cursor-not-allowed leading-none"
+                  title="Naar beneden"
+                  data-testid={`btn-bijlage-down-${b.koppelingId}`}
+                >▼</button>
+              </div>
               <FileText className="h-5 w-5 text-red-600" />
               <div className="flex-1">
                 <div className="text-sm font-medium">{b.naam}</div>
-                <div className="text-xs text-gray-500">{b.bestandsnaam} · {formatBytes(b.bestandsgrootte)}</div>
+                <div className="text-xs text-gray-500">{b.bestandsnaam} · {formatBytes(b.bestandsgrootte)} · {b.taal}</div>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => ontkoppelMutation.mutate(b.koppelingId)}>
+              <Button variant="ghost" size="sm" onClick={() => ontkoppelMutation.mutate(b.koppelingId)} title="Ontkoppelen">
                 <X className="h-4 w-4 text-red-500" />
               </Button>
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={() => setShowBijlagePicker(true)} data-testid="button-bijlage-toevoegen">
-            <Plus className="h-4 w-4 mr-1" /> Bijlage toevoegen
+            <Plus className="h-4 w-4 mr-1" /> Bijlage(n) toevoegen
           </Button>
         </div>
       </section>
@@ -482,7 +536,29 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
         onClose={() => setShowBijlagePicker(false)}
         templateId={templateId}
         alGekoppeld={(tpl.bijlagen || []).map(b => b.id)}
+        startVolgorde={(tpl.bijlagen || []).length}
       />
+
+      <Dialog open={showDeleteConfirm} onOpenChange={(o) => !o && setShowDeleteConfirm(false)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Template verwijderen</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Weet je zeker dat je <strong>"{form.naam}"</strong> wilt verwijderen? Dit kan niet ongedaan gemaakt worden.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Annuleren</Button>
+            <Button
+              variant="destructive"
+              onClick={() => { setShowDeleteConfirm(false); deleteMutation.mutate(); }}
+              disabled={deleteMutation.isPending}
+            >
+              Verwijderen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -508,12 +584,14 @@ function NieuweTemplateModal({ open, onClose, onCreated }: { open: boolean; onCl
       isStandaard: form.isStandaard,
       actief: true,
     }),
-    onSuccess: async (res: any) => {
-      const tpl = await res.json();
+    onSuccess: (tpl: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
       toast({ title: `Template '${form.naam}' aangemaakt ✓` });
       setForm({ naam: '', taal: 'Nederlands', functiegroep: '', opdrachtgever: '', isStandaard: false });
       onCreated(tpl.id);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Aanmaken mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
     },
   });
 
@@ -573,41 +651,93 @@ function NieuweTemplateModal({ open, onClose, onCreated }: { open: boolean; onCl
   );
 }
 
-function BijlagePickerModal({ open, onClose, templateId, alGekoppeld }: { open: boolean; onClose: () => void; templateId: number; alGekoppeld: number[] }) {
+function BijlagePickerModal({ open, onClose, templateId, alGekoppeld, startVolgorde }: { open: boolean; onClose: () => void; templateId: number; alGekoppeld: number[]; startVolgorde: number }) {
+  const { toast } = useToast();
   const { data: bijlagen = [] } = useQuery<OnboardingBijlage[]>({
     queryKey: ['/api/onboarding/bijlagen'],
     enabled: open,
   });
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (open) setSelected(new Set());
+  }, [open]);
+
   const koppelMutation = useMutation({
-    mutationFn: (bijlageId: number) => apiRequest('POST', '/api/onboarding/template-bijlagen', { template_id: templateId, bijlage_id: bijlageId, volgorde: alGekoppeld.length }),
-    onSuccess: () => {
+    mutationFn: async (ids: number[]) => {
+      for (let i = 0; i < ids.length; i++) {
+        await apiRequest('POST', '/api/onboarding/template-bijlagen', {
+          template_id: templateId,
+          bijlage_id: ids[i],
+          volgorde: startVolgorde + i,
+        });
+      }
+    },
+    onSuccess: (_, ids) => {
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      toast({ title: `${ids.length} bijlage${ids.length === 1 ? '' : 'n'} gekoppeld ✓` });
       onClose();
+    },
+    onError: (err: any) => {
+      toast({ title: 'Koppelen mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
     },
   });
   const beschikbaar = bijlagen.filter(b => !alGekoppeld.includes(b.id));
 
+  const toggle = (id: number) => {
+    setSelected(s => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Bijlage koppelen</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Bijlage(n) koppelen</DialogTitle>
+          <p className="text-xs text-gray-500 mt-1">Selecteer één of meerdere bijlagen.</p>
+        </DialogHeader>
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {beschikbaar.length === 0 && <div className="text-sm text-gray-400 p-4 text-center">Geen beschikbare bijlagen — upload eerst een PDF in de tab Bijlagen.</div>}
-          {beschikbaar.map(b => (
-            <button
-              key={b.id}
-              onClick={() => koppelMutation.mutate(b.id)}
-              className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-md hover:bg-purple-50 hover:border-purple-300 text-left"
-            >
-              <FileText className="h-5 w-5 text-red-600" />
-              <div className="flex-1">
-                <div className="text-sm font-medium">{b.naam}</div>
-                <div className="text-xs text-gray-500">{b.bestandsnaam} · {formatBytes(b.bestandsgrootte)} · {b.taal}</div>
-              </div>
-              <Plus className="h-4 w-4 text-purple-600" />
-            </button>
-          ))}
+          {beschikbaar.map(b => {
+            const isSel = selected.has(b.id);
+            return (
+              <label
+                key={b.id}
+                className={`w-full flex items-center gap-3 p-3 border rounded-md cursor-pointer transition-colors ${
+                  isSel ? 'bg-purple-50 border-purple-300' : 'border-gray-200 hover:bg-gray-50'
+                }`}
+                data-testid={`bijlage-pick-${b.id}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSel}
+                  onChange={() => toggle(b.id)}
+                  className="h-4 w-4"
+                />
+                <FileText className="h-5 w-5 text-red-600" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{b.naam}</div>
+                  <div className="text-xs text-gray-500">{b.bestandsnaam} · {formatBytes(b.bestandsgrootte)} · {b.taal}</div>
+                </div>
+              </label>
+            );
+          })}
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={koppelMutation.isPending}>Annuleren</Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            disabled={selected.size === 0 || koppelMutation.isPending}
+            onClick={() => koppelMutation.mutate(Array.from(selected))}
+            data-testid="btn-koppel-bijlagen"
+          >
+            {koppelMutation.isPending ? 'Bezig…' : `Koppel ${selected.size > 0 ? `(${selected.size})` : ''}`}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

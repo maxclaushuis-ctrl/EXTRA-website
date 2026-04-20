@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -371,10 +371,25 @@ export default function MedewerkersTab() {
                       <div className="text-xs text-gray-500 truncate">{emp.opdrachtgever || '—'}</div>
                     </div>
                     <Badge variant="outline" className={`${st.cls} text-xs`}>{st.label}</Badge>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (bulkSelectMode) return;
+                      setSelectedId(emp.id);
+                      setEditMode(false);
+                      setProfileTab('gegevens');
+                    }}
+                    disabled={bulkSelectMode}
+                    title={emp.onboardingSent ? 'Onboarding verstuurd — klik om opnieuw te versturen of details te bekijken' : 'Onboarding nog niet verstuurd — klik om te versturen'}
+                    className="shrink-0 p-1 rounded hover:bg-gray-100 disabled:cursor-not-allowed"
+                    data-testid={`btn-envelop-${emp.id}`}
+                  >
                     {emp.onboardingSent ? (
-                      <MailCheck className="h-4 w-4 text-green-600 shrink-0" aria-label="Onboarding verstuurd" />
+                      <MailCheck className="h-4 w-4 text-green-600" />
                     ) : (
-                      <Mail className="h-4 w-4 text-gray-300 shrink-0" aria-label="Onboarding nog niet verstuurd" />
+                      <Mail className="h-4 w-4 text-gray-400" />
                     )}
                   </button>
                 </div>
@@ -451,46 +466,14 @@ export default function MedewerkersTab() {
 
       {/* Bulk confirm */}
       <Dialog open={bulkConfirmOpen} onOpenChange={(o) => { if (!o) setBulkConfirmOpen(false); }}>
-        <DialogContent className="max-w-md" data-testid="dialog-bulk-confirm">
-          <DialogHeader><DialogTitle>Bulk onboarding versturen</DialogTitle></DialogHeader>
-          <div className="space-y-3 text-sm">
-            <p>
-              Je staat op het punt om <strong>{bulkSelectedIds.size}</strong> onboarding mail
-              {bulkSelectedIds.size === 1 ? '' : 's'} te versturen.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-              Voor elke medewerker wordt automatisch de best passende template gekozen op basis van
-              taal, functiegroep en opdrachtgever. Bijlagen worden meegestuurd indien aanwezig.
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto text-xs space-y-1">
-              {Array.from(bulkSelectedIds).map(id => {
-                const e = employees.find(x => x.id === id);
-                return e ? (
-                  <div key={id} className="flex justify-between">
-                    <span>{e.firstName} {e.lastName}</span>
-                    <span className="text-gray-500">{e.email}</span>
-                  </div>
-                ) : null;
-              })}
-            </div>
-            <div className="flex gap-2 justify-end pt-1">
-              <Button variant="outline" onClick={() => setBulkConfirmOpen(false)} disabled={bulkSendMutation.isPending}>
-                Annuleren
-              </Button>
-              <Button
-                className="bg-purple-600 hover:bg-purple-700"
-                disabled={bulkSendMutation.isPending}
-                onClick={() => bulkSendMutation.mutate({ medewerkerIds: Array.from(bulkSelectedIds) })}
-                data-testid="btn-confirm-bulk-send"
-              >
-                {bulkSendMutation.isPending ? (
-                  <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Bezig…</>
-                ) : (
-                  <><Send className="h-4 w-4 mr-1" /> Verstuur {bulkSelectedIds.size}</>
-                )}
-              </Button>
-            </div>
-          </div>
+        <DialogContent className="max-w-2xl" data-testid="dialog-bulk-confirm">
+          <DialogHeader><DialogTitle>Bulk onboarding — preview</DialogTitle></DialogHeader>
+          <BulkPreviewContent
+            selectedEmployees={Array.from(bulkSelectedIds).map(id => employees.find(e => e.id === id)).filter(Boolean) as Employee[]}
+            isPending={bulkSendMutation.isPending}
+            onCancel={() => setBulkConfirmOpen(false)}
+            onConfirm={(ids) => bulkSendMutation.mutate({ medewerkerIds: ids })}
+          />
         </DialogContent>
       </Dialog>
     </div>
@@ -500,7 +483,7 @@ export default function MedewerkersTab() {
 function SendConfirmContent({
   employee, template, onCancel, onConfirm, isPending,
 }: {
-  employee: Employee;
+  employee: EmployeeWithLogs;
   template: TemplateLite;
   onCancel: () => void;
   onConfirm: () => void;
@@ -510,8 +493,33 @@ function SendConfirmContent({
     queryKey: ['/api/onboarding/templates', template.id],
   });
   const bijlagen = tplDetail?.bijlagen || [];
+  const [bevestig, setBevestig] = useState(false);
   return (
     <div className="space-y-3 text-sm">
+      {employee.onboardingSent && (
+        <div className="rounded-lg bg-amber-50 border border-amber-300 p-3 flex items-start gap-2" data-testid="warn-already-sent">
+          <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <div className="text-xs font-semibold text-amber-900">Onboarding mail is al verstuurd</div>
+            <div className="text-xs text-amber-800 mt-0.5">
+              Verzonden op{' '}
+              {employee.onboardingSentAt
+                ? new Date(employee.onboardingSentAt).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })
+                : '—'}.
+              Bevestig hieronder dat je opnieuw wilt versturen.
+            </div>
+            <label className="flex items-center gap-2 mt-2 text-xs text-amber-900 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={bevestig}
+                onChange={e => setBevestig(e.target.checked)}
+                data-testid="checkbox-confirm-resend"
+              />
+              <span>Ja, opnieuw versturen aan {employee.firstName}</span>
+            </label>
+          </div>
+        </div>
+      )}
       <p>Versturen aan <strong>{employee.firstName} {employee.lastName}</strong></p>
       <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-xs">
         <div><span className="text-gray-500">E-mailadres:</span> <span className="font-medium">{employee.email}</span></div>
@@ -544,14 +552,172 @@ function SendConfirmContent({
         <Button variant="outline" onClick={onCancel} disabled={isPending}>Annuleren</Button>
         <Button
           className="bg-purple-600 hover:bg-purple-700"
-          disabled={isPending}
+          disabled={isPending || (employee.onboardingSent && !bevestig)}
           onClick={onConfirm}
           data-testid="btn-confirm-send-onboarding"
         >
           {isPending ? (
             <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Versturen…</>
+          ) : employee.onboardingSent ? (
+            <><Send className="h-4 w-4 mr-1" /> Opnieuw versturen</>
           ) : (
             <><Send className="h-4 w-4 mr-1" /> Versturen</>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function BulkPreviewContent({
+  selectedEmployees, isPending, onCancel, onConfirm,
+}: {
+  selectedEmployees: Employee[];
+  isPending: boolean;
+  onCancel: () => void;
+  onConfirm: (ids: number[]) => void;
+}) {
+  const [previews, setPreviews] = useState<Array<{
+    employee: Employee;
+    template: TemplateLite | null;
+    bijlagenCount: number;
+    error: string | null;
+  }> | null>(null);
+
+  useEffect(() => {
+    let aborted = false;
+    setPreviews(null);
+    (async () => {
+      const results = await Promise.all(selectedEmployees.map(async (e) => {
+        const params = new URLSearchParams({
+          taal: e.language || 'Nederlands',
+          ...(e.functie ? { functie: e.functie } : {}),
+          ...(e.opdrachtgever ? { opdrachtgever: e.opdrachtgever } : {}),
+        });
+        try {
+          const res = await fetch(`/api/onboarding/templates/selecteer?${params}`, { credentials: 'include' });
+          if (!res.ok) return { employee: e, template: null, bijlagenCount: 0, error: 'Geen template' };
+          const tpl = await res.json();
+          let bijlagenCount = 0;
+          try {
+            const detRes = await fetch(`/api/onboarding/templates/${tpl.id}`, { credentials: 'include' });
+            if (detRes.ok) {
+              const det = await detRes.json();
+              bijlagenCount = (det.bijlagen || []).length;
+            }
+          } catch {}
+          return { employee: e, template: tpl, bijlagenCount, error: null };
+        } catch (err: any) {
+          return { employee: e, template: null, bijlagenCount: 0, error: err?.message || 'Fout' };
+        }
+      }));
+      if (!aborted) setPreviews(results);
+    })();
+    return () => { aborted = true; };
+  }, [selectedEmployees]);
+
+  const klaar = previews !== null;
+  const verzendbaar = (previews || []).filter(p => p.template && p.employee.email);
+  const geblokkeerd = (previews || []).filter(p => !p.template || !p.employee.email);
+  const alVerstuurd = (previews || []).filter(p => p.employee.onboardingSent).length;
+
+  return (
+    <div className="space-y-3 text-sm">
+      {!klaar ? (
+        <div className="py-6 text-center text-gray-500 text-sm flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Templates ophalen…
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="rounded-md bg-green-50 border border-green-200 p-2">
+              <div className="font-semibold text-green-800">{verzendbaar.length}</div>
+              <div className="text-green-700">verzendbaar</div>
+            </div>
+            <div className="rounded-md bg-amber-50 border border-amber-200 p-2">
+              <div className="font-semibold text-amber-800">{alVerstuurd}</div>
+              <div className="text-amber-700">al eerder verstuurd</div>
+            </div>
+            <div className="rounded-md bg-red-50 border border-red-200 p-2">
+              <div className="font-semibold text-red-800">{geblokkeerd.length}</div>
+              <div className="text-red-700">geblokkeerd</div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden max-h-72 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-50 text-gray-500 uppercase text-[10px]">
+                <tr>
+                  <th className="text-left p-2">Medewerker</th>
+                  <th className="text-left p-2">Template</th>
+                  <th className="text-left p-2">Bijlagen</th>
+                  <th className="text-left p-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {previews!.map(p => (
+                  <tr key={p.employee.id} className="border-t" data-testid={`bulk-preview-row-${p.employee.id}`}>
+                    <td className="p-2">
+                      <div className="font-medium text-gray-900">{p.employee.firstName} {p.employee.lastName}</div>
+                      <div className="text-gray-500">{p.employee.email || '— geen email —'}</div>
+                    </td>
+                    <td className="p-2">
+                      {p.template ? (
+                        <div>
+                          <div className="font-medium">{p.template.naam}</div>
+                          <div className="text-gray-500">{p.template.taal}</div>
+                        </div>
+                      ) : (
+                        <span className="text-red-600">{p.error || 'Geen match'}</span>
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {p.bijlagenCount > 0 ? (
+                        <Badge variant="outline" className="text-[10px]">
+                          <Paperclip className="h-2.5 w-2.5 mr-0.5" /> {p.bijlagenCount}
+                        </Badge>
+                      ) : <span className="text-gray-400">—</span>}
+                    </td>
+                    <td className="p-2">
+                      {!p.employee.email ? (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 text-[10px]">geen email</Badge>
+                      ) : !p.template ? (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 text-[10px]">geen template</Badge>
+                      ) : p.employee.onboardingSent ? (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 text-[10px]">opnieuw</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 text-[10px]">klaar</Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {geblokkeerd.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-2 text-xs text-red-800 flex items-start gap-2">
+              <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>
+                <strong>{geblokkeerd.length}</strong> medewerker(s) worden overgeslagen — los het probleem op of deselecteer ze om verder te gaan.
+              </span>
+            </div>
+          )}
+        </>
+      )}
+
+      <div className="flex gap-2 justify-end pt-1">
+        <Button variant="outline" onClick={onCancel} disabled={isPending}>Annuleren</Button>
+        <Button
+          className="bg-purple-600 hover:bg-purple-700"
+          disabled={isPending || !klaar || verzendbaar.length === 0}
+          onClick={() => onConfirm(verzendbaar.map(p => p.employee.id))}
+          data-testid="btn-confirm-bulk-send"
+        >
+          {isPending ? (
+            <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Bezig…</>
+          ) : (
+            <><Send className="h-4 w-4 mr-1" /> Verstuur {verzendbaar.length}</>
           )}
         </Button>
       </div>

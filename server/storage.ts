@@ -419,6 +419,7 @@ export interface IStorage {
 
   koppelBijlageAanTemplate(templateId: number, bijlageId: number, volgorde?: number): Promise<OnboardingTemplateBijlage>;
   ontkoppelBijlageVanTemplate(koppelingId: number): Promise<boolean>;
+  setKoppelingVolgorde(koppelingId: number, volgorde: number): Promise<OnboardingTemplateBijlage | null>;
 
   getOnboardingStatistieken(): Promise<{
     totaalVerstuurd: number;
@@ -4787,6 +4788,14 @@ export class MemStorage implements IStorage {
   async ontkoppelBijlageVanTemplate(koppelingId: number): Promise<boolean> {
     const result = await db.delete(onboardingTemplateBijlagenTable).where(eq(onboardingTemplateBijlagenTable.id, koppelingId)).returning();
     return result.length > 0;
+  }
+
+  async setKoppelingVolgorde(koppelingId: number, volgorde: number): Promise<OnboardingTemplateBijlage | null> {
+    const [row] = await db.update(onboardingTemplateBijlagenTable)
+      .set({ volgorde } as any)
+      .where(eq(onboardingTemplateBijlagenTable.id, koppelingId))
+      .returning();
+    return row || null;
   }
 
   async getOnboardingStatistieken() {
