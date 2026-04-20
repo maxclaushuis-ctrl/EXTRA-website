@@ -897,8 +897,8 @@ function BijlagePickerModal({ open, onClose, templateId, alGekoppeld, startVolgo
         });
       }
     },
-    onSuccess: (_, ids) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+    onSuccess: async (_, ids) => {
+      await queryClient.refetchQueries({ queryKey: ['/api/onboarding/templates', templateId] });
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
       onClose();
       if (onGekoppeld) onGekoppeld(ids.length);
