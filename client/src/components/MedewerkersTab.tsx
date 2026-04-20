@@ -496,6 +496,7 @@ function SendConfirmContent({
 }) {
   const { data: tplDetail, isLoading } = useQuery<TemplateMetBijlagen>({
     queryKey: ['/api/onboarding/templates', template.id],
+    queryFn: () => apiRequest(`/api/onboarding/templates/${template.id}`) as Promise<TemplateMetBijlagen>,
   });
   const bijlagen = tplDetail?.bijlagen || [];
   const [bevestig, setBevestig] = useState(false);
