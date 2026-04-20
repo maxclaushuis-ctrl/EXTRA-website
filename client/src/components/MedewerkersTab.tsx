@@ -8,13 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Search, Plus, Mail, MailCheck, X, Pencil, Trash2,
+  Search, Plus, Mail, MailCheck, X, Pencil, Trash2, Paperclip, Loader2,
   CheckCircle2, Briefcase, MapPin, Phone, Calendar, Tag, FileText, Send, AlertCircle,
 } from 'lucide-react';
-import type { Employee, OnboardingLog, OnboardingTemplate } from '@shared/schema';
+import type { Employee, OnboardingLog, OnboardingTemplate, OnboardingBijlage } from '@shared/schema';
 
 type TemplateLite = Pick<OnboardingTemplate, 'id' | 'naam' | 'taal' | 'functiegroep' | 'opdrachtgever'>;
+type TemplateMetBijlagen = OnboardingTemplate & {
+  bijlagen?: (OnboardingBijlage & { koppelingId: number; volgorde: number })[];
+};
 
 const BRANCHES = ['Hotel', 'Restaurant', 'Cateraar', 'Evenementenlocatie', 'Logistiek'];
 const CONTRACT_TYPES = ['oproepkracht', 'parttimer', 'fulltimer'];
@@ -42,6 +46,9 @@ export default function MedewerkersTab() {
   const [profileTab, setProfileTab] = useState<'gegevens' | 'historie' | 'shifts'>('gegevens');
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [sendConfirmTemplate, setSendConfirmTemplate] = useState<TemplateLite | null>(null);
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   const { data: listData, isLoading } = useQuery<{ employees: Employee[]; total: number }>({
     queryKey: ['/api/admin/employees'],
@@ -86,19 +93,55 @@ export default function MedewerkersTab() {
   }, [employees]);
 
   const sendOnboardingMutation = useMutation({
-    mutationFn: (vars: { id: number; templateId: number; templateName: string }) =>
-      apiRequest('POST', `/api/admin/employees/${vars.id}/onboarding-versturen`, {
+    mutationFn: async (vars: { id: number; templateId: number }) => {
+      const res = await apiRequest('POST', `/api/admin/employees/${vars.id}/onboarding-versturen`, {
         templateId: vars.templateId,
-        templateName: vars.templateName,
-      }),
-    onSuccess: () => {
-      toast({ title: 'Onboarding mail verstuurd ✓' });
+      });
+      return (res as Response).json();
+    },
+    onSuccess: (data: any) => {
+      const ontbrekend: string[] = data?.ontbrekendeBijlagen || [];
+      if (ontbrekend.length > 0) {
+        toast({
+          title: 'Onboarding mail verstuurd ✓',
+          description: `Let op: ${ontbrekend.length} bijlage(n) ontbraken op de server en zijn niet meegestuurd: ${ontbrekend.join(', ')}`,
+        });
+      } else {
+        toast({ title: 'Onboarding mail verstuurd ✓' });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/statistieken'] });
       refetchDetail();
       setSendConfirmTemplate(null);
     },
     onError: (err: any) => {
       toast({ title: 'Versturen mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
+    },
+  });
+
+  const bulkSendMutation = useMutation({
+    mutationFn: async (vars: { medewerkerIds: number[] }) => {
+      const res = await apiRequest('POST', '/api/admin/employees/onboarding-bulk', {
+        medewerkerIds: vars.medewerkerIds,
+      });
+      return (res as Response).json();
+    },
+    onSuccess: (data: any) => {
+      const v = data?.verzonden || 0;
+      const m = data?.mislukt || 0;
+      toast({
+        title: 'Bulk onboarding voltooid',
+        description: `${v} mail${v === 1 ? '' : 's'} verstuurd${m > 0 ? `, ${m} mislukt` : ''}.`,
+        variant: m > 0 ? 'destructive' : 'default',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/statistieken'] });
+      setBulkConfirmOpen(false);
+      setBulkSelectedIds(new Set());
+      setBulkSelectMode(false);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Bulk verzending mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
     },
   });
 
@@ -134,9 +177,40 @@ export default function MedewerkersTab() {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Medewerkers</h1>
           <p className="text-sm text-gray-500">Beheer actieve medewerkers en stuur onboarding mails</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)} className="bg-purple-600 hover:bg-purple-700" data-testid="btn-nieuwe-medewerker">
-          <Plus className="h-4 w-4 mr-1" /> Nieuwe medewerker
-        </Button>
+        <div className="flex gap-2">
+          {bulkSelectMode ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => { setBulkSelectMode(false); setBulkSelectedIds(new Set()); }}
+                data-testid="btn-bulk-cancel"
+              >
+                <X className="h-4 w-4 mr-1" /> Annuleren
+              </Button>
+              <Button
+                className="bg-purple-600 hover:bg-purple-700"
+                disabled={bulkSelectedIds.size === 0}
+                onClick={() => setBulkConfirmOpen(true)}
+                data-testid="btn-bulk-versturen"
+              >
+                <Send className="h-4 w-4 mr-1" /> Verstuur {bulkSelectedIds.size > 0 ? `(${bulkSelectedIds.size})` : ''}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => { setBulkSelectMode(true); setBulkSelectedIds(new Set()); }}
+                data-testid="btn-bulk-mode"
+              >
+                <Mail className="h-4 w-4 mr-1" /> Bulk onboarding
+              </Button>
+              <Button onClick={() => setShowCreateModal(true)} className="bg-purple-600 hover:bg-purple-700" data-testid="btn-nieuwe-medewerker">
+                <Plus className="h-4 w-4 mr-1" /> Nieuwe medewerker
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Stats balk */}
@@ -231,34 +305,83 @@ export default function MedewerkersTab() {
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
+            {bulkSelectMode && (
+              <div className="px-4 py-2 bg-purple-50 border-b border-purple-100 flex items-center gap-3 text-sm">
+                <Checkbox
+                  checked={
+                    filtered.filter(e => !e.onboardingSent).length > 0 &&
+                    filtered.filter(e => !e.onboardingSent).every(e => bulkSelectedIds.has(e.id))
+                  }
+                  onCheckedChange={(c) => {
+                    const ids = new Set(bulkSelectedIds);
+                    const ongetuurd = filtered.filter(e => !e.onboardingSent);
+                    if (c) ongetuurd.forEach(e => ids.add(e.id));
+                    else ongetuurd.forEach(e => ids.delete(e.id));
+                    setBulkSelectedIds(ids);
+                  }}
+                  data-testid="checkbox-select-all"
+                />
+                <span className="text-purple-700">
+                  Selecteer alle nog niet verstuurde ({filtered.filter(e => !e.onboardingSent).length})
+                </span>
+              </div>
+            )}
             {filtered.map(emp => {
               const st = STATUS_LABELS[emp.status] || STATUS_LABELS.nieuw;
+              const checked = bulkSelectedIds.has(emp.id);
+              const disableSelect = emp.onboardingSent;
               return (
-                <button
+                <div
                   key={emp.id}
-                  onClick={() => { setSelectedId(emp.id); setEditMode(false); setProfileTab('gegevens'); }}
                   className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors ${
                     selectedId === emp.id ? 'bg-purple-50' : ''
-                  }`}
+                  } ${bulkSelectMode && checked ? 'bg-purple-50' : ''}`}
                   data-testid={`row-employee-${emp.id}`}
                 >
-                  <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold shrink-0">
-                    {emp.firstName?.[0]}{emp.lastName?.[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900 truncate">{emp.firstName} {emp.lastName}</span>
-                      <span className="text-xs text-gray-400">— {emp.functie || 'geen functie'}</span>
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">{emp.opdrachtgever || '—'}</div>
-                  </div>
-                  <Badge variant="outline" className={`${st.cls} text-xs`}>{st.label}</Badge>
-                  {emp.onboardingSent ? (
-                    <MailCheck className="h-4 w-4 text-green-600 shrink-0" aria-label="Onboarding verstuurd" />
-                  ) : (
-                    <Mail className="h-4 w-4 text-gray-300 shrink-0" aria-label="Onboarding nog niet verstuurd" />
+                  {bulkSelectMode && (
+                    <Checkbox
+                      checked={checked}
+                      disabled={disableSelect}
+                      onCheckedChange={(c) => {
+                        const ids = new Set(bulkSelectedIds);
+                        if (c) ids.add(emp.id); else ids.delete(emp.id);
+                        setBulkSelectedIds(ids);
+                      }}
+                      data-testid={`checkbox-employee-${emp.id}`}
+                    />
                   )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (bulkSelectMode) {
+                        if (disableSelect) return;
+                        const ids = new Set(bulkSelectedIds);
+                        if (ids.has(emp.id)) ids.delete(emp.id); else ids.add(emp.id);
+                        setBulkSelectedIds(ids);
+                      } else {
+                        setSelectedId(emp.id); setEditMode(false); setProfileTab('gegevens');
+                      }
+                    }}
+                    className="flex-1 flex items-center gap-3 text-left min-w-0"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-semibold shrink-0">
+                      {emp.firstName?.[0]}{emp.lastName?.[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900 truncate">{emp.firstName} {emp.lastName}</span>
+                        <span className="text-xs text-gray-400">— {emp.functie || 'geen functie'}</span>
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">{emp.opdrachtgever || '—'}</div>
+                    </div>
+                    <Badge variant="outline" className={`${st.cls} text-xs`}>{st.label}</Badge>
+                    {emp.onboardingSent ? (
+                      <MailCheck className="h-4 w-4 text-green-600 shrink-0" aria-label="Onboarding verstuurd" />
+                    ) : (
+                      <Mail className="h-4 w-4 text-gray-300 shrink-0" aria-label="Onboarding nog niet verstuurd" />
+                    )}
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -313,36 +436,129 @@ export default function MedewerkersTab() {
 
       {/* Send confirm */}
       <Dialog open={sendConfirmTemplate !== null} onOpenChange={(o) => { if (!o) setSendConfirmTemplate(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" data-testid="dialog-send-confirm">
           <DialogHeader><DialogTitle>Onboarding mail versturen</DialogTitle></DialogHeader>
           {detailData && sendConfirmTemplate && (
-            <div className="space-y-3 text-sm">
-              <p>Versturen aan <strong>{detailData.firstName} {detailData.lastName}</strong></p>
-              <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-xs">
-                <div><span className="text-gray-500">E-mailadres:</span> <span className="font-medium">{detailData.email}</span></div>
-                <div><span className="text-gray-500">Template:</span> <span className="font-medium">{sendConfirmTemplate.naam}</span></div>
-                <div className="text-gray-400 italic">Bijlagen worden in Stap 3 toegevoegd.</div>
-              </div>
-              <div className="flex gap-2 justify-end pt-1">
-                <Button variant="outline" onClick={() => setSendConfirmTemplate(null)}>Annuleren</Button>
-                <Button
-                  className="bg-purple-600 hover:bg-purple-700"
-                  disabled={sendOnboardingMutation.isPending}
-                  onClick={() => sendOnboardingMutation.mutate({
-                    id: detailData.id,
-                    templateId: sendConfirmTemplate.id,
-                    templateName: sendConfirmTemplate.naam,
-                  })}
-                  data-testid="btn-confirm-send-onboarding"
-                >
-                  <Send className="h-4 w-4 mr-1" />
-                  {sendOnboardingMutation.isPending ? 'Versturen…' : 'Versturen'}
-                </Button>
-              </div>
-            </div>
+            <SendConfirmContent
+              employee={detailData}
+              template={sendConfirmTemplate}
+              onCancel={() => setSendConfirmTemplate(null)}
+              onConfirm={() => sendOnboardingMutation.mutate({
+                id: detailData.id,
+                templateId: sendConfirmTemplate.id,
+              })}
+              isPending={sendOnboardingMutation.isPending}
+            />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Bulk confirm */}
+      <Dialog open={bulkConfirmOpen} onOpenChange={(o) => { if (!o) setBulkConfirmOpen(false); }}>
+        <DialogContent className="max-w-md" data-testid="dialog-bulk-confirm">
+          <DialogHeader><DialogTitle>Bulk onboarding versturen</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>
+              Je staat op het punt om <strong>{bulkSelectedIds.size}</strong> onboarding mail
+              {bulkSelectedIds.size === 1 ? '' : 's'} te versturen.
+            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+              Voor elke medewerker wordt automatisch de best passende template gekozen op basis van
+              taal, functiegroep en opdrachtgever. Bijlagen worden meegestuurd indien aanwezig.
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto text-xs space-y-1">
+              {Array.from(bulkSelectedIds).map(id => {
+                const e = employees.find(x => x.id === id);
+                return e ? (
+                  <div key={id} className="flex justify-between">
+                    <span>{e.firstName} {e.lastName}</span>
+                    <span className="text-gray-500">{e.email}</span>
+                  </div>
+                ) : null;
+              })}
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" onClick={() => setBulkConfirmOpen(false)} disabled={bulkSendMutation.isPending}>
+                Annuleren
+              </Button>
+              <Button
+                className="bg-purple-600 hover:bg-purple-700"
+                disabled={bulkSendMutation.isPending}
+                onClick={() => bulkSendMutation.mutate({ medewerkerIds: Array.from(bulkSelectedIds) })}
+                data-testid="btn-confirm-bulk-send"
+              >
+                {bulkSendMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Bezig…</>
+                ) : (
+                  <><Send className="h-4 w-4 mr-1" /> Verstuur {bulkSelectedIds.size}</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function SendConfirmContent({
+  employee, template, onCancel, onConfirm, isPending,
+}: {
+  employee: Employee;
+  template: TemplateLite;
+  onCancel: () => void;
+  onConfirm: () => void;
+  isPending: boolean;
+}) {
+  const { data: tplDetail, isLoading } = useQuery<TemplateMetBijlagen>({
+    queryKey: ['/api/onboarding/templates', template.id],
+  });
+  const bijlagen = tplDetail?.bijlagen || [];
+  return (
+    <div className="space-y-3 text-sm">
+      <p>Versturen aan <strong>{employee.firstName} {employee.lastName}</strong></p>
+      <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-xs">
+        <div><span className="text-gray-500">E-mailadres:</span> <span className="font-medium">{employee.email}</span></div>
+        <div><span className="text-gray-500">Template:</span> <span className="font-medium">{template.naam}</span></div>
+        <div><span className="text-gray-500">Taal:</span> <span className="font-medium">{template.taal}</span></div>
+      </div>
+      <div>
+        <div className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+          <Paperclip className="h-3.5 w-3.5" /> Bijlagen
+        </div>
+        {isLoading ? (
+          <div className="text-xs text-gray-400 flex items-center gap-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Laden…
+          </div>
+        ) : bijlagen.length === 0 ? (
+          <div className="text-xs text-gray-400 italic">Geen bijlagen aan deze template gekoppeld.</div>
+        ) : (
+          <ul className="space-y-1 text-xs bg-blue-50 border border-blue-100 rounded-lg p-2">
+            {bijlagen.map(b => (
+              <li key={b.id} className="flex items-center gap-2" data-testid={`bijlage-${b.id}`}>
+                <FileText className="h-3.5 w-3.5 text-blue-600" />
+                <span className="font-medium">{b.naam}</span>
+                <span className="text-gray-500">({Math.round((b.bestandsgrootte || 0) / 1024)} KB)</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="flex gap-2 justify-end pt-1">
+        <Button variant="outline" onClick={onCancel} disabled={isPending}>Annuleren</Button>
+        <Button
+          className="bg-purple-600 hover:bg-purple-700"
+          disabled={isPending}
+          onClick={onConfirm}
+          data-testid="btn-confirm-send-onboarding"
+        >
+          {isPending ? (
+            <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Versturen…</>
+          ) : (
+            <><Send className="h-4 w-4 mr-1" /> Versturen</>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -37,6 +37,7 @@ import {
 import { z, ZodError } from "zod";
 import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./birthday";
 import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail, sendAdminWelcomeEmail } from "./mail";
+import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
@@ -6851,26 +6852,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Onboarding mail versturen (Stap 1: stub — markeert als verzonden + log entry)
+  // Onboarding mail versturen (Stap 3: echte verzending via SendGrid + bijlagen)
   app.post("/api/admin/employees/:id/onboarding-versturen", adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const { templateId } = req.body || {};
     try {
-      const id = parseInt(req.params.id);
-      const { templateId, templateName } = req.body || {};
       if (!templateId || typeof templateId !== 'number') {
         return res.status(400).json({ message: "templateId is verplicht" });
       }
+      const result = await verstuurOnboardingMail(id, templateId, 'handmatig');
       const employee = await storage.getEmployee(id);
-      if (!employee) return res.status(404).json({ message: "Medewerker niet gevonden" });
-      if (!employee.email) return res.status(400).json({ message: "Voeg eerst een e-mailadres toe" });
-
-      // Stap 3 zal hier echt de mail versturen via mail-service.
-      // Voor nu alleen markeren + log entry aanmaken.
-      const updated = await storage.markEmployeeOnboardingSent(id, templateId, templateName);
-      return res.json({ success: true, sentAt: updated?.onboardingSentAt, employee: updated });
-    } catch (error) {
-      console.error("Error sending onboarding:", error);
-      return res.status(500).json({ message: "Er is iets misgegaan bij het versturen" });
+      return res.json({
+        success: true,
+        sentAt: result.verstuurdOp,
+        templateName: result.templateNaam,
+        bijlagenCount: result.bijlagenCount,
+        ontbrekendeBijlagen: result.ontbrekendeBijlagen,
+        employee,
+      });
+    } catch (error: any) {
+      const fout = error?.message || 'Onbekende fout';
+      console.error("Error sending onboarding:", fout);
+      await logOnboardingFout(id, typeof templateId === 'number' ? templateId : null, fout);
+      try {
+        const emp = await storage.getEmployee(id);
+        if (emp) await notificeerOnboardingFout(emp as any, fout);
+      } catch {}
+      return res.status(500).json({ message: fout, error: fout });
     }
+  });
+
+  // Bulk onboarding versturen — sequentieel met 300ms pauze
+  app.post("/api/admin/employees/onboarding-bulk", adminMiddleware, async (req: Request, res: Response) => {
+    const { medewerkerIds, templateId } = req.body || {};
+    if (!Array.isArray(medewerkerIds) || medewerkerIds.length === 0) {
+      return res.status(400).json({ message: "medewerkerIds is verplicht" });
+    }
+    const resultaten = { verzonden: 0, mislukt: 0, fouten: [] as { id: number; fout: string }[] };
+
+    for (const rawId of medewerkerIds) {
+      const id = Number(rawId);
+      if (!Number.isFinite(id)) continue;
+      try {
+        const medewerker = await storage.getEmployee(id);
+        if (!medewerker) {
+          resultaten.mislukt++;
+          resultaten.fouten.push({ id, fout: 'Medewerker niet gevonden' });
+          continue;
+        }
+        let chosenTemplateId: number | undefined = typeof templateId === 'number' ? templateId : undefined;
+        if (!chosenTemplateId) {
+          const auto = await storage.selecteerOnboardingTemplate({
+            taal: medewerker.language,
+            functie: medewerker.functie,
+            opdrachtgever: medewerker.opdrachtgever,
+          });
+          if (!auto) {
+            resultaten.mislukt++;
+            resultaten.fouten.push({ id, fout: 'Geen passende template gevonden' });
+            continue;
+          }
+          chosenTemplateId = auto.id;
+        }
+        await verstuurOnboardingMail(id, chosenTemplateId, 'bulk');
+        resultaten.verzonden++;
+        await new Promise(r => setTimeout(r, 300));
+      } catch (err: any) {
+        const fout = err?.message || 'Onbekende fout';
+        await logOnboardingFout(id, null, fout);
+        resultaten.mislukt++;
+        resultaten.fouten.push({ id, fout });
+      }
+    }
+
+    await notificeerBulkVoltooid(resultaten.verzonden, resultaten.mislukt);
+    return res.json(resultaten);
   });
 
   // Sollicitant aannemen → maakt medewerker aan

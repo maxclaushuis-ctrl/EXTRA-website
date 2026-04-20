@@ -1,0 +1,284 @@
+Replit Prompt — Onboarding Stap 3: Verzendlogica & SendGrid Integratie
+Wat je gaat doen
+Bouw de volledige verzendinfrastructuur voor onboarding e-mails. Dit omvat de HTML-generatie vanuit templates, het meesturen van PDF-bijlagen via SendGrid, personalisatie per medewerker en de logging van alle verzendingen. Na deze stap is de volledige onboarding module operationeel en vervangt het Mailblue.
+
+1. Onboarding verzendservice
+Schrijf een service onboardingService.js met de volgende functies:
+genereerOnboardingHTML(template, medewerker)
+javascriptasync function genereerOnboardingHTML(template, medewerker) {
+  // 1. Haal JSON content op uit template.content
+  // 2. Vervang alle personalisatie-tags
+  const tags = {
+    '{{voornaam}}':      medewerker.voornaam || 'daar',
+    '{{achternaam}}':    medewerker.achternaam || '',
+    '{{naam}}':          `${medewerker.voornaam} ${medewerker.achternaam}`.trim() || 'daar',
+    '{{functie}}':       medewerker.functie || '',
+    '{{opdrachtgever}}': medewerker.opdrachtgever || '',
+    '{{startdatum}}':    medewerker.startdatum
+                           ? formatNLDatum(new Date(medewerker.startdatum))
+                           : '',
+  };
+
+  // 3. Gebruik dezelfde generateEmailHTML functie als de campagnemodule
+  //    maar ZONDER trackingpixel en ZONDER unsubscribe link
+  //    (onboarding mails zijn transactioneel, geen marketing)
+
+  // 4. Voeg footer toe:
+  // EXTRA B.V. — Amsterdam | doehetextra.nl
+
+  // 5. Geef volledige HTML string terug
+}
+genereerOnboardingPlainText(template, medewerker)
+javascript// Zelfde logica als campagnes maar zonder tracking
+// Vervang tags, zet blokken om naar plain text
+// Voeg footer toe als plain text
+haalBijlagenOp(templateId)
+javascriptasync function haalBijlagenOp(templateId) {
+  const koppelingen = await getBijlagenVoorTemplate(templateId);
+
+  return Promise.all(koppelingen.map(async (koppeling) => {
+    const bijlage = koppeling.bijlage;
+    const bestandsdata = await fs.readFile(bijlage.bestandspad);
+
+    return {
+      naam: bijlage.naam,
+      bestandsnaam: bijlage.bestandsnaam,
+      content: bestandsdata.toString('base64'),
+      type: 'application/pdf',
+      disposition: 'attachment',
+      bestandsgrootte: bijlage.bestandsgrootte,
+    };
+  }));
+}
+controleerBijlagenGrootte(bijlagen)
+javascriptfunction controleerBijlagenGrootte(bijlagen) {
+  const totaalBytes = bijlagen.reduce((sum, b) => sum + b.bestandsgrootte, 0);
+  const maxBytes = 25 * 1024 * 1024; // 25MB
+
+  if (totaalBytes > maxBytes) {
+    return {
+      geldig: false,
+      melding: `Bijlagen zijn te groot (${(totaalBytes / 1024 / 1024).toFixed(1)} MB).
+                Maximum is 25 MB. Verwijder bijlagen of verklein de bestanden.`
+    };
+  }
+  return { geldig: true };
+}
+verstuurOnboardingMail(medewerkerId, templateId)
+javascriptasync function verstuurOnboardingMail(medewerkerId, templateId) {
+  // 1. Haal medewerker op
+  const medewerker = await getMedewerker(medewerkerId);
+  if (!medewerker?.email) {
+    throw new Error('Medewerker heeft geen e-mailadres');
+  }
+
+  // 2. Haal template op
+  const template = await getOnboardingTemplate(templateId);
+  if (!template) {
+    throw new Error('Template niet gevonden');
+  }
+
+  // 3. Controleer of template inhoud heeft
+  if (!template.content) {
+    throw new Error(`Template '${template.naam}' heeft nog geen e-mailinhoud.
+                    Maak de template eerst op via de e-mail builder.`);
+  }
+
+  // 4. Genereer HTML en plain text
+  const html = await genereerOnboardingHTML(template, medewerker);
+  const plainText = await genereerOnboardingPlainText(template, medewerker);
+
+  // 5. Haal bijlagen op en controleer grootte
+  const bijlagen = await haalBijlagenOp(templateId);
+  const grootteCheck = controleerBijlagenGrootte(bijlagen);
+  if (!grootteCheck.geldig) {
+    throw new Error(grootteCheck.melding);
+  }
+
+  // 6. Vervang tags in onderwerpregel
+  const onderwerp = vervangTags(template.onderwerp, medewerker);
+
+  // 7. Bouw SendGrid bericht
+  const bericht = {
+    to: medewerker.email,
+    from: {
+      email: process.env.SENDGRID_FROM_EMAIL,  // max@doehetextra.nl
+      name: process.env.SENDGRID_FROM_NAME,    // Max van EXTRA
+    },
+    subject: onderwerp,
+    html: html,
+    text: plainText,
+    attachments: bijlagen,  // PDF bijlagen als echte e-mailbijlagen
+  };
+
+  // 8. Verstuur via SendGrid
+  await sgMail.send(bericht);
+
+  // 9. Log de verzending
+  await logOnboardingVerzending({
+    medewerker_id: medewerkerId,
+    template_id: templateId,
+    status: 'verzonden',
+    verstuurd_door: 'handmatig',
+  });
+
+  // 10. Update medewerker record
+  await updateMedewerker(medewerkerId, {
+    onboarding_verstuurd: 1,
+    onboarding_verstuurd_op: new Date(),
+    onboarding_template_id: templateId,
+  });
+
+  return { success: true };
+}
+
+2. API endpoints
+POST /api/medewerkers/:id/onboarding-versturen
+javascriptrouter.post('/:id/onboarding-versturen', async (req, res) => {
+  const { id } = req.params;
+  const { template_id } = req.body;
+
+  try {
+    if (!template_id) {
+      return res.status(400).json({ error: 'Geen template opgegeven' });
+    }
+
+    await verstuurOnboardingMail(id, template_id);
+
+    res.json({
+      success: true,
+      verstuurd_op: new Date(),
+      bericht: 'Onboarding mail succesvol verstuurd'
+    });
+
+  } catch (err) {
+    await logOnboardingVerzending({
+      medewerker_id: id,
+      template_id,
+      status: 'mislukt',
+      fout_melding: err.message,
+    });
+
+    res.status(500).json({
+      error: 'Versturen mislukt',
+      details: err.message
+    });
+  }
+});
+POST /api/medewerkers/onboarding-bulk
+javascript// Body: { medewerker_ids: [1, 2, 3] }
+// Verwerkt sequentieel met 300ms pauze tussen verzendingen
+
+router.post('/onboarding-bulk', async (req, res) => {
+  const { medewerker_ids } = req.body;
+  const resultaten = { verzonden: 0, mislukt: 0, fouten: [] };
+
+  for (const id of medewerker_ids) {
+    try {
+      const medewerker = await getMedewerker(id);
+      const template = await selecteerOnboardingTemplate(medewerker);
+
+      if (!template) {
+        resultaten.mislukt++;
+        resultaten.fouten.push({ id, fout: 'Geen passende template gevonden' });
+        continue;
+      }
+
+      await verstuurOnboardingMail(id, template.id);
+      resultaten.verzonden++;
+
+      await new Promise(r => setTimeout(r, 300));
+
+    } catch (err) {
+      resultaten.mislukt++;
+      resultaten.fouten.push({ id, fout: err.message });
+    }
+  }
+
+  res.json(resultaten);
+});
+
+3. Foutafhandeling — alle gevallen
+SituatieMelding in UIGeen e-mailadres"Voeg eerst een e-mailadres toe om de onboarding mail te versturen"Template zonder inhoud"Template '[naam]' heeft nog geen inhoud. Maak de template eerst op."Geen passende template"Geen passende template gevonden. Selecteer handmatig een template."Bijlagen te groot"Bijlagen zijn te groot (X MB). Maximum is 25 MB."Bijlage niet op diskMail wordt verstuurd zonder die bijlage + waarschuwing toastSendGrid fout"Versturen mislukt. Probeer opnieuw of controleer de SendGrid-instellingen."
+Bij elke fout: log in onboarding_log met status = 'mislukt' en fout_melding.
+
+4. Onboarding-banner in medewerkersprofiel
+De banner in het medewerkersprofiel (gebouwd in stap 1) reageert live op de verzendstatus:
+Vóór verzending — blauw:
+┌──────────────────────────────────────────────────────┐
+│ 📧 Onboarding mail nog niet verstuurd                │
+│ Stuur [voornaam] een welkomstmail om te starten      │
+│                                                       │
+│ Template: [Welkom Horeca NL ▼]  (automatisch)        │
+│ Bijlagen: Afmeldprotocol.pdf, Jixbee uitleg.pdf      │
+│                                                       │
+│          [✉️ Verstuur onboarding mail]               │
+└──────────────────────────────────────────────────────┘
+Na verzending — groen:
+┌──────────────────────────────────────────────────────┐
+│ ✅ Onboarding mail verstuurd                         │
+│ Verzonden op: maandag 14 april 2026 om 09:32         │
+│ Template: "Welkom Horeca NL"                         │
+│                               [Opnieuw versturen]    │
+└──────────────────────────────────────────────────────┘
+Bij klik op "Verstuur onboarding mail":
+
+Laad template via GET /api/onboarding/templates/selecteer?taal=&functie=&opdrachtgever=
+Toon bevestigingsmodal:
+
+Onboarding mail versturen
+─────────────────────────
+Ontvanger:   Jan de Vries (jan@email.nl)
+Template:    Welkom Horeca NL
+Bijlagen:    📄 Afmeldprotocol.pdf
+             📄 Jixbee uitleg.pdf
+
+[Annuleren]  [✉️ Versturen]
+
+Bij bevestiging: roep POST /api/medewerkers/:id/onboarding-versturen aan
+Toon laadspinner op de knop tijdens verzending
+Bij succes: banner update direct naar groen, toast "Onboarding mail verstuurd ✓"
+Bij fout: toast met foutmelding, banner blijft blauw
+
+
+5. Notificaties
+Gebruik het bestaande notificatiesysteem voor onboarding events:
+Bij succesvolle verzending:
+✉️ Onboarding mail verstuurd
+Jan de Vries (Budbee) — "Welkom Horeca NL"
+[Bekijk medewerkersprofiel →]
+Bij mislukte verzending:
+⚠️ Onboarding mail mislukt
+Jan de Vries — Controleer het e-mailadres en probeer opnieuw
+[Bekijk medewerkersprofiel →]
+Bij bulk verzending voltooid:
+✉️ Bulk onboarding verstuurd
+15 mails verstuurd, 1 mislukt
+[Bekijk details →]
+
+6. Volgorde van implementatie
+
+onboardingService.js — alle functies uit sectie 1
+API endpoint POST /api/medewerkers/:id/onboarding-versturen
+API endpoint POST /api/medewerkers/onboarding-bulk
+Bevestigingsmodal + laadstate in de onboarding-banner
+Foutafhandeling voor alle gevallen uit sectie 3
+Notificaties
+CSV export statistieken
+
+
+7. End-to-end verificatie na stap 3
+
+ Sollicitant aannemen → medewerkerrecord aangemaakt
+ Medewerker handmatig aanmaken zonder sollicitant-koppeling
+ Template automatisch geselecteerd op basis van taal + functie + opdrachtgever
+ Gebruiker kan template handmatig overschrijven in dropdown
+ Bevestigingsmodal toont juiste template + bijlagen
+ Onboarding mail verstuurd via SendGrid met correcte personalisatie
+ PDF bijlagen zitten als echte bijlagen in de e-mail
+ Banner toont groen na verzending
+ Onboarding historie tab toont de verzending
+ Bulk verzending werkt voor meerdere medewerkers
+ Foutafhandeling werkt bij ontbrekend e-mailadres of lege template
+ Notificatie verschijnt na verzending
+ CSV export downloadt correct
