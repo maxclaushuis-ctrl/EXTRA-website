@@ -80,6 +80,11 @@ import {
   type FlowContactProgress, type InsertFlowContactProgress,
   notificaties as notificatiesTable,
   type Notificatie, type InsertNotificatie,
+  employees as employeesTable,
+  onboardingLogs as onboardingLogsTable,
+  type Employee, type InsertEmployee,
+  type OnboardingLog, type InsertOnboardingLog,
+  type EmployeeWithLogs,
 } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -366,6 +371,28 @@ export interface IStorage {
   getCandidateImport(id: number): Promise<CandidateImport | undefined>;
   updateCandidateImport(id: number, importData: Partial<InsertCandidateImport>): Promise<CandidateImport | undefined>;
   getCandidateImports(): Promise<CandidateImport[]>;
+
+  // ==========================================
+  // MEDEWERKERS (Employees) methods
+  // ==========================================
+  createEmployee(data: InsertEmployee): Promise<Employee>;
+  getEmployees(filters?: {
+    status?: string;
+    branche?: string;
+    functie?: string;
+    opdrachtgever?: string;
+    language?: string;
+    onboardingSent?: boolean;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ employees: Employee[]; total: number }>;
+  getEmployee(id: number): Promise<EmployeeWithLogs | undefined>;
+  updateEmployee(id: number, data: Partial<InsertEmployee>): Promise<Employee | undefined>;
+  deleteEmployee(id: number): Promise<boolean>;
+  markEmployeeOnboardingSent(id: number, templateId: number, templateName?: string): Promise<Employee | undefined>;
+  createOnboardingLog(log: InsertOnboardingLog): Promise<OnboardingLog>;
+  getOnboardingLogs(employeeId: number): Promise<OnboardingLog[]>;
 
   // ==========================================
   // SOLLICITATIES (Applications) methods
@@ -4495,6 +4522,101 @@ export class MemStorage implements IStorage {
     }
 
     return result;
+  }
+
+  // ─── Medewerkers (Employees) ──────────────────────────────────────────────
+
+  async createEmployee(data: InsertEmployee): Promise<Employee> {
+    const [row] = await db.insert(employeesTable).values(data as any).returning();
+    return row;
+  }
+
+  async getEmployees(filters?: {
+    status?: string;
+    branche?: string;
+    functie?: string;
+    opdrachtgever?: string;
+    language?: string;
+    onboardingSent?: boolean;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ employees: Employee[]; total: number }> {
+    const conditions: any[] = [];
+    if (filters?.status) conditions.push(eq(employeesTable.status, filters.status as any));
+    if (filters?.branche) conditions.push(eq(employeesTable.branche, filters.branche));
+    if (filters?.functie) conditions.push(eq(employeesTable.functie, filters.functie));
+    if (filters?.opdrachtgever) conditions.push(eq(employeesTable.opdrachtgever, filters.opdrachtgever));
+    if (filters?.language) conditions.push(eq(employeesTable.language, filters.language));
+    if (typeof filters?.onboardingSent === 'boolean') conditions.push(eq(employeesTable.onboardingSent, filters.onboardingSent));
+    if (filters?.search) {
+      const p = `%${filters.search}%`;
+      conditions.push(or(
+        ilike(employeesTable.firstName, p),
+        ilike(employeesTable.lastName, p),
+        ilike(employeesTable.email, p),
+        ilike(employeesTable.opdrachtgever, p),
+      ));
+    }
+    const whereClause = conditions.length ? and(...conditions) : undefined;
+    const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(employeesTable).where(whereClause);
+    const total = Number(countRow?.count || 0);
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 500;
+    const employees = await db.select().from(employeesTable).where(whereClause)
+      .orderBy(desc(employeesTable.createdAt)).limit(limit).offset((page - 1) * limit);
+    return { employees, total };
+  }
+
+  async getEmployee(id: number): Promise<EmployeeWithLogs | undefined> {
+    const [emp] = await db.select().from(employeesTable).where(eq(employeesTable.id, id));
+    if (!emp) return undefined;
+    const logs = await db.select().from(onboardingLogsTable)
+      .where(eq(onboardingLogsTable.employeeId, id))
+      .orderBy(desc(onboardingLogsTable.sentAt));
+    return { ...emp, onboardingLogs: logs };
+  }
+
+  async updateEmployee(id: number, data: Partial<InsertEmployee>): Promise<Employee | undefined> {
+    const [row] = await db.update(employeesTable)
+      .set({ ...(data as any), updatedAt: new Date() })
+      .where(eq(employeesTable.id, id)).returning();
+    return row;
+  }
+
+  async deleteEmployee(id: number): Promise<boolean> {
+    const result = await db.delete(employeesTable).where(eq(employeesTable.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async markEmployeeOnboardingSent(id: number, templateId: number, templateName?: string): Promise<Employee | undefined> {
+    const [row] = await db.update(employeesTable).set({
+      onboardingSent: true,
+      onboardingSentAt: new Date(),
+      onboardingTemplateId: templateId,
+      updatedAt: new Date(),
+    }).where(eq(employeesTable.id, id)).returning();
+    if (row) {
+      await db.insert(onboardingLogsTable).values({
+        employeeId: id,
+        templateId,
+        templateName: templateName || null,
+        sentBy: 'handmatig',
+        status: 'verzonden',
+      } as any);
+    }
+    return row;
+  }
+
+  async createOnboardingLog(log: InsertOnboardingLog): Promise<OnboardingLog> {
+    const [row] = await db.insert(onboardingLogsTable).values(log as any).returning();
+    return row;
+  }
+
+  async getOnboardingLogs(employeeId: number): Promise<OnboardingLog[]> {
+    return db.select().from(onboardingLogsTable)
+      .where(eq(onboardingLogsTable.employeeId, employeeId))
+      .orderBy(desc(onboardingLogsTable.sentAt));
   }
 
   // ─── Notificaties ──────────────────────────────────────────────────────────

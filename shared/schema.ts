@@ -1593,3 +1593,75 @@ export const instellingen = pgTable("instellingen", {
   waarde: text("waarde").notNull(),
   bijgewerktOp: timestamp("bijgewerkt_op").defaultNow().notNull(),
 });
+
+// ==========================================
+// MEDEWERKERS MODULE (Onboarding Stap 1)
+// ==========================================
+
+export const employeeStatusEnum = pgEnum('employee_status', ['nieuw', 'actief', 'inactief', 'uitgestroomd']);
+export const employeeContractEnum = pgEnum('employee_contract', ['oproepkracht', 'parttimer', 'fulltimer']);
+
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+
+  // Persoonlijk
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  birthDate: date("birth_date"),
+  city: text("city"),
+  language: text("language").default('Nederlands'),
+
+  // Werk
+  functie: text("functie"),
+  branche: text("branche"),
+  opdrachtgever: text("opdrachtgever"),
+  contractType: employeeContractEnum("contract_type"),
+  startDate: date("start_date"),
+
+  // Status
+  status: employeeStatusEnum("status").default('nieuw').notNull(),
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`),
+
+  // Onboarding
+  onboardingSent: boolean("onboarding_sent").default(false).notNull(),
+  onboardingSentAt: timestamp("onboarding_sent_at"),
+  onboardingTemplateId: integer("onboarding_template_id"),
+
+  // Koppeling
+  candidateId: integer("candidate_id").references(() => candidates.id),
+
+  // Meta
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const onboardingLogs = pgTable("onboarding_logs", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  templateId: integer("template_id").notNull(),
+  templateName: text("template_name"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  sentBy: text("sent_by").default('handmatig'),
+  status: text("status").default('verzonden'),
+  errorMessage: text("error_message"),
+});
+
+export const insertEmployeeSchema = createInsertSchema(employees).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  onboardingSent: true,
+  onboardingSentAt: true,
+  onboardingTemplateId: true,
+});
+export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
+export type Employee = typeof employees.$inferSelect;
+
+export const insertOnboardingLogSchema = createInsertSchema(onboardingLogs).omit({ id: true, sentAt: true });
+export type InsertOnboardingLog = z.infer<typeof insertOnboardingLogSchema>;
+export type OnboardingLog = typeof onboardingLogs.$inferSelect;
+
+export type EmployeeWithLogs = Employee & { onboardingLogs?: OnboardingLog[] };

@@ -33,6 +33,7 @@ import NotificationCenter from '@/components/NotificationCenter';
 import NotificatieBel from '@/components/NotificatieBel';
 import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
 import SchedulerStatusTab from '@/components/SchedulerStatusTab';
+import MedewerkersTab from '@/components/MedewerkersTab';
 
 type User = {
   id: number;
@@ -324,6 +325,8 @@ export default function DashboardMockup() {
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [appDetailOpen, setAppDetailOpen] = useState(false);
   const [appRejectConfirmApp, setAppRejectConfirmApp] = useState<any | null>(null);
+  const [aannemenApp, setAannemenApp] = useState<any | null>(null);
+  const [aannemenForm, setAannemenForm] = useState<{ functie: string; branche: string; opdrachtgever: string; contractType: string; startDate: string; language: string }>({ functie: '', branche: '', opdrachtgever: '', contractType: '', startDate: '', language: 'Nederlands' });
   const [appNotesDraft, setAppNotesDraft] = useState<string>('');
   // Reset draft when a different application card is opened
   useEffect(() => {
@@ -859,6 +862,7 @@ export default function DashboardMockup() {
               {[
                 { icon: UserCheck, label: 'Kandidaten', tab: 'kandidaten' },
                 { icon: UserPlus, label: 'Sollicitanten', tab: 'sollicitanten' },
+                { icon: CheckCircle2, label: 'Medewerkers', tab: 'medewerkers' },
                 { icon: ShieldAlert, label: 'TWV', tab: 'twv' },
               ].map(item => (
                 <button
@@ -2512,6 +2516,31 @@ export default function DashboardMockup() {
                     );
                   })()}
 
+                  {/* Aannemen-actie — voor alle sollicitanten met een email */}
+                  {selectedApp && selectedApp.email && (
+                    <div className="mt-4 border-t border-gray-100 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAannemenForm({
+                            functie: selectedApp.functionType || '',
+                            branche: '',
+                            opdrachtgever: '',
+                            contractType: '',
+                            startDate: '',
+                            language: selectedApp.formData?.language || 'Nederlands',
+                          });
+                          setAannemenApp(selectedApp);
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2"
+                        data-testid="btn-aannemen-medewerker"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Aannemen als medewerker
+                      </button>
+                    </div>
+                  )}
+
                   {/* Referenties sectie — altijd zichtbaar onderaan de kaart */}
                   {selectedApp && (
                     <div className="mt-4 border-t border-gray-100 pt-4">
@@ -2544,6 +2573,103 @@ export default function DashboardMockup() {
                         >
                           {saveAppNotesMutation.isPending ? 'Opslaan…' : 'Referentie opslaan'}
                         </button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              {/* Aannemen-modal — sollicitant promoten naar medewerker */}
+              <Dialog open={aannemenApp !== null} onOpenChange={(open) => { if (!open) setAannemenApp(null); }}>
+                <DialogContent className="max-w-lg" data-testid="dialog-aannemen-medewerker">
+                  <DialogHeader>
+                    <DialogTitle>Aannemen als medewerker</DialogTitle>
+                  </DialogHeader>
+                  {aannemenApp && (
+                    <div className="space-y-3">
+                      <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                        <div className="font-medium">{aannemenApp.firstName} {aannemenApp.lastName}</div>
+                        <div className="text-xs text-gray-500">{aannemenApp.email}</div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="text-sm">
+                          <span className="block text-xs text-gray-500 mb-1">Functie</span>
+                          <Input value={aannemenForm.functie} onChange={e => setAannemenForm(f => ({ ...f, functie: e.target.value }))} placeholder="bijv. housekeeping" />
+                        </label>
+                        <label className="text-sm">
+                          <span className="block text-xs text-gray-500 mb-1">Branche</span>
+                          <Select value={aannemenForm.branche} onValueChange={v => setAannemenForm(f => ({ ...f, branche: v }))}>
+                            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                            <SelectContent>
+                              {['Hotel', 'Restaurant', 'Cateraar', 'Evenementenlocatie', 'Logistiek'].map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </label>
+                        <label className="text-sm">
+                          <span className="block text-xs text-gray-500 mb-1">Opdrachtgever</span>
+                          <Input value={aannemenForm.opdrachtgever} onChange={e => setAannemenForm(f => ({ ...f, opdrachtgever: e.target.value }))} placeholder="bijv. Budbee" />
+                        </label>
+                        <label className="text-sm">
+                          <span className="block text-xs text-gray-500 mb-1">Contract</span>
+                          <Select value={aannemenForm.contractType} onValueChange={v => setAannemenForm(f => ({ ...f, contractType: v }))}>
+                            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="oproepkracht">Oproepkracht</SelectItem>
+                              <SelectItem value="parttimer">Parttimer</SelectItem>
+                              <SelectItem value="fulltimer">Fulltimer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </label>
+                        <label className="text-sm">
+                          <span className="block text-xs text-gray-500 mb-1">Startdatum</span>
+                          <Input type="date" value={aannemenForm.startDate} onChange={e => setAannemenForm(f => ({ ...f, startDate: e.target.value }))} />
+                        </label>
+                        <label className="text-sm">
+                          <span className="block text-xs text-gray-500 mb-1">Taal</span>
+                          <Select value={aannemenForm.language} onValueChange={v => setAannemenForm(f => ({ ...f, language: v }))}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Nederlands">Nederlands</SelectItem>
+                              <SelectItem value="Engels">Engels</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </label>
+                      </div>
+                      <div className="flex gap-2 justify-end pt-2">
+                        <Button variant="outline" onClick={() => setAannemenApp(null)}>Annuleren</Button>
+                        <Button
+                          className="bg-green-600 hover:bg-green-700"
+                          data-testid="btn-confirm-aannemen"
+                          onClick={async () => {
+                            try {
+                              const candidateId = aannemenApp.linkedCandidateId || aannemenApp.candidateId;
+                              if (!candidateId) {
+                                toast({ title: 'Geen sollicitant gekoppeld', description: 'Deze sollicitatie heeft geen kandidaat-koppeling om uit aan te nemen.', variant: 'destructive' });
+                                return;
+                              }
+                              const res = await apiRequest('POST', `/api/admin/candidates/${candidateId}/aannemen`, {
+                                functie: aannemenForm.functie || undefined,
+                                branche: aannemenForm.branche || undefined,
+                                opdrachtgever: aannemenForm.opdrachtgever || undefined,
+                                contractType: aannemenForm.contractType || undefined,
+                                startDate: aannemenForm.startDate || undefined,
+                                language: aannemenForm.language || undefined,
+                              });
+                              const data = await res.json();
+                              toast({ title: `Medewerker ${data.employee.firstName} ${data.employee.lastName} aangemaakt ✓` });
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+                              setAannemenApp(null);
+                              setAppDetailOpen(false);
+                              setActiveTab('medewerkers');
+                            } catch (err: any) {
+                              const msg = err?.message || 'Er ging iets mis';
+                              toast({ title: 'Aanmaken mislukt', description: msg, variant: 'destructive' });
+                            }
+                          }}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" /> Medewerker aanmaken
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -3382,6 +3508,9 @@ export default function DashboardMockup() {
                 </div>
               )}
             </div>
+          ) : activeTab === 'medewerkers' ? (
+            /* Medewerkers Tab — onboarding stap 1 */
+            <MedewerkersTab />
           ) : activeTab === 'twv' ? (
             /* TWV Tab — Tewerkstellingsvergunning Kanban */
             <div>

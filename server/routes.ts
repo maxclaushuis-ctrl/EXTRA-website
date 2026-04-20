@@ -31,6 +31,7 @@ import {
   insertSalaryScaleSchema,
   insertCandidateAuditLogSchema,
   insertCandidateImportSchema,
+  insertEmployeeSchema,
   pushSubscriptions,
 } from "@shared/schema";
 import { z, ZodError } from "zod";
@@ -6766,6 +6767,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==========================================
+  // ==========================================
+  // MEDEWERKERS (Employees) endpoints
+  // ==========================================
+
+  app.get("/api/admin/employees", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { status, branche, functie, opdrachtgever, language, onboardingSent, search, page, limit } = req.query;
+      const result = await storage.getEmployees({
+        status: status as string | undefined,
+        branche: branche as string | undefined,
+        functie: functie as string | undefined,
+        opdrachtgever: opdrachtgever as string | undefined,
+        language: language as string | undefined,
+        onboardingSent: onboardingSent === 'true' ? true : onboardingSent === 'false' ? false : undefined,
+        search: search as string | undefined,
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 500,
+      });
+      return res.json(result);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het ophalen van medewerkers" });
+    }
+  });
+
+  app.get("/api/admin/employees/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const employee = await storage.getEmployee(id);
+      if (!employee) return res.status(404).json({ message: "Medewerker niet gevonden" });
+      return res.json(employee);
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
+  app.post("/api/admin/employees", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const data = insertEmployeeSchema.parse(req.body);
+      const employee = await storage.createEmployee(data);
+      return res.status(201).json(employee);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ongeldige gegevens", errors: error.errors });
+      }
+      console.error("Error creating employee:", error);
+      const msg = error?.message?.includes('unique') || error?.code === '23505'
+        ? "Er bestaat al een medewerker met dit e-mailadres"
+        : "Er is iets misgegaan bij het aanmaken van de medewerker";
+      return res.status(500).json({ message: msg });
+    }
+  });
+
+  app.put("/api/admin/employees/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const data = insertEmployeeSchema.partial().parse(req.body);
+      const employee = await storage.updateEmployee(id, data);
+      if (!employee) return res.status(404).json({ message: "Medewerker niet gevonden" });
+      return res.json(employee);
+    } catch (error) {
+      if (error instanceof ZodError) return res.status(400).json({ message: "Ongeldige gegevens", errors: error.errors });
+      console.error("Error updating employee:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
+  app.delete("/api/admin/employees/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const employee = await storage.getEmployee(id);
+      if (!employee) return res.status(404).json({ message: "Medewerker niet gevonden" });
+      if (employee.status !== 'uitgestroomd') {
+        return res.status(400).json({ message: "Alleen uitgestroomde medewerkers kunnen verwijderd worden" });
+      }
+      const ok = await storage.deleteEmployee(id);
+      return res.json({ success: ok });
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan" });
+    }
+  });
+
+  // Onboarding mail versturen (Stap 1: stub — markeert als verzonden + log entry)
+  app.post("/api/admin/employees/:id/onboarding-versturen", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { templateId, templateName } = req.body || {};
+      if (!templateId || typeof templateId !== 'number') {
+        return res.status(400).json({ message: "templateId is verplicht" });
+      }
+      const employee = await storage.getEmployee(id);
+      if (!employee) return res.status(404).json({ message: "Medewerker niet gevonden" });
+      if (!employee.email) return res.status(400).json({ message: "Voeg eerst een e-mailadres toe" });
+
+      // Stap 3 zal hier echt de mail versturen via mail-service.
+      // Voor nu alleen markeren + log entry aanmaken.
+      const updated = await storage.markEmployeeOnboardingSent(id, templateId, templateName);
+      return res.json({ success: true, sentAt: updated?.onboardingSentAt, employee: updated });
+    } catch (error) {
+      console.error("Error sending onboarding:", error);
+      return res.status(500).json({ message: "Er is iets misgegaan bij het versturen" });
+    }
+  });
+
+  // Sollicitant aannemen → maakt medewerker aan
+  app.post("/api/admin/candidates/:id/aannemen", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const candidateId = parseInt(req.params.id);
+      const candidate = await storage.getCandidate(candidateId);
+      if (!candidate) return res.status(404).json({ message: "Sollicitant niet gevonden" });
+      if (!candidate.email) return res.status(400).json({ message: "Sollicitant heeft geen e-mailadres" });
+
+      const { functie, branche, opdrachtgever, contractType, startDate, language } = req.body || {};
+
+      const employee = await storage.createEmployee({
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email,
+        phone: candidate.phone || null,
+        birthDate: candidate.birthDate || null,
+        city: candidate.city || null,
+        language: language || candidate.language || 'Nederlands',
+        functie: functie || candidate.functionType,
+        branche: branche || null,
+        opdrachtgever: opdrachtgever || null,
+        contractType: contractType || null,
+        startDate: startDate || null,
+        status: 'nieuw',
+        candidateId,
+      } as any);
+
+      // Update sollicitant naar aangenomen
+      await storage.updateCandidateStatus(candidateId, 'aangenomen');
+
+      return res.status(201).json({ employee });
+    } catch (error: any) {
+      console.error("Error aannemen candidate:", error);
+      const msg = error?.message?.includes('unique') || error?.code === '23505'
+        ? "Er bestaat al een medewerker met dit e-mailadres"
+        : "Er is iets misgegaan bij het aanmaken van de medewerker";
+      return res.status(500).json({ message: msg });
+    }
+  });
+
   // KPI Rapportage endpoint
   app.get("/api/admin/kpi", adminMiddleware, async (req: Request, res: Response) => {
     try {

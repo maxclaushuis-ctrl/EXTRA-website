@@ -1,0 +1,316 @@
+# Replit Prompt — Onboarding Stap 1: Medewerkers-tab
+
+## Wat je gaat doen
+Voeg een nieuw tabblad "Medewerkers" toe aan de bestaande MEDEWERKERS sectie in de navigatie. Medewerkers zijn sollicitanten die zijn aangenomen. Ze krijgen een eigen overzichtspagina met een medewerkersprofiel en een knop om handmatig een onboardingmail te versturen. Dit tabblad is de centrale plek voor het beheren van actieve medewerkers.
+
+---
+
+## 1. Navigatie — Medewerkers tabblad toevoegen
+
+Voeg "Medewerkers" toe aan de MEDEWERKERS sectie, direct onder "Sollicitanten":
+
+```
+MEDEWERKERS
+  Kandidaten
+  Sollicitanten
+  Medewerkers        ← nieuw
+  TWV
+```
+
+Icoon: persoon met vinkje icoon (bijv. `user-check`)
+Actieve staat: zelfde paarse stijl als de rest van de navigatie
+
+---
+
+## 2. Database schema — medewerkers tabel
+
+```sql
+CREATE TABLE IF NOT EXISTS medewerkers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+  -- Persoonlijke gegevens
+  voornaam TEXT NOT NULL,
+  achternaam TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  telefoon TEXT,
+  geboortedatum DATE,
+  stad TEXT,
+  taal TEXT DEFAULT 'Nederlands',     -- opties: Nederlands, Engels
+
+  -- Werk gegevens
+  functie TEXT,                        -- bijv. housekeeping, bediening, orderpicker
+  branche TEXT,                        -- bijv. Hotel, Logistiek
+  opdrachtgever TEXT,                  -- bijv. Budbee, StayOkay (vrij tekstveld)
+  contract_type TEXT,                  -- bijv. oproepkracht, parttimer, fulltimer
+  startdatum DATE,
+
+  -- Status
+  status TEXT DEFAULT 'nieuw',         -- nieuw, actief, inactief, uitgestroomd
+  tags TEXT DEFAULT '[]',              -- JSON array van tags
+
+  -- Onboarding
+  onboarding_verstuurd INTEGER DEFAULT 0,   -- 0 = nee, 1 = ja
+  onboarding_verstuurd_op DATETIME,
+  onboarding_template_id INTEGER,           -- welke template is verstuurd
+
+  -- Koppeling met sollicitant
+  sollicitant_id INTEGER,                   -- referentie naar bestaande sollicitanten tabel (indien gekoppeld)
+
+  -- Meta
+  notities TEXT,
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (sollicitant_id) REFERENCES sollicitanten(id)
+);
+```
+
+---
+
+## 3. Doorstroom vanuit Sollicitanten
+
+In het bestaande Sollicitanten-overzicht: voeg een actieknop toe per sollicitant:
+
+**Knop: "✓ Aannemen als medewerker"**
+- Zichtbaar in het sollicitantenprofiel (detailpagina of actiemenu)
+- Bij klikken: opent een klein modaal "Medewerker aanmaken"
+
+**Modaal "Medewerker aanmaken":**
+- Toont de naam en het e-mailadres van de sollicitant (vooringevuld, niet bewerkbaar)
+- Aanvullende velden om in te vullen:
+  - Functie (tekstveld met autocomplete op bestaande functies)
+  - Branche (dropdown: Hotel, Restaurant, Cateraar, Evenementenlocatie, Logistiek)
+  - Opdrachtgever (vrij tekstveld, bijv. "Budbee")
+  - Contract type (dropdown: Oproepkracht, Parttimer, Fulltimer)
+  - Startdatum (datepicker)
+  - Taal (dropdown: Nederlands, Engels — vooringevuld vanuit sollicitantprofiel indien beschikbaar)
+- Knop: "Medewerker aanmaken" → maakt record aan in medewerkers tabel, koppelt sollicitant_id
+- Na aanmaken: navigeer direct naar het nieuwe medewerkersprofiel
+- Toast: "Medewerker [naam] aangemaakt ✓"
+
+**Medewerker ook handmatig aanmaken:**
+- Knop "+ Nieuwe medewerker" in de medewerkers-overzichtspagina
+- Zelfde modaal maar zonder vooringevulde data en zonder sollicitant_id koppeling
+- Alle velden handmatig invullen
+
+---
+
+## 4. Medewerkers overzichtspagina
+
+**Layout:** zelfde sidebar + detailpaneel structuur als de Contacten-pagina
+
+### Linker paneel — medewerkerslijst
+
+- Zoekbalk (zoekt op naam, email, opdrachtgever)
+- Filterknop met dropdown:
+  - Status (Nieuw / Actief / Inactief / Uitgestroomd / Alles)
+  - Branche (multiselect pills)
+  - Functie (multiselect)
+  - Opdrachtgever (multiselect van unieke waarden)
+  - Taal (Nederlands / Engels / Alles)
+  - Onboarding verstuurd (Ja / Nee / Alles)
+- Sortering: Naam A-Z, Nieuwste eerst, Startdatum
+
+**Per medewerker in de lijst:**
+- Volledige naam + functie
+- Opdrachtgever (klein, grijs)
+- Status-badge:
+  - Nieuw → blauwe badge
+  - Actief → groene badge
+  - Inactief → grijze badge
+  - Uitgestroomd → rode badge
+- Onboarding-indicator: klein envelop-icoon ✉️ als onboarding verstuurd is, grijs kruis als niet
+
+**Statistieken balk bovenaan:**
+```
+[Totaal: X]  [Actief: X]  [Nieuw: X]  [Onboarding nog te sturen: X]
+```
+"Onboarding nog te sturen" kaart is klikbaar → filtert automatisch op onboarding_verstuurd = 0 en status = nieuw/actief
+
+---
+
+## 5. Medewerkersprofiel (rechter detailpaneel)
+
+Klik op een medewerker → slide-over paneel van rechts (500px breed)
+
+### Header
+- Volledige naam (groot, bold)
+- Functie + opdrachtgever (grijs)
+- Status-badge + bewerkknop + verwijderknop (met bevestigingsmodal)
+
+### Onboarding-banner (prominent, bovenaan het profiel)
+
+**Als onboarding NIET verstuurd:**
+```
+┌─────────────────────────────────────────────────────┐
+│ 📧 Onboarding mail nog niet verstuurd               │
+│ Stuur [voornaam] een welkomstmail om te starten     │
+│                                                      │
+│ Template: [Automatisch geselecteerd ▼]              │
+│                                                      │
+│         [✉️ Verstuur onboarding mail]               │
+└─────────────────────────────────────────────────────┘
+```
+- Lichte blauwe achtergrond (#EFF6FF), blauwe rand links
+- Template dropdown toont de automatisch geselecteerde template op basis van taal + functie + opdrachtgever
+- Gebruiker kan handmatig een andere template kiezen uit de dropdown
+- Knop "Verstuur onboarding mail" → zie sectie 6
+
+**Als onboarding WEL verstuurd:**
+```
+┌─────────────────────────────────────────────────────┐
+│ ✅ Onboarding mail verstuurd                        │
+│ Verzonden op: maandag 14 april 2026 om 09:32        │
+│ Template: "Welkom Horeca NL"                        │
+│                                    [Opnieuw sturen] │
+└─────────────────────────────────────────────────────┘
+```
+- Lichte groene achtergrond (#F0FDF4), groene rand links
+- "Opnieuw sturen" knop stuurt de mail nogmaals (met bevestigingsmodal)
+
+### Tabs in het profiel
+
+**Tab "Gegevens":**
+Twee kolommen, alle velden bewerkbaar via bewerkknop:
+
+*Persoonlijk:*
+- Voornaam, Achternaam
+- E-mailadres
+- Telefoonnummer
+- Geboortedatum
+- Stad
+- Taal
+
+*Werk:*
+- Functie
+- Branche
+- Opdrachtgever
+- Contract type
+- Startdatum
+
+*Classificatie:*
+- Status (dropdown)
+- Tags (vrij toevoegbaar, autocomplete)
+- Notities (textarea)
+
+**Tab "Onboarding historie":**
+Tabel van alle verzonden onboarding mails:
+| Template | Verstuurd op | Status |
+|----------|-------------|--------|
+| Welkom Horeca NL | 14 apr 09:32 | Verzonden ✓ |
+
+Leeg state: "Nog geen onboarding mails verstuurd"
+
+**Tab "Shifts / Historie":**
+Voorlopig leeg state: "Shift-historie volgt binnenkort"
+Klaar voor toekomstige koppeling met planningsmodule
+
+---
+
+## 6. Onboarding mail versturen — verzendlogica
+
+Bij klik op "Verstuur onboarding mail":
+
+1. Controleer of er een e-mailadres bekend is → zo niet: toon foutmelding "Voeg eerst een e-mailadres toe"
+2. Toon bevestigingsmodal:
+   ```
+   Onboarding mail versturen aan [voornaam achternaam]
+   E-mailadres: [email]
+   Template: [naam van geselecteerde template]
+   Bijlagen: [lijst van bijlagen in de template]
+
+   [Annuleren]  [✉️ Versturen]
+   ```
+3. Bij bevestiging:
+   - Roep de onboarding verzendservice aan (wordt gebouwd in stap 3)
+   - Update medewerker: onboarding_verstuurd = 1, onboarding_verstuurd_op = NOW(), onboarding_template_id = geselecteerde template
+   - Voeg record toe aan onboarding_log tabel
+   - Toast: "Onboarding mail verstuurd aan [naam] ✓"
+   - Onboarding-banner in het profiel update direct naar de groene "verstuurd" staat
+
+### Template automatische selectie
+De juiste template wordt automatisch geselecteerd op basis van:
+1. Opdrachtgever (meest specifiek — als er een opdrachtgever-specifieke template bestaat)
+2. Functie + taal (als geen opdrachtgever-specifieke template bestaat)
+3. Taal alleen (als fallback)
+4. Standaard NL template (als ultieme fallback)
+
+De gebruiker kan de automatisch geselecteerde template altijd handmatig overschrijven via de dropdown.
+
+---
+
+## 7. Bulk onboarding versturen
+
+In de medewerkers-overzichtspagina: selectiemodus via checkbox per medewerker
+
+- Checkbox linksboven in de lijst: selecteer alle gefilterde medewerkers
+- Bij selectie van ≥ 1 medewerker: actiebalk verschijnt onderaan:
+  ```
+  3 medewerkers geselecteerd
+  [✉️ Onboarding mail versturen aan selectie]
+  ```
+- Bij klik: bevestigingsmodal met lijst van ontvangers + geselecteerde templates per persoon
+- Bulk versturen gebruikt dezelfde verzendlogica als individueel versturen
+
+---
+
+## 8. Onboarding log tabel (database)
+
+```sql
+CREATE TABLE IF NOT EXISTS onboarding_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  medewerker_id INTEGER NOT NULL,
+  template_id INTEGER NOT NULL,
+  verstuurd_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  verstuurd_door TEXT DEFAULT 'handmatig',   -- handmatig of automatisch
+  status TEXT DEFAULT 'verzonden',            -- verzonden, mislukt
+  fout_melding TEXT,
+  FOREIGN KEY (medewerker_id) REFERENCES medewerkers(id)
+);
+```
+
+---
+
+## 9. API endpoints
+
+### GET /api/medewerkers
+- Alle medewerkers, filterbaar op status, branche, functie, opdrachtgever, taal, onboarding_verstuurd
+- Zoeken op naam, email, opdrachtgever
+- Sortering en paginering (20 per pagina)
+
+### GET /api/medewerkers/:id
+- Volledig medewerkersprofiel inclusief onboarding_log
+
+### POST /api/medewerkers
+- Nieuw medewerkerrecord aanmaken (handmatig of vanuit sollicitant)
+
+### PUT /api/medewerkers/:id
+- Profiel updaten
+
+### DELETE /api/medewerkers/:id
+- Verwijderen met bevestiging (alleen als status = uitgestroomd)
+
+### POST /api/medewerkers/:id/onboarding-versturen
+- Triggert de onboarding mail (wordt uitgewerkt in stap 3)
+- Body: { template_id: X }
+- Geeft terug: { success: true, verstuurd_op: datetime }
+
+### POST /api/sollicitanten/:id/aannemen
+- Maakt medewerkerrecord aan vanuit sollicitant
+- Body: { functie, branche, opdrachtgever, contract_type, startdatum, taal }
+- Geeft terug: { medewerker_id: X }
+
+---
+
+## 10. Stijlrichtlijnen
+
+- Zelfde sidebar + slide-over structuur als de Contacten-pagina (stap 1 van de campagnemodule)
+- Status badges: Nieuw = blauw, Actief = groen, Inactief = grijs, Uitgestroomd = rood
+- Onboarding niet verstuurd banner: #EFF6FF achtergrond, blauwe rand links (4px), #2563EB tekst
+- Onboarding verstuurd banner: #F0FDF4 achtergrond, groene rand links (4px), #059669 tekst
+- Verstuur-knop: #7C3AED, wit, volle breedte in de banner
+- Statistiekenkaart "Onboarding nog te sturen": oranje rand (#F59E0B) om aandacht te trekken
+
+---
+
+*Onboarding Stap 1 van 3 — EXTRA Medewerkers Module*
