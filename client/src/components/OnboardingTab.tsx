@@ -766,7 +766,18 @@ function TestmailModal({ open, onClose, templateId }: { open: boolean; onClose: 
       naar,
       medewerkerId: medewerkerId ? Number(medewerkerId) : undefined,
     }),
-    onSuccess: () => { toast({ title: 'Testmail verzonden ✓', description: `Naar ${naar}` }); onClose(); },
+    onSuccess: (res: any) => {
+      const count = typeof res?.bijlagenCount === 'number' ? res.bijlagenCount : 0;
+      const ontbrekend: string[] = Array.isArray(res?.ontbrekendeBijlagen) ? res.ontbrekendeBijlagen : [];
+      const bijlageTekst = count === 0 ? 'zonder bijlagen' : `${count} bijlage${count === 1 ? '' : 'n'} meegestuurd`;
+      const ontbrekendTekst = ontbrekend.length ? ` · ontbrekend: ${ontbrekend.join(', ')}` : '';
+      toast({
+        title: 'Testmail verzonden ✓',
+        description: `Naar ${naar} — ${bijlageTekst}${ontbrekendTekst}`,
+        variant: ontbrekend.length ? 'destructive' : 'default',
+      });
+      onClose();
+    },
     onError: (e: any) => toast({ title: 'Versturen mislukt', description: e?.message, variant: 'destructive' }),
   });
 
