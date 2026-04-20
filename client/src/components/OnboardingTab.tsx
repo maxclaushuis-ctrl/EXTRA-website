@@ -242,6 +242,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const bijlagenSectionRef = useRef<HTMLDivElement | null>(null);
   const [bijlagenFlash, setBijlagenFlash] = useState(false);
+  const [verwijderdeKoppelingen, setVerwijderdeKoppelingen] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (tpl) {
@@ -296,6 +297,13 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   const ontkoppelMutation = useMutation({
     mutationFn: (koppelingId: number) => apiRequest('DELETE', `/api/onboarding/template-bijlagen/${koppelingId}`),
     onMutate: async (koppelingId: number) => {
+      // 1) Direct uit UI verwijderen via lokale state — geen wachten op cache of server
+      setVerwijderdeKoppelingen(prev => {
+        const n = new Set(prev);
+        n.add(koppelingId);
+        return n;
+      });
+      // 2) Cancel pending queries en update cache optimistisch
       await queryClient.cancelQueries({ queryKey: ['/api/onboarding/templates', templateId] });
       const previous = queryClient.getQueryData<OnboardingTemplateMetBijlagen>(['/api/onboarding/templates', templateId]);
       if (previous) {
@@ -306,16 +314,39 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
       }
       return { previous };
     },
-    onError: (err: any, _koppelingId, ctx) => {
+    onSuccess: (_data, koppelingId) => {
+      // Server delete slaagde — laat lokale filter staan totdat de cache opnieuw geladen is
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+    },
+    onError: (err: any, koppelingId, ctx) => {
+      // Server delete mislukte — terugzetten in UI
+      setVerwijderdeKoppelingen(prev => {
+        const n = new Set(prev);
+        n.delete(koppelingId);
+        return n;
+      });
       if (ctx?.previous) {
         queryClient.setQueryData(['/api/onboarding/templates', templateId], ctx.previous);
       }
       toast({ title: 'Ontkoppelen mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
-    },
   });
+
+  // Schoon de lokale verwijder-set zodra de server-data weer binnen is zonder die items
+  useEffect(() => {
+    if (!tpl?.bijlagen) return;
+    const huidigeKoppelingen = new Set(tpl.bijlagen.map(b => b.koppelingId));
+    setVerwijderdeKoppelingen(prev => {
+      let veranderd = false;
+      const n = new Set<number>();
+      prev.forEach(id => {
+        if (huidigeKoppelingen.has(id)) n.add(id);
+        else veranderd = true;
+      });
+      return veranderd ? n : prev;
+    });
+  }, [tpl?.bijlagen]);
 
   const reorderMutation = useMutation({
     mutationFn: async ({ koppelingId, volgorde }: { koppelingId: number; volgorde: number }) =>
@@ -551,10 +582,10 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
           )}
         </h3>
         <div className="space-y-2">
-          {(tpl.bijlagen || []).length === 0 && (
+          {((tpl.bijlagen || []).filter(b => !verwijderdeKoppelingen.has(b.koppelingId))).length === 0 && (
             <div className="text-sm text-gray-400 italic">Nog geen bijlagen gekoppeld</div>
           )}
-          {(tpl.bijlagen || []).map((b, idx, arr) => (
+          {(tpl.bijlagen || []).filter(b => !verwijderdeKoppelingen.has(b.koppelingId)).map((b, idx, arr) => (
             <div key={b.koppelingId} className="flex items-center gap-2 p-2 border border-gray-200 rounded-md">
               <div className="flex flex-col">
                 <button

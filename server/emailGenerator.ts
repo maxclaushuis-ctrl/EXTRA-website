@@ -103,7 +103,8 @@ export function generateEmailHTML(
   const settings = parsed.instellingen ?? {};
   const bgEmail = settings.achtergrond_email || '#F9FAFB';
   const bgInhoud = settings.achtergrond_inhoud || '#FFFFFF';
-  const font = settings.lettertype || 'Inter, Arial, sans-serif';
+  const fontName = settings.lettertype || 'Poppins';
+  const font = `'${fontName}', Arial, Helvetica, sans-serif`;
   const tekstkleur = settings.tekstkleur || '#111827';
   const unsubTekst = settings.unsubscribe_tekst || 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.';
   const layOut = settings.lay_out ?? 'extra';
@@ -156,8 +157,13 @@ export function generateEmailHTML(
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>E-mail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!--[if mso]><style>* { font-family: Arial, Helvetica, sans-serif !important; }</style><![endif]-->
   <style>
     body { margin:0; padding:0; background-color:${bgEmail}; font-family:${font}; }
+    h1, h2, h3, .email-heading { font-family:${font} !important; font-weight:800 !important; letter-spacing:-0.01em; }
     @media only screen and (max-width:600px) { .email-wrapper { width:100% !important; } .email-content { padding:24px 18px !important; } }
   </style>
 </head>
@@ -188,7 +194,7 @@ function renderBlockHtml(blok: BuilderBlock, contact: ContactData, nl: boolean, 
     case 'koptekst': {
       const tag = blok.niveau || 'h2';
       const size = tag === 'h1' ? '26px' : tag === 'h2' ? '22px' : '18px';
-      return `<${tag} style="font-size:${size};font-weight:700;color:${blok.kleur || '#111827'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px">${p(blok.tekst || '')}</${tag}>`;
+      return `<${tag} class="email-heading" style="font-size:${size};font-weight:800;color:${blok.kleur || '#111827'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px;letter-spacing:-0.01em">${p(blok.tekst || '')}</${tag}>`;
     }
     case 'paragraaf':
       return `<p style="font-size:15px;color:${blok.kleur || '#374151'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px;line-height:1.7">${p(blok.tekst || '').replace(/\n/g, '<br/>')}</p>`;

@@ -61,7 +61,7 @@ export type BuilderContent = {
 const DEFAULT_SETTINGS: BuilderSettings = {
   achtergrond_email: '#F9FAFB',
   achtergrond_inhoud: '#FFFFFF',
-  lettertype: 'Inter',
+  lettertype: 'Poppins',
   tekstkleur: '#111827',
   unsubscribe_tekst: 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.',
   lay_out: 'extra',
@@ -461,7 +461,7 @@ function SettingsPanel({ settings, onChange }: { settings: BuilderSettings; onCh
             <Select value={settings.lettertype} onValueChange={v => onChange({ lettertype: v })}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {['Inter','Outfit','Arial','Georgia'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                {['Poppins','Inter','Outfit','Arial','Georgia'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
