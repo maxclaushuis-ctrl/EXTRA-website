@@ -56,6 +56,18 @@ function isNl(taal?: string | null): boolean {
   return t === 'nl' || t === 'nederlands' || t === 'dutch';
 }
 
+// Inline-link parser: zet [tekst](url) om naar veilige <a>-tags
+// Ondersteunt http(s):, mailto:, tel: schemes. Andere worden geweigerd.
+export function renderInlineLinks(text: string): string {
+  if (!text) return '';
+  return text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label: string, url: string) => {
+    const trimmed = url.trim();
+    const safe = /^(https?:|mailto:|tel:)/i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/+/, '')}`;
+    const escapedUrl = safe.replace(/"/g, '&quot;');
+    return `<a href="${escapedUrl}" style="color:#7c3aed;text-decoration:underline" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+}
+
 export function personalizeText(text: string, contact: ContactData): string {
   const voornaam = contact.voornaam || '';
   const achternaam = contact.achternaam || '';
@@ -194,10 +206,10 @@ function renderBlockHtml(blok: BuilderBlock, contact: ContactData, nl: boolean, 
     case 'koptekst': {
       const tag = blok.niveau || 'h2';
       const size = tag === 'h1' ? '26px' : tag === 'h2' ? '22px' : '18px';
-      return `<${tag} class="email-heading" style="font-size:${size};font-weight:800;color:${blok.kleur || '#111827'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px;letter-spacing:-0.01em">${p(blok.tekst || '')}</${tag}>`;
+      return `<${tag} class="email-heading" style="font-size:${size};font-weight:800;color:${blok.kleur || '#111827'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px;letter-spacing:-0.01em">${renderInlineLinks(p(blok.tekst || ''))}</${tag}>`;
     }
     case 'paragraaf':
-      return `<p style="font-size:15px;color:${blok.kleur || '#374151'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px;line-height:1.7">${p(blok.tekst || '').replace(/\n/g, '<br/>')}</p>`;
+      return `<p style="font-size:15px;color:${blok.kleur || '#374151'};text-align:${blok.uitlijning || 'left'};margin:0 0 16px;line-height:1.7">${renderInlineLinks(p(blok.tekst || '')).replace(/\n/g, '<br/>')}</p>`;
     case 'knop': {
       const url = clickUrl
         ? `${clickUrl}?dest=${encodeURIComponent(blok.url || '#')}`

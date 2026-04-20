@@ -24,8 +24,23 @@ import {
 import {
   ArrowLeft, Save, Eye, Mail, Monitor, Smartphone, Plus, Trash2, X,
   ChevronDown, ChevronRight, AlertCircle, RefreshCw, Type, AlignLeft,
-  Image as ImageIcon, Minus, Square, Tag as TagIcon, Globe, User,
+  Image as ImageIcon, Minus, Square, Tag as TagIcon, Globe, User, Link as LinkIcon,
 } from "lucide-react";
+
+// ─── Inline-link parser (zelfde regels als server-side) ──────────────────────
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+export function renderInlineLinksHtml(text: string): string {
+  if (!text) return '';
+  // Eerst escape, dan link-syntax weer parsen (op het al-escape'de patroon)
+  const escaped = escapeHtml(text);
+  return escaped.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label: string, url: string) => {
+    const trimmed = url.trim();
+    const safe = /^(https?:|mailto:|tel:)/i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/+/, '')}`;
+    return `<a href="${safe}" style="color:#7c3aed;text-decoration:underline" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type BuilderSettings = {
@@ -139,14 +154,20 @@ export function BlockPreview({ blok, selected, onClick }: { blok: BuilderBlock; 
   return (
     <div className={cls} onClick={onClick}>
       {blok.type === 'koptekst' && (
-        <div style={{ textAlign: blok.uitlijning, color: blok.kleur, fontWeight: 700, fontSize: blok.niveau === 'h1' ? '26px' : blok.niveau === 'h2' ? '22px' : '18px', lineHeight: 1.3 }}>
-          {blok.tekst || <span className="text-gray-300">Kopregel...</span>}
-        </div>
+        blok.tekst
+          ? <div
+              style={{ textAlign: blok.uitlijning, color: blok.kleur, fontWeight: 800, fontSize: blok.niveau === 'h1' ? '26px' : blok.niveau === 'h2' ? '22px' : '18px', lineHeight: 1.3, letterSpacing: '-0.01em' }}
+              dangerouslySetInnerHTML={{ __html: renderInlineLinksHtml(blok.tekst) }}
+            />
+          : <div style={{ textAlign: blok.uitlijning, color: blok.kleur, fontWeight: 800, fontSize: blok.niveau === 'h1' ? '26px' : blok.niveau === 'h2' ? '22px' : '18px', lineHeight: 1.3 }}><span className="text-gray-300">Kopregel...</span></div>
       )}
       {blok.type === 'paragraaf' && (
-        <div style={{ textAlign: blok.uitlijning, color: blok.kleur, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-          {blok.tekst || <span className="text-gray-300">Paragraaf tekst...</span>}
-        </div>
+        blok.tekst
+          ? <div
+              style={{ textAlign: blok.uitlijning, color: blok.kleur, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}
+              dangerouslySetInnerHTML={{ __html: renderInlineLinksHtml(blok.tekst) }}
+            />
+          : <div style={{ textAlign: blok.uitlijning, color: blok.kleur, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}><span className="text-gray-300">Paragraaf tekst...</span></div>
       )}
       {blok.type === 'knop' && (
         <div style={{ textAlign: blok.uitlijning }}>
@@ -216,6 +237,66 @@ function insertTagIntoTextarea(textareaRef: React.RefObject<HTMLTextAreaElement 
   setTimeout(() => { el.focus(); el.setSelectionRange(start + tag.length, start + tag.length); }, 10);
 }
 
+function LinkInsertButton({ refEl, onChange, currentText }: { refEl: React.RefObject<any>; onChange: (v: string) => void; currentText: string }) {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState('');
+  const [url, setUrl] = useState('https://');
+
+  const openDialog = () => {
+    const el = refEl.current;
+    const start = el?.selectionStart ?? 0;
+    const end = el?.selectionEnd ?? 0;
+    const selected = (currentText || '').slice(start, end);
+    setLabel(selected || 'klik hier');
+    setUrl('https://');
+    setOpen(true);
+  };
+
+  const insert = () => {
+    const cleanLabel = (label || 'link').replace(/[\[\]]/g, '');
+    const cleanUrl = (url || '').trim();
+    if (!cleanUrl) return;
+    const snippet = `[${cleanLabel}](${cleanUrl})`;
+    insertTagIntoTextarea(refEl, snippet, onChange);
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={openDialog}
+        className="text-xs px-2 py-1 rounded border border-gray-200 text-purple-600 hover:bg-purple-50 transition-colors flex items-center gap-1"
+        title="Link invoegen"
+      >
+        <LinkIcon className="h-3 w-3" /> Link
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Link invoegen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs text-gray-500 mb-1 block">Linktekst</Label>
+              <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="bv. ons afmeldprotocol" />
+            </div>
+            <div>
+              <Label className="text-xs text-gray-500 mb-1 block">URL</Label>
+              <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://doehetextra.nl/..." />
+              <p className="text-[10px] text-gray-400 mt-1">Tip: gebruik <code className="font-mono">mailto:</code> voor e-mail of <code className="font-mono">tel:</code> voor telefoon.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
+            <Button onClick={insert} disabled={!url.trim() || !label.trim()} className="bg-purple-600 hover:bg-purple-700">Invoegen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function TagInsertButton({ refEl, onChange }: { refEl: React.RefObject<any>; onChange: (v: string) => void }) {
   const tags = useContext(PersonalTagsContext);
   return (
@@ -244,7 +325,10 @@ export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChan
       <div>
         <div className="flex items-center justify-between mb-1">
           <Label className="text-xs text-gray-500">Tekst</Label>
-          <TagInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} />
+          <div className="flex gap-1">
+            <LinkInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} currentText={blok.tekst} />
+            <TagInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} />
+          </div>
         </div>
         <Input ref={textRef} value={blok.tekst} onChange={e => onChange({ tekst: e.target.value } as any)} className="text-sm" />
       </div>
@@ -278,9 +362,13 @@ export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChan
       <div>
         <div className="flex items-center justify-between mb-1">
           <Label className="text-xs text-gray-500">Tekst</Label>
-          <TagInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} />
+          <div className="flex gap-1">
+            <LinkInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} currentText={blok.tekst} />
+            <TagInsertButton refEl={textRef} onChange={v => onChange({ tekst: v } as any)} />
+          </div>
         </div>
         <Textarea ref={textRef} value={blok.tekst} onChange={e => onChange({ tekst: e.target.value } as any)} rows={5} className="text-sm resize-none" />
+        <p className="text-[10px] text-gray-400 mt-1">Tip: links via knop hierboven, of typ <code className="font-mono">[tekst](https://...)</code>.</p>
       </div>
       <div>
         <Label className="text-xs text-gray-500 mb-1 block">Uitlijning</Label>
