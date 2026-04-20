@@ -229,6 +229,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   const { toast } = useToast();
   const { data: tpl, isLoading } = useQuery<OnboardingTemplateMetBijlagen>({
     queryKey: ['/api/onboarding/templates', templateId],
+    queryFn: () => apiRequest(`/api/onboarding/templates/${templateId}`) as Promise<OnboardingTemplateMetBijlagen>,
   });
 
   const [form, setForm] = useState<any>(null);
