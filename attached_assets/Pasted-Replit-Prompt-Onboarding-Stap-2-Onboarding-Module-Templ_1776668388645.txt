@@ -1,0 +1,311 @@
+Replit Prompt — Onboarding Stap 2: Onboarding Module & Template Beheer
+Wat je gaat doen
+Bouw een "Onboarding" pagina bereikbaar via de CAMPAGNES sectie in de navigatie. Dit is de centrale plek voor het beheren van onboarding e-mail templates, bijlagen en statistieken. De editor is dezelfde als die van de klantcampagnes, maar toegespitst op medewerker-onboarding. Templates zijn instelbaar per taal, functie en opdrachtgever.
+
+1. Navigatie — Onboarding toevoegen aan CAMPAGNES
+Pas de bestaande navigatie aan:
+CAMPAGNES
+  Contacten
+  E-mail campagnes
+  Onboarding           ← nieuw, tussen E-mail campagnes en Statistieken
+  Statistieken
+  Scheduler
+
+Label: Onboarding
+Icoon: envelop met vinkje (mail-check of vergelijkbaar)
+Route: /onboarding
+Actieve staat: zelfde paarse stijl (#7C3AED achtergrond, paarse tekst) als de andere actieve items
+Stijl: identiek aan bestaande items — zelfde padding, font, icoongrootte
+Alle bestaande routes en navigatie-items blijven ongewijzigd
+
+
+2. Database schema
+sqlCREATE TABLE IF NOT EXISTS onboarding_templates (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  naam TEXT NOT NULL,
+  taal TEXT DEFAULT 'Nederlands',      -- opties: Nederlands, Engels
+  functiegroep TEXT,                   -- leeg = alle functies
+  opdrachtgever TEXT,                  -- leeg = alle opdrachtgevers
+  onderwerp TEXT NOT NULL,
+  content TEXT,                        -- JSON van e-mailblokken
+  is_standaard INTEGER DEFAULT 0,      -- 1 = standaard fallback voor deze taal
+  actief INTEGER DEFAULT 1,
+  aangemaakt_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS onboarding_bijlagen (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  naam TEXT NOT NULL,
+  bestandsnaam TEXT NOT NULL,
+  bestandspad TEXT NOT NULL,
+  bestandsgrootte INTEGER,
+  taal TEXT DEFAULT 'alles',           -- opties: alles, Nederlands, Engels
+  versie TEXT,
+  actief INTEGER DEFAULT 1,
+  geupload_op DATETIME DEFAULT CURRENT_TIMESTAMP,
+  bijgewerkt_op DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS onboarding_template_bijlagen (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  template_id INTEGER NOT NULL,
+  bijlage_id INTEGER NOT NULL,
+  volgorde INTEGER DEFAULT 0,
+  FOREIGN KEY (template_id) REFERENCES onboarding_templates(id),
+  FOREIGN KEY (bijlage_id) REFERENCES onboarding_bijlagen(id)
+);
+
+3. Pagina layout — /onboarding
+[Topbalk: "Onboarding" titel]
+[Drie tabs: "Templates"  |  "Bijlagen"  |  "Statistieken"]
+
+4. Tab "Templates"
+Linker paneel (300px)
+
+Knop "+ Nieuwe template" bovenaan
+Filteropties:
+
+Taal: Nederlands / Engels / Alles
+Functiegroep: multiselect van bestaande waarden
+Opdrachtgever: multiselect van bestaande waarden
+
+
+Per template in de lijst:
+
+Naam (bold)
+Taal-badge (NL of EN pill)
+Functiegroep (grijs, klein) of "Alle functies"
+Opdrachtgever (grijs, klein) of "Alle opdrachtgevers"
+Standaard-badge (⭐ als is_standaard = 1)
+Actief/inactief indicator
+
+
+
+Rechter paneel — template detail
+Header:
+
+Templatenaam (bewerkbaar inline)
+Bewerkknop + dupliceerknop + verwijderknop
+Toggle: Actief / Inactief
+
+Sectie: Instellingen
+Naam:           [bewerkbaar tekstveld]
+Taal:           [Nederlands ▼]
+Functiegroep:   [housekeeping ▼]   (leeg = alle functies)
+Opdrachtgever:  [bijv. Budbee]     (leeg = alle opdrachtgevers)
+Standaard:      ☐ Gebruik als standaard fallback voor deze taal
+Toelichting bij Standaard: "Als geen specifiekere template gevonden wordt, wordt deze gebruikt voor alle medewerkers met deze taal."
+Sectie: E-mail inhoud
+
+Onderwerpregel (tekstveld)
+Kleine hint: "Gebruik {{voornaam}}, {{bedrijf}} etc. voor personalisatie"
+Knop "✏️ Template opmaken" → opent de e-mail builder (zelfde als campagnes)
+
+Sectie: Bijlagen
+📄 Afmeldprotocol.pdf     [↕] [✕]
+📄 Jixbee uitleg.pdf      [↕] [✕]
+[+ Bijlage toevoegen]
+
+Sleep-icoon (↕) voor volgorde aanpassen
+Verwijder-icoon (✕) om bijlage los te koppelen van template
+"+ Bijlage toevoegen" opent picker met bijlagenbibliotheek
+
+Sectie: Beschikbare personalisatie-tags
+{{voornaam}}        Voornaam medewerker
+{{achternaam}}      Achternaam medewerker
+{{naam}}            Volledige naam
+{{functie}}         Functie, bijv. "housekeeping"
+{{opdrachtgever}}   Opdrachtgever, bijv. "Budbee"
+{{startdatum}}      Startdatum, bijv. "14 april 2026"
+
+5. Template aanmaken — modaal
+Knop "+ Nieuwe template" opent een modaal:
+Template aanmaken
+─────────────────
+Naam*:          [bijv. Welkom Horeca NL]
+Taal*:          [Nederlands ▼]
+Functiegroep:   [housekeeping ▼]   (optioneel)
+Opdrachtgever:  [bijv. Budbee]     (optioneel, vrij tekstveld)
+Standaard:      ☐ Standaard fallback voor deze taal
+
+[Annuleren]  [Template aanmaken →]
+Na aanmaken:
+
+Navigeer direct naar de template detailpagina
+Toon lege e-mail builder klaar om in te vullen
+Toast: "Template '[naam]' aangemaakt ✓"
+
+
+6. Template selectie logica
+Bouw een functie selecteerOnboardingTemplate(medewerker) die de best passende template selecteert van meest naar minst specifiek:
+javascriptasync function selecteerOnboardingTemplate(medewerker) {
+  const { taal, functie, opdrachtgever } = medewerker;
+  const kandidaten = await getTemplates({ actief: 1 });
+
+  return (
+    // 1. Opdrachtgever + functie + taal (meest specifiek)
+    kandidaten.find(t =>
+      t.opdrachtgever === opdrachtgever &&
+      t.functiegroep === functie &&
+      t.taal === taal
+    ) ||
+    // 2. Opdrachtgever + taal
+    kandidaten.find(t =>
+      t.opdrachtgever === opdrachtgever &&
+      !t.functiegroep &&
+      t.taal === taal
+    ) ||
+    // 3. Functie + taal
+    kandidaten.find(t =>
+      !t.opdrachtgever &&
+      t.functiegroep === functie &&
+      t.taal === taal
+    ) ||
+    // 4. Standaard voor deze taal
+    kandidaten.find(t =>
+      !t.opdrachtgever &&
+      !t.functiegroep &&
+      t.taal === taal &&
+      t.is_standaard === 1
+    ) ||
+    // 5. Nederlandse standaard (ultieme fallback)
+    kandidaten.find(t =>
+      t.taal === 'Nederlands' &&
+      t.is_standaard === 1
+    )
+  );
+}
+
+7. Tab "Bijlagen" — bijlagenbibliotheek
+Overzicht tabel
+NaamBestandsnaamTaalGrootteVersieGeüploadActiesAfmeldprotocolafmeldprotocol.pdfAlles245 KBv2.014 apr[👁️] [🔄] [🗑️]
+Acties per bijlage:
+
+👁️ Bekijken: opent PDF in nieuw tabblad
+🔄 Vervangen: upload nieuwe versie, koppelingen met templates blijven behouden
+🗑️ Verwijderen: alleen mogelijk als bijlage niet gekoppeld is aan actieve templates, anders: waarschuwing "Bijlage is gekoppeld aan X templates"
+
+Bijlage uploaden — modaal
+Bijlage uploaden
+────────────────
+[Drag & drop of klik om een PDF te selecteren]
+Alleen PDF bestanden, max 10 MB
+
+Naam*:    [bijv. Afmeldprotocol]
+Taal:     [Alles ▼]   (opties: Alles, Nederlands, Engels)
+Versie:   [bijv. v2.0]
+
+[Annuleren]  [Uploaden]
+Upload implementatie (server-side):
+
+Installeer: npm install multer
+Sla op in /uploads/onboarding-bijlagen/ directory
+Genereer unieke bestandsnaam: [timestamp]-[originele-naam].pdf
+Valideer: alleen PDF, max 10MB
+Sla metadata op in onboarding_bijlagen tabel
+
+
+8. Tab "Statistieken"
+KPI kaarten bovenaan:
+[Totaal verstuurd: X]  [Deze maand: X]  [Meest gebruikt: "Welkom NL"]
+Tabel: laatste 50 onboarding verzendingen:
+MedewerkerTemplateOpdrachtgeverVerstuurd opStatusJan de VriesWelkom Horeca NLBudbee14 apr 09:32✓ Verzonden
+
+Klik op rij → navigeer naar medewerkersprofiel
+Knop "⬇ Exporteer als CSV" rechtsboven
+
+Bestandsnaam: EXTRA-onboarding-log-[datum].csv
+Kolommen: Naam, Email, Opdrachtgever, Template, Verstuurd op, Status
+
+
+
+
+9. E-mail builder aanpassingen voor onboarding
+Gebruik exact dezelfde builder als campagnes, met deze verschillen:
+Niet beschikbaar:
+
+Taalvariant-blok (onboarding heeft aparte templates per taal)
+A/B variant tabs
+
+Extra blok: Bijlagen-blok
+
+Toont de aan de template gekoppelde PDF's als knoppen in de mail preview
+Bij verzending worden bijlagen als echte e-mailbijlagen meegestuurd (niet als links)
+Weergave in de mail:
+
+  📄 Afmeldprotocol downloaden
+  📄 Jixbee uitleg downloaden
+
+Knoppen: #7C3AED achtergrond, witte tekst
+
+Personalisatie-tags: {{voornaam}}, {{achternaam}}, {{naam}}, {{functie}}, {{opdrachtgever}}, {{startdatum}}
+Geen trackingpixel en geen unsubscribe link — onboarding mails zijn transactioneel
+Auto-save: elke 1.5 seconden, sla content op als JSON in onboarding_templates.content
+
+10. API endpoints
+Templates
+
+GET /api/onboarding/templates — alle templates, filterbaar op taal, functiegroep, opdrachtgever, actief
+GET /api/onboarding/templates/:id — volledig inclusief gekoppelde bijlagen
+POST /api/onboarding/templates — nieuwe template aanmaken
+PUT /api/onboarding/templates/:id — updaten inclusief content
+DELETE /api/onboarding/templates/:id — verwijderen
+GET /api/onboarding/templates/selecteer?taal=&functie=&opdrachtgever= — beste match teruggeven op basis van selectielogica
+
+Bijlagen
+
+POST /api/onboarding/bijlagen — multipart upload
+GET /api/onboarding/bijlagen — lijst, filterbaar op taal en actief
+GET /api/onboarding/bijlagen/:id/bekijken — PDF in browser (Content-Type: application/pdf, Content-Disposition: inline)
+PUT /api/onboarding/bijlagen/:id/vervangen — nieuwe versie uploaden
+DELETE /api/onboarding/bijlagen/:id — verwijderen met koppelingscheck
+
+Koppelingen
+
+POST /api/onboarding/template-bijlagen — bijlage aan template koppelen, body: { template_id, bijlage_id, volgorde }
+DELETE /api/onboarding/template-bijlagen/:id — bijlage loskoppelen
+
+Statistieken
+
+GET /api/onboarding/statistieken — KPI's + laatste 50 verzendingen
+GET /api/onboarding/statistieken/export/csv — CSV export
+
+
+11. Standaard templates aanmaken bij eerste start
+Maak automatisch aan als er nog geen templates bestaan:
+Template 1: "Welkom bij EXTRA (NL)"
+
+Taal: Nederlands
+Functiegroep: leeg
+Opdrachtgever: leeg
+is_standaard: 1
+Onderwerp: Welkom bij het EXTRA team, {{voornaam}}! 🎉
+Content: basis welkomstmail in het Nederlands
+
+Template 2: "Welcome to EXTRA (EN)"
+
+Taal: Engels
+Functiegroep: leeg
+Opdrachtgever: leeg
+is_standaard: 1
+Onderwerp: Welcome to the EXTRA team, {{voornaam}}! 🎉
+Content: basis welkomstmail in het Engels
+
+
+12. Installatie
+bashnpm install multer
+mkdir -p uploads/onboarding-bijlagen
+Voeg toe aan .gitignore:
+uploads/onboarding-bijlagen/
+Zorg dat de uploads directory persistent is in de Replit-omgeving.
+
+Stijlrichtlijnen
+
+Twee-koloms layout: templatelijst links (300px), detail rechts
+Upload zone: gestippelde rand (#D1D5DB), lichtgrijs, 200px hoog
+Upload zone hover: paarse rand (#7C3AED), licht paarse achtergrond (#F5F3FF)
+PDF icoon: rood (#DC2626) voor herkenbaarheid
+Bijlagentabel: zebra-striping (wit / #F9FAFB)
+Alle pills/badges: border-radius 9999px
+Toasts rechtsboven, 3 seconden zichtbaar
