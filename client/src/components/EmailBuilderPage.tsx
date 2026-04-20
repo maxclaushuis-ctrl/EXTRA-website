@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, createContext, useContext } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +62,9 @@ const DEFAULT_SETTINGS: BuilderSettings = {
   unsubscribe_tekst: 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.',
 };
 
-const PERSONAL_TAGS = [
+export type PersonalTag = { tag: string; label: string };
+
+const DEFAULT_PERSONAL_TAGS: PersonalTag[] = [
   { tag: '{{voornaam}}', label: 'Voornaam' },
   { tag: '{{achternaam}}', label: 'Achternaam' },
   { tag: '{{naam}}', label: 'Volledige naam' },
@@ -71,9 +73,12 @@ const PERSONAL_TAGS = [
   { tag: '{{stad}}', label: 'Stad' },
 ];
 
-function genId() { return `blok_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; }
+export const PersonalTagsContext = createContext<PersonalTag[]>(DEFAULT_PERSONAL_TAGS);
 
-function makeBlock(type: BuilderBlock['type']): BuilderBlock {
+function genId() { return `blok_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; }
+export { genId };
+
+export function makeBlock(type: BuilderBlock['type']): BuilderBlock {
   const id = genId();
   switch (type) {
     case 'koptekst': return { id, type, tekst: 'Kopregel', niveau: 'h2', uitlijning: 'left', kleur: '#111827' };
@@ -92,7 +97,7 @@ function emptyContent(): BuilderContent {
   return { modus: 'html', instellingen: { ...DEFAULT_SETTINGS }, blokken: [] };
 }
 
-function parseContent(raw: string | null | undefined): BuilderContent {
+export function parseContent(raw: string | null | undefined): BuilderContent {
   if (!raw) return emptyContent();
   try {
     const parsed = JSON.parse(raw);
@@ -119,7 +124,7 @@ function parseContent(raw: string | null | undefined): BuilderContent {
 }
 
 // ─── Block renderer (canvas preview) ─────────────────────────────────────────
-function BlockPreview({ blok, selected, onClick }: { blok: BuilderBlock; selected: boolean; onClick: () => void }) {
+export function BlockPreview({ blok, selected, onClick }: { blok: BuilderBlock; selected: boolean; onClick: () => void }) {
   const [hovNl, setHovNl] = useState(true);
   const cls = `relative rounded transition-all cursor-pointer ${selected ? 'ring-2 ring-purple-500 ring-offset-1' : 'hover:ring-1 hover:ring-purple-200'} px-1 py-0.5`;
 
@@ -204,6 +209,7 @@ function insertTagIntoTextarea(textareaRef: React.RefObject<HTMLTextAreaElement 
 }
 
 function TagInsertButton({ refEl, onChange }: { refEl: React.RefObject<any>; onChange: (v: string) => void }) {
+  const tags = useContext(PersonalTagsContext);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -212,7 +218,7 @@ function TagInsertButton({ refEl, onChange }: { refEl: React.RefObject<any>; onC
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48">
-        {PERSONAL_TAGS.map(t => (
+        {tags.map(t => (
           <DropdownMenuItem key={t.tag} onClick={() => insertTagIntoTextarea(refEl, t.tag, onChange)}>
             <span className="font-mono text-xs text-purple-600 mr-2">{t.tag}</span>{t.label}
           </DropdownMenuItem>
@@ -222,7 +228,7 @@ function TagInsertButton({ refEl, onChange }: { refEl: React.RefObject<any>; onC
   );
 }
 
-function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChange: (patch: Partial<BuilderBlock>) => void }) {
+export function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChange: (patch: Partial<BuilderBlock>) => void }) {
   const textRef = useRef<any>(null);
 
   if (blok.type === 'koptekst') return (
@@ -412,7 +418,7 @@ function BlockProperties({ blok, onChange }: { blok: BuilderBlock; onChange: (pa
 }
 
 // ─── Add blocks menu ──────────────────────────────────────────────────────────
-const BLOCK_TYPES: { type: BuilderBlock['type']; label: string; icon: any; desc: string }[] = [
+export const BLOCK_TYPES: { type: BuilderBlock['type']; label: string; icon: any; desc: string }[] = [
   { type: 'aanhef',       label: 'Aanhef',          icon: User,       desc: 'Gepersonaliseerde opening' },
   { type: 'koptekst',     label: 'Koptekst',         icon: Type,       desc: 'H1 / H2 / H3 titel' },
   { type: 'paragraaf',    label: 'Paragraaf',        icon: AlignLeft,  desc: 'Tekstblok' },

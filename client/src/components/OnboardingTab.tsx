@@ -13,9 +13,11 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   Plus, Trash2, Copy, Star, FileText, Eye, RotateCcw, Upload, Download,
-  Mail, Paperclip, Save, CheckCircle2, AlertCircle, X, GripVertical,
+  Mail, Paperclip, Save, CheckCircle2, AlertCircle, X, GripVertical, Monitor, Smartphone,
 } from 'lucide-react';
 import type { OnboardingTemplate, OnboardingBijlage, OnboardingTemplateMetBijlagen } from '@shared/schema';
+import OnboardingEmailBuilder, { migreerNaarBuilderContent } from '@/components/OnboardingEmailBuilder';
+import type { BuilderContent } from '@/components/EmailBuilderPage';
 
 const PERSONALISATIE_TAGS = [
   { tag: '{{voornaam}}', uitleg: 'Voornaam medewerker' },
@@ -230,9 +232,11 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   });
 
   const [form, setForm] = useState<any>(null);
-  const [bodyTekst, setBodyTekst] = useState('');
+  const [builderContent, setBuilderContent] = useState<BuilderContent | null>(null);
   const [showBijlagePicker, setShowBijlagePicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showVoorvertoning, setShowVoorvertoning] = useState(false);
+  const [showTestmail, setShowTestmail] = useState(false);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
 
@@ -247,7 +251,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
         isStandaard: tpl.isStandaard,
         actief: tpl.actief,
       });
-      setBodyTekst(blokkenNaarTekst(tpl.content));
+      setBuilderContent(migreerNaarBuilderContent(tpl.content));
     }
   }, [tpl]);
 
@@ -276,7 +280,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
       functiegroep: form.functiegroep || null,
       opdrachtgever: form.opdrachtgever || null,
       onderwerp: form.onderwerp,
-      content: tekstNaarBlokken(bodyTekst),
+      content: builderContent ? JSON.stringify(builderContent) : '',
       isStandaard: false,
       actief: form.actief,
     }),
@@ -312,14 +316,15 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   };
 
   // Auto-save
-  const triggerAutoSave = (next: any, body?: string) => {
+  const triggerAutoSave = (next: any, content?: BuilderContent) => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    const contentToSave = content ?? builderContent;
     autoSaveTimer.current = setTimeout(() => {
       updateMutation.mutate({
         ...next,
         functiegroep: next.functiegroep || null,
         opdrachtgever: next.opdrachtgever || null,
-        content: tekstNaarBlokken(body !== undefined ? body : bodyTekst),
+        content: contentToSave ? JSON.stringify(contentToSave) : '',
       });
     }, 1500);
   };
@@ -330,9 +335,9 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
     triggerAutoSave(next);
   };
 
-  const updateBody = (val: string) => {
-    setBodyTekst(val);
-    triggerAutoSave(form, val);
+  const updateBuilderContent = (next: BuilderContent) => {
+    setBuilderContent(next);
+    triggerAutoSave(form, next);
   };
 
   if (isLoading || !form || !tpl) {
@@ -455,15 +460,17 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
             </p>
           </div>
           <div>
-            <Label className="text-xs text-gray-600">Body <span className="text-gray-400">(scheid blokken met een lege regel)</span></Label>
-            <Textarea
-              value={bodyTekst}
-              onChange={e => updateBody(e.target.value)}
-              rows={10}
-              className="font-mono text-sm"
-              placeholder="Hoi {{voornaam}},&#10;&#10;Welkom bij EXTRA!..."
-              data-testid="textarea-body"
-            />
+            <Label className="text-xs text-gray-600 mb-2 block">E-mail builder</Label>
+            {builderContent && (
+              <OnboardingEmailBuilder
+                value={builderContent}
+                onChange={updateBuilderContent}
+                isSaving={updateMutation.isPending}
+                savedAt={savedAt}
+                onPreview={() => setShowVoorvertoning(true)}
+                onTestmail={() => setShowTestmail(true)}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -539,6 +546,18 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
         startVolgorde={(tpl.bijlagen || []).length}
       />
 
+      <VoorvertoningModal
+        open={showVoorvertoning}
+        onClose={() => setShowVoorvertoning(false)}
+        templateId={templateId}
+      />
+
+      <TestmailModal
+        open={showTestmail}
+        onClose={() => setShowTestmail(false)}
+        templateId={templateId}
+      />
+
       <Dialog open={showDeleteConfirm} onOpenChange={(o) => !o && setShowDeleteConfirm(false)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -560,6 +579,139 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+type MedewerkerOpt = { id: number; firstName: string | null; lastName: string | null; email: string | null; opdrachtgever?: string | null };
+
+function useMedewerkersOptions() {
+  const { data } = useQuery<{ employees?: MedewerkerOpt[] } | MedewerkerOpt[]>({
+    queryKey: ['/api/admin/employees'],
+  });
+  return useMemo(() => {
+    const arr = Array.isArray(data) ? data : (data?.employees || []);
+    return (arr || []).filter(m => m && m.email);
+  }, [data]);
+}
+
+function VoorvertoningModal({ open, onClose, templateId }: { open: boolean; onClose: () => void; templateId: number }) {
+  const medewerkers = useMedewerkersOptions();
+  const [medewerkerId, setMedewerkerId] = useState<string>('');
+  const [device, setDevice] = useState<'desktop' | 'mobiel'>('desktop');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      setRefreshKey(k => k + 1);
+    }
+  }, [open, medewerkerId, templateId]);
+
+  const url = `/api/onboarding/templates/${templateId}/preview-html${medewerkerId ? `?medewerkerId=${medewerkerId}` : ''}&_=${refreshKey}`;
+
+  return (
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Eye className="h-4 w-4" /> Voorvertoning</DialogTitle>
+        </DialogHeader>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <Label className="text-xs text-gray-500">Medewerker</Label>
+            <Select value={medewerkerId || 'voorbeeld'} onValueChange={v => setMedewerkerId(v === 'voorbeeld' ? '' : v)}>
+              <SelectTrigger data-testid="select-preview-medewerker"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="voorbeeld">— Voorbeeld medewerker —</SelectItem>
+                {medewerkers.map(m => (
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.firstName} {m.lastName} {m.opdrachtgever ? `· ${m.opdrachtgever}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end gap-1">
+            <Button variant={device === 'desktop' ? 'default' : 'outline'} size="sm" onClick={() => setDevice('desktop')} data-testid="btn-preview-desktop">
+              <Monitor className="h-4 w-4 mr-1" /> Desktop
+            </Button>
+            <Button variant={device === 'mobiel' ? 'default' : 'outline'} size="sm" onClick={() => setDevice('mobiel')} data-testid="btn-preview-mobile">
+              <Smartphone className="h-4 w-4 mr-1" /> Mobiel
+            </Button>
+          </div>
+        </div>
+        <div className="bg-gray-100 p-3 rounded-lg flex justify-center">
+          <iframe
+            key={refreshKey}
+            src={url}
+            className="bg-white border border-gray-200 rounded shadow-sm"
+            style={{ width: device === 'desktop' ? '100%' : '375px', height: '60vh', maxWidth: '100%' }}
+            title="Voorvertoning"
+            data-testid="iframe-preview"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Sluiten</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TestmailModal({ open, onClose, templateId }: { open: boolean; onClose: () => void; templateId: number }) {
+  const { toast } = useToast();
+  const medewerkers = useMedewerkersOptions();
+  const [naar, setNaar] = useState('');
+  const [medewerkerId, setMedewerkerId] = useState<string>('');
+
+  useEffect(() => { if (!open) { setNaar(''); setMedewerkerId(''); } }, [open]);
+
+  const verstuurMutation = useMutation({
+    mutationFn: () => apiRequest('POST', `/api/onboarding/templates/${templateId}/testmail`, {
+      naar,
+      medewerkerId: medewerkerId ? Number(medewerkerId) : undefined,
+    }),
+    onSuccess: () => { toast({ title: 'Testmail verzonden ✓', description: `Naar ${naar}` }); onClose(); },
+    onError: (e: any) => toast({ title: 'Versturen mislukt', description: e?.message, variant: 'destructive' }),
+  });
+
+  const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(naar);
+
+  return (
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Mail className="h-4 w-4" /> Testmail sturen</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs text-gray-600">Naar e-mailadres</Label>
+            <Input value={naar} onChange={e => setNaar(e.target.value)} placeholder="jouw@adres.nl" data-testid="input-testmail-naar" />
+          </div>
+          <div>
+            <Label className="text-xs text-gray-600">Personaliseer met (optioneel)</Label>
+            <Select value={medewerkerId || 'voorbeeld'} onValueChange={v => setMedewerkerId(v === 'voorbeeld' ? '' : v)}>
+              <SelectTrigger data-testid="select-testmail-medewerker"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="voorbeeld">— Voorbeeld data —</SelectItem>
+                {medewerkers.map(m => (
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.firstName} {m.lastName} {m.opdrachtgever ? `· ${m.opdrachtgever}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded px-2 py-1.5">
+            Het onderwerp krijgt het prefix <code className="bg-white px-1 rounded">[TEST]</code>.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button disabled={!valid || verstuurMutation.isPending} onClick={() => verstuurMutation.mutate()} data-testid="btn-testmail-verstuur">
+            {verstuurMutation.isPending ? 'Versturen…' : 'Verstuur testmail'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

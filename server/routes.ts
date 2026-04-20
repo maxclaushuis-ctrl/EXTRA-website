@@ -7050,6 +7050,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij verwijderen' }); }
   });
 
+  // Preview HTML (gerenderd met optionele medewerker)
+  app.get("/api/onboarding/templates/:id/preview-html", adminMiddleware, async (req, res) => {
+    try {
+      const tpl = await storage.getOnboardingTemplate(parseInt(req.params.id));
+      if (!tpl) return res.status(404).send('Template niet gevonden');
+      const medewerkerId = req.query.medewerkerId ? parseInt(String(req.query.medewerkerId)) : null;
+      let medewerker: any = null;
+      if (medewerkerId) {
+        medewerker = await storage.getEmployee(medewerkerId);
+      }
+      if (!medewerker) {
+        medewerker = {
+          id: 0, firstName: 'Voorbeeld', lastName: 'Medewerker', email: 'voorbeeld@extra.nl',
+          functie: 'Bediening', opdrachtgever: 'Voorbeeld Hotel', language: 'Nederlands',
+          startDate: new Date(),
+        };
+      }
+      const { genereerOnboardingHTML } = await import('./onboardingService');
+      const html = await genereerOnboardingHTML(tpl, medewerker);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(html);
+    } catch (e: any) {
+      console.error(e);
+      res.status(500).send('Fout bij renderen preview: ' + (e?.message || ''));
+    }
+  });
+
+  // Testmail
+  app.post("/api/onboarding/templates/:id/testmail", adminMiddleware, async (req, res) => {
+    try {
+      const tpl = await storage.getOnboardingTemplate(parseInt(req.params.id));
+      if (!tpl) return res.status(404).json({ message: 'Template niet gevonden' });
+      const { naar, medewerkerId } = req.body || {};
+      if (!naar || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(naar)) {
+        return res.status(400).json({ message: 'Geldig e-mailadres vereist' });
+      }
+      let medewerker: any = null;
+      if (medewerkerId) {
+        medewerker = await storage.getEmployee(parseInt(String(medewerkerId)));
+      }
+      if (!medewerker) {
+        medewerker = {
+          id: 0, firstName: 'Voorbeeld', lastName: 'Medewerker', email: naar,
+          functie: 'Bediening', opdrachtgever: 'Voorbeeld Hotel', language: 'Nederlands',
+          startDate: new Date(),
+        };
+      }
+      const { genereerOnboardingHTML, genereerOnboardingPlainText, vervangTags } = await import('./onboardingService');
+      const html = await genereerOnboardingHTML(tpl, medewerker);
+      const text = genereerOnboardingPlainText(tpl, medewerker);
+      const subject = `[TEST] ${vervangTags(tpl.onderwerp || '', medewerker)}`;
+      const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'max@doehetextra.nl';
+      const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Max van EXTRA';
+      const { sendEmail } = await import('./mail');
+      const ok = await sendEmail({
+        to: naar,
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        subject,
+        html,
+        text,
+      });
+      if (!ok) return res.status(500).json({ message: 'Versturen via SendGrid mislukt' });
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error(e);
+      res.status(500).json({ message: e?.message || 'Testmail mislukt' });
+    }
+  });
+
   // Bijlagen
   app.get("/api/onboarding/bijlagen", adminMiddleware, async (req, res) => {
     try {

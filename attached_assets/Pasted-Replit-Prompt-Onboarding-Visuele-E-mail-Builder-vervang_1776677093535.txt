@@ -1,0 +1,211 @@
+Replit Prompt — Onboarding: Visuele E-mail Builder vervangen plain text editor
+Wat je gaat doen
+Vervang de huidige plain text "Body" textarea in de onboarding template editor door de volledige visuele e-mail builder die al gebouwd is voor de klantcampagnes. De bestaande textarea verdwijnt volledig en wordt vervangen door dezelfde blokken-editor met live preview. Alle bestaande functionaliteit (onderwerp, bijlagen, personalisatie-tags) blijft behouden.
+
+1. Wat er nu staat — vervangen
+In de huidige onboarding template detailpagina staat onder "E-mail inhoud":
+
+Een tekstveld voor het onderwerp ← blijft behouden
+Een grote plain text textarea "Body (scheid blokken met een lege regel)" ← dit vervangen
+Sectie Bijlagen ← blijft behouden
+Sectie Personalisatie-tags ← blijft behouden
+
+
+2. Wat er moet komen
+Vervang de plain text textarea door een ingebedde versie van de bestaande campagne e-mail builder. De builder wordt niet op een aparte pagina geopend maar rendeert inline op de template detailpagina, direct onder het onderwerpveld.
+Layout na aanpassing:
+[Instellingen sectie: Taal, Functiegroep, Opdrachtgever, Standaard]
+
+[E-mail inhoud sectie]
+  Onderwerp: [tekstveld]
+
+  [E-mail builder — inline, volle breedte]
+  ┌─────────────────────────────────────────────────────┐
+  │  [+ Koptekst] [+ Paragraaf] [+ Knop] [+ Afbeelding]│  ← blokken toolbar
+  │  [+ Lijn] [+ Ruimte] [+ Handtekening]              │
+  ├─────────────────────────────────────────────────────┤
+  │                                                     │
+  │   [Koptekst blok: Welkom bij EXTRA 🚀]             │
+  │   [Paragraaf blok: Hoi {{voornaam}},...]           │
+  │   [Handtekening blok]                              │
+  │                                                     │
+  └─────────────────────────────────────────────────────┘
+  
+  [Voorvertoning knop]  [Testmail sturen knop]
+
+[Bijlagen sectie]
+[Personalisatie-tags sectie]
+
+3. Builder configuratie voor onboarding
+Gebruik exact dezelfde builder component als de campagnes, maar initialiseer hem met de volgende configuratie:
+Beschikbare blokken:
+
+✅ Koptekst
+✅ Paragraaf
+✅ Knop
+✅ Afbeelding
+✅ Lijn
+✅ Ruimte
+✅ Handtekening
+
+Niet beschikbaar (verberg deze opties):
+
+❌ Taalvariant-blok (onboarding heeft aparte templates per taal)
+❌ A/B variant tabs
+❌ Plain text / HTML toggle (onboarding gebruikt altijd HTML)
+
+Personalisatie-tags beschikbaar in de builder:
+{{voornaam}}, {{achternaam}}, {{naam}}, {{functie}}, {{opdrachtgever}}, {{startdatum}}
+Deze tags zijn klikbaar invoegbaar via de {{}} knop in elk tekstblok.
+Geen tracking:
+
+Geen trackingpixel invoegen
+Geen unsubscribe link toevoegen
+Geen click tracking op links
+
+
+4. Content opslag
+De builder slaat content op als JSON in het bestaande content veld van de onboarding_templates tabel. Gebruik exact dezelfde JSON structuur als campagne content:
+json{
+  "modus": "html",
+  "instellingen": {
+    "achtergrond_email": "#F9FAFB",
+    "achtergrond_inhoud": "#FFFFFF",
+    "lettertype": "Inter",
+    "tekstkleur": "#111827"
+  },
+  "blokken": [
+    {
+      "id": "blok_1",
+      "type": "koptekst",
+      "inhoud": "Welkom bij EXTRA 🚀",
+      "stijl": { "grootte": "H1", "uitlijning": "links" }
+    },
+    {
+      "id": "blok_2",
+      "type": "paragraaf",
+      "inhoud": "Hoi {{voornaam}},\n\nWelkom bij het EXTRA team!..."
+    },
+    {
+      "id": "blok_3",
+      "type": "handtekening"
+    }
+  ]
+}
+Migratie van bestaande plain text content:
+Als een template al plain text content heeft opgeslagen als string (niet als JSON), converteer dit automatisch naar een paragraaf-blok bij het openen van de builder:
+javascriptfunction migreerPlainTextNaarBlokken(bestaandeContent) {
+  // Als content geen geldig JSON object is met 'blokken':
+  // Wrap de tekst in een paragraaf-blok
+  try {
+    const parsed = JSON.parse(bestaandeContent);
+    if (parsed.blokken) return parsed; // al correct formaat
+  } catch (e) {
+    // plain text — migreer
+  }
+  
+  return {
+    modus: 'html',
+    instellingen: { /* standaard instellingen */ },
+    blokken: [
+      {
+        id: 'blok_1',
+        type: 'paragraaf',
+        inhoud: bestaandeContent || ''
+      }
+    ]
+  };
+}
+
+5. Auto-save
+
+Sla de builder content automatisch op na elke wijziging (debounced, 1.5 seconden)
+Toon een auto-save indicator rechtsbovenaan de builder sectie:
+
+Groene stip + "Opgeslagen" bij laatste opslag
+Oranje stip + "Niet opgeslagen" bij openstaande wijzigingen
+
+
+API call: PUT /api/onboarding/templates/:id met de bijgewerkte content JSON
+
+
+6. Voorvertoning
+Knop "👁️ Voorvertoning" onder de builder:
+
+Opent een modal met een fullscreen preview van de mail
+Dropdown "Voorvertoning als medewerker" → kies een bestaande medewerker uit de database
+De preview toont de mail met ingevulde personalisatie-tags van die medewerker
+Schakelaar: Desktop (600px) / Mobiel (375px)
+
+
+7. Testmail sturen
+Knop "📨 Testmail sturen" naast de voorvertoning knop:
+
+Opent een klein modal:
+
+  Testmail sturen
+  ───────────────
+  Naar: [max@doehetextra.nl]  (vooringevuld, aanpasbaar)
+  Als medewerker: [dropdown — kies testcontact voor personalisatie]
+
+  [Annuleren]  [Verstuur testmail]
+
+Onderwerp krijgt prefix: "[TEST] " + origineel onderwerp
+Verstuur via dezelfde SendGrid integratie als stap 3
+Bijlagen uit de template worden meegestuurd
+Toast: "Testmail verstuurd naar [email] ✓"
+
+
+8. HTML generatie voor verzending
+De bestaande genereerOnboardingHTML(template, medewerker) functie uit stap 3 moet bijgewerkt worden om de nieuwe JSON blokken-structuur te verwerken in plaats van plain text:
+javascriptasync function genereerOnboardingHTML(template, medewerker) {
+  // 1. Parse template.content als JSON
+  const content = migreerPlainTextNaarBlokken(template.content);
+  
+  // 2. Vervang personalisatie-tags in alle blokken
+  const tags = {
+    '{{voornaam}}':      medewerker.voornaam || 'daar',
+    '{{achternaam}}':    medewerker.achternaam || '',
+    '{{naam}}':          `${medewerker.voornaam} ${medewerker.achternaam}`.trim(),
+    '{{functie}}':       medewerker.functie || '',
+    '{{opdrachtgever}}': medewerker.opdrachtgever || '',
+    '{{startdatum}}':    medewerker.startdatum
+                           ? formatNLDatum(new Date(medewerker.startdatum))
+                           : '',
+  };
+  
+  // 3. Gebruik generateEmailHTML van de campagnemodule
+  //    maar sla trackingpixel en unsubscribe link over
+  const html = await generateEmailHTML(content, tags, {
+    trackingPixel: false,
+    unsubscribeLink: false,
+    wrapLinksWithTracking: false,
+  });
+  
+  // 4. Voeg EXTRA footer toe
+  return html + `
+    <div style="margin-top:32px; padding-top:16px; border-top:1px solid #E5E7EB;
+                font-size:12px; color:#9CA3AF; text-align:center;">
+      EXTRA B.V. — Amsterdam<br>
+      <a href="https://doehetextra.nl" style="color:#7C3AED;">doehetextra.nl</a>
+    </div>
+  `;
+}
+
+9. Stijlrichtlijnen builder inline weergave
+
+Builder container: witte achtergrond, border 1px solid #E5E7EB, border-radius 8px
+Blokken toolbar bovenaan de builder: lichtgrijs (#F9FAFB), border-bottom
+Canvas gebied: #F3F4F6 achtergrond, e-mail als wit blok gecentreerd (max 600px)
+Geselecteerd blok: paarse outline (#7C3AED), 2px
+Auto-save indicator: rechts uitgelijnd boven de builder, kleine tekst (12px)
+Voorvertoning + Testmail knoppen: uitgelijnd rechts onder de builder, secondary stijl (wit met paarse rand)
+
+
+Wat NIET wijzigt
+
+Het onderwerpveld blijft een gewone tekst input
+De bijlagen-sectie onder de builder blijft ongewijzigd
+De personalisatie-tags referentiekaart onderaan blijft ongewijzigd
+Alle bestaande API endpoints blijven werken
+Bestaande templates zonder content worden automatisch gemigreerd via migreerPlainTextNaarBlokken
