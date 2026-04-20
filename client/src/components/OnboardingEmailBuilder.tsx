@@ -170,38 +170,56 @@ export default function OnboardingEmailBuilder({
           {/* Canvas */}
           <div className="bg-gray-100 p-4 overflow-auto">
             <div
-              className="mx-auto rounded-lg shadow-sm"
+              className="mx-auto rounded-lg shadow-sm overflow-hidden"
               style={{
                 width: '100%',
                 maxWidth: '600px',
-                background: value.instellingen.achtergrond_inhoud,
                 fontFamily: value.instellingen.lettertype + ',sans-serif',
                 color: value.instellingen.tekstkleur,
-                padding: '28px 24px',
+                background: value.instellingen.achtergrond_inhoud,
                 minHeight: '380px',
               }}
             >
-              {value.blokken.length === 0 && (
-                <div className="py-12 text-center text-gray-400 text-sm">
-                  <Mail className="h-10 w-10 mx-auto mb-2 text-gray-300" />
-                  Voeg blokken toe via de knoppen bovenaan
+              {(value.instellingen.lay_out ?? 'extra') === 'extra' && (
+                <div
+                  style={{
+                    background: value.instellingen.header_kleur || '#5b2eb5',
+                    padding: '28px 20px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 32, letterSpacing: '0.04em', lineHeight: 1 }}>
+                    {value.instellingen.header_tekst || 'EXTRA'}
+                  </div>
                 </div>
               )}
-              <div className="space-y-2">
-                {value.blokken.map(blok => (
-                  <div key={blok.id} className="relative group">
-                    <div className="absolute -right-2 top-0 opacity-0 group-hover:opacity-100 flex flex-col gap-0.5 transition-opacity z-10">
-                      <button onClick={() => moveBlock(blok.id, -1)} className="bg-white border border-gray-200 shadow-sm rounded p-0.5 text-gray-400 hover:text-gray-700 text-[10px]" title="Omhoog">↑</button>
-                      <button onClick={() => moveBlock(blok.id, 1)} className="bg-white border border-gray-200 shadow-sm rounded p-0.5 text-gray-400 hover:text-gray-700 text-[10px]" title="Omlaag">↓</button>
-                      <button onClick={() => removeBlock(blok.id)} className="bg-white border border-red-200 shadow-sm rounded p-0.5 text-red-300 hover:text-red-600" title="Verwijderen"><X className="h-2.5 w-2.5" /></button>
-                    </div>
-                    <BlockPreview blok={blok} selected={selectedId === blok.id} onClick={() => setSelectedId(blok.id)} />
+
+              <div style={{ padding: '28px 24px', background: value.instellingen.achtergrond_inhoud }}>
+                {value.blokken.length === 0 && (
+                  <div className="py-12 text-center text-gray-400 text-sm">
+                    <Mail className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                    Voeg blokken toe via de knoppen bovenaan
                   </div>
-                ))}
+                )}
+                <div className="space-y-2">
+                  {value.blokken.map(blok => (
+                    <div key={blok.id} className="relative group">
+                      <div className="absolute -right-2 top-0 opacity-0 group-hover:opacity-100 flex flex-col gap-0.5 transition-opacity z-10">
+                        <button onClick={() => moveBlock(blok.id, -1)} className="bg-white border border-gray-200 shadow-sm rounded p-0.5 text-gray-400 hover:text-gray-700 text-[10px]" title="Omhoog">↑</button>
+                        <button onClick={() => moveBlock(blok.id, 1)} className="bg-white border border-gray-200 shadow-sm rounded p-0.5 text-gray-400 hover:text-gray-700 text-[10px]" title="Omlaag">↓</button>
+                        <button onClick={() => removeBlock(blok.id)} className="bg-white border border-red-200 shadow-sm rounded p-0.5 text-red-300 hover:text-red-600" title="Verwijderen"><X className="h-2.5 w-2.5" /></button>
+                      </div>
+                      <BlockPreview blok={blok} selected={selectedId === blok.id} onClick={() => setSelectedId(blok.id)} />
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="border-t border-gray-100 pt-3 mt-4 text-[11px] text-gray-300 text-center">
-                EXTRA B.V. — Amsterdam · doehetextra.nl
-              </div>
+
+              {(value.instellingen.lay_out ?? 'extra') === 'extra' && (
+                <div className="text-[11px] text-gray-400 text-center py-3 px-4" style={{ background: value.instellingen.achtergrond_inhoud }}>
+                  {value.instellingen.footer_tekst || 'EXTRA · Herengracht 372 · Amsterdam'}
+                </div>
+              )}
             </div>
           </div>
 

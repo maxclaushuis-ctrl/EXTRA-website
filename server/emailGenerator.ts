@@ -20,6 +20,10 @@ type BuilderSettings = {
   lettertype?: string;
   tekstkleur?: string;
   unsubscribe_tekst?: string;
+  lay_out?: 'extra' | 'geen';
+  header_kleur?: string;
+  header_tekst?: string;
+  footer_tekst?: string;
 };
 
 type BuilderBlock = {
@@ -100,6 +104,10 @@ export function generateEmailHTML(
   const font = settings.lettertype || 'Inter, Arial, sans-serif';
   const tekstkleur = settings.tekstkleur || '#111827';
   const unsubTekst = settings.unsubscribe_tekst || 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.';
+  const layOut = settings.lay_out ?? 'extra';
+  const headerKleur = settings.header_kleur || '#5b2eb5';
+  const headerTekst = settings.header_tekst || 'EXTRA';
+  const footerTekst = settings.footer_tekst || 'EXTRA · Herengracht 372 · Amsterdam';
   const nl = isNl(contact.taal);
 
   const blokken = parsed.blokken ?? [];
@@ -110,13 +118,11 @@ export function generateEmailHTML(
     ? `<p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb">
         <a href="${unsubscribeUrl}" style="color:#9ca3af">${personalizeText(unsubTekst, contact)}</a>
        </p>`
-    : `<p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:24px">© EXTRA | doehetextra.nl</p>`;
+    : '';
 
   const pixel = trackingPixelUrl
     ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none" alt="" />`
     : '';
-
-  const bodyContent = `${blocksHtml}\n${unsubHtml}\n${pixel}`;
 
   // Preheader (first 100 chars of text content)
   const preheader = blokken
@@ -126,6 +132,20 @@ export function generateEmailHTML(
     .replace(/<[^>]+>/g, '')
     .slice(0, 100);
 
+  // EXTRA branded shell (header + footer) — kan uitgezet via lay_out: 'geen'
+  const headerHtml = layOut === 'extra'
+    ? `<tr><td style="background:${headerKleur};padding:36px 28px;text-align:center;border-radius:8px 8px 0 0">
+         <div style="font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:42px;letter-spacing:0.04em;color:#ffffff;line-height:1">${headerTekst}</div>
+       </td></tr>`
+    : '';
+
+  const footerHtml = layOut === 'extra'
+    ? `<tr><td style="padding:18px 28px;text-align:center;font-size:11px;color:#9ca3af;font-family:${font}">${footerTekst}</td></tr>`
+    : '';
+
+  const contentRadius = layOut === 'extra' ? '0 0 8px 8px' : '8px';
+  const contentPadding = layOut === 'extra' ? '32px 28px 24px' : '32px 28px';
+
   return `<!DOCTYPE html>
 <html lang="${nl ? 'nl' : 'en'}">
 <head>
@@ -134,7 +154,7 @@ export function generateEmailHTML(
   <title>E-mail</title>
   <style>
     body { margin:0; padding:0; background-color:${bgEmail}; font-family:${font}; }
-    @media only screen and (max-width:600px) { .email-wrapper { width:100% !important; padding:16px !important; } }
+    @media only screen and (max-width:600px) { .email-wrapper { width:100% !important; } .email-content { padding:24px 18px !important; } }
   </style>
 </head>
 <body>
@@ -142,11 +162,15 @@ export function generateEmailHTML(
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${bgEmail};padding:24px 16px">
     <tr><td align="center">
       <table class="email-wrapper" width="600" cellpadding="0" cellspacing="0" border="0"
-        style="background-color:${bgInhoud};border-radius:8px;padding:32px 28px;color:${tekstkleur};font-family:${font};font-size:15px;line-height:1.6">
-        <tr><td>
-          ${bodyContent}
+        style="background-color:${bgInhoud};border-radius:8px;color:${tekstkleur};font-family:${font};font-size:15px;line-height:1.6;overflow:hidden">
+        ${headerHtml}
+        <tr><td class="email-content" style="background:${bgInhoud};padding:${contentPadding};border-radius:${contentRadius}">
+          ${blocksHtml}
+          ${unsubHtml}
         </td></tr>
+        ${footerHtml}
       </table>
+      ${pixel}
     </td></tr>
   </table>
 </body>

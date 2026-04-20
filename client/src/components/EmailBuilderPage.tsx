@@ -34,6 +34,10 @@ export type BuilderSettings = {
   lettertype: string;
   tekstkleur: string;
   unsubscribe_tekst: string;
+  lay_out?: 'extra' | 'geen';
+  header_kleur?: string;
+  header_tekst?: string;
+  footer_tekst?: string;
 };
 
 export type KoptekstBlock = { id: string; type: 'koptekst'; tekst: string; niveau: 'h1'|'h2'|'h3'; uitlijning: 'left'|'center'|'right'; kleur: string };
@@ -60,6 +64,10 @@ const DEFAULT_SETTINGS: BuilderSettings = {
   lettertype: 'Inter',
   tekstkleur: '#111827',
   unsubscribe_tekst: 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.',
+  lay_out: 'extra',
+  header_kleur: '#5b2eb5',
+  header_tekst: 'EXTRA',
+  footer_tekst: 'EXTRA · Herengracht 372 · Amsterdam',
 };
 
 export type PersonalTag = { tag: string; label: string };
@@ -464,6 +472,49 @@ function SettingsPanel({ settings, onChange }: { settings: BuilderSettings; onCh
           <div>
             <Label className="text-xs text-gray-500 mb-1 block">Uitschrijf-tekst</Label>
             <Textarea value={settings.unsubscribe_tekst} onChange={e => onChange({ unsubscribe_tekst: e.target.value })} rows={2} className="text-xs resize-none" />
+          </div>
+
+          <div className="pt-3 border-t border-gray-100 space-y-3">
+            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Lay-out / EXTRA shell</div>
+            <div>
+              <Label className="text-xs text-gray-500 mb-1 block">Standaard lay-out</Label>
+              <Select value={settings.lay_out ?? 'extra'} onValueChange={v => onChange({ lay_out: v as 'extra' | 'geen' })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="extra">EXTRA huisstijl (header + footer)</SelectItem>
+                  <SelectItem value="geen">Geen — alleen blokken</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(settings.lay_out ?? 'extra') === 'extra' && (
+              <>
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Header tekst</Label>
+                  <input
+                    type="text"
+                    value={settings.header_tekst ?? 'EXTRA'}
+                    onChange={e => onChange({ header_tekst: e.target.value })}
+                    className="w-full h-8 text-xs px-2 rounded border border-gray-200"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Header kleur</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={settings.header_kleur ?? '#5b2eb5'} onChange={e => onChange({ header_kleur: e.target.value })} className="h-8 w-10 rounded border cursor-pointer" />
+                    <span className="text-xs text-gray-500">{settings.header_kleur ?? '#5b2eb5'}</span>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Footer tekst</Label>
+                  <input
+                    type="text"
+                    value={settings.footer_tekst ?? 'EXTRA · Herengracht 372 · Amsterdam'}
+                    onChange={e => onChange({ footer_tekst: e.target.value })}
+                    className="w-full h-8 text-xs px-2 rounded border border-gray-200"
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
