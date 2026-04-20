@@ -59,6 +59,11 @@ export default function MedewerkersTab() {
 
   const { data: detailData, refetch: refetchDetail } = useQuery<EmployeeWithLogs>({
     queryKey: ['/api/admin/employees', selectedId],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/employees/${selectedId}`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      return res.json();
+    },
     enabled: selectedId !== null,
   });
 
