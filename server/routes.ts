@@ -7097,12 +7097,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           startDate: new Date(),
         };
       }
-      const { genereerOnboardingHTML, genereerOnboardingPlainText, vervangTags } = await import('./onboardingService');
+      const { genereerOnboardingHTML, genereerOnboardingPlainText, vervangTags, haalBijlagenOp, controleerBijlagenGrootte } = await import('./onboardingService');
       const html = await genereerOnboardingHTML(tpl, medewerker);
       const text = genereerOnboardingPlainText(tpl, medewerker);
       const subject = `[TEST] ${vervangTags(tpl.onderwerp || '', medewerker)}`;
       const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'max@doehetextra.nl';
       const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Max van EXTRA';
+
+      // Bijlagen ophalen — testmail moet exact dezelfde PDF's bevatten als de echte mail
+      const { attachments, ontbrekend } = await haalBijlagenOp(tpl);
+      const sizeCheck = controleerBijlagenGrootte(attachments);
+      if (!sizeCheck.geldig) {
+        return res.status(400).json({ message: `Bijlagen te groot: ${sizeCheck.melding}` });
+      }
+
       const { sendEmail } = await import('./mail');
       const ok = await sendEmail({
         to: naar,
@@ -7110,9 +7118,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subject,
         html,
         text,
+        attachments: attachments.map(a => ({
+          content: a.content,
+          filename: a.bestandsnaam,
+          type: a.type,
+          disposition: 'attachment',
+        })),
       });
       if (!ok) return res.status(500).json({ message: 'Versturen via SendGrid mislukt' });
-      res.json({ success: true });
+      res.json({ success: true, bijlagenCount: attachments.length, ontbrekendeBijlagen: ontbrekend });
     } catch (e: any) {
       console.error(e);
       res.status(500).json({ message: e?.message || 'Testmail mislukt' });
