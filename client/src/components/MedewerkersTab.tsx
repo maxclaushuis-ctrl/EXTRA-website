@@ -93,12 +93,10 @@ export default function MedewerkersTab() {
   }, [employees]);
 
   const sendOnboardingMutation = useMutation({
-    mutationFn: async (vars: { id: number; templateId: number }) => {
-      const res = await apiRequest('POST', `/api/admin/employees/${vars.id}/onboarding-versturen`, {
+    mutationFn: (vars: { id: number; templateId: number }) =>
+      apiRequest('POST', `/api/admin/employees/${vars.id}/onboarding-versturen`, {
         templateId: vars.templateId,
-      });
-      return (res as Response).json();
-    },
+      }),
     onSuccess: (data: any) => {
       const ontbrekend: string[] = data?.ontbrekendeBijlagen || [];
       if (ontbrekend.length > 0) {
@@ -120,12 +118,10 @@ export default function MedewerkersTab() {
   });
 
   const bulkSendMutation = useMutation({
-    mutationFn: async (vars: { medewerkerIds: number[] }) => {
-      const res = await apiRequest('POST', '/api/admin/employees/onboarding-bulk', {
+    mutationFn: (vars: { medewerkerIds: number[] }) =>
+      apiRequest('POST', '/api/admin/employees/onboarding-bulk', {
         medewerkerIds: vars.medewerkerIds,
-      });
-      return (res as Response).json();
-    },
+      }),
     onSuccess: (data: any) => {
       const v = data?.verzonden || 0;
       const m = data?.mislukt || 0;
@@ -914,9 +910,8 @@ function CreateEmployeeModal({ onClose, onCreated }: { onClose: () => void; onCr
   const [draft, setDraft] = useState<Partial<Employee>>({ language: 'Nederlands', status: 'nieuw' });
 
   const createMutation = useMutation({
-    mutationFn: (data: Partial<Employee>) => apiRequest('POST', '/api/admin/employees', data),
-    onSuccess: async (res: any) => {
-      const emp = await res.json();
+    mutationFn: (data: Partial<Employee>) => apiRequest('POST', '/api/admin/employees', data) as Promise<Employee>,
+    onSuccess: (emp: Employee) => {
       toast({ title: `Medewerker ${emp.firstName} ${emp.lastName} aangemaakt ✓` });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
       onCreated(emp);
