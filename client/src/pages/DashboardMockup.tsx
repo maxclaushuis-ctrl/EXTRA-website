@@ -2649,28 +2649,51 @@ export default function DashboardMockup() {
                           data-testid="btn-confirm-aannemen"
                           onClick={async () => {
                             try {
-                              const candidateId = aannemenApp.linkedCandidateId || aannemenApp.candidateId;
-                              if (!candidateId) {
-                                toast({ title: 'Geen sollicitant gekoppeld', description: 'Deze sollicitatie heeft geen kandidaat-koppeling om uit aan te nemen.', variant: 'destructive' });
+                              if (!aannemenApp.email) {
+                                toast({ title: 'Geen e-mailadres', description: 'Deze sollicitatie heeft geen e-mailadres — vul dat eerst in.', variant: 'destructive' });
                                 return;
                               }
-                              const res = await apiRequest('POST', `/api/admin/candidates/${candidateId}/aannemen`, {
-                                functie: aannemenForm.functie || undefined,
-                                branche: aannemenForm.branche || undefined,
-                                opdrachtgever: aannemenForm.opdrachtgever || undefined,
-                                contractType: aannemenForm.contractType || undefined,
-                                startDate: aannemenForm.startDate || undefined,
-                                language: aannemenForm.language || undefined,
-                              });
-                              const data = await res.json();
-                              toast({ title: `Medewerker ${data.employee.firstName} ${data.employee.lastName} aangemaakt ✓` });
+                              const candidateId = aannemenApp.linkedCandidateId || aannemenApp.candidateId;
+                              let employee: any;
+                              if (candidateId) {
+                                const data: any = await apiRequest('POST', `/api/admin/candidates/${candidateId}/aannemen`, {
+                                  functie: aannemenForm.functie || undefined,
+                                  branche: aannemenForm.branche || undefined,
+                                  opdrachtgever: aannemenForm.opdrachtgever || undefined,
+                                  contractType: aannemenForm.contractType || undefined,
+                                  startDate: aannemenForm.startDate || undefined,
+                                  language: aannemenForm.language || undefined,
+                                });
+                                employee = data.employee;
+                              } else {
+                                // Geen kandidaat-koppeling → direct medewerker aanmaken vanuit applicatiedata
+                                employee = await apiRequest('POST', `/api/admin/employees`, {
+                                  firstName: aannemenApp.firstName || '',
+                                  lastName: aannemenApp.lastName || '',
+                                  email: aannemenApp.email,
+                                  phone: aannemenApp.phone || null,
+                                  city: aannemenApp.city || null,
+                                  language: aannemenForm.language || 'Nederlands',
+                                  functie: aannemenForm.functie || null,
+                                  branche: aannemenForm.branche || null,
+                                  opdrachtgever: aannemenForm.opdrachtgever || null,
+                                  contractType: aannemenForm.contractType || null,
+                                  startDate: aannemenForm.startDate || null,
+                                  status: 'nieuw',
+                                });
+                              }
+                              toast({ title: `Medewerker ${employee.firstName} ${employee.lastName} aangemaakt ✓` });
                               queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
                               queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
                               setAannemenApp(null);
                               setAppDetailOpen(false);
                               setActiveTab('medewerkers');
                             } catch (err: any) {
-                              const msg = err?.message || 'Er ging iets mis';
+                              const raw = err?.data?.message || err?.message || 'Er ging iets mis';
+                              const msg = /409|unique|bestaat al/i.test(raw)
+                                ? 'Er bestaat al een medewerker met dit e-mailadres.'
+                                : raw;
                               toast({ title: 'Aanmaken mislukt', description: msg, variant: 'destructive' });
                             }
                           }}
