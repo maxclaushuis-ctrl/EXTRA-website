@@ -159,11 +159,18 @@ export default function MedewerkersTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/employees/${id}`),
-    onSuccess: () => {
+    onSuccess: (_data, deletedId) => {
       toast({ title: 'Medewerker verwijderd ✓' });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
+      queryClient.setQueryData<{ employees: Employee[]; total: number }>(
+        ['/api/admin/employees'],
+        (old) => old
+          ? { employees: old.employees.filter(e => e.id !== deletedId), total: Math.max(0, (old.total ?? old.employees.length) - 1) }
+          : old,
+      );
+      queryClient.removeQueries({ queryKey: ['/api/admin/employees', deletedId] });
       setSelectedId(null);
       setDeleteConfirmId(null);
+      queryClient.refetchQueries({ queryKey: ['/api/admin/employees'], exact: true });
     },
     onError: (err: any) => {
       toast({ title: 'Verwijderen mislukt', description: err?.message || 'Alleen uitgestroomde medewerkers kunnen verwijderd worden', variant: 'destructive' });
