@@ -7907,13 +7907,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      const { twvStatus, twvStartDate, twvEndDate, twvNotes, needsTwv } = req.body;
+      const { twvStatus, twvStartDate, twvEndDate, twvNotes, needsTwv, firstName, lastName, email, nationality, functionType } = req.body;
       const updateData: Record<string, any> = {};
       if (twvStatus !== undefined) updateData.twvStatus = twvStatus;
       if (twvStartDate !== undefined) updateData.twvStartDate = twvStartDate;
       if (twvEndDate !== undefined) updateData.twvEndDate = twvEndDate;
       if (twvNotes !== undefined) updateData.twvNotes = twvNotes;
       if (needsTwv !== undefined) updateData.needsTwv = needsTwv;
+      if (firstName !== undefined) updateData.firstName = String(firstName).trim();
+      if (lastName !== undefined) updateData.lastName = String(lastName).trim();
+      if (email !== undefined) updateData.email = email ? String(email).trim() : null;
+      if (nationality !== undefined) updateData.nationality = nationality ? String(nationality).trim() : null;
+      if (functionType !== undefined) updateData.functionType = functionType;
       const updated = await storage.updateCandidate(id, updateData as any);
       if (!updated) return res.status(404).json({ message: "Kandidaat niet gevonden" });
       return res.json(updated);

@@ -293,6 +293,11 @@ export default function DashboardMockup() {
   const [twvEditCandidate, setTwvEditCandidate] = useState<TwvCandidate | null>(null);
   const [twvEditStartDate, setTwvEditStartDate] = useState('');
   const [twvEditEndDate, setTwvEditEndDate] = useState('');
+  const [twvEditFirstName, setTwvEditFirstName] = useState('');
+  const [twvEditLastName, setTwvEditLastName] = useState('');
+  const [twvEditEmail, setTwvEditEmail] = useState('');
+  const [twvEditNationality, setTwvEditNationality] = useState('');
+  const [twvEditFunctionType, setTwvEditFunctionType] = useState('');
   // Handmatig toevoegen dialog
   const [twvManualAddOpen, setTwvManualAddOpen] = useState(false);
   const [twvAddSearch, setTwvAddSearch] = useState('');
@@ -3516,45 +3521,111 @@ export default function DashboardMockup() {
           ) : activeTab === 'twv' ? (
             /* TWV Tab — Tewerkstellingsvergunning Kanban */
             <div>
-              {/* Edit dates modal */}
+              {/* Bewerk-modal: medewerker-gegevens + TWV datums */}
               <Dialog open={twvEditOpen} onOpenChange={setTwvEditOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>TWV datums instellen</DialogTitle>
+                    <DialogTitle>Medewerker bewerken</DialogTitle>
                   </DialogHeader>
                   {twvEditCandidate && (
                     <div className="space-y-4 pt-2">
-                      <p className="text-sm text-gray-600">
-                        <strong>{twvEditCandidate.firstName} {twvEditCandidate.lastName}</strong>
-                      </p>
-                      <div>
-                        <label className="text-xs font-medium text-gray-500 mb-1 block">Startdatum TWV</label>
-                        <Input
-                          type="date"
-                          value={twvEditStartDate}
-                          onChange={e => setTwvEditStartDate(e.target.value)}
-                        />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Voornaam</label>
+                          <Input
+                            value={twvEditFirstName}
+                            onChange={e => setTwvEditFirstName(e.target.value)}
+                            data-testid="input-twv-edit-firstname"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Achternaam</label>
+                          <Input
+                            value={twvEditLastName}
+                            onChange={e => setTwvEditLastName(e.target.value)}
+                            data-testid="input-twv-edit-lastname"
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-500 mb-1 block">Einddatum TWV</label>
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">E-mail</label>
                         <Input
-                          type="date"
-                          value={twvEditEndDate}
-                          onChange={e => setTwvEditEndDate(e.target.value)}
+                          type="email"
+                          value={twvEditEmail}
+                          onChange={e => setTwvEditEmail(e.target.value)}
+                          placeholder="naam@voorbeeld.nl"
+                          data-testid="input-twv-edit-email"
                         />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Nationaliteit</label>
+                          <Input
+                            value={twvEditNationality}
+                            onChange={e => setTwvEditNationality(e.target.value)}
+                            placeholder="bv. Oekraïne"
+                            data-testid="input-twv-edit-nationality"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Functie</label>
+                          <select
+                            className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            value={twvEditFunctionType}
+                            onChange={e => setTwvEditFunctionType(e.target.value)}
+                            data-testid="select-twv-edit-functietype"
+                          >
+                            <option value="horecamedewerker">Horeca</option>
+                            <option value="housekeeping">Housekeeping</option>
+                            <option value="chef">Chef</option>
+                            <option value="frontoffice">Front office</option>
+                            <option value="logistiek">Logistiek</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="border-t border-gray-100 pt-3">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">TWV periode</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 mb-1 block">Startdatum</label>
+                            <Input
+                              type="date"
+                              value={twvEditStartDate}
+                              onChange={e => setTwvEditStartDate(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 mb-1 block">Einddatum</label>
+                            <Input
+                              type="date"
+                              value={twvEditEndDate}
+                              onChange={e => setTwvEditEndDate(e.target.value)}
+                            />
+                          </div>
+                        </div>
                       </div>
                       <div className="flex gap-2 pt-2">
                         <Button
                           className="flex-1 bg-purple-600 hover:bg-purple-700"
                           onClick={() => {
                             if (!twvEditCandidate) return;
+                            if (!twvEditFirstName.trim() || !twvEditLastName.trim()) {
+                              toast({ title: 'Voor- en achternaam zijn verplicht', variant: 'destructive' });
+                              return;
+                            }
                             updateTwvMutation.mutate({
                               id: twvEditCandidate.id,
+                              firstName: twvEditFirstName.trim(),
+                              lastName: twvEditLastName.trim(),
+                              email: twvEditEmail.trim(),
+                              nationality: twvEditNationality.trim(),
+                              functionType: twvEditFunctionType,
                               twvStartDate: twvEditStartDate || undefined,
                               twvEndDate: twvEditEndDate || undefined,
                             });
                             setTwvEditOpen(false);
                           }}
+                          data-testid="btn-twv-edit-save"
                         >
                           Opslaan
                         </Button>
@@ -4056,7 +4127,27 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
                           {/* Nationaliteit */}
                           <div className="text-sm text-gray-600">
-                            {c.nationality ? <span>🌍 {c.nationality}</span> : <span className="text-gray-300">—</span>}
+                            {c.nationality ? (
+                              <span>🌍 {c.nationality}</span>
+                            ) : (
+                              <button
+                                className="text-xs text-purple-500 hover:text-purple-700 hover:underline"
+                                onClick={() => {
+                                  setTwvEditCandidate(c);
+                                  setTwvEditFirstName(c.firstName);
+                                  setTwvEditLastName(c.lastName);
+                                  setTwvEditEmail(c.email || '');
+                                  setTwvEditNationality(c.nationality || '');
+                                  setTwvEditFunctionType((c as any).functionType || 'horecamedewerker');
+                                  setTwvEditStartDate(c.twvStartDate || '');
+                                  setTwvEditEndDate(c.twvEndDate || '');
+                                  setTwvEditOpen(true);
+                                }}
+                                data-testid={`btn-twv-add-nationality-${c.id}`}
+                              >
+                                + Toevoegen
+                              </button>
+                            )}
                           </div>
 
                           {/* Functie */}
@@ -4107,6 +4198,23 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               <option value="twv_verstrekt">TWV Verstrekt</option>
                               <option value="twv_verlopen">TWV Verlopen</option>
                             </select>
+                            <button
+                              className="flex items-center gap-1 text-[11px] text-purple-500 hover:text-purple-700 transition-colors"
+                              onClick={() => {
+                                setTwvEditCandidate(c);
+                                setTwvEditFirstName(c.firstName);
+                                setTwvEditLastName(c.lastName);
+                                setTwvEditEmail(c.email || '');
+                                setTwvEditNationality(c.nationality || '');
+                                setTwvEditFunctionType((c as any).functionType || 'horecamedewerker');
+                                setTwvEditStartDate(c.twvStartDate || '');
+                                setTwvEditEndDate(c.twvEndDate || '');
+                                setTwvEditOpen(true);
+                              }}
+                              data-testid={`btn-twv-edit-${c.id}`}
+                            >
+                              <Pencil className="h-3 w-3" /> Gegevens bewerken
+                            </button>
                             <button
                               className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
                               onClick={() => {
