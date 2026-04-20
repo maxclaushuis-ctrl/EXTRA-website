@@ -585,6 +585,12 @@ function NieuweTemplateModal({ open, onClose, onCreated }: { open: boolean; onCl
       actief: true,
     }),
     onSuccess: (tpl: any) => {
+      // Optimistisch toevoegen zodat de nieuwe template direct in de lijst staat
+      queryClient.setQueryData<any[]>(['/api/onboarding/templates'], (old) => {
+        if (!Array.isArray(old)) return [tpl];
+        if (old.some(t => t.id === tpl.id)) return old;
+        return [tpl, ...old];
+      });
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
       toast({ title: `Template '${form.naam}' aangemaakt ✓` });
       setForm({ naam: '', taal: 'Nederlands', functiegroep: '', opdrachtgever: '', isStandaard: false });
