@@ -763,13 +763,12 @@ function BijlagenTab() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/onboarding/bijlagen/${id}`);
-      const data = await (res as Response).json().catch(() => ({}));
-      if (!(res as Response).ok) throw new Error(data?.message || 'Verwijderen mislukt');
-      return data;
-    },
-    onSuccess: () => {
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/onboarding/bijlagen/${id}`),
+    onSuccess: (_data, id) => {
+      // Optimistisch verwijderen uit cache
+      queryClient.setQueryData<OnboardingBijlage[]>(['/api/onboarding/bijlagen'], (old) =>
+        Array.isArray(old) ? old.filter(b => b.id !== id) : old
+      );
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/bijlagen'] });
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
       toast({ title: 'Bijlage verwijderd ✓' });
@@ -894,7 +893,13 @@ function BijlageUploadModal({ open, onClose }: { open: boolean; onClose: () => v
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.message || 'Upload mislukt');
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (nieuw: any) => {
+      // Optimistisch prepend zodat hij direct in de bibliotheek staat
+      queryClient.setQueryData<OnboardingBijlage[]>(['/api/onboarding/bijlagen'], (old) => {
+        if (!Array.isArray(old)) return [nieuw];
+        if (old.some(b => b.id === nieuw.id)) return old;
+        return [nieuw, ...old];
+      });
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/bijlagen'] });
       toast({ title: 'Bijlage geüpload ✓' });
       reset();
