@@ -295,9 +295,25 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
 
   const ontkoppelMutation = useMutation({
     mutationFn: (koppelingId: number) => apiRequest('DELETE', `/api/onboarding/template-bijlagen/${koppelingId}`),
-    onSuccess: () => {
+    onMutate: async (koppelingId: number) => {
+      await queryClient.cancelQueries({ queryKey: ['/api/onboarding/templates', templateId] });
+      const previous = queryClient.getQueryData<OnboardingTemplateMetBijlagen>(['/api/onboarding/templates', templateId]);
+      if (previous) {
+        queryClient.setQueryData<OnboardingTemplateMetBijlagen>(
+          ['/api/onboarding/templates', templateId],
+          { ...previous, bijlagen: (previous.bijlagen || []).filter(b => b.koppelingId !== koppelingId) },
+        );
+      }
+      return { previous };
+    },
+    onError: (err: any, _koppelingId, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(['/api/onboarding/templates', templateId], ctx.previous);
+      }
+      toast({ title: 'Ontkoppelen mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
     },
   });
 
