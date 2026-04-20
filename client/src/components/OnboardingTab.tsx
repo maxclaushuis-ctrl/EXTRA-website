@@ -180,7 +180,7 @@ function TemplatesTab() {
               }`}
             >
               <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="font-semibold text-sm text-gray-900 line-clamp-1 flex-1">
+                <div className="font-semibold text-sm text-gray-900 break-words flex-1">
                   {t.naam}
                 </div>
                 {t.isStandaard && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
