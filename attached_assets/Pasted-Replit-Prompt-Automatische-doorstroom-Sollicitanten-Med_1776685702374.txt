@@ -1,0 +1,157 @@
+Replit Prompt — Automatische doorstroom Sollicitanten → Medewerkers
+Wat je gaat doen
+Zorg dat elke sollicitant die wordt aangenomen (of waarvan het intakeformulier is ingediend) automatisch ook verschijnt in het Medewerkers-tabblad, zodat de onboarding mail verstuurd kan worden. Nu zijn de twee tabbladen volledig losgekoppeld — dat verbinden we.
+
+1. Het probleem
+In het Sollicitanten-overzicht staan 521 sollicitanten verdeeld over functiecategorieën (Horecamedewerker, Chef, Housekeeping, Logistiek etc.). In het Medewerkers-tabblad staan 0 medewerkers. De koppeling tussen de twee ontbreekt volledig.
+
+2. Wanneer wordt iemand doorgeschoten?
+Maak een duidelijk onderscheid in twee scenario's:
+Scenario A — Handmatig aannemen
+Een gebruiker bekijkt een sollicitant en klikt op "Aannemen als medewerker". Dit bestaat al — zorg dat het correct werkt en een medewerkerrecord aanmaakt.
+Scenario B — Automatisch bij indiening intakeformulier (nieuw)
+Zodra een sollicitant een intakeformulier indient en in het Sollicitanten-overzicht verschijnt, wordt automatisch een medewerkerrecord aangemaakt met status "Nieuw". De gebruiker hoeft hier niets voor te doen — het gebeurt op de achtergrond.
+
+3. Automatische doorstroom logica (Scenario B)
+Pas de bestaande code aan die een nieuwe sollicitant opslaat in de database:
+javascript// Na het opslaan van een nieuw sollicitant-record:
+async function verwerkNieuweSollicitant(sollicitant) {
+  // 1. Sla sollicitant op zoals gebruikelijk
+  const nieuweSollicitant = await saveSollicitant(sollicitant);
+
+  // 2. Controleer of er al een medewerkerrecord bestaat
+  //    op basis van e-mailadres (voorkom duplicaten)
+  const bestaandeMedewerker = await getMedewerkerByEmail(sollicitant.email);
+
+  if (!bestaandeMedewerker) {
+    // 3. Maak automatisch een medewerkerrecord aan
+    await createMedewerker({
+      voornaam:      sollicitant.voornaam,
+      achternaam:    sollicitant.achternaam,
+      email:         sollicitant.email,
+      telefoon:      sollicitant.telefoon,
+      stad:          sollicitant.woonplaats,
+      taal:          mapTaalVanSollicitant(sollicitant.taal), // zie sectie 5
+      functie:       mapFunctieVanSollicitant(sollicitant.functie),
+      branche:       mapBrancheVanFunctie(sollicitant.functie),
+      status:        'nieuw',
+      sollicitant_id: nieuweSollicitant.id,
+      onboarding_verstuurd: 0,
+    });
+  }
+
+  return nieuweSollicitant;
+}
+
+4. Taal mapping
+Sollicitanten hebben talen als komma-gescheiden string (bijv. "Nederlands, Engels"). Zet dit om naar de enkelvoudige taalwaarde die onboarding gebruikt:
+javascriptfunction mapTaalVanSollicitant(taalString) {
+  if (!taalString) return 'Nederlands';
+  const talen = taalString.toLowerCase();
+
+  // Als alleen Engels → Engels
+  if (talen.includes('engels') && !talen.includes('nederlands')) {
+    return 'Engels';
+  }
+  // Standaard → Nederlands
+  return 'Nederlands';
+}
+
+5. Functie en branche mapping
+javascriptfunction mapFunctieVanSollicitant(functieCategorie) {
+  const mapping = {
+    'Horecamedewerker': 'bediening',
+    'Chef':             'chef',
+    'Housekeeping':     'housekeeping',
+    'Front-office':     'front-office',
+    'Logistiek':        'orderpicker',
+  };
+  return mapping[functieCategorie] || functieCategorie;
+}
+
+function mapBrancheVanFunctie(functieCategorie) {
+  const mapping = {
+    'Horecamedewerker': 'Hotel',
+    'Chef':             'Restaurant',
+    'Housekeeping':     'Hotel',
+    'Front-office':     'Hotel',
+    'Logistiek':        'Logistiek',
+  };
+  return mapping[functieCategorie] || null;
+}
+
+6. Duplicaat beveiliging
+Voorkom dat dezelfde persoon meerdere keren als medewerker wordt aangemaakt:
+
+Check altijd op e-mailadres vóór aanmaken
+Als medewerker al bestaat: update alleen de sollicitant_id koppeling indien die leeg is
+Log een waarschuwing als duplicaat gedetecteerd: "Medewerker [email] bestaat al — geen nieuw record aangemaakt"
+Voeg een UNIQUE constraint toe op email in de medewerkers tabel als die er nog niet is:
+
+sql  CREATE UNIQUE INDEX IF NOT EXISTS idx_medewerkers_email 
+  ON medewerkers(email);
+
+7. Sollicitanten overzicht — visuele indicator
+In het Sollicitanten-overzicht (screenshot 1): voeg een kolom of icoon toe die aangeeft of iemand al als medewerker staat:
+
+Groen vinkje icoon ✓ = staat al in Medewerkers-tabblad
+Geen icoon = nog niet gekoppeld (kan voorkomen bij oudere sollicitanten van vóór deze update)
+
+Voeg ook een knop toe per rij in het actiemenu (de drie stippen of oog-icoon):
+
+"Bekijk medewerkersdossier →" als koppeling al bestaat
+"Toevoegen als medewerker" als koppeling nog niet bestaat (handmatig scenario A)
+
+
+8. Bestaande sollicitanten migreren (eenmalig)
+Voer bij de eerste keer opstarten na deze update een eenmalige migratie uit:
+javascriptasync function migreerBestaandeSollicitanten() {
+  const sollicitanten = await getAllSollicitanten();
+  let aangemaakt = 0;
+  let overgeslagen = 0;
+
+  for (const sollicitant of sollicitanten) {
+    const bestaand = await getMedewerkerByEmail(sollicitant.email);
+
+    if (!bestaand && sollicitant.email) {
+      await createMedewerker({
+        voornaam:      sollicitant.voornaam,
+        achternaam:    sollicitant.achternaam,
+        email:         sollicitant.email,
+        telefoon:      sollicitant.telefoon,
+        stad:          sollicitant.woonplaats,
+        taal:          mapTaalVanSollicitant(sollicitant.taal),
+        functie:       mapFunctieVanSollicitant(sollicitant.functie),
+        branche:       mapBrancheVanFunctie(sollicitant.functie),
+        status:        'nieuw',
+        sollicitant_id: sollicitant.id,
+        onboarding_verstuurd: 0,
+      });
+      aangemaakt++;
+    } else {
+      overgeslagen++;
+    }
+  }
+
+  console.log(`Migratie voltooid: ${aangemaakt} aangemaakt, ${overgeslagen} overgeslagen`);
+}
+Roep deze functie aan bij server-opstart, maar alleen als er 0 medewerkers in de database staan:
+javascriptconst aantalMedewerkers = await countMedewerkers();
+if (aantalMedewerkers === 0) {
+  await migreerBestaandeSollicitanten();
+}
+
+9. Medewerkers-tabblad — statistieken updaten
+Na de migratie en automatische doorstroom zullen de statistiekenkaarten gevuld zijn. Zorg dat de teller "Onboarding nog te sturen" correct berekend wordt:
+sqlSELECT COUNT(*) FROM medewerkers 
+WHERE onboarding_verstuurd = 0 
+AND status != 'uitgestroomd'
+AND email IS NOT NULL
+AND email != ''
+
+10. Wat NIET wijzigt
+
+Het Sollicitanten-overzicht zelf blijft ongewijzigd
+Afwijzen van een sollicitant maakt geen medewerkerrecord aan
+Bestaande medewerkers die handmatig zijn aangemaakt worden niet aangeraakt
+De onboarding mail wordt NIET automatisch verstuurd — dit blijft altijd een handmatige actie
