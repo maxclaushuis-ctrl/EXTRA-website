@@ -6929,6 +6929,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(resultaten);
   });
 
+  // Helper: zet sollicitant-functiecategorie om naar medewerker-functie/branche
+  const FUNCTIE_MAPPING: Record<string, string> = {
+    'Horecamedewerker': 'bediening',
+    'Chef': 'chef',
+    'Housekeeping': 'housekeeping',
+    'Front-office': 'front-office',
+    'Logistiek': 'orderpicker',
+  };
+  const BRANCHE_MAPPING: Record<string, string> = {
+    'Horecamedewerker': 'Hotel',
+    'Chef': 'Restaurant',
+    'Housekeeping': 'Hotel',
+    'Front-office': 'Hotel',
+    'Logistiek': 'Logistiek',
+  };
+  function mapTaalSollicitant(input: any): string {
+    if (Array.isArray(input)) {
+      const lower = input.map((t: any) => String(t).toLowerCase());
+      if (lower.includes('engels') && !lower.includes('nederlands')) return 'Engels';
+      return 'Nederlands';
+    }
+    if (typeof input === 'string' && input) {
+      const t = input.toLowerCase();
+      if (t.includes('engels') && !t.includes('nederlands')) return 'Engels';
+      return 'Nederlands';
+    }
+    return 'Nederlands';
+  }
+
+  // Sollicitatie aannemen vanuit application-record (rijke versie)
+  // Combineert: application-kolommen + form_data + eventueel gekoppelde candidate
+  app.post("/api/admin/applications/:id/aannemen", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const application = await storage.getApplicationById(applicationId);
+      if (!application) return res.status(404).json({ message: "Sollicitatie niet gevonden" });
+      if (!application.email) return res.status(400).json({ message: "Sollicitatie heeft geen e-mailadres" });
+
+      const fd: any = (application.formData as any) || {};
+      const candidate = application.candidateId ? await storage.getCandidate(application.candidateId) : null;
+
+      const { functie, branche, opdrachtgever, contractType, startDate, language } = req.body || {};
+
+      const mappedFunctie = functie
+        || candidate?.functionType
+        || FUNCTIE_MAPPING[application.functionType]
+        || application.functionType
+        || null;
+      const mappedBranche = branche || BRANCHE_MAPPING[application.functionType] || null;
+
+      const employee = await storage.createEmployee({
+        firstName: application.firstName || candidate?.firstName || '',
+        lastName: application.lastName || candidate?.lastName || '',
+        email: application.email,
+        phone: application.phone || candidate?.phone || fd.phone || fd.telefoon || null,
+        birthDate: candidate?.birthDate || fd.birthDate || fd.geboortedatum || null,
+        city: application.city || candidate?.city || fd.city || fd.woonplaats || null,
+        language: language || mapTaalSollicitant(fd.languages || fd.language || candidate?.language),
+        functie: mappedFunctie,
+        branche: mappedBranche,
+        opdrachtgever: opdrachtgever || null,
+        contractType: contractType || null,
+        startDate: startDate || null,
+        status: 'nieuw',
+        candidateId: application.candidateId || null,
+      } as any);
+
+      // Update application status zodat we 'm in het overzicht kunnen herkennen
+      await storage.updateApplicationStatus(applicationId, 'aangenomen').catch(() => {});
+      if (application.candidateId) {
+        await storage.updateCandidateStatus(application.candidateId, 'aangenomen').catch(() => {});
+      }
+
+      return res.status(201).json({ employee });
+    } catch (error: any) {
+      console.error("Error aannemen application:", error);
+      const msg = error?.message?.includes('unique') || error?.code === '23505'
+        ? "Er bestaat al een medewerker met dit e-mailadres"
+        : (error?.message || "Er is iets misgegaan bij het aanmaken van de medewerker");
+      return res.status(error?.code === '23505' ? 409 : 500).json({ message: msg });
+    }
+  });
+
   // Sollicitant aannemen → maakt medewerker aan
   app.post("/api/admin/candidates/:id/aannemen", adminMiddleware, async (req: Request, res: Response) => {
     try {

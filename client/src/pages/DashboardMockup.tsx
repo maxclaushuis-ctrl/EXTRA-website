@@ -2653,35 +2653,16 @@ export default function DashboardMockup() {
                                 toast({ title: 'Geen e-mailadres', description: 'Deze sollicitatie heeft geen e-mailadres — vul dat eerst in.', variant: 'destructive' });
                                 return;
                               }
-                              const candidateId = aannemenApp.linkedCandidateId || aannemenApp.candidateId;
-                              let employee: any;
-                              if (candidateId) {
-                                const data: any = await apiRequest('POST', `/api/admin/candidates/${candidateId}/aannemen`, {
-                                  functie: aannemenForm.functie || undefined,
-                                  branche: aannemenForm.branche || undefined,
-                                  opdrachtgever: aannemenForm.opdrachtgever || undefined,
-                                  contractType: aannemenForm.contractType || undefined,
-                                  startDate: aannemenForm.startDate || undefined,
-                                  language: aannemenForm.language || undefined,
-                                });
-                                employee = data.employee;
-                              } else {
-                                // Geen kandidaat-koppeling → direct medewerker aanmaken vanuit applicatiedata
-                                employee = await apiRequest('POST', `/api/admin/employees`, {
-                                  firstName: aannemenApp.firstName || '',
-                                  lastName: aannemenApp.lastName || '',
-                                  email: aannemenApp.email,
-                                  phone: aannemenApp.phone || null,
-                                  city: aannemenApp.city || null,
-                                  language: aannemenForm.language || 'Nederlands',
-                                  functie: aannemenForm.functie || null,
-                                  branche: aannemenForm.branche || null,
-                                  opdrachtgever: aannemenForm.opdrachtgever || null,
-                                  contractType: aannemenForm.contractType || null,
-                                  startDate: aannemenForm.startDate || null,
-                                  status: 'nieuw',
-                                });
-                              }
+                              // Backend rijke endpoint: combineert application + form_data + candidate
+                              const data: any = await apiRequest('POST', `/api/admin/applications/${aannemenApp.id}/aannemen`, {
+                                functie: aannemenForm.functie || undefined,
+                                branche: aannemenForm.branche || undefined,
+                                opdrachtgever: aannemenForm.opdrachtgever || undefined,
+                                contractType: aannemenForm.contractType || undefined,
+                                startDate: aannemenForm.startDate || undefined,
+                                language: aannemenForm.language || undefined,
+                              });
+                              const employee = data.employee;
                               toast({ title: `Medewerker ${employee.firstName} ${employee.lastName} aangemaakt ✓` });
                               queryClient.invalidateQueries({ queryKey: ['/api/admin/employees'] });
                               queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
