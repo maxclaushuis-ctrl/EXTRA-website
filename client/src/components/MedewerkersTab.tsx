@@ -439,7 +439,7 @@ export default function MedewerkersTab() {
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Medewerker verwijderen</DialogTitle></DialogHeader>
           <p className="text-sm text-gray-600 mb-4">
-            Weet je zeker dat je deze medewerker wilt verwijderen? Dit kan alleen als de status <strong>Uitgestroomd</strong> is.
+            Weet je zeker dat je deze medewerker wilt verwijderen? Alle gekoppelde gegevens (onboarding-historie, shifts e.d.) worden mee verwijderd. Dit kan niet ongedaan gemaakt worden.
           </p>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Annuleren</Button>

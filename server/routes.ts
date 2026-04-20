@@ -6841,9 +6841,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const employee = await storage.getEmployee(id);
       if (!employee) return res.status(404).json({ message: "Medewerker niet gevonden" });
-      if (employee.status !== 'uitgestroomd') {
-        return res.status(400).json({ message: "Alleen uitgestroomde medewerkers kunnen verwijderd worden" });
-      }
       const ok = await storage.deleteEmployee(id);
       return res.json({ success: ok });
     } catch (error) {
