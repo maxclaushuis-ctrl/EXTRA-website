@@ -208,7 +208,7 @@ function TemplatesTab() {
       {/* Rechter paneel: detail */}
       <div>
         {selectedId ? (
-          <TemplateDetail templateId={selectedId} onDeleted={() => setSelectedId(null)} />
+          <TemplateDetail templateId={selectedId} onDeleted={() => setSelectedId(null)} onDuplicated={(id) => setSelectedId(id)} />
         ) : (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center text-gray-400">
             Selecteer een template links of maak een nieuwe aan
@@ -225,7 +225,7 @@ function TemplatesTab() {
   );
 }
 
-function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDeleted: () => void }) {
+function TemplateDetail({ templateId, onDeleted, onDuplicated }: { templateId: number; onDeleted: () => void; onDuplicated?: (newId: number) => void }) {
   const { toast } = useToast();
   const { data: tpl, isLoading } = useQuery<OnboardingTemplateMetBijlagen>({
     queryKey: ['/api/onboarding/templates', templateId],
@@ -238,6 +238,8 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showVoorvertoning, setShowVoorvertoning] = useState(false);
   const [showTestmail, setShowTestmail] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateName, setDuplicateName] = useState('');
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const bijlagenSectionRef = useRef<HTMLDivElement | null>(null);
@@ -278,8 +280,8 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   });
 
   const dupliceerMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/onboarding/templates', {
-      naam: `${form.naam} (kopie)`,
+    mutationFn: (naam: string) => apiRequest('POST', '/api/onboarding/templates', {
+      naam: naam.trim() || `${form.naam} (kopie)`,
       taal: form.taal,
       functiegroep: form.functiegroep || null,
       opdrachtgever: form.opdrachtgever || null,
@@ -288,11 +290,19 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
       isStandaard: false,
       actief: form.actief,
     }),
-    onSuccess: () => {
+    onSuccess: (nieuw: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
-      toast({ title: 'Template gedupliceerd ✓' });
+      toast({ title: `Template '${nieuw?.naam}' aangemaakt ✓` });
+      setShowDuplicateDialog(false);
+      if (nieuw?.id) onDuplicated?.(nieuw.id);
     },
+    onError: (e: any) => toast({ title: 'Dupliceren mislukt', description: e?.message, variant: 'destructive' }),
   });
+
+  const openDuplicateDialog = () => {
+    setDuplicateName(`${form.naam} (kopie)`);
+    setShowDuplicateDialog(true);
+  };
 
   const ontkoppelMutation = useMutation({
     mutationFn: (koppelingId: number) => apiRequest('DELETE', `/api/onboarding/template-bijlagen/${koppelingId}`),
@@ -460,7 +470,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
             <Save className="h-4 w-4 mr-1" />
             {updateMutation.isPending ? 'Opslaan…' : 'Opslaan'}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => dupliceerMutation.mutate()} data-testid="button-dupliceer">
+          <Button variant="outline" size="sm" onClick={openDuplicateDialog} data-testid="button-dupliceer" title="Dupliceren">
             <Copy className="h-4 w-4" />
           </Button>
           <Button
@@ -654,6 +664,37 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
         onClose={() => setShowTestmail(false)}
         templateId={templateId}
       />
+
+      <Dialog open={showDuplicateDialog} onOpenChange={(o) => !o && setShowDuplicateDialog(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Template dupliceren</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-sm">Naam voor nieuwe template</Label>
+            <Input
+              value={duplicateName}
+              onChange={e => setDuplicateName(e.target.value)}
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter' && duplicateName.trim()) dupliceerMutation.mutate(duplicateName); }}
+              placeholder="bijv. Welkom Horeca NL — variant"
+              data-testid="input-dupliceer-naam"
+            />
+            <p className="text-xs text-gray-500">Inhoud, bijlagen-instellingen, taal en functiegroep worden mee gekopieerd.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDuplicateDialog(false)}>Annuleren</Button>
+            <Button
+              onClick={() => dupliceerMutation.mutate(duplicateName)}
+              disabled={!duplicateName.trim() || dupliceerMutation.isPending}
+              className="bg-purple-600 hover:bg-purple-700"
+              data-testid="btn-dupliceer-bevestig"
+            >
+              {dupliceerMutation.isPending ? 'Dupliceren…' : 'Dupliceren'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showDeleteConfirm} onOpenChange={(o) => !o && setShowDeleteConfirm(false)}>
         <DialogContent className="max-w-sm">
