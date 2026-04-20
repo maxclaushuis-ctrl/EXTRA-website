@@ -239,6 +239,8 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
   const [showTestmail, setShowTestmail] = useState(false);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const bijlagenSectionRef = useRef<HTMLDivElement | null>(null);
+  const [bijlagenFlash, setBijlagenFlash] = useState(false);
 
   useEffect(() => {
     if (tpl) {
@@ -340,6 +342,37 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
     triggerAutoSave(form, next);
   };
 
+  const handleManualSave = () => {
+    if (!form) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    updateMutation.mutate(
+      {
+        ...form,
+        functiegroep: form.functiegroep || null,
+        opdrachtgever: form.opdrachtgever || null,
+        content: builderContent ? JSON.stringify(builderContent) : '',
+      },
+      {
+        onSuccess: () => toast({ title: 'Template opgeslagen ✓' }),
+        onError: (err: any) => toast({
+          title: 'Opslaan mislukt',
+          description: err?.message || 'Er ging iets mis',
+          variant: 'destructive',
+        }),
+      },
+    );
+  };
+
+  const handleBijlageGekoppeld = (aantal: number) => {
+    bijlagenSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setBijlagenFlash(true);
+    setTimeout(() => setBijlagenFlash(false), 1600);
+    toast({
+      title: `${aantal} bijlage${aantal === 1 ? '' : 'n'} gekoppeld ✓`,
+      description: 'Te zien onder "Bijlagen" verderop in de template.',
+    });
+  };
+
   if (isLoading || !form || !tpl) {
     return <div className="bg-white border border-gray-200 rounded-lg p-12 text-center text-gray-400">Laden...</div>;
   }
@@ -369,6 +402,16 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
             />
             <span className="text-sm">{form.actief ? 'Actief' : 'Inactief'}</span>
           </div>
+          <Button
+            size="sm"
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            onClick={handleManualSave}
+            disabled={updateMutation.isPending}
+            data-testid="button-opslaan-template"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {updateMutation.isPending ? 'Opslaan…' : 'Opslaan'}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => dupliceerMutation.mutate()} data-testid="button-dupliceer">
             <Copy className="h-4 w-4" />
           </Button>
@@ -476,7 +519,12 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
       </section>
 
       {/* Bijlagen */}
-      <section>
+      <section
+        ref={bijlagenSectionRef}
+        className={`scroll-mt-24 transition-all rounded-md ${
+          bijlagenFlash ? 'ring-2 ring-purple-400 bg-purple-50/40 -m-2 p-2' : ''
+        }`}
+      >
         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
           <Paperclip className="h-4 w-4" /> Bijlagen
           {(tpl.bijlagen?.length || 0) > 0 && (
@@ -544,6 +592,7 @@ function TemplateDetail({ templateId, onDeleted }: { templateId: number; onDelet
         templateId={templateId}
         alGekoppeld={(tpl.bijlagen || []).map(b => b.id)}
         startVolgorde={(tpl.bijlagen || []).length}
+        onGekoppeld={handleBijlageGekoppeld}
       />
 
       <VoorvertoningModal
@@ -809,7 +858,7 @@ function NieuweTemplateModal({ open, onClose, onCreated }: { open: boolean; onCl
   );
 }
 
-function BijlagePickerModal({ open, onClose, templateId, alGekoppeld, startVolgorde }: { open: boolean; onClose: () => void; templateId: number; alGekoppeld: number[]; startVolgorde: number }) {
+function BijlagePickerModal({ open, onClose, templateId, alGekoppeld, startVolgorde, onGekoppeld }: { open: boolean; onClose: () => void; templateId: number; alGekoppeld: number[]; startVolgorde: number; onGekoppeld?: (aantal: number) => void }) {
   const { toast } = useToast();
   const { data: bijlagen = [] } = useQuery<OnboardingBijlage[]>({
     queryKey: ['/api/onboarding/bijlagen'],
@@ -834,8 +883,9 @@ function BijlagePickerModal({ open, onClose, templateId, alGekoppeld, startVolgo
     onSuccess: (_, ids) => {
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates', templateId] });
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
-      toast({ title: `${ids.length} bijlage${ids.length === 1 ? '' : 'n'} gekoppeld ✓` });
       onClose();
+      if (onGekoppeld) onGekoppeld(ids.length);
+      else toast({ title: `${ids.length} bijlage${ids.length === 1 ? '' : 'n'} gekoppeld ✓` });
     },
     onError: (err: any) => {
       toast({ title: 'Koppelen mislukt', description: err?.message || 'Er ging iets mis', variant: 'destructive' });
