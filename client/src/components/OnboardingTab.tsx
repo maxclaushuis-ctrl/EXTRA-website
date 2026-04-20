@@ -621,18 +621,27 @@ function BijlagenTab() {
   const { toast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
   const [vervangenId, setVervangenId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<OnboardingBijlage | null>(null);
   const { data: bijlagen = [], isLoading } = useQuery<OnboardingBijlage[]>({
     queryKey: ['/api/onboarding/bijlagen'],
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest('DELETE', `/api/onboarding/bijlagen/${id}`),
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('DELETE', `/api/onboarding/bijlagen/${id}`);
+      const data = await (res as Response).json().catch(() => ({}));
+      if (!(res as Response).ok) throw new Error(data?.message || 'Verwijderen mislukt');
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/onboarding/bijlagen'] });
-      toast({ title: 'Bijlage verwijderd' });
+      queryClient.invalidateQueries({ queryKey: ['/api/onboarding/templates'] });
+      toast({ title: 'Bijlage verwijderd ✓' });
+      setDeleteTarget(null);
     },
     onError: (e: any) => {
       toast({ title: 'Verwijderen niet mogelijk', description: e?.message || 'Bijlage is gekoppeld aan actieve templates', variant: 'destructive' });
+      setDeleteTarget(null);
     },
   });
 
@@ -679,7 +688,7 @@ function BijlagenTab() {
                   <Button variant="ghost" size="sm" onClick={() => setVervangenId(b.id)} title="Vervangen">
                     <RotateCcw className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { if (confirm(`Bijlage "${b.naam}" verwijderen?`)) deleteMutation.mutate(b.id); }} title="Verwijderen">
+                  <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(b)} title="Verwijderen" data-testid={`button-delete-bijlage-${b.id}`}>
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </div>
@@ -697,6 +706,32 @@ function BijlagenTab() {
         bijlageId={vervangenId}
         onClose={() => setVervangenId(null)}
       />
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(o) => { if (!o && !deleteMutation.isPending) setDeleteTarget(null); }}>
+        <DialogContent className="max-w-sm" data-testid="dialog-delete-bijlage">
+          <DialogHeader><DialogTitle>Bijlage verwijderen</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>
+              Weet je zeker dat je <strong>{deleteTarget?.naam}</strong> wilt verwijderen?
+              Dit kan niet ongedaan gemaakt worden. Bijlagen die nog aan een actieve template
+              gekoppeld zijn, kunnen niet worden verwijderd.
+            </p>
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleteMutation.isPending}>
+                Annuleren
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+                disabled={deleteMutation.isPending}
+                data-testid="button-confirm-delete-bijlage"
+              >
+                {deleteMutation.isPending ? 'Verwijderen…' : 'Verwijderen'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
