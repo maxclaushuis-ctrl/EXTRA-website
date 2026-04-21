@@ -360,10 +360,32 @@ export default function SollicitatieFormulier() {
       return;
     }
 
+    // Stap 1: basisvelden check (interviewer / functie / naam) — zonder deze kan
+    // de backend niet opslaan en geeft 'ie 500. We laten de gebruiker direct
+    // terugspringen naar de juiste sectie.
+    const baseMissing: Array<{ section: number; label: string; key: string }> = [];
+    if (!data.interviewer) baseMissing.push({ section: 0, label: "Interviewer", key: "interviewer" });
+    if (!data.functionType) baseMissing.push({ section: 0, label: "Functie", key: "functionType" });
+    if (!data.firstName) baseMissing.push({ section: 1, label: "Voornaam", key: "firstName" });
+    if (!data.lastName) baseMissing.push({ section: 1, label: "Achternaam", key: "lastName" });
+
+    if (baseMissing.length > 0) {
+      const labels = baseMissing.map(m => m.label);
+      setScoreErrors(labels);
+      toast({
+        title: "Verplichte velden ontbreken",
+        description: `Vul eerst in: ${labels.join(", ")}`,
+        variant: "destructive",
+      });
+      setCurrentSection(baseMissing[0].section);
+      window.scrollTo(0, 0);
+      return;
+    }
+
     const requiredFields = getRequiredScoreFields(data.functionType);
     const missing = requiredFields.filter(f => {
       const val = (data as any)[f];
-      return val === undefined || val === null || val === "";
+      return val === undefined || val === null || val === "" || val === 0;
     });
 
     if (missing.length > 0) {
@@ -1792,24 +1814,32 @@ export default function SollicitatieFormulier() {
             </div>
 
             {currentSection === sections.length - 1 ? (
-              <Button
-                type="button"
-                onClick={async () => { await onSubmit(watch() as FormData); }}
-                disabled={isSubmitting}
-                className="flex items-center gap-2 h-14 px-8 text-base rounded-xl bg-green-600 hover:bg-green-700"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Opslaan…
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Versturen
-                  </>
+              <div className="flex flex-col items-end gap-2">
+                {scoreErrors.length > 0 && (
+                  <div className="flex items-center gap-2 text-red-600 text-sm font-semibold bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>Vul ontbrekende velden in: {scoreErrors.join(", ")}</span>
+                  </div>
                 )}
-              </Button>
+                <Button
+                  type="button"
+                  onClick={async () => { await onSubmit(watch() as FormData); }}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 h-14 px-8 text-base rounded-xl bg-green-600 hover:bg-green-700"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Opslaan…
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Versturen
+                    </>
+                  )}
+                </Button>
+              </div>
             ) : (
               <Button
                 type="button"
