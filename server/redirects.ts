@@ -73,7 +73,8 @@ const REDIRECT_MAP: Record<string, string> = {
   "/post/studiebeurs-als-student":
     "/blog",
 
-  // ── REGIO PAGINA'S → HOMEPAGE ────────────────────────────
+  // ── REGIO PAGINA'S ───────────────────────────────────────
+  "/uitzendbureau-amsterdam":           "/horeca-uitzendbureau-amsterdam",
   "/uitzendbureau-hilversum":           "/",
   "/uitzendbureau-utrecht":             "/",
   "/uitzendbureau-bussum":              "/",

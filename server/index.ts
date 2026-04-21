@@ -195,6 +195,20 @@ async function ensureAdminAccounts() {
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);
 
+  // Interne admin/mockup-pagina's uitsluiten van zoekmachines
+  const NOINDEX_PATHS = new Set([
+    '/dashboard-mockup',
+    '/employee-app',
+    '/employee-app-v1',
+  ]);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const p = req.path.toLowerCase().replace(/\/$/, '') || '/';
+    if (NOINDEX_PATHS.has(p)) {
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    }
+    next();
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
