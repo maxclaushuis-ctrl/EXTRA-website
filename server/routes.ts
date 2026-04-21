@@ -4014,6 +4014,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: z.string().optional().nullable(),
         status: z.enum(["in_behandeling", "gepland", "aangenomen", "afgewezen"]).optional().default("in_behandeling"),
         partial: z.boolean().optional().default(false),
+        // Horecamedewerker tags (optioneel — alleen ingevuld als functie = horecamedewerker)
+        canIndependentShift: z.boolean().optional(),
+        canCarryThreePlates: z.boolean().optional(),
+        isBarista: z.boolean().optional(),
+        canMakeCocktails: z.boolean().optional(),
+        isAssistantChef: z.boolean().optional(),
+        canDoWashing: z.boolean().optional(),
+        isPromoter: z.boolean().optional(),
+        serviceSkills: z.number().int().min(1).max(5).optional().nullable(),
+        barSkills: z.number().int().min(1).max(5).optional().nullable(),
+        dinerSkills: z.number().int().min(1).max(5).optional().nullable(),
       });
 
       const validated = publicRegistrationSchema.parse(req.body);
@@ -4052,6 +4063,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: validated.notes || null,
         status: validated.status || "in_behandeling",
         retentionUntil: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        ...(validated.canCarryThreePlates !== undefined && { canCarryThreePlates: validated.canCarryThreePlates }),
+        ...(validated.isBarista !== undefined && { isBarista: validated.isBarista }),
+        ...(validated.canMakeCocktails !== undefined && { canMakeCocktails: validated.canMakeCocktails }),
+        ...(validated.isAssistantChef !== undefined && { isAssistantChef: validated.isAssistantChef }),
+        ...(validated.canDoWashing !== undefined && { canDoWashing: validated.canDoWashing }),
+        ...(validated.isPromoter !== undefined && { isPromoter: validated.isPromoter }),
+        ...(validated.serviceSkills != null && { serviceSkills: validated.serviceSkills }),
+        ...(validated.barSkills != null && { barSkills: validated.barSkills }),
+        ...(validated.dinerSkills != null && { dinerSkills: validated.dinerSkills }),
+        ...(validated.canIndependentShift !== undefined && { isOnlyJob: validated.canIndependentShift }),
       } as any);
 
       await storage.createCandidateAuditLog({
@@ -4231,6 +4252,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: z.string().optional().nullable(),
         rejectionReason: z.string().optional().nullable(),
         partial: z.boolean().optional().default(false),
+        canIndependentShift: z.boolean().optional(),
+        canCarryThreePlates: z.boolean().optional(),
+        isBarista: z.boolean().optional(),
+        canMakeCocktails: z.boolean().optional(),
+        isAssistantChef: z.boolean().optional(),
+        canDoWashing: z.boolean().optional(),
+        isPromoter: z.boolean().optional(),
+        serviceSkills: z.number().int().min(1).max(5).optional().nullable(),
+        barSkills: z.number().int().min(1).max(5).optional().nullable(),
+        dinerSkills: z.number().int().min(1).max(5).optional().nullable(),
       });
 
       const validated = updateSchema.parse(req.body);
@@ -4247,6 +4278,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (validated.interviewDate !== undefined) updateData.interviewDate = validated.interviewDate;
       if (validated.interviewTime !== undefined) updateData.interviewTime = validated.interviewTime;
       if (validated.notes !== undefined) updateData.notes = validated.notes;
+      if (validated.canIndependentShift !== undefined) updateData.isOnlyJob = validated.canIndependentShift;
+      if (validated.canCarryThreePlates !== undefined) updateData.canCarryThreePlates = validated.canCarryThreePlates;
+      if (validated.isBarista !== undefined) updateData.isBarista = validated.isBarista;
+      if (validated.canMakeCocktails !== undefined) updateData.canMakeCocktails = validated.canMakeCocktails;
+      if (validated.isAssistantChef !== undefined) updateData.isAssistantChef = validated.isAssistantChef;
+      if (validated.canDoWashing !== undefined) updateData.canDoWashing = validated.canDoWashing;
+      if (validated.isPromoter !== undefined) updateData.isPromoter = validated.isPromoter;
+      if (validated.serviceSkills != null) updateData.serviceSkills = validated.serviceSkills;
+      if (validated.barSkills != null) updateData.barSkills = validated.barSkills;
+      if (validated.dinerSkills != null) updateData.dinerSkills = validated.dinerSkills;
 
       const updated = await storage.updateCandidate(id, updateData);
 
