@@ -18,6 +18,7 @@ import {
   FileText, MessageSquare, PhoneCall, AlignLeft, AlertTriangle, Upload
 } from 'lucide-react';
 import { ImportClientsDialog } from './ImportClientsDialog';
+import { useToast } from '@/hooks/use-toast';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
