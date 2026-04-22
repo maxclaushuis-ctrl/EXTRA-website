@@ -1,0 +1,310 @@
+client_id,client_name,street_name,number,number_extention,zip_code,city,email,mobile,contact_id,contact_first_name,contact_last_name,contact_phone_number,contact_email,rating,rate,regions
+1,Apple,Torenallee,45,,5617BA,Eindhoven,info@brendan-mackenzie.com,0612345678,,,,,,0,22,"EXTRA, Brabant"
+2,"Doen Horeca",Vestdijk,59,,"5611  CA",Eindhoven,,085-1307967,9,Kevin,"de Lepper","31 0639125620",kevin@doenhoreca.nl,8.5,27.08,"EXTRA, Brabant"
+2,"Doen Horeca",Vestdijk,59,,"5611  CA",Eindhoven,,085-1307967,63,Ingrid,Vork,"31 0628612174",administratie@doenhoreca.nl,8.5,27.08,"EXTRA, Brabant"
+3,"Theater Amsterdam",Danzigerkade,5,,"1013  AP",Amsterdam,,020-7055055,10,Evelien,Linders-Schimmel,"31 0610782469",evelien@theateramsterdam.nl,0,22.75,"EXTRA, Noord-holland"
+3,"Theater Amsterdam",Danzigerkade,5,,"1013  AP",Amsterdam,,020-7055055,187,Karlijn,Jager,"31 0652414932",k.jager@theateramsterdam.nl,0,22.75,"EXTRA, Noord-holland"
+4,"Be my guest",Ondiep-Zuidzijde,6,,"3551  BW",Utrecht,,085-0608123,,,,,,10,0,"EXTRA, Utrecht"
+5,"Hotel Arena",'s-Gravesandestraat,55,,"1092 AA",Amsterdam,,020-8502400,370,Eduardo,"Hotel Arena","31 0657084760",venuemanager@hotelarena.nl,8.86,23,"EXTRA, Noord-holland"
+6,"Bolt Events",Nieuwpoortkade,21,,"1055  RX",Amsterdam,,06-42269201,,,,,,0,21.5,"EXTRA, Noord-holland"
+7,"Floris & van Maurik",Energieweg,8,,"1271  ED",Huizen,,035-5264856,1796,Remco,"van Maurik","31 643670503",remco@florisenvanmaurik.nl,9.25,26.54,"EXTRA, Het Gooi"
+7,"Floris & van Maurik",Energieweg,8,,"1271  ED",Huizen,,035-5264856,1797,Floris,Kok,"31 6 45300298",floris@florisenvanmaurik.nl,9.25,26.54,"EXTRA, Het Gooi"
+8,"Famous Flavours",Luzernestraat,57,,"2153  GM",Nieuw-Vennep,,020-4160020,16,Myrthe,"de Louw-Postma","31 020-4160020",myrthe@famousflavours.nl,0,0,EXTRA
+9,"HoutsKohl Catering",Hoofdweg,67-3,,"1058  AZ",Amsterdam,,06-26842817,17,Tom,Kohlmann,"31 06-26842817",tom@houtskohl.nl,0,0,"EXTRA, Noord-holland"
+10,Kanteen25,Kattenburgerstraat,"5 (025)",,"1018 JA",Amsterdam,,06-57167214,937,Federico,Palagano,"31 612930512",federico@kanteen25.nl,9.44,25.5,"EXTRA, Noord-holland"
+10,Kanteen25,Kattenburgerstraat,"5 (025)",,"1018 JA",Amsterdam,,06-57167214,1068,Isabel,x,"31 123456789",isabel@kanteen25.nl,9.44,25.5,"EXTRA, Noord-holland"
+11,"Landgoed Salentein",Putterstraatweg,5,,"3862  RA",Nijkerk,,033-2475201,19,Robert,Leussink,"31 033-2475201",r.leussink@landgoedsalentein.nl,0,23,"EXTRA, Utrecht"
+12,"Leonardo Royal Hotel","Paul van Vlissingenstraat",24,,"1096 BK",Amsterdam,,020-2500000,,,,,,0,0,"EXTRA, Noord-holland"
+13,"Mart Visser",Luchtvaartstraat,1A,,"1059 CA",Amsterdam,,020-5712020,1763,Mart,Visser,"31 6 51184044",mart@martvisser.nl,9.6,29.5,"EXTRA, Noord-holland"
+14,"Sonah Catering",Ondernemingsweg,"52 E",,"1422 DZ",Uithoorn,,06-41833825,22,Eelco,Meerman,"31 06-41833825",julien@sonahcatering.nl,9.04,28.5,"EXTRA, Noord-holland"
+15,"Taylor Made Catering & Co",Veemarktkade,8,,"5222 AE",'s-Hertogenbosch,,06-50236114,,,,,,0,0,"EXTRA, Brabant"
+16,"Work Out",Gaaspstraat,54-2,,"1079 VG",Amsterdam,,0653813448,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant"
+17,KC-service,Rhijnspoorplein,10,,"1018 TX",Amsterdam,,085-1305915,30,Max,Claushuis,"31 0653813448",max@bureaupistache.nl,10,0,"EXTRA, Noord-holland"
+17,KC-service,Rhijnspoorplein,10,,"1018 TX",Amsterdam,,085-1305915,116,Eva,"van Wieringen","31 0655900255",x.eva@live.nl,10,0,"EXTRA, Noord-holland"
+18,"Zones Pure food & Drinks",Laarderhoogtweg,25,,"1101 EB",Amsterdam,,088-0158600,64,Max,Claushuis,"31 0653813448",max@zones.nu,9.6,28.62,"EXTRA, Noord-holland"
+18,"Zones Pure food & Drinks",Laarderhoogtweg,25,,"1101 EB",Amsterdam,,088-0158600,312,Krista,Siwalette,"31 0616084078",krista@zones.nu,9.6,28.62,"EXTRA, Noord-holland"
+19,"De Kok & De Maitre",Danzigerkade,177,,"1013 AP",Amsterdam,,0648178817,,,,,,0,0,"EXTRA, Noord-holland"
+20,"Bar Kaspar",Beethovenstraat,100,,"1077 SR",Amsterdam,,"020 240 0870",,,,,,0,0,"EXTRA, Noord-holland"
+21,Okura,"Ferdinand bolstraat",333,,"1072 LH",Amsterdam,,"020 678 7111",,,,,,0,0,"EXTRA, Noord-holland"
+22,"Felix Works",Vestdijk,"59 B",,"5611  CA",Eindhoven,,085-1307967,,,,,,8,0,"EXTRA, Brabant"
+23,Okura,"Ferdinand Bolstraat",333,,"1072  LH",Amsterdam,,020-6787111,87,Rik,Donders,"31 0619701479",okura@amsterdam.nl,7.6,0,"EXTRA, Noord-holland"
+24,"The Grand Amsterdam","Oudezijds Voorburgwal",197,,"1012  EX",Amsterdam,,020-5553111,89,Arjen,Robben,"31 0612345678",info@arjenrobben.nl,0,23.5,"EXTRA, Noord-holland"
+25,"Max Jaspers Catering","Carolina MacGillavrylaan",144,,"1098 XA",Amsterdam,,0612391837,98,Max,Jaspers,"31 0612391837",jaspersbbqcatering@gmail.com,9.71,20.7,"EXTRA, Noord-holland"
+26,Rocycle,Rembrandtplein,11,,"1017 CP",Amsterdam,,0612345678,,,,,,0,0,"EXTRA, Noord-holland"
+27,"De Groene Afslag",Amersfoortsestraatweg,117,,"1251 AV",Laren,,"035 888 8877",,,,,,0,0,"EXTRA, Het Gooi"
+28,"Hete Peper Catering","Verrijn Stuartweg",77,,"1112 AW",Diemen,,012-06820012,916,Tessa,Sonderman,"31 625581803",tessa@hetepeper.nl,9.09,29.95,"EXTRA, Noord-holland"
+29,"Vliegbasis Soesterberg",Hertenlaan,12,,"3734 CG","Den Dolder",,"030 - 220 55 55",,,,,,0,0,"EXTRA, Utrecht"
+30,"Taide The Agency","Jacob Obrechtstraat",51,,"1071  KJ",Amsterdam,,"085 068 5592",,,,,,0,0,"EXTRA, Noord-holland"
+31,"Andaz Hotel",Prinsengracht,587,,"1016  HT",Amsterdam,,"020 523 1234",,,,,,0,23.27,"EXTRA, Noord-holland"
+32,"Waldorf Astoria",Herengracht,542-556,,"1017 CG",Amsterdam,,"020 718 4600",134,Eloy,"Umpierrez de Jong","31 0640292448",Eloy.UmpierrezdeJong@waldorfastoria.com,0,23.5,"EXTRA, Noord-holland"
+33,"Hilton Apollolaan",Apollolaan,138,,"1077  BG",Amsterdam,,"020 710 6000",902,Federica,Palomba,"31 207106025",Federica.palomba@hilton.com,8,25,"EXTRA, Noord-holland"
+33,"Hilton Apollolaan",Apollolaan,138,,"1077  BG",Amsterdam,,"020 710 6000",1223,Zerrin,Yurtseven,"31 0207106028",zerrin.yurtseven@hilton.com,8,25,"EXTRA, Noord-holland"
+33,"Hilton Apollolaan",Apollolaan,138,,"1077  BG",Amsterdam,,"020 710 6000",1225,Vincenzo,Sulmona,"31 638198466",vincenzo.sulmona@hilton.com,8,25,"EXTRA, Noord-holland"
+34,"Hilton Apollolaan",Apollolaan,138,,"1077 BG",Amsterdam,,"020 710 6000",,,,,,0,23,"EXTRA, Noord-holland"
+35,"Johan Cruijff ArenA","ArenA Boulevard",1,,"1100  DL",Amsterdam,,-,132,Felix,Works,"31 -",[arena]moshe@vandersterre-it.nl,8.37,0,"EXTRA, Noord-holland"
+36,Skanna,"Derde Weteringdwarsstraat",28,,"1017  TC",Amsterdam,,"020 620 4048",177,Selma,Skanna,"31 0612177829",planning@skanna.nl,9.38,0,"EXTRA, Noord-holland"
+37,"Eetcafe de Otter",Oud-Loosdrechtsedijk,131,,"1231  LT",Loosdrecht,,"06-28 73 79 38",,,,,,0,0,"EXTRA, Utrecht"
+38,Gooiland,Emmastraat,2,,"1211  NG",Hilversum,,"035 744 0115",137,Mitch,Verlaan,"31 0613741658",mitch.verlaan@gooiland.nl,0,0,"EXTRA, Utrecht"
+39,"Kimpton De Witt Hotel","Nieuwezijds Voorburgwal",5,,"1012 RC",AMsterdam,,0206200500,,,,,,0,23.78,"EXTRA, Noord-holland"
+40,Bridges,"Oudezijds Achterburgwal",170,,"1012  GH",Amsterdam,,-,,,,,,0,23.78,"EXTRA, Noord-holland"
+41,"Tribe Company","Burgemeester Stramanweg","97 C",,"1191  EA","Ouderkerk a/d Amstel",,020-6767567,145,Stephanie,Röpke,"31 0620224694",stephanie@tribecompany.com,8.27,23.5,"EXTRA, Utrecht"
+42,"De Fotomeiden",Keizersgracht,229-B,,"1016 DV",Amsterdam,,020-3484874,223,Rutger,Diemel,"31 0614697748",info@defotomeiden.nl,9.4,25,"EXTRA, Noord-holland"
+43,"Double Tree by Hilton",Oosterdoksstraat,4,,"1011  DK",Amsterdam,,"+31 20 530 0800",147,TEST,TEST,"31 0677900455",Test@test.nl,9.16,0,"EXTRA, Noord-holland"
+44,MPS,Herenweg,24B,,"3602  AP",Maarssen,,0880801300,161,Skander,Rana,"31 06 427 993 77",[mps]skander@skanna.nl,8.4,0,"EXTRA, Utrecht"
+45,Photonic,Rapenburg,1,,"1011  TT",Amsterdam,,"020 330 43 84",162,Patrick,Smits,"31 06 18 09 00 14",patrick@photonic.nl,9.33,20,"EXTRA, Noord-holland"
+46,"Hutten Catering",Mountbattenweg,2,,"54 66",Veghel,,"0413 366 633",166,Herman,"den Blijker","31 0612345678",koken@test.nl,8.67,0,"EXTRA, Brabant"
+47,"A Culinary Affair","Nieuwe Hemweg",15,C,1013BG,Amsterdam,,0681654323,2323,Federico,"Coli Rivera","31 624341265",federico@aculinaryaffair.nl,9.37,30.71,"EXTRA, Noord-holland"
+48,Tubes,Franciscusweg,14,,"1216  SK",Hilversum,,"+31 35 303 49 94",173,Yumi,Velleman-Gotoh,"31 +31 6 17 840 801",yumi.velleman@tubes.nl,0,0,"EXTRA, Het Gooi"
+49,"Huis van Eemnes",Noordersingel,4,,"3755  EZ",Eemnes,,"035 531 18 87",176,Robert-Jan,Vos,"31 035 531 18 87",rj.vos@huisvaneemnes.nl,9.5,0,"EXTRA, Het Gooi"
+50,"Wajer Yachts",Zeeburgerkade,832-834,,"1019  HT",Amsterdam,,"0515 442 131",180,Marielle,"van der Putten","31 0611109758",noncence@hotmail.com,0,0,"EXTRA, Noord-holland"
+51,"Creative Valley Utrecht CS",Stationsplein,32,,"3511  ED",Utrecht,,0640651265,,,,,,0,0,"EXTRA, Utrecht"
+52,"Creative Valley Papendorp",Orteliuslaan,13,,"3528  BA",Utrecht,,0640651265,,,,,,0,0,"EXTRA, Utrecht"
+53,"Pinc Catering & Events",Jordaan,8,,"1251 PC",Laren,,(+31)06-45548293,,,,,,0,0,"EXTRA, Het Gooi"
+54,"Leonardo Royal Hotel Amsterdam","Paul van Vlissingenstraat",24,,"1096  BK",Amsterdam,,"+31 20 – 250 00 00",200,Adriaan,"van Rooij","31 0611845685",adriaan.vanrooij@leonardo-hotels.nl,0,0,EXTRA
+55,"Ouwehands Dierenpark",Grebbeweg,111,,"3911  AV",Rhenen,,"0317 650200",,,,,,0,0,"EXTRA, Utrecht"
+56,Spant!,"Dr. A. Kuyperlaan",3,,"1402  SB",Bussum,,"035 693 3254",201,Rene,Turk,"31 0622698978",rt@spant.nl,8.23,23.68,"EXTRA, Het Gooi"
+57,"The Food Line-Up","Nieuwe Hemweg",14H,,"1013  BG",Amsterdam,,"020 261 5235",652,Ellis,Pronk,"31 0626463556",planning@thefoodlineup.nl,9.07,28.5,"EXTRA, Noord-holland"
+57,"The Food Line-Up","Nieuwe Hemweg",14H,,"1013  BG",Amsterdam,,"020 261 5235",2861,Guusje,Olsthoorn,"31 6 34217491 ",guusje@thefoodlineup.nl,9.07,28.5,"EXTRA, Noord-holland"
+58,"Maison van den Boer","De Amert",207,,"5462  GH",Veghel,,"0413 318 318",207,Jelle,Vloedgraven,"31 063196616",[maison]planning@skanna.nl,9.23,26.4,"EXTRA, Brabant"
+58,"Maison van den Boer","De Amert",207,,"5462  GH",Veghel,,"0413 318 318",218,Maison,"van den boer","41 0413 318 318",personeelsplanning@maisonvandenboer.com,9.23,26.4,"EXTRA, Brabant"
+59,Trainevents,"Caroline MacGillavrylaan",3402,,"1098  XJ",Amsterdam,,0642019224,208,Matthijs,"van der Mierde","31 0642019224",info@trainevents.nl,0,0,"EXTRA, Noord-holland"
+60,"Club Up Amsterdam","Korte Leidsedwarsstraat",26,,"1017  RR",Amsterdam,,+31(0)206236985,,,,,,0,0,"EXTRA, Noord-holland"
+61,"Gemeente Amsterdam",Huizerweg,59,,"1261  AV",Blaricum,,0634343420,212,ANNEMIEKE,VERWOERT,"31 0634343420",miek@miekcommunicatie.nl,0,0,"EXTRA, Het Gooi"
+62,"Special Wines",Marathonweg,15,,"1076 SX",Amsterdam,,"06 517 518 91",,,,,,0,0,"EXTRA, Noord-holland"
+63,"Arena Maison van den Boer","Johan Cruijff Boulevard",25,,"1101  AX",Amsterdam,,"+31 (0)20 311 11 00",216,Arena,Maison,"31 +31 (0)20 311 11 00",operations.arena@maisonvandenboer.com,8.75,24.47,"EXTRA, Noord-holland"
+64,"Maison van den Boer","De Amert",207,,5462GH,Veghel,,030-8885500,543,Maison,"van den Boer","31 0624545326",info@nononsense.nl,8.87,26.42,"EXTRA, Utrecht"
+65,DailyPack,Bedrijfsweg,7,,"3831 KE",Leusden,,033-4343098,236,Hedzer,Gelijsteen,"31 033-4343098",hedzer@dailypack.nl,7.69,0,"EXTRA, Utrecht"
+65,DailyPack,Bedrijfsweg,7,,"3831 KE",Leusden,,033-4343098,244,Hedzer,Gelijsteen,"31 033-4343098",info@dailypack.nl,7.69,0,"EXTRA, Utrecht"
+66,"Red je Pakketje Amsterdam",Gyroscoopweg,6,,"1042  AB",Amsterdam,,"+31 (0)6 28285234",,,,,,6,0,"Noord-holland, EXTRA"
+67,"Red je Pakketje Utrecht",Fermiweg,10,,"3542 CB",Utrecht,,06-43299164,,,,,,8,0,"Utrecht, EXTRA"
+68,"Red je Pakketje Best",Tormentil,10,,"5684 PK",Best,,06-48178464,,,,,,0,0,"Brabant, EXTRA"
+69,"Red je Pakketje Zwolle",Rieteweg,15,,"8041 AJ",Zwolle,,06-43223465,,,,,,0,0,"Utrecht, EXTRA"
+70,"Red je Pakketje Rijen",Kempenbaan,30,,"5121 DM",Rijen,,06-48178464,,,,,,0,0,"Brabant, EXTRA"
+71,"Intersport Twinsport Akerpoort",Ookmeerweg,408,,"1069 CG",Amsterdam,,"020 246 1207",,,,,,8.67,22,"Noord-holland, EXTRA"
+72,"Intersport Twinsport Gelderlandplein",Gelderlandplein,"32 - 34",,"1082 LB",Amsterdam,,"020 644 2442",,,,,,9.8,22,"Noord-holland, EXTRA"
+73,"Va De Vi",Marktplein,21,,"1421 AC",Uithoorn,,"06 41833825",281,Eelco,Meerman,"31 0641833825",[vadevi]eelco@sonahcatering.nl,10,0,"Noord-holland, EXTRA"
+74,Gastvrij,Onderwijsboulevard,422,,"5223 DP",'s-Hertogenbosch,,"073 751 70 00",,,,,,0,0,"Utrecht, EXTRA"
+75,"Passionata Catering",Marktstraat,31,,"1411 CZ",Naarden,,"035 678 2416",,,,,,0,0,"Het Gooi, EXTRA"
+76,EXTRA,Herengracht,372,,"1016 CH",Amsterdam,,"085 130 5915",703,Max,Claus,"31 0653813448",info@extravagant.nl,9.22,0,"Noord-holland, EXTRA"
+76,EXTRA,Herengracht,372,,"1016 CH",Amsterdam,,"085 130 5915",1283,Eveline,Smits,"31 085 401 2373",info@doehetextra.nl,9.22,0,"Noord-holland, EXTRA"
+77,WestWeelde,Klönneplein,4-6,,"1014 DD",Amsterdam,,"020 684 8496",1228,Dani,x,"31 +31 6 21961705","bevestigen planning@westergasterras.nl",9.58,26.29,"Noord-holland, EXTRA"
+78,"FAJE Catering","Nieuwe Havenweg",81C,,"1216 BP",Hilversum,,"035-201 9629",,,,,,0,0,"Het Gooi, EXTRA"
+79,"Van Dam Catering",Limmerick,19,,1046AR,Amsterdam,,020-4708801,,,,,,0,0,"Noord-holland, EXTRA"
+80,"Marc van Laere Producties",Stationsweg,29,,"4205 AA",Gorinchem,,"+31 (0)183 64 88 26",344,Zoë,"van Walstijn","31 0648363763",zoe@marcvanlaere.nl,10,0,"EXTRA, Noord-holland"
+81,"Hilton Garden Inn","Willem Einthovenstraat",3,,"2342 BH",Oegstgeest,,"071 711 1000",,,,,,0,0,"EXTRA, Den Haag"
+82,"Van Gils Creations",Franciscusweg,14,,1216SK,Hilversum,,0353034997,348,Stefan,"van Gils","31 0629223388",stefan@vangilscreations.nl,9.5,29.5,"Noord-holland, EXTRA, Utrecht"
+83,"Hilton Schiphol Airport","Schiphol Boulevard",701,,"1118 BN",Amsterdam,,020-7104000,353,Rik,"van Gool","31 020-7104000",[hilton-schiphol]moshe@felixworks.nl,9.26,27.08,"Noord-holland, EXTRA"
+84,"Grand Café Marie",Mariaplaats,14,,3511LJ,Utrecht,,"030 303 1480",366,Luuk,Rijnders,"31 0622908939",luukrijnders@grandbarmarie.nl,8.67,0,"EXTRA, Utrecht"
+85,"Holy Cow",Lindenhovenstraat,6,a,2471XK,Zwammerdam,,0622242899,,,,,,8.25,27.5,EXTRA
+86,"Novotel - Stach",Europaboulevard,10,,"1083 AD",Amsterdam,,0207219179,396,Frank,Lips,"31 info@felix.nl",0612345678,9.33,0,"Noord-holland, EXTRA"
+87,"Invicta Lustrum",Warmoesstraat,153,,1012JC,Amsterdam,,020-5238017,,,,,,0,0,"Noord-holland, EXTRA"
+88,"Compass Group",Herculesplein,241,,3584AA,Utrecht,,020-5643700,470,Max,Claushuis,"31 020-5643700",planning@doehetextra.nl,9.33,27,"Utrecht, EXTRA"
+89,"AFAS Live","Johan Cruijff Boulevard",590,,"1101 DS",Amsterdam,,"020 409 79 79",504,Janine,Pirovano,"31 020 409 79 79",x,9.86,28.2,"Noord-holland, Utrecht, Brabant, EXTRA"
+90,"Vermaat groep",Produktieweg,1,,"3401 MG",Utrecht,,"030 688 0181",527,Max,C,"31 x",info@vermaatgroep.nl,8.67,0,"Noord-holland, Den Haag, EXTRA, Brabant, Het Gooi, Utrecht"
+91,"Greater EXPO",Stelling,1,,"2141 SB",Vijfhuizen,,"023 566 0140",529,Greater,Expo,"31 023 566 0140",info@greater.nl,9.33,24.5,"Noord-holland, EXTRA"
+92,Vermaat,Produktieweg,1,,"3401 MG",Ijselstein,,"030 687 55 98",,,,,,0,0,"Noord-holland, EXTRA, Utrecht"
+93,Tolhuistuin,IJpromenade,2,,"1031 KT",Amsterdam,,"020 760 4820",,,,,,0,0,"Noord-holland, EXTRA"
+94,"Event Center Fokker",Ijweg,1094,,"2133 MH",Hoofddorp,,"023 561 7858",,,,,,0,0,"EXTRA, Noord-holland"
+95,"Stoop Catering",Industrieweg,15,,3738JW,Maartensdijk,,023-2052399,650,Hester,"van der Lely","31 0653641743",hester@stoopcateringevents.nl,9.2,27.75,EXTRA
+96,"The Flavour Kitchen",Seinstraat,14,,"1223 DA",Hilversum,,"035 6317530",701,Johan,Bijland,"31 0631928798",werken@theflavourkitchen.nl,9.3,25,EXTRA
+97,"De Cateringfabriek",Kobalstraat,3,E,"1411 AM",Naarden,,0618813155,586,Joost,Nouwens,"31 0618813155",jnouwens@cateringfabriek.nl,9.42,26.5,"EXTRA, Het Gooi, Noord-holland"
+97,"De Cateringfabriek",Kobalstraat,3,E,"1411 AM",Naarden,,0618813155,1324,Robin,"van Benten","31 06 30 66 08 24",robin.vanbenten@cateringfabriek.nl,9.42,26.5,"EXTRA, Het Gooi, Noord-holland"
+98,"Lola's events","Jan van houtkade",41,,2311PE,Leiden,,0642319209,,,,,,0,0,"EXTRA, Den Haag"
+99,Adyen,Rokin,49,,"1012 KK",Amsterdam,,0652788377,,,,,,9.56,27.5,Noord-holland
+100,"Salsa Catering",Postbus,41,,"4153 ZG",Beesd,,0652211459,,,,,,0,0,"Noord-holland, Den Haag, EXTRA, Brabant, Het Gooi, Utrecht"
+101,"Nick Vollebregt",Naarderstraat,40,,1251BD,Laren,,035-5383577,,,,,,0,0,"EXTRA, Het Gooi"
+102,Solid,"Ronde Tocht",11,,"1507 CC",Zaandam,,"020- 2440832",,,,,,0,0,Noord-holland
+103,"Grand Hotel Amrâth Kurhaus","Gevers Deynootplein",30,,2586CK,"Den Haag",,070-4162636,640,Kur,Haus,"31 070-4162636",.,8.06,0,"Den Haag, EXTRA"
+104,"BluePrint Automation",Carrosserieweg,3,,"3445 BC",Woerden,,0348410999,,,,,,10,0,EXTRA
+105,"Taste More B.V.",Everdenberg,6,,"4902 TT",Oosterhout,,0162727600,654,No,Nonsense,"31 0",--,8.5,0,"EXTRA, Brabant, Den Haag"
+106,CHANG-I,"Jan Willem Brouwersstraat",7,,"1071 LH",Amsterdam,,"020 4 701 700",667,Vincent,Nonsense,"31 0619068060",info@chang-i.nl,9.4,25,"Noord-holland, EXTRA"
+107,"Holy Moly",Flinesstraat,4,,1114AL,Amsterdam,,020-4635635,672,Ben,"van Duin","31 0645079572",test@holymoly.pizza,8,29.3,"EXTRA, Noord-holland"
+108,Mr-Joy,Kinkerstraat,90,,"1053 EB",Amsterdam,,020-2615648,673,Tom,"ten Herkel","31 0613677699",xx,8.1,0,"EXTRA, Noord-holland"
+109,"NHOW Rai Amsterdam","Europaboulevard 2",B,,"1078 RV",Amsterdam,,"020 800 3200",711,Nonsense,Nonsense,"31 xxx",xxx,8.68,24.73,Noord-holland
+110,"Hotel NH Centre Leeuwenhorst",Langelaan,3,,"2211 XT",Noordwijkerhout,,"0252 378 888",712,xxx,xxx,"31 xxx",nonsense,8,0,EXTRA
+111,"NH Hotel Schiphol",Kruisweg,495,,"Kruisweg 495,",Amsterdam,,"020 655 0550",,,,,,0,0,EXTRA
+112,"Stek Advocaten",Leidseplein,29,,"1017 PS",Amsterdam,,"020 530 5200",714,Mirjam,"de Jong","31 06 40 23 28 99",mirjam.dejong@stek.com,9.33,27,"Noord-holland, EXTRA"
+113,"Felix Janssen Catering",Valkenaarstraat,38,,"1271 TN",Huizen,,0624900205,718,Felix,Janssen,"31 624900205",info@felixjanssencatering.com,0,0,"Noord-holland, EXTRA, Het Gooi"
+114,"Morgan | Taide",Haarlemmermeerstraat,55,,"1058 JR",Amsterdam,,"06 38314251",,,,,,8.65,24,"Noord-holland, EXTRA"
+115,"Compass - Universiteit Utrecht",Maupertuusplein,1,,"3584 EE",Utrecht,,621705612,729,Harry,"van het Kamp","31 621705612",.xxx,8,0,"EXTRA, Utrecht"
+116,"Compass Group - Provinciehuis Utrecht",Archimedeslaan,6,,"3584 BA",Utrecht,,"+31 6 19701479",735,nonsense,nonsense,"31 nonsense",nonsense.nl,8.97,27,EXTRA
+117,"Juliette Amsterdam",Valeriusplein,4,a,1075BG,Amsterdam,,0629363827,751,Noud,Versteegh,"31 629363827",noud@julesjuliette.nl,8.83,0,"EXTRA, Noord-holland"
+118,"Orangerie Elswout",Elswoutslaan,22,,"2051 AE Overveen",Overveen,,"023 524 2639",754,Denise,"de Vogel","31 x",info@orangerie-elswout.nl,8.47,25,EXTRA
+119,Cookaholics,Akkelaan,2,,5143ND,Waalwijk,,0852736709,761,Steffan,Oerlemans,"31 0852736709",geen,9.33,0,EXTRA
+120,"Bon Bon Party Service","Van Hennaertweg",3,,2952CA,Alblasserdam,,078-6912186,774,Gerrie,Badspak,"31 627374341",gerrie@badspak.nl,8.67,0,"EXTRA, Den Haag"
+121,"Strand Zuid",Europaplein,22,,1078GZ,Amsterdam,,0206392589,931,Naomi,"Naomi K","31 6 13268790",n.kempe@unlimitedlabel.com,9.31,0,"Noord-holland, EXTRA"
+121,"Strand Zuid",Europaplein,22,,1078GZ,Amsterdam,,0206392589,1227,Franka,Veltman,"31 0612765824",f.veltman@unlimitedlabel.com,9.31,0,"Noord-holland, EXTRA"
+122,"Baseball European Champions Cup",Herengracht,372,4,1016CH,Amsterdam,,0653547607,779,Bernie,Elfrink,"31 653547607",bernie@hcaw.nl,9.37,0,"Noord-holland, EXTRA, Het Gooi"
+123,"De Rode Hoed","Da Costakade",102,,"1053 WP",Amsterdam,,"020 589 1680",,,,,,0,0,Noord-holland
+124,"Felix Meritis",Keizersgracht,324,,"1016 EZ",Amsterdam,,"020 627 9477",,,,,,0,0,Noord-holland
+125,"Het Compagnietheater","Da Costakade",102,,"1053 WP",Amsterdam,,"020 589 1680",,,,,,0,0,Noord-holland
+126,"De Nieuwe Liefde","Da Costakade",102,,"1053 WP",Amsterdam,,"020 589 1680",,,,,,0,0,Noord-holland
+127,"Bernie's Beach Club","Boulevard Barnaart",65,,2041JA,Zandvoort,,023-5737583,802,Saskia,Koelewijn,"31 627399548",tet@test,9.3,0,"Noord-holland, EXTRA"
+128,"Hessing Events",Wijkergouw,36,,1023NX,Amsterdam,,0624649499,803,Karel,Hessing,"31 624649499",info@hessingevents.nl,9.34,28.75,"EXTRA, Noord-holland"
+129,"Het Scheepvaartmuseum",Kattenburgerplein,1,,"1018 KK",Amsterdam,,020-5232222,804,Petrov,Hueting,"31 642710387",petrovhueting@hetscheepvaartmuseum.nl,9.4,30.45,"Noord-holland, EXTRA"
+129,"Het Scheepvaartmuseum",Kattenburgerplein,1,,"1018 KK",Amsterdam,,020-5232222,2479,Jorick,"van der Panne","31 205232258",jvdpanne@hetscheepvaartmuseum.nl,9.4,30.45,"Noord-holland, EXTRA"
+130,Kas20,Noordammerweg,35,,1424NW,"De Kwakel",,020-2101966,,,,,,0,0,"EXTRA, Noord-holland"
+131,Amerpodia,"Da Costakade",102,,1053WP,Amsterdam,,020-5891680,,,,,,8,0,"Noord-holland, EXTRA"
+132,x,Europaplein,24,,"1078 GZ",Amsterdam,,x,,,,,,0,0,Noord-holland
+133,"RAI Amsterdam",Europaplein,24,,"1078 GZ",Amsterdam,,NS,859,NS,NS,"31 NS",client@ns,8.72,0,EXTRA
+134,"Tivoli Doelen Hotel","Nieuwe Doelenstraat",26,,"1012 CP",Amsterdam,,"020 554 0600",,,,,,0,0,Noord-holland
+135,"Seak Agency",Elandsgracht,140,1,Amsterdam,1016VC,,0627399548,870,Saskia,Koelewijn,"31 627399548",seakagency@outlook.com,8.74,27.5,"Noord-holland, EXTRA"
+136,Hyppe,Deltazijde,34,U,1261ZM,Blaricum,,035-5234213,872,Grace,Gorzeman,"31 611249224",ggorzeman@hyppe.nl,9.7,0,"EXTRA, Het Gooi"
+137,Mastiek,Europaboulevard,2,,"1078 RV",Amsterdam,,"020 3083006",878,Martijn,Koelman,"31 6 29298128",m.koelman@mastiek.work,9.03,28.85,EXTRA
+138,"Hannekes Boom",Dijksgracht,4,,"1019 BS",Amsterdam,,"020 419 9820",,,,,,0,0,EXTRA
+139,"West-Indisch Huis",Herenmarkt,99,,"1013 EC",Amsterdam,,"020 625 7528",,,,,,0,0,EXTRA
+140,Ericis,"Gustav Mahlerplein",28,,1082LS,Amsterdam,,0182622744,897,Norman,Dinkelaar,"31 627422105",norman@ericis.nl,9.33,29,"Noord-holland, EXTRA"
+141,"Floris graaf V Muiden",Herengracht,72,,1398AD,Muiden,,0294261296,,,,,,0,0,EXTRA
+142,"Sociëteit de unie",'s-Gravelandseweg,57,,"1217 EH",Hilversum,,"+31 6 14213954",966,Alen/skanna,x,"31 6 31916616",alen@skanna.nl,10,0,"Het Gooi"
+143,"ROAS Trading",Keizersgracht,442,,"1016 GD",Amsterdam,,0683174393,967,Frederique,Molenkamp,"31 683174393",frederique@roastrading.nl,9.33,0,"Noord-holland, EXTRA"
+144,"Holy Moly Pizza",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+145,"Tilburg Trappers",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+146,Efteling,,,,,,,,,,,,,9.78,0,"EXTRA, Brabant, Efteling"
+147,"NH Veluwe Sparrenhorst",,,,,,,,,,,,,0,0,EXTRA
+148,"Beekse Bergen: Lake Resort",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+149,"Hilton The Hague",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+150,Smakenrad,,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+151,"Hutten Catering BV",,,,,,,,,,,,,9.71,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+152,Libéma,,,,,,,,,,,,,9.47,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+153,"NH Collection Eindhoven",,,,,,,,,,,,,0,0,EXTRA
+154,"Café-Restaurant Dauphine",,,,,,,,,,,,,8,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+155,"Beekse Bergen: Hogon House",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+156,"Amerpodia B.V.",,,,,,,,,,,,,9.44,30.71,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag"
+157,"Hollywood Event Center",Buikslotermeerplein,2005,,"1025 XL",Amsterdam,,020-8914751,,,,,,0,0,"Noord-holland, EXTRA"
+158,Mood4food,,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+159,"Event my Brand",Nieuwpoortkade,2,A,"1055 RX",Amsterdam,,085-4010540,993,Mariska,Leising,"31 854010540",mariska@eventmybrand.com,9,0,"Noord-holland, EXTRA"
+160,"Select Catering",Thermiekstraat,40,,1117BC,Schiphol,,020-6475888,1017,Eric,Schinck,"31 206475888",contact@selectcatering.nl,9.16,29.5,"Noord-holland, Den Haag, EXTRA"
+160,"Select Catering",Thermiekstraat,40,,1117BC,Schiphol,,020-6475888,1424,Esmé,"van der Klei","31 683227214",Esme@selectcatering.nl,9.16,29.5,"Noord-holland, Den Haag, EXTRA"
+161,"NH Hotels",,,,,,,,,,,,,9.41,28.16,EXTRA
+162,"Fletcher Hotels",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+163,"BAUT Amsterdam",Wibautstraat,125,,"1091 GL",Amsterdam,,"+31 (0)20 210 3011",1029,Nikie,Zwarthoed,"31 6 451 51 832",nikie@bautamsterdam.nl,8.89,0,EXTRA
+164,"Catering De Dreef",Raadhuisstraat,49,,"2101 HD",Heemstede,,0235471655,,,,,,0,0,EXTRA
+165,"Lekker Bakkie",Zeefbaan,29,,9672BN,Winschoten,,0613481932,1042,Joost,"de Haan","31 613481932",amsterdam@lekker-bakkie.nl,9,0,"Noord-holland, EXTRA"
+166,Qeet,,,,,,,,,,,,,9,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+167,Graanbeurs,,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+168,"Meervaart Theater",,,,,,,,,,,,,9.25,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+169,PriveOber,,,,,,,,,,,,,9.5,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+170,Westerunie,Klönneplein,4-6,,1014DD,Amsterdam,,"020 684 8496",,,,,,0,0,"EXTRA, Noord-holland"
+171,"SMAAK Bedrijfscatering",,,,,,,,,,,,,0,29.25,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+172,"Leo Catering",,,,,,,,,,,,,9.19,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+173,"Queens Stroopwafels",Kalverstraat,198,A,1012XH,Amsterdam,,0652317163,1335,Ibram,Awad,"31 652317163",uhi-bv@hotmail.com,8.9,0,"Noord-holland, EXTRA"
+174,"Appèl B.V.",,,,,,,,,,,,,9.49,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland"
+175,"Tivoli Doelen Hotel",,,,,,,,,,,,,9.96,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+176,"AZ N.V.",,,,,,,,,,,,,9.21,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+177,"H'ART Museum","Nieuwe Keizersgracht",1,,"1018 DR",Amsterdam,,"020 530 87 55",1576,Maud,Smithuis,"31 618806903",m.smithuis@hartmuseum.nl,9.39,27,"Noord-holland, EXTRA"
+178,"Vlotte Tantes",Bruynvisweg,16,,"1531 AZ",Wormer,,"075 653 1111",1577,Nicolette,Pouw,"31 683809150",nicolette@vlottetantes.nl,9.91,0,"Noord-holland, EXTRA, Het Gooi, Utrecht"
+179,"Beheer & Exploitatie Bleecker Bloemendaal BV",,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+180,"Kookstudio De Laurier",Laurierstraat,250,,1016PT,Amsterdam,,"020 622 03 34",1592,Zoë,Verloop,"31 6 53 66 76 33",zoe@delaurier.nl,9.6,0,"EXTRA, Het Gooi, Noord-holland"
+181,"Catering met Passie",Bellstraat,37,,"3771 AH",Barneveld,,"0342 - 23 46 90",,,,,,10,0,"EXTRA, Utrecht"
+182,"Bomencentrum Nederland",,,,,,,,,,,,,9.23,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+183,"Affordable Art Fair","Chaussée de Boondael",6,,1050,Ixelles,,+32489105966,1611,Justine,Rainer,"32 489105966",Justine@affordableartfair.com,9.19,0,EXTRA
+184,"Het West Indisch Huis",Herenmarkt,99,,"1013 EC",Amsterdam,,020-6257582,2569,Simone,Linstra,"31 6 39208239",Simone@taste.nl,9.65,28.65,"Noord-holland, EXTRA"
+185,"ADAM Toren",,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+186,"Compass Bedrijfscatering",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+187,"Tim@Your Table","De Breeck",7,,1151BN,"Broek in Waterland",,"020 520 0090",1737,Timothy,"van Benthum","31 0644421558",Timatyourtable@gmail.com,9.56,0,"EXTRA, Noord-holland"
+188,"Chicago Social Club",Leidseplein,12,,1017PT,Amsterdam,,020-7601171,1771,Joris,Bakker,"31 0624880739",joris@chicagosocialclub.nl,9.65,0,"EXTRA, Noord-holland"
+188,"Chicago Social Club",Leidseplein,12,,1017PT,Amsterdam,,020-7601171,1803,Tyrone,Rachid,"31 641744066",tyrone@chicagosocialclub.nl,9.65,0,"EXTRA, Noord-holland"
+188,"Chicago Social Club",Leidseplein,12,,1017PT,Amsterdam,,020-7601171,1804,Emma-Lee,Molenaar,"31 627977025",emmaleemolenaar@gmail.com,9.65,0,"EXTRA, Noord-holland"
+189,"Chimi Churri",Keizersgracht,560,,1017EM,Amsterdam,,"06 45220521",1820,Bart,"van der Kley","31 06 45220521",bart@chimi-en-churri.nl,8.8,0,"EXTRA, Noord-holland"
+190,"NoBu Partners",Ringslang,4,,1398JJ,Muiden,,0647470376,1825,Maarten,Koppenens,"31 647470376",maarten.koppenens@nobupartners.com,10,0,EXTRA
+191,Funda,"Piet Heinkade",167,,1019GM,Amsterdam,,020-5618229,2188,Marjan,Pietersz,"31 612723292",officemanager@funda.nl,9.72,34.91,"Noord-holland, EXTRA"
+192,Stelz,Weteringschans,94,,1017XS,Amsterdam,,0634917717,1829,Noah,Coers,"31 634917717",noah@drinkstelz.com,10,0,"EXTRA, Noord-holland"
+193,Qisum,Hoogoorddreef,62,,1101BE,Amsterdam,,0642381777,1830,Ard,Kraan,"31 642381777",ard.kraan@qisum.nl,9.36,0,"Noord-holland, EXTRA"
+194,"Eurest bedrijfscatering",,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+195,"Capital C",Weesperplein,4,B,1018XA,Amsterdam,,"020 247 7000",1872,Patrick,Peute,"31 641374662",patrick@capitalcamsterdam.com,10,0,"Noord-holland, EXTRA"
+196,"Mövenpick Hotel Amsterdam City Centre",,,,,,,,,,,,,9.5,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+197,"Amsterdam Marriott Hotel",Stadhouderskade,12,,1054ES,Amsterdam,,020-6075555,1917,David,Cubillos,"31 611831125",David.Cubillos@marriott.com,9.65,41.5,"Noord-holland, EXTRA"
+197,"Amsterdam Marriott Hotel",Stadhouderskade,12,,1054ES,Amsterdam,,020-6075555,2422,Marina,"Saz Ramirez","34 699532787",Marina.SazRamirez@marriott.com,9.65,41.5,"Noord-holland, EXTRA"
+197,"Amsterdam Marriott Hotel",Stadhouderskade,12,,1054ES,Amsterdam,,020-6075555,2431,Marieke,Keurntjes,"31 621859145",Marieke.Keurntjes@marriott.com,9.65,41.5,"Noord-holland, EXTRA"
+197,"Amsterdam Marriott Hotel",Stadhouderskade,12,,1054ES,Amsterdam,,020-6075555,2554,Angie,Steenbergen,"31 206075599",Angie.Steenbergen@marriott.com,9.65,41.5,"Noord-holland, EXTRA"
+198,"Mercure Hotel Amsterdam City",,,,,,,,,,,,,9.17,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+199,BCN,,,,,,,,,,,,,8.8,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+200,"Aspen Digital",'s-Gravelandseweg,67,,"1217 EJ",Hilversum,,"035 221 0050",2125,Jeroen,Meijer,"31 653658250",jeroen.Meijer@aspendigital.nl,9.2,0,EXTRA
+201,Hilton,,,,,,,,,,,,,9.3,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+202,"HP Events B.V.",,,,,,,,,,,,,8.94,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+203,"Bandra Groep",,,,,,,,,,,,,9.64,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+204,Keukenhof,Stationsweg,166,A,2161AM,Lisse,,+31252465564,2150,Eva,"Four Parties","31 643430854",info@fourparties.nl,10,30.5,EXTRA
+205,"Eurostar / Cepovett Group",Stationsplein,25,,1012AB,Amsterdam,,"04 74 02 93 95",2175,Delphine,Plassard,"33 04 74 02 93 95",DPlassard@cepovett.com,10,0,"EXTRA, Noord-holland"
+206,"Amstel hotel",,,,,,,,,,,,,9.54,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+207,"Kookservice Erica Friedheim",Cornelissteeg,1,B,"2011 EA",Haarlem,,0629212919,2198,Erica,Friedheim,"31 0629212919",ericafriedheim@gmail.com,10,0,"EXTRA, Noord-holland"
+208,"De Artiesten","Johan van Hasseltweg",39,L,1021KN,Amsterdam,,"0888 48 53 48",2212,Sanne,"van Weerd","31 0888 48 53 48",info@deartiesten.nl,9.5,0,EXTRA
+209,"Lore Group",,,,,,,,,,,,,9.75,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+210,"Vrije Academie/Huis Vasari",Herengracht,368,,1016CH,Amsterdam,,"088 518 5000",2218,Francien,"de Visser","31 614527809",fdv@vrijeacademie.nl,10,29.25,"EXTRA, Noord-holland"
+211,"Smulders Catering B.V.",,,,,,,,,,,,,8.67,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+212,"Bilderberg Europa Hotel Scheveningen",,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+213,"STAG Hotels Netherlands",,,,,,,,,,,,,9.03,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+214,"Hollandsche Golfbaan Exploitatiemaatschappij",,,,,,,,,,,,,9.54,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+215,L'europe,,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+216,"Qeet Crew",Vondellaan,170,,3522AD,Utrecht,,"030 696 6121",2311,Tom,"van Ramesdonk","31 6 12650870",tom@qeet.nl,9.36,28.5,EXTRA
+217,"Huize van Alenvelt",Hindersteinlaan,32,,3451EZ,Utrecht,,030-4101020,2320,Romy,Vroom,"31 642037141",romy.vroom@huizealenvelt.nl,8.29,29.5,"EXTRA, Utrecht"
+218,"Carlton Beach",,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+219,Festisquad,,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+220,Speyz,,,,,,,,,,,,,9.11,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+221,"Sommelier Luc",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+222,FoodFavors,,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+223,"De Kort Catering",,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+224,"Solid Event Crew",,,,,,,,,,,,,8,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+225,"Ray's Kitchen","Laantje van Heijenbrock",32,,1261ZK,Blaricum,,0616018812,2481,Ray,Katty,"31 616018812",info@rayskitchen.nl,0,0,"EXTRA, Het Gooi"
+226,"Nijmeegse Vierdaagse","Waldeck Pyrmontsingel",40,,"6524 AC",Nijmegen,,0648048491,2492,Marit,"de Kloet","31 648048491",marit@fourparties.nl,10,0,EXTRA
+227,"Vindicat Lustrum","Grote Markt",27,,"9712 HS",Groningen,,"050 304 8051",,,,,,0,0,EXTRA
+228,"Europarcs de Biesbosch",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+229,"WestCord Hotels",,,,,,,,,,,,,9.14,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+230,"Amsterdam Wine Company","Nieuwe Kalfjeslaan",23,,"1182 AA",Amsterdam,,"085 130 5915",2557,Sebastiaan,"van Erne","31 646306357",x@gmail.com,9.2,0,"EXTRA, Noord-holland"
+231,"Ruis aan de Sluis",Sluis,1,,1398AR,Muiden,,0249-745340,2575,Enrico,Runkat,"31 636324898",e.runkat@gmail.com,8.5,28.25,"EXTRA, Het Gooi, Noord-holland"
+232,"Royal TerBerg Group B.V.",Newtonstraat,2,,3401JA,IJsselstein,,"030 686 8700",2584,Inez,Delgado,"31 6 38570150",IDelgado@terberg.nl,9.52,38.86,EXTRA
+233,"Goyer Golf & Country Club",Beukenlaan,1,,3755MP,Eemnes,,035-5393111,2586,Richard,Francke,"31 611355022",rfrancke@goyer.nl,9.2,0,"EXTRA, Het Gooi"
+234,"Radisson Blu Hotel Amsterdam Airport","Boeing Avenue",2,,1119PB,Schiphol-Rijk,,"020 655 3131",2616,Alissa,Schoenmaker,"31 6 50 01 01 34",alissa.schoenmaker@radissonhotels.com,9.77,42.12,EXTRA
+234,"Radisson Blu Hotel Amsterdam Airport","Boeing Avenue",2,,1119PB,Schiphol-Rijk,,"020 655 3131",2617,Joost,Plantaz,"31 627541318",joost.plantaz@radissonblu.com,9.77,42.12,EXTRA
+234,"Radisson Blu Hotel Amsterdam Airport","Boeing Avenue",2,,1119PB,Schiphol-Rijk,,"020 655 3131",2622,Frank,Kaldenbach,"31 6 29233747",frank.kaldenbach@radissonblu.com,9.77,42.12,EXTRA
+234,"Radisson Blu Hotel Amsterdam Airport","Boeing Avenue",2,,1119PB,Schiphol-Rijk,,"020 655 3131",2706,Jacob,Adringa,"31 623347043",jacob.andringa@radissonblu.com,9.77,42.12,EXTRA
+235,"Bilderberg Hotels",,,,,,,,,,,,,8.86,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam"
+236,"WestWeelde ZWK's",Klönneplein,4,,1014DD,Amsterdam,,0206848496,2641,Dani,Sarda,"31 0206848496",planning@westweelde.nl,10,40.5,EXTRA
+237,"De Gooische Meiden",Herengracht,372,2,1016CH,Amsterdam,,"+31 6 27 873 777",2645,Lisa,"de Gunst","31 6 27873777",info@degooischemeiden.nl,9.2,27.5,"EXTRA, Het Gooi, Utrecht"
+238,"Landgoed Huize Bergen en Eigentijdserf",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+239,"Sofitel Legend The Grand Amsterdam",,,,,,,,,,,,,9.66,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+240,"Jondani Downtown",,,,,,,,,,,,,8.44,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+241,Stamppot,Leidsekruisstraat,11,,1017RE,Amsterdam,,020-3038314,2708,U,Nakis,"31 615320804",u.nakis@hotmail.com,0,0,EXTRA
+242,"MyOffice Utrecht",Computerweg,22,,3542DR,Utrecht,,"038 820 0082",2732,Roel,"van Engeland","31 689974870",roel@my-office.nl,10,32.25,EXTRA
+243,"Grand Hotel Amrath Amsterdam","Prins Hendrikkade",108,,1011AK,Amsterdam,,"020 552 0000",2748,Dodi,Koops,"31 686851055",d.koops@amrathamsterdam.com,9.33,29.82,"EXTRA, Noord-holland"
+243,"Grand Hotel Amrath Amsterdam","Prins Hendrikkade",108,,1011AK,Amsterdam,,"020 552 0000",2752,Joeri,Nuijten,"31 641479565",j.nuijten@amrathamsterdam.com,9.33,29.82,"EXTRA, Noord-holland"
+243,"Grand Hotel Amrath Amsterdam","Prins Hendrikkade",108,,1011AK,Amsterdam,,"020 552 0000",2771,Andjela,Cvikl,"31 0641331259",a.cvikl@amrathamsterdam.com,9.33,29.82,"EXTRA, Noord-holland"
+243,"Grand Hotel Amrath Amsterdam","Prins Hendrikkade",108,,1011AK,Amsterdam,,"020 552 0000",2944,Max,Claushuis,"31 653813448",[amrath]max@bureaupistache.nl,9.33,29.82,"EXTRA, Noord-holland"
+244,"Metzlr House Hotel Haarlem",Harmenjansweg,4,,2031WK,Haarlem,,023-3032216,2787,Tom,Test,"31 618849253",test@metzlrhouse.com,8.44,30.42,EXTRA
+244,"Metzlr House Hotel Haarlem",Harmenjansweg,4,,2031WK,Haarlem,,023-3032216,2999,Lara,Steketee,"31 023 303 2216",lara@koepelplein.nl,8.44,30.42,EXTRA
+245,"Art Zoo Museum",Herengracht,368,,1016CH,Amsterdam,,"088 518 5001",2789,Francien,A,"31 6 14527809",mail@artzoo.com,10,0,"EXTRA, Het Gooi, Noord-holland, Utrecht"
+246,"Poke King",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+247,"Arabia Catering",Pleimuiden,19,A,1046AG,Amsterdam,,020-2620493,2807,Ghanem,Boucanna,"31 020-2620493",info@arabiacatering.nl,0,0,"EXTRA, Noord-holland"
+248,"Café in the City Amsterdam",,,,,,,,,,,,,9,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+249,Lastminute.com,Rokin,92,,1012KZ,Amsterdam,,020-7975820,2817,Anna,Rast,"49 15144165986",test@lastminute.com,0,120,EXTRA
+250,"Ibis Utrecht",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+251,"Agile Falcon","1300 Street NW",400,E,"DC 20005",Washington,,+12027885661,2845,Faya,Amjad,"1 2027885661",faya@agilefalconsg.com,8,39.5,EXTRA
+252,"Stripclub BonTon",Stadhouderskade,64,,1072AD,Amsterdam,,"020 578 8515",2859,Sterre,x,"31 x",Sterre@bonton-group.com,9.94,36,EXTRA
+253,"Belfor B.V.",Hogeweyselaan,101,,"1382 JK",Weesp,,"+31 (0) 294 416151",2866,Mariska,Dijst,"31 +31 (0) 294 416151",mariska.dijst@nl.belfor.com,0,0,EXTRA
+254,Foodaffair,Legmeerstraat,85,,1058NC,Amsterdam,,0642976653,2877,Raquel,Evertsz,"31 642976653",test@foodaffair.com,0,0,EXTRA
+255,"Bar Buuf","Ferdinand Bolstraat",178,H,"1072 LT",Amsterdam,,06538113448,2883,Fleur,"van Olphen","31 657930220",fleur@barbuuf.nl,9.79,23.39,EXTRA
+256,"Chef Nathan Blog",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+257,"Gooische Lawn Tennis Club ""Het Spieghel",Meerweg,78,,1405BH,Bussum,,035-6941084,2905,Janneke,Schmitz-Schippers,"31 626364663",recreanten@hetspieghel.nl,0,0,EXTRA
+258,"Vondelparkpaviljoen/Matter of Taste",Vondelpark,3,,1071,Amsterdam,,"+31 (0)20 820 5011",2906,Simone,Linstra,"31 639208239",events@hetvondelparkpaviljoen.nl,0,0,EXTRA
+259,"Grand Hotel Amrath Kurhaus","Gevers Deynootplein",30,,2586,"Den Haag",,"070 416 2636",2915,Shanty,Ramnarine,"31 686825001",s.ramnarine@amrathkurhaus.com,7.7,30.82,EXTRA
+259,"Grand Hotel Amrath Kurhaus","Gevers Deynootplein",30,,2586,"Den Haag",,"070 416 2636",2916,Balkrishna,Semwal,"31 643567498",b.semwal@amrathkurhaus.com,7.7,30.82,EXTRA
+260,"Heemelrijck Restaurants","Van Woustraat",23,,1074AA,Amsterdam,,0850879409,,,,,,0,0,EXTRA
+261,Kunstlinie,Esplanade,10,,1315SH,Almere,,"036 845 5888",2948,Lex,Gasseling,"31 036 8455 752",lexgasseling@kunstlinie.nl,0,0,EXTRA
+261,Kunstlinie,Esplanade,10,,1315SH,Almere,,"036 845 5888",2949,Stephanie,Wijders,"31 630221886",stephaniewijders@kunstlinie.nl,0,0,EXTRA
+261,Kunstlinie,Esplanade,10,,1315SH,Almere,,"036 845 5888",2950,Jurre,"van Blaricum","31 621316649",jurrevanblaricum@kunstlinie.nl,0,0,EXTRA
+261,Kunstlinie,Esplanade,10,,1315SH,Almere,,"036 845 5888",2951,"Horeca Account",Algemeen,"31 036 845 5888",horeca@kunstlinie.nl,0,0,EXTRA
+262,IHCP,,,,,,,,,,,,,10,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"
+263,"Huis van de Wijk","Arent Janszoon Ernststraat",112,,"1082 LP",Amsterdam,,"020 642 2835",2969,David,Heitz,"31 615621349",david@hvdwbuitenveldert.nl,0,0,"EXTRA, Het Gooi, Utrecht"
+264,"IJver Amsterdam",Scheepsbouwkade,72,,1033WM,Amsterdam,,020-2471001,2973,Reinout,Ezinga,"31 618031631",reinout@allerliefstegroep.nl,0,0,"EXTRA, Noord-holland"
+265,"Restaurant Scheepskameel","Gebouw 024A, Kattenburgerstraat",5,,1018JA,Amsterdam,,"020 337 9680",2974,Pieter,Smits,"31 617242046",info@scheepskameel.nl,9,30.75,EXTRA
+266,"Tulip Tours Holland",Termini,27,,1025XM,Amsterdam,,0857925355,2978,Mike,Zwart,"31 0857925355",mike@tuliptoursholland.com,9.92,30.75,EXTRA
+267,"Huize Bartolotti",Herengracht,170,,1016BP,Amsterdam,,"020 521 0630",2997,Maaike,Jansen,"31 657972069",m.jansen@hendrickdekeyser.nl,0,0,EXTRA
+268,"The Red Sun Blaricum",Huizerweg,3,,1261AR,Blaricum,,"035 533 6996",3002,Wimmy,Hu,"31 35 533 6996",wimmy@theredsun.nl,8,27.5,EXTRA
+268,"The Red Sun Blaricum",Huizerweg,3,,1261AR,Blaricum,,"035 533 6996",3005,Nancy,Lai,"31 634713088",Nancy@theredsun.nl,8,27.5,EXTRA
+268,"The Red Sun Blaricum",Huizerweg,3,,1261AR,Blaricum,,"035 533 6996",3006,Rogier,"van Asselt","31 622778488",Rogier@theredsun.nl,8,27.5,EXTRA
+269,"Rederij Belle Muiden",Naarderstraat,5,,1398AN,Muiden,,"0294 261 433",3003,Lilian,Klop,"31 0294 261 433",info@rederijbelle.nl,0,0,EXTRA
+270,"Gooische Lawn Tennis Club ""Het Spieghel",Meerweg,78,,"1405 BH",Bussum,,0356941084,3031,Evelijne,Wismeijer,"31 622973461",evelijne@wismeijer.com,0,0,Noord-holland
+271,"Het Paardje","Gerard Doustraat",1,,1073XE,Amsterdam,,020-6643539,3032,Lester,"van der Meijden","31 624559402",lester@hetpaardje.nl,10,35,EXTRA
+272,"StayOkay Hostel Oost",Timorplein,21,,1094CC,Amsterdam,,"020 551 3190",3050,Jaap,Stolwijk,"31 0653333614",j.stolwijk@stayokay.com,9.75,29.25,EXTRA
+272,"StayOkay Hostel Oost",Timorplein,21,,1094CC,Amsterdam,,"020 551 3190",3052,Mieke,Soemita,"31 0207517834",m.soemita@stayokay.com,9.75,29.25,EXTRA
+273,Budbee,Marconiweg,12,,4131PD,Vianen,,0642508163,3057,Kyle,Bridges,"31 638751247",kyle.bridges@instabee.com,8.8,29.86,EXTRA
+274,"Boswachter Erp",,,,,,,,,,,,,0,0,"EXTRA, Utrecht, Noord-holland, Het Gooi, Brabant, Den Haag, Gelderland, Den Helder, Rotterdam, Efteling"

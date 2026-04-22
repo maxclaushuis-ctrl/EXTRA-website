@@ -8831,6 +8831,103 @@ ${posts.map(p => `  <url>
     }
   });
 
+  // Bulk import van bestaande klanten via Excel
+  app.post("/api/admin/crm/companies/import", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { rows, defaultIsClient } = req.body as {
+        rows: Array<Record<string, any>>;
+        defaultIsClient?: boolean;
+      };
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return res.status(400).json({ message: "Geen rijen ontvangen" });
+      }
+
+      const VALID_TYPES = new Set(["hotel", "restaurant", "eventlocatie", "cateraar"]);
+      const VALID_OWNERS = new Set(["max", "eveline", "charlotte", "lea"]);
+      const VALID_ABC = new Set(["A", "B", "C"]);
+      const VALID_POTENTIAL = new Set(["laag", "midden", "hoog"]);
+
+      const created: any[] = [];
+      const errors: Array<{ row: number; name?: string; reason: string }> = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i] || {};
+        const rowNum = i + 2; // header = rij 1, dus eerste data = rij 2
+        try {
+          const name = String(r.name || r.bedrijfsnaam || "").trim();
+          if (!name) {
+            errors.push({ row: rowNum, reason: "Bedrijfsnaam ontbreekt" });
+            continue;
+          }
+          const type = String(r.type || "hotel").trim().toLowerCase();
+          const owner = r.owner ? String(r.owner).trim().toLowerCase() : undefined;
+          const accountOwner = r.accountOwner ? String(r.accountOwner).trim().toLowerCase() : undefined;
+          const abc = r.abc ? String(r.abc).trim().toUpperCase() : undefined;
+          const potential = r.potential ? String(r.potential).trim().toLowerCase() : undefined;
+
+          const tags = Array.isArray(r.tags)
+            ? r.tags.map((t: any) => String(t).trim()).filter(Boolean)
+            : (r.tags ? String(r.tags).split(",").map((t: string) => t.trim()).filter(Boolean) : []);
+
+          const companyData: any = {
+            name,
+            type: VALID_TYPES.has(type) ? type : "hotel",
+            isClient: defaultIsClient ?? true,
+            city: r.city ? String(r.city).trim() : null,
+            region: r.region ? String(r.region).trim() : null,
+            website: r.website ? String(r.website).trim() : null,
+            linkedin: r.linkedin ? String(r.linkedin).trim() : null,
+            owner: owner && VALID_OWNERS.has(owner) ? owner : null,
+            accountOwner: accountOwner && VALID_OWNERS.has(accountOwner) ? accountOwner : null,
+            abc: abc && VALID_ABC.has(abc) ? abc : null,
+            potential: potential && VALID_POTENTIAL.has(potential) ? potential : null,
+            source: r.source ? String(r.source).trim() : null,
+            busyPeriods: r.busyPeriods ? String(r.busyPeriods).trim() : null,
+            notes: r.notes ? String(r.notes).trim() : null,
+            tags,
+          };
+
+          const company = await storage.createCrmCompany(companyData);
+
+          // Optioneel: primair contact aanmaken als naam/email/telefoon is opgegeven
+          const contactName = r.contactName ? String(r.contactName).trim() : "";
+          const contactEmail = r.contactEmail ? String(r.contactEmail).trim() : "";
+          const contactPhone = r.contactPhone ? String(r.contactPhone).trim() : "";
+          if (contactName || contactEmail || contactPhone) {
+            try {
+              await storage.createCrmContact({
+                companyId: company.id,
+                name: contactName || name,
+                function: r.contactFunction ? String(r.contactFunction).trim() : null,
+                email: contactEmail || null,
+                phone: contactPhone || null,
+                linkedin: null,
+                isPrimary: true,
+              } as any);
+            } catch (ce) {
+              console.error("Contact aanmaken mislukt voor", name, ce);
+            }
+          }
+
+          created.push({ id: company.id, name: company.name });
+        } catch (e: any) {
+          errors.push({ row: rowNum, name: r.name || r.bedrijfsnaam, reason: e?.message || "Onbekende fout" });
+        }
+      }
+
+      return res.json({
+        success: true,
+        createdCount: created.length,
+        errorCount: errors.length,
+        created,
+        errors,
+      });
+    } catch (error: any) {
+      console.error("Error importing CRM companies:", error);
+      return res.status(500).json({ message: "Fout bij importeren: " + (error?.message || "onbekend") });
+    }
+  });
+
   app.patch("/api/admin/crm/companies/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);

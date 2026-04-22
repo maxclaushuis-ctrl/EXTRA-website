@@ -15,8 +15,9 @@ import {
   Plus, Search, X, ExternalLink, Phone, Mail, Linkedin, Building2, MapPin,
   User, Calendar, Clock, CheckCircle, AlertCircle, Bell, ChevronRight,
   Pencil, Trash2, Star, MoreHorizontal, Globe, Users, TrendingUp, RefreshCw,
-  FileText, MessageSquare, PhoneCall, AlignLeft, AlertTriangle
+  FileText, MessageSquare, PhoneCall, AlignLeft, AlertTriangle, Upload
 } from 'lucide-react';
+import { ImportClientsDialog } from './ImportClientsDialog';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -1228,6 +1229,7 @@ export function CrmKlantenTab() {
   const [tagFilter, setTagFilter] = useState('alle');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: companies = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'klanten'],
@@ -1258,6 +1260,9 @@ export function CrmKlantenTab() {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => refetch()}><RefreshCw className="h-3.5 w-3.5" />Vernieuwen</Button>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => setImportOpen(true)}>
+            <Upload className="h-3.5 w-3.5" />Importeren
+          </Button>
           <Button size="sm" className="gap-1.5 text-xs h-8 bg-purple-600 hover:bg-purple-700" onClick={() => setAddOpen(true)}>
             <Plus className="h-3.5 w-3.5" />Klant toevoegen
           </Button>
@@ -1321,6 +1326,7 @@ export function CrmKlantenTab() {
 
       {selectedId && <CrmCompanyDrawer companyId={selectedId} onClose={() => setSelectedId(null)} allCompanies={companies} />}
       {addOpen && <CompanyFormModal open={addOpen} onClose={() => setAddOpen(false)} allCompanies={companies} defaultIsClient={true} />}
+      <ImportClientsDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
