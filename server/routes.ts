@@ -8796,7 +8796,26 @@ ${posts.map(p => `  <url>
         abc: abc as string,
         search: search as string,
       });
-      return res.json(companies);
+
+      // Verrijk met primair contact (telefoon + naam) voor de overzichtstabel.
+      const contactsByCompany = await Promise.all(
+        companies.map(async (c) => ({ id: c.id, contacts: await storage.getCrmContacts(c.id) }))
+      );
+      const contactMap = new Map<number, any[]>();
+      for (const entry of contactsByCompany) contactMap.set(entry.id, entry.contacts);
+
+      const enriched = companies.map((c) => {
+        const list = contactMap.get(c.id) || [];
+        const primary = list.find((ct: any) => ct.isPrimary) || list[0] || null;
+        return {
+          ...c,
+          primaryContactName: primary?.name || null,
+          primaryContactPhone: primary?.phone || null,
+          primaryContactEmail: primary?.email || null,
+          contactCount: list.length,
+        };
+      });
+      return res.json(enriched);
     } catch (error) {
       console.error("Error fetching CRM companies:", error);
       return res.status(500).json({ message: "Fout bij ophalen bedrijven" });

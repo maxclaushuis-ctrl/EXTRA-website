@@ -24,6 +24,68 @@ import { ImportClientsDialog } from './ImportClientsDialog';
 export const CRM_OWNERS = ['max', 'eveline', 'charlotte', 'lea'] as const;
 export type CrmOwner = typeof CRM_OWNERS[number];
 
+// Functies (sluit aan op het sollicitatieformulier)
+export const FUNCTION_TAGS = [
+  { value: 'horecamedewerker', label: 'Horecamedewerker' },
+  { value: 'chef',             label: 'Chef' },
+  { value: 'housekeeping',     label: 'Housekeeping' },
+  { value: 'logistiek',        label: 'Logistiek' },
+] as const;
+
+const FUNCTION_LABELS: Record<string, string> = Object.fromEntries(
+  FUNCTION_TAGS.map(f => [f.value, f.label])
+);
+
+const FUNCTION_COLORS: Record<string, string> = {
+  horecamedewerker: 'bg-blue-50 text-blue-700 border-blue-200',
+  chef:             'bg-amber-50 text-amber-700 border-amber-200',
+  housekeeping:     'bg-emerald-50 text-emerald-700 border-emerald-200',
+  logistiek:        'bg-slate-50 text-slate-700 border-slate-200',
+};
+
+function FunctionBadge({ value, onRemove }: { value: string; onRemove?: () => void }) {
+  const label = FUNCTION_LABELS[value] || value;
+  const cls = FUNCTION_COLORS[value] || 'bg-gray-100 text-gray-600 border-gray-200';
+  return (
+    <span className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${cls}`}>
+      {label}
+      {onRemove && (
+        <button onClick={onRemove} className="hover:opacity-70 ml-0.5">
+          <X className="h-2.5 w-2.5" />
+        </button>
+      )}
+    </span>
+  );
+}
+
+function FunctionsEditor({ values, onChange }: { values: string[]; onChange: (v: string[]) => void }) {
+  const available = FUNCTION_TAGS.filter(f => !values.includes(f.value));
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 mb-1.5">
+        {values.length === 0 && <span className="text-xs text-gray-400">Nog geen functies geselecteerd</span>}
+        {values.map(v => (
+          <FunctionBadge key={v} value={v} onRemove={() => onChange(values.filter(x => x !== v))} />
+        ))}
+      </div>
+      {available.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {available.map(f => (
+            <button
+              key={f.value}
+              type="button"
+              className={`text-xs px-2 py-0.5 rounded-full border font-medium hover:opacity-80 transition-opacity ${FUNCTION_COLORS[f.value]}`}
+              onClick={() => onChange([...values, f.value])}
+            >
+              + {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const CRM_TAGS = [
   'Hot lead',
   'Warm lead',
@@ -247,7 +309,7 @@ function CompanyFormModal({
     owner: 'max', accountOwner: '', city: '', region: '', website: '', linkedin: '',
     potential: 'midden', source: 'inbound', parentCompanyId: null,
     attentionNeeded: false, risk: false, busyPeriods: '', planningNotes: '', notes: '',
-    tags: [],
+    tags: [], functions: [],
   });
 
   const createMutation = useMutation({
@@ -419,6 +481,10 @@ function CompanyFormModal({
               </div>
             </>
           )}
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Functies waarvoor uitzendkrachten worden ingezet</label>
+            <FunctionsEditor values={form.functions || []} onChange={v => set('functions', v)} />
+          </div>
           <div className="col-span-2">
             <label className="text-xs font-medium text-gray-600 mb-1 block">Tags</label>
             <TagEditor tags={form.tags || []} onChange={v => set('tags', v)} />
@@ -1046,6 +1112,87 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
 
 // ── Company Row ────────────────────────────────────────────────────────────
 
+function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
+  const openReminders = (company.reminders || []).filter((r: any) => r.status !== 'completed').length;
+  const functions: string[] = company.functions || [];
+  const phone: string | null = company.primaryContactPhone || null;
+  return (
+    <tr onClick={onClick} className="hover:bg-purple-50/30 cursor-pointer transition-colors border-b border-gray-100 last:border-0">
+      {/* Bedrijf + Locatie */}
+      <td className="py-2.5 px-3">
+        <div className="flex items-start gap-2">
+          <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+            <Building2 className="h-3.5 w-3.5 text-purple-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium text-sm text-gray-900 truncate">{company.name}</p>
+            {(company.city || company.region) && (
+              <p className="text-xs text-gray-400 flex items-center gap-0.5">
+                <MapPin className="h-2.5 w-2.5" />
+                {[company.city, company.region].filter(Boolean).join(', ')}
+              </p>
+            )}
+          </div>
+        </div>
+      </td>
+      {/* Type */}
+      <td className="py-2.5 px-3">
+        <span className={`text-xs px-2 py-0.5 rounded-full ${TYPE_COLORS[company.type] || 'bg-gray-100 text-gray-600'}`}>
+          {TYPE_LABELS[company.type] || company.type}
+        </span>
+      </td>
+      {/* Functies */}
+      <td className="py-2.5 px-3">
+        <div className="flex flex-wrap gap-1">
+          {functions.length === 0
+            ? <span className="text-xs text-gray-300">—</span>
+            : functions.slice(0, 3).map(f => <FunctionBadge key={f} value={f} />)
+          }
+          {functions.length > 3 && <span className="text-xs text-gray-400">+{functions.length - 3}</span>}
+        </div>
+      </td>
+      {/* Telefoon */}
+      <td className="py-2.5 px-3">
+        {phone ? (
+          <a href={`tel:${phone.replace(/\s+/g, '')}`} onClick={e => e.stopPropagation()} className="text-xs text-gray-700 hover:text-purple-700 inline-flex items-center gap-1">
+            <PhoneCall className="h-3 w-3 text-gray-400" />{phone}
+          </a>
+        ) : <span className="text-xs text-gray-300">—</span>}
+      </td>
+      {/* Fase */}
+      <td className="py-2.5 px-3">
+        <span className={`text-xs px-2 py-0.5 rounded-full ${PHASE_COLORS[company.phase || 'nieuw']}`}>
+          {PHASE_LABELS[company.phase || 'nieuw']}
+        </span>
+      </td>
+      {/* Eigenaar */}
+      <td className="py-2.5 px-3">
+        {company.owner ? (
+          <span className={`text-xs px-2 py-0.5 rounded-full ${OWNER_COLORS[company.owner]}`}>
+            {company.owner.charAt(0).toUpperCase() + company.owner.slice(1)}
+          </span>
+        ) : <span className="text-xs text-gray-300">—</span>}
+      </td>
+      {/* Potentie */}
+      <td className="py-2.5 px-3">
+        {company.potential ? (
+          <span className="text-xs text-gray-600 capitalize">{company.potential}</span>
+        ) : <span className="text-xs text-gray-300">—</span>}
+      </td>
+      <td className="py-2.5 px-3">
+        <div className="flex items-center gap-1">
+          {openReminders > 0 && (
+            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{openReminders}</span>
+          )}
+          {company.risk && <AlertTriangle className="h-3.5 w-3.5 text-red-400" />}
+          {company.attentionNeeded && <AlertCircle className="h-3.5 w-3.5 text-orange-400" />}
+          <ChevronRight className="h-4 w-4 text-gray-300 ml-1" />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function CompanyRow({ company, onClick, showAbc = false }: { company: any; onClick: () => void; showAbc?: boolean }) {
   const openReminders = (company.reminders || []).filter((r: any) => r.status !== 'completed').length;
   const tags: string[] = company.tags || [];
@@ -1118,6 +1265,7 @@ export function CrmLeadsTab() {
   const [ownerFilter, setOwnerFilter] = useState('alle');
   const [potentialFilter, setPotentialFilter] = useState('alle');
   const [tagFilter, setTagFilter] = useState('alle');
+  const [functionFilter, setFunctionFilter] = useState('alle');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -1132,12 +1280,13 @@ export function CrmLeadsTab() {
     if (ownerFilter !== 'alle' && c.owner !== ownerFilter) return false;
     if (potentialFilter !== 'alle' && c.potential !== potentialFilter) return false;
     if (tagFilter !== 'alle' && !(c.tags || []).includes(tagFilter)) return false;
+    if (functionFilter !== 'alle' && !(c.functions || []).includes(functionFilter)) return false;
     if (search) {
       const s = search.toLowerCase();
       return c.name?.toLowerCase().includes(s) || c.city?.toLowerCase().includes(s) || c.region?.toLowerCase().includes(s);
     }
     return true;
-  }), [companies, typeFilter, phaseFilter, ownerFilter, potentialFilter, tagFilter, search]);
+  }), [companies, typeFilter, phaseFilter, ownerFilter, potentialFilter, tagFilter, functionFilter, search]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -1164,6 +1313,7 @@ export function CrmLeadsTab() {
         </div>
         {[
           { value: typeFilter, onChange: setTypeFilter, placeholder: 'Type', options: [['alle', 'Alle typen'], ...Object.entries(TYPE_LABELS)] },
+          { value: functionFilter, onChange: setFunctionFilter, placeholder: 'Functie', options: [['alle', 'Alle functies'], ...FUNCTION_TAGS.map(f => [f.value, f.label])] },
           { value: phaseFilter, onChange: setPhaseFilter, placeholder: 'Fase', options: [['alle', 'Alle fases'], ...Object.entries(PHASE_LABELS)] },
           { value: ownerFilter, onChange: setOwnerFilter, placeholder: 'Eigenaar', options: [['alle', 'Alle eigenaren'], ...CRM_OWNERS.map(o => [o, o.charAt(0).toUpperCase() + o.slice(1)])] },
           { value: potentialFilter, onChange: setPotentialFilter, placeholder: 'Potentie', options: [['alle', 'Alle potentie'], ['laag', 'Laag'], ['midden', 'Midden'], ['hoog', 'Hoog']] },
@@ -1176,8 +1326,8 @@ export function CrmLeadsTab() {
             </SelectContent>
           </Select>
         ))}
-        {(typeFilter !== 'alle' || phaseFilter !== 'alle' || ownerFilter !== 'alle' || potentialFilter !== 'alle' || tagFilter !== 'alle' || search) && (
-          <button className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1" onClick={() => { setTypeFilter('alle'); setPhaseFilter('alle'); setOwnerFilter('alle'); setPotentialFilter('alle'); setTagFilter('alle'); setSearch(''); }}>
+        {(typeFilter !== 'alle' || phaseFilter !== 'alle' || ownerFilter !== 'alle' || potentialFilter !== 'alle' || tagFilter !== 'alle' || functionFilter !== 'alle' || search) && (
+          <button className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1" onClick={() => { setTypeFilter('alle'); setPhaseFilter('alle'); setOwnerFilter('alle'); setPotentialFilter('alle'); setTagFilter('alle'); setFunctionFilter('alle'); setSearch(''); }}>
             <X className="h-3 w-3" />Wis filters
           </button>
         )}
@@ -1197,14 +1347,14 @@ export function CrmLeadsTab() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Bedrijf', 'Type', 'Fase', 'Tags', 'Eigenaar', 'Potentie', 'Toegevoegd', ''].map((h, i) => (
+                {['Bedrijf', 'Type', 'Functies', 'Telefoon', 'Fase', 'Eigenaar', 'Potentie', ''].map((h, i) => (
                   <th key={i} className="text-left py-2.5 px-3 text-xs font-semibold text-gray-500">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map((c: any) => (
-                <CompanyRow key={c.id} company={c} onClick={() => setSelectedId(c.id)} />
+                <LeadRow key={c.id} company={c} onClick={() => setSelectedId(c.id)} />
               ))}
             </tbody>
           </table>
