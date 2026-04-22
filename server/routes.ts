@@ -8861,7 +8861,7 @@ ${posts.map(p => `  <url>
         return res.status(400).json({ message: "Geen rijen ontvangen" });
       }
 
-      const VALID_TYPES = new Set(["hotel", "restaurant", "eventlocatie", "cateraar"]);
+      const VALID_TYPES = new Set(["hotel", "restaurant", "eventlocatie", "cateraar", "logistiek"]);
       const VALID_OWNERS = new Set(["max", "eveline", "charlotte", "lea"]);
       const VALID_ABC = new Set(["A", "B", "C"]);
       const VALID_POTENTIAL = new Set(["laag", "midden", "hoog"]);

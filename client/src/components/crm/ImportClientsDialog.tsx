@@ -94,7 +94,7 @@ async function downloadTemplate() {
   ws2.addRow(['Veld', 'Toegestane waardes / uitleg']).font = { bold: true };
   const help: Array<[string, string]> = [
     ['Bedrijfsnaam *', 'Verplicht. Naam van de klant.'],
-    ['Type', 'hotel | restaurant | eventlocatie | cateraar (default: hotel)'],
+    ['Type', 'hotel | restaurant | eventlocatie | cateraar | logistiek (default: hotel)'],
     ['Eigenaar', 'max | eveline | charlotte | lea (kleine letters)'],
     ['Account-eigenaar', 'max | eveline | charlotte | lea'],
     ['Klasse (A/B/C)', 'A | B | C'],

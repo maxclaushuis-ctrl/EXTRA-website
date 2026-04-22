@@ -315,6 +315,7 @@ const TYPE_LABELS: Record<string, string> = {
   restaurant: 'Restaurant',
   eventlocatie: 'Eventlocatie',
   cateraar: 'Cateraar',
+  logistiek: 'Logistiek',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -322,6 +323,7 @@ const TYPE_COLORS: Record<string, string> = {
   restaurant: 'bg-orange-100 text-orange-700',
   eventlocatie: 'bg-violet-100 text-violet-700',
   cateraar: 'bg-teal-100 text-teal-700',
+  logistiek: 'bg-slate-100 text-slate-700',
 };
 
 const ABC_COLORS: Record<string, string> = {
@@ -1221,6 +1223,30 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
   );
 }
 
+// ── Inline Type Editor ─────────────────────────────────────────────────────
+
+function InlineTypeEditor({ companyId, value }: { companyId: number; value: string }) {
+  const mutation = useMutation({
+    mutationFn: (type: string) => apiRequest('PATCH', `/api/admin/crm/companies/${companyId}`, { type }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', companyId] });
+    },
+  });
+  return (
+    <Select value={value} onValueChange={v => mutation.mutate(v)}>
+      <SelectTrigger
+        className={`h-6 text-xs px-2 py-0 rounded-full border-0 font-medium w-auto gap-1 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-50 ${TYPE_COLORS[value] || 'bg-gray-100 text-gray-600'}`}
+      >
+        <SelectValue>{TYPE_LABELS[value] || value}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(TYPE_LABELS).map(([v, l]) => <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+}
+
 // ── Company Row ────────────────────────────────────────────────────────────
 
 function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
@@ -1246,10 +1272,8 @@ function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
         </div>
       </td>
       {/* Type */}
-      <td className="py-2.5 px-3">
-        <span className={`text-xs px-2 py-0.5 rounded-full ${TYPE_COLORS[company.type] || 'bg-gray-100 text-gray-600'}`}>
-          {TYPE_LABELS[company.type] || company.type}
-        </span>
+      <td className="py-2.5 px-3" onClick={e => e.stopPropagation()}>
+        <InlineTypeEditor companyId={company.id} value={company.type} />
       </td>
       {/* Functies */}
       <td className="py-2.5 px-3">
