@@ -3928,6 +3928,17 @@ export class MemStorage implements IStorage {
     return db.select().from(crmContactsTable).where(eq(crmContactsTable.companyId, companyId)).orderBy(desc(crmContactsTable.isPrimary));
   }
 
+  async getCrmSubLocations(parentId: number): Promise<CrmCompany[]> {
+    return db.select().from(crmCompaniesTable).where(eq(crmCompaniesTable.parentCompanyId, parentId));
+  }
+
+  async getCrmContactsByCompanyIds(companyIds: number[]): Promise<CrmContact[]> {
+    if (companyIds.length === 0) return [];
+    return db.select().from(crmContactsTable)
+      .where(inArray(crmContactsTable.companyId, companyIds))
+      .orderBy(desc(crmContactsTable.isPrimary));
+  }
+
   async createCrmContact(data: InsertCrmContact): Promise<CrmContact> {
     const [contact] = await db.insert(crmContactsTable).values(data).returning();
     return contact;

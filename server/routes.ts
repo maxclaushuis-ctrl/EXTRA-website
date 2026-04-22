@@ -8798,11 +8798,13 @@ ${posts.map(p => `  <url>
       });
 
       // Verrijk met primair contact (telefoon + naam) voor de overzichtstabel.
-      const contactsByCompany = await Promise.all(
-        companies.map(async (c) => ({ id: c.id, contacts: await storage.getCrmContacts(c.id) }))
-      );
+      // Eén batch-query in plaats van N+1.
+      const allContacts = await storage.getCrmContactsByCompanyIds(companies.map(c => c.id));
       const contactMap = new Map<number, any[]>();
-      for (const entry of contactsByCompany) contactMap.set(entry.id, entry.contacts);
+      for (const ct of allContacts) {
+        if (!contactMap.has(ct.companyId)) contactMap.set(ct.companyId, []);
+        contactMap.get(ct.companyId)!.push(ct);
+      }
 
       const enriched = companies.map((c) => {
         const list = contactMap.get(c.id) || [];
@@ -8831,7 +8833,7 @@ ${posts.map(p => `  <url>
         storage.getCrmContacts(id),
         storage.getCrmNotes(id),
         storage.getCrmReminders({ companyId: id }),
-        storage.getCrmCompanies({ search: '' }).then(all => all.filter(c => c.parentCompanyId === id)),
+        storage.getCrmSubLocations(id),
       ]);
       return res.json({ ...company, contacts, notes, reminders, subLocations });
     } catch (error) {
