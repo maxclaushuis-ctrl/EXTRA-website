@@ -206,9 +206,7 @@ const OWNER_COLORS: Record<string, string> = {
 
 const PHASE_LABELS: Record<string, string> = {
   nieuw: 'Nieuw',
-  toegewezen: 'Toegewezen',
   eerste_contact: 'Eerste contact',
-  in_gesprek: 'In gesprek',
   afspraak_gepland: 'Afspraak gepland',
   voorstel_verstuurd: 'Voorstel verstuurd',
   follow_up: 'Follow-up',
@@ -219,9 +217,7 @@ const PHASE_LABELS: Record<string, string> = {
 
 const PHASE_COLORS: Record<string, string> = {
   nieuw: 'bg-gray-100 text-gray-600',
-  toegewezen: 'bg-blue-100 text-blue-700',
   eerste_contact: 'bg-indigo-100 text-indigo-700',
-  in_gesprek: 'bg-violet-100 text-violet-700',
   afspraak_gepland: 'bg-amber-100 text-amber-700',
   voorstel_verstuurd: 'bg-orange-100 text-orange-700',
   follow_up: 'bg-yellow-100 text-yellow-700',
@@ -1268,6 +1264,7 @@ export function CrmLeadsTab() {
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: companies = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'prospects'],
@@ -1298,6 +1295,9 @@ export function CrmLeadsTab() {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => refetch()}><RefreshCw className="h-3.5 w-3.5" />Vernieuwen</Button>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => setImportOpen(true)}>
+            <Upload className="h-3.5 w-3.5" />Importeren
+          </Button>
           <Button size="sm" className="gap-1.5 text-xs h-8 bg-purple-600 hover:bg-purple-700" onClick={() => setAddOpen(true)}>
             <Plus className="h-3.5 w-3.5" />Nieuw bedrijf
           </Button>
@@ -1363,6 +1363,7 @@ export function CrmLeadsTab() {
 
       {selectedId && <CrmCompanyDrawer companyId={selectedId} onClose={() => setSelectedId(null)} allCompanies={companies} />}
       {addOpen && <CompanyFormModal open={addOpen} onClose={() => setAddOpen(false)} allCompanies={companies} defaultIsClient={false} />}
+      <ImportClientsDialog open={importOpen} onOpenChange={setImportOpen} defaultIsClient={false} />
     </div>
   );
 }

@@ -355,9 +355,10 @@ async function parseFile(file: File): Promise<ParsedRow[]> {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultIsClient?: boolean; // true = bestaande klanten, false = leads/prospects
 }
 
-export function ImportClientsDialog({ open, onOpenChange }: Props) {
+export function ImportClientsDialog({ open, onOpenChange, defaultIsClient = true }: Props) {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -396,7 +397,7 @@ export function ImportClientsDialog({ open, onOpenChange }: Props) {
     try {
       const data: any = await apiRequest('/api/admin/crm/companies/import', {
         method: 'POST',
-        body: JSON.stringify({ rows: validRows, defaultIsClient: true }),
+        body: JSON.stringify({ rows: validRows, defaultIsClient }),
       });
       setResult(data);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
