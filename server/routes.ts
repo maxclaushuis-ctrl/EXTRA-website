@@ -8829,13 +8829,13 @@ ${posts.map(p => `  <url>
       const id = parseInt(req.params.id);
       const company = await storage.getCrmCompanyById(id);
       if (!company) return res.status(404).json({ message: "Bedrijf niet gevonden" });
-      const [contacts, notes, reminders, subLocations] = await Promise.all([
+      const [contacts, noteEntries, reminders, subLocations] = await Promise.all([
         storage.getCrmContacts(id),
         storage.getCrmNotes(id),
         storage.getCrmReminders({ companyId: id }),
         storage.getCrmSubLocations(id),
       ]);
-      return res.json({ ...company, contacts, notes, reminders, subLocations });
+      return res.json({ ...company, contacts, noteEntries, reminders, subLocations });
     } catch (error) {
       console.error("Error fetching CRM company:", error);
       return res.status(500).json({ message: "Fout bij ophalen bedrijf" });

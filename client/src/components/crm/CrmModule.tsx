@@ -963,7 +963,7 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
                   {[
                     { id: 'overzicht', label: 'Overzicht' },
                     { id: 'contacten', label: `Contacten (${company.contacts?.length || 0})` },
-                    { id: 'notities', label: `Notities (${company.notes?.length || 0})` },
+                    { id: 'notities', label: `Notities (${company.noteEntries?.length || 0})` },
                     { id: 'reminders', label: `Reminders (${company.reminders?.filter((r: any) => r.status !== 'completed').length || 0})` },
                     { id: 'vestigingen', label: `Vestigingen (${company.subLocations?.length || 0})` },
                   ].map(t => (
@@ -1124,11 +1124,11 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
                       </div>
                     </div>
                     {/* Notes timeline */}
-                    {(company.notes || []).length === 0 ? (
+                    {(company.noteEntries || []).length === 0 ? (
                       <div className="text-center py-6 text-gray-400 text-sm">Nog geen notities</div>
                     ) : (
                       <div className="space-y-2">
-                        {(company.notes || []).map((n: any) => {
+                        {(company.noteEntries || []).map((n: any) => {
                           const NoteIcon = NOTE_TYPE_ICONS[n.type] || AlignLeft;
                           return (
                             <div key={n.id} className="flex gap-3">
