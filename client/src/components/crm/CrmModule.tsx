@@ -722,20 +722,33 @@ function ContactFormModal({ open, onClose, companyId, contact }: {
   const isEdit = !!contact;
   const [form, setForm] = useState<any>(contact ? { ...contact, tags: contact.tags || [] } : { companyId, name: '', function: '', email: '', phone: '', linkedin: '', isPrimary: false, tags: [] });
 
+  const { toast } = useToast();
   const createMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/admin/crm/contacts', data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', companyId] }); onClose(); },
+    onError: (e: any) => toast({ title: 'Opslaan mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' }),
   });
   const updateMutation = useMutation({
     mutationFn: (data: any) => apiRequest('PATCH', `/api/admin/crm/contacts/${contact.id}`, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', companyId] }); onClose(); },
+    onError: (e: any) => toast({ title: 'Opslaan mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' }),
   });
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  const buildPayload = () => ({
+    name: (form.name || '').trim(),
+    function: form.function?.trim() || null,
+    email: form.email?.trim() || null,
+    phone: form.phone?.trim() || null,
+    linkedin: form.linkedin?.trim() || null,
+    isPrimary: !!form.isPrimary,
+    tags: Array.isArray(form.tags) ? form.tags : [],
+  });
   const handleSubmit = () => {
     if (!form.name.trim()) return;
-    if (isEdit) updateMutation.mutate(form);
-    else createMutation.mutate({ ...form, companyId });
+    const payload = buildPayload();
+    if (isEdit) updateMutation.mutate(payload);
+    else createMutation.mutate({ ...payload, companyId });
   };
   const isPending = createMutation.isPending || updateMutation.isPending;
 
