@@ -129,6 +129,36 @@ function TagBadge({ tag, onRemove }: { tag: string; onRemove?: () => void }) {
   );
 }
 
+function FunctionsInlineEditor({ companyId, initialFunctions }: { companyId: number; initialFunctions: string[] }) {
+  const [localFunctions, setLocalFunctions] = useState<string[]>(initialFunctions);
+  const [saving, setSaving] = useState(false);
+
+  const prevId = useRef(companyId);
+  if (prevId.current !== companyId) { prevId.current = companyId; setLocalFunctions(initialFunctions); }
+
+  const save = async (newFns: string[]) => {
+    setLocalFunctions(newFns);
+    setSaving(true);
+    try {
+      await apiRequest('PATCH', `/api/admin/crm/companies/${companyId}`, { functions: newFns });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', companyId] });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-xs text-gray-500">Functies waarvoor uitzendkrachten worden ingezet</p>
+        {saving && <span className="text-xs text-gray-400">Opslaan...</span>}
+      </div>
+      <FunctionsEditor values={localFunctions} onChange={save} />
+    </div>
+  );
+}
+
 function TagsInlineEditor({ companyId, initialTags }: { companyId: number; initialTags: string[] }) {
   const [localTags, setLocalTags] = useState<string[]>(initialTags);
   const [saving, setSaving] = useState(false);
@@ -845,6 +875,8 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
                   <div className="space-y-4">
                     {/* Tags inline */}
                     <TagsInlineEditor companyId={companyId!} initialTags={company.tags || []} />
+                    {/* Functies inline */}
+                    <FunctionsInlineEditor companyId={companyId!} initialFunctions={company.functions || []} />
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { label: 'Type', value: TYPE_LABELS[company.type] },
@@ -1111,7 +1143,6 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
 function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
   const openReminders = (company.reminders || []).filter((r: any) => r.status !== 'completed').length;
   const functions: string[] = company.functions || [];
-  const phone: string | null = company.primaryContactPhone || null;
   return (
     <tr onClick={onClick} className="hover:bg-purple-50/30 cursor-pointer transition-colors border-b border-gray-100 last:border-0">
       {/* Bedrijf + Locatie */}
@@ -1146,14 +1177,6 @@ function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
           }
           {functions.length > 3 && <span className="text-xs text-gray-400">+{functions.length - 3}</span>}
         </div>
-      </td>
-      {/* Telefoon */}
-      <td className="py-2.5 px-3">
-        {phone ? (
-          <a href={`tel:${phone.replace(/\s+/g, '')}`} onClick={e => e.stopPropagation()} className="text-xs text-gray-700 hover:text-purple-700 inline-flex items-center gap-1">
-            <PhoneCall className="h-3 w-3 text-gray-400" />{phone}
-          </a>
-        ) : <span className="text-xs text-gray-300">—</span>}
       </td>
       {/* Fase */}
       <td className="py-2.5 px-3">
@@ -1347,7 +1370,7 @@ export function CrmLeadsTab() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Bedrijf', 'Type', 'Functies', 'Telefoon', 'Fase', 'Eigenaar', 'Potentie', ''].map((h, i) => (
+                {['Bedrijf', 'Type', 'Functies', 'Fase', 'Eigenaar', 'Potentie', ''].map((h, i) => (
                   <th key={i} className="text-left py-2.5 px-3 text-xs font-semibold text-gray-500">{h}</th>
                 ))}
               </tr>
