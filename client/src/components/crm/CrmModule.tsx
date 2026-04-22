@@ -395,9 +395,11 @@ function CompanyFormModal({
     tags: [], functions: [],
   });
 
+  const { toast } = useToast();
   const createMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/admin/crm/companies', data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] }); onClose(); },
+    onError: (e: any) => toast({ title: 'Opslaan mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' }),
   });
   const updateMutation = useMutation({
     mutationFn: (data: any) => apiRequest('PATCH', `/api/admin/crm/companies/${company.id}`, data),
@@ -406,14 +408,27 @@ function CompanyFormModal({
       queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', company.id] });
       onClose();
     },
+    onError: (e: any) => toast({ title: 'Opslaan mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' }),
   });
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const buildPayload = () => {
+    const COMPANY_FIELDS = [
+      'name', 'type', 'isClient', 'phase', 'abc', 'owner', 'accountOwner',
+      'city', 'region', 'website', 'linkedin', 'potential', 'source',
+      'parentCompanyId', 'attentionNeeded', 'risk', 'busyPeriods',
+      'planningNotes', 'notes', 'tags', 'functions',
+    ];
+    const out: any = {};
+    for (const k of COMPANY_FIELDS) if (form[k] !== undefined) out[k] = form[k];
+    return out;
+  };
+
   const handleSubmit = () => {
-    const payload = { ...form };
-    if (!payload.name.trim()) return;
+    if (!form.name?.trim()) return;
+    const payload = buildPayload();
     if (isEdit) updateMutation.mutate(payload);
     else createMutation.mutate(payload);
   };
