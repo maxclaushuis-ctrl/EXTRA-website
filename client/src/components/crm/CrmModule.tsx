@@ -1233,13 +1233,14 @@ function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
       </td>
       {/* Functies */}
       <td className="py-2.5 px-3">
-        <div className="flex flex-wrap gap-1">
-          {functions.length === 0
-            ? <span className="text-xs text-gray-300">—</span>
-            : functions.slice(0, 3).map(f => <FunctionBadge key={f} value={f} />)
-          }
-          {functions.length > 3 && <span className="text-xs text-gray-400">+{functions.length - 3}</span>}
-        </div>
+        {functions.length === 0 ? (
+          <span className="text-xs text-gray-300">—</span>
+        ) : (
+          <span className="text-xs text-gray-600">
+            {functions.slice(0, 3).map(f => FUNCTION_LABELS[f] || f).join(', ')}
+            {functions.length > 3 && <span className="text-gray-400"> +{functions.length - 3}</span>}
+          </span>
+        )}
       </td>
       {/* Fase */}
       <td className="py-2.5 px-3">
@@ -1250,7 +1251,7 @@ function LeadRow({ company, onClick }: { company: any; onClick: () => void }) {
       {/* Eigenaar */}
       <td className="py-2.5 px-3">
         {company.owner ? (
-          <span className={`text-xs px-2 py-0.5 rounded-full ${OWNER_COLORS[company.owner]}`}>
+          <span className="text-xs text-gray-700">
             {company.owner.charAt(0).toUpperCase() + company.owner.slice(1)}
           </span>
         ) : <span className="text-xs text-gray-300">—</span>}
