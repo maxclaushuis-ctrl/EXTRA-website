@@ -6,6 +6,8 @@ import { Download, Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, X, Load
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 
+type ParsedContact = { name: string; function?: string; email?: string; phone?: string };
+
 type ParsedRow = {
   name: string;
   type?: string;
@@ -25,6 +27,7 @@ type ParsedRow = {
   contactFunction?: string;
   contactEmail?: string;
   contactPhone?: string;
+  contacts?: ParsedContact[];
   _rowError?: string;
 };
 
@@ -112,15 +115,215 @@ async function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
+// Eenvoudige RFC4180-achtige CSV-parser (ondersteunt quoted velden, dubbele quotes)
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let cur: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else field += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ',') { cur.push(field); field = ''; }
+      else if (ch === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; }
+      else if (ch === '\r') { /* skip */ }
+      else field += ch;
+    }
+  }
+  if (field.length > 0 || cur.length > 0) { cur.push(field); rows.push(cur); }
+  return rows.filter(r => r.some(c => c && c.trim() !== ''));
+}
+
+function cleanZip(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+function cleanPhone(s: string): string {
+  let v = (s || '').trim();
+  if (!v) return '';
+  // formaten zoals "31 0639125620" of "31 0207106025" → "+31 6 39 12 56 20"-stijl
+  if (/^31\s+0?/.test(v)) v = '+31 ' + v.replace(/^31\s+0?/, '');
+  // normaliseer dubbele spaties
+  v = v.replace(/\s+/g, ' ');
+  return v;
+}
+
+function pickRegion(regions: string): string | undefined {
+  // "EXTRA, Brabant" → "Brabant"; "Noord-holland, EXTRA" → "Noord-holland"
+  if (!regions) return undefined;
+  const parts = regions.split(',').map(p => p.trim()).filter(p => p && p.toLowerCase() !== 'extra');
+  return parts[0];
+}
+
+// Bekend export-formaat: client_id,client_name,street_name,...
+function parseExportRows(headers: string[], dataRows: string[][]): ParsedRow[] {
+  const idx: Record<string, number> = {};
+  headers.forEach((h, i) => { idx[h.trim().toLowerCase()] = i; });
+  const get = (row: string[], key: string) => {
+    const i = idx[key];
+    return i === undefined ? '' : (row[i] || '').trim();
+  };
+
+  // Groepeer op client_id
+  type Group = {
+    name: string;
+    city?: string;
+    region?: string;
+    notesLines: string[];
+    contactsByKey: Map<string, ParsedContact>;
+  };
+  const groups = new Map<string, Group>();
+
+  for (const row of dataRows) {
+    const clientId = get(row, 'client_id');
+    const clientName = get(row, 'client_name');
+    if (!clientId && !clientName) continue;
+    const groupKey = clientId || clientName;
+
+    let g = groups.get(groupKey);
+    if (!g) {
+      // Bouw notitie-regels uit adres / e-mail / telefoon / rating / rate
+      const street = get(row, 'street_name');
+      const number = get(row, 'number');
+      const numberExt = get(row, 'number_extention');
+      const zip = cleanZip(get(row, 'zip_code'));
+      const cityVal = get(row, 'city');
+      const email = get(row, 'email');
+      const mobile = get(row, 'mobile');
+      const rating = get(row, 'rating');
+      const rate = get(row, 'rate');
+      const regions = get(row, 'regions');
+
+      const addressLine = [street, [number, numberExt].filter(Boolean).join(' ')].filter(Boolean).join(' ').trim();
+      const fullAddress = [addressLine, [zip, cityVal].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+      const notesLines: string[] = [];
+      if (fullAddress) notesLines.push(`Adres: ${fullAddress}`);
+      if (email) notesLines.push(`E-mail bedrijf: ${email}`);
+      if (mobile) notesLines.push(`Telefoon bedrijf: ${cleanPhone(mobile)}`);
+      if (rating && rating !== '0') notesLines.push(`Beoordeling: ${rating}`);
+      if (rate && rate !== '0') notesLines.push(`Tarief: € ${rate}`);
+      if (regions) notesLines.push(`Regio's: ${regions}`);
+      if (clientId) notesLines.push(`Geïmporteerd uit oud systeem (ID ${clientId})`);
+
+      g = {
+        name: clientName,
+        city: cityVal || undefined,
+        region: pickRegion(regions),
+        notesLines,
+        contactsByKey: new Map(),
+      };
+      groups.set(groupKey, g);
+    }
+
+    // Contact toevoegen indien aanwezig
+    const cid = get(row, 'contact_id');
+    const cFirst = get(row, 'contact_first_name');
+    const cLast = get(row, 'contact_last_name');
+    const cPhone = cleanPhone(get(row, 'contact_phone_number'));
+    const cEmail = get(row, 'contact_email');
+    if (cid || cFirst || cLast || cEmail || cPhone) {
+      const fullName = [cFirst, cLast].filter(Boolean).join(' ').trim();
+      const key = cid || `${fullName}|${cEmail}`;
+      if (!g.contactsByKey.has(key)) {
+        g.contactsByKey.set(key, {
+          name: fullName || cEmail || cPhone,
+          email: cEmail || undefined,
+          phone: cPhone || undefined,
+        });
+      }
+    }
+  }
+
+  const result: ParsedRow[] = [];
+  for (const g of Array.from(groups.values())) {
+    const contacts = Array.from(g.contactsByKey.values()).filter(c => c.name || c.email || c.phone);
+    const row: ParsedRow = {
+      name: g.name,
+      type: 'hotel',
+      city: g.city,
+      region: g.region,
+      notes: g.notesLines.join('\n') || undefined,
+      contacts: contacts.length > 0 ? contacts : undefined,
+    };
+    if (!row.name) row._rowError = 'Bedrijfsnaam ontbreekt';
+    result.push(row);
+  }
+  return result;
+}
+
+function isExportFormat(headers: string[]): boolean {
+  const lower = headers.map(h => h.trim().toLowerCase());
+  return lower.includes('client_id') && lower.includes('client_name');
+}
+
 async function parseFile(file: File): Promise<ParsedRow[]> {
+  const lower = file.name.toLowerCase();
+  if (lower.endsWith('.csv') || file.type === 'text/csv') {
+    const text = await file.text();
+    const all = parseCsv(text);
+    if (all.length === 0) return [];
+    const headers = all[0];
+    const dataRows = all.slice(1);
+    if (isExportFormat(headers)) {
+      return parseExportRows(headers, dataRows);
+    }
+    // Generieke CSV (sjabloon-compatible): map kolommen op de bekende keys
+    const colMap: Record<number, keyof ParsedRow> = {};
+    headers.forEach((h, i) => {
+      const raw = h.toLowerCase().replace(/\s*\*$/, '').trim();
+      const key = HEADER_TO_KEY[raw] || ALIASES[raw];
+      if (key) colMap[i] = key;
+    });
+    const rows: ParsedRow[] = [];
+    for (const dr of dataRows) {
+      const data: any = {};
+      let has = false;
+      dr.forEach((val, i) => {
+        const key = colMap[i];
+        if (!key) return;
+        const s = (val || '').trim();
+        if (s) { data[key] = s; has = true; }
+      });
+      if (!has) continue;
+      if (!data.name) data._rowError = 'Bedrijfsnaam ontbreekt';
+      rows.push(data as ParsedRow);
+    }
+    return rows;
+  }
+
+  // Excel-pad
   const buf = await file.arrayBuffer();
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buf);
   const ws = wb.worksheets[0];
   if (!ws) return [];
 
-  // Maak kolom-mapping op basis van header-rij
   const headerRow = ws.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell((cell, colNumber) => { headers[colNumber - 1] = String(cell.value || ''); });
+
+  // Detecteer ook in Excel als iemand het export-CSV via Excel heeft opgeslagen
+  if (isExportFormat(headers)) {
+    const dataRows: string[][] = [];
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const arr: string[] = [];
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        let v: any = cell.value;
+        if (v && typeof v === 'object' && 'text' in v) v = (v as any).text;
+        if (v && typeof v === 'object' && 'result' in v) v = (v as any).result;
+        arr[colNumber - 1] = v == null ? '' : String(v);
+      });
+      dataRows.push(arr);
+    });
+    return parseExportRows(headers, dataRows);
+  }
+
   const colMap: Record<number, keyof ParsedRow> = {};
   headerRow.eachCell((cell, colNumber) => {
     const raw = String(cell.value || '').toLowerCase().replace(/\s*\*$/, '').trim();
@@ -130,7 +333,7 @@ async function parseFile(file: File): Promise<ParsedRow[]> {
 
   const rows: ParsedRow[] = [];
   ws.eachRow((row, rowNumber) => {
-    if (rowNumber === 1) return; // header
+    if (rowNumber === 1) return;
     const data: any = {};
     let hasValue = false;
     row.eachCell((cell, colNumber) => {

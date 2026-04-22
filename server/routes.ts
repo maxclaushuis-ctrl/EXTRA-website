@@ -8889,20 +8889,47 @@ ${posts.map(p => `  <url>
 
           const company = await storage.createCrmCompany(companyData);
 
-          // Optioneel: primair contact aanmaken als naam/email/telefoon is opgegeven
-          const contactName = r.contactName ? String(r.contactName).trim() : "";
-          const contactEmail = r.contactEmail ? String(r.contactEmail).trim() : "";
-          const contactPhone = r.contactPhone ? String(r.contactPhone).trim() : "";
-          if (contactName || contactEmail || contactPhone) {
-            try {
-              await storage.createCrmContact({
-                companyId: company.id,
+          // Contacten aanmaken — ondersteunt zowel een meervoud `contacts: [...]`
+          // als losse contactName/contactEmail/contactPhone-velden voor backwards compat.
+          const contactsToCreate: Array<{ name: string; function?: string | null; email?: string | null; phone?: string | null }> = [];
+          if (Array.isArray(r.contacts)) {
+            for (const c of r.contacts) {
+              if (!c) continue;
+              const cName = String(c.name || "").trim();
+              const cEmail = String(c.email || "").trim();
+              const cPhone = String(c.phone || "").trim();
+              if (cName || cEmail || cPhone) {
+                contactsToCreate.push({
+                  name: cName || cEmail || cPhone,
+                  function: c.function ? String(c.function).trim() : null,
+                  email: cEmail || null,
+                  phone: cPhone || null,
+                });
+              }
+            }
+          } else {
+            const contactName = r.contactName ? String(r.contactName).trim() : "";
+            const contactEmail = r.contactEmail ? String(r.contactEmail).trim() : "";
+            const contactPhone = r.contactPhone ? String(r.contactPhone).trim() : "";
+            if (contactName || contactEmail || contactPhone) {
+              contactsToCreate.push({
                 name: contactName || name,
                 function: r.contactFunction ? String(r.contactFunction).trim() : null,
                 email: contactEmail || null,
                 phone: contactPhone || null,
+              });
+            }
+          }
+          for (let ci = 0; ci < contactsToCreate.length; ci++) {
+            try {
+              await storage.createCrmContact({
+                companyId: company.id,
+                name: contactsToCreate[ci].name,
+                function: contactsToCreate[ci].function ?? null,
+                email: contactsToCreate[ci].email ?? null,
+                phone: contactsToCreate[ci].phone ?? null,
                 linkedin: null,
-                isPrimary: true,
+                isPrimary: ci === 0,
               } as any);
             } catch (ce) {
               console.error("Contact aanmaken mislukt voor", name, ce);
