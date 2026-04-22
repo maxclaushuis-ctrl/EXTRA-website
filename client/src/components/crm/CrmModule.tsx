@@ -86,6 +86,60 @@ function FunctionsEditor({ values, onChange }: { values: string[]; onChange: (v:
   );
 }
 
+export const CONTACT_TAGS = [
+  { value: 'Bediening',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { value: 'Housekeeping', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { value: 'Keuken',       color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'Logistiek',    color: 'bg-slate-50 text-slate-700 border-slate-200' },
+  { value: 'Front-office', color: 'bg-violet-50 text-violet-700 border-violet-200' },
+] as const;
+
+const CONTACT_TAG_COLORS: Record<string, string> = Object.fromEntries(
+  CONTACT_TAGS.map(t => [t.value, t.color])
+);
+
+function ContactTagBadge({ value, onRemove }: { value: string; onRemove?: () => void }) {
+  const cls = CONTACT_TAG_COLORS[value] || 'bg-gray-100 text-gray-600 border-gray-200';
+  return (
+    <span className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${cls}`}>
+      {value}
+      {onRemove && (
+        <button type="button" onClick={onRemove} className="hover:opacity-70 ml-0.5">
+          <X className="h-2.5 w-2.5" />
+        </button>
+      )}
+    </span>
+  );
+}
+
+function ContactTagsEditor({ values, onChange }: { values: string[]; onChange: (v: string[]) => void }) {
+  const available = CONTACT_TAGS.filter(t => !values.includes(t.value));
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 mb-1.5 min-h-[20px]">
+        {values.length === 0 && <span className="text-xs text-gray-400">Nog geen tags geselecteerd</span>}
+        {values.map(v => (
+          <ContactTagBadge key={v} value={v} onRemove={() => onChange(values.filter(x => x !== v))} />
+        ))}
+      </div>
+      {available.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {available.map(t => (
+            <button
+              key={t.value}
+              type="button"
+              className={`text-xs px-2 py-0.5 rounded-full border font-medium hover:opacity-80 transition-opacity ${t.color}`}
+              onClick={() => onChange([...values, t.value])}
+            >
+              + {t.value}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const CRM_TAGS = [
   'Hot lead',
   'Warm lead',
@@ -664,7 +718,7 @@ function ContactFormModal({ open, onClose, companyId, contact }: {
   open: boolean; onClose: () => void; companyId: number; contact?: any;
 }) {
   const isEdit = !!contact;
-  const [form, setForm] = useState<any>(contact || { companyId, name: '', function: '', email: '', phone: '', linkedin: '', isPrimary: false });
+  const [form, setForm] = useState<any>(contact ? { ...contact, tags: contact.tags || [] } : { companyId, name: '', function: '', email: '', phone: '', linkedin: '', isPrimary: false, tags: [] });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/admin/crm/contacts', data),
@@ -709,6 +763,10 @@ function ContactFormModal({ open, onClose, companyId, contact }: {
               <label className="text-xs font-medium text-gray-600 mb-1 block">LinkedIn</label>
               <Input value={form.linkedin || ''} onChange={e => set('linkedin', e.target.value)} placeholder="linkedin.com/in/..." />
             </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Tags</label>
+            <ContactTagsEditor values={form.tags || []} onChange={v => set('tags', v)} />
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={!!form.isPrimary} onChange={e => set('isPrimary', e.target.checked)} />
@@ -952,6 +1010,11 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
                                 {c.isPrimary && <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star className="h-2.5 w-2.5" />Primair</span>}
                               </div>
                               {c.function && <p className="text-xs text-gray-500 mt-0.5">{c.function}</p>}
+                              {c.tags && c.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {c.tags.map((t: string) => <ContactTagBadge key={t} value={t} />)}
+                                </div>
+                              )}
                               <div className="flex gap-3 mt-1.5 flex-wrap">
                                 {c.email && <a href={`mailto:${c.email}`} className="text-xs text-blue-600 flex items-center gap-1 hover:underline"><Mail className="h-3 w-3" />{c.email}</a>}
                                 {c.phone && <a href={`tel:${c.phone}`} className="text-xs text-gray-600 flex items-center gap-1 hover:underline"><Phone className="h-3 w-3" />{c.phone}</a>}

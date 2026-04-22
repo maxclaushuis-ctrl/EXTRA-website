@@ -1276,6 +1276,7 @@ export const crmContacts = pgTable("crm_contacts", {
   phone: text("phone"),
   linkedin: text("linkedin"),
   isPrimary: boolean("is_primary").default(false),
+  tags: text("tags").array().default(sql`'{}'::text[]`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
