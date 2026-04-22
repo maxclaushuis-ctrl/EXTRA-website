@@ -618,23 +618,6 @@ export default function Aanmelden() {
     if (!formData.experience) {
       newErrors.experience = lang === "NL" ? "Selecteer je ervaring" : "Please select your experience";
     }
-    if (formData.preferredFunction === "horecamedewerker") {
-      const required: Array<[string, string]> = [
-        ["canIndependentShift", lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-        ["canCarry3Plates",     lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-        ["isBarista",           lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-        ["canMakeCocktails",    lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-        ["isAssistantChef",     lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-        ["canDoWashing",        lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-        ["isPromoter",          lang === "NL" ? "Beantwoord deze vraag" : "Please answer this question"],
-      ];
-      for (const [k, msg] of required) {
-        if (!(formData as any)[k]) newErrors[k] = msg;
-      }
-      if (!formData.serviceSkills) newErrors.serviceSkills = lang === "NL" ? "Geef een score" : "Please rate";
-      if (!formData.barSkills) newErrors.barSkills = lang === "NL" ? "Geef een score" : "Please rate";
-      if (!formData.dinerSkills) newErrors.dinerSkills = lang === "NL" ? "Geef een score" : "Please rate";
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -680,7 +663,6 @@ export default function Aanmelden() {
         status,
         partial,
         notes: rejReason ? `Afgewezen reden: ${rejReason}` : undefined,
-        ...(formData.preferredFunction === "horecamedewerker" ? horecaTagsPayload() : {}),
       };
 
       if (savedCandidateId) {
@@ -1144,83 +1126,6 @@ export default function Aanmelden() {
                     </Select>
                     {errors.experience && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.experience}</p>}
                   </div>
-
-                  {/* Horecamedewerker-specifieke vragen (tags) */}
-                  {formData.preferredFunction === "horecamedewerker" && (
-                    <div className="space-y-5 pt-4 border-t border-gray-100">
-                      <div>
-                        <h3 className="text-base font-bold text-gray-900 mb-1">{lang === "NL" ? "Jouw vaardigheden" : "Your skills"}</h3>
-                        <p className="text-xs text-gray-500">{lang === "NL" ? "Een korte check zodat we je goed kunnen matchen." : "A short check so we can match you well."}</p>
-                      </div>
-
-                      {([
-                        { key: "canIndependentShift", label: lang === "NL" ? "Kan je zelfstandig een dienst draaien?" : "Can you run a shift independently?" },
-                        { key: "canCarry3Plates",     label: lang === "NL" ? "🍽️ 3 borden lopen" : "🍽️ Carry 3 plates" },
-                        { key: "isBarista",           label: lang === "NL" ? "☕ Barista" : "☕ Barista" },
-                        { key: "canMakeCocktails",    label: lang === "NL" ? "🍸 Cocktailshaker" : "🍸 Cocktail shaker" },
-                        { key: "isAssistantChef",     label: lang === "NL" ? "🔪 Assistent chef" : "🔪 Assistant chef" },
-                        { key: "canDoWashing",        label: lang === "NL" ? "🧽 Afwas" : "🧽 Dishwashing" },
-                        { key: "isPromoter",          label: lang === "NL" ? "🎤 Promotiemedewerker" : "🎤 Promotional worker" },
-                      ] as const).map((q) => (
-                        <div key={q.key}>
-                          <Label className="text-sm font-semibold text-gray-700 mb-2 block">{q.label} <span className="text-red-500">*</span></Label>
-                          <div className="flex gap-2">
-                            {[
-                              { v: "ja", l: lang === "NL" ? "Ja" : "Yes" },
-                              { v: "nee", l: lang === "NL" ? "Nee" : "No" },
-                            ].map((opt) => (
-                              <button
-                                type="button"
-                                key={opt.v}
-                                onClick={() => updateField(q.key, opt.v)}
-                                className={`flex-1 px-4 py-3 rounded-xl border text-sm font-semibold transition-all ${
-                                  (formData as any)[q.key] === opt.v
-                                    ? "border-purple-500 bg-purple-50 text-purple-700"
-                                    : "border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/30"
-                                }`}
-                              >
-                                {opt.l}
-                              </button>
-                            ))}
-                          </div>
-                          {errors[q.key] && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors[q.key]}</p>}
-                        </div>
-                      ))}
-
-                      {/* Sterren-scores */}
-                      {([
-                        { key: "serviceSkills", label: lang === "NL" ? "🥂 Bediening vaardigheden" : "🥂 Service skills" },
-                        { key: "barSkills",     label: lang === "NL" ? "🍻 Bar vaardigheden" : "🍻 Bar skills" },
-                        { key: "dinerSkills",   label: lang === "NL" ? "🍽️ Diner vaardigheden" : "🍽️ Dinner-service skills" },
-                      ] as const).map((q) => {
-                        const value = (formData as any)[q.key] as number;
-                        return (
-                          <div key={q.key}>
-                            <Label className="text-sm font-semibold text-gray-700 mb-2 block">{q.label} <span className="text-red-500">*</span></Label>
-                            <div className="flex gap-1.5 items-center">
-                              {[1,2,3,4,5].map((n) => (
-                                <button
-                                  type="button"
-                                  key={n}
-                                  onClick={() => updateField(q.key, n)}
-                                  aria-label={`${n}`}
-                                  className={`w-10 h-10 rounded-lg border text-lg transition-all ${
-                                    n <= value
-                                      ? "border-yellow-400 bg-yellow-50 text-yellow-500"
-                                      : "border-gray-200 text-gray-300 hover:border-yellow-300"
-                                  }`}
-                                >
-                                  ★
-                                </button>
-                              ))}
-                              {value > 0 && <span className="ml-2 text-xs text-gray-500">{value}/5</span>}
-                            </div>
-                            {errors[q.key] && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors[q.key]}</p>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
 
                   {/* CV upload */}
                   <div>
