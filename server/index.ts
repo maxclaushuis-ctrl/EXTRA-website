@@ -34,8 +34,8 @@ declare global {
 const app = express();
 app.set('trust proxy', 1);
 app.use(compression({ level: 6, threshold: 1024 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Cache-control headers for immutable hashed assets (Vite build output)
 app.use((req, res, next) => {
