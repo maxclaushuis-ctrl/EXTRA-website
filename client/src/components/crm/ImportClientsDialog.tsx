@@ -445,7 +445,7 @@ export function ImportClientsDialog({ open, onOpenChange }: Props) {
               <input
                 ref={inputRef}
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.csv,text/csv"
                 className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
               />
