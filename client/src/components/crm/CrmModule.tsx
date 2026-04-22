@@ -837,6 +837,13 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies', companyId] });
     },
   });
+  const deleteCompanyMutation = useMutation({
+    mutationFn: () => apiRequest('DELETE', `/api/admin/crm/companies/${companyId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
+      onClose();
+    },
+  });
 
   const addNote = async () => {
     if (!noteText.trim() || !companyId) return;
@@ -887,6 +894,19 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
                 <div className="flex gap-1.5 shrink-0">
                   <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-3 w-3" />Bewerken
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5 text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    disabled={deleteCompanyMutation.isPending}
+                    onClick={() => {
+                      if (window.confirm(`Weet je zeker dat je "${company.name}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`)) {
+                        deleteCompanyMutation.mutate();
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />{deleteCompanyMutation.isPending ? 'Verwijderen...' : 'Verwijderen'}
                   </Button>
                 </div>
               </div>
@@ -1342,6 +1362,7 @@ function CompanyRow({ company, onClick, showAbc = false }: { company: any; onCli
 // ── CRM Leads Tab ──────────────────────────────────────────────────────────
 
 export function CrmLeadsTab() {
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('alle');
   const [phaseFilter, setPhaseFilter] = useState('alle');
@@ -1356,6 +1377,22 @@ export function CrmLeadsTab() {
   const { data: companies = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'prospects'],
     queryFn: () => fetch('/api/admin/crm/companies?isClient=false', { credentials: 'include' }).then(r => r.json()),
+  });
+
+  const dedupeMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/admin/crm/companies/dedupe', {}),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/companies'] });
+      toast({
+        title: 'Opschonen voltooid',
+        description: data?.removedCount > 0
+          ? `${data.removedCount} dubbel(e) bedrijf/bedrijven verwijderd uit ${data.groupsFound} groep(en).`
+          : 'Geen dubbele bedrijven gevonden.',
+      });
+    },
+    onError: (e: any) => {
+      toast({ title: 'Opschonen mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' });
+    },
   });
 
   const filtered = useMemo(() => companies.filter((c: any) => {
@@ -1382,6 +1419,19 @@ export function CrmLeadsTab() {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => refetch()}><RefreshCw className="h-3.5 w-3.5" />Vernieuwen</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs h-8"
+            disabled={dedupeMutation.isPending}
+            onClick={() => {
+              if (window.confirm('Dubbele bedrijven worden samengevoegd op basis van naam + stad. De oudste blijft behouden, de rest wordt verwijderd. Doorgaan?')) {
+                dedupeMutation.mutate();
+              }
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />{dedupeMutation.isPending ? 'Bezig...' : 'Opschonen'}
+          </Button>
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => setImportOpen(true)}>
             <Upload className="h-3.5 w-3.5" />Importeren
           </Button>

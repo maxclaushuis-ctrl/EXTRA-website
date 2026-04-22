@@ -8998,6 +8998,62 @@ ${posts.map(p => `  <url>
     }
   });
 
+  // Dubbele bedrijven opschonen — groepeert op genormaliseerde naam (+ stad).
+  // De oudste record blijft behouden, de rest wordt verwijderd.
+  app.post("/api/admin/crm/companies/dedupe", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const all = await storage.getCrmCompanies({});
+      const norm = (s?: string | null) =>
+        (s || "")
+          .toLowerCase()
+          .normalize("NFKD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\b(b\.?v\.?|n\.?v\.?|v\.?o\.?f\.?|the|de|het|hotel|restaurant)\b/g, "")
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+
+      const groups = new Map<string, any[]>();
+      for (const c of all) {
+        const key = `${norm(c.name)}|${norm((c as any).city)}`;
+        if (!norm(c.name)) continue;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(c);
+      }
+
+      let removed = 0;
+      const removedItems: Array<{ id: number; name: string }> = [];
+      const groupsList = Array.from(groups.values());
+      for (const group of groupsList) {
+        if (group.length < 2) continue;
+        // Oudste eerst (laagste id wint, valt terug op createdAt)
+        group.sort((a, b) => {
+          const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          if (ta !== tb) return ta - tb;
+          return (a.id || 0) - (b.id || 0);
+        });
+        const [, ...rest] = group;
+        for (const dup of rest) {
+          const ok = await storage.deleteCrmCompany(dup.id);
+          if (ok) {
+            removed++;
+            removedItems.push({ id: dup.id, name: dup.name });
+          }
+        }
+      }
+
+      return res.json({
+        success: true,
+        removedCount: removed,
+        groupsFound: groupsList.filter(g => g.length > 1).length,
+        removed: removedItems,
+      });
+    } catch (error: any) {
+      console.error("Error deduping CRM companies:", error);
+      return res.status(500).json({ message: "Fout bij opschonen dubbele bedrijven", error: error?.message });
+    }
+  });
+
   // Contacts
   app.get("/api/admin/crm/contacts/:companyId", adminMiddleware, async (req: Request, res: Response) => {
     try {
