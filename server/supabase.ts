@@ -46,3 +46,89 @@ export async function downloadCvBuffer(cvFilename: string): Promise<{ buffer: Bu
     return null;
   }
 }
+
+// ───────────────────────── Onboarding-bijlagen ─────────────────────────
+const ONBOARDING_BUCKET = 'onboarding-bijlagen';
+let _onboardingBucketEnsured = false;
+
+async function ensureOnboardingBucket() {
+  if (_onboardingBucketEnsured) return;
+  try {
+    const sb = getSupabaseAdmin();
+    const { data: buckets } = await sb.storage.listBuckets();
+    const exists = (buckets || []).some((b: any) => b.name === ONBOARDING_BUCKET);
+    if (!exists) {
+      await sb.storage.createBucket(ONBOARDING_BUCKET, {
+        public: true,
+        fileSizeLimit: 25 * 1024 * 1024,
+        allowedMimeTypes: ['application/pdf'],
+      });
+      console.log(`[Supabase] Bucket '${ONBOARDING_BUCKET}' aangemaakt`);
+    }
+    _onboardingBucketEnsured = true;
+  } catch (e) {
+    console.warn('[Supabase] Kon bucket niet controleren/aanmaken:', e);
+  }
+}
+
+/** Haalt de Supabase storage-path op uit een opgeslagen onboarding-bijlage URL. */
+export function extractOnboardingBijlageStoragePath(url: string): string | null {
+  if (!url) return null;
+  const re = new RegExp(`/storage/v1/object/(?:public|sign|upload)/${ONBOARDING_BUCKET}/([^?#]+)`);
+  const match = url.match(re);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** Upload een onboarding-bijlage PDF naar Supabase Storage. Retourneert de publieke URL. */
+export async function uploadOnboardingBijlage(
+  buffer: Buffer,
+  originalFilename: string
+): Promise<string> {
+  await ensureOnboardingBucket();
+  const safe = originalFilename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `${Date.now()}-${safe}`;
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.storage
+    .from(ONBOARDING_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: 'application/pdf',
+      upsert: false,
+    });
+  if (error) throw new Error(`Supabase upload mislukt: ${error.message}`);
+  const { data } = sb.storage.from(ONBOARDING_BUCKET).getPublicUrl(storagePath);
+  return data.publicUrl;
+}
+
+/** Download een onboarding-bijlage uit Supabase Storage. Geeft null als niet gevonden. */
+export async function downloadOnboardingBijlageBuffer(url: string): Promise<Buffer | null> {
+  const storagePath = extractOnboardingBijlageStoragePath(url);
+  if (!storagePath) return null;
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .storage.from(ONBOARDING_BUCKET)
+      .download(storagePath);
+    if (error || !data) return null;
+    return Buffer.from(await data.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+/** Verwijder een onboarding-bijlage uit Supabase Storage. */
+export async function deleteOnboardingBijlageStorage(url: string): Promise<boolean> {
+  const storagePath = extractOnboardingBijlageStoragePath(url);
+  if (!storagePath) return false;
+  try {
+    const { error } = await getSupabaseAdmin()
+      .storage.from(ONBOARDING_BUCKET)
+      .remove([storagePath]);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/** Helper: detecteert of het opgeslagen bestandspad een Supabase URL is (vs lokaal pad). */
+export function isOnboardingBijlageUrl(bestandspad: string): boolean {
+  return /^https?:\/\//.test(bestandspad) && bestandspad.includes(`/${ONBOARDING_BUCKET}/`);
+}

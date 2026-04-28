@@ -7242,18 +7242,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─── Onboarding Module: templates, bijlagen, koppelingen, statistieken ────
 
-  const ONBOARDING_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads/onboarding-bijlagen');
-  if (!fs.existsSync(ONBOARDING_UPLOAD_DIR)) fs.mkdirSync(ONBOARDING_UPLOAD_DIR, { recursive: true });
-
-  const onboardingBijlageStorage = multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, ONBOARDING_UPLOAD_DIR),
-    filename: (_req, file, cb) => {
-      const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-      cb(null, `${Date.now()}-${safe}`);
-    },
-  });
+  // Onboarding-bijlagen worden opgeslagen in Supabase Storage (persistent over deploys).
+  // Multer gebruikt memory-storage zodat we de buffer direct naar Supabase kunnen pushen.
   const onboardingBijlageUpload = multer({
-    storage: onboardingBijlageStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       if (file.mimetype !== 'application/pdf') return cb(new Error('Alleen PDF bestanden zijn toegestaan'));
@@ -7431,13 +7423,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!file) return res.status(400).json({ message: 'Geen PDF bestand ontvangen' });
       const { naam, taal, versie } = req.body || {};
       if (!naam) {
-        try { fs.unlinkSync(file.path); } catch {}
         return res.status(400).json({ message: 'Naam is verplicht' });
       }
+      // Upload naar Supabase Storage (persistent over deploys)
+      const { uploadOnboardingBijlage } = await import('./supabase');
+      const publicUrl = await uploadOnboardingBijlage(file.buffer, file.originalname);
       const bijlage = await storage.createOnboardingBijlage({
         naam,
         bestandsnaam: file.originalname,
-        bestandspad: path.relative(process.cwd(), file.path),
+        bestandspad: publicUrl,
         bestandsgrootte: file.size,
         taal: taal || 'alles',
         versie: versie || null,
@@ -7454,6 +7448,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const b = await storage.getOnboardingBijlage(parseInt(req.params.id));
       if (!b) return res.status(404).json({ message: 'Bijlage niet gevonden' });
+      const { isOnboardingBijlageUrl, downloadOnboardingBijlageBuffer } = await import('./supabase');
+      // Supabase-bijlage: stream vanuit storage
+      if (isOnboardingBijlageUrl(b.bestandspad)) {
+        const buf = await downloadOnboardingBijlageBuffer(b.bestandspad);
+        if (!buf) return res.status(404).json({ message: 'Bestand niet meer aanwezig in storage' });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${b.bestandsnaam}"`);
+        return res.end(buf);
+      }
+      // Backward compat: legacy lokaal pad
       const filePath = path.resolve(process.cwd(), b.bestandspad);
       if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Bestand niet meer aanwezig' });
       res.setHeader('Content-Type', 'application/pdf');
@@ -7469,20 +7473,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!file) return res.status(400).json({ message: 'Geen PDF bestand ontvangen' });
       const oud = await storage.getOnboardingBijlage(id);
       if (!oud) {
-        try { fs.unlinkSync(file.path); } catch {}
         return res.status(404).json({ message: 'Bijlage niet gevonden' });
       }
+      // Upload nieuw bestand naar Supabase
+      const { uploadOnboardingBijlage, isOnboardingBijlageUrl, deleteOnboardingBijlageStorage } = await import('./supabase');
+      const publicUrl = await uploadOnboardingBijlage(file.buffer, file.originalname);
       const updated = await storage.updateOnboardingBijlage(id, {
         bestandsnaam: file.originalname,
-        bestandspad: path.relative(process.cwd(), file.path),
+        bestandspad: publicUrl,
         bestandsgrootte: file.size,
         versie: req.body?.versie || oud.versie,
       } as any);
-      // verwijder oud bestand
+      // Verwijder oud bestand (Supabase of lokaal)
       try {
-        const oudPath = path.resolve(process.cwd(), oud.bestandspad);
-        if (fs.existsSync(oudPath)) fs.unlinkSync(oudPath);
-      } catch {}
+        if (isOnboardingBijlageUrl(oud.bestandspad)) {
+          await deleteOnboardingBijlageStorage(oud.bestandspad);
+        } else {
+          const oudPath = path.resolve(process.cwd(), oud.bestandspad);
+          if (fs.existsSync(oudPath)) fs.unlinkSync(oudPath);
+        }
+      } catch (cleanupErr) {
+        console.warn('[Onboarding] Cleanup oud bestand mislukt:', cleanupErr);
+      }
       res.json(updated);
     } catch (e: any) { console.error(e); res.status(500).json({ message: e?.message || 'Vervangen mislukt' }); }
   });
@@ -7497,9 +7509,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (b) {
         try {
-          const filePath = path.resolve(process.cwd(), b.bestandspad);
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        } catch {}
+          const { isOnboardingBijlageUrl, deleteOnboardingBijlageStorage } = await import('./supabase');
+          if (isOnboardingBijlageUrl(b.bestandspad)) {
+            await deleteOnboardingBijlageStorage(b.bestandspad);
+          } else {
+            const filePath = path.resolve(process.cwd(), b.bestandspad);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+          }
+        } catch (cleanupErr) {
+          console.warn('[Onboarding] Cleanup bij delete mislukt:', cleanupErr);
+        }
       }
       res.json({ success: true });
     } catch (e) { console.error(e); res.status(500).json({ message: 'Fout bij verwijderen' }); }

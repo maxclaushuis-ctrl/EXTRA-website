@@ -105,13 +105,25 @@ export async function haalBijlagenOp(
 ): Promise<{ attachments: OnboardingAttachment[]; ontbrekend: string[] }> {
   const attachments: OnboardingAttachment[] = [];
   const ontbrekend: string[] = [];
+  const { isOnboardingBijlageUrl, downloadOnboardingBijlageBuffer } = await import('./supabase');
 
   for (const b of template.bijlagen || []) {
-    const absPath = path.isAbsolute(b.bestandspad)
-      ? b.bestandspad
-      : path.resolve(process.cwd(), b.bestandspad);
     try {
-      const data = await fs.promises.readFile(absPath);
+      let data: Buffer | null = null;
+      if (isOnboardingBijlageUrl(b.bestandspad)) {
+        // Persistent storage in Supabase
+        data = await downloadOnboardingBijlageBuffer(b.bestandspad);
+      } else {
+        // Backward compat: legacy lokaal bestand
+        const absPath = path.isAbsolute(b.bestandspad)
+          ? b.bestandspad
+          : path.resolve(process.cwd(), b.bestandspad);
+        data = await fs.promises.readFile(absPath);
+      }
+      if (!data) {
+        ontbrekend.push(b.naam);
+        continue;
+      }
       attachments.push({
         naam: b.naam,
         bestandsnaam: b.bestandsnaam,
