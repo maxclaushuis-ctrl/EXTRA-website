@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "6Jkpu834J9Z4BjhP4pHvY"
+uri = "file://client/public/email-banner-extra.png"
+type = "image"
+title = "EXTRA banner — PNG (aanbevolen voor Word)"
+
+[[outputs]]
+id = "tunj_kzV2cWeWUurZ76jF"
+uri = "file://client/public/email-banner-extra.jpg"
+type = "image"
+title = "EXTRA banner — JPG (kleinere bestandsgrootte)"
