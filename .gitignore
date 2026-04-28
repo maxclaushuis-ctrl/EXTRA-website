@@ -7,3 +7,5 @@ vite.config.ts.*
 # Onboarding bijlagen uploads
 uploads/onboarding-bijlagen/
 .replit
+# Lokale JSON-database/seed data — mag nooit gecommit worden (bevat eventueel wachtwoorden)
+server/db.json
