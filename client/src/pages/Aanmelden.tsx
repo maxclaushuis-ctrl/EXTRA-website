@@ -663,6 +663,7 @@ export default function Aanmelden() {
         status,
         partial,
         notes: rejReason ? `Afgewezen reden: ${rejReason}` : undefined,
+        rejectionReason: status === "afgewezen" ? rejReason : undefined,
       };
 
       if (savedCandidateId) {

@@ -131,6 +131,20 @@ function getInitials(firstName: string, lastName: string): string {
   return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
 }
 
+// Mapping van afwijzingsreden-codes (admin) en bekende auto-redenen (Aanmelden) naar leesbare labels.
+const REJECTION_REASON_LABELS: Record<string, string> = {
+  diensten: 'Te weinig diensten',
+  cv: 'CV onvoldoende passend',
+  locatie: 'Locatie te ver',
+  no_show: 'Niet komen opdagen',
+  geen_reactie: 'Geen reactie',
+};
+function formatRejectionReason(reason: string): string {
+  if (!reason) return '—';
+  const trimmed = reason.trim();
+  return REJECTION_REASON_LABELS[trimmed] || trimmed;
+}
+
 function daysSince(dateStr: string): number {
   if (!dateStr) return 999;
   const date = new Date(dateStr);
@@ -210,7 +224,7 @@ export default function DashboardMockup() {
   const [selectedKandidate, setSelectedKandidate] = useState<Candidate | null>(null);
   const [kanDetailOpen, setKanDetailOpen] = useState(false);
   const [rejectConfirmId, setRejectConfirmId] = useState<number | null>(null);
-  const [rejectReason, setRejectReason] = useState<'diensten' | 'cv'>('diensten');
+  const [rejectReason, setRejectReason] = useState<'diensten' | 'cv' | 'locatie' | 'no_show' | 'geen_reactie'>('diensten');
   const [cvPreviewOpen, setCvPreviewOpen] = useState(false);
   const [cvPreviewCandidate, setCvPreviewCandidate] = useState<Candidate | null>(null);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
@@ -1241,6 +1255,9 @@ export default function DashboardMockup() {
                     {([
                       { value: 'diensten', label: 'Te weinig diensten beschikbaar' },
                       { value: 'cv', label: 'CV onvoldoende passend' },
+                      { value: 'locatie', label: 'Locatie te ver' },
+                      { value: 'no_show', label: 'Niet komen opdagen' },
+                      { value: 'geen_reactie', label: 'Geen reactie' },
                     ] as const).map(opt => (
                       <label key={opt.value} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${rejectReason === opt.value ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300'}`}>
                         <input
@@ -1799,6 +1816,9 @@ export default function DashboardMockup() {
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Nat.</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden xl:table-cell">Taal</th>
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap hidden lg:table-cell">Kanaal</th>
+                            {kandidatenSubtab === 'afgewezen' && (
+                              <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase whitespace-nowrap">Reden</th>
+                            )}
                             <th className="px-3 py-3 text-left font-medium text-gray-500 text-xs uppercase">CV</th>
                           </tr>
                         </thead>
@@ -1879,6 +1899,21 @@ export default function DashboardMockup() {
                                     </span>
                                   ) : '—'}
                                 </td>
+                                {/* REDEN AFWIJZING (alleen op Afgewezen-tab) */}
+                                {kandidatenSubtab === 'afgewezen' && (
+                                  <td className="px-3 py-3 text-xs whitespace-nowrap">
+                                    {(() => {
+                                      const r = (c as any).rejectionReason as string | null | undefined;
+                                      if (!r) return <span className="text-gray-300">—</span>;
+                                      const label = formatRejectionReason(r);
+                                      return (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100 max-w-[180px] truncate" title={label}>
+                                          {label}
+                                        </span>
+                                      );
+                                    })()}
+                                  </td>
+                                )}
                                 {/* CV + ACTIES */}
                                 <td className="px-3 py-3">
                                   {kandidatenSubtab === 'beoordelen' ? (

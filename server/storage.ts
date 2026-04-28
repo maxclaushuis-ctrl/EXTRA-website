@@ -358,7 +358,7 @@ export interface IStorage {
   getCandidate(id: number): Promise<CandidateWithDetails | undefined>;
   updateCandidate(id: number, candidateData: Partial<InsertCandidate>): Promise<Candidate | undefined>;
   deleteCandidate(id: number): Promise<boolean>;
-  updateCandidateStatus(id: number, status: string, changedByUserId?: number): Promise<Candidate | undefined>;
+  updateCandidateStatus(id: number, status: string, changedByUserId?: number, rejectionReason?: string | null): Promise<Candidate | undefined>;
   anonymizeCandidate(id: number, changedByUserId?: number): Promise<boolean>;
   
   // Salary Scale methods
@@ -3204,7 +3204,7 @@ export class MemStorage implements IStorage {
     return result.length > 0;
   }
 
-  async updateCandidateStatus(id: number, status: string, changedByUserId?: number): Promise<Candidate | undefined> {
+  async updateCandidateStatus(id: number, status: string, changedByUserId?: number, rejectionReason?: string | null): Promise<Candidate | undefined> {
     const [candidate] = await db
       .select()
       .from(candidatesTable)
@@ -3213,9 +3213,16 @@ export class MemStorage implements IStorage {
     if (!candidate) return undefined;
     
     const oldStatus = candidate.status;
+    const setData: any = { status: status as any, updatedAt: new Date() };
+    if (status === 'afgewezen' && rejectionReason !== undefined) {
+      setData.rejectionReason = rejectionReason;
+    } else if (status !== 'afgewezen') {
+      // status veranderde naar iets anders dan afgewezen → reden wissen
+      setData.rejectionReason = null;
+    }
     const [updated] = await db
       .update(candidatesTable)
-      .set({ status: status as any, updatedAt: new Date() })
+      .set(setData)
       .where(eq(candidatesTable.id, id))
       .returning();
     

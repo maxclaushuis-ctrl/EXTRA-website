@@ -242,9 +242,51 @@ async function ensureAdminAccounts() {
     scheduleDailyCvReminders();
     scheduleBlogAutoPublish();
     scheduleFlowEngine();
+    // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
+    backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp wordt beheerd via externe VPS (geconfigureerd via WHATSAPP_API_URL secret)
   });
 })();
+
+async function backfillRejectionReasons() {
+  // Haalt voor elke afgewezen kandidaat zonder rejection_reason de meest recente
+  // audit-log entry op met "Afgewezen: ..." in change_data.description en bewaart die
+  // tekst (gestript) in candidates.rejection_reason. Idempotent: vult alleen NULLs.
+  const sql = `
+    WITH src AS (
+      SELECT
+        c.id AS candidate_id,
+        (
+          SELECT regexp_replace(l.change_data::jsonb->>'description', '^Afgewezen:\\s*', '')
+          FROM candidate_audit_log l
+          WHERE l.candidate_id = c.id
+            AND l.change_data::jsonb ? 'description'
+            AND l.change_data::jsonb->>'description' LIKE 'Afgewezen:%'
+          ORDER BY l.created_at DESC
+          LIMIT 1
+        ) AS reason
+      FROM candidates c
+      WHERE c.status = 'afgewezen' AND c.rejection_reason IS NULL
+    )
+    UPDATE candidates c
+       SET rejection_reason = src.reason
+      FROM src
+     WHERE c.id = src.candidate_id
+       AND src.reason IS NOT NULL
+       AND length(src.reason) > 0
+       AND src.reason <> 'onbekend';
+  `;
+  try {
+    const { pool } = await import('./db');
+    const result: any = await pool.query(sql);
+    if (result?.rowCount && result.rowCount > 0) {
+      log(`Backfill rejection_reason: ${result.rowCount} kandidaten bijgewerkt`);
+    }
+  } catch (err: any) {
+    // Log maar laat de app niet crashen
+    console.warn('backfillRejectionReasons SQL-fout:', err?.message || err);
+  }
+}
 
 function scheduleDailyCvReminders() {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;

@@ -863,6 +863,7 @@ export const candidates = pgTable("candidates", {
   // Functie en status
   functionType: candidateFunctionEnum("function_type").notNull(),
   status: candidateStatusEnum("status").default('in_behandeling').notNull(),
+  rejectionReason: text("rejection_reason"), // korte code, bv. "te_jong", "geen_taal", "cv", "geen_reactie"
   
   // TWV (Tewerkstellingsvergunning)
   needsTwv: boolean("needs_twv").default(false),

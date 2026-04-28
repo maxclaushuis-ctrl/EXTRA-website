@@ -4013,6 +4013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceChannel: z.string().optional().default("Website"),
         notes: z.string().optional().nullable(),
         status: z.enum(["in_behandeling", "gepland", "aangenomen", "afgewezen"]).optional().default("in_behandeling"),
+        rejectionReason: z.string().optional().nullable(),
         partial: z.boolean().optional().default(false),
         // Horecamedewerker tags (optioneel — alleen ingevuld als functie = horecamedewerker)
         canIndependentShift: z.boolean().optional(),
@@ -4062,6 +4063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceChannel: validated.sourceChannel || "Website",
         notes: validated.notes || null,
         status: validated.status || "in_behandeling",
+        rejectionReason: validated.status === "afgewezen" ? (validated.rejectionReason || null) : null,
         retentionUntil: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         ...(validated.canCarryThreePlates !== undefined && { canCarryThreePlates: validated.canCarryThreePlates }),
         ...(validated.isBarista !== undefined && { isBarista: validated.isBarista }),
@@ -4272,6 +4274,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updateData: Record<string, any> = {};
       if (validated.status) updateData.status = validated.status;
+      if (validated.status === 'afgewezen' && validated.rejectionReason !== undefined) {
+        updateData.rejectionReason = validated.rejectionReason;
+      }
       if (validated.language !== undefined) updateData.language = validated.language;
       if (validated.horecaExperience !== undefined) updateData.horecaExperience = validated.horecaExperience;
       if (validated.needsTwv !== undefined) updateData.needsTwv = validated.needsTwv;
@@ -6272,12 +6277,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ongeldige status" });
       }
       
-      const updatedCandidate = await storage.updateCandidateStatus(id, status, req.session?.userId);
+      const updatedCandidate = await storage.updateCandidateStatus(
+        id,
+        status,
+        req.session?.userId,
+        status === 'afgewezen' ? (rejectionReason || null) : null
+      );
       if (!updatedCandidate) {
         return res.status(404).json({ message: "Sollicitant niet gevonden" });
       }
 
-      if (status === 'afgewezen' && updatedCandidate.email && updatedCandidate.firstName) {
+      // Stuur alleen mail bij actieve afwijzingsredenen, niet bij stille markeringen (locatie, geen reactie, niet komen opdagen)
+      const SILENT_REASONS = new Set(['locatie', 'geen_reactie', 'no_show']);
+      if (status === 'afgewezen' && updatedCandidate.email && updatedCandidate.firstName && !SILENT_REASONS.has(String(rejectionReason || ''))) {
         const candidate = { firstName: updatedCandidate.firstName, email: updatedCandidate.email };
         if (rejectionReason === 'cv') {
           sendCandidateRejectionEmailCv(candidate).catch(err =>
