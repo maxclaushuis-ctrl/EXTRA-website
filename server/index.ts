@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import compression from "compression";
+import helmet from "helmet";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { registerRoutes, pingGoogleSitemap } from "./routes";
@@ -33,6 +34,16 @@ declare global {
 
 const app = express();
 app.set('trust proxy', 1);
+
+// Helmet voegt automatisch beveiligingsheaders toe (X-Frame-Options, X-Content-Type-Options,
+// Strict-Transport-Security, Referrer-Policy, etc.). CSP en CORP zijn uitgeschakeld om
+// de frontend (Vite assets, embedded previews) niet te breken — die vereisen een eigen
+// doorgesproken policy als ze later geactiveerd worden.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
 app.use(compression({ level: 6, threshold: 1024 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
@@ -49,7 +60,10 @@ app.use((req, res, next) => {
 });
 
 
-// CORS headers toevoegen om cross-domain problemen te voorkomen
+// Strikte CORS — alleen origins op de allowlist krijgen credentialed CORS-headers,
+// ongeacht NODE_ENV. Server-to-server calls (zonder Origin header) en same-origin
+// requests worden doorgelaten zonder CORS-headers. Onbekende cross-origin requests
+// worden hard geweigerd met 403.
 const ALLOWED_ORIGINS = [
   'https://www.doehetextra.nl',
   'https://doehetextra.nl',
@@ -58,17 +72,36 @@ const ALLOWED_ORIGINS = [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const isAllowed = !origin || ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV !== 'production';
-  if (isAllowed) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+
+  // Geen Origin header: server-to-server, curl, mobile app, etc. — toegestaan zonder CORS-headers
+  if (!origin) {
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    return next();
   }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+
+  // Same-origin (browser stuurt Origin maar het komt overeen met Host) — toegestaan, geen CORS nodig
+  const sameOrigin = origin === `${req.protocol}://${req.headers.host}`;
+
+  // Bekende cross-origin op allowlist — vol-CORS met credentials
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Vary', 'Origin');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    return next();
   }
-  next();
+
+  // Same-origin: geen CORS-headers (browser vereist ze niet voor same-origin)
+  if (sameOrigin) {
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    return next();
+  }
+
+  // Onbekende cross-origin — geweigerd
+  console.warn(`[CORS] Geweigerde origin: ${origin} → ${req.method} ${req.path}`);
+  return res.status(403).json({ message: 'Origin not allowed' });
 });
 
 // Verplichte secrets — geen fallback toegestaan, zelfs niet in development.
