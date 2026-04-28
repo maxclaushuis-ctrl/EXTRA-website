@@ -5424,10 +5424,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return { vanaf_dt, tot_dt, granularity, prev_vanaf, prev_tot };
   }
 
-  function brancheWhere(alias: string, branches: string[]): string {
-    if (!branches || branches.length === 0) return '';
-    const quoted = branches.map(b => `'${b.replace(/'/g, "''")}'`).join(',');
-    return ` AND (${alias}.branche_filter = '{}' OR ${alias}.branche_filter && ARRAY[${quoted}]::text[])`;
+  // brancheWhere geeft een geparametriseerde SQL-fragment terug die veilig in een
+  // grotere sql`` template gecombineerd kan worden. De alias is gehardcodeerd op 'pc'
+  // (de tabel-alias gebruikt in alle stats-queries) zodat hij nooit door user input
+  // bepaald kan worden. Elke branche-waarde wordt afzonderlijk als parameter gebonden
+  // via sql.join, zodat pg ze kan typen als text[] zonder string-interpolatie.
+  function brancheWhereFragment(branches: string[]) {
+    if (!branches || branches.length === 0) return sql``;
+    const arr = sql.join(branches.map(b => sql`${b}`), sql`, `);
+    return sql` AND (pc.branche_filter = '{}' OR pc.branche_filter && ARRAY[${arr}]::text[])`;
+  }
+
+  // granularityLiteral geeft een SQL-fragment terug met de granularity als string-literal
+  // (bv. 'day') in plaats van een gebonden parameter. Dat is nodig omdat PostgreSQL twee
+  // DATE_TRUNC($N, kolom)-expressies in SELECT en GROUP BY niet als equivalent herkent
+  // wanneer $N een parameter is. De waarde komt uit een whitelist (parsePeriod), dus
+  // er is geen pad voor user-input om door te lekken.
+  function granularityLiteral(granularity: string) {
+    switch (granularity) {
+      case 'day': return sql`'day'`;
+      case 'week': return sql`'week'`;
+      case 'month': return sql`'month'`;
+      default: return sql`'month'`;
+    }
   }
 
   app.get("/api/admin/stats/overview", adminMiddleware, async (req: Request, res: Response) => {
@@ -5435,10 +5454,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { vanaf, tot, branche } = req.query as Record<string, any>;
       const branches: string[] = branche ? (Array.isArray(branche) ? branche : [branche]) : [];
       const { vanaf_dt, tot_dt, granularity, prev_vanaf, prev_tot } = parsePeriod(vanaf, tot);
-      const bWhere = brancheWhere('pc', branches);
+      const bWhere = brancheWhereFragment(branches);
+      const gran = granularityLiteral(granularity);
 
-      // KPI current period
-      const kpiSQL = `
+      // KPI current period — geparametriseerd via Drizzle's sql template
+      const kpiQuery = sql`
         SELECT
           COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS totaal_verzonden,
           COUNT(DISTINCT me_open.mail_send_id) AS geopend,
@@ -5449,12 +5469,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
         LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
         LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
-        WHERE ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        WHERE ms.verzonden_op >= ${vanaf_dt} AND ms.verzonden_op <= ${tot_dt}
         ${bWhere}
       `;
 
       // KPI previous period
-      const kpiPrevSQL = `
+      const kpiPrevQuery = sql`
         SELECT
           COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS totaal_verzonden,
           COUNT(DISTINCT me_open.mail_send_id) AS geopend,
@@ -5465,14 +5485,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
         LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
         LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
-        WHERE ms.verzonden_op >= '${prev_vanaf.toISOString()}' AND ms.verzonden_op <= '${prev_tot.toISOString()}'
+        WHERE ms.verzonden_op >= ${prev_vanaf} AND ms.verzonden_op <= ${prev_tot}
         ${bWhere}
       `;
 
-      // Tijdlijn (group by period)
-      const tijdlijnSQL = `
+      // Tijdlijn (group by period) — granularity is een whitelisted SQL-literal (niet
+      // een parameter), zodat PostgreSQL DATE_TRUNC in SELECT en GROUP BY als equivalent ziet
+      const tijdlijnQuery = sql`
         SELECT
-          DATE_TRUNC('${granularity}', ms.verzonden_op) AS periode,
+          DATE_TRUNC(${gran}, ms.verzonden_op) AS periode,
           COUNT(ms.id) FILTER (WHERE ms.status = 'sent') AS verzonden,
           COUNT(DISTINCT me_open.mail_send_id) AS geopend,
           COUNT(DISTINCT me_click.mail_send_id) AS geklikt
@@ -5480,14 +5501,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         JOIN prospect_campaigns pc ON pc.id = ms.campaign_id
         LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
         LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
-        WHERE ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+        WHERE ms.verzonden_op >= ${vanaf_dt} AND ms.verzonden_op <= ${tot_dt}
         ${bWhere}
-        GROUP BY DATE_TRUNC('${granularity}', ms.verzonden_op)
+        GROUP BY DATE_TRUNC(${gran}, ms.verzonden_op)
         ORDER BY periode
       `;
 
       // Per branche
-      const brancheSQL = `
+      const brancheQuery = sql`
         SELECT
           UNNEST(pc.branche_filter) AS branche,
           COUNT(DISTINCT pc.id) AS campagnes,
@@ -5496,7 +5517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(DISTINCT me_click.mail_send_id) AS geklikt
         FROM prospect_campaigns pc
         LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
-          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+          AND ms.verzonden_op >= ${vanaf_dt} AND ms.verzonden_op <= ${tot_dt}
         LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
         LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
         WHERE ARRAY_LENGTH(pc.branche_filter, 1) > 0
@@ -5505,10 +5526,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       const [kpiRows, kpiPrevRows, tijdlijnRows, brancheRows] = await Promise.all([
-        db.execute(sql.raw(kpiSQL)),
-        db.execute(sql.raw(kpiPrevSQL)),
-        db.execute(sql.raw(tijdlijnSQL)),
-        db.execute(sql.raw(brancheSQL)),
+        db.execute(kpiQuery),
+        db.execute(kpiPrevQuery),
+        db.execute(tijdlijnQuery),
+        db.execute(brancheQuery),
       ]);
 
       const k = (kpiRows.rows as any[])[0] || {};
@@ -5575,17 +5596,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { vanaf, tot, branche, sort_by = 'open_rate', sort_dir = 'desc', page = '1', per_page = '10' } = req.query as Record<string, any>;
       const branches: string[] = branche ? (Array.isArray(branche) ? branche : [branche]) : [];
       const { vanaf_dt, tot_dt } = parsePeriod(vanaf, tot);
-      const bWhere = brancheWhere('pc', branches);
-      const offset = (parseInt(page) - 1) * parseInt(per_page);
+      const bWhere = brancheWhereFragment(branches);
+      const perPage = parseInt(per_page);
+      const pageNum = parseInt(page);
+      const offset = (pageNum - 1) * perPage;
 
-      const validSort: Record<string, string> = {
-        open_rate: 'open_rate', click_rate: 'click_rate',
-        verzonden: 'verzonden', naam: 'pc.name', datum: 'pc.sent_at',
+      // ORDER BY-kolom en richting via whitelist; we leveren ze als sql-fragmenten
+      // (geen user input komt ooit als raw string in de query terecht).
+      const sortColMap: Record<string, ReturnType<typeof sql>> = {
+        open_rate: sql`open_rate`,
+        click_rate: sql`click_rate`,
+        verzonden: sql`verzonden`,
+        naam: sql`pc.name`,
+        datum: sql`pc.sent_at`,
       };
-      const sortCol = validSort[sort_by] || 'open_rate';
-      const sortDir = sort_dir === 'asc' ? 'ASC' : 'DESC';
+      const sortCol = sortColMap[sort_by] ?? sortColMap.open_rate;
+      const sortDir = sort_dir === 'asc' ? sql`ASC` : sql`DESC`;
 
-      const campagnesSQL = `
+      const campagnesQuery = sql`
         SELECT
           pc.id, pc.name, pc.campagne_type, pc.status, pc.sent_at, pc.branche_filter,
           pc.ab_test_actief,
@@ -5602,32 +5630,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ELSE 0 END AS click_rate
         FROM prospect_campaigns pc
         LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
-          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+          AND ms.verzonden_op >= ${vanaf_dt} AND ms.verzonden_op <= ${tot_dt}
         LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
         LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
         LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
         WHERE pc.status NOT IN ('concept', 'draft') OR EXISTS (
           SELECT 1 FROM mail_sends ms2 WHERE ms2.campaign_id = pc.id
-            AND ms2.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms2.verzonden_op <= '${tot_dt.toISOString()}'
+            AND ms2.verzonden_op >= ${vanaf_dt} AND ms2.verzonden_op <= ${tot_dt}
         )
         ${bWhere}
         GROUP BY pc.id
         ORDER BY ${sortCol} ${sortDir} NULLS LAST
-        LIMIT ${parseInt(per_page)} OFFSET ${offset}
+        LIMIT ${perPage} OFFSET ${offset}
       `;
 
-      const countSQL = `
+      const countQuery = sql`
         SELECT COUNT(DISTINCT pc.id) AS total
         FROM prospect_campaigns pc
         LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
-          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+          AND ms.verzonden_op >= ${vanaf_dt} AND ms.verzonden_op <= ${tot_dt}
         WHERE pc.status NOT IN ('concept', 'draft') OR ms.id IS NOT NULL
         ${bWhere}
       `;
 
       const [rows, countRows] = await Promise.all([
-        db.execute(sql.raw(campagnesSQL)),
-        db.execute(sql.raw(countSQL)),
+        db.execute(campagnesQuery),
+        db.execute(countQuery),
       ]);
 
       const campagnes = (rows.rows as any[]).map(r => ({
@@ -5658,8 +5686,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/stats/activity", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const { limit = '20', offset = '0' } = req.query as Record<string, any>;
+      // Hard-bound integer-conversie voorkomt zowel NaN-fouten als ongeldige waardes.
+      const limitNum = Math.max(1, Math.min(500, parseInt(limit) || 20));
+      const offsetNum = Math.max(0, parseInt(offset) || 0);
 
-      const activitySQL = `
+      const activityQuery = sql`
         SELECT
           me.id, me.type, me.timestamp, me.url,
           ms.email, ms.campaign_id, ms.variant,
@@ -5671,14 +5702,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         JOIN prospect_campaigns pc ON pc.id = ms.campaign_id
         LEFT JOIN prospect_contacts pcon ON pcon.id = ms.contact_id
         ORDER BY me.timestamp DESC
-        LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        LIMIT ${limitNum} OFFSET ${offsetNum}
       `;
 
-      const countSQL = `SELECT COUNT(*) AS total FROM mail_events`;
+      const countQuery = sql`SELECT COUNT(*) AS total FROM mail_events`;
 
       const [rows, countRows] = await Promise.all([
-        db.execute(sql.raw(activitySQL)),
-        db.execute(sql.raw(countSQL)),
+        db.execute(activityQuery),
+        db.execute(countQuery),
       ]);
 
       const activiteiten = (rows.rows as any[]).map(r => ({
@@ -5709,9 +5740,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { vanaf, tot, branche } = req.query as Record<string, any>;
       const branches: string[] = branche ? (Array.isArray(branche) ? branche : [branche]) : [];
       const { vanaf_dt, tot_dt } = parsePeriod(vanaf, tot);
-      const bWhere = brancheWhere('pc', branches);
+      const bWhere = brancheWhereFragment(branches);
 
-      const exportSQL = `
+      const exportQuery = sql`
         SELECT
           pc.name AS naam, pc.campagne_type AS type, pc.status,
           pc.branche_filter,
@@ -5729,16 +5760,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(ms.id) FILTER (WHERE ms.status = 'failed') AS mislukt
         FROM prospect_campaigns pc
         LEFT JOIN mail_sends ms ON ms.campaign_id = pc.id
-          AND ms.verzonden_op >= '${vanaf_dt.toISOString()}' AND ms.verzonden_op <= '${tot_dt.toISOString()}'
+          AND ms.verzonden_op >= ${vanaf_dt} AND ms.verzonden_op <= ${tot_dt}
         LEFT JOIN mail_events me_open ON me_open.mail_send_id = ms.id AND me_open.type = 'open'
         LEFT JOIN mail_events me_click ON me_click.mail_send_id = ms.id AND me_click.type = 'click'
         LEFT JOIN mail_events me_unsub ON me_unsub.mail_send_id = ms.id AND me_unsub.type = 'unsubscribe'
-        ${bWhere}
+        WHERE TRUE ${bWhere}
         GROUP BY pc.id
         ORDER BY pc.sent_at DESC NULLS LAST
       `;
 
-      const rows = await db.execute(sql.raw(exportSQL));
+      const rows = await db.execute(exportQuery);
       const header = 'Campagnenaam,Type,Status,Branche_filter,Verzonden_op,Totaal_verzonden,Geopend,Open_rate_pct,Geklikt,Click_rate_pct,Uitgeschreven,Mislukt\n';
       const csvRows = (rows.rows as any[]).map(r =>
         [
@@ -5768,7 +5799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
 
-      const clickSQL = `
+      const clickQuery = sql`
         SELECT
           me.url,
           COUNT(*) AS totaal_kliks,
@@ -5780,7 +5811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY totaal_kliks DESC
       `;
 
-      const openConSQL = `
+      const openConQuery = sql`
         SELECT
           pcon.id, pcon.name, pcon.company, pcon.email,
           MIN(me.timestamp) AS geopend_op,
@@ -5795,7 +5826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LIMIT 100
       `;
 
-      const nietOpenSQL = `
+      const nietOpenQuery = sql`
         SELECT
           pcon.id, pcon.name, pcon.company, pcon.email
         FROM mail_sends ms
@@ -5808,9 +5839,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       const [clickRows, openConRows, nietOpenRows] = await Promise.all([
-        db.execute(sql.raw(clickSQL)),
-        db.execute(sql.raw(openConSQL)),
-        db.execute(sql.raw(nietOpenSQL)),
+        db.execute(clickQuery),
+        db.execute(openConQuery),
+        db.execute(nietOpenQuery),
       ]);
 
       return res.json({
