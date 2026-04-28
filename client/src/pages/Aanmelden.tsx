@@ -143,7 +143,7 @@ const NL_THRESHOLDS: ExperienceThresholds = {
   horecamedewerker: ["6to12", "1to3", "3plus"],
   frontoffice: ["6to12", "1to3", "3plus"],
   chef: ["1to3", "3plus"],
-  logistiek: ["1to3", "3plus"],
+  logistiek: ["6to12", "1to3", "3plus"],
 };
 
 const EU_THRESHOLDS: ExperienceThresholds = {
@@ -151,7 +151,7 @@ const EU_THRESHOLDS: ExperienceThresholds = {
   horecamedewerker: ["1to3", "3plus"],
   frontoffice: ["6to12", "1to3", "3plus"],
   chef: ["1to3", "3plus"],
-  logistiek: ["1to3", "3plus"],
+  logistiek: ["6to12", "1to3", "3plus"],
 };
 
 const NON_EU_THRESHOLDS: ExperienceThresholds = {
@@ -159,7 +159,7 @@ const NON_EU_THRESHOLDS: ExperienceThresholds = {
   horecamedewerker: ["1to3", "3plus"],
   frontoffice: ["6to12", "1to3", "3plus"],
   chef: ["1to3", "3plus"],
-  logistiek: ["1to3", "3plus"],
+  logistiek: ["6to12", "1to3", "3plus"],
 };
 
 function XPatternBg({ count = 4, opacity = 0.08 }: { count?: number; opacity?: number }) {
