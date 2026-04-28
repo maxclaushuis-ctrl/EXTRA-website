@@ -7383,7 +7383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: `Bijlagen te groot: ${sizeCheck.melding}` });
       }
 
-      const { sendEmail } = await import('./mail');
+      const { sendEmail, getLastEmailError } = await import('./mail');
       const ok = await sendEmail({
         to: naar,
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
@@ -7397,7 +7397,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           disposition: 'attachment',
         })),
       });
-      if (!ok) return res.status(500).json({ message: 'Versturen via SendGrid mislukt' });
+      if (!ok) {
+        const err = getLastEmailError();
+        const sgMsg = err?.sendgridErrors?.[0]?.message;
+        const detail = sgMsg || err?.message;
+        return res.status(500).json({
+          message: detail ? `SendGrid: ${detail}` : 'Versturen via SendGrid mislukt',
+          sendgridError: sgMsg || null,
+        });
+      }
       res.json({ success: true, bijlagenCount: attachments.length, ontbrekendeBijlagen: ontbrekend });
     } catch (e: any) {
       console.error(e);

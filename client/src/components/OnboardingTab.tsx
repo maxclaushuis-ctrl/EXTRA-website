@@ -799,8 +799,9 @@ function TestmailModal({ open, onClose, templateId }: { open: boolean; onClose: 
   const medewerkers = useMedewerkersOptions();
   const [naar, setNaar] = useState('');
   const [medewerkerId, setMedewerkerId] = useState<string>('');
+  const [foutmelding, setFoutmelding] = useState<string | null>(null);
 
-  useEffect(() => { if (!open) { setNaar(''); setMedewerkerId(''); } }, [open]);
+  useEffect(() => { if (!open) { setNaar(''); setMedewerkerId(''); setFoutmelding(null); } }, [open]);
 
   const verstuurMutation = useMutation({
     mutationFn: () => apiRequest('POST', `/api/onboarding/templates/${templateId}/testmail`, {
@@ -812,6 +813,7 @@ function TestmailModal({ open, onClose, templateId }: { open: boolean; onClose: 
       const ontbrekend: string[] = Array.isArray(res?.ontbrekendeBijlagen) ? res.ontbrekendeBijlagen : [];
       const bijlageTekst = count === 0 ? 'zonder bijlagen' : `${count} bijlage${count === 1 ? '' : 'n'} meegestuurd`;
       const ontbrekendTekst = ontbrekend.length ? ` · ontbrekend: ${ontbrekend.join(', ')}` : '';
+      setFoutmelding(null);
       toast({
         title: 'Testmail verzonden ✓',
         description: `Naar ${naar} — ${bijlageTekst}${ontbrekendTekst}`,
@@ -819,7 +821,12 @@ function TestmailModal({ open, onClose, templateId }: { open: boolean; onClose: 
       });
       onClose();
     },
-    onError: (e: any) => toast({ title: 'Versturen mislukt', description: e?.message, variant: 'destructive' }),
+    onError: (e: any) => {
+      const data = e?.data || {};
+      const detail = data?.message || e?.message || 'Onbekende fout';
+      setFoutmelding(detail);
+      toast({ title: 'Versturen mislukt', description: detail, variant: 'destructive' });
+    },
   });
 
   const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(naar);
@@ -852,6 +859,20 @@ function TestmailModal({ open, onClose, templateId }: { open: boolean; onClose: 
           <p className="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded px-2 py-1.5">
             Het onderwerp krijgt het prefix <code className="bg-white px-1 rounded">[TEST]</code>.
           </p>
+          {foutmelding && (
+            <div
+              className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2"
+              data-testid="testmail-error"
+            >
+              <div className="font-medium mb-0.5">Versturen mislukt</div>
+              <div className="text-xs break-words">{foutmelding}</div>
+              {/Maximum credits exceeded|credits/i.test(foutmelding) && (
+                <div className="text-xs text-red-600 mt-1">
+                  Je SendGrid-account heeft het mailcredit-limiet bereikt. Upgrade je SendGrid-plan of wacht tot de credits resetten.
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuleren</Button>

@@ -83,6 +83,12 @@ interface EmailParams {
   headers?: Record<string, string>;
 }
 
+// Houd de laatste fout bij zodat callers een specifieke foutboodschap kunnen tonen
+let lastEmailError: { message: string; sendgridErrors?: any[] } | null = null;
+export function getLastEmailError() {
+  return lastEmailError;
+}
+
 // Verzend een e-mail met opgegeven parameters
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   // Check of we in mock-modus zijn
@@ -130,9 +136,15 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       }));
     }
     await mailService.send(msg);
+    lastEmailError = null;
     console.log(`✅ E-mail succesvol verzonden naar ${Array.isArray(params.to) ? params.to.join(', ') : params.to} (onderwerp: ${params.subject})`);
     return true;
   } catch (error: any) {
+    const sendgridErrors = error?.response?.body?.errors;
+    lastEmailError = {
+      message: error?.message || String(error),
+      sendgridErrors: Array.isArray(sendgridErrors) ? sendgridErrors : undefined,
+    };
     console.error('❌ Fout bij verzenden van e-mail via SendGrid:');
     console.error('  - Naar:', params.to);
     console.error('  - Van:', params.from);
