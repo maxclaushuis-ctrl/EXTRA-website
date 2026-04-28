@@ -12,3 +12,15 @@ id = "tunj_kzV2cWeWUurZ76jF"
 uri = "file://client/public/email-banner-extra.jpg"
 type = "image"
 title = "EXTRA banner — JPG (kleinere bestandsgrootte)"
+
+[[outputs]]
+id = "QbbRTtUWwaQrvWr84xf22"
+uri = "file://attached_assets/banners/extra-banner-no-logo.png"
+type = "image"
+title = "EXTRA banner zonder logo (PNG, 1200x400)"
+
+[[outputs]]
+id = "uq6EtVhEolLBIftzhR7E8"
+uri = "file://attached_assets/banners/extra-banner-no-logo.jpg"
+type = "image"
+title = "EXTRA banner zonder logo (JPG, 1200x400)"
