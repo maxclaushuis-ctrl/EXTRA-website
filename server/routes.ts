@@ -197,6 +197,50 @@ const registrationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Brute-force-bescherming voor login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skip: (req: Request) => {
+    const email = (req.body?.email || '').toLowerCase();
+    return email.endsWith('@doehetextra.nl');
+  },
+  message: { error: 'Te veel inlogpogingen, probeer later opnieuw' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Strikte limiter voor signup-formulier (admin/employee accounts)
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  skip: (req: Request) => {
+    const email = (req.body?.email || '').toLowerCase();
+    return email.endsWith('@doehetextra.nl');
+  },
+  message: { error: 'Te veel aanmeldingen vanaf dit IP-adres, probeer het over een uur opnieuw' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Voorkomt CV-upload spam / storage-misbruik
+const cvUploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: 'Te veel CV-uploads vanaf dit IP-adres, probeer het over een uur opnieuw' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Voorkomt WhatsApp-spam (per-minuut, want admins mogen wel bulk versturen)
+const whatsappSendLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: 'Te veel WhatsApp-berichten in korte tijd, probeer het zo opnieuw' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Simple cookie parser function
 function parseCookies(cookieString?: string): Record<string, string> {
   const cookies: Record<string, string> = {};
@@ -423,7 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   scheduleGdprCleanup();
 
   // Legacy API routes - behouden voor backward compatibility
-  app.post("/api/signup", async (req: Request, res: Response) => {
+  app.post("/api/signup", signupLimiter, async (req: Request, res: Response) => {
     try {
       // Validate request body
       const result = insertApplicantSchema.safeParse(req.body);
@@ -565,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
+  app.post("/api/auth/login", loginLimiter, async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
       
@@ -4743,7 +4787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const cvUploadMiddleware = withUploadErrorHandler(cvUpload.single('cv'), 10, 'CV');
   const CV_ALLOWED_EXTS = ['pdf', 'doc', 'docx'] as const;
 
-  app.post("/api/aanmelden/cv", cvUploadMiddleware, async (req: Request, res: Response) => {
+  app.post("/api/aanmelden/cv", cvUploadLimiter, cvUploadMiddleware, async (req: Request, res: Response) => {
     try {
       const file = req.file;
       if (!file) {
@@ -9491,7 +9535,7 @@ ${posts.map(p => `  <url>
   });
 
   // POST /api/whatsapp/stuur — bericht sturen via 360dialog
-  app.post('/api/whatsapp/stuur', adminMiddleware, async (req: Request, res: Response) => {
+  app.post('/api/whatsapp/stuur', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
 
