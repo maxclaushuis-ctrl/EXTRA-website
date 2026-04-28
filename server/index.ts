@@ -71,6 +71,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// SESSION_SECRET is verplicht — geen fallback toegestaan, zelfs niet in development.
+// De app weigert te starten als deze niet is ingesteld om sessie-vervalsing te voorkomen.
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is niet ingesteld. Stel deze in voordat de app start.');
+}
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
 // Voeg sessie middleware toe (PostgreSQL store zodat autoscale werkt)
 app.use(session({
   store: new PgStore({
@@ -78,7 +85,7 @@ app.use(session({
     tableName: 'session',
     createTableIfMissing: true,
   }),
-  secret: process.env.SESSION_SECRET || 'extra-rewards-fallback-only-for-dev',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   rolling: true,
@@ -122,51 +129,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// Vaste admin-accounts die altijd aanwezig moeten zijn.
-// Wachtwoorden zijn bcrypt-hashes — nooit als plaintext opslaan.
-const REQUIRED_ADMINS = [
-  { email: 'admin@extra.nl',            firstName: 'Admin',     lastName: 'EXTRAATJE',     password: '$2b$10$ZtjnweBSZOPnSgCHevw7/OZTpOAko4RaeAA8nN8L/.NyfO0VvEFd6' },
-  { email: 'charlotte@doehetextra.nl',  firstName: 'Charlotte', lastName: '',              password: '$2b$12$XW1Dc.n6YebI/hKMbNWHiO8uXXo7JybIl4z6q5WM7mRgJW8CKIfw6' },
-  { email: 'eveline@doehetextra.nl',    firstName: 'Eveline',   lastName: '',              password: '$2b$12$Qi.e2LUmhKppqhQ1XMAxreefN4tlA.6R7BhvufV9tbHlp7dxs/IUi' },
-  { email: 'lea@doehetextra.nl',        firstName: 'Lea',       lastName: '',              password: '$2b$12$sBP9rhd28Vop79JuhgVE8en3bmSKPWy5I2.OqXS7cWUnXAI3B1Yr.' },
-  { email: 'max@doehetextra.nl',        firstName: 'Max',       lastName: '',              password: '$2b$12$sBP9rhd28Vop79JuhgVE8en3bmSKPWy5I2.OqXS7cWUnXAI3B1Yr.' },
-];
-
+// Verifieer dat er minstens één actief admin-account bestaat in de database.
+// Admin-accounts worden volledig in de database beheerd (geen hardcoded lijst).
 async function ensureAdminAccounts() {
   try {
-    for (const admin of REQUIRED_ADMINS) {
-      const { rows } = await pool.query('SELECT id, role, status FROM users WHERE email = $1', [admin.email]);
-      if (rows.length === 0) {
-        // Account bestaat niet — aanmaken
-        await pool.query(
-          `INSERT INTO users (email, password, first_name, last_name, role, status, points, monthly_points)
-           VALUES ($1, $2, $3, $4, 'admin', 'active', 0, 0)`,
-          [admin.email, admin.password, admin.firstName, admin.lastName]
-        );
-        log(`[admin-guard] Admin-account aangemaakt: ${admin.email}`);
-      } else {
-        const existing = rows[0];
-        // Account bestaat maar is mogelijk gedegradeerd of gedeactiveerd — herstellen
-        if (existing.role !== 'admin' || existing.status !== 'active') {
-          await pool.query(
-            `UPDATE users SET role = 'admin', status = 'active' WHERE email = $1`,
-            [admin.email]
-          );
-          log(`[admin-guard] Admin-account hersteld (rol/status): ${admin.email}`);
-        }
-      }
+    const users = await storage.getUsers();
+    const activeAdmins = users.filter(u => u.role === 'admin' && u.status === 'active');
+    if (activeAdmins.length === 0) {
+      console.warn('[admin-guard] WAARSCHUWING: geen actieve admin-accounts in de database. Maak er minstens één aan.');
+    } else {
+      log(`[admin-guard] ${activeAdmins.length} actieve admin-account(s) gevonden in database`);
     }
   } catch (err) {
-    console.error('[admin-guard] Fout bij herstellen admin-accounts:', err);
+    console.error('[admin-guard] Fout bij controleren admin-accounts:', err);
   }
 }
 
 (async () => {
-  // Zorg dat alle admin-accounts altijd bestaan (ook na DB-reset of nieuw deployment)
+  // Verifieer bij start dat er minimaal één actief admin-account in de database staat
   await ensureAdminAccounts();
-
-  // Hercontrole elke 10 minuten — ook als accounts tussentijds worden verwijderd
-  setInterval(() => ensureAdminAccounts(), 10 * 60 * 1000);
 
   // Herstel: zet is_internal_interview = true voor alle handmatig via TWV aangemaakte kandidaten
   // zodat ze niet in het Kandidaten-overzicht verschijnen
