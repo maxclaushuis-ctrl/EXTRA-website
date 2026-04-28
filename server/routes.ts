@@ -4681,6 +4681,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(html);
   });
 
+  // Detecteer het werkelijke bestandstype op basis van de magic bytes (niet vertrouwen op
+  // de mimetype die de client meestuurt). Retourneert null als type niet herkend is.
+  async function detectAndValidateFileType(
+    buffer: Buffer,
+    allowedExts: readonly string[],
+    humanReadableTypes: string
+  ): Promise<{ valid: true; ext: string; mime: string } | { valid: false; error: string }> {
+    try {
+      const { fileTypeFromBuffer } = await import('file-type');
+      const detected = await fileTypeFromBuffer(buffer);
+      if (!detected) {
+        return { valid: false, error: `Bestandstype kon niet worden vastgesteld. Alleen ${humanReadableTypes} toegestaan.` };
+      }
+      if (!allowedExts.includes(detected.ext)) {
+        return { valid: false, error: `Ongeldig bestandstype (${detected.ext}). Alleen ${humanReadableTypes} toegestaan.` };
+      }
+      return { valid: true, ext: detected.ext, mime: detected.mime };
+    } catch (err) {
+      console.error('[file-validation] Fout bij detecteren bestandstype:', err);
+      return { valid: false, error: 'Fout bij valideren van het bestand.' };
+    }
+  }
+
+  // Wrap een multer middleware zodat fouten (oa LIMIT_FILE_SIZE) als nette JSON 400 terugkomen
+  function withUploadErrorHandler(
+    uploader: (req: Request, res: Response, next: NextFunction) => void,
+    maxMb: number,
+    label: string
+  ) {
+    return (req: Request, res: Response, next: NextFunction) => {
+      uploader(req, res, (err: any) => {
+        if (err) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: `${label} is groter dan ${maxMb}MB. Upload een kleiner bestand.` });
+          }
+          return res.status(400).json({ message: err.message || `${label}-upload geweigerd` });
+        }
+        next();
+      });
+    };
+  }
+
   const cvUpload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -4693,19 +4735,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
-        cb(new Error('Only PDF, DOC and DOCX files are allowed'));
+        cb(new Error('Alleen PDF, DOC en DOCX bestanden zijn toegestaan'));
       }
     }
   });
 
-  app.post("/api/aanmelden/cv", cvUpload.single('cv'), async (req: Request, res: Response) => {
+  const cvUploadMiddleware = withUploadErrorHandler(cvUpload.single('cv'), 10, 'CV');
+  const CV_ALLOWED_EXTS = ['pdf', 'doc', 'docx'] as const;
+
+  app.post("/api/aanmelden/cv", cvUploadMiddleware, async (req: Request, res: Response) => {
     try {
       const file = req.file;
       if (!file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const publicUrl = await uploadCvToSupabase(file.buffer, file.mimetype, file.originalname);
+      // Verifieer het werkelijke bestandstype op basis van magic bytes,
+      // zodat een client niet kan liegen over de mimetype
+      const validation = await detectAndValidateFileType(file.buffer, CV_ALLOWED_EXTS, 'PDF, DOC of DOCX');
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.error });
+      }
+
+      const publicUrl = await uploadCvToSupabase(file.buffer, validation.mime, file.originalname);
 
       const candidateId = req.body?.candidateId ? parseInt(req.body.candidateId) : null;
       if (candidateId && !isNaN(candidateId)) {
@@ -4735,7 +4787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Directe CV upload via token-link vanuit email
-  app.post("/api/cv-upload-token", cvUpload.single('cv'), async (req: Request, res: Response) => {
+  app.post("/api/cv-upload-token", cvUploadMiddleware, async (req: Request, res: Response) => {
     try {
       const token = req.body?.token || req.query?.token as string;
       if (!token) return res.status(400).json({ message: "Token ontbreekt" });
@@ -4743,12 +4795,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const file = req.file;
       if (!file) return res.status(400).json({ message: "Geen bestand ontvangen" });
 
+      // Verifieer het werkelijke bestandstype op basis van magic bytes
+      const validation = await detectAndValidateFileType(file.buffer, CV_ALLOWED_EXTS, 'PDF, DOC of DOCX');
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.error });
+      }
+
       // Zoek kandidaat op token via directe DB query
       const [candidate] = await db.select().from(candidatesTable).where(eq(candidatesTable.cvUploadToken, token)).limit(1);
       if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen upload-link" });
       if (candidate.hasCv) return res.status(400).json({ message: "CV al ontvangen" });
 
-      const publicUrl = await uploadCvToSupabase(file.buffer, file.mimetype, file.originalname);
+      const publicUrl = await uploadCvToSupabase(file.buffer, validation.mime, file.originalname);
 
       // Sla CV op en wis het token (eenmalig gebruik)
       await storage.updateCandidate(candidate.id, {
@@ -6576,25 +6634,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Configure multer for candidate photo uploads
-  const candidatePhotoStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(process.cwd(), 'uploads', 'candidates');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const candidateId = req.params.id;
-      const ext = path.extname(file.originalname);
-      const filename = `candidate-${candidateId}-${Date.now()}${ext}`;
-      cb(null, filename);
-    }
-  });
-
+  // Configure multer for candidate photo uploads — memory storage zodat we het werkelijke
+  // bestandstype kunnen valideren (magic bytes) voordat we naar disk schrijven
   const candidatePhotoUpload = multer({
-    storage: candidatePhotoStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -6606,19 +6649,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const candidatePhotoMiddleware = withUploadErrorHandler(
+    candidatePhotoUpload.single('photo'),
+    5,
+    'Foto'
+  );
+  const PHOTO_ALLOWED_EXTS = ['jpg', 'png', 'webp'] as const;
+
   // Upload candidate photo
-  app.post("/api/admin/candidates/:id/photo", adminMiddleware, candidatePhotoUpload.single('photo'), async (req: Request, res: Response) => {
+  app.post("/api/admin/candidates/:id/photo", adminMiddleware, candidatePhotoMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const file = req.file;
-      
+
       if (!file) {
         return res.status(400).json({ message: "Geen foto geüpload" });
       }
 
+      // Verifieer het werkelijke bestandstype op basis van magic bytes
+      const validation = await detectAndValidateFileType(file.buffer, PHOTO_ALLOWED_EXTS, 'JPG, PNG of WebP');
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.error });
+      }
+
       const candidate = await storage.getCandidate(id);
       if (!candidate) {
-        fs.unlinkSync(file.path);
         return res.status(404).json({ message: "Sollicitant niet gevonden" });
       }
 
@@ -6630,12 +6685,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const photoUrl = `/uploads/candidates/${file.filename}`;
+      // Schrijf naar disk met de gevalideerde extensie
+      const uploadDir = path.join(process.cwd(), 'uploads', 'candidates');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const filename = `candidate-${id}-${Date.now()}.${validation.ext}`;
+      fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+
+      const photoUrl = `/uploads/candidates/${filename}`;
       await storage.updateCandidate(id, { photoUrl });
 
-      return res.json({ 
+      return res.json({
         message: "Foto succesvol geüpload",
-        photoUrl 
+        photoUrl
       });
     } catch (error) {
       console.error("Error uploading candidate photo:", error);
