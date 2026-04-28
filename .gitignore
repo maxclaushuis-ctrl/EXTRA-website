@@ -9,3 +9,9 @@ uploads/onboarding-bijlagen/
 .replit
 # Lokale JSON-database/seed data — mag nooit gecommit worden (bevat eventueel wachtwoorden)
 server/db.json
+# Environment variabelen / secrets — nooit committen
+.env
+.env.local
+.env.*.local
+*.env
+.env.production
