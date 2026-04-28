@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -1377,7 +1378,7 @@ export default function DashboardMockup() {
                             <div
                               className="border border-gray-200 rounded-lg p-6 overflow-y-auto bg-white text-gray-800 text-sm leading-relaxed rich-text"
                               style={{ maxHeight: '60vh' }}
-                              dangerouslySetInnerHTML={{ __html: docxHtml }}
+                              dangerouslySetInnerHTML={{ __html: sanitizeHtml(docxHtml) }}
                             />
                           )}
                           <div className="flex justify-end">
@@ -5419,7 +5420,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                       <div
                         className="blog-content text-sm leading-relaxed"
                         style={{ fontFamily: 'inherit' }}
-                        dangerouslySetInnerHTML={{ __html: blogPreviewPost.content }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(blogPreviewPost.content) }}
                       />
                     </div>
                   )}

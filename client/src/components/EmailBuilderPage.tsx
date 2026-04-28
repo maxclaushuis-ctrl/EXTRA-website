@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, createContext, useContext } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,7 +158,7 @@ export function BlockPreview({ blok, selected, onClick }: { blok: BuilderBlock; 
         blok.tekst
           ? <div
               style={{ textAlign: blok.uitlijning, color: blok.kleur, fontWeight: 800, fontSize: blok.niveau === 'h1' ? '26px' : blok.niveau === 'h2' ? '22px' : '18px', lineHeight: 1.3, letterSpacing: '-0.01em' }}
-              dangerouslySetInnerHTML={{ __html: renderInlineLinksHtml(blok.tekst) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderInlineLinksHtml(blok.tekst)) }}
             />
           : <div style={{ textAlign: blok.uitlijning, color: blok.kleur, fontWeight: 800, fontSize: blok.niveau === 'h1' ? '26px' : blok.niveau === 'h2' ? '22px' : '18px', lineHeight: 1.3 }}><span className="text-gray-300">Kopregel...</span></div>
       )}
@@ -165,7 +166,7 @@ export function BlockPreview({ blok, selected, onClick }: { blok: BuilderBlock; 
         blok.tekst
           ? <div
               style={{ textAlign: blok.uitlijning, color: blok.kleur, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}
-              dangerouslySetInnerHTML={{ __html: renderInlineLinksHtml(blok.tekst) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderInlineLinksHtml(blok.tekst)) }}
             />
           : <div style={{ textAlign: blok.uitlijning, color: blok.kleur, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}><span className="text-gray-300">Paragraaf tekst...</span></div>
       )}

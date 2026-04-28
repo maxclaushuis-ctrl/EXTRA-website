@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -691,7 +692,7 @@ const EmailTemplateEditor = ({
                       <div className="p-2 bg-gray-100 border-b text-sm">{banner.name}</div>
                       <div 
                         className="p-2" 
-                        dangerouslySetInnerHTML={{ __html: banner.html }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(banner.html) }}
                       />
                     </div>
                   ))}
@@ -783,7 +784,7 @@ const EmailTemplateEditor = ({
             <ScrollArea className="h-[300px]">
               <div 
                 className="p-4 preview-content" 
-                dangerouslySetInnerHTML={{ __html: replaceVariables(htmlContent) }} 
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(replaceVariables(htmlContent)) }} 
               />
             </ScrollArea>
           </div>
@@ -831,7 +832,7 @@ const EmailTemplateEditor = ({
               <div
                 className="p-4 preview-content" 
                 style={{ fontFamily: 'Poppins, sans-serif' }}
-                dangerouslySetInnerHTML={{ __html: replaceVariables(htmlContent) }} 
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(replaceVariables(htmlContent)) }} 
               />
             </ScrollArea>
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Link, useParams } from "wouter";
 import PublicFooter from "@/components/PublicFooter";
 import PublicNav from "@/components/PublicNav";
@@ -356,7 +357,7 @@ export default function NieuwsArtikel() {
                 [&_.tip]:bg-amber-50 [&_.tip]:border [&_.tip]:border-amber-200 [&_.tip]:rounded-xl [&_.tip]:px-5 [&_.tip]:py-4 [&_.tip]:my-6 [&_.tip]:text-amber-900 [&_.tip]:text-sm
                 [&_a]:text-purple-600 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-purple-800
                 [&_strong]:text-gray-900 [&_strong]:font-semibold"
-              dangerouslySetInnerHTML={{ __html: dbPost.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(dbPost.content) }}
             />
 
             {/* Internal links CTA */}
