@@ -465,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get current stats (for A/B testing metrics and analytics)
-  app.get("/api/stats", async (req: Request, res: Response) => {
+  app.get("/api/stats", authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
     try {
       const fromDate = req.query.from ? new Date(req.query.from as string) : undefined;
       const toDate = req.query.to ? new Date(req.query.to as string) : undefined;
