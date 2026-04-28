@@ -71,10 +71,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// SESSION_SECRET is verplicht — geen fallback toegestaan, zelfs niet in development.
-// De app weigert te starten als deze niet is ingesteld om sessie-vervalsing te voorkomen.
+// Verplichte secrets — geen fallback toegestaan, zelfs niet in development.
+// De app weigert te starten als één van deze ontbreekt om sessie-vervalsing en
+// onbetrouwbare HMAC-tokens (unsubscribe-links) te voorkomen.
 if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET environment variable is niet ingesteld. Stel deze in voordat de app start.');
+}
+if (!process.env.UNSUBSCRIBE_SECRET) {
+  throw new Error('UNSUBSCRIBE_SECRET environment variable is not set');
 }
 const SESSION_SECRET = process.env.SESSION_SECRET;
 

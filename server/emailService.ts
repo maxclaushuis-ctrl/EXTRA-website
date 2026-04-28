@@ -13,7 +13,10 @@ function getBaseUrl(req?: any): string {
   return 'https://doehetextra.nl';
 }
 
-const UNSUBSCRIBE_SECRET = process.env.UNSUBSCRIBE_SECRET || 'extra-unsubscribe-fallback-secret-2024';
+const UNSUBSCRIBE_SECRET = process.env.UNSUBSCRIBE_SECRET;
+if (!UNSUBSCRIBE_SECRET) {
+  throw new Error('UNSUBSCRIBE_SECRET environment variable is not set');
+}
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'max@doehetextra.nl';
 const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Max van EXTRA';
 
