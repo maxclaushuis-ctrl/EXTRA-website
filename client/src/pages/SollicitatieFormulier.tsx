@@ -185,6 +185,7 @@ export default function SollicitatieFormulier() {
   const [intakeCandidatesLoading, setIntakeCandidatesLoading] = useState(false);
   const [selectedIntakeId, setSelectedIntakeId] = useState<number | null>(null);
   const [intakeCandidateSearch, setIntakeCandidateSearch] = useState('');
+  const [intakeNotAuthorized, setIntakeNotAuthorized] = useState(false);
   const [scoreErrors, setScoreErrors] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -221,6 +222,12 @@ export default function SollicitatieFormulier() {
   useEffect(() => {
     document.title = 'Sollicitatieformulier – EXTRA';
     setIsSubmitted(false);
+    // Snelle auth-check zodat we direct kunnen melden als de gebruiker niet ingelogd is
+    // (vooral relevant op iPad/mobiel waar Safari sessies sneller verloopt)
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(user => { if (!user) setIntakeNotAuthorized(true); })
+      .catch(() => {});
   }, []);
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = form;
@@ -231,8 +238,15 @@ export default function SollicitatieFormulier() {
     setIntakeCandidatesLoading(true);
     setSelectedIntakeId(null);
     setIntakeCandidateSearch('');
-    fetch(`/api/intake/candidates?functionType=${encodeURIComponent(watchedFunctionType)}`)
-      .then(r => r.ok ? r.json() : { candidates: [] })
+    fetch(`/api/intake/candidates?functionType=${encodeURIComponent(watchedFunctionType)}`, { credentials: 'include' })
+      .then(r => {
+        if (r.status === 401 || r.status === 403) {
+          setIntakeNotAuthorized(true);
+          return { candidates: [] };
+        }
+        setIntakeNotAuthorized(false);
+        return r.ok ? r.json() : { candidates: [] };
+      })
       .then(json => setIntakeCandidates(json.candidates || []))
       .catch(() => setIntakeCandidates([]))
       .finally(() => setIntakeCandidatesLoading(false));
@@ -701,6 +715,27 @@ export default function SollicitatieFormulier() {
             {/* ═══ SECTIE 1: BASISINFORMATIE ═══ */}
             {currentSection === 1 && (
               <>
+                {intakeNotAuthorized && (
+                  <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-amber-900 mb-1">Je bent niet (meer) ingelogd in het dashboard</p>
+                        <p className="text-sm text-amber-800 mb-3">Daarom is de lijst met aangemelde kandidaten leeg. Log eerst in en open het intakeformulier opnieuw — dan staan alle kandidaten netjes klaar om te selecteren.</p>
+                        <a
+                          href={`/dashboard?redirect=${encodeURIComponent('/sollicitatieformulier')}`}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold transition-colors"
+                        >
+                          Inloggen in dashboard
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {intakeCandidatesLoading && (
                   <div className="flex items-center gap-3 text-sm text-purple-600 bg-purple-50 border border-purple-100 rounded-2xl px-5 py-4">
                     <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
@@ -767,7 +802,7 @@ export default function SollicitatieFormulier() {
                   </div>
                 )}
 
-                {!intakeCandidatesLoading && intakeCandidates.length === 0 && watchedFunctionType && (
+                {!intakeCandidatesLoading && !intakeNotAuthorized && intakeCandidates.length === 0 && watchedFunctionType && (
                   <div className="rounded-xl border border-gray-200 px-5 py-4 text-sm text-gray-500 bg-gray-50">
                     Geen aangemelde kandidaten voor deze functie — vul de gegevens hieronder handmatig in.
                   </div>
