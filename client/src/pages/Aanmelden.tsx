@@ -491,18 +491,6 @@ export default function Aanmelden() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (step === "success") {
-      try {
-        const w = window as any;
-        if (!w.jobster) w.jobster = [];
-        w.jobster.push(function() {
-          w.jobster.conversion("1a0c9513-ffae-436e-b8cc-2945905f1e5c", "customer");
-        });
-      } catch (_) {}
-    }
-  }, [step]);
-
   const [formData, setFormData] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const utmSource = params.get("utm_source");
