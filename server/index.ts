@@ -129,7 +129,7 @@ app.use(session({
   name: 'extra.sid',
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000, // 24 uur
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dagen — handig voor iPad-snelkoppelingen waar je dagelijks intakes afneemt
     httpOnly: true,
     sameSite: 'lax',
     path: '/'
