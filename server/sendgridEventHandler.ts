@@ -192,6 +192,9 @@ async function applyEventEffect(
             bounceReden: ev.reason || null,
             phase: 'uitgesloten',
           } as any);
+          // Blok 4: stop alle lopende flows direct.
+          const { stopFlowsBijReply } = await import('./flowEngine');
+          await stopFlowsBijReply(mailSend.contactId, 'hard_bounce');
         } catch (err) {
           console.warn('[SgEventHandler] kon contact niet updaten bij hard bounce', err);
         }
@@ -214,6 +217,9 @@ async function applyEventEffect(
           await storage.updateProspectContact(mailSend.contactId, {
             spamReported: true, spamReportedAt: stamp, phase: 'uitgesloten',
           } as any);
+          // Blok 4: stop alle lopende flows direct.
+          const { stopFlowsBijReply } = await import('./flowEngine');
+          await stopFlowsBijReply(mailSend.contactId, 'spam_gemeld');
         } catch {}
       }
       break;
@@ -235,6 +241,9 @@ async function applyEventEffect(
           await storage.updateProspectContact(mailSend.contactId, {
             unsubscribed: true, contactStatus: 'uitgeschreven', phase: 'uitgesloten',
           } as any);
+          // Blok 4: stop alle lopende flows direct.
+          const { stopFlowsBijReply } = await import('./flowEngine');
+          await stopFlowsBijReply(mailSend.contactId, 'uitgeschreven');
         } catch {}
       }
       break;

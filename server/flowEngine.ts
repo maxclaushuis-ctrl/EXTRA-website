@@ -1,8 +1,99 @@
-// ─── Flow Engine — Stap 5 ─────────────────────────────────────────────────────
+// ─── Flow Engine — Stap 5 + Blok 4 ────────────────────────────────────────────
 // Verwerkt flow stappen per contact en evalueert condities.
+// Blok 4: auto-stop bij reply / bounce / spam / unsubscribe + slimme wait die
+// vaste verzendslots respecteert wanneer de campagne deze heeft geconfigureerd.
 
 import { storage } from './storage';
-import type { FlowContactProgress, FlowStep } from '@shared/schema';
+import type { FlowContactProgress, FlowStep, ProspectContact, ProspectCampaign } from '@shared/schema';
+import { eerstvolgendSlot, berekenWerkelijkVerzendMoment } from './schedulerUtils';
+
+// ─── Blok 4: skip-check op contact ────────────────────────────────────────────
+//
+// Bepaalt of een contact nog mail mag ontvangen in een lopende flow.
+// Eén centrale lijst van redenen zodat zowel processFlowStep (vóór email) als
+// runFlowScheduler (vóór elke iteratie) hetzelfde gedrag vertonen.
+export type SkipReden =
+  | 'reply_ontvangen'
+  | 'in_gesprek'
+  | 'klant'
+  | 'uitgesloten'
+  | 'uitgeschreven'
+  | 'hard_bounce'
+  | 'spam_gemeld';
+
+export function bepaalSkipReden(contact: ProspectContact | null | undefined): SkipReden | null {
+  if (!contact) return 'uitgesloten';
+  if (contact.lastReplyAt) return 'reply_ontvangen';
+  if (contact.phase === 'in_gesprek') return 'in_gesprek';
+  if (contact.phase === 'klant') return 'klant';
+  if (contact.phase === 'uitgesloten') return 'uitgesloten';
+  if (contact.unsubscribed) return 'uitgeschreven';
+  if (contact.bounceStatus === 'hard') return 'hard_bounce';
+  if (contact.spamReported) return 'spam_gemeld';
+  return null;
+}
+
+const SKIP_REDEN_TEKST: Record<SkipReden, string> = {
+  reply_ontvangen: 'Contact heeft geantwoord — flow automatisch gestopt',
+  in_gesprek:      'Contact staat in gesprek — geen verdere mailings',
+  klant:           'Contact is klant geworden — geen verdere mailings',
+  uitgesloten:     'Contact is uitgesloten van campagnes',
+  uitgeschreven:   'Contact heeft zich uitgeschreven',
+  hard_bounce:     'Hard bounce ontvangen — contact uitgesloten van mail',
+  spam_gemeld:     'Spam-rapport ontvangen — contact uitgesloten van mail',
+};
+
+export function tekstVoorSkipReden(reden: SkipReden): string {
+  return SKIP_REDEN_TEKST[reden] || reden;
+}
+
+// ─── Blok 4: slimme wait helper ──────────────────────────────────────────────
+// Schuif een wachtTot-tijdstip door naar het eerstvolgende geldige verzendmoment
+// volgens de campagne-configuratie (vaste slots > toegestane dagen + tijdvenster).
+export function berekenSlimWachtTot(ruweWachtTot: Date, campaign: ProspectCampaign): Date {
+  const tz = campaign.tijdzone || 'Europe/Amsterdam';
+  const slots: any[] | null = (campaign as any).verzendSlots ?? null;
+  if (slots && slots.length > 0) {
+    const eerstvolgend = eerstvolgendSlot(ruweWachtTot, slots, tz);
+    if (eerstvolgend) return eerstvolgend;
+  }
+  // Geen vaste slots — gebruik de generieke berekening met toegestane dagen +
+  // tijdvenster zodat 's avonds-mailings/weekend-mailings worden vermeden.
+  try {
+    return berekenWerkelijkVerzendMoment(ruweWachtTot, {
+      alleenWerkdagen: campaign.alleenWerkdagen ?? false,
+      tijdvensterStart: campaign.tijdvensterStart || '08:00',
+      tijdvensterEind:  campaign.tijdvensterEind  || '18:00',
+      tijdzone: tz,
+      verzendDagen: (campaign as any).verzendDagen ?? null,
+      verzendSlots: slots,
+    });
+  } catch {
+    return ruweWachtTot;
+  }
+}
+
+// ─── Blok 4: directe stop bij reply (gebruikt door inbound webhook) ──────────
+// Stopt alle actieve flow-progresses voor een contact, ongeacht in welke
+// campagne. Wordt aangeroepen vanuit sendgridInboundHandler zodra een echte
+// reply binnenkomt zodat we niet hoeven te wachten op de scheduler-tick.
+export async function stopFlowsBijReply(contactId: number, reden: SkipReden = 'reply_ontvangen'): Promise<{ gestopt: number }> {
+  let gestopt = 0;
+  try {
+    const actieve = await storage.getActiveFlowProgressesByContact(contactId);
+    for (const p of actieve) {
+      await storage.updateFlowContactProgress(p.id, {
+        status: 'gestopt',
+        foutMelding: tekstVoorSkipReden(reden),
+        wachtTot: null,
+      });
+      gestopt++;
+    }
+  } catch (err) {
+    console.warn('[FlowEngine] stopFlowsBijReply mislukt:', err);
+  }
+  return { gestopt };
+}
 
 // ─── Conditie evaluatie ────────────────────────────────────────────────────────
 
@@ -52,6 +143,22 @@ export async function processFlowStep(progressId: number): Promise<void> {
   const progress = await storage.getFlowContactProgressById(progressId);
   if (!progress || progress.status !== 'actief') return;
 
+  // ─── Blok 4: auto-stop bij reply / opt-out / hard bounce / spam ────────────
+  // Vóór ÉLKE stap een verse contact-check. Zo onderbreken we ook lopende
+  // wait-periodes zodra een contact heeft geantwoord (de scheduler haalt deze
+  // progress weer op zodra wachtTot bereikt is, of direct via reageerOpReply).
+  const contact = await storage.getProspectContact(progress.contactId);
+  const skipReden = bepaalSkipReden(contact);
+  if (skipReden) {
+    await storage.updateFlowContactProgress(progressId, {
+      status: 'gestopt',
+      foutMelding: tekstVoorSkipReden(skipReden),
+      wachtTot: null,
+    });
+    console.log(`[FlowEngine] Contact ${progress.contactId} gestopt: ${skipReden}`);
+    return;
+  }
+
   const step = await storage.getFlowStepByStapId(progress.campaignId, progress.huidigeStapId);
   if (!step) {
     await storage.updateFlowContactProgress(progressId, {
@@ -74,7 +181,6 @@ export async function processFlowStep(progressId: number): Promise<void> {
 
       case 'email': {
         // Verzend e-mail via emailService
-        const { sendCampaignBatch } = await import('./emailService');
         const baseUrl = process.env.BASE_URL || 'https://doehetextra.nl';
 
         // Maak een tijdelijke mail_send voor dit contact en verzend
@@ -99,7 +205,26 @@ export async function processFlowStep(progressId: number): Promise<void> {
         const waarde = config.waarde || 1;
         const eenheid = config.eenheid || 'dagen';
         const msPerEenheid = eenheid === 'uren' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-        const wachtTot = new Date(Date.now() + waarde * msPerEenheid);
+        let wachtTot = new Date(Date.now() + waarde * msPerEenheid);
+
+        // ─── Blok 4: slimme wait — respecteer verzendslots/-dagen van campagne ──
+        // Als de campagne vaste slots of toegestane dagen + tijdvenster heeft,
+        // schuiven we wachtTot door naar het eerstvolgende geldige verzendmoment.
+        // Dat voorkomt mailings buiten de afgesproken vensters (bijv. 's avonds
+        // of in het weekend) ook bij flow-driven stappen.
+        try {
+          const campaign = await storage.getProspectCampaign(progress.campaignId);
+          if (campaign) {
+            const verschoven = berekenSlimWachtTot(wachtTot, campaign);
+            if (verschoven && verschoven.getTime() !== wachtTot.getTime()) {
+              console.log(`[FlowEngine] Slimme wait: ${wachtTot.toISOString()} → ${verschoven.toISOString()} voor contact ${progress.contactId}`);
+              wachtTot = verschoven;
+            }
+          }
+        } catch (err) {
+          console.warn('[FlowEngine] Slimme-wait-berekening mislukt, fallback op ruwe wachtTot:', err);
+        }
+
         await storage.updateFlowContactProgress(progressId, { wachtTot });
         console.log(`[FlowEngine] Contact ${progress.contactId} wacht tot ${wachtTot.toISOString()}`);
         break;

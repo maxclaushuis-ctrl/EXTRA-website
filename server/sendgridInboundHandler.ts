@@ -149,6 +149,17 @@ export async function verwerkInboundReply(payload: InboundPayload): Promise<Repl
       } catch (err) {
         console.warn('[Inbound] kon contact niet updaten met phase=in_gesprek', err);
       }
+
+      // Blok 4: stop alle lopende flows voor dit contact direct (real-time auto-stop).
+      try {
+        const { stopFlowsBijReply } = await import('./flowEngine');
+        const res = await stopFlowsBijReply(contact.id, 'reply_ontvangen');
+        if (res.gestopt > 0) {
+          console.log(`[Inbound] ${res.gestopt} actieve flow(s) gestopt voor contact ${contact.id} na reply`);
+        }
+      } catch (err) {
+        console.warn('[Inbound] auto-stop flows mislukte:', err);
+      }
     }
   }
 

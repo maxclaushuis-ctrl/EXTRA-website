@@ -1101,13 +1101,25 @@ function FlowVoortgangTab({ campaignId }: { campaignId: number }) {
               <tbody className="divide-y divide-slate-100">
                 {(stats.contacten || []).map(p => (
                   <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 text-slate-700">{p.contactId}</td>
-                    <td className="px-4 py-2.5 text-slate-600 font-mono">{p.huidigeStapId}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLOR[p.status] || 'bg-gray-100 text-gray-600'}`}>{p.status}</span>
+                    <td className="px-4 py-2.5 text-slate-700 align-top">{p.contactId}</td>
+                    <td className="px-4 py-2.5 align-top">
+                      <div className="text-slate-600 font-mono">{p.huidigeStapId}</div>
+                      {p.foutMelding && (p.status === 'gestopt' || p.status === 'error') && (
+                        <div className={`mt-1 text-[11px] italic ${p.status === 'error' ? 'text-red-500' : 'text-slate-500'}`}>
+                          {p.foutMelding}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-4 py-2.5 text-slate-500">{p.wachtTot ? new Date(p.wachtTot).toLocaleString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                    <td className="px-4 py-2.5 text-slate-400">{new Date(p.bijgewerktOp).toLocaleString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="px-4 py-2.5 align-top">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLOR[p.status] || 'bg-gray-100 text-gray-600'}`}
+                        title={p.foutMelding || undefined}
+                      >
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-slate-500 align-top">{p.wachtTot ? new Date(p.wachtTot).toLocaleString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                    <td className="px-4 py-2.5 text-slate-400 align-top">{new Date(p.bijgewerktOp).toLocaleString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
                   </tr>
                 ))}
               </tbody>

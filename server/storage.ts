@@ -606,6 +606,7 @@ export interface IStorage {
   createFlowContactProgress(data: InsertFlowContactProgress): Promise<FlowContactProgress>;
   updateFlowContactProgress(id: number, data: Partial<InsertFlowContactProgress>): Promise<FlowContactProgress | undefined>;
   getActiveFlowProgresses(): Promise<FlowContactProgress[]>;
+  getActiveFlowProgressesByContact(contactId: number): Promise<FlowContactProgress[]>;
   getFlowStats(campaignId: number): Promise<{
     actief: number; voltooid: number; gestopt: number; error: number;
     perStap: Array<{ stapId: string; wachtHier: number; doorgelopen: number }>;
@@ -4640,6 +4641,17 @@ export class MemStorage implements IStorage {
             isNull(flowContactProgressTable.wachtTot),
             lte(flowContactProgressTable.wachtTot, now)
           )
+        )
+      );
+  }
+
+  // Blok 4: alle actieve flow-progresses voor één contact (voor real-time stop bij reply)
+  async getActiveFlowProgressesByContact(contactId: number): Promise<FlowContactProgress[]> {
+    return db.select().from(flowContactProgressTable)
+      .where(
+        and(
+          eq(flowContactProgressTable.contactId, contactId),
+          eq(flowContactProgressTable.status, 'actief'),
         )
       );
   }
