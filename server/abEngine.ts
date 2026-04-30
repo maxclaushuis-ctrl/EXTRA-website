@@ -77,21 +77,9 @@ export async function verstuurWinnaarNaarRest(
 
   const baseUrl = process.env.BASE_URL || 'https://doehetextra.nl';
 
-  // Haal alle contacten op die voldoen aan segmentfilters
-  const allContacts = await storage.getProspectContacts({});
-  const bf = Array.isArray(campaign.brancheFilter) ? campaign.brancheFilter : [];
-  const ff = Array.isArray(campaign.functieFilter) ? campaign.functieFilter : [];
-  const tags: string[] = (() => { try { return JSON.parse(campaign.tagFilter || '[]'); } catch { return []; } })();
-
-  const targets = allContacts.filter(c => {
-    if (c.unsubscribed || c.contactStatus === 'uitgeschreven' || c.contactStatus === 'geblokkeerd') return false;
-    if (campaign.typeFilter && campaign.typeFilter !== 'alles' && c.contactType !== campaign.typeFilter) return false;
-    if (campaign.taalFilter && campaign.taalFilter !== 'alles' && c.taal !== campaign.taalFilter) return false;
-    if (bf.length > 0 && !bf.some(b => c.branche === b || (c.brancheTags || []).includes(b))) return false;
-    if (ff.length > 0 && !ff.some(f => (c.functieTags || []).includes(f))) return false;
-    if (tags.length > 0 && !tags.some(t => (c.tags || []).includes(t))) return false;
-    return !!c.email;
-  });
+  // Haal alle contacten op die voldoen aan segmentfilters (incl. Blok 1 phase + functionTagIds)
+  const { resolveCampaignAudience } = await import('./prospectSegmentResolver');
+  const targets = await resolveCampaignAudience(campaign);
 
   // Filter contacten die al een mail_send hebben voor deze campagne
   const bestaandeSends = await storage.getMailSendsByCampaign(campaignId);

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time, real, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time, real, uniqueIndex, index, primaryKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1376,10 +1376,40 @@ export const prospectContacts = pgTable("prospect_contacts", {
   contactType: text("contact_type").default("prospect"), // prospect | klant
   customTags: text("custom_tags").default("[]"),       // JSON array van strings bijv. ["VIP","Warme lead"]
   contactStatus: text("contact_status").default("actief"), // actief | uitgeschreven | geblokkeerd
+  // Pijplijn-fase voor mailcampagnes — Blok 1
+  // nieuw | in_campagne | in_gesprek | klant | uitgesloten
+  phase: text("phase").default("nieuw").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  phaseIdx: index("prospect_contacts_phase_idx").on(table.phase),
+}));
+
+// ─── Gestandaardiseerde functietags — Blok 1 ──────────────────────────────────
+// Master-lijst van functietags die in dropdowns/multi-selects gebruikt wordt.
+// Gekoppeld aan prospect_contacts via prospectContactFunctionTags (m2m).
+export const functionTags = pgTable("function_tags", {
+  id: serial("id").primaryKey(),
+  naam: text("naam").notNull(),
+  slug: text("slug").notNull().unique(),
+  volgorde: integer("volgorde").default(0).notNull(),
+  actief: boolean("actief").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const prospectContactFunctionTags = pgTable("prospect_contact_function_tags", {
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'cascade' }).notNull(),
+  functionTagId: integer("function_tag_id").references(() => functionTags.id, { onDelete: 'cascade' }).notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.contactId, table.functionTagId] }),
+  contactIdx: index("pcft_contact_idx").on(table.contactId),
+  tagIdx: index("pcft_tag_idx").on(table.functionTagId),
+}));
+
+export const insertFunctionTagSchema = createInsertSchema(functionTags).omit({ id: true, createdAt: true });
+export type InsertFunctionTag = z.infer<typeof insertFunctionTagSchema>;
+export type FunctionTag = typeof functionTags.$inferSelect;
 
 // ─── B2B Prospect E-mail Campagnes ───────────────────────────────────────────
 export const prospectCampaigns = pgTable("prospect_campaigns", {
@@ -1395,13 +1425,18 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   // Content variants
   contentA: text("content_a"),                       // JSON blocks variant A
   contentB: text("content_b"),                       // JSON blocks variant B (A/B test)
-  // Targeting filters (legacy array)
+  // Targeting filters (legacy array — vrije strings, deprecated)
+  // Behouden voor backwards compatibility met bestaande campagnes.
+  // Nieuwe code gebruikt functionTagIds (gestandaardiseerde m2m via function_tags).
   brancheFilter: text("branche_filter").array().default([]),
   functieFilter: text("functie_filter").array().default([]),
   // Extended targeting filters
   typeFilter: text("type_filter").default("alles"),  // alles | prospect | klant
   taalFilter: text("taal_filter").default("alles"),  // alles | Nederlands | Engels | Anders
   tagFilter: text("tag_filter").default("[]"),       // JSON array
+  // Blok 1: Pijplijn-fase filter + gestandaardiseerde functietag-IDs
+  phaseFilter: text("phase_filter").array().default([]),         // [] = alle fases
+  functionTagIds: integer("function_tag_ids").array().default([]), // [] = alle functietags
   // Status: concept | gepland | actief | voltooid | gestopt | draft | sent | scheduled
   status: text("status").default("concept").notNull(),
   scheduledAt: timestamp("scheduled_at"),

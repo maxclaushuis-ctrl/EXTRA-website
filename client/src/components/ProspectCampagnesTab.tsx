@@ -42,6 +42,7 @@ type Campaign = {
   status: string; // concept | gepland | actief | voltooid | gestopt | draft | sent | scheduled
   brancheFilter: string[]; functieFilter: string[];
   typeFilter: string; taalFilter: string; tagFilter: string;
+  phaseFilter: string[] | null; functionTagIds: number[] | null;
   editorBlocks: string | null; contentA: string | null; contentB: string | null;
   htmlContent: string; textContent: string | null;
   scheduledAt: string | null; sentAt: string | null;
@@ -301,6 +302,8 @@ function StepBar({ step, labels }: { step: number; labels: string[] }) {
 type WizardData = {
   name: string; subject: string; campagneType: 'bulk' | 'flow';
   brancheFilter: string[]; functieFilter: string[]; typeFilter: string; taalFilter: string; tagFilter: string[];
+  // Blok 1: pijplijn-fase + gestandaardiseerde functietags
+  phaseFilter: string[]; functionTagIds: number[];
   verzendMode: 'direct' | 'gepland'; verzendOp: string;
   alleenWerkdagen: boolean; tijdvensterStart: string; tijdvensterEind: string;
   abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number;
@@ -309,10 +312,20 @@ type WizardData = {
 const EMPTY_WIZARD: WizardData = {
   name: '', subject: '', campagneType: 'bulk',
   brancheFilter: [], functieFilter: [], typeFilter: 'alles', taalFilter: 'alles', tagFilter: [],
+  phaseFilter: [], functionTagIds: [],
   verzendMode: 'direct', verzendOp: '',
   alleenWerkdagen: true, tijdvensterStart: '08:00', tijdvensterEind: '18:00',
   abTestActief: false, abSplitPct: 50, abWinnaarOp: 'open_rate', abWinnaarNaUren: 24,
 };
+
+// Pijplijn-fases (Blok 1) — moet matchen met server-side whitelist
+const WIZARD_PHASES = [
+  { value: 'nieuw',       label: 'Nieuw' },
+  { value: 'in_campagne', label: 'In campagne' },
+  { value: 'in_gesprek',  label: 'In gesprek' },
+  { value: 'klant',       label: 'Klant' },
+  { value: 'uitgesloten', label: 'Uitgesloten' },
+];
 
 function CampaignWizard({ open, onClose, onCreated }: {
   open: boolean; onClose: () => void; onCreated: (campaign: Campaign) => void;
@@ -328,6 +341,10 @@ function CampaignWizard({ open, onClose, onCreated }: {
     queryKey: ['/api/admin/prospect-contacts/unique-tags'],
   });
 
+  const { data: functionTagsList = [] } = useQuery<{ id: number; naam: string }[]>({
+    queryKey: ['/api/admin/function-tags'],
+  });
+
   const set = useCallback((k: keyof WizardData, v: any) => setData(d => ({ ...d, [k]: v })), []);
 
   // Live segment count with debounce
@@ -340,6 +357,8 @@ function CampaignWizard({ open, onClose, onCreated }: {
       params.set('type_filter', data.typeFilter);
       params.set('taal_filter', data.taalFilter);
       if (data.tagFilter.length > 0) params.set('tag_filter', JSON.stringify(data.tagFilter));
+      if (data.phaseFilter.length > 0) params.set('phase_filter', JSON.stringify(data.phaseFilter));
+      if (data.functionTagIds.length > 0) params.set('function_tag_ids', JSON.stringify(data.functionTagIds));
       const res = await fetch(`/api/admin/prospect-campaigns/segment-count?${params}`, { credentials: 'include' });
       const { count } = await res.json();
       setSegmentCount(count ?? 0);
@@ -348,7 +367,7 @@ function CampaignWizard({ open, onClose, onCreated }: {
     } finally {
       setSegmentLoading(false);
     }
-  }, [data.brancheFilter, data.functieFilter, data.typeFilter, data.taalFilter, data.tagFilter]);
+  }, [data.brancheFilter, data.functieFilter, data.typeFilter, data.taalFilter, data.tagFilter, data.phaseFilter, data.functionTagIds]);
 
   useEffect(() => {
     if (step === 2) {
@@ -375,6 +394,8 @@ function CampaignWizard({ open, onClose, onCreated }: {
       brancheFilter: data.brancheFilter, functieFilter: data.functieFilter,
       typeFilter: data.typeFilter, taalFilter: data.taalFilter,
       tagFilter: data.tagFilter,
+      phaseFilter: data.phaseFilter,
+      functionTagIds: data.functionTagIds,
       status: 'concept',
       alleenWerkdagen: data.alleenWerkdagen,
       tijdvensterStart: data.tijdvensterStart, tijdvensterEind: data.tijdvensterEind,
@@ -463,6 +484,44 @@ function CampaignWizard({ open, onClose, onCreated }: {
                 ))}
               </div>
             </div>
+
+            {/* Pijplijn-fase */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Pijplijn-fase <span className="text-gray-400 font-normal">(leeg = alle fases)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {WIZARD_PHASES.map(p => {
+                  const has = data.phaseFilter.includes(p.value);
+                  return (
+                    <button key={p.value} type="button"
+                      onClick={() => set('phaseFilter', has ? data.phaseFilter.filter(x => x !== p.value) : [...data.phaseFilter, p.value])}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-amber-100 border-amber-300 text-amber-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                      data-testid={`button-wizard-phase-${p.value}`}>
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Functietags (gestandaardiseerd) */}
+            {functionTagsList.length > 0 && (
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Functietags <span className="text-gray-400 font-normal">(leeg = alle functies)</span></Label>
+                <div className="flex flex-wrap gap-2">
+                  {functionTagsList.map(ft => {
+                    const has = data.functionTagIds.includes(ft.id);
+                    return (
+                      <button key={ft.id} type="button"
+                        onClick={() => set('functionTagIds', has ? data.functionTagIds.filter(x => x !== ft.id) : [...data.functionTagIds, ft.id])}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                        data-testid={`button-wizard-function-tag-${ft.id}`}>
+                        {ft.naam}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Voertaal */}
             <div>
@@ -1411,6 +1470,16 @@ export default function ProspectCampagnesTab() {
     queryKey: ['/api/admin/prospect-campaigns'],
   });
 
+  const { data: functionTagsList = [] } = useQuery<{ id: number; naam: string }[]>({
+    queryKey: ['/api/admin/function-tags'],
+  });
+  const functionTagNameById = new Map(functionTagsList.map(ft => [ft.id, ft.naam]));
+
+  const PHASE_LABELS: Record<string, string> = {
+    nieuw: 'Nieuw', in_campagne: 'In campagne', in_gesprek: 'In gesprek',
+    klant: 'Klant', uitgesloten: 'Uitgesloten',
+  };
+
   const selectedCampaign = campaigns.find(c => c.id === selectedId) ?? null;
 
   const { data: recipients = [], isLoading: recipLoading } = useQuery<Recipient[]>({
@@ -1464,6 +1533,7 @@ export default function ProspectCampagnesTab() {
         campagneType: c.campagneType, status: 'concept',
         brancheFilter: c.brancheFilter, functieFilter: c.functieFilter,
         typeFilter: c.typeFilter, taalFilter: c.taalFilter, tagFilter: c.tagFilter,
+        phaseFilter: c.phaseFilter ?? [], functionTagIds: c.functionTagIds ?? [],
         contentA: c.contentA, contentB: c.contentB, editorBlocks: c.editorBlocks,
         alleenWerkdagen: c.alleenWerkdagen, tijdvensterStart: c.tijdvensterStart, tijdvensterEind: c.tijdvensterEind,
         abTestActief: c.abTestActief, abSplitPct: c.abSplitPct, abWinnaarOp: c.abWinnaarOp, abWinnaarNaUren: c.abWinnaarNaUren,
@@ -1533,6 +1603,13 @@ export default function ProspectCampagnesTab() {
   function getSegmentSummary(c: Campaign): string {
     const parts: string[] = [];
     if (c.brancheFilter?.length > 0) parts.push(`Branches: ${c.brancheFilter.join(', ')}`);
+    if (c.phaseFilter && c.phaseFilter.length > 0) {
+      parts.push(`Fase: ${c.phaseFilter.map(p => PHASE_LABELS[p] ?? p).join(', ')}`);
+    }
+    if (c.functionTagIds && c.functionTagIds.length > 0) {
+      const namen = c.functionTagIds.map(id => functionTagNameById.get(id) ?? `#${id}`);
+      parts.push(`Functies: ${namen.join(', ')}`);
+    }
     if (c.typeFilter && c.typeFilter !== 'alles') parts.push(`Type: ${c.typeFilter === 'prospect' ? 'Prospects' : 'Klanten'}`);
     if (c.taalFilter && c.taalFilter !== 'alles') parts.push(`Taal: ${c.taalFilter}`);
     const tags = (() => { try { return JSON.parse(c.tagFilter || '[]'); } catch { return []; } })();

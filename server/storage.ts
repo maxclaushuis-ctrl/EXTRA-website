@@ -68,6 +68,9 @@ import {
   type ProspectContact, type InsertProspectContact,
   type ProspectCampaign, type InsertProspectCampaign,
   type ProspectCampaignRecipient, type InsertProspectCampaignRecipient,
+  functionTags as functionTagsTable,
+  prospectContactFunctionTags as prospectContactFunctionTagsTable,
+  type FunctionTag, type InsertFunctionTag,
   mailSends as mailSendsTable,
   mailEvents as mailEventsTable,
   unsubscribeTokens as unsubscribeTokensTable,
@@ -501,6 +504,7 @@ export interface IStorage {
   getProspectContacts(filters?: {
     branche?: string; functie?: string; search?: string;
     type?: string; status?: string; taal?: string; functiegroep?: string; tag?: string;
+    phase?: string; functionTagId?: number;
     sort?: string;
   }): Promise<ProspectContact[]>;
   getProspectContact(id: number): Promise<ProspectContact | undefined>;
@@ -512,10 +516,20 @@ export interface IStorage {
   getProspectContactUniqueTags(): Promise<string[]>;
   getProspectContactCampaignHistory(contactId: number): Promise<any[]>;
 
+  // Blok 1: Function tags (gestandaardiseerd) + m2m koppeling
+  getFunctionTags(opts?: { actiefOnly?: boolean }): Promise<FunctionTag[]>;
+  createFunctionTag(data: InsertFunctionTag): Promise<FunctionTag>;
+  updateFunctionTag(id: number, data: Partial<InsertFunctionTag>): Promise<FunctionTag | undefined>;
+  deleteFunctionTag(id: number): Promise<void>;
+  getProspectContactFunctionTagIds(contactId: number): Promise<number[]>;
+  setProspectContactFunctionTags(contactId: number, functionTagIds: number[]): Promise<void>;
+  // Bulk-lookup: voor lijst-views en campagne-resolving (contactId -> functionTagIds[])
+  getFunctionTagIdsByContactIds(contactIds: number[]): Promise<Map<number, number[]>>;
+
   // B2B Prospect Campagnes
   getProspectCampaigns(filters?: { status?: string; type?: string }): Promise<ProspectCampaign[]>;
   getProspectCampaign(id: number): Promise<ProspectCampaign | undefined>;
-  getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[] }): Promise<number>;
+  getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[]; phaseFilter?: string[]; functionTagIds?: number[] }): Promise<number>;
   createProspectCampaign(data: InsertProspectCampaign): Promise<ProspectCampaign>;
   updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
   deleteProspectCampaign(id: number): Promise<void>;
@@ -4059,6 +4073,7 @@ export class MemStorage implements IStorage {
   async getProspectContacts(filters?: {
     branche?: string; functie?: string; search?: string;
     type?: string; status?: string; taal?: string; functiegroep?: string; tag?: string;
+    phase?: string; functionTagId?: number;
     sort?: string;
   }): Promise<ProspectContact[]> {
     let query = db.select().from(prospectContactsTable).$dynamic();
@@ -4078,6 +4093,14 @@ export class MemStorage implements IStorage {
     if (filters?.status) conditions.push(eq(prospectContactsTable.contactStatus, filters.status));
     if (filters?.taal) conditions.push(eq(prospectContactsTable.taal, filters.taal));
     if (filters?.functiegroep) conditions.push(ilike(prospectContactsTable.functiegroep, `%${filters.functiegroep}%`));
+    if (filters?.phase) conditions.push(eq(prospectContactsTable.phase, filters.phase));
+    // Filter op gestandaardiseerde functietag (m2m): subselect contact-ids
+    if (filters?.functionTagId) {
+      conditions.push(sql`${prospectContactsTable.id} IN (
+        SELECT contact_id FROM prospect_contact_function_tags
+        WHERE function_tag_id = ${filters.functionTagId}
+      )`);
+    }
     if (conditions.length > 0) query = query.where(and(...conditions));
     // Sort
     if (filters?.sort === 'bedrijf') {
@@ -4173,7 +4196,7 @@ export class MemStorage implements IStorage {
     return query.orderBy(desc(prospectCampaignsTable.createdAt));
   }
 
-  async getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[] }): Promise<number> {
+  async getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[]; phaseFilter?: string[]; functionTagIds?: number[] }): Promise<number> {
     const conds: any[] = [
       eq(prospectContactsTable.contactStatus, 'actief'),
       eq(prospectContactsTable.unsubscribed, false),
@@ -4197,10 +4220,78 @@ export class MemStorage implements IStorage {
       );
       conds.push(or(...tagConds));
     }
+    // Blok 1: Phase filter (lege array = geen filter, alle fases)
+    if (filters.phaseFilter && filters.phaseFilter.length > 0) {
+      conds.push(inArray(prospectContactsTable.phase, filters.phaseFilter));
+    }
+    // Blok 1: Gestandaardiseerde functietag-IDs (lege array = geen filter)
+    // Contact moet minstens één van de geselecteerde functietags hebben (OR-logica).
+    if (filters.functionTagIds && filters.functionTagIds.length > 0) {
+      const idList = sql.join(filters.functionTagIds.map(n => sql`${n}`), sql`, `);
+      conds.push(sql`${prospectContactsTable.id} IN (
+        SELECT contact_id FROM prospect_contact_function_tags
+        WHERE function_tag_id IN (${idList})
+      )`);
+    }
     const [{ count }] = await db.select({ count: sql<number>`count(*)::int` })
       .from(prospectContactsTable)
       .where(and(...conds));
     return count;
+  }
+
+  // ─── Function Tags (Blok 1) ──────────────────────────────────────────────
+  async getFunctionTags(opts?: { actiefOnly?: boolean }): Promise<FunctionTag[]> {
+    let query = db.select().from(functionTagsTable).$dynamic();
+    if (opts?.actiefOnly) query = query.where(eq(functionTagsTable.actief, true));
+    return query.orderBy(asc(functionTagsTable.volgorde), asc(functionTagsTable.naam));
+  }
+
+  async createFunctionTag(data: InsertFunctionTag): Promise<FunctionTag> {
+    const [row] = await db.insert(functionTagsTable).values(data).returning();
+    return row;
+  }
+
+  async updateFunctionTag(id: number, data: Partial<InsertFunctionTag>): Promise<FunctionTag | undefined> {
+    const [row] = await db.update(functionTagsTable).set(data).where(eq(functionTagsTable.id, id)).returning();
+    return row;
+  }
+
+  async deleteFunctionTag(id: number): Promise<void> {
+    await db.delete(functionTagsTable).where(eq(functionTagsTable.id, id));
+  }
+
+  async getProspectContactFunctionTagIds(contactId: number): Promise<number[]> {
+    const rows = await db.select({ id: prospectContactFunctionTagsTable.functionTagId })
+      .from(prospectContactFunctionTagsTable)
+      .where(eq(prospectContactFunctionTagsTable.contactId, contactId));
+    return rows.map(r => r.id);
+  }
+
+  async setProspectContactFunctionTags(contactId: number, functionTagIds: number[]): Promise<void> {
+    // Vervang volledige set: delete bestaande, insert nieuwe.
+    await db.delete(prospectContactFunctionTagsTable)
+      .where(eq(prospectContactFunctionTagsTable.contactId, contactId));
+    const unique = Array.from(new Set(functionTagIds.filter(n => Number.isFinite(n) && n > 0)));
+    if (unique.length === 0) return;
+    await db.insert(prospectContactFunctionTagsTable)
+      .values(unique.map(functionTagId => ({ contactId, functionTagId })));
+  }
+
+  async getFunctionTagIdsByContactIds(contactIds: number[]): Promise<Map<number, number[]>> {
+    const map = new Map<number, number[]>();
+    if (contactIds.length === 0) return map;
+    const rows = await db.select({
+        contactId: prospectContactFunctionTagsTable.contactId,
+        functionTagId: prospectContactFunctionTagsTable.functionTagId,
+      })
+      .from(prospectContactFunctionTagsTable)
+      .where(inArray(prospectContactFunctionTagsTable.contactId, contactIds));
+    for (const r of rows) {
+      const arr = map.get(r.contactId) || [];
+      arr.push(r.functionTagId);
+      map.set(r.contactId, arr);
+    }
+    return map;
   }
 
   async getProspectCampaign(id: number): Promise<ProspectCampaign | undefined> {

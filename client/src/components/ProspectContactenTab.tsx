@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,20 @@ import {
 const BRANCHES = ['Hotel', 'Restaurant', 'Cateraar', 'Evenementenlocatie', 'Logistiek'] as const;
 const TALEN = ['Nederlands', 'Engels', 'Anders'] as const;
 const SYSTEEM_VELDEN = ['voornaam', 'achternaam', 'email', 'bedrijf', 'functietitel', 'telefoon', 'stad', 'taal', 'branche', 'functiegroep', 'type', 'tags'] as const;
+
+// Pijplijn-fases (Blok 1)
+const PHASES = [
+  { value: 'nieuw',        label: 'Nieuw',        cls: 'bg-slate-100 text-slate-700 border-slate-200' },
+  { value: 'in_campagne',  label: 'In campagne',  cls: 'bg-blue-100 text-blue-700 border-blue-200' },
+  { value: 'in_gesprek',   label: 'In gesprek',   cls: 'bg-amber-100 text-amber-700 border-amber-200' },
+  { value: 'klant',        label: 'Klant',        cls: 'bg-green-100 text-green-700 border-green-200' },
+  { value: 'uitgesloten',  label: 'Uitgesloten',  cls: 'bg-red-100 text-red-700 border-red-200' },
+] as const;
+
+function phasePill(phase: string | null | undefined) {
+  const p = PHASES.find(x => x.value === (phase || 'nieuw')) || PHASES[0];
+  return <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full border font-medium ${p.cls}`}>{p.label}</span>;
+}
 
 const BRANCHE_COLORS: Record<string, string> = {
   Hotel: 'bg-sky-100 text-sky-700 border-sky-200',
@@ -117,7 +131,26 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
     voornaam: '', achternaam: '', email: '', telefoon: '',
     bedrijf: '', functietitel: '', stad: '', branche: '', functiegroep: '',
     type: 'prospect', taal: 'Nederlands', tags: [] as string[], notities: '',
+    phase: 'nieuw',
+    functionTagIds: [] as number[],
   };
+
+  // Function tags master list (Blok 1)
+  const { data: functionTagsList = [] } = useQuery<Array<{ id: number; naam: string }>>({
+    queryKey: ['/api/admin/function-tags'],
+    enabled: open,
+  });
+
+  // Bestaande koppeling laden bij edit
+  const { data: contactFunctionTags } = useQuery<{ functionTagIds: number[] }>({
+    queryKey: ['/api/admin/prospect-contacts', contact?.id, 'function-tags'],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/prospect-contacts/${contact.id}/function-tags`, { credentials: 'include' });
+      if (!res.ok) return { functionTagIds: [] };
+      return res.json();
+    },
+    enabled: open && !!contact?.id,
+  });
 
   const [form, setForm] = useState<typeof emptyForm>(contact ? {
     voornaam: contact.voornaam || '',
@@ -133,7 +166,16 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
     taal: contact.taal || 'Nederlands',
     tags: parseTags(contact.customTags),
     notities: contact.notes || '',
+    phase: contact.phase || 'nieuw',
+    functionTagIds: [],
   } : emptyForm);
+
+  // Sync ingeladen function-tag-ids zodra ze binnen zijn
+  useEffect(() => {
+    if (contactFunctionTags?.functionTagIds) {
+      setForm(f => ({ ...f, functionTagIds: contactFunctionTags.functionTagIds }));
+    }
+  }, [contactFunctionTags?.functionTagIds]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -170,6 +212,7 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
       );
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts', contact.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts', contact.id, 'function-tags'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts/unique-tags'] });
       toast({ title: 'Contact bijgewerkt' });
       onSaved?.();
@@ -281,6 +324,35 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
                     {TALEN.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Pijplijn-fase</label>
+                <Select value={form.phase} onValueChange={v => set('phase', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PHASES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Functietags</label>
+                <div className="flex flex-wrap gap-1.5 border rounded-md p-2 min-h-[38px] bg-white">
+                  {functionTagsList.length === 0 && <span className="text-xs text-gray-400">Geen functietags beschikbaar</span>}
+                  {functionTagsList.map(ft => {
+                    const sel = form.functionTagIds.includes(ft.id);
+                    return (
+                      <button
+                        key={ft.id}
+                        type="button"
+                        onClick={() => set('functionTagIds', sel ? form.functionTagIds.filter((x: number) => x !== ft.id) : [...form.functionTagIds, ft.id])}
+                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${sel ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        data-testid={`button-function-tag-${ft.id}`}
+                      >
+                        {ft.naam}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className="col-span-2">
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Tags</label>
@@ -575,6 +647,7 @@ function ContactDetailSheet({ contactId, onClose, onEdit, tagSuggestions }: {
                 <p className="text-sm text-gray-500 truncate">{contact.company || contact.bedrijf || '—'}</p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   {typeBadge(contact.contactType)}
+                  <span data-testid={`pill-phase-${contact.id}`}>{phasePill(contact.phase)}</span>
                   {statusBadge(contact.contactStatus)}
                 </div>
               </div>
@@ -717,10 +790,13 @@ interface Filters {
   status: string;
   taal: string;
   tags: string[];
+  phase: string[];
+  functionTagIds: number[];
 }
 
-function FilterPanel({ filters, onChange, tagOptions, onClose }: {
-  filters: Filters; onChange: (f: Filters) => void; tagOptions: string[]; onClose: () => void;
+function FilterPanel({ filters, onChange, tagOptions, functionTagOptions, onClose }: {
+  filters: Filters; onChange: (f: Filters) => void; tagOptions: string[];
+  functionTagOptions: { id: number; naam: string }[]; onClose: () => void;
 }) {
   const [local, setLocal] = useState<Filters>(filters);
   const set = (k: keyof Filters, v: any) => setLocal(f => ({ ...f, [k]: v }));
@@ -735,6 +811,18 @@ function FilterPanel({ filters, onChange, tagOptions, onClose }: {
     setLocal(f => ({
       ...f,
       tags: f.tags.includes(t) ? f.tags.filter(x => x !== t) : [...f.tags, t],
+    }));
+  };
+  const togglePhase = (p: string) => {
+    setLocal(f => ({
+      ...f,
+      phase: f.phase.includes(p) ? f.phase.filter(x => x !== p) : [...f.phase, p],
+    }));
+  };
+  const toggleFunctionTag = (id: number) => {
+    setLocal(f => ({
+      ...f,
+      functionTagIds: f.functionTagIds.includes(id) ? f.functionTagIds.filter(x => x !== id) : [...f.functionTagIds, id],
     }));
   };
 
@@ -793,6 +881,34 @@ function FilterPanel({ filters, onChange, tagOptions, onClose }: {
         </div>
       </div>
 
+      <div>
+        <p className="text-xs font-medium text-gray-500 mb-2">Pijplijn-fase</p>
+        <div className="flex flex-wrap gap-1">
+          {PHASES.map(p => (
+            <button key={p.value} onClick={() => togglePhase(p.value)}
+              data-testid={`button-filter-phase-${p.value}`}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${local.phase.includes(p.value) ? 'bg-amber-100 border-amber-300 text-amber-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {functionTagOptions.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-gray-500 mb-2">Functietags</p>
+          <div className="flex flex-wrap gap-1">
+            {functionTagOptions.map(ft => (
+              <button key={ft.id} onClick={() => toggleFunctionTag(ft.id)}
+                data-testid={`button-filter-function-tag-${ft.id}`}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${local.functionTagIds.includes(ft.id) ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                {ft.naam}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {tagOptions.length > 0 && (
         <div>
           <p className="text-xs font-medium text-gray-500 mb-2">Tags</p>
@@ -808,7 +924,7 @@ function FilterPanel({ filters, onChange, tagOptions, onClose }: {
       )}
 
       <div className="flex gap-2 pt-1">
-        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { const empty: Filters = { branche: [], type: '', status: '', taal: '', tags: [] }; setLocal(empty); onChange(empty); onClose(); }}>
+        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { const empty: Filters = { branche: [], type: '', status: '', taal: '', tags: [], phase: [], functionTagIds: [] }; setLocal(empty); onChange(empty); onClose(); }}>
           Wis alles
         </Button>
         <Button size="sm" className="flex-1 text-xs bg-purple-600 hover:bg-purple-700" onClick={() => { onChange(local); onClose(); }}>
@@ -824,7 +940,7 @@ function FilterPanel({ filters, onChange, tagOptions, onClose }: {
 export default function ProspectContactenTab() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('naam-az');
-  const [filters, setFilters] = useState<Filters>({ branche: [], type: '', status: '', taal: '', tags: [] });
+  const [filters, setFilters] = useState<Filters>({ branche: [], type: '', status: '', taal: '', tags: [], phase: [], functionTagIds: [] });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -841,6 +957,17 @@ export default function ProspectContactenTab() {
     queryKey: ['/api/admin/prospect-contacts/unique-tags'],
   });
 
+  const { data: functionTagsList = [] } = useQuery<{ id: number; naam: string }[]>({
+    queryKey: ['/api/admin/function-tags'],
+  });
+
+  // Bulk-overzicht function-tag koppelingen (alleen ophalen wanneer filter actief)
+  const needFunctionTagMap = filters.functionTagIds.length > 0;
+  const { data: functionTagMap = {} } = useQuery<Record<number, number[]>>({
+    queryKey: ['/api/admin/prospect-contacts/function-tags-map'],
+    enabled: needFunctionTagMap,
+  });
+
   // ── Client-side filtering ──
   const filtered = useMemo(() => {
     let list = [...contacts];
@@ -854,6 +981,13 @@ export default function ProspectContactenTab() {
       if (filters.type) list = list.filter(c => c.contactType === filters.type);
       if (filters.status) list = list.filter(c => c.contactStatus === filters.status);
       if (filters.taal) list = list.filter(c => c.taal === filters.taal);
+      if (filters.phase.length > 0) list = list.filter(c => filters.phase.includes(c.phase || 'nieuw'));
+      if (filters.functionTagIds.length > 0) {
+        list = list.filter(c => {
+          const ids = functionTagMap[c.id] || [];
+          return filters.functionTagIds.some(id => ids.includes(id));
+        });
+      }
       if (filters.tags.length > 0) {
         list = list.filter(c => {
           const ct = parseTags(c.customTags);
@@ -880,7 +1014,7 @@ export default function ProspectContactenTab() {
     else if (sort === 'nieuwste') list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return list;
-  }, [contacts, search, sort, filters, statFilter]);
+  }, [contacts, search, sort, filters, statFilter, functionTagMap]);
 
   // ── Stats ──
   const stats = useMemo(() => ({
@@ -891,7 +1025,7 @@ export default function ProspectContactenTab() {
     uitgeschreven: contacts.filter(c => c.contactStatus === 'uitgeschreven').length,
   }), [contacts]);
 
-  const activeFilterCount = filters.branche.length + (filters.type ? 1 : 0) + (filters.status ? 1 : 0) + (filters.taal ? 1 : 0) + filters.tags.length;
+  const activeFilterCount = filters.branche.length + (filters.type ? 1 : 0) + (filters.status ? 1 : 0) + (filters.taal ? 1 : 0) + filters.tags.length + filters.phase.length + filters.functionTagIds.length;
 
   const selectedContact = contacts.find(c => c.id === selectedId);
 
@@ -937,7 +1071,7 @@ export default function ProspectContactenTab() {
             {activeFilterCount > 0 && <span className="bg-purple-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">{activeFilterCount}</span>}
           </Button>
           {filterOpen && (
-            <FilterPanel filters={filters} onChange={f => { setFilters(f); setStatFilter(null); }} tagOptions={uniqueTags} onClose={() => setFilterOpen(false)} />
+            <FilterPanel filters={filters} onChange={f => { setFilters(f); setStatFilter(null); }} tagOptions={uniqueTags} functionTagOptions={functionTagsList} onClose={() => setFilterOpen(false)} />
           )}
         </div>
 
@@ -990,7 +1124,7 @@ export default function ProspectContactenTab() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b sticky top-0">
                 <tr>
-                  {['Naam', 'Bedrijf', 'Branche', 'Type', 'Status', 'E-mail', 'Tags', ''].map((h, i) => (
+                  {['Naam', 'Bedrijf', 'Branche', 'Fase', 'Type', 'Status', 'E-mail', 'Tags', ''].map((h, i) => (
                     <th key={i} className="text-left py-2.5 px-4 text-xs font-semibold text-gray-500">{h}</th>
                   ))}
                 </tr>
@@ -1018,6 +1152,7 @@ export default function ProspectContactenTab() {
                         {c.stad && <p className="text-xs text-gray-400">{c.stad}</p>}
                       </td>
                       <td className="py-3 px-4">{branchePill(c.branche) || <span className="text-gray-300 text-xs">—</span>}</td>
+                      <td className="py-3 px-4" data-testid={`cell-phase-${c.id}`}>{phasePill(c.phase)}</td>
                       <td className="py-3 px-4">{typeBadge(c.contactType)}</td>
                       <td className="py-3 px-4">{statusBadge(c.contactStatus)}</td>
                       <td className="py-3 px-4">

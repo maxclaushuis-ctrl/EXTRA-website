@@ -1,0 +1,269 @@
+We gaan het mailcampagne-systeem in vier afgebakende blokken 
+uitbreiden. Bouw blok voor blok. Ga PAS naar het volgende 
+blok als ik akkoord geef op het vorige. Geen overlap, geen 
+vooruitwerken.
+
+CONTEXT
+
+Dit volgt op een audit-rapport dat eerder is gegenereerd. 
+De huidige state is bekend; we vullen alleen de gaps. We 
+draaien een 8-mail jaarcampagne voor banqueting-contacten 
+in hotels. Verzendmomenten dinsdag 14:30 en woensdag 10:30 
+(Amsterdam-tijd). Doelgroep: prospect_contacts met functie 
+"Banqueting" en fase "nieuw". Sender: max@doehetextra.nl 
+via SendGrid.
+
+ALGEMENE REGELS VOOR ALLE BLOKKEN
+
+- Lees eerst de bestaande code in het genoemde bestand 
+  voordat je iets verandert
+- Behoud bestaande functionaliteit — niets dat nu werkt 
+  mag breken
+- Schrijf migraties als reversible (up + down)
+- Update Drizzle schema's (shared/schema.ts) bij elke 
+  database-wijziging
+- Update relevante TypeScript types
+- Bij twijfel: vraag, ga niet gokken
+- Geen tests schrijven tenzij specifiek gevraagd
+
+================================================================
+BLOK 1 — DATAMODEL: PHASE EN GESTANDAARDISEERDE FUNCTIETAGS
+================================================================
+
+DOEL
+Prospect_contacts kunnen filteren op fase + gestandaardiseerde 
+functietag, zonder vrije invoer.
+
+WAT TE BOUWEN
+
+1.1 Phase-kolom op prospect_contacts
+- Voeg veld `phase` toe aan prospect_contacts (varchar/enum, 
+  default 'nieuw')
+- Mogelijke waarden: nieuw, in_campagne, in_gesprek, klant, 
+  uitgesloten
+- Migreer bestaande data: alle huidige prospect_contacts 
+  krijgen phase = 'nieuw'
+- Voeg index toe op phase voor snelle filtering
+
+1.2 Gestandaardiseerde functietag-lijst
+- Maak een nieuwe tabel `function_tags` met velden: id, 
+  naam, slug (uniek), volgorde, actief
+- Seed initieel met deze tags: Banqueting, Housekeeping, 
+  Chef, Keukenbrigade, F&B Manager, F&B Director, 
+  Restaurant Manager, Floor Manager, Receptie, 
+  Algemeen Hotel
+- Maak een koppeltabel `prospect_contact_function_tags` 
+  (contact_id, function_tag_id) — many-to-many
+- Behoud het bestaande `functie_tags` veld op 
+  prospect_contacts voor backwards compatibility, maar 
+  markeer in een commentaar dat dit deprecated is en dat 
+  nieuwe code de koppeltabel moet gebruiken
+
+1.3 Filter-uitbreiding op campagnes
+- Voeg veld `phase_filter` (array van strings) toe aan 
+  prospect_campaigns
+- Vervang `functie_filter` (huidige array op vrije strings) 
+  door `function_tag_ids` (array van function_tag IDs) — 
+  maar laat het oude veld eerst nog bestaan voor migratie
+- Pas de segment-count endpoint aan zodat hij filtert op 
+  zowel phase als function_tag_ids
+
+1.4 UI-aanpassingen
+- In het contactenoverzicht: kolom phase tonen, 
+  bewerkbaar
+- Bij contactdetail: dropdown voor phase, multi-select voor 
+  function_tags (op basis van function_tags-tabel)
+- Bij campagne-aanmaken: dropdown phase_filter (multi-select), 
+  dropdown function_tag_ids (multi-select op basis van 
+  function_tags-tabel)
+
+ACCEPTATIECRITERIA
+- Ik kan in het dashboard een prospect_contact zien met 
+  phase "nieuw" en function_tag "Banqueting"
+- Ik kan een nieuwe campagne aanmaken met phase_filter = 
+  ["nieuw"] en function_tag_ids = [Banqueting-id]
+- De segment-count endpoint geeft het juiste aantal terug
+- Bestaande campagnes blijven werken (geen breaking change 
+  op functie_filter)
+
+================================================================
+BLOK 2 — SCHEDULER: TOEGESTANE DAGEN-ARRAY EN TIJDZONE-FIX
+================================================================
+
+DOEL
+Mails kunnen plannen op alleen specifieke weekdagen 
+(bv. dinsdag + woensdag) in Amsterdam-tijd.
+
+WAT TE BOUWEN
+
+2.1 Toegestane dagen-array
+- Voeg veld `toegestane_dagen` (array van integers, 
+  0=zondag t/m 6=zaterdag) toe aan prospect_campaigns. 
+  Default: [1,2,3,4,5] (huidige werkdagen-gedrag)
+- Maak het oude veld `alleen_werkdagen` deprecated maar 
+  blijf het ondersteunen voor backwards compatibility (bij 
+  true: gedrag identiek aan toegestane_dagen=[1,2,3,4,5])
+- Update `berekenWerkelijkVerzendMoment()` in 
+  schedulerUtils.ts: als gewenst moment niet in 
+  toegestane_dagen valt, schuif door naar eerstvolgende 
+  geldige dag binnen het tijdvenster
+
+2.2 Tijdzone-fix
+- Update `berekenWerkelijkVerzendMoment()`: gebruik het 
+  tijdzone-veld dat al bestaat (default Europe/Amsterdam) 
+  in plaats van server-UTC
+- Gebruik een library zoals date-fns-tz of luxon (als die 
+  al ergens gebruikt wordt, hergebruik; anders date-fns-tz 
+  toevoegen)
+- Test edge cases: zomertijd vs wintertijd, omschakeling 
+  laatste zondag van maart en oktober
+
+2.3 UI-aanpassing
+- Bij campagne-aanmaken: checkboxen voor weekdagen (ma-zo) 
+  in plaats van enkele "alleen werkdagen"-toggle
+- Default-selectie: dinsdag en woensdag aangevinkt (matcht 
+  onze nieuwe verzendstrategie)
+
+ACCEPTATIECRITERIA
+- Ik kan een campagne plannen op vrijdag 10:00 met 
+  toegestane_dagen=[2,3] (di/wo). Het systeem schuift de 
+  verzending automatisch naar de eerstvolgende dinsdag of 
+  woensdag binnen het tijdvenster
+- Tijden worden correct geïnterpreteerd in Amsterdam-tijd 
+  ongeacht zomer- of wintertijd
+- Bestaande campagnes met alleen_werkdagen=true blijven 
+  werken zonder migratie
+
+================================================================
+BLOK 3 — SENDGRID EVENT-WEBHOOK + INBOUND PARSE
+================================================================
+
+DOEL
+Automatisch bounces, spam-complaints, deliveries, opens en 
+replies vastleggen in het systeem. Geen handmatig werk meer 
+in het SendGrid-dashboard.
+
+WAT TE BOUWEN
+
+3.1 Event Webhook (bounces, deliveries, complaints)
+- Maak endpoint POST /webhooks/sendgrid/events
+- Verifieer requests met SendGrid Event Webhook signature 
+  (HMAC met public key uit env var SENDGRID_WEBHOOK_PUBLIC_KEY)
+- Verwerk events: delivered, bounce, blocked, dropped, 
+  spamreport, deferred
+- Schrijf naar mail_events met juiste type per event
+- Bij hard bounce of spamreport: zet 
+  prospect_contacts.contact_status = 'geblokkeerd' en 
+  log de reden in een nieuw veld `block_reason`
+- Update mail_sends.status op basis van events
+- Voeg `bounced_count`, `complained_count` tellers toe aan 
+  prospect_campaigns en update bij events
+
+3.2 Inbound Parse Webhook (replies)
+- Maak endpoint POST /webhooks/sendgrid/inbound
+- Verifieer met basic auth of signature (afhankelijk van 
+  hoe SendGrid Inbound Parse is geconfigureerd; check 
+  SendGrid docs)
+- Parse de inkomende mail (multipart/form-data van SendGrid)
+- Match op originele mail via In-Reply-To header of via 
+  een unique tag in de Message-ID die we bij verzending 
+  injecteren (kies één methode, leg uit waarom)
+- Schrijf naar mail_events met type='reply', inclusief de 
+  reply-tekst (eerste 1000 tekens, gestript)
+- Voeg een nieuw veld `replied_at` toe aan mail_sends en 
+  zet het op de timestamp van de reply
+
+3.3 Notificaties bij reply
+- Bij elke reply: maak een record aan in de bestaande 
+  `notificaties` tabel met type='reply', gericht aan Max 
+  (user_id van Max — gebruik bestaande logica)
+- Inhoud notificatie: contactnaam, bedrijf, originele 
+  campagnenaam, eerste 200 tekens van reply-tekst
+- Push naar het bestaande notificatie-systeem zoals dat 
+  ook werkt voor A/B-winnaars
+
+3.4 Reporting-uitbreiding
+- Voeg "bezorgd", "gebounced", "uitgeschreven", 
+  "gereageerd" toe aan de campagne-statistiek-endpoint
+- Update het ProspectStatistiekenDashboard component
+
+ACCEPTATIECRITERIA
+- Wanneer SendGrid een hard bounce signaleert, zie ik dat 
+  in mail_events én is de contact_status van het contact 
+  op 'geblokkeerd' gezet
+- Wanneer iemand een reply stuurt op een verzonden 
+  campagnemail, zie ik dat in mail_events met type='reply' 
+  én krijgt Max een notificatie
+- De campagne-statistieken tonen 6 metrics: verzonden, 
+  bezorgd, geopend, geklikt, gereageerd, gebounced
+
+LET OP — WAT IK ZELF MOET DOEN BUITEN DE CODEBASE
+- SendGrid Event Webhook URL configureren in SendGrid 
+  dashboard (Settings > Mail Settings > Event Webhook)
+- SendGrid Inbound Parse configureren met een subdomein 
+  (bv. reply.doehetextra.nl) en MX-record in DNS
+- Public key van Event Webhook in env vars zetten
+- Geef instructies in een README-blok wat ik exact moet 
+  configureren
+
+================================================================
+BLOK 4 — FLOW-INTEGRATIE: AUTO-STOP OP REPLY + SLIMME WAIT
+================================================================
+
+DOEL
+Trigger-flows respecteren replies en verzendvensters.
+
+WAT TE BOUWEN
+
+4.1 geen_reply-conditie
+- Voeg conditie-type `geen_reply` toe aan de flow-engine 
+  (flowEngine.ts)
+- Conditie evalueert: heeft contact gereageerd op een mail 
+  uit deze campagne (mail_events met type='reply') sinds 
+  flow-start?
+- Documenteer in code dat dit afhangt van blok 3.2
+
+4.2 Auto-stop bij reply
+- Wanneer een reply binnenkomt voor een contact dat actief 
+  is in een flow (flow_contact_progress.status='actief'): 
+  zet status op 'gestopt_door_reply' en log dit
+- Implementeer dit als een hook die wordt aangeroepen 
+  vanuit de Inbound Parse webhook handler
+
+4.3 Slimme wait-stap
+- Update het 'wait'-staptype in de flow-engine zodat het 
+  het verzendvenster van de bovenliggende campagne 
+  respecteert
+- Logica: na X dagen wachten, rond uit naar eerstvolgende 
+  geldige slot (toegestane_dagen + tijdvenster)
+- Hergebruik berekenWerkelijkVerzendMoment uit blok 2
+
+4.4 UI: flow-status zien per contact
+- In de campagne-detail-view: tabel met contacten + hun 
+  flow-status (actief / gestopt_door_reply / voltooid)
+- Filter-mogelijkheid om alleen 'actief' te tonen
+
+ACCEPTATIECRITERIA
+- Ik kan een flow bouwen met een wait-stap "5 dagen" en 
+  vervolgens een conditie "geen_reply"
+- Wanneer een contact tijdens die 5 dagen reageert, stopt 
+  de flow voor dat contact
+- Wanneer de wait-stap eindigt, wordt de volgende stap 
+  uitgevoerd op het eerstvolgende geldige verzendslot van 
+  de campagne (di 14:30 of wo 10:30)
+- In het dashboard zie ik per contact welke status zijn 
+  flow heeft
+
+================================================================
+EINDE — RAPPORTAGE PER BLOK
+================================================================
+
+Na elk blok: rapporteer in deze structuur:
+- Wat is gebouwd (kort)
+- Welke bestanden zijn aangepast
+- Welke databasewijzigingen zijn doorgevoerd (met 
+  migratiebestand)
+- Hoe ik kan testen dat het werkt
+- Bekende beperkingen of vragen die je hebt voor mij
+
+Stop daarna en wacht op akkoord voor het volgende blok.

@@ -206,19 +206,9 @@ export async function activateFlow(campaignId: number): Promise<{ gestart: numbe
   const trigger = steps.find(s => s.type === 'trigger');
   if (!trigger) throw new Error('Geen trigger stap gevonden');
 
-  // Haal contacten op die voldoen aan de segmentfilters
-  const allContacts = await storage.getProspectContacts({});
-  const bf = Array.isArray(campaign.brancheFilter) ? campaign.brancheFilter : [];
-  const ff = Array.isArray(campaign.functieFilter) ? campaign.functieFilter : [];
-
-  const targets = allContacts.filter(c => {
-    if (c.unsubscribed || c.contactStatus === 'uitgeschreven' || c.contactStatus === 'geblokkeerd') return false;
-    if (campaign.typeFilter && campaign.typeFilter !== 'alles' && c.contactType !== campaign.typeFilter) return false;
-    if (campaign.taalFilter && campaign.taalFilter !== 'alles' && c.taal !== campaign.taalFilter) return false;
-    if (bf.length > 0 && !bf.some(b => c.branche === b)) return false;
-    if (ff.length > 0 && !ff.some(f => (c.functieTags || []).includes(f))) return false;
-    return !!c.email;
-  });
+  // Haal contacten op die voldoen aan de segmentfilters (incl. Blok 1 phase + functionTagIds)
+  const { resolveCampaignAudience } = await import('./prospectSegmentResolver');
+  const targets = await resolveCampaignAudience(campaign);
 
   // Maak flow_contact_progress records aan
   let gestart = 0;

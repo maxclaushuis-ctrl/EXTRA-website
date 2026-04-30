@@ -4973,10 +4973,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ─── B2B Prospect Contacten ──────────────────────────────────────────────
   app.get("/api/admin/prospect-contacts", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { branche, functie, search, type, status, taal, functiegroep, tag, sort } = req.query as Record<string, string>;
-      const contacts = await storage.getProspectContacts({ branche, functie, search, type, status, taal, functiegroep, tag, sort });
+      const { branche, functie, search, type, status, taal, functiegroep, tag, sort, phase, function_tag_id } = req.query as Record<string, string>;
+      const functionTagId = function_tag_id ? parseInt(function_tag_id) : undefined;
+      const contacts = await storage.getProspectContacts({
+        branche, functie, search, type, status, taal, functiegroep, tag, sort,
+        phase, functionTagId: Number.isFinite(functionTagId as number) ? functionTagId : undefined,
+      });
       return res.json(contacts);
     } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // ─── Function Tags (Blok 1) ──────────────────────────────────────────────
+  app.get("/api/admin/function-tags", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const actiefOnly = req.query.actiefOnly !== 'false';
+      const tags = await storage.getFunctionTags({ actiefOnly });
+      return res.json(tags);
+    } catch (err) {
+      console.error("[FunctionTags] Fout ophalen:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.post("/api/admin/function-tags", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { naam, slug, volgorde, actief } = req.body;
+      if (!naam || !slug) return res.status(400).json({ message: "Naam en slug zijn verplicht" });
+      const tag = await storage.createFunctionTag({
+        naam: String(naam).trim(),
+        slug: String(slug).trim().toLowerCase(),
+        volgorde: typeof volgorde === 'number' ? volgorde : 0,
+        actief: actief !== false,
+      });
+      return res.status(201).json(tag);
+    } catch (err: any) {
+      if (err?.code === '23505') return res.status(409).json({ message: "Slug bestaat al" });
+      console.error("[FunctionTags] Aanmaken fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.put("/api/admin/function-tags/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const updated = await storage.updateFunctionTag(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Niet gevonden" });
+      return res.json(updated);
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.delete("/api/admin/function-tags/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      await storage.deleteFunctionTag(id);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Function-tag-koppeling per contact
+  app.get("/api/admin/prospect-contacts/:id/function-tags", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const ids = await storage.getProspectContactFunctionTagIds(id);
+      return res.json({ functionTagIds: ids });
+    } catch (err) {
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  app.put("/api/admin/prospect-contacts/:id/function-tags", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const ids: number[] = Array.isArray(req.body?.functionTagIds) ? req.body.functionTagIds.map((n: any) => parseInt(n)).filter((n: number) => Number.isFinite(n) && n > 0) : [];
+      await storage.setProspectContactFunctionTags(id, ids);
+      return res.json({ success: true, functionTagIds: ids });
+    } catch (err) {
+      console.error("[ProspectContacts] Function-tag koppeling fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Bulk-overzicht functietag-koppelingen voor client-side filteren
+  app.get("/api/admin/prospect-contacts/function-tags-map", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const all = await storage.getProspectContacts({});
+      const ids = all.map(c => c.id);
+      const map = await storage.getFunctionTagIdsByContactIds(ids);
+      const out: Record<number, number[]> = {};
+      map.forEach((v, k) => { out[k] = v; });
+      return res.json(out);
+    } catch (err) {
+      console.error("[ProspectContacts] Bulk function-tag map fout:", err);
       return res.status(500).json({ message: "Fout" });
     }
   });
@@ -5030,6 +5127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         voornaam, achternaam, email, telefoon, bedrijf, functietitel, stad,
         branche, functiegroep, type: contactType, taal, tags: customTagsInput, notities,
+        phase, functionTagIds,
         // legacy
         name, company, function: fn, brancheTags, functieTags, source,
       } = req.body;
@@ -5066,7 +5164,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contactType: contactType || 'prospect',
         customTags,
         contactStatus: 'actief',
+        phase: ['nieuw','in_campagne','in_gesprek','klant','uitgesloten'].includes(phase) ? phase : 'nieuw',
       });
+      // Koppel gestandaardiseerde functietags
+      if (Array.isArray(functionTagIds) && functionTagIds.length > 0) {
+        const ids = functionTagIds.map((n: any) => parseInt(n)).filter((n: number) => Number.isFinite(n) && n > 0);
+        if (ids.length > 0) await storage.setProspectContactFunctionTags(contact.id, ids);
+      }
       return res.status(201).json(contact);
     } catch (err) {
       console.error("[ProspectContacts] Aanmaken fout:", err);
@@ -5077,10 +5181,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const body = req.body;
+      const body = { ...req.body };
       // Handle customTags serialization
       if (Array.isArray(body.customTags)) body.customTags = JSON.stringify(body.customTags);
       if (Array.isArray(body.tags)) body.customTags = JSON.stringify(body.tags);
+      // Strip tags (legacy alias) zodat het niet door drizzle naar de db gaat
+      delete body.tags;
+      // Phase whitelist
+      if (body.phase !== undefined && !['nieuw','in_campagne','in_gesprek','klant','uitgesloten'].includes(body.phase)) {
+        delete body.phase;
+      }
+      // FunctionTagIds wordt apart afgehandeld via m2m
+      const functionTagIds = body.functionTagIds;
+      delete body.functionTagIds;
       // Rebuild name if voornaam/achternaam changed
       if (body.voornaam || body.achternaam) {
         const existing = await storage.getProspectContact(id);
@@ -5090,8 +5203,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const updated = await storage.updateProspectContact(id, body);
       if (!updated) return res.status(404).json({ message: "Niet gevonden" });
+      // M2m bijwerken indien meegegeven
+      if (Array.isArray(functionTagIds)) {
+        const ids = functionTagIds.map((n: any) => parseInt(n)).filter((n: number) => Number.isFinite(n) && n > 0);
+        await storage.setProspectContactFunctionTags(id, ids);
+      }
       return res.json(updated);
     } catch (err) {
+      console.error("[ProspectContacts] Update fout:", err);
       return res.status(500).json({ message: "Fout" });
     }
   });
@@ -5199,15 +5318,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // segment-count MUST be before /:id
   app.get("/api/admin/prospect-campaigns/segment-count", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { branche_filter, functie_filter, type_filter, taal_filter, tag_filter } = req.query as Record<string, string>;
-      const brancheFilter = branche_filter ? JSON.parse(branche_filter) : [];
-      const functieFilter = functie_filter ? JSON.parse(functie_filter) : [];
-      const tagFilter = tag_filter ? JSON.parse(tag_filter) : [];
+      const { branche_filter, functie_filter, type_filter, taal_filter, tag_filter, phase_filter, function_tag_ids } = req.query as Record<string, string>;
+      const safeParse = (v: string | undefined) => { try { return v ? JSON.parse(v) : []; } catch { return []; } };
+      const brancheFilter = safeParse(branche_filter);
+      const functieFilter = safeParse(functie_filter);
+      const tagFilter = safeParse(tag_filter);
+      const phaseFilter = safeParse(phase_filter);
+      const functionTagIdsRaw = safeParse(function_tag_ids);
+      const functionTagIds = (Array.isArray(functionTagIdsRaw) ? functionTagIdsRaw : [])
+        .map((n: any) => parseInt(n))
+        .filter((n: number) => Number.isFinite(n) && n > 0);
       const count = await storage.getProspectCampaignSegmentCount({
         brancheFilter, functieFilter,
         typeFilter: type_filter || 'alles',
         taalFilter: taal_filter || 'alles',
         tagFilter,
+        phaseFilter,
+        functionTagIds,
       });
       return res.json({ count });
     } catch (err) {
@@ -5221,11 +5348,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         name, subject, campagneType, status,
         brancheFilter, functieFilter, typeFilter, taalFilter, tagFilter,
+        phaseFilter, functionTagIds,
         contentA, contentB, editorBlocks, htmlContent,
         abTestActief, abSplitPct, abWinnaarOp, abWinnaarNaUren,
         alleenWerkdagen, tijdvensterStart, tijdvensterEind, scheduledAt,
       } = req.body;
       if (!name || !subject) return res.status(400).json({ message: "Naam en onderwerp zijn verplicht" });
+      const VALID_PHASES = ['nieuw','in_campagne','in_gesprek','klant','uitgesloten'];
+      const cleanPhaseFilter = Array.isArray(phaseFilter) ? phaseFilter.filter((p: any) => VALID_PHASES.includes(p)) : [];
+      const cleanFunctionTagIds = Array.isArray(functionTagIds) ? functionTagIds.map((n: any) => parseInt(n)).filter((n: number) => Number.isFinite(n) && n > 0) : [];
       const campaign = await storage.createProspectCampaign({
         name,
         subject,
@@ -5236,6 +5367,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         typeFilter: typeFilter || 'alles',
         taalFilter: taalFilter || 'alles',
         tagFilter: typeof tagFilter === 'string' ? tagFilter : JSON.stringify(tagFilter || []),
+        phaseFilter: cleanPhaseFilter,
+        functionTagIds: cleanFunctionTagIds,
         contentA: contentA || null,
         contentB: contentB || null,
         editorBlocks: editorBlocks || contentA || null,
@@ -5269,6 +5402,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
       // Serialize tagFilter if array
       if (Array.isArray(req.body.tagFilter)) req.body.tagFilter = JSON.stringify(req.body.tagFilter);
+      // Blok 1: Valideer phaseFilter en functionTagIds
+      const VALID_PHASES = ['nieuw','in_campagne','in_gesprek','klant','uitgesloten'];
+      if (Array.isArray(req.body.phaseFilter)) {
+        req.body.phaseFilter = req.body.phaseFilter.filter((p: any) => VALID_PHASES.includes(p));
+      }
+      if (Array.isArray(req.body.functionTagIds)) {
+        req.body.functionTagIds = req.body.functionTagIds
+          .map((n: any) => parseInt(n))
+          .filter((n: number) => Number.isFinite(n) && n > 0);
+      }
       // Auto-generate htmlContent from new-format contentA if provided
       if (req.body.contentA && !req.body.htmlContent) {
         try {
