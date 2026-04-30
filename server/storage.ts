@@ -537,6 +537,8 @@ export interface IStorage {
   createProspectCampaign(data: InsertProspectCampaign): Promise<ProspectCampaign>;
   updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
   deleteProspectCampaign(id: number): Promise<void>;
+  duplicateProspectCampaign(id: number, overrides?: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
+  generateCampaignVariants(srcId: number, opts: { branches: string[]; functies: string[]; talen: string[] }): Promise<ProspectCampaign[]>;
   getProspectCampaignRecipients(campaignId: number): Promise<ProspectCampaignRecipient[]>;
   // Werkelijke ontvangers van een verzonden campagne (uit mail_sends + contacts + mail_events)
   getProspectCampaignSentRecipients(campaignId: number): Promise<Array<{
@@ -4337,6 +4339,64 @@ export class MemStorage implements IStorage {
 
   async deleteProspectCampaign(id: number): Promise<void> {
     await db.delete(prospectCampaignsTable).where(eq(prospectCampaignsTable.id, id));
+  }
+
+  async duplicateProspectCampaign(id: number, overrides?: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined> {
+    const src = await this.getProspectCampaign(id);
+    if (!src) return undefined;
+    const { id: _id, createdAt: _c, updatedAt: _u, sentAt: _s, scheduledAt: _sc, werkelijkVerzendOp: _w,
+      sentCount: _sn, failedCount: _fn, openCount: _on, clickCount: _cn,
+      deliveredCount: _dn, bounceCount: _bn, spamCount: _sp, replyCount: _rp,
+      abWinnaarVariant: _av, abWinnaarBepaaldOp: _ab, ...rest } = src as any;
+    const data: any = {
+      ...rest,
+      name: `${src.name} — kopie`,
+      status: 'concept',
+      sentAt: null,
+      scheduledAt: null,
+      werkelijkVerzendOp: null,
+      verzendDirect: false,
+      sentCount: 0,
+      failedCount: 0,
+      openCount: 0,
+      clickCount: 0,
+      deliveredCount: 0,
+      bounceCount: 0,
+      spamCount: 0,
+      replyCount: 0,
+      abTestFase: 'concept',
+      abWinnaarVariant: null,
+      abWinnaarBepaaldOp: null,
+      ...overrides,
+    };
+    return this.createProspectCampaign(data);
+  }
+
+  async generateCampaignVariants(srcId: number, opts: { branches: string[]; functies: string[]; talen: string[] }): Promise<ProspectCampaign[]> {
+    const src = await this.getProspectCampaign(srcId);
+    if (!src) return [];
+    const branches = opts.branches.length > 0 ? opts.branches : [''];
+    const functies = opts.functies.length > 0 ? opts.functies : [''];
+    const talen = opts.talen.length > 0 ? opts.talen : [''];
+    const created: ProspectCampaign[] = [];
+    const baseName = src.name.replace(/ — kopie$/, '').replace(/ — [^—]+ — [^—]+ — [^—]+$/, '');
+    for (const b of branches) {
+      for (const f of functies) {
+        for (const t of talen) {
+          const labelParts = [b, f, t].filter(Boolean);
+          const naam = labelParts.length > 0 ? `${baseName} — ${labelParts.join(' — ')}` : `${baseName} — variant`;
+          const overrides: any = {
+            name: naam,
+            brancheFilter: b ? [b] : [],
+            functieFilter: f ? [f] : [],
+            taalFilter: t || 'alles',
+          };
+          const dup = await this.duplicateProspectCampaign(srcId, overrides);
+          if (dup) created.push(dup);
+        }
+      }
+    }
+    return created;
   }
 
   async getProspectCampaignRecipients(campaignId: number): Promise<ProspectCampaignRecipient[]> {

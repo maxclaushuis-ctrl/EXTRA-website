@@ -5474,6 +5474,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dupliceer een campagne (status reset, naam +" — kopie")
+  app.post("/api/admin/prospect-campaigns/:id/duplicate", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const overrides = (req.body && typeof req.body === 'object') ? req.body : {};
+      const dup = await storage.duplicateProspectCampaign(id, overrides);
+      if (!dup) return res.status(404).json({ message: "Bron-campagne niet gevonden" });
+      return res.status(201).json(dup);
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout dupliceren:", err);
+      return res.status(500).json({ message: "Fout bij dupliceren" });
+    }
+  });
+
+  // Genereer varianten voor een campagne (matrix branche × functie × taal)
+  app.post("/api/admin/prospect-campaigns/:id/genereer-varianten", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const branches: string[] = Array.isArray(req.body?.branches) ? req.body.branches : [];
+      const functies: string[] = Array.isArray(req.body?.functies) ? req.body.functies : [];
+      const talen: string[] = Array.isArray(req.body?.talen) ? req.body.talen : [];
+      if (branches.length === 0 && functies.length === 0 && talen.length === 0) {
+        return res.status(400).json({ message: "Kies minstens één dimensie (branche, functie of taal)" });
+      }
+      const created = await storage.generateCampaignVariants(id, { branches, functies, talen });
+      return res.status(201).json({ aantal: created.length, varianten: created });
+    } catch (err) {
+      console.error("[ProspectCampaign] Fout genereren varianten:", err);
+      return res.status(500).json({ message: "Fout bij genereren varianten" });
+    }
+  });
+
   // Ontvangers — toon werkelijke verzendingen uit mail_sends (inclusief
   // bulk/segment-verzendingen). De handmatige tabel prospect_campaign_recipients
   // wordt door deze endpoint niet gelezen; die heeft eigen POST/DELETE-endpoints.

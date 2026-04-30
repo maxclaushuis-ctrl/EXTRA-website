@@ -12,7 +12,11 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const migrations = [
   \"ALTER TABLE candidates ADD COLUMN IF NOT EXISTS review_token_expires_at TIMESTAMP\",
   \"ALTER TABLE crm_companies ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'\",
-  \"ALTER TABLE crm_companies ADD COLUMN IF NOT EXISTS staffing_request_id INTEGER\"
+  \"ALTER TABLE crm_companies ADD COLUMN IF NOT EXISTS staffing_request_id INTEGER\",
+  // 0005: serie-velden voor jaarcampagne-groepering
+  \"ALTER TABLE prospect_campaigns ADD COLUMN IF NOT EXISTS serie TEXT\",
+  \"ALTER TABLE prospect_campaigns ADD COLUMN IF NOT EXISTS serie_stap_nr INTEGER\",
+  \"CREATE INDEX IF NOT EXISTS idx_prospect_campaigns_serie ON prospect_campaigns (serie, serie_stap_nr) WHERE serie IS NOT NULL\"
 ];
 
 (async () => {

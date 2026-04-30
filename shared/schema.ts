@@ -1477,6 +1477,9 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   // Geplande verzending
   verzendDirect: boolean("verzend_direct").default(false),
   werkelijkVerzendOp: timestamp("werkelijk_verzend_op"),
+  // Serie-velden voor groepering (bv. "Banqueting jaarcampagne", stap 1..8)
+  serie: text("serie"),
+  serieStapNr: integer("serie_stap_nr"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

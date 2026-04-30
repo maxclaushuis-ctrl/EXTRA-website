@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -57,6 +57,7 @@ type Campaign = {
   abWinnaarVariant: string | null; abWinnaarBepaaldOp: string | null; abTestFase: string | null;
   alleenWerkdagen: boolean; tijdvensterStart: string; tijdvensterEind: string;
   verzendDagen: number[] | null; verzendSlots: Array<{ dag: number; tijd: string }> | null;
+  serie: string | null; serieStapNr: number | null;
   createdAt: string; updatedAt: string;
 };
 
@@ -673,6 +674,105 @@ function CampaignWizard({ open, onClose, onCreated }: {
               {createMutation.isPending ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" />Aanmaken...</> : <><Rocket className="h-3.5 w-3.5" />Campagne aanmaken</>}
             </Button>
           )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Genereer-varianten dialog ────────────────────────────────────────────────
+function GenereerVariantenDialog({ open, onClose, onConfirm, pending }: {
+  open: boolean; onClose: () => void;
+  onConfirm: (branches: string[], functies: string[], talen: string[]) => void;
+  pending: boolean;
+}) {
+  const [b, setB] = useState<string[]>([]);
+  const [f, setF] = useState<string[]>([]);
+  const [t, setT] = useState<string[]>([]);
+  const TALEN = ['nl', 'en'];
+  const totaal = Math.max(b.length, 1) * Math.max(f.length, 1) * Math.max(t.length, 1);
+  const minstensEen = b.length + f.length + t.length > 0;
+
+  const toggle = (arr: string[], setter: (v: string[]) => void, val: string) => {
+    setter(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Genereer varianten</DialogTitle>
+          <DialogDescription>
+            Maakt voor elke combinatie van branche × functie × taal een kopie van deze campagne.
+            Iedere variant krijgt z'n eigen filter en kan apart worden bewerkt.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div>
+            <p className="text-xs font-semibold text-slate-700 mb-2">Branches</p>
+            <div className="flex flex-wrap gap-1.5">
+              {BRANCHES.map(x => {
+                const has = b.includes(x);
+                return (
+                  <button key={x} onClick={() => toggle(b, setB, x)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                    {x}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-700 mb-2">Functies</p>
+            <div className="flex flex-wrap gap-1.5">
+              {FUNCTIEGROEPEN.map(x => {
+                const has = f.includes(x);
+                return (
+                  <button key={x} onClick={() => toggle(f, setF, x)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-orange-100 border-orange-300 text-orange-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                    {x}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-700 mb-2">Talen</p>
+            <div className="flex flex-wrap gap-1.5">
+              {TALEN.map(x => {
+                const has = t.includes(x);
+                return (
+                  <button key={x} onClick={() => toggle(t, setT, x)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                    {x.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm">
+            {minstensEen ? (
+              <span>Maakt <strong className="text-purple-700">{totaal}</strong> variant{totaal === 1 ? '' : 'en'} aan
+                {b.length > 0 && ` — ${b.length} branche${b.length === 1 ? '' : 's'}`}
+                {f.length > 0 && ` × ${f.length} functie${f.length === 1 ? '' : 's'}`}
+                {t.length > 0 && ` × ${t.length} ta${t.length === 1 ? 'al' : 'len'}`}.
+              </span>
+            ) : (
+              <span className="text-slate-500">Kies minstens één dimensie om te beginnen.</span>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button onClick={() => onConfirm(b, f, t)} disabled={!minstensEen || pending}
+            className="bg-purple-600 hover:bg-purple-700">
+            {pending ? 'Bezig...' : `Maak ${totaal} variant${totaal === 1 ? '' : 'en'} aan`}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1654,6 +1754,82 @@ function CampagneRepliesPaneel({ campaignId }: { campaignId: number }) {
   );
 }
 
+// ─── Serie-editor: toon en bewerk serie + stapnummer voor de geselecteerde campagne
+function SerieEditor({ campaign, alleSeries }: { campaign: Campaign; alleSeries: string[] }) {
+  const { toast } = useToast();
+  const [serie, setSerie] = useState<string>(campaign.serie ?? '');
+  const [stap, setStap] = useState<string>(campaign.serieStapNr != null ? String(campaign.serieStapNr) : '');
+  const [showSuggesties, setShowSuggesties] = useState(false);
+
+  useEffect(() => {
+    setSerie(campaign.serie ?? '');
+    setStap(campaign.serieStapNr != null ? String(campaign.serieStapNr) : '');
+  }, [campaign.id]);
+
+  const dirty = (serie || '') !== (campaign.serie ?? '') ||
+    (stap || '') !== (campaign.serieStapNr != null ? String(campaign.serieStapNr) : '');
+
+  const opslaanMut = useMutation({
+    mutationFn: () => apiRequest('PUT', `/api/admin/prospect-campaigns/${campaign.id}`, {
+      serie: serie.trim() || null,
+      serieStapNr: stap ? parseInt(stap) : null,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
+      toast({ title: 'Serie opgeslagen' });
+    },
+    onError: (e: any) => toast({ title: e?.data?.message || 'Opslaan mislukt', variant: 'destructive' }),
+  });
+
+  const suggesties = serie
+    ? alleSeries.filter(s => s.toLowerCase().includes(serie.toLowerCase()) && s !== serie).slice(0, 5)
+    : alleSeries.slice(0, 5);
+
+  return (
+    <div className="bg-purple-50/50 rounded-xl p-4 border border-purple-200">
+      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <FileText className="h-3.5 w-3.5" />Serie / Jaarcampagne
+      </p>
+      <div className="grid grid-cols-[2fr_1fr] gap-3">
+        <div className="relative">
+          <Label className="text-xs text-slate-500">Serie-naam</Label>
+          <Input
+            value={serie}
+            onChange={e => { setSerie(e.target.value); setShowSuggesties(true); }}
+            onFocus={() => setShowSuggesties(true)}
+            onBlur={() => setTimeout(() => setShowSuggesties(false), 200)}
+            placeholder="bv. Banqueting jaarcampagne"
+            className="h-8 text-sm bg-white"
+          />
+          {showSuggesties && suggesties.length > 0 && (
+            <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg max-h-40 overflow-y-auto">
+              {suggesties.map(s => (
+                <button key={s} type="button" onMouseDown={e => { e.preventDefault(); setSerie(s); setShowSuggesties(false); }}
+                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 text-slate-600">
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500">Stap nr.</Label>
+          <Input type="number" min={1} value={stap} onChange={e => setStap(e.target.value)}
+            placeholder="1..N" className="h-8 text-sm bg-white" />
+        </div>
+      </div>
+      {dirty && (
+        <div className="mt-3 flex justify-end">
+          <Button size="sm" onClick={() => opslaanMut.mutate()} disabled={opslaanMut.isPending}
+            className="bg-purple-600 hover:bg-purple-700 h-7 text-xs">
+            {opslaanMut.isPending ? 'Bezig...' : 'Opslaan'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main module ──────────────────────────────────────────────────────────────
 export default function ProspectCampagnesTab() {
   const { toast } = useToast();
@@ -1665,6 +1841,13 @@ export default function ProspectCampagnesTab() {
   const [statusFilter, setStatusFilter] = useState('alle');
   const [builderOpen, setBuilderOpen] = useState(false);
   const [flowBuilderOpen, setFlowBuilderOpen] = useState(false);
+  // Serie/branche/functie/taal filters voor de gegroepeerde sidebar
+  const [serieFilter, setSerieFilter] = useState<string>('alle');
+  const [brancheGroepFilter, setBrancheGroepFilter] = useState<string>('alle');
+  const [functieGroepFilter, setFunctieGroepFilter] = useState<string>('alle');
+  const [taalGroepFilter, setTaalGroepFilter] = useState<string>('alle');
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [variantenWizardOpen, setVariantenWizardOpen] = useState(false);
 
   // ── Queries
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
@@ -1723,24 +1906,25 @@ export default function ProspectCampagnesTab() {
   });
 
   const duplicateMut = useMutation({
-    mutationFn: async (c: Campaign) => {
-      const payload = {
-        name: `${c.name} (kopie)`, subject: c.subject,
-        campagneType: c.campagneType, status: 'concept',
-        brancheFilter: c.brancheFilter, functieFilter: c.functieFilter,
-        typeFilter: c.typeFilter, taalFilter: c.taalFilter, tagFilter: c.tagFilter,
-        phaseFilter: c.phaseFilter ?? [],
-        contentA: c.contentA, contentB: c.contentB, editorBlocks: c.editorBlocks,
-        alleenWerkdagen: c.alleenWerkdagen, tijdvensterStart: c.tijdvensterStart, tijdvensterEind: c.tijdvensterEind,
-        abTestActief: c.abTestActief, abSplitPct: c.abSplitPct, abWinnaarOp: c.abWinnaarOp, abWinnaarNaUren: c.abWinnaarNaUren,
-      };
-      return apiRequest('POST', '/api/admin/prospect-campaigns', payload);
-    },
+    mutationFn: async (c: Campaign) => apiRequest('POST', `/api/admin/prospect-campaigns/${c.id}/duplicate`),
     onSuccess: (c: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
       setSelectedId(c.id);
       toast({ title: `Kopie '${c.name}' aangemaakt` });
     },
+    onError: (e: any) => toast({ title: e?.data?.message || 'Dupliceren mislukt', variant: 'destructive' }),
+  });
+
+  const genereerVariantenMut = useMutation({
+    mutationFn: async (args: { id: number; branches: string[]; functies: string[]; talen: string[] }) =>
+      apiRequest('POST', `/api/admin/prospect-campaigns/${args.id}/genereer-varianten`, {
+        branches: args.branches, functies: args.functies, talen: args.talen,
+      }),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
+      toast({ title: `${res.aantal} varianten aangemaakt` });
+    },
+    onError: (e: any) => toast({ title: e?.data?.message || 'Varianten aanmaken mislukt', variant: 'destructive' }),
   });
 
   const updateStatusMut = useMutation({
@@ -1773,16 +1957,76 @@ export default function ProspectCampagnesTab() {
       (statusFilter === 'gepland' && ['gepland','scheduled'].includes(c.status)) ||
       (statusFilter === 'actief' && c.status === 'actief') ||
       (statusFilter === 'voltooid' && ['voltooid','sent'].includes(c.status));
-    return matchSearch && matchStatus;
+    const matchSerie = serieFilter === 'alle' ||
+      (serieFilter === '__geen__' ? !c.serie : c.serie === serieFilter);
+    const cBranche = c.brancheFilter?.[0] ?? '';
+    const cFunctie = c.functieFilter?.[0] ?? '';
+    const cTaal = c.taalFilter ?? 'alles';
+    const matchBranche = brancheGroepFilter === 'alle' || cBranche === brancheGroepFilter;
+    const matchFunctie = functieGroepFilter === 'alle' || cFunctie === functieGroepFilter;
+    const matchTaal = taalGroepFilter === 'alle' || cTaal === taalGroepFilter;
+    return matchSearch && matchStatus && matchSerie && matchBranche && matchFunctie && matchTaal;
   }).sort((a, b) => {
-    // Gepland: sorteer op werkelijk verzendmoment (vroegst eerst)
+    // Eerst op serie (alfabetisch, leeg laatst), daarna stapnr, daarna gepland-tijd
+    const sa = a.serie ?? '\uffff'; const sb = b.serie ?? '\uffff';
+    if (sa !== sb) return sa.localeCompare(sb);
+    const na = a.serieStapNr ?? 9999; const nb = b.serieStapNr ?? 9999;
+    if (na !== nb) return na - nb;
     if (['gepland','scheduled'].includes(a.status) && ['gepland','scheduled'].includes(b.status)) {
       const da = a.werkelijkVerzendOp ? new Date(a.werkelijkVerzendOp).getTime() : 0;
       const db2 = b.werkelijkVerzendOp ? new Date(b.werkelijkVerzendOp).getTime() : 0;
       return da - db2;
     }
-    return 0;
+    return a.name.localeCompare(b.name);
   });
+
+  // Unieke series + filter-opties uit alle campagnes
+  const seriesSet = new Set<string>();
+  const branchesSet = new Set<string>();
+  const functiesSet = new Set<string>();
+  const talenSet = new Set<string>();
+  for (const c of campaigns) {
+    if (c.serie) seriesSet.add(c.serie);
+    if (c.brancheFilter?.[0]) branchesSet.add(c.brancheFilter[0]);
+    if (c.functieFilter?.[0]) functiesSet.add(c.functieFilter[0]);
+    if (c.taalFilter && c.taalFilter !== 'alles') talenSet.add(c.taalFilter);
+  }
+  const alleSeries = Array.from(seriesSet).sort();
+  const alleBranches = Array.from(branchesSet).sort();
+  const alleFuncties = Array.from(functiesSet).sort();
+  const alleTalen = Array.from(talenSet).sort();
+
+  // Groepeer gefilterde campagnes per serie (geen serie = "Losse campagnes")
+  type GroepKey = string;
+  const grouped = new Map<GroepKey, { label: string; isLos: boolean; items: Campaign[] }>();
+  for (const c of filteredCampaigns) {
+    const key = c.serie ?? '__los__';
+    if (!grouped.has(key)) grouped.set(key, { label: c.serie ?? 'Losse campagnes', isLos: !c.serie, items: [] });
+    grouped.get(key)!.items.push(c);
+  }
+  const groupedArr = Array.from(grouped.entries()).sort(([ka, va], [kb, vb]) => {
+    if (va.isLos && !vb.isLos) return 1;
+    if (!va.isLos && vb.isLos) return -1;
+    return va.label.localeCompare(vb.label);
+  });
+
+  const filtersActive = serieFilter !== 'alle' || brancheGroepFilter !== 'alle' ||
+    functieGroepFilter !== 'alle' || taalGroepFilter !== 'alle';
+  const wisFilters = () => {
+    setSerieFilter('alle'); setBrancheGroepFilter('alle');
+    setFunctieGroepFilter('alle'); setTaalGroepFilter('alle');
+  };
+
+  function groepStatusBalk(items: Campaign[]) {
+    const t: Record<string, number> = { concept: 0, gepland: 0, actief: 0, voltooid: 0 };
+    for (const c of items) {
+      if (['concept','draft'].includes(c.status)) t.concept++;
+      else if (['gepland','scheduled'].includes(c.status)) t.gepland++;
+      else if (c.status === 'actief') t.actief++;
+      else if (['voltooid','sent'].includes(c.status)) t.voltooid++;
+    }
+    return t;
+  }
 
   // ── Segment summary text
   function getSegmentSummary(c: Campaign): string {
@@ -1841,7 +2085,39 @@ export default function ProspectCampagnesTab() {
           })}
         </div>
 
-        {/* Campaign list */}
+        {/* Groep-filters (Serie / Branche / Functie / Taal) */}
+        <div className="px-3 py-2 border-b border-slate-100 bg-white space-y-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
+            <select value={serieFilter} onChange={e => setSerieFilter(e.target.value)}
+              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
+              <option value="alle">Alle series</option>
+              {alleSeries.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="__geen__">— Losse campagnes</option>
+            </select>
+            <select value={brancheGroepFilter} onChange={e => setBrancheGroepFilter(e.target.value)}
+              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
+              <option value="alle">Alle branches</option>
+              {alleBranches.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select value={functieGroepFilter} onChange={e => setFunctieGroepFilter(e.target.value)}
+              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
+              <option value="alle">Alle functies</option>
+              {alleFuncties.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+            <select value={taalGroepFilter} onChange={e => setTaalGroepFilter(e.target.value)}
+              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
+              <option value="alle">Alle talen</option>
+              {alleTalen.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+            </select>
+          </div>
+          {filtersActive && (
+            <button onClick={wisFilters} className="text-[10px] text-purple-600 hover:text-purple-800 hover:underline">
+              Wis filters
+            </button>
+          )}
+        </div>
+
+        {/* Campaign list (gegroepeerd per serie) */}
         <ScrollArea className="flex-1">
           {isLoading ? (
             <div className="p-8 text-center text-xs text-slate-400">Laden...</div>
@@ -1852,7 +2128,27 @@ export default function ProspectCampagnesTab() {
             </div>
           ) : (
             <div className="py-1">
-              {filteredCampaigns.map(c => {
+              {groupedArr.map(([key, groep]) => {
+                const isCollapsed = collapsedGroups[key] === true;
+                const tellers = groepStatusBalk(groep.items);
+                return (
+                  <div key={key} className="border-b border-slate-100">
+                    <button
+                      onClick={() => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }))}
+                      className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-slate-50 transition-colors text-left ${groep.isLos ? 'bg-slate-50/40' : 'bg-slate-50/80'}`}>
+                      <ChevronRight className={`h-3 w-3 text-slate-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} />
+                      <span className={`text-[11px] font-semibold flex-1 truncate ${groep.isLos ? 'text-slate-500 italic' : 'text-slate-700'}`}>
+                        {groep.label}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">{groep.items.length}</span>
+                      <div className="flex gap-0.5 items-center">
+                        {tellers.concept > 0 && <span className="text-[9px] px-1 rounded bg-gray-100 text-gray-600">{tellers.concept}</span>}
+                        {tellers.gepland > 0 && <span className="text-[9px] px-1 rounded bg-blue-100 text-blue-700">{tellers.gepland}</span>}
+                        {tellers.actief > 0 && <span className="text-[9px] px-1 rounded bg-green-100 text-green-700">{tellers.actief}</span>}
+                        {tellers.voltooid > 0 && <span className="text-[9px] px-1 rounded bg-slate-200 text-slate-600">{tellers.voltooid}</span>}
+                      </div>
+                    </button>
+                    {!isCollapsed && groep.items.map(c => {
                 const sb = STATUS_BADGE[c.status] ?? STATUS_BADGE.concept;
                 const tb = TYPE_BADGE[c.campagneType ?? 'bulk'] ?? TYPE_BADGE.bulk;
                 const isActive = c.id === selectedId;
@@ -1915,6 +2211,9 @@ export default function ProspectCampagnesTab() {
                   </div>
                 );
               })}
+                  </div>
+                );
+              })}
             </div>
           )}
         </ScrollArea>
@@ -1948,6 +2247,12 @@ export default function ProspectCampagnesTab() {
               </div>
               <h2 className="text-base font-semibold text-gray-900 truncate">{selectedCampaign.name}</h2>
               <p className="text-xs text-gray-500 mt-0.5 truncate">{selectedCampaign.subject}</p>
+              {selectedCampaign.serie && (
+                <p className="text-[11px] text-purple-600 mt-0.5 truncate">
+                  Serie: {selectedCampaign.serie}
+                  {selectedCampaign.serieStapNr ? ` — stap ${selectedCampaign.serieStapNr}` : ''}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {selectedCampaign.campagneType === 'flow' ? (
@@ -1957,6 +2262,17 @@ export default function ProspectCampagnesTab() {
               ) : (
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setBuilderOpen(true)}>
                   <Pencil className="h-3.5 w-3.5" />E-mail opmaken
+                </Button>
+              )}
+              <Button size="sm" variant="outline" className="gap-1"
+                onClick={() => duplicateMut.mutate(selectedCampaign)}
+                disabled={duplicateMut.isPending}>
+                <Copy className="h-3.5 w-3.5" />Dupliceren
+              </Button>
+              {['concept','draft'].includes(selectedCampaign.status) && (
+                <Button size="sm" variant="outline" className="gap-1 border-purple-300 text-purple-700 hover:bg-purple-50"
+                  onClick={() => setVariantenWizardOpen(true)}>
+                  <Plus className="h-3.5 w-3.5" />Genereer varianten
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 px-2"
@@ -1988,6 +2304,9 @@ export default function ProspectCampagnesTab() {
             {/* Overzicht */}
             <TabsContent value="overzicht" className="flex-1 overflow-auto p-6">
               <div className="max-w-xl space-y-5">
+                {/* Serie-toewijzing */}
+                <SerieEditor campaign={selectedCampaign} alleSeries={alleSeries} />
+
                 {/* Doelgroep samenvatting */}
                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
@@ -2402,6 +2721,19 @@ export default function ProspectCampagnesTab() {
 
       {/* ── Wizard modal ── */}
       <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={(c) => { setWizardOpen(false); setSelectedId(c.id); }} />
+
+      {/* ── Genereer-varianten wizard ── */}
+      {selectedCampaign && (
+        <GenereerVariantenDialog
+          open={variantenWizardOpen}
+          onClose={() => setVariantenWizardOpen(false)}
+          onConfirm={(b, f, t) => {
+            genereerVariantenMut.mutate({ id: selectedCampaign.id, branches: b, functies: f, talen: t });
+            setVariantenWizardOpen(false);
+          }}
+          pending={genereerVariantenMut.isPending}
+        />
+      )}
 
       {/* ── Delete confirm ── */}
       <AlertDialog open={!!deleteId} onOpenChange={v => !v && setDeleteId(null)}>
