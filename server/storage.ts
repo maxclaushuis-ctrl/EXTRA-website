@@ -76,6 +76,10 @@ import {
   unsubscribeTokens as unsubscribeTokensTable,
   type MailSend, type InsertMailSend,
   type MailEvent, type InsertMailEvent,
+  // Blok 3
+  sendgridEventLog, prospectReplies, instellingen as instellingenTable,
+  type SendgridEventLog, type InsertSendgridEventLog,
+  type ProspectReply, type InsertProspectReply,
   type UnsubscribeToken,
   flowSteps as flowStepsTable,
   flowContactProgress as flowContactProgressTable,
@@ -542,10 +546,22 @@ export interface IStorage {
   // Mail Tracking
   createMailSend(data: InsertMailSend): Promise<MailSend>;
   getMailSend(id: number): Promise<MailSend | undefined>;
+  getMailSendBySgMessageId(sgMessageId: string): Promise<MailSend | undefined>;
   getMailSendsByCampaign(campaignId: number): Promise<MailSend[]>;
   updateMailSend(id: number, data: Partial<InsertMailSend>): Promise<MailSend | undefined>;
   createMailEvent(data: InsertMailEvent): Promise<MailEvent>;
   getMailEventsByMailSend(mailSendId: number): Promise<MailEvent[]>;
+  // Blok 3: SendGrid event-log + replies
+  createSendgridEvent(data: InsertSendgridEventLog): Promise<SendgridEventLog | null>;
+  getSendgridEventBySgEventId(sgEventId: string): Promise<SendgridEventLog | undefined>;
+  listSendgridEvents(opts: { limit?: number; campaignId?: number; event?: string }): Promise<SendgridEventLog[]>;
+  createProspectReply(data: InsertProspectReply): Promise<ProspectReply>;
+  listProspectReplies(opts: { handled?: boolean; limit?: number; campaignId?: number; contactId?: number }): Promise<ProspectReply[]>;
+  updateProspectReply(id: number, data: Partial<InsertProspectReply> & { handled?: boolean; handledBy?: number }): Promise<ProspectReply | undefined>;
+  incrementCampaignCounter(campaignId: number, field: 'deliveredCount' | 'bounceCount' | 'spamCount' | 'replyCount' | 'openCount' | 'clickCount', delta?: number): Promise<void>;
+  // Instellingen-tabel (sleutel/waarde) — Blok 3
+  getInstellingByKey(sleutel: string): Promise<{ sleutel: string; waarde: string } | undefined>;
+  upsertInstelling(sleutel: string, waarde: string): Promise<{ sleutel: string; waarde: string }>;
   getCampaignMailStats(campaignId: number): Promise<{
     verzonden: number; geopend: number; geklikt: number; uitgeschreven: number; mislukt: number;
     geopend_pct: number; geklikt_pct: number; uitgeschreven_pct: number;
@@ -4369,6 +4385,98 @@ export class MemStorage implements IStorage {
 
   async getMailEventsByMailSend(mailSendId: number): Promise<MailEvent[]> {
     return db.select().from(mailEventsTable).where(eq(mailEventsTable.mailSendId, mailSendId));
+  }
+
+  async getMailSendBySgMessageId(sgMessageId: string): Promise<MailSend | undefined> {
+    const [row] = await db.select().from(mailSendsTable).where(eq(mailSendsTable.sgMessageId, sgMessageId));
+    return row;
+  }
+
+  // ─── Blok 3: SendGrid event-log + replies ─────────────────────────────────
+  async createSendgridEvent(data: InsertSendgridEventLog): Promise<SendgridEventLog | null> {
+    try {
+      const [row] = await db.insert(sendgridEventLog).values(data).returning();
+      return row;
+    } catch (err: any) {
+      // Idempotency: dubbele sg_event_id (UNIQUE) wordt stilzwijgend genegeerd
+      if (err?.code === '23505') return null;
+      throw err;
+    }
+  }
+
+  async getSendgridEventBySgEventId(sgEventId: string): Promise<SendgridEventLog | undefined> {
+    const [row] = await db.select().from(sendgridEventLog).where(eq(sendgridEventLog.sgEventId, sgEventId));
+    return row;
+  }
+
+  async listSendgridEvents(opts: { limit?: number; campaignId?: number; event?: string }): Promise<SendgridEventLog[]> {
+    const conds: any[] = [];
+    if (opts.campaignId != null) conds.push(eq(sendgridEventLog.campaignId, opts.campaignId));
+    if (opts.event) conds.push(eq(sendgridEventLog.event, opts.event));
+    let q = db.select().from(sendgridEventLog) as any;
+    if (conds.length === 1) q = q.where(conds[0]);
+    else if (conds.length > 1) q = q.where(and(...conds));
+    return q.orderBy(desc(sendgridEventLog.receivedAt)).limit(opts.limit ?? 200);
+  }
+
+  async createProspectReply(data: InsertProspectReply): Promise<ProspectReply> {
+    const [row] = await db.insert(prospectReplies).values(data).returning();
+    return row;
+  }
+
+  async listProspectReplies(opts: { handled?: boolean; limit?: number; campaignId?: number; contactId?: number }): Promise<ProspectReply[]> {
+    const conds: any[] = [];
+    if (opts.handled != null) conds.push(eq(prospectReplies.handled, opts.handled));
+    if (opts.campaignId != null) conds.push(eq(prospectReplies.campaignId, opts.campaignId));
+    if (opts.contactId != null) conds.push(eq(prospectReplies.contactId, opts.contactId));
+    let q = db.select().from(prospectReplies) as any;
+    if (conds.length === 1) q = q.where(conds[0]);
+    else if (conds.length > 1) q = q.where(and(...conds));
+    return q.orderBy(desc(prospectReplies.receivedAt)).limit(opts.limit ?? 100);
+  }
+
+  async updateProspectReply(id: number, data: Partial<InsertProspectReply> & { handled?: boolean; handledBy?: number }): Promise<ProspectReply | undefined> {
+    const patch: any = { ...data };
+    if (patch.handled === true && patch.handledAt == null) patch.handledAt = new Date();
+    const [row] = await db.update(prospectReplies).set(patch).where(eq(prospectReplies.id, id)).returning();
+    return row;
+  }
+
+  // Helpers voor de instellingen-tabel (sleutel/waarde) — Blok 3
+  async getInstellingByKey(sleutel: string): Promise<{ sleutel: string; waarde: string } | undefined> {
+    const [row] = await db.select().from(instellingenTable).where(eq(instellingenTable.sleutel, sleutel));
+    return row as any;
+  }
+
+  async upsertInstelling(sleutel: string, waarde: string): Promise<{ sleutel: string; waarde: string }> {
+    const existing = await this.getInstellingByKey(sleutel);
+    if (existing) {
+      const [row] = await db.update(instellingenTable)
+        .set({ waarde, bijgewerktOp: new Date() })
+        .where(eq(instellingenTable.sleutel, sleutel))
+        .returning();
+      return row as any;
+    }
+    const [row] = await db.insert(instellingenTable).values({ sleutel, waarde }).returning();
+    return row as any;
+  }
+
+  async incrementCampaignCounter(
+    campaignId: number,
+    field: 'deliveredCount' | 'bounceCount' | 'spamCount' | 'replyCount' | 'openCount' | 'clickCount',
+    delta: number = 1,
+  ): Promise<void> {
+    const colMap: Record<string, string> = {
+      deliveredCount: 'delivered_count',
+      bounceCount: 'bounce_count',
+      spamCount: 'spam_count',
+      replyCount: 'reply_count',
+      openCount: 'open_count',
+      clickCount: 'click_count',
+    };
+    const col = colMap[field];
+    if (!col) return;
+    await db.execute(sql.raw(`UPDATE prospect_campaigns SET ${col} = COALESCE(${col}, 0) + ${Number(delta)} WHERE id = ${Number(campaignId)}`));
   }
 
   async getCampaignMailStats(campaignId: number): Promise<{

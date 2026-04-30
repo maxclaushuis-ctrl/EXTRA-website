@@ -10123,5 +10123,163 @@ ${posts.map(p => `  <url>
     }
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BLOK 3 — SendGrid Event-webhook + Inbound Parse webhook
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // Helper: ECDSA-verificatie van SendGrid Event-webhook payload.
+  async function verifySendgridSignature(req: Request): Promise<{ ok: boolean; reden?: string }> {
+    try {
+      const setting = await storage.getInstellingByKey('sendgrid_webhook_public_key');
+      const publicKeyPem = setting?.waarde?.trim();
+      if (!publicKeyPem) {
+        // Geen public key ingesteld → laat door, maar log waarschuwing.
+        return { ok: true, reden: 'Geen public key ingesteld (signature niet gecontroleerd)' };
+      }
+      const sig = req.header('X-Twilio-Email-Event-Webhook-Signature') || req.header('x-twilio-email-event-webhook-signature');
+      const ts  = req.header('X-Twilio-Email-Event-Webhook-Timestamp') || req.header('x-twilio-email-event-webhook-timestamp');
+      if (!sig || !ts) return { ok: false, reden: 'Ontbrekende signature-headers' };
+
+      const raw: Buffer | undefined = (req as any).rawBody;
+      if (!raw || !raw.length) return { ok: false, reden: 'Geen raw body beschikbaar' };
+
+      const crypto = await import('crypto');
+      // SendGrid tekent: timestamp + raw_body (UTF-8 string concat)
+      const payloadToVerify = Buffer.concat([Buffer.from(String(ts), 'utf8'), raw]);
+
+      // Public key kan in PEM (-----BEGIN PUBLIC KEY-----) of als losse base64 SPKI komen.
+      let pem = publicKeyPem;
+      if (!/BEGIN PUBLIC KEY/.test(pem)) {
+        const b64 = pem.replace(/\s+/g, '');
+        pem = `-----BEGIN PUBLIC KEY-----\n${b64.match(/.{1,64}/g)?.join('\n') || b64}\n-----END PUBLIC KEY-----\n`;
+      }
+      const keyObj = crypto.createPublicKey(pem);
+      const verifier = crypto.createVerify('sha256');
+      verifier.update(payloadToVerify);
+      verifier.end();
+      // SendGrid gebruikt DER-encoded ECDSA; sig is base64
+      const ok = verifier.verify({ key: keyObj, dsaEncoding: 'der' as any }, Buffer.from(sig, 'base64'));
+      return ok ? { ok: true } : { ok: false, reden: 'Signature komt niet overeen' };
+    } catch (err: any) {
+      return { ok: false, reden: 'Verificatie-fout: ' + (err?.message || err) };
+    }
+  }
+
+  // SendGrid Event-webhook — publiek (signature-verified)
+  app.post("/api/webhooks/sendgrid/events", async (req: Request, res: Response) => {
+    const { verwerkSendgridEvents } = await import('./sendgridEventHandler');
+    const verif = await verifySendgridSignature(req);
+    if (!verif.ok) {
+      console.warn('[SgWebhook] geweigerd:', verif.reden);
+      return res.status(401).json({ ok: false, message: verif.reden });
+    }
+    const events = Array.isArray(req.body) ? req.body : [];
+    if (!events.length) return res.status(200).json({ ok: true, ontvangen: 0 });
+    try {
+      const stats = await verwerkSendgridEvents(events);
+      return res.status(200).json({ ok: true, ...stats });
+    } catch (err: any) {
+      console.error('[SgWebhook] verwerkingsfout:', err);
+      return res.status(500).json({ ok: false, message: err?.message || 'verwerkingsfout' });
+    }
+  });
+
+  // Endpoint om de huidige public key (status) op te vragen voor admins
+  app.get("/api/admin/sendgrid/webhook-status", adminMiddleware, async (_req, res) => {
+    const pk  = await storage.getInstellingByKey('sendgrid_webhook_public_key');
+    const ibs = await storage.getInstellingByKey('sendgrid_inbound_secret');
+    res.json({
+      publicKeyConfigured: !!pk?.waarde?.trim(),
+      inboundSecretConfigured: !!ibs?.waarde?.trim(),
+      webhookEndpoint: '/api/webhooks/sendgrid/events',
+      inboundEndpoint: '/api/webhooks/sendgrid/inbound',
+    });
+  });
+
+  // Inbound Parse webhook — multipart/form-data van SendGrid.
+  // Beveiliging: shared secret via query (?secret=…) of Authorization: Bearer … header,
+  // gevalideerd tegen instellingen-key sendgrid_inbound_secret.
+  const inboundUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 25 * 1024 * 1024, files: 20 },
+  });
+
+  app.post(
+    "/api/webhooks/sendgrid/inbound",
+    inboundUpload.any(),
+    async (req: Request, res: Response) => {
+      try {
+        const setting = await storage.getInstellingByKey('sendgrid_inbound_secret');
+        const expected = setting?.waarde?.trim();
+        if (expected) {
+          const provided =
+            (req.query.secret as string | undefined) ||
+            (req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+          if (provided !== expected) {
+            return res.status(401).json({ ok: false, message: 'Ongeldige inbound secret' });
+          }
+        }
+        const { verwerkInboundReply } = await import('./sendgridInboundHandler');
+        const payload = (req.body || {}) as any;
+        const result = await verwerkInboundReply(payload);
+        // SendGrid Inbound Parse vereist 200 OK om retries te vermijden, ook bij niet-matching.
+        return res.status(200).json(result);
+      } catch (err: any) {
+        console.error('[SgInbound] verwerkingsfout:', err);
+        // Geef 200 terug om retries te voorkomen; we hebben gelogd
+        return res.status(200).json({ ok: false, reden: err?.message || 'fout' });
+      }
+    },
+  );
+
+  // Admin: lijst van replies (paginated, simple filters)
+  app.get("/api/admin/prospect-replies", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const handled = req.query.handled === 'true' ? true : req.query.handled === 'false' ? false : undefined;
+      const limit = req.query.limit ? Math.min(500, parseInt(String(req.query.limit))) : 100;
+      const campaignId = req.query.campaignId ? parseInt(String(req.query.campaignId)) : undefined;
+      const contactId  = req.query.contactId ? parseInt(String(req.query.contactId)) : undefined;
+      const replies = await storage.listProspectReplies({ handled, limit, campaignId, contactId } as any);
+      res.json(replies);
+    } catch (err: any) {
+      res.status(500).json({ message: err?.message || 'fout' });
+    }
+  });
+
+  // Admin: markeer reply als afgehandeld
+  app.patch("/api/admin/prospect-replies/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: 'Ongeldig id' });
+      const userId = (req.session as any)?.userId;
+      const patch: any = {};
+      if (typeof req.body.handled === 'boolean') {
+        patch.handled = req.body.handled;
+        if (req.body.handled && userId) patch.handledBy = userId;
+      }
+      if (typeof req.body.notitie === 'string') patch.notitie = req.body.notitie;
+      const updated = await storage.updateProspectReply(id, patch);
+      if (!updated) return res.status(404).json({ message: 'Reply niet gevonden' });
+      res.json(updated);
+    } catch (err: any) {
+      res.status(500).json({ message: err?.message || 'fout' });
+    }
+  });
+
+  // Admin: lijst recente SendGrid event-log entries (debug + audit)
+  app.get("/api/admin/sendgrid/events", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? Math.min(500, parseInt(String(req.query.limit))) : 100;
+      const campaignId = req.query.campaignId ? parseInt(String(req.query.campaignId)) : undefined;
+      const event = req.query.event ? String(req.query.event) : undefined;
+      const events = await storage.listSendgridEvents({ limit, campaignId, event });
+      res.json(events);
+    } catch (err: any) {
+      res.status(500).json({ message: err?.message || 'fout' });
+    }
+  });
+
+  // ═══ Einde Blok 3 endpoints ═══════════════════════════════════════════════
+
   return httpServer;
 }

@@ -4,7 +4,7 @@
 import { createHmac, timingSafeEqual, createHash } from 'crypto';
 import { storage } from './storage';
 import { generateEmailHTML, generateEmailPlainText, type ContactData } from './emailGenerator';
-import { sendEmail } from './mail';
+import { sendEmail, sendEmailWithResult } from './mail';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 function getBaseUrl(req?: any): string {
@@ -196,25 +196,47 @@ export async function sendSingleMail(mailSendId: number, baseUrl: string): Promi
       ? generateUnsubscribeLink(mailSend.contactId, generateUnsubscribeTokenValue(mailSend.contactId), baseUrl)
       : `${baseUrl}/unsubscribe/0/invalid`;
 
-    const ok = await sendEmail({
+    // Blok 3: customArgs koppelen aan de SendGrid event-webhook (komen 1-op-1 terug
+    // bij delivered/open/click/bounce/spamreport/dropped events).
+    const customArgs: Record<string, string> = {
+      mail_send_id: String(mailSendId),
+      campaign_id: String(mailSend.campaignId),
+      variant: mailSend.variant || 'A',
+    };
+    if (mailSend.contactId != null) customArgs.contact_id = String(mailSend.contactId);
+
+    // Blok 3: replyTo zodat antwoorden via SendGrid Inbound Parse binnenkomen.
+    // Standaard wordt dit het from-adres als er geen aparte REPLY_TO ingesteld is.
+    const replyTo = process.env.SENDGRID_REPLY_TO || `${FROM_NAME} <${FROM_EMAIL}>`;
+
+    const result = await sendEmailWithResult({
       to,
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       subject,
       html,
       text,
+      replyTo,
+      customArgs,
       headers: {
         'List-Unsubscribe': `<${unsubUrl}>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
     });
 
-    if (ok) {
-      await storage.updateMailSend(mailSendId, { status: 'sent', verzondenOp: new Date() });
-      console.log(`[EmailService] ✓ Verstuurd naar ${to} (campagne ${mailSend.campaignId})`);
+    if (result.ok) {
+      await storage.updateMailSend(mailSendId, {
+        status: 'sent',
+        verzondenOp: new Date(),
+        sgMessageId: result.messageId,
+      } as any);
+      console.log(`[EmailService] ✓ Verstuurd naar ${to} (campagne ${mailSend.campaignId})${result.messageId ? ` [msg=${result.messageId}]` : ''}`);
       return true;
     } else {
-      await storage.updateMailSend(mailSendId, { status: 'failed', foutMelding: 'SendGrid retourneerde false' });
-      console.error(`[EmailService] ✗ Mislukt voor ${to}`);
+      await storage.updateMailSend(mailSendId, {
+        status: 'failed',
+        foutMelding: result.error?.message || 'SendGrid retourneerde geen succes',
+      } as any);
+      console.error(`[EmailService] ✗ Mislukt voor ${to}: ${result.error?.message}`);
       return false;
     }
   } catch (err: any) {

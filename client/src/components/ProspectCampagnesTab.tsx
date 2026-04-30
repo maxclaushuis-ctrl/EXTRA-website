@@ -33,6 +33,8 @@ import {
   ArrowLeft, ArrowRight, SlidersHorizontal, Calendar, Timer, FlaskConical,
   Zap, TrendingUp, Tag, ChevronDown, ChevronUp, UserMinus, ExternalLink,
   CalendarClock, BanIcon, Hourglass, SendHorizontal,
+  // Blok 3
+  CheckCircle2, MessageSquare, Flag, Reply, Inbox,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -48,6 +50,8 @@ type Campaign = {
   scheduledAt: string | null; sentAt: string | null;
   werkelijkVerzendOp: string | null; verzendDirect: boolean | null; tijdzone: string | null;
   sentCount: number; failedCount: number; openCount: number; clickCount: number;
+  // Blok 3 — aggregated tellers vanuit SendGrid Event-webhook
+  deliveredCount?: number | null; bounceCount?: number | null; spamCount?: number | null; replyCount?: number | null;
   abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number;
   abWinnaarVariant: string | null; abWinnaarBepaaldOp: string | null; abTestFase: string | null;
   alleenWerkdagen: boolean; tijdvensterStart: string; tijdvensterEind: string;
@@ -1542,6 +1546,109 @@ function PlanFormVelden({
   );
 }
 
+// ─── Blok 3 — Campagne replies-paneel ────────────────────────────────────────
+type ProspectReplyDTO = {
+  id: number; contactId: number | null; campaignId: number | null; mailSendId: number | null;
+  fromEmail: string; fromName: string | null; subject: string | null;
+  bodyText: string | null; bodyHtml: string | null;
+  inReplyTo: string | null; receivedAt: string;
+  handled: boolean; handledAt: string | null;
+};
+
+function CampagneRepliesPaneel({ campaignId }: { campaignId: number }) {
+  const { toast } = useToast();
+  const [openId, setOpenId] = useState<number | null>(null);
+  const { data: replies = [], isLoading } = useQuery<ProspectReplyDTO[]>({
+    queryKey: ['/api/admin/prospect-replies', { campaignId }],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/prospect-replies?campaignId=${campaignId}&limit=20`, { credentials: 'include' });
+      if (!res.ok) throw new Error('replies laden mislukt');
+      return res.json();
+    },
+    refetchInterval: 60_000,
+  });
+  const markeerAfgehandeld = useMutation({
+    mutationFn: async ({ id, handled }: { id: number; handled: boolean }) => {
+      return apiRequest('PATCH', `/api/admin/prospect-replies/${id}`, { handled });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-replies'] });
+      toast({ title: 'Reply bijgewerkt' });
+    },
+    onError: (e: any) => toast({ title: 'Bijwerken mislukt', description: e?.message || '', variant: 'destructive' }),
+  });
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5" data-testid="campagne-replies-paneel">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Inbox className="h-4 w-4 text-indigo-500" />
+          <p className="text-sm font-semibold text-slate-700">Recente replies</p>
+          {replies.length > 0 && (
+            <span className="text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">{replies.length}</span>
+          )}
+        </div>
+        <span className="text-[11px] text-slate-400">Auto-refresh elke minuut</span>
+      </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <RefreshCw className="h-4 w-4 text-slate-300 animate-spin" />
+        </div>
+      ) : replies.length === 0 ? (
+        <p className="text-xs text-slate-400 py-4 text-center">Nog geen antwoorden ontvangen via SendGrid Inbound Parse.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100" data-testid="replies-lijst">
+          {replies.map((r) => {
+            const isOpen = openId === r.id;
+            const tijd = new Date(r.receivedAt).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+            return (
+              <li key={r.id} className="py-2.5" data-testid={`reply-${r.id}`}>
+                <button
+                  type="button"
+                  onClick={() => setOpenId(isOpen ? null : r.id)}
+                  className="w-full text-left flex items-start gap-3 hover:bg-slate-50 rounded-md p-1 -m-1"
+                  data-testid={`reply-toggle-${r.id}`}
+                >
+                  <Reply className={`h-4 w-4 mt-0.5 ${r.handled ? 'text-slate-300' : 'text-indigo-500'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-700 truncate">
+                        {r.fromName || r.fromEmail}
+                      </span>
+                      {r.handled && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">Afgehandeld</span>}
+                    </div>
+                    <p className="text-xs text-slate-500 truncate">{r.subject || '(geen onderwerp)'}</p>
+                    <p className="text-[11px] text-slate-400">{r.fromEmail} · {tijd}</p>
+                  </div>
+                  {isOpen ? <ChevronUp className="h-4 w-4 text-slate-300" /> : <ChevronDown className="h-4 w-4 text-slate-300" />}
+                </button>
+                {isOpen && (
+                  <div className="mt-2 ml-7 pr-2">
+                    <div className="bg-slate-50 rounded-md p-3 text-xs text-slate-700 whitespace-pre-wrap max-h-48 overflow-auto" data-testid={`reply-body-${r.id}`}>
+                      {r.bodyText?.trim() || (r.bodyHtml ? <span className="italic text-slate-400">(alleen HTML beschikbaar)</span> : <span className="italic text-slate-400">(geen tekst)</span>)}
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        size="sm"
+                        variant={r.handled ? 'outline' : 'default'}
+                        onClick={() => markeerAfgehandeld.mutate({ id: r.id, handled: !r.handled })}
+                        disabled={markeerAfgehandeld.isPending}
+                        data-testid={`reply-handle-${r.id}`}
+                      >
+                        {r.handled ? 'Heropen' : 'Markeer afgehandeld'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ─── Main module ──────────────────────────────────────────────────────────────
 export default function ProspectCampagnesTab() {
   const { toast } = useToast();
@@ -1971,9 +2078,16 @@ export default function ProspectCampagnesTab() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
                       { label: 'Verzonden', value: campaignStats?.verzonden ?? selectedCampaign.sentCount ?? 0, icon: Send, color: 'text-blue-600', bg: 'bg-blue-50' },
+                      // Blok 3 — Afgeleverd komt van SendGrid 'delivered' events
+                      { label: 'Afgeleverd', value: selectedCampaign.deliveredCount ?? 0, sub: ((selectedCampaign.sentCount ?? 0) > 0 ? `${Math.round(((selectedCampaign.deliveredCount ?? 0) / (selectedCampaign.sentCount || 1)) * 100)}%` : '0%'), icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                       { label: 'Geopend', value: `${campaignStats?.geopend_pct ?? 0}%`, sub: `${campaignStats?.geopend ?? 0} uniek`, icon: MailOpen, color: 'text-green-600', bg: 'bg-green-50' },
                       { label: 'Geklikt', value: `${campaignStats?.geklikt_pct ?? 0}%`, sub: `${campaignStats?.geklikt ?? 0} uniek`, icon: MousePointer, color: 'text-purple-600', bg: 'bg-purple-50' },
+                      // Blok 3 — Reply teller (SendGrid Inbound Parse)
+                      { label: 'Replies', value: selectedCampaign.replyCount ?? 0, icon: MessageSquare, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                       { label: 'Uitgeschreven', value: `${campaignStats?.uitgeschreven_pct ?? 0}%`, sub: `${campaignStats?.uitgeschreven ?? 0} totaal`, icon: X, color: 'text-orange-500', bg: 'bg-orange-50' },
+                      // Blok 3 — Bounce + Spam tellers (SendGrid bounce/spamreport events)
+                      { label: 'Bounces', value: selectedCampaign.bounceCount ?? 0, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
+                      { label: 'Spam', value: selectedCampaign.spamCount ?? 0, icon: Flag, color: 'text-rose-600', bg: 'bg-rose-50' },
                       { label: 'Mislukt', value: campaignStats?.mislukt ?? selectedCampaign.failedCount ?? 0, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50' },
                     ].map(stat => (
                       <div key={stat.label} className={`${stat.bg} rounded-xl p-4 border border-white`}>
@@ -1986,6 +2100,9 @@ export default function ProspectCampagnesTab() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Blok 3 — Replies paneel (laatst ontvangen antwoorden voor deze campagne) */}
+                  <CampagneRepliesPaneel campaignId={selectedCampaign.id} />
 
                   {/* A/B Test vergelijking */}
                   {selectedCampaign.abTestActief && campaignStats && (

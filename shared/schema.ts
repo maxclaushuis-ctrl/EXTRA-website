@@ -1379,11 +1379,19 @@ export const prospectContacts = pgTable("prospect_contacts", {
   // Pijplijn-fase voor mailcampagnes — Blok 1
   // nieuw | in_campagne | in_gesprek | klant | uitgesloten
   phase: text("phase").default("nieuw").notNull(),
+  // Blok 3: bounce/spam/reply tracking voor auto-uitsluiting en fase-overgang
+  bounceStatus: text("bounce_status").default("geen"), // geen | soft | hard
+  lastBounceAt: timestamp("last_bounce_at"),
+  bounceReden: text("bounce_reden"),
+  spamReported: boolean("spam_reported").default(false),
+  spamReportedAt: timestamp("spam_reported_at"),
+  lastReplyAt: timestamp("last_reply_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   phaseIdx: index("prospect_contacts_phase_idx").on(table.phase),
+  bounceStatusIdx: index("prospect_contacts_bounce_status_idx").on(table.bounceStatus),
 }));
 
 // ─── Gestandaardiseerde functietags — Blok 1 ──────────────────────────────────
@@ -1445,6 +1453,11 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   failedCount: integer("failed_count").default(0),
   openCount: integer("open_count").default(0),
   clickCount: integer("click_count").default(0),
+  // Blok 3: SendGrid event-aggregaties
+  deliveredCount: integer("delivered_count").default(0),
+  bounceCount: integer("bounce_count").default(0),
+  spamCount: integer("spam_count").default(0),
+  replyCount: integer("reply_count").default(0),
   // A/B test
   abTestActief: boolean("ab_test_actief").default(false),
   abSplitPct: integer("ab_split_pct").default(50),
@@ -1530,16 +1543,61 @@ export const mailSends = pgTable("mail_sends", {
   status: text("status").default('pending').notNull(), // pending | sent | failed
   foutMelding: text("fout_melding"),
   linkMap: text("link_map"), // JSON: { [index]: url }
+  // Blok 3: SendGrid event tracking
+  sgMessageId: text("sg_message_id"),
+  deliveredAt: timestamp("delivered_at"),
+  bouncedAt: timestamp("bounced_at"),
+  bounceType: text("bounce_type"),       // bounce | blocked
+  bounceReason: text("bounce_reason"),
+  spamReportedAt: timestamp("spam_reported_at"),
+  droppedAt: timestamp("dropped_at"),
+  droppedReason: text("dropped_reason"),
+  replyAt: timestamp("reply_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const mailEvents = pgTable("mail_events", {
   id: serial("id").primaryKey(),
   mailSendId: integer("mail_send_id").references(() => mailSends.id, { onDelete: 'cascade' }).notNull(),
-  type: text("type").notNull(), // open | click | unsubscribe
+  // Blok 3: uitgebreid met delivered/bounce/spamreport/dropped/deferred/processed/reply
+  type: text("type").notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
   url: text("url"), // for click events: the original URL
   ipAdres: text("ip_adres"),
+});
+
+// ─── Blok 3: SendGrid event audit-log + ingekomen replies ─────────────────────
+
+export const sendgridEventLog = pgTable("sendgrid_event_log", {
+  id: serial("id").primaryKey(),
+  sgEventId: text("sg_event_id").notNull().unique(),
+  sgMessageId: text("sg_message_id"),
+  event: text("event").notNull(), // delivered|open|click|bounce|spamreport|dropped|deferred|processed|unsubscribe|group_unsubscribe
+  email: text("email"),
+  mailSendId: integer("mail_send_id").references(() => mailSends.id, { onDelete: 'set null' }),
+  campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'set null' }),
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
+  payload: jsonb("payload"),
+  occurredAt: timestamp("occurred_at"),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
+});
+
+export const prospectReplies = pgTable("prospect_replies", {
+  id: serial("id").primaryKey(),
+  contactId: integer("contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
+  campaignId: integer("campaign_id").references(() => prospectCampaigns.id, { onDelete: 'set null' }),
+  mailSendId: integer("mail_send_id").references(() => mailSends.id, { onDelete: 'set null' }),
+  fromEmail: text("from_email").notNull(),
+  fromName: text("from_name"),
+  subject: text("subject"),
+  bodyText: text("body_text"),
+  bodyHtml: text("body_html"),
+  inReplyTo: text("in_reply_to"),
+  rawEnvelope: jsonb("raw_envelope"),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
+  handled: boolean("handled").default(false).notNull(),
+  handledAt: timestamp("handled_at"),
+  handledBy: integer("handled_by"),
 });
 
 export const unsubscribeTokens = pgTable("unsubscribe_tokens", {
@@ -1556,6 +1614,15 @@ export type MailSend = typeof mailSends.$inferSelect;
 export const insertMailEventSchema = createInsertSchema(mailEvents).omit({ id: true });
 export type InsertMailEvent = z.infer<typeof insertMailEventSchema>;
 export type MailEvent = typeof mailEvents.$inferSelect;
+
+// Blok 3
+export const insertSendgridEventLogSchema = createInsertSchema(sendgridEventLog).omit({ id: true, receivedAt: true });
+export type InsertSendgridEventLog = z.infer<typeof insertSendgridEventLogSchema>;
+export type SendgridEventLog = typeof sendgridEventLog.$inferSelect;
+
+export const insertProspectReplySchema = createInsertSchema(prospectReplies).omit({ id: true, receivedAt: true, handledAt: true });
+export type InsertProspectReply = z.infer<typeof insertProspectReplySchema>;
+export type ProspectReply = typeof prospectReplies.$inferSelect;
 
 export const insertUnsubscribeTokenSchema = createInsertSchema(unsubscribeTokens).omit({ id: true });
 export type InsertUnsubscribeToken = z.infer<typeof insertUnsubscribeTokenSchema>;

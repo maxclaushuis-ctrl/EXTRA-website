@@ -45,7 +45,15 @@ app.use(helmet({
 }));
 
 app.use(compression({ level: 6, threshold: 1024 }));
-app.use(express.json({ limit: '50mb' }));
+// Blok 3: bewaar de exacte raw request body voor SendGrid webhook signature-verificatie.
+// We hangen de buffer aan req.rawBody zodat alleen de webhook-handler hem nodig heeft;
+// alle andere routes blijven werken met req.body.
+app.use(express.json({
+  limit: '50mb',
+  verify: (req: any, _res, buf) => {
+    if (buf && buf.length) req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Cache-control headers for immutable hashed assets (Vite build output)

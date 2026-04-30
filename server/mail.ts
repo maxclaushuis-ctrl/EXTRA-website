@@ -81,12 +81,79 @@ interface EmailParams {
   text?: string;
   attachments?: EmailAttachment[];
   headers?: Record<string, string>;
+  // Blok 3: extra metadata voor SendGrid event-tracking en reply-routing
+  customArgs?: Record<string, string>;
+  replyTo?: string;
 }
 
 // Houd de laatste fout bij zodat callers een specifieke foutboodschap kunnen tonen
 let lastEmailError: { message: string; sendgridErrors?: any[] } | null = null;
 export function getLastEmailError() {
   return lastEmailError;
+}
+
+// Blok 3: resultaat van een verzending inclusief SendGrid Message-ID
+export interface SendEmailResult {
+  ok: boolean;
+  messageId: string | null;
+  error?: { message: string; sendgridErrors?: any[] };
+}
+
+// Blok 3: variant die zowel succes als de SendGrid Message-ID teruggeeft.
+// Gebruik dit voor prospect-campagnes zodat je de message-id in mail_sends
+// kunt opslaan voor latere event-correlatie. Voor bestaande callers is sendEmail()
+// hieronder een dunne wrapper die de boolean blijft teruggeven.
+export async function sendEmailWithResult(params: EmailParams): Promise<SendEmailResult> {
+  if (useMockService) {
+    const mockId = `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    mockMailLog.push({
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      text: params.text?.substring(0, 200),
+      html: params.html?.substring(0, 200),
+      attachments: params.attachments?.map(a => a.filename),
+      customArgs: params.customArgs,
+      timestamp: new Date().toISOString(),
+      messageId: mockId,
+    });
+    console.log(`Mock e-mail verzonden naar ${params.to} [${mockId}]`);
+    return { ok: true, messageId: mockId };
+  }
+  if (!mailService) {
+    console.warn('Mail service niet geïnitialiseerd, kan geen e-mail verzenden');
+    return { ok: false, messageId: null, error: { message: 'Mail service niet geïnitialiseerd' } };
+  }
+  try {
+    const msg: any = {
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      text: params.text,
+      html: params.html,
+    };
+    if (params.headers && Object.keys(params.headers).length > 0) msg.headers = params.headers;
+    if (params.attachments && params.attachments.length > 0) {
+      msg.attachments = params.attachments.map(a => ({
+        content: a.content, filename: a.filename, type: a.type, disposition: a.disposition || 'attachment',
+      }));
+    }
+    if (params.customArgs && Object.keys(params.customArgs).length > 0) msg.customArgs = params.customArgs;
+    if (params.replyTo) msg.replyTo = params.replyTo;
+    const [response] = await mailService.send(msg);
+    lastEmailError = null;
+    const rawMsgId = (response?.headers?.['x-message-id'] || response?.headers?.['X-Message-Id']) as string | undefined;
+    return { ok: true, messageId: rawMsgId || null };
+  } catch (error: any) {
+    const sendgridErrors = error?.response?.body?.errors;
+    const errInfo = {
+      message: error?.message || String(error),
+      sendgridErrors: Array.isArray(sendgridErrors) ? sendgridErrors : undefined,
+    };
+    lastEmailError = errInfo;
+    console.error('❌ Fout bij verzenden van e-mail via SendGrid:', errInfo.message);
+    return { ok: false, messageId: null, error: errInfo };
+  }
 }
 
 // Verzend een e-mail met opgegeven parameters
@@ -134,6 +201,13 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
         type: a.type,
         disposition: a.disposition || 'attachment',
       }));
+    }
+    // Blok 3: customArgs (komen terug in event-webhook) en replyTo (voor inbound-parse)
+    if (params.customArgs && Object.keys(params.customArgs).length > 0) {
+      msg.customArgs = params.customArgs;
+    }
+    if (params.replyTo) {
+      msg.replyTo = params.replyTo;
     }
     await mailService.send(msg);
     lastEmailError = null;
