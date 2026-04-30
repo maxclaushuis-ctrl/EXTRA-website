@@ -1372,7 +1372,7 @@ export const prospectContacts = pgTable("prospect_contacts", {
   stad: text("stad"),
   taal: text("taal").default("Nederlands"),
   branche: text("branche"),                            // Hotel | Restaurant | Cateraar | Evenementenlocatie | Logistiek
-  functiegroep: text("functiegroep"),                  // vrij tekstveld bijv. housekeeping, bediening
+  functiegroep: text("functiegroep"),                  // Bediening | Chef | Housekeeping | Logistiek (zie FUNCTIEGROEPEN)
   contactType: text("contact_type").default("prospect"), // prospect | klant
   customTags: text("custom_tags").default("[]"),       // JSON array van strings bijv. ["VIP","Warme lead"]
   contactStatus: text("contact_status").default("actief"), // actief | uitgeschreven | geblokkeerd
@@ -1502,6 +1502,13 @@ export const prospectCampaignRecipients = pgTable("prospect_campaign_recipients"
 export const insertProspectContactSchema = createInsertSchema(prospectContacts).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProspectContact = z.infer<typeof insertProspectContactSchema>;
 export type ProspectContact = typeof prospectContacts.$inferSelect;
+
+// ─── Functiegroepen — vaste lijst ─────────────────────────────────────────────
+// Bron van waarheid voor zowel het contact-form, de campagne-targeting,
+// als de Apollo-import mapping. Bewust kort gehouden om beheer simpel te
+// houden voor de gebruiker.
+export const FUNCTIEGROEPEN = ['Bediening', 'Chef', 'Housekeeping', 'Logistiek'] as const;
+export type Functiegroep = typeof FUNCTIEGROEPEN[number];
 
 export const insertProspectCampaignSchema = createInsertSchema(prospectCampaigns).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProspectCampaign = z.infer<typeof insertProspectCampaignSchema>;

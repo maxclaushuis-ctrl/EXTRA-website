@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { FUNCTIEGROEPEN } from "@shared/schema";
 import EmailBuilderPage from "@/components/EmailBuilderPage";
 import FlowBuilderPage from "@/components/FlowBuilderPage";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ type Campaign = {
   status: string; // concept | gepland | actief | voltooid | gestopt | draft | sent | scheduled
   brancheFilter: string[]; functieFilter: string[];
   typeFilter: string; taalFilter: string; tagFilter: string;
-  phaseFilter: string[] | null; functionTagIds: number[] | null;
+  phaseFilter: string[] | null;
   editorBlocks: string | null; contentA: string | null; contentB: string | null;
   htmlContent: string; textContent: string | null;
   scheduledAt: string | null; sentAt: string | null;
@@ -314,8 +315,8 @@ function StepBar({ step, labels }: { step: number; labels: string[] }) {
 type WizardData = {
   name: string; subject: string; campagneType: 'bulk' | 'flow';
   brancheFilter: string[]; functieFilter: string[]; typeFilter: string; taalFilter: string; tagFilter: string[];
-  // Blok 1: pijplijn-fase + gestandaardiseerde functietags
-  phaseFilter: string[]; functionTagIds: number[];
+  // Blok 1: pijplijn-fase
+  phaseFilter: string[];
   verzendMode: 'direct' | 'gepland'; verzendOp: string;
   alleenWerkdagen: boolean; tijdvensterStart: string; tijdvensterEind: string;
   abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number;
@@ -324,7 +325,7 @@ type WizardData = {
 const EMPTY_WIZARD: WizardData = {
   name: '', subject: '', campagneType: 'bulk',
   brancheFilter: [], functieFilter: [], typeFilter: 'alles', taalFilter: 'alles', tagFilter: [],
-  phaseFilter: [], functionTagIds: [],
+  phaseFilter: [],
   verzendMode: 'direct', verzendOp: '',
   alleenWerkdagen: true, tijdvensterStart: '08:00', tijdvensterEind: '18:00',
   abTestActief: false, abSplitPct: 50, abWinnaarOp: 'open_rate', abWinnaarNaUren: 24,
@@ -353,10 +354,6 @@ function CampaignWizard({ open, onClose, onCreated }: {
     queryKey: ['/api/admin/prospect-contacts/unique-tags'],
   });
 
-  const { data: functionTagsList = [] } = useQuery<{ id: number; naam: string }[]>({
-    queryKey: ['/api/admin/function-tags'],
-  });
-
   const set = useCallback((k: keyof WizardData, v: any) => setData(d => ({ ...d, [k]: v })), []);
 
   // Live segment count with debounce
@@ -370,7 +367,6 @@ function CampaignWizard({ open, onClose, onCreated }: {
       params.set('taal_filter', data.taalFilter);
       if (data.tagFilter.length > 0) params.set('tag_filter', JSON.stringify(data.tagFilter));
       if (data.phaseFilter.length > 0) params.set('phase_filter', JSON.stringify(data.phaseFilter));
-      if (data.functionTagIds.length > 0) params.set('function_tag_ids', JSON.stringify(data.functionTagIds));
       const res = await fetch(`/api/admin/prospect-campaigns/segment-count?${params}`, { credentials: 'include' });
       const { count } = await res.json();
       setSegmentCount(count ?? 0);
@@ -379,7 +375,7 @@ function CampaignWizard({ open, onClose, onCreated }: {
     } finally {
       setSegmentLoading(false);
     }
-  }, [data.brancheFilter, data.functieFilter, data.typeFilter, data.taalFilter, data.tagFilter, data.phaseFilter, data.functionTagIds]);
+  }, [data.brancheFilter, data.functieFilter, data.typeFilter, data.taalFilter, data.tagFilter, data.phaseFilter]);
 
   useEffect(() => {
     if (step === 2) {
@@ -407,7 +403,6 @@ function CampaignWizard({ open, onClose, onCreated }: {
       typeFilter: data.typeFilter, taalFilter: data.taalFilter,
       tagFilter: data.tagFilter,
       phaseFilter: data.phaseFilter,
-      functionTagIds: data.functionTagIds,
       status: 'concept',
       alleenWerkdagen: data.alleenWerkdagen,
       tijdvensterStart: data.tijdvensterStart, tijdvensterEind: data.tijdvensterEind,
@@ -515,25 +510,23 @@ function CampaignWizard({ open, onClose, onCreated }: {
               </div>
             </div>
 
-            {/* Functietags (gestandaardiseerd) */}
-            {functionTagsList.length > 0 && (
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Functietags <span className="text-gray-400 font-normal">(leeg = alle functies)</span></Label>
-                <div className="flex flex-wrap gap-2">
-                  {functionTagsList.map(ft => {
-                    const has = data.functionTagIds.includes(ft.id);
-                    return (
-                      <button key={ft.id} type="button"
-                        onClick={() => set('functionTagIds', has ? data.functionTagIds.filter(x => x !== ft.id) : [...data.functionTagIds, ft.id])}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-                        data-testid={`button-wizard-function-tag-${ft.id}`}>
-                        {ft.naam}
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Functiegroep — bron van waarheid (gekoppeld aan veld op contact) */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Functiegroep <span className="text-gray-400 font-normal">(leeg = alle functies)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {FUNCTIEGROEPEN.map(g => {
+                  const has = data.functieFilter.includes(g);
+                  return (
+                    <button key={g} type="button"
+                      onClick={() => set('functieFilter', has ? data.functieFilter.filter(x => x !== g) : [...data.functieFilter, g])}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${has ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                      data-testid={`button-wizard-functiegroep-${g}`}>
+                      {g}
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Voertaal */}
             <div>
@@ -1678,11 +1671,6 @@ export default function ProspectCampagnesTab() {
     queryKey: ['/api/admin/prospect-campaigns'],
   });
 
-  const { data: functionTagsList = [] } = useQuery<{ id: number; naam: string }[]>({
-    queryKey: ['/api/admin/function-tags'],
-  });
-  const functionTagNameById = new Map(functionTagsList.map(ft => [ft.id, ft.naam]));
-
   const PHASE_LABELS: Record<string, string> = {
     nieuw: 'Nieuw', in_campagne: 'In campagne', in_gesprek: 'In gesprek',
     klant: 'Klant', uitgesloten: 'Uitgesloten',
@@ -1741,7 +1729,7 @@ export default function ProspectCampagnesTab() {
         campagneType: c.campagneType, status: 'concept',
         brancheFilter: c.brancheFilter, functieFilter: c.functieFilter,
         typeFilter: c.typeFilter, taalFilter: c.taalFilter, tagFilter: c.tagFilter,
-        phaseFilter: c.phaseFilter ?? [], functionTagIds: c.functionTagIds ?? [],
+        phaseFilter: c.phaseFilter ?? [],
         contentA: c.contentA, contentB: c.contentB, editorBlocks: c.editorBlocks,
         alleenWerkdagen: c.alleenWerkdagen, tijdvensterStart: c.tijdvensterStart, tijdvensterEind: c.tijdvensterEind,
         abTestActief: c.abTestActief, abSplitPct: c.abSplitPct, abWinnaarOp: c.abWinnaarOp, abWinnaarNaUren: c.abWinnaarNaUren,
@@ -1814,9 +1802,8 @@ export default function ProspectCampagnesTab() {
     if (c.phaseFilter && c.phaseFilter.length > 0) {
       parts.push(`Fase: ${c.phaseFilter.map(p => PHASE_LABELS[p] ?? p).join(', ')}`);
     }
-    if (c.functionTagIds && c.functionTagIds.length > 0) {
-      const namen = c.functionTagIds.map(id => functionTagNameById.get(id) ?? `#${id}`);
-      parts.push(`Functies: ${namen.join(', ')}`);
+    if (c.functieFilter && c.functieFilter.length > 0) {
+      parts.push(`Functies: ${c.functieFilter.join(', ')}`);
     }
     if (c.typeFilter && c.typeFilter !== 'alles') parts.push(`Type: ${c.typeFilter === 'prospect' ? 'Prospects' : 'Klanten'}`);
     if (c.taalFilter && c.taalFilter !== 'alles') parts.push(`Taal: ${c.taalFilter}`);

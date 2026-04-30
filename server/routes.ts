@@ -5352,23 +5352,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // segment-count MUST be before /:id
   app.get("/api/admin/prospect-campaigns/segment-count", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { branche_filter, functie_filter, type_filter, taal_filter, tag_filter, phase_filter, function_tag_ids } = req.query as Record<string, string>;
+      const { branche_filter, functie_filter, type_filter, taal_filter, tag_filter, phase_filter } = req.query as Record<string, string>;
       const safeParse = (v: string | undefined) => { try { return v ? JSON.parse(v) : []; } catch { return []; } };
       const brancheFilter = safeParse(branche_filter);
       const functieFilter = safeParse(functie_filter);
       const tagFilter = safeParse(tag_filter);
       const phaseFilter = safeParse(phase_filter);
-      const functionTagIdsRaw = safeParse(function_tag_ids);
-      const functionTagIds = (Array.isArray(functionTagIdsRaw) ? functionTagIdsRaw : [])
-        .map((n: any) => parseInt(n))
-        .filter((n: number) => Number.isFinite(n) && n > 0);
       const count = await storage.getProspectCampaignSegmentCount({
         brancheFilter, functieFilter,
         typeFilter: type_filter || 'alles',
         taalFilter: taal_filter || 'alles',
         tagFilter,
         phaseFilter,
-        functionTagIds,
       });
       return res.json({ count });
     } catch (err) {
@@ -5382,7 +5377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         name, subject, campagneType, status,
         brancheFilter, functieFilter, typeFilter, taalFilter, tagFilter,
-        phaseFilter, functionTagIds,
+        phaseFilter,
         contentA, contentB, editorBlocks, htmlContent,
         abTestActief, abSplitPct, abWinnaarOp, abWinnaarNaUren,
         alleenWerkdagen, tijdvensterStart, tijdvensterEind, scheduledAt,
@@ -5390,7 +5385,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!name || !subject) return res.status(400).json({ message: "Naam en onderwerp zijn verplicht" });
       const VALID_PHASES = ['nieuw','in_campagne','in_gesprek','klant','uitgesloten'];
       const cleanPhaseFilter = Array.isArray(phaseFilter) ? phaseFilter.filter((p: any) => VALID_PHASES.includes(p)) : [];
-      const cleanFunctionTagIds = Array.isArray(functionTagIds) ? functionTagIds.map((n: any) => parseInt(n)).filter((n: number) => Number.isFinite(n) && n > 0) : [];
       const campaign = await storage.createProspectCampaign({
         name,
         subject,
@@ -5402,7 +5396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         taalFilter: taalFilter || 'alles',
         tagFilter: typeof tagFilter === 'string' ? tagFilter : JSON.stringify(tagFilter || []),
         phaseFilter: cleanPhaseFilter,
-        functionTagIds: cleanFunctionTagIds,
+        functionTagIds: [],
         contentA: contentA || null,
         contentB: contentB || null,
         editorBlocks: editorBlocks || contentA || null,
@@ -5436,16 +5430,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
       // Serialize tagFilter if array
       if (Array.isArray(req.body.tagFilter)) req.body.tagFilter = JSON.stringify(req.body.tagFilter);
-      // Blok 1: Valideer phaseFilter en functionTagIds
+      // Valideer phaseFilter
       const VALID_PHASES = ['nieuw','in_campagne','in_gesprek','klant','uitgesloten'];
       if (Array.isArray(req.body.phaseFilter)) {
         req.body.phaseFilter = req.body.phaseFilter.filter((p: any) => VALID_PHASES.includes(p));
       }
-      if (Array.isArray(req.body.functionTagIds)) {
-        req.body.functionTagIds = req.body.functionTagIds
-          .map((n: any) => parseInt(n))
-          .filter((n: number) => Number.isFinite(n) && n > 0);
-      }
+      // functionTagIds is legacy en wordt niet meer vanuit UI gestuurd; negeer als aanwezig.
+      if ('functionTagIds' in req.body) delete req.body.functionTagIds;
       // Auto-generate htmlContent from new-format contentA if provided
       if (req.body.contentA && !req.body.htmlContent) {
         try {

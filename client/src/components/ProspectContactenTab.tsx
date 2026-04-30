@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { FUNCTIEGROEPEN } from '@shared/schema';
 import {
   Plus, Search, X, Upload, Mail, Phone, MapPin, Building2,
   Pencil, Trash2, Users, RefreshCw, ChevronRight, Filter,
@@ -132,25 +133,7 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
     bedrijf: '', functietitel: '', stad: '', branche: '', functiegroep: '',
     type: 'prospect', taal: 'Nederlands', tags: [] as string[], notities: '',
     phase: 'nieuw',
-    functionTagIds: [] as number[],
   };
-
-  // Function tags master list (Blok 1)
-  const { data: functionTagsList = [] } = useQuery<Array<{ id: number; naam: string }>>({
-    queryKey: ['/api/admin/function-tags'],
-    enabled: open,
-  });
-
-  // Bestaande koppeling laden bij edit
-  const { data: contactFunctionTags } = useQuery<{ functionTagIds: number[] }>({
-    queryKey: ['/api/admin/prospect-contacts', contact?.id, 'function-tags'],
-    queryFn: async () => {
-      const res = await fetch(`/api/admin/prospect-contacts/${contact.id}/function-tags`, { credentials: 'include' });
-      if (!res.ok) return { functionTagIds: [] };
-      return res.json();
-    },
-    enabled: open && !!contact?.id,
-  });
 
   const [form, setForm] = useState<typeof emptyForm>(contact ? {
     voornaam: contact.voornaam || '',
@@ -167,15 +150,7 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
     tags: parseTags(contact.customTags),
     notities: contact.notes || '',
     phase: contact.phase || 'nieuw',
-    functionTagIds: [],
   } : emptyForm);
-
-  // Sync ingeladen function-tag-ids zodra ze binnen zijn
-  useEffect(() => {
-    if (contactFunctionTags?.functionTagIds) {
-      setForm(f => ({ ...f, functionTagIds: contactFunctionTags.functionTagIds }));
-    }
-  }, [contactFunctionTags?.functionTagIds]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -212,7 +187,6 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
       );
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts', contact.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts', contact.id, 'function-tags'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts/unique-tags'] });
       toast({ title: 'Contact bijgewerkt' });
       onSaved?.();
@@ -293,7 +267,14 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
               </div>
               <div className="col-span-2">
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Functiegroep</label>
-                <Input value={form.functiegroep} onChange={e => set('functiegroep', e.target.value)} placeholder="housekeeping, bediening, orderpicker..." />
+                <Select value={form.functiegroep || 'none'} onValueChange={v => set('functiegroep', v === 'none' ? '' : v)}>
+                  <SelectTrigger data-testid="select-functiegroep"><SelectValue placeholder="Selecteer functiegroep..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Geen —</SelectItem>
+                    {FUNCTIEGROEPEN.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-gray-400 mt-1">Wordt gebruikt door de e-mailcampagne om het juiste segment te selecteren.</p>
               </div>
             </div>
           </div>
@@ -334,26 +315,6 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Functietags</label>
-                <div className="flex flex-wrap gap-1.5 border rounded-md p-2 min-h-[38px] bg-white">
-                  {functionTagsList.length === 0 && <span className="text-xs text-gray-400">Geen functietags beschikbaar</span>}
-                  {functionTagsList.map(ft => {
-                    const sel = form.functionTagIds.includes(ft.id);
-                    return (
-                      <button
-                        key={ft.id}
-                        type="button"
-                        onClick={() => set('functionTagIds', sel ? form.functionTagIds.filter((x: number) => x !== ft.id) : [...form.functionTagIds, ft.id])}
-                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${sel ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                        data-testid={`button-function-tag-${ft.id}`}
-                      >
-                        {ft.naam}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
               <div className="col-span-2">
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Tags</label>
                 <TagInput tags={form.tags} onChange={v => set('tags', v)} suggestions={tagSuggestions} />
@@ -387,8 +348,8 @@ interface ApolloPreview {
   dubbelInDb: number;
   dubbelInBestand: number;
   ongeldigEmail: number;
-  zonderFunctietag: number;
-  perTag: Array<{ tagId: number; naam: string; aantal: number }>;
+  zonderFunctiegroep: number;
+  perFunctiegroep: Array<{ groep: string; aantal: number }>;
   perBranche: Array<{ branche: string; aantal: number }>;
   voorbeelden: Array<any>;
   alleNormRijen: Array<any>;
@@ -404,7 +365,7 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
   const [stap, setStap] = useState<1 | 2 | 3>(1);
   const [bezig, setBezig] = useState(false);
   const [preview, setPreview] = useState<ApolloPreview | null>(null);
-  const [resultaat, setResultaat] = useState<{ aangemaakt: number; overgeslagen: number; fouten: string[]; perTag: Array<{ naam: string; aantal: number }> } | null>(null);
+  const [resultaat, setResultaat] = useState<{ aangemaakt: number; overgeslagen: number; fouten: string[]; perFunctiegroep: Array<{ groep: string; aantal: number }> } | null>(null);
   const [alleenGeverifieerd, setAlleenGeverifieerd] = useState(true);
   const [alleenHospitality, setAlleenHospitality] = useState(true);
   const [bestandsnaam, setBestandsnaam] = useState('');
@@ -458,7 +419,7 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
       if (alleenHospitality) opties.branchefilter = HOSPITALITY_BRANCHES;
       const data = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/commit', {
         rijen: preview.alleNormRijen, opties,
-      }) as { aangemaakt: number; overgeslagen: number; fouten: string[]; perTag: Array<{ naam: string; aantal: number }> };
+      }) as { aangemaakt: number; overgeslagen: number; fouten: string[]; perFunctiegroep: Array<{ groep: string; aantal: number }> };
       setResultaat(data);
       setStap(3);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
@@ -597,18 +558,18 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
                 <div className="text-xs text-red-700 font-medium">Ongeldig</div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
-                <div className="text-2xl font-bold text-slate-700">{preview.zonderFunctietag}</div>
-                <div className="text-xs text-slate-700 font-medium">Geen tag</div>
+                <div className="text-2xl font-bold text-slate-700">{preview.zonderFunctiegroep}</div>
+                <div className="text-xs text-slate-700 font-medium">Geen groep</div>
               </div>
             </div>
 
-            {preview.perTag.length > 0 && (
+            {preview.perFunctiegroep.length > 0 && (
               <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Functietag-detectie</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Functiegroep-detectie</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {preview.perTag.map(t => (
-                    <Badge key={t.tagId} variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
-                      {t.naam} <span className="ml-1 font-bold">{t.aantal}</span>
+                  {preview.perFunctiegroep.map(g => (
+                    <Badge key={g.groep} variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                      {g.groep} <span className="ml-1 font-bold">{g.aantal}</span>
                     </Badge>
                   ))}
                 </div>
@@ -640,7 +601,7 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
                       <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Email</th>
                       <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Bedrijf</th>
                       <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Functie</th>
-                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Tag</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Groep</th>
                       <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Status</th>
                     </tr>
                   </thead>
@@ -652,8 +613,8 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
                         <td className="px-3 py-1.5 text-slate-600">{r.bedrijf || '—'}</td>
                         <td className="px-3 py-1.5 text-slate-500">{r.functietitel || '—'}</td>
                         <td className="px-3 py-1.5">
-                          {r.functietagNaam
-                            ? <span className="text-purple-700 text-[11px] font-medium">{r.functietagNaam}</span>
+                          {r.functiegroep
+                            ? <span className="text-purple-700 text-[11px] font-medium">{r.functiegroep}</span>
                             : <span className="text-slate-300 text-[11px]">—</span>}
                         </td>
                         <td className="px-3 py-1.5">
@@ -724,13 +685,13 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
               </p>
             </div>
 
-            {resultaat.perTag.length > 0 && (
+            {resultaat.perFunctiegroep.length > 0 && (
               <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Toegewezen functietags</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Toegewezen functiegroepen</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {resultaat.perTag.map((t, i) => (
+                  {resultaat.perFunctiegroep.map((g, i) => (
                     <Badge key={i} variant="secondary" className="bg-purple-100 text-purple-700">
-                      {t.naam} <span className="ml-1 font-bold">{t.aantal}</span>
+                      {g.groep} <span className="ml-1 font-bold">{g.aantal}</span>
                     </Badge>
                   ))}
                 </div>
@@ -1168,12 +1129,12 @@ interface Filters {
   taal: string;
   tags: string[];
   phase: string[];
-  functionTagIds: number[];
+  functiegroepen: string[];
 }
 
-function FilterPanel({ filters, onChange, tagOptions, functionTagOptions, onClose }: {
+function FilterPanel({ filters, onChange, tagOptions, onClose }: {
   filters: Filters; onChange: (f: Filters) => void; tagOptions: string[];
-  functionTagOptions: { id: number; naam: string }[]; onClose: () => void;
+  onClose: () => void;
 }) {
   const [local, setLocal] = useState<Filters>(filters);
   const set = (k: keyof Filters, v: any) => setLocal(f => ({ ...f, [k]: v }));
@@ -1196,10 +1157,10 @@ function FilterPanel({ filters, onChange, tagOptions, functionTagOptions, onClos
       phase: f.phase.includes(p) ? f.phase.filter(x => x !== p) : [...f.phase, p],
     }));
   };
-  const toggleFunctionTag = (id: number) => {
+  const toggleFunctiegroep = (g: string) => {
     setLocal(f => ({
       ...f,
-      functionTagIds: f.functionTagIds.includes(id) ? f.functionTagIds.filter(x => x !== id) : [...f.functionTagIds, id],
+      functiegroepen: f.functiegroepen.includes(g) ? f.functiegroepen.filter(x => x !== g) : [...f.functiegroepen, g],
     }));
   };
 
@@ -1271,20 +1232,18 @@ function FilterPanel({ filters, onChange, tagOptions, functionTagOptions, onClos
         </div>
       </div>
 
-      {functionTagOptions.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-gray-500 mb-2">Functietags</p>
-          <div className="flex flex-wrap gap-1">
-            {functionTagOptions.map(ft => (
-              <button key={ft.id} onClick={() => toggleFunctionTag(ft.id)}
-                data-testid={`button-filter-function-tag-${ft.id}`}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${local.functionTagIds.includes(ft.id) ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                {ft.naam}
-              </button>
-            ))}
-          </div>
+      <div>
+        <p className="text-xs font-medium text-gray-500 mb-2">Functiegroep</p>
+        <div className="flex flex-wrap gap-1">
+          {FUNCTIEGROEPEN.map(g => (
+            <button key={g} onClick={() => toggleFunctiegroep(g)}
+              data-testid={`button-filter-functiegroep-${g}`}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${local.functiegroepen.includes(g) ? 'bg-purple-100 border-purple-300 text-purple-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+              {g}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {tagOptions.length > 0 && (
         <div>
@@ -1301,7 +1260,7 @@ function FilterPanel({ filters, onChange, tagOptions, functionTagOptions, onClos
       )}
 
       <div className="flex gap-2 pt-1">
-        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { const empty: Filters = { branche: [], type: '', status: '', taal: '', tags: [], phase: [], functionTagIds: [] }; setLocal(empty); onChange(empty); onClose(); }}>
+        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { const empty: Filters = { branche: [], type: '', status: '', taal: '', tags: [], phase: [], functiegroepen: [] }; setLocal(empty); onChange(empty); onClose(); }}>
           Wis alles
         </Button>
         <Button size="sm" className="flex-1 text-xs bg-purple-600 hover:bg-purple-700" onClick={() => { onChange(local); onClose(); }}>
@@ -1317,7 +1276,7 @@ function FilterPanel({ filters, onChange, tagOptions, functionTagOptions, onClos
 export default function ProspectContactenTab() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('naam-az');
-  const [filters, setFilters] = useState<Filters>({ branche: [], type: '', status: '', taal: '', tags: [], phase: [], functionTagIds: [] });
+  const [filters, setFilters] = useState<Filters>({ branche: [], type: '', status: '', taal: '', tags: [], phase: [], functiegroepen: [] });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -1335,17 +1294,6 @@ export default function ProspectContactenTab() {
     queryKey: ['/api/admin/prospect-contacts/unique-tags'],
   });
 
-  const { data: functionTagsList = [] } = useQuery<{ id: number; naam: string }[]>({
-    queryKey: ['/api/admin/function-tags'],
-  });
-
-  // Bulk-overzicht function-tag koppelingen (alleen ophalen wanneer filter actief)
-  const needFunctionTagMap = filters.functionTagIds.length > 0;
-  const { data: functionTagMap = {} } = useQuery<Record<number, number[]>>({
-    queryKey: ['/api/admin/prospect-contacts/function-tags-map'],
-    enabled: needFunctionTagMap,
-  });
-
   // ── Client-side filtering ──
   const filtered = useMemo(() => {
     let list = [...contacts];
@@ -1360,11 +1308,8 @@ export default function ProspectContactenTab() {
       if (filters.status) list = list.filter(c => c.contactStatus === filters.status);
       if (filters.taal) list = list.filter(c => c.taal === filters.taal);
       if (filters.phase.length > 0) list = list.filter(c => filters.phase.includes(c.phase || 'nieuw'));
-      if (filters.functionTagIds.length > 0) {
-        list = list.filter(c => {
-          const ids = functionTagMap[c.id] || [];
-          return filters.functionTagIds.some(id => ids.includes(id));
-        });
+      if (filters.functiegroepen.length > 0) {
+        list = list.filter(c => filters.functiegroepen.includes(c.functiegroep));
       }
       if (filters.tags.length > 0) {
         list = list.filter(c => {
@@ -1392,7 +1337,7 @@ export default function ProspectContactenTab() {
     else if (sort === 'nieuwste') list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return list;
-  }, [contacts, search, sort, filters, statFilter, functionTagMap]);
+  }, [contacts, search, sort, filters, statFilter]);
 
   // ── Stats ──
   const stats = useMemo(() => ({
@@ -1403,7 +1348,7 @@ export default function ProspectContactenTab() {
     uitgeschreven: contacts.filter(c => c.contactStatus === 'uitgeschreven').length,
   }), [contacts]);
 
-  const activeFilterCount = filters.branche.length + (filters.type ? 1 : 0) + (filters.status ? 1 : 0) + (filters.taal ? 1 : 0) + filters.tags.length + filters.phase.length + filters.functionTagIds.length;
+  const activeFilterCount = filters.branche.length + (filters.type ? 1 : 0) + (filters.status ? 1 : 0) + (filters.taal ? 1 : 0) + filters.tags.length + filters.phase.length + filters.functiegroepen.length;
 
   const selectedContact = contacts.find(c => c.id === selectedId);
 
@@ -1449,7 +1394,7 @@ export default function ProspectContactenTab() {
             {activeFilterCount > 0 && <span className="bg-purple-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">{activeFilterCount}</span>}
           </Button>
           {filterOpen && (
-            <FilterPanel filters={filters} onChange={f => { setFilters(f); setStatFilter(null); }} tagOptions={uniqueTags} functionTagOptions={functionTagsList} onClose={() => setFilterOpen(false)} />
+            <FilterPanel filters={filters} onChange={f => { setFilters(f); setStatFilter(null); }} tagOptions={uniqueTags} onClose={() => setFilterOpen(false)} />
           )}
         </div>
 

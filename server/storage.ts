@@ -533,7 +533,7 @@ export interface IStorage {
   // B2B Prospect Campagnes
   getProspectCampaigns(filters?: { status?: string; type?: string }): Promise<ProspectCampaign[]>;
   getProspectCampaign(id: number): Promise<ProspectCampaign | undefined>;
-  getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[]; phaseFilter?: string[]; functionTagIds?: number[] }): Promise<number>;
+  getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[]; phaseFilter?: string[] }): Promise<number>;
   createProspectCampaign(data: InsertProspectCampaign): Promise<ProspectCampaign>;
   updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
   deleteProspectCampaign(id: number): Promise<void>;
@@ -4213,7 +4213,7 @@ export class MemStorage implements IStorage {
     return query.orderBy(desc(prospectCampaignsTable.createdAt));
   }
 
-  async getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[]; phaseFilter?: string[]; functionTagIds?: number[] }): Promise<number> {
+  async getProspectCampaignSegmentCount(filters: { brancheFilter?: string[]; functieFilter?: string[]; typeFilter?: string; taalFilter?: string; tagFilter?: string[]; phaseFilter?: string[] }): Promise<number> {
     const conds: any[] = [
       eq(prospectContactsTable.contactStatus, 'actief'),
       eq(prospectContactsTable.unsubscribed, false),
@@ -4237,18 +4237,17 @@ export class MemStorage implements IStorage {
       );
       conds.push(or(...tagConds));
     }
-    // Blok 1: Phase filter (lege array = geen filter, alle fases)
+    // Phase filter (lege array = geen filter, alle fases)
     if (filters.phaseFilter && filters.phaseFilter.length > 0) {
       conds.push(inArray(prospectContactsTable.phase, filters.phaseFilter));
     }
-    // Blok 1: Gestandaardiseerde functietag-IDs (lege array = geen filter)
-    // Contact moet minstens één van de geselecteerde functietags hebben (OR-logica).
-    if (filters.functionTagIds && filters.functionTagIds.length > 0) {
-      const idList = sql.join(filters.functionTagIds.map(n => sql`${n}`), sql`, `);
-      conds.push(sql`${prospectContactsTable.id} IN (
-        SELECT contact_id FROM prospect_contact_function_tags
-        WHERE function_tag_id IN (${idList})
-      )`);
+    // Functiefilter: match op `functiegroep` veld (case-insensitive) of legacy `functieTags` array
+    if (filters.functieFilter && filters.functieFilter.length > 0) {
+      const ff = filters.functieFilter;
+      const groepConds = ff.map(f => sql`lower(${prospectContactsTable.functiegroep}) = ${f.toLowerCase()}`);
+      // Legacy fallback via array overlap (case-insensitive match niet mogelijk op array, dus gebruik exact)
+      const legacyCond = sql`${prospectContactsTable.functieTags} && ARRAY[${sql.join(ff.map(f => sql`${f}`), sql`, `)}]::text[]`;
+      conds.push(or(...groepConds, legacyCond));
     }
     const [{ count }] = await db.select({ count: sql<number>`count(*)::int` })
       .from(prospectContactsTable)
