@@ -1,0 +1,60 @@
+Twee bugs ontdekt na de eerste testverzending van een 
+campagne. Niet bouwen — eerst diagnose, daarna oplossen 
+nadat ik akkoord geef.
+
+CONTEXT
+
+Campagne "Banqueting - Mail 1 - Acquisitie zomer (mei 2026)" 
+is zojuist verzonden naar 1 testcontact. De stats laten zien:
+- Verzonden 1, afgeleverd 100%, geopend 100% (correct)
+- Geklikt: 0% (incorrect — ik heb wel op de link 
+  https://doehetextra.nl in de mail geklikt)
+- Bounces 0, spam 0, mislukt 0 (correct)
+
+Ook: ik had de campagne ingesteld op verzending vandaag 
+om 17:00 (Amsterdam-tijd), maar de mail ging direct uit 
+toen ik op "Activeren" klikte. De geplande tijd is 
+genegeerd.
+
+WAT IK WIL DAT JE ONDERZOEKT
+
+A. Click-tracking probleem
+1. Open de campagne in de database. Welke mail_send-record 
+   is er voor het ene testcontact?
+2. Bekijk de body van die mail_send (of het rendered 
+   eindresultaat). Is de link https://doehetextra.nl 
+   correct herschreven naar /track/click/:mailSendId/:linkIndex 
+   met query ?url=...?
+3. Bekijk de mail_events-tabel. Zijn er events met type 
+   'click' voor deze mail_send_id?
+4. Bekijk de sendgrid_event_logs / mail_events. Is er een 
+   click-event van SendGrid binnengekomen via de Event 
+   Webhook? Zo ja: is die wel/niet gekoppeld aan de 
+   mail_send via custom_args?
+5. Kijk specifiek naar wrapLinksWithTracking() in 
+   server/emailService.ts. Wordt die wel aangeroepen voor 
+   plain-text mails? (Vraag is: doet de code link-rewrite 
+   alleen voor HTML, of ook voor plain-text?)
+
+B. Verzendmoment probleem
+1. Kijk in de database naar de campagne. Wat staan er voor 
+   waarden in scheduled_at, werkelijk_verzend_op, 
+   verzend_direct?
+2. Is er ergens een toggle/flag die per ongeluk op "direct 
+   verzenden" is gezet ondanks dat ik "Inplannen op datum" 
+   heb gekozen?
+3. Welke route/handler is er afgegaan toen ik op 
+   "Activeren" klikte? Heeft die de geplande tijd 
+   gerespecteerd?
+4. Kijk naar de scheduler-logica: vergelijkt hij correct 
+   met de Amsterdam-tijdzone, of met server-UTC?
+
+OUTPUT
+
+Geef per probleem terug:
+- Wat er precies gebeurde (op basis van data + code)
+- Wat de root cause is
+- Wat het herstel zou inhouden (alleen beschrijving, niet 
+  implementeren)
+
+Daarna wacht je op mijn akkoord voor de fix.
