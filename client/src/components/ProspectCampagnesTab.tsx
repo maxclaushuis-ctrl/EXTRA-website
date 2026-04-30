@@ -25,6 +25,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -2048,25 +2051,35 @@ export default function ProspectCampagnesTab() {
   function isSentStatus(status: string) { return ['sent','voltooid','actief'].includes(status); }
 
   return (
-    <div className="flex h-full bg-white">
-      {/* ── Left: Campaign list ── */}
-      <div className="w-72 flex-shrink-0 border-r border-slate-100 flex flex-col bg-slate-50/50">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-100 bg-white">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-semibold text-gray-800 text-sm">Campagnes</h2>
-            <Button size="sm" className="gap-1 bg-purple-600 hover:bg-purple-700 h-7 text-xs px-2" onClick={() => setWizardOpen(true)}>
-              <Plus className="h-3 w-3" />Nieuw
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Zoeken..." className="pl-7 h-8 text-xs bg-white" />
-          </div>
+    <div className="h-full overflow-auto bg-gray-50">
+      {/* ── Page header (Onboarding-stijl) ── */}
+      <div className="bg-white border-b border-gray-200 px-6 pt-5 pb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Campagnes</h1>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="grid gap-4" style={{ gridTemplateColumns: '320px 1fr' }}>
+
+      {/* ── Left: Campaign list (witte card) ── */}
+      <div className="bg-white border border-gray-200 rounded-lg p-3 h-fit flex flex-col">
+        {/* Nieuw knop */}
+        <Button
+          onClick={() => setWizardOpen(true)}
+          className="w-full mb-3 bg-purple-600 hover:bg-purple-700"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Nieuwe campagne
+        </Button>
+
+        {/* Zoekveld */}
+        <div className="relative mb-3">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Zoeken..." className="pl-7 h-9 text-sm bg-white" />
         </div>
 
         {/* Status filter pills */}
-        <div className="px-3 py-2 border-b border-slate-100 flex gap-1 flex-wrap bg-white">
+        <div className="flex gap-1 flex-wrap mb-3">
           {STATUS_FILTER_OPTIONS.map(opt => {
             const count = statusCounts[opt.v as keyof typeof statusCounts] ?? 0;
             const isActive = statusFilter === opt.v;
@@ -2085,40 +2098,48 @@ export default function ProspectCampagnesTab() {
           })}
         </div>
 
-        {/* Groep-filters (Serie / Branche / Functie / Taal) */}
-        <div className="px-3 py-2 border-b border-slate-100 bg-white space-y-1.5">
-          <div className="grid grid-cols-2 gap-1.5">
-            <select value={serieFilter} onChange={e => setSerieFilter(e.target.value)}
-              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
-              <option value="alle">Alle series</option>
-              {alleSeries.map(s => <option key={s} value={s}>{s}</option>)}
-              <option value="__geen__">— Losse campagnes</option>
-            </select>
-            <select value={brancheGroepFilter} onChange={e => setBrancheGroepFilter(e.target.value)}
-              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
-              <option value="alle">Alle branches</option>
-              {alleBranches.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-            <select value={functieGroepFilter} onChange={e => setFunctieGroepFilter(e.target.value)}
-              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
-              <option value="alle">Alle functies</option>
-              {alleFuncties.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-            <select value={taalGroepFilter} onChange={e => setTaalGroepFilter(e.target.value)}
-              className="h-7 text-[11px] border border-slate-200 rounded px-1.5 bg-white text-slate-600">
-              <option value="alle">Alle talen</option>
-              {alleTalen.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-            </select>
+        {/* Groep-filters (Serie / Branche / Functie / Taal) — shadcn Select in 2x2 grid */}
+        <div className="space-y-2 mb-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Select value={serieFilter} onValueChange={setSerieFilter}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alle">Alle series</SelectItem>
+                {alleSeries.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                <SelectItem value="__geen__">— Losse campagnes</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={brancheGroepFilter} onValueChange={setBrancheGroepFilter}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alle">Alle branches</SelectItem>
+                {alleBranches.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={functieGroepFilter} onValueChange={setFunctieGroepFilter}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alle">Alle functies</SelectItem>
+                {alleFuncties.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={taalGroepFilter} onValueChange={setTaalGroepFilter}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alle">Alle talen</SelectItem>
+                {alleTalen.map(t => <SelectItem key={t} value={t}>{t.toUpperCase()}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           {filtersActive && (
-            <button onClick={wisFilters} className="text-[10px] text-purple-600 hover:text-purple-800 hover:underline">
+            <button onClick={wisFilters} className="text-xs text-purple-600 hover:text-purple-800 hover:underline">
               Wis filters
             </button>
           )}
         </div>
 
         {/* Campaign list (gegroepeerd per serie) */}
-        <ScrollArea className="flex-1">
+        <div className="space-y-1 max-h-[calc(100vh-460px)] overflow-y-auto -mx-1 px-1">
           {isLoading ? (
             <div className="p-8 text-center text-xs text-slate-400">Laden...</div>
           ) : filteredCampaigns.length === 0 ? (
@@ -2216,25 +2237,23 @@ export default function ProspectCampagnesTab() {
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </div>
 
-      {/* ── Right: Detail / empty state ── */}
+      {/* ── Right: Detail / empty state (witte card) ── */}
       {!selectedCampaign ? (
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <Megaphone className="h-14 w-14 text-slate-200 mx-auto mb-3" />
-            <p className="text-slate-400 text-sm font-medium">Selecteer een campagne</p>
-            <p className="text-xs text-slate-300 mt-1">of maak een nieuwe aan via "Nieuw"</p>
-            <Button onClick={() => setWizardOpen(true)} className="mt-4 gap-1.5 bg-purple-600 hover:bg-purple-700" size="sm">
-              <Plus className="h-3.5 w-3.5" />Eerste campagne aanmaken
-            </Button>
-          </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+          <Megaphone className="h-14 w-14 text-slate-200 mx-auto mb-3" />
+          <p className="text-slate-400 text-sm font-medium">Selecteer een campagne</p>
+          <p className="text-xs text-slate-300 mt-1">of maak een nieuwe aan via "Nieuwe campagne"</p>
+          <Button onClick={() => setWizardOpen(true)} className="mt-4 gap-1.5 bg-purple-600 hover:bg-purple-700" size="sm">
+            <Plus className="h-3.5 w-3.5" />Eerste campagne aanmaken
+          </Button>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden">
           {/* Campaign header */}
-          <div className="px-6 py-4 bg-white border-b border-slate-100 flex items-start justify-between gap-4">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_BADGE[selectedCampaign.campagneType ?? 'bulk']?.cls}`}>
@@ -2700,6 +2719,9 @@ export default function ProspectCampagnesTab() {
           </Tabs>
         </div>
       )}
+
+        </div>{/* /grid */}
+      </div>{/* /p-6 */}
 
       {/* ── Email Builder (full-page) ── */}
       {builderOpen && selectedCampaign && (
