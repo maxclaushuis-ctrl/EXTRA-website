@@ -419,18 +419,31 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
   };
 
   const verwerkBestand = async (file: File) => {
+    console.log('[apollo-import] verwerkBestand aangeroepen:', file.name, file.size, file.type);
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      toast({ title: 'Alleen .csv bestanden', variant: 'destructive' }); return;
+      toast({ title: 'Alleen .csv bestanden', description: `Bestandsnaam: ${file.name}`, variant: 'destructive' });
+      return;
+    }
+    if (file.size === 0) {
+      toast({ title: 'Bestand is leeg', variant: 'destructive' }); return;
     }
     setBestandsnaam(file.name);
     setBezig(true);
     try {
+      console.log('[apollo-import] file inlezen...');
       const tekst = await file.text();
+      console.log('[apollo-import] CSV grootte:', tekst.length, 'bytes - POST naar preview...');
       const data = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/preview', { csv: tekst }) as ApolloPreview;
+      console.log('[apollo-import] preview ontvangen:', data?.totaal, 'rijen');
       setPreview(data);
       setStap(2);
     } catch (err: any) {
-      toast({ title: 'Preview mislukt', description: err?.message, variant: 'destructive' });
+      console.error('[apollo-import] Preview FOUT:', err);
+      toast({
+        title: 'Preview mislukt',
+        description: err?.message || err?.data?.error || 'Onbekende fout — kijk in console (F12)',
+        variant: 'destructive',
+      });
     } finally {
       setBezig(false);
     }
@@ -481,18 +494,39 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
         {/* ── Stap 1: upload ── */}
         {stap === 1 && (
           <div className="space-y-4">
-            <div
+            <label
+              htmlFor="apollo-csv-input"
               onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
-              onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) verwerkBestand(f); }}
-              onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${isDragging ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'}`}
+              onDrop={e => {
+                e.preventDefault();
+                setIsDragging(false);
+                const f = e.dataTransfer.files[0];
+                console.log('[apollo-import] drop event:', f?.name);
+                if (f) verwerkBestand(f);
+              }}
+              className={`block border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${isDragging ? 'border-purple-400 bg-purple-50' : bezig ? 'border-purple-300 bg-purple-50/50' : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'}`}
             >
-              <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-600">{bezig ? 'CSV wordt gelezen...' : 'Sleep je Apollo CSV-export hierheen'}</p>
-              <p className="text-xs text-gray-400 mt-1">of klik om een bestand te kiezen</p>
-              <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={e => e.target.files?.[0] && verwerkBestand(e.target.files[0])} />
-            </div>
+              <Upload className={`h-8 w-8 mx-auto mb-3 ${bezig ? 'text-purple-400 animate-pulse' : 'text-gray-300'}`} />
+              <p className="text-sm font-medium text-gray-600">
+                {bezig ? `${bestandsnaam || 'CSV'} wordt verwerkt…` : 'Sleep je Apollo CSV-export hierheen'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">{bezig ? 'AI controleert kolommen, even geduld...' : 'of klik om een bestand te kiezen'}</p>
+              <input
+                id="apollo-csv-input"
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv,application/vnd.ms-excel"
+                className="sr-only"
+                disabled={bezig}
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  console.log('[apollo-import] input change:', f?.name);
+                  if (f) verwerkBestand(f);
+                  e.target.value = '';
+                }}
+              />
+            </label>
             <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
               <p className="text-sm font-semibold text-purple-900 mb-2">Hoe haal je een Apollo CSV?</p>
               <ol className="text-xs text-purple-800 space-y-1 list-decimal list-inside">
