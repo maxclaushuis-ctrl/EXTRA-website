@@ -2254,29 +2254,32 @@ export default function ProspectCampagnesTab() {
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-wrap justify-end shrink-0 max-w-full">
               {selectedCampaign.campagneType === 'flow' ? (
-                <Button size="sm" variant="outline" className="gap-1 border-purple-300 text-purple-700 hover:bg-purple-50" onClick={() => setFlowBuilderOpen(true)}>
-                  <Zap className="h-3.5 w-3.5" />Flow opmaken
+                <Button size="sm" variant="outline" className="gap-1 border-purple-300 text-purple-700 hover:bg-purple-50 shrink-0" onClick={() => setFlowBuilderOpen(true)}>
+                  <Zap className="h-3.5 w-3.5" /><span className="hidden sm:inline">Flow opmaken</span>
                 </Button>
               ) : (
-                <Button size="sm" variant="outline" className="gap-1" onClick={() => setBuilderOpen(true)}>
-                  <Pencil className="h-3.5 w-3.5" />E-mail opmaken
+                <Button size="sm" variant="outline" className="gap-1 shrink-0" onClick={() => setBuilderOpen(true)}>
+                  <Pencil className="h-3.5 w-3.5" /><span className="hidden sm:inline">E-mail opmaken</span>
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="gap-1"
+              <Button size="sm" variant="outline" className="gap-1 shrink-0"
                 onClick={() => duplicateMut.mutate(selectedCampaign)}
-                disabled={duplicateMut.isPending}>
-                <Copy className="h-3.5 w-3.5" />Dupliceren
+                disabled={duplicateMut.isPending}
+                title="Dupliceren">
+                <Copy className="h-3.5 w-3.5" /><span className="hidden md:inline">Dupliceren</span>
               </Button>
               {['concept','draft'].includes(selectedCampaign.status) && (
-                <Button size="sm" variant="outline" className="gap-1 border-purple-300 text-purple-700 hover:bg-purple-50"
-                  onClick={() => setVariantenWizardOpen(true)}>
-                  <Plus className="h-3.5 w-3.5" />Genereer varianten
+                <Button size="sm" variant="outline" className="gap-1 border-purple-300 text-purple-700 hover:bg-purple-50 shrink-0"
+                  onClick={() => setVariantenWizardOpen(true)}
+                  title="Genereer varianten">
+                  <Plus className="h-3.5 w-3.5" /><span className="hidden md:inline">Genereer varianten</span>
                 </Button>
               )}
-              <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 px-2"
-                onClick={() => setDeleteId(selectedCampaign.id)}>
+              <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 px-2 shrink-0"
+                onClick={() => setDeleteId(selectedCampaign.id)}
+                title="Verwijderen">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
