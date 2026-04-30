@@ -1,0 +1,121 @@
+Ik wil een complete audit van de huidige staat van het 
+mailcampagne-systeem in dit dashboard. Niets bouwen, niets 
+veranderen — alleen rapporteren.
+
+CONTEXT
+
+Ik ga een 8-mail jaarcampagne draaien voor banqueting-
+contacten in hotels (functie-label "Banqueting", fase 
+"nieuw"). De campagne bevat 4 mailtypes: acquisitie, piek-
+aankondiging, kennisdeling en social proof. Sommige mails 
+hebben een trigger-follow-up op klik (5-7 dagen na klik op 
+link, alleen als geen reply). Verzendmomenten: dinsdag 14:30 
+of woensdag 10:30. Doelgroep: <100 contacten, persoonlijke 
+afzender (Max Claushuis).
+
+WAT IK WIL WETEN — PER GEBIED
+
+Voor elk van de onderstaande gebieden geef je:
+1. Status: WERKT / WERKT GEDEELTELIJK / NIET AANWEZIG
+2. Korte beschrijving van hoe het is geïmplementeerd
+3. Bestandsnaam(en) waar de relevante code staat
+4. Bekende beperkingen of bugs
+
+GEBIEDEN
+
+A. Schedule-functionaliteit
+   - Kan ik een mail plannen op specifieke datum + tijd?
+   - Wordt timezone correct afgehandeld (Amsterdam-tijd)?
+   - Kan ik een mail uitstellen of annuleren na inplannen?
+
+B. Click-tracking per mail
+   - Worden links in mails getrackt per ontvanger?
+   - Wordt vastgelegd welke link is geklikt en wanneer?
+   - Is er een tabel/log waar ik klik-events kan zien?
+
+C. Trigger-flow (automatische follow-up op klik)
+   - Kan ik een follow-up mail laten triggeren op een 
+     specifieke ontvangersactie (klik)?
+   - Kan ik condities instellen ("alleen als geen reply 
+     binnen X dagen")?
+   - Hoe wordt timing afgehandeld (bv. plan follow-up 
+     op eerstvolgende dinsdag/woensdag 10:30 minimaal 5 
+     dagen na klik)?
+
+D. Reply-detection
+   - Wordt gedetecteerd als een ontvanger reageert op een 
+     verzonden mail?
+   - Stopt dit automatisch lopende trigger-flows voor die 
+     ontvanger?
+   - Krijgt Max een notificatie bij reply?
+
+E. Suppression list
+   - Is er een unsubscribe-mechanisme in elke mail?
+   - Worden afmeldingen automatisch verwerkt?
+   - Worden harde bounces automatisch gesuppresseerd?
+   - Kan ik handmatig contacten op suppression zetten?
+
+F. Sender-authenticatie
+   - Zijn SPF, DKIM en DMARC ingesteld voor het 
+     verzenddomein?
+   - Welk domein/subdomein wordt gebruikt voor verzending?
+   - Is er een mechanisme om deliverability te monitoren 
+     (bounce rate, spam complaints)?
+
+G. Contactsegmentatie
+   - Bevestig: kan ik filteren op functie-label 
+     "Banqueting" + fase "nieuw"?
+   - Welke andere labels en fases zijn beschikbaar?
+   - Hoe worden contacten van fase "nieuw" verplaatst naar 
+     andere fases (handmatig, automatisch, op basis van 
+     actie)?
+
+H. Personalisatie en variabelen
+   - Welke merge-tags zijn beschikbaar (bv. {{voornaam}}, 
+     {{hotel}})?
+   - Werken die in zowel onderwerpsregel als body?
+   - Wat gebeurt er bij ontbrekende data (bv. geen voornaam 
+     bekend)?
+
+I. Reporting / analytics
+   - Welke metrics kan ik per mail zien? (verzonden, 
+     bezorgd, geopend, geklikt, gereageerd, uitgeschreven, 
+     gebounced)
+   - Is er een per-ontvanger journey-view (welke mails heeft 
+     deze persoon ontvangen, wanneer, wat deed hij)?
+   - Hoe lang wordt event-data bewaard?
+
+J. A/B-testing
+   - Kan ik meerdere onderwerpsregels splitsen over een 
+     lijst?
+   - Hoe wordt de winnaar bepaald en geselecteerd?
+
+UITVOER
+
+Geef het rapport in deze structuur:
+
+# Mailcampagne Dashboard — Audit Rapport
+
+## A. Schedule-functionaliteit
+**Status:** [WERKT / WERKT GEDEELTELIJK / NIET AANWEZIG]
+**Implementatie:** [korte beschrijving]
+**Codebestanden:** [paden]
+**Beperkingen:** [eventuele bugs of gaps]
+
+[herhaal voor B t/m J]
+
+## Samenvatting
+- Wat werkt volledig: [lijst]
+- Wat werkt gedeeltelijk: [lijst]
+- Wat ontbreekt: [lijst]
+- Top 3 dingen die als eerste moeten worden aangepakt om de 
+  campagne te kunnen draaien: [genummerde lijst]
+
+BELANGRIJK
+- Niets bouwen, niets veranderen, geen voorstellen voor 
+  uitbreiding meegeven
+- Alleen rapporteren wat er IS, niet wat er ZOU MOETEN ZIJN
+- Bij twijfel: noem het als "gedeeltelijk" en leg uit wat 
+  ontbreekt
+- Eerlijk zijn over gaps — beter een gat erkennen dan 
+  verbergen
