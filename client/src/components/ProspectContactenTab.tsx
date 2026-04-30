@@ -426,8 +426,7 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
     setBezig(true);
     try {
       const tekst = await file.text();
-      const res = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/preview', { csv: tekst }) as Response;
-      const data: ApolloPreview = await res.json();
+      const data = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/preview', { csv: tekst }) as ApolloPreview;
       setPreview(data);
       setStap(2);
     } catch (err: any) {
@@ -444,10 +443,9 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
       const opties: any = { defaultPhase: 'nieuw' };
       if (alleenGeverifieerd) opties.alleenGeverifieerd = true;
       if (alleenHospitality) opties.branchefilter = HOSPITALITY_BRANCHES;
-      const res = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/commit', {
+      const data = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/commit', {
         rijen: preview.alleNormRijen, opties,
-      }) as Response;
-      const data = await res.json();
+      }) as { aangemaakt: number; overgeslagen: number; fouten: string[]; perTag: Array<{ naam: string; aantal: number }> };
       setResultaat(data);
       setStap(3);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
