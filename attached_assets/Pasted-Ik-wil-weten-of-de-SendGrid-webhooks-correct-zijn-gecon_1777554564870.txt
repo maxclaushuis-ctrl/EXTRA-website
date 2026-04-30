@@ -1,0 +1,92 @@
+Ik wil weten of de SendGrid webhooks correct zijn 
+geconfigureerd. Niets bouwen, niets veranderen — alleen 
+checken en rapporteren.
+
+CONTEXT
+
+We hebben in een eerdere sessie blok 3 gebouwd waarin 
+twee SendGrid webhooks zijn geïmplementeerd:
+
+1. Event Webhook voor delivery-events (delivered, bounce, 
+   blocked, dropped, spamreport, deferred)
+2. Inbound Parse Webhook voor replies
+
+Beide moeten zowel in de codebase als aan de SendGrid-kant 
+geconfigureerd zijn om te werken.
+
+WAT IK WIL WETEN
+
+Voor elk van de twee webhooks:
+
+1. Code-kant — bestaat het endpoint?
+   - Welk pad heeft het endpoint? (bv. /webhooks/sendgrid/events)
+   - Volledige URL waar SendGrid naartoe moet posten 
+     (https://[domein]/[pad])
+   - Bestand + regelnummer waar het is geïmplementeerd
+   - Verificatielogica aanwezig? (signature check voor 
+     Event Webhook, basic auth of vergelijkbaar voor 
+     Inbound Parse)
+   - Welke env-variabele bevat het verificatie-secret?
+
+2. Functionaliteit — werkt het endpoint?
+   - Welke event-types worden verwerkt?
+   - Wat gebeurt er met de data (welke tabellen worden 
+     bijgewerkt)?
+   - Bekende beperkingen of edge cases die nog niet 
+     afgehandeld worden
+
+3. SendGrid-kant — kun je dit verifiëren?
+   - Heb je toegang tot het SendGrid-account om te zien of 
+     beide webhooks daadwerkelijk in SendGrid zelf 
+     geconfigureerd zijn?
+   - Zo ja: rapporteer status (active/inactive), URL 
+     waarnaar gepost wordt, en welke event-types 
+     aangevinkt staan
+   - Zo nee: zeg dat expliciet en geef instructies wat ik 
+     zelf in SendGrid moet checken
+
+UITVOER
+
+Geef het rapport in deze structuur:
+
+# SendGrid Webhook Status
+
+## Event Webhook (bounces, deliveries, complaints)
+
+**Code-kant:**
+- Endpoint URL: [volledige URL]
+- Bestand + regel: [pad]
+- Verificatie: [aanwezig/afwezig, methode]
+- Env-variabele: [naam]
+- Verwerkte event-types: [lijst]
+
+**Functionaliteit:**
+[korte beschrijving wat het doet]
+
+**SendGrid-kant:**
+[wat je kunt verifiëren of wat ik zelf moet checken]
+
+**Bekende issues:**
+[eventueel]
+
+## Inbound Parse Webhook (replies)
+
+[zelfde structuur]
+
+## Wat ik zelf in SendGrid moet doen
+
+Geef een concrete checklist met exacte clicks:
+- Hoe kom ik bij de Event Webhook configuratie?
+- Welke URL moet daar staan?
+- Welke event-types moet ik aanvinken?
+- Hoe kom ik bij de Inbound Parse configuratie?
+- Welke hostname/subdomein moet daar staan?
+- Welk DNS-record moet er bij one.com staan voor Inbound 
+  Parse om te werken? (verwacht: MX-record)
+
+BELANGRIJK
+- Niets bouwen of aanpassen
+- Bij twijfel: eerlijk zeggen "weet niet zeker" in plaats 
+  van gokken
+- Geef de daadwerkelijke URL (inclusief het Replit-domein 
+  van deze deployment), niet een placeholder
