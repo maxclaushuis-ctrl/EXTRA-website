@@ -117,6 +117,30 @@ function schoonTelefoon(v: string | undefined): string | undefined {
   return t.length > 0 ? t : undefined;
 }
 
+// ─── Branche-normalisatie ────────────────────────────────────────────────────
+// Apollo levert hotels onder de generieke industrie "Hospitality" aan. Voor
+// EXTRA willen we deze contacten onder de specifieke branche "Hotels" plaatsen
+// zodat segmentering op hotel-campagnes werkt. Mapping is case-insensitive en
+// matcht zowel exacte waardes als comma-separated lijsten (Apollo zet soms
+// meerdere industries achter elkaar).
+const APOLLO_BRANCHE_MAP: Record<string, string> = {
+  'hospitality': 'Hotels',
+};
+
+export function normaliseerBranche(raw: string | undefined): string | undefined {
+  if (!raw) return raw;
+  const trimmed = raw.trim();
+  if (!trimmed) return raw;
+  // Apollo kan meerdere industries komma-gescheiden geven. Normaliseer per stuk
+  // en stuur de eerste mapping-hit terug, anders de eerste originele waarde.
+  const onderdelen = trimmed.split(',').map(s => s.trim()).filter(Boolean);
+  for (const onderdeel of onderdelen) {
+    const mapped = APOLLO_BRANCHE_MAP[onderdeel.toLowerCase()];
+    if (mapped) return mapped;
+  }
+  return onderdelen[0] || trimmed;
+}
+
 export function normaliseerRij(
   row: Record<string, string>,
   extraMapping?: Record<string, keyof NormApolloRow>,
@@ -138,6 +162,8 @@ export function normaliseerRij(
   // Telefoonnummers schoonmaken (Excel ' prefix)
   norm.telefoon = schoonTelefoon(norm.telefoon);
   norm.telefoonBedrijf = schoonTelefoon(norm.telefoonBedrijf);
+  // Branche normaliseren (bv. Apollo "Hospitality" → "Hotels")
+  norm.branche = normaliseerBranche(norm.branche);
   return norm;
 }
 
