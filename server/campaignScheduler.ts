@@ -5,6 +5,8 @@ import {
   formatNLDatum,
   berekenReden,
   logScheduler,
+  DEFAULT_TZ,
+  type VerzendSlot,
 } from "./schedulerUtils";
 
 export interface PlanResultaat {
@@ -19,7 +21,8 @@ export interface PlanResultaat {
 async function getCampagne(campaignId: number) {
   const result = await db.execute(sql`
     SELECT id, name, status, verzend_direct, scheduled_at, werkelijk_verzend_op,
-           alleen_werkdagen, tijdvenster_start, tijdvenster_eind, tijdzone
+           alleen_werkdagen, tijdvenster_start, tijdvenster_eind, tijdzone,
+           verzend_dagen, verzend_slots
     FROM prospect_campaigns WHERE id = ${campaignId} LIMIT 1
   `);
   return (result.rows as any[])[0] ?? null;
@@ -72,6 +75,9 @@ export async function planCampagne(
     alleenWerkdagen?: boolean;
     tijdvensterStart?: string;
     tijdvensterEind?: string;
+    tijdzone?: string;
+    verzendDagen?: number[] | null;
+    verzendSlots?: VerzendSlot[] | null;
     dryRun?: boolean;
   } = {},
 ): Promise<PlanResultaat> {
@@ -81,6 +87,12 @@ export async function planCampagne(
   const alleenWerkdagen = opties.alleenWerkdagen ?? campagne.alleen_werkdagen ?? true;
   const tvStart = opties.tijdvensterStart ?? campagne.tijdvenster_start ?? '08:00';
   const tvEind = opties.tijdvensterEind ?? campagne.tijdvenster_eind ?? '18:00';
+  const tz = opties.tijdzone ?? campagne.tijdzone ?? DEFAULT_TZ;
+  const verzendDagen = opties.verzendDagen ?? (Array.isArray(campagne.verzend_dagen) ? campagne.verzend_dagen as number[] : null);
+  const slotsRaw = opties.verzendSlots ?? campagne.verzend_slots ?? [];
+  const verzendSlots: VerzendSlot[] = Array.isArray(slotsRaw)
+    ? slotsRaw
+    : (typeof slotsRaw === 'string' ? (JSON.parse(slotsRaw || '[]') as VerzendSlot[]) : []);
   const verzendDirect = opties.verzendDirect ?? campagne.verzend_direct ?? false;
 
   let gewenstMoment: Date;
@@ -92,16 +104,18 @@ export async function planCampagne(
     gewenstMoment = new Date(base);
   }
 
-  const werkelijkMoment = berekenWerkelijkVerzendMoment(
-    gewenstMoment,
+  const planOpties = {
     alleenWerkdagen,
-    tvStart,
-    tvEind,
-  );
-
-  const reden = berekenReden(gewenstMoment, werkelijkMoment, alleenWerkdagen, tvStart, tvEind);
+    tijdvensterStart: tvStart,
+    tijdvensterEind: tvEind,
+    tijdzone: tz,
+    verzendDagen,
+    verzendSlots,
+  };
+  const werkelijkMoment = berekenWerkelijkVerzendMoment(gewenstMoment, planOpties);
+  const reden = berekenReden(gewenstMoment, werkelijkMoment, planOpties);
   const gecorrigeerd = reden !== null;
-  const leesbaar = formatNLDatum(werkelijkMoment);
+  const leesbaar = formatNLDatum(werkelijkMoment, tz);
   const verschilMs = werkelijkMoment.getTime() - Date.now();
   const uitgesteld = verschilMs > 60_000;
 
@@ -109,7 +123,9 @@ export async function planCampagne(
     return { uitgesteld, werkelijkMoment, leesbaar, gecorrigeerd, reden };
   }
 
-  // Sla op
+  // Sla op (incl. nieuwe Blok 2-velden)
+  const verzendDagenForSql = verzendDagen && verzendDagen.length > 0 ? `{${verzendDagen.join(',')}}` : null;
+  const verzendSlotsJson = JSON.stringify(verzendSlots ?? []);
   await db.execute(sql`
     UPDATE prospect_campaigns
     SET status = 'gepland',
@@ -119,13 +135,16 @@ export async function planCampagne(
         alleen_werkdagen = ${alleenWerkdagen},
         tijdvenster_start = ${tvStart},
         tijdvenster_eind = ${tvEind},
+        tijdzone = ${tz},
+        verzend_dagen = ${verzendDagenForSql}::int[],
+        verzend_slots = ${verzendSlotsJson}::jsonb,
         updated_at = NOW()
     WHERE id = ${campaignId}
   `);
 
   // Notificatie
   const melding = gecorrigeerd
-    ? `${campagne.name} is verschoven van ${formatNLDatum(gewenstMoment)} naar ${leesbaar} vanwege het werkdagen-tijdvenster`
+    ? `${campagne.name} is verschoven van ${formatNLDatum(gewenstMoment, tz)} naar ${leesbaar} (${reden})`
     : `${campagne.name} is ingepland op ${leesbaar}`;
 
   await maakNotificatie(

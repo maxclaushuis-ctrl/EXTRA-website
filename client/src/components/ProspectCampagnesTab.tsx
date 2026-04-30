@@ -51,8 +51,16 @@ type Campaign = {
   abTestActief: boolean; abSplitPct: number; abWinnaarOp: string; abWinnaarNaUren: number;
   abWinnaarVariant: string | null; abWinnaarBepaaldOp: string | null; abTestFase: string | null;
   alleenWerkdagen: boolean; tijdvensterStart: string; tijdvensterEind: string;
+  verzendDagen: number[] | null; verzendSlots: Array<{ dag: number; tijd: string }> | null;
   createdAt: string; updatedAt: string;
 };
+
+// Blok 2: vaste preset voor de banqueting jaarcampagne (di 14:30 + wo 10:30 Amsterdam)
+const JAARCAMPAGNE_DAGEN: number[] = [2, 3];
+const JAARCAMPAGNE_SLOTS: Array<{ dag: number; tijd: string }> = [
+  { dag: 2, tijd: '14:30' },
+  { dag: 3, tijd: '10:30' },
+];
 type Recipient = {
   id: number; campaignId: number; email: string; name: string | null;
   company: string | null; functieTags: string[]; status: string;
@@ -1141,6 +1149,14 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
   const [alleenWerkdagen, setAlleenWerkdagen] = useState(campaign.alleenWerkdagen ?? true);
   const [tijdvensterStart, setTijdvensterStart] = useState(campaign.tijdvensterStart || '08:00');
   const [tijdvensterEind, setTijdvensterEind] = useState(campaign.tijdvensterEind || '18:00');
+  // Blok 2: vaste verzenddagen + slots (lege array = niet actief, val terug op tijdvenster)
+  const [verzendDagen, setVerzendDagen] = useState<number[]>(Array.isArray(campaign.verzendDagen) ? campaign.verzendDagen : []);
+  const [verzendSlots, setVerzendSlots] = useState<Array<{ dag: number; tijd: string }>>(
+    Array.isArray(campaign.verzendSlots) ? campaign.verzendSlots : [],
+  );
+  const jaarcampagneActief = verzendSlots.length > 0
+    && JAARCAMPAGNE_SLOTS.every(s => verzendSlots.some(v => v.dag === s.dag && v.tijd === s.tijd))
+    && verzendSlots.length === JAARCAMPAGNE_SLOTS.length;
   const [preview, setPreview] = useState<{ leesbaar: string; gecorrigeerd: boolean; reden: string | null } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1159,7 +1175,10 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
       setPreviewLoading(true);
       try {
         const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen-preview`, {
-          verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, verzendDirect: false,
+          verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind,
+          verzendDagen: verzendDagen.length > 0 ? verzendDagen : undefined,
+          verzendSlots: verzendSlots.length > 0 ? verzendSlots : undefined,
+          verzendDirect: false,
         });
         const data = await res.json();
         setPreview(data);
@@ -1167,7 +1186,7 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
       finally { setPreviewLoading(false); }
     }, 600);
     return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
-  }, [verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, modus, campaign.id]);
+  }, [verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, verzendDagen, verzendSlots, modus, campaign.id]);
 
   const planMut = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
@@ -1216,12 +1235,30 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
     setAlleenWerkdagen(campaign.alleenWerkdagen ?? true);
     setTijdvensterStart(campaign.tijdvensterStart || '08:00');
     setTijdvensterEind(campaign.tijdvensterEind || '18:00');
+    setVerzendDagen(Array.isArray(campaign.verzendDagen) ? campaign.verzendDagen : []);
+    setVerzendSlots(Array.isArray(campaign.verzendSlots) ? campaign.verzendSlots : []);
     setPreview(null);
     setModus(isGepland ? 'wijzigen' : 'plannen');
   }
 
+  // Blok 2: zet/verwijder de banqueting-jaarcampagne preset (di 14:30 / wo 10:30)
+  function toggleJaarcampagnePreset() {
+    if (jaarcampagneActief) {
+      setVerzendDagen([]);
+      setVerzendSlots([]);
+    } else {
+      setVerzendDagen([...JAARCAMPAGNE_DAGEN]);
+      setVerzendSlots(JAARCAMPAGNE_SLOTS.map(s => ({ ...s })));
+    }
+  }
+
   function submitPlan() {
-    const payload = { verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, verzendDirect: false };
+    const payload = {
+      verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind,
+      verzendDagen: verzendDagen.length > 0 ? verzendDagen : null,
+      verzendSlots: verzendSlots.length > 0 ? verzendSlots : null,
+      verzendDirect: false,
+    };
     if (modus === 'wijzigen') wijzigMut.mutate(payload);
     else planMut.mutate(payload);
   }
@@ -1241,15 +1278,17 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
           <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center gap-1.5">
             <CalendarClock className="h-3.5 w-3.5" />Verzendmoment wijzigen
           </p>
+          <JaarcampagnePresetKnop actief={jaarcampagneActief} onToggle={toggleJaarcampagnePreset} testIdPrefix="wijzigen" />
           <PlanFormVelden
             verzendOp={verzendOp} setVerzendOp={setVerzendOp}
             alleenWerkdagen={alleenWerkdagen} setAlleenWerkdagen={setAlleenWerkdagen}
             tijdvensterStart={tijdvensterStart} setTijdvensterStart={setTijdvensterStart}
             tijdvensterEind={tijdvensterEind} setTijdvensterEind={setTijdvensterEind}
             preview={preview} previewLoading={previewLoading}
+            slotsActief={jaarcampagneActief}
           />
           <div className="flex gap-2">
-            <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={!verzendOp || isPending} onClick={submitPlan}>
+            <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={!verzendOp || isPending} onClick={submitPlan} data-testid="button-verzendmoment-opslaan">
               {isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CalendarClock className="h-3.5 w-3.5 mr-1.5" />}
               Opslaan
             </Button>
@@ -1277,9 +1316,18 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
               {' '}— aangepast aan tijdvenster
             </p>
           )}
-          <div className="flex gap-3 mt-1.5 text-xs text-blue-500">
-            {campaign.alleenWerkdagen && <span>Alleen werkdagen</span>}
-            <span>Venster: {campaign.tijdvensterStart}–{campaign.tijdvensterEind}</span>
+          <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-blue-500">
+            {Array.isArray(campaign.verzendSlots) && campaign.verzendSlots.length > 0 ? (
+              <span data-testid="badge-vaste-slots-actief">
+                Vaste slots: {campaign.verzendSlots.map(s => `${WEEKDAG_KORT[s.dag] ?? '?'} ${s.tijd}`).join(' / ')}
+              </span>
+            ) : (
+              <>
+                {campaign.alleenWerkdagen && <span>Alleen werkdagen</span>}
+                <span>Venster: {campaign.tijdvensterStart}–{campaign.tijdvensterEind}</span>
+              </>
+            )}
+            <span className="text-blue-400">Tijdzone: {campaign.tijdzone || 'Europe/Amsterdam'}</span>
           </div>
         </div>
         <div className="flex gap-2">
@@ -1322,16 +1370,18 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
         <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide flex items-center gap-1.5">
           <CalendarClock className="h-3.5 w-3.5" />Verzendmoment inplannen
         </p>
+        <JaarcampagnePresetKnop actief={jaarcampagneActief} onToggle={toggleJaarcampagnePreset} testIdPrefix="plannen" />
         <PlanFormVelden
           verzendOp={verzendOp} setVerzendOp={setVerzendOp}
           alleenWerkdagen={alleenWerkdagen} setAlleenWerkdagen={setAlleenWerkdagen}
           tijdvensterStart={tijdvensterStart} setTijdvensterStart={setTijdvensterStart}
           tijdvensterEind={tijdvensterEind} setTijdvensterEind={setTijdvensterEind}
           preview={preview} previewLoading={previewLoading}
+          slotsActief={jaarcampagneActief}
         />
         <div className="flex gap-2">
           <Button size="sm" className="flex-1 bg-purple-600 hover:bg-purple-700" disabled={!verzendOp || isPending}
-            onClick={submitPlan}>
+            onClick={submitPlan} data-testid="button-verzendmoment-inplannen">
             {isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CalendarClock className="h-3.5 w-3.5 mr-1.5" />}
             Inplannen
           </Button>
@@ -1384,6 +1434,40 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
   return null;
 }
 
+// Korte weekdag-labels voor weergave (ISO 1=ma..7=zo)
+const WEEKDAG_KORT: Record<number, string> = { 1: 'ma', 2: 'di', 3: 'wo', 4: 'do', 5: 'vr', 6: 'za', 7: 'zo' };
+
+// Blok 2: preset-knop voor de banqueting jaarcampagne (di 14:30 / wo 10:30 Amsterdam)
+function JaarcampagnePresetKnop({ actief, onToggle, testIdPrefix }: {
+  actief: boolean; onToggle: () => void; testIdPrefix: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      data-testid={`button-preset-jaarcampagne-${testIdPrefix}`}
+      className={`w-full flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+        actief
+          ? 'bg-purple-100 border-purple-400 text-purple-900'
+          : 'bg-white border-slate-200 hover:border-purple-300 hover:bg-purple-50/40 text-slate-700'
+      }`}
+    >
+      <div>
+        <p className="text-xs font-semibold flex items-center gap-1.5">
+          {actief ? <CheckCircle className="h-3.5 w-3.5 text-purple-600" /> : <CalendarClock className="h-3.5 w-3.5 text-slate-400" />}
+          Banqueting jaarcampagne-preset
+        </p>
+        <p className="text-[11px] text-slate-500 mt-0.5">
+          Vaste momenten: dinsdag 14:30 en woensdag 10:30 (Europe/Amsterdam)
+        </p>
+      </div>
+      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${actief ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+        {actief ? 'Aan' : 'Uit'}
+      </span>
+    </button>
+  );
+}
+
 // ─── Plan form velden ─────────────────────────────────────────────────────────
 function PlanFormVelden({
   verzendOp, setVerzendOp,
@@ -1391,6 +1475,7 @@ function PlanFormVelden({
   tijdvensterStart, setTijdvensterStart,
   tijdvensterEind, setTijdvensterEind,
   preview, previewLoading,
+  slotsActief = false,
 }: {
   verzendOp: string; setVerzendOp: (v: string) => void;
   alleenWerkdagen: boolean; setAlleenWerkdagen: (v: boolean) => void;
@@ -1398,34 +1483,38 @@ function PlanFormVelden({
   tijdvensterEind: string; setTijdvensterEind: (v: string) => void;
   preview: { leesbaar: string; gecorrigeerd: boolean; reden: string | null } | null;
   previewLoading: boolean;
+  slotsActief?: boolean;
 }) {
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs text-slate-600 mb-1 block">Gewenst verzendmoment</Label>
+        <Label className="text-xs text-slate-600 mb-1 block">
+          Gewenst verzendmoment {slotsActief && <span className="text-purple-600 font-normal">(wordt afgerond op eerstvolgende vaste slot)</span>}
+        </Label>
         <Input
           type="datetime-local"
           value={verzendOp}
           onChange={e => setVerzendOp(e.target.value)}
           className="text-sm"
           min={new Date().toISOString().slice(0, 16)}
+          data-testid="input-verzend-op"
         />
       </div>
-      <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2">
+      <div className={`flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2 ${slotsActief ? 'opacity-50' : ''}`}>
         <div>
           <p className="text-xs font-medium text-slate-700">Alleen werkdagen</p>
           <p className="text-[11px] text-slate-400">Weekend worden overgeslagen</p>
         </div>
-        <Switch checked={alleenWerkdagen} onCheckedChange={setAlleenWerkdagen} />
+        <Switch checked={alleenWerkdagen} onCheckedChange={setAlleenWerkdagen} disabled={slotsActief} />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className={`grid grid-cols-2 gap-2 ${slotsActief ? 'opacity-50' : ''}`}>
         <div>
           <Label className="text-xs text-slate-600 mb-1 block">Tijdvenster start</Label>
-          <Input type="time" value={tijdvensterStart} onChange={e => setTijdvensterStart(e.target.value)} className="text-sm" />
+          <Input type="time" value={tijdvensterStart} onChange={e => setTijdvensterStart(e.target.value)} className="text-sm" disabled={slotsActief} />
         </div>
         <div>
           <Label className="text-xs text-slate-600 mb-1 block">Tijdvenster eind</Label>
-          <Input type="time" value={tijdvensterEind} onChange={e => setTijdvensterEind(e.target.value)} className="text-sm" />
+          <Input type="time" value={tijdvensterEind} onChange={e => setTijdvensterEind(e.target.value)} className="text-sm" disabled={slotsActief} />
         </div>
       </div>
 

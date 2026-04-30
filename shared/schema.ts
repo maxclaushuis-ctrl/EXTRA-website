@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date, pgEnum, time, real, uniqueIndex, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, jsonb, date, pgEnum, time, real, uniqueIndex, index, primaryKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1458,6 +1458,9 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   tijdvensterStart: text("tijdvenster_start").default("08:00"),
   tijdvensterEind: text("tijdvenster_eind").default("18:00"),
   tijdzone: text("tijdzone").default("Europe/Amsterdam"),
+  // Blok 2: Scheduler-dagen (ISO 1=ma..7=zo) en vaste verzendslots per campagne
+  verzendDagen: integer("verzend_dagen").array(),
+  verzendSlots: jsonb("verzend_slots").$type<Array<{ dag: number; tijd: string }>>().default([]),
   // Geplande verzending
   verzendDirect: boolean("verzend_direct").default(false),
   werkelijkVerzendOp: timestamp("werkelijk_verzend_op"),

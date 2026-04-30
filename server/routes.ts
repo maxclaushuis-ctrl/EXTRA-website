@@ -6051,21 +6051,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ─── Stap 8: Geplande Verzending routes ──────────────────────────────────────
+  // ─── Stap 8 + Blok 2: Geplande Verzending routes ────────────────────────────
+
+  // Helper om planopties uit een request body te halen (incl. Blok 2-velden).
+  function extractPlanOptiesFromBody(body: any) {
+    const verzendDagen = Array.isArray(body?.verzendDagen)
+      ? body.verzendDagen.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n) && n >= 1 && n <= 7)
+      : undefined;
+    let verzendSlots: Array<{ dag: number; tijd: string }> | undefined = undefined;
+    if (Array.isArray(body?.verzendSlots)) {
+      verzendSlots = body.verzendSlots
+        .map((s: any) => ({ dag: Number(s?.dag), tijd: String(s?.tijd ?? '') }))
+        .filter((s: any) => Number.isFinite(s.dag) && s.dag >= 1 && s.dag <= 7 && /^\d{1,2}:\d{2}$/.test(s.tijd));
+    }
+    return {
+      alleenWerkdagen: body?.alleenWerkdagen !== undefined ? !!body.alleenWerkdagen : undefined,
+      tijdvensterStart: body?.tijdvensterStart || undefined,
+      tijdvensterEind: body?.tijdvensterEind || undefined,
+      tijdzone: body?.tijdzone || undefined,
+      verzendDagen,
+      verzendSlots,
+    };
+  }
 
   // Preview (dry-run): bereken werkelijk verzendmoment zonder op te slaan
   app.post("/api/admin/prospect-campaigns/:id/plannen-preview", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      const { verzendDirect, verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind } = req.body;
+      const { verzendDirect, verzendOp } = req.body;
       const { planCampagne } = await import('./campaignScheduler');
       const resultaat = await planCampagne(id, {
         verzendDirect: !!verzendDirect,
         verzendOp: verzendOp ? new Date(verzendOp) : null,
-        alleenWerkdagen: alleenWerkdagen !== undefined ? !!alleenWerkdagen : undefined,
-        tijdvensterStart: tijdvensterStart || undefined,
-        tijdvensterEind: tijdvensterEind || undefined,
+        ...extractPlanOptiesFromBody(req.body),
         dryRun: true,
       });
       return res.json(resultaat);
@@ -6079,14 +6098,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      const { verzendDirect, verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind } = req.body;
+      const { verzendDirect, verzendOp } = req.body;
       const { planCampagne } = await import('./campaignScheduler');
       const resultaat = await planCampagne(id, {
         verzendDirect: !!verzendDirect,
         verzendOp: verzendOp ? new Date(verzendOp) : null,
-        alleenWerkdagen: alleenWerkdagen !== undefined ? !!alleenWerkdagen : undefined,
-        tijdvensterStart: tijdvensterStart || undefined,
-        tijdvensterEind: tijdvensterEind || undefined,
+        ...extractPlanOptiesFromBody(req.body),
         dryRun: false,
       });
       return res.json(resultaat);
@@ -6100,15 +6117,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      const { verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind } = req.body;
+      const { verzendOp } = req.body;
       if (!verzendOp) return res.status(400).json({ message: "verzendOp verplicht" });
       const { planCampagne } = await import('./campaignScheduler');
       const resultaat = await planCampagne(id, {
         verzendDirect: false,
         verzendOp: new Date(verzendOp),
-        alleenWerkdagen: alleenWerkdagen !== undefined ? !!alleenWerkdagen : undefined,
-        tijdvensterStart: tijdvensterStart || undefined,
-        tijdvensterEind: tijdvensterEind || undefined,
+        ...extractPlanOptiesFromBody(req.body),
         dryRun: false,
       });
       return res.json(resultaat);
