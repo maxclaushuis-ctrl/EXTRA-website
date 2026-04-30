@@ -5272,6 +5272,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Apollo.io CSV import (Blok 5) ────────────────────────────────────────
+  // Twee-staps flow: eerst preview (toont kolommappping, tag-detectie en
+  // dedupe-statistieken), daarna commit. Frontend leest het CSV-bestand zelf
+  // (FileReader) en stuurt de tekst als JSON-body — geen multipart nodig.
+  app.post("/api/admin/prospect-contacts/import-apollo/preview", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const csv: string = (req.body?.csv || '').toString();
+      if (!csv.trim()) return res.status(400).json({ message: 'Lege CSV inhoud' });
+      if (csv.length > 5_000_000) return res.status(413).json({ message: 'CSV te groot (>5 MB)' });
+      const { maakPreview } = await import('./apolloImport');
+      const preview = await maakPreview(csv);
+      return res.json(preview);
+    } catch (err: any) {
+      console.error('[ApolloImport] preview-fout:', err);
+      return res.status(500).json({ message: err?.message || 'Preview mislukt' });
+    }
+  });
+
+  app.post("/api/admin/prospect-contacts/import-apollo/commit", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const rijen = req.body?.rijen;
+      const opties = req.body?.opties || {};
+      if (!Array.isArray(rijen) || rijen.length === 0) {
+        return res.status(400).json({ message: 'Geen rijen om te importeren' });
+      }
+      const { commitImport } = await import('./apolloImport');
+      const resultaat = await commitImport(rijen, opties);
+      return res.json(resultaat);
+    } catch (err: any) {
+      console.error('[ApolloImport] commit-fout:', err);
+      return res.status(500).json({ message: err?.message || 'Import mislukt' });
+    }
+  });
+
   // Import CRM contacts into prospect contacts list
   app.post("/api/admin/prospect-contacts/import-crm", adminMiddleware, async (req: Request, res: Response) => {
     try {

@@ -379,6 +379,308 @@ function ContactFormModal({ open, onClose, contact, tagSuggestions, onSaved }: {
 
 // ── CSV Import Modal ───────────────────────────────────────────────────────
 
+// ── Apollo CSV Import Modal (Blok 5) ───────────────────────────────────────
+
+interface ApolloPreview {
+  totaal: number;
+  geldigNieuw: number;
+  dubbelInDb: number;
+  dubbelInBestand: number;
+  ongeldigEmail: number;
+  zonderFunctietag: number;
+  perTag: Array<{ tagId: number; naam: string; aantal: number }>;
+  perBranche: Array<{ branche: string; aantal: number }>;
+  voorbeelden: Array<any>;
+  alleNormRijen: Array<any>;
+}
+
+function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved?: () => void }) {
+  const { toast } = useToast();
+  const [stap, setStap] = useState<1 | 2 | 3>(1);
+  const [bezig, setBezig] = useState(false);
+  const [preview, setPreview] = useState<ApolloPreview | null>(null);
+  const [resultaat, setResultaat] = useState<{ aangemaakt: number; overgeslagen: number; fouten: string[]; perTag: Array<{ naam: string; aantal: number }> } | null>(null);
+  const [alleenGeverifieerd, setAlleenGeverifieerd] = useState(true);
+  const [alleenHospitality, setAlleenHospitality] = useState(true);
+  const [bestandsnaam, setBestandsnaam] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const HOSPITALITY_BRANCHES = ['Hospitality', 'Hotels', 'Restaurants', 'Hotels & Travel Accommodation', 'Hotels And Motels', 'Food & Beverages', 'Catering'];
+
+  const reset = () => {
+    setStap(1); setPreview(null); setResultaat(null);
+    setBestandsnaam(''); setAlleenGeverifieerd(true); setAlleenHospitality(true);
+  };
+
+  const verwerkBestand = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast({ title: 'Alleen .csv bestanden', variant: 'destructive' }); return;
+    }
+    setBestandsnaam(file.name);
+    setBezig(true);
+    try {
+      const tekst = await file.text();
+      const res = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/preview', { csv: tekst }) as Response;
+      const data: ApolloPreview = await res.json();
+      setPreview(data);
+      setStap(2);
+    } catch (err: any) {
+      toast({ title: 'Preview mislukt', description: err?.message, variant: 'destructive' });
+    } finally {
+      setBezig(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!preview) return;
+    setBezig(true);
+    try {
+      const opties: any = { defaultPhase: 'nieuw' };
+      if (alleenGeverifieerd) opties.alleenGeverifieerd = true;
+      if (alleenHospitality) opties.branchefilter = HOSPITALITY_BRANCHES;
+      const res = await apiRequest('POST', '/api/admin/prospect-contacts/import-apollo/commit', {
+        rijen: preview.alleNormRijen, opties,
+      }) as Response;
+      const data = await res.json();
+      setResultaat(data);
+      setStap(3);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
+      toast({ title: `${data.aangemaakt} contact(en) geïmporteerd uit Apollo` });
+      onSaved?.();
+    } catch (err: any) {
+      toast({ title: 'Import mislukt', description: err?.message, variant: 'destructive' });
+    } finally {
+      setBezig(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); reset(); } }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5 text-purple-600" />
+            Apollo.io CSV importeren
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex items-center gap-2 mb-4">
+          {[1, 2, 3].map(s => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold ${stap >= s ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{s}</div>
+              {s < 3 && <div className={`flex-1 h-0.5 w-12 ${stap > s ? 'bg-purple-600' : 'bg-gray-200'}`} />}
+            </div>
+          ))}
+          <span className="text-xs text-gray-500 ml-2">{stap === 1 ? 'Upload' : stap === 2 ? 'Controleren' : 'Klaar'}</span>
+        </div>
+
+        {/* ── Stap 1: upload ── */}
+        {stap === 1 && (
+          <div className="space-y-4">
+            <div
+              onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) verwerkBestand(f); }}
+              onClick={() => fileRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${isDragging ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'}`}
+            >
+              <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-600">{bezig ? 'CSV wordt gelezen...' : 'Sleep je Apollo CSV-export hierheen'}</p>
+              <p className="text-xs text-gray-400 mt-1">of klik om een bestand te kiezen</p>
+              <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={e => e.target.files?.[0] && verwerkBestand(e.target.files[0])} />
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <p className="text-sm font-semibold text-purple-900 mb-2">Hoe haal je een Apollo CSV?</p>
+              <ol className="text-xs text-purple-800 space-y-1 list-decimal list-inside">
+                <li>Bouw in Apollo een lijst (bv. <em>Title contains "F&B Manager", Industry = Hospitality, Location = Amsterdam 50km</em>).</li>
+                <li>Selecteer je rijen → <strong>Export</strong> → kies CSV.</li>
+                <li>Sleep het bestand hierboven. Wij herkennen automatisch de kolommen en koppelen functietags.</li>
+              </ol>
+            </div>
+          </div>
+        )}
+
+        {/* ── Stap 2: preview ── */}
+        {stap === 2 && preview && (
+          <div className="space-y-5">
+            <p className="text-sm text-gray-600">
+              <strong>{bestandsnaam}</strong> — {preview.totaal} rijen ingelezen.
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-center">
+                <div className="text-2xl font-bold text-green-700">{preview.geldigNieuw}</div>
+                <div className="text-xs text-green-700 font-medium">Nieuw</div>
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
+                <div className="text-2xl font-bold text-amber-700">{preview.dubbelInDb + preview.dubbelInBestand}</div>
+                <div className="text-xs text-amber-700 font-medium">Dubbel</div>
+              </div>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-center">
+                <div className="text-2xl font-bold text-red-700">{preview.ongeldigEmail}</div>
+                <div className="text-xs text-red-700 font-medium">Ongeldig</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
+                <div className="text-2xl font-bold text-slate-700">{preview.zonderFunctietag}</div>
+                <div className="text-xs text-slate-700 font-medium">Geen tag</div>
+              </div>
+            </div>
+
+            {preview.perTag.length > 0 && (
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Functietag-detectie</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {preview.perTag.map(t => (
+                    <Badge key={t.tagId} variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                      {t.naam} <span className="ml-1 font-bold">{t.aantal}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {preview.perBranche.length > 0 && (
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Top branches in bestand</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {preview.perBranche.map(b => (
+                    <Badge key={b.branche} variant="outline" className="text-xs">
+                      {b.branche} <span className="ml-1 font-bold">{b.aantal}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 px-3 py-2 border-b border-slate-200">
+                <p className="text-xs font-semibold text-slate-500">Voorbeeld (eerste {Math.min(10, preview.voorbeelden.length)} rijen)</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Naam</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Email</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Bedrijf</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Functie</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Tag</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {preview.voorbeelden.slice(0, 10).map((r, i) => (
+                      <tr key={i} className={r.isDubbel || r.isOngeldigEmail ? 'bg-red-50/30' : ''}>
+                        <td className="px-3 py-1.5 text-slate-700">{r.naam || '—'}</td>
+                        <td className="px-3 py-1.5 text-slate-600 font-mono text-[10px]">{r.email || '—'}</td>
+                        <td className="px-3 py-1.5 text-slate-600">{r.bedrijf || '—'}</td>
+                        <td className="px-3 py-1.5 text-slate-500">{r.functietitel || '—'}</td>
+                        <td className="px-3 py-1.5">
+                          {r.functietagNaam
+                            ? <span className="text-purple-700 text-[11px] font-medium">{r.functietagNaam}</span>
+                            : <span className="text-slate-300 text-[11px]">—</span>}
+                        </td>
+                        <td className="px-3 py-1.5">
+                          {r.isOngeldigEmail
+                            ? <span className="text-red-600 text-[11px]">ongeldig</span>
+                            : r.isDubbel
+                              ? <span className="text-amber-600 text-[11px]">dubbel</span>
+                              : <span className="text-green-600 text-[11px]">nieuw</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-2.5">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Filters</p>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={alleenGeverifieerd}
+                  onChange={e => setAlleenGeverifieerd(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600"
+                />
+                <span className="text-sm text-slate-700">
+                  Alleen <strong>geverifieerde</strong> e-mails importeren
+                  <span className="block text-[11px] text-slate-500 mt-0.5">(skipt Apollo "Guessed" / "Unverified" rijen — voorkomt bounces)</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={alleenHospitality}
+                  onChange={e => setAlleenHospitality(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600"
+                />
+                <span className="text-sm text-slate-700">
+                  Alleen <strong>hospitality-branches</strong> importeren
+                  <span className="block text-[11px] text-slate-500 mt-0.5">(Hospitality, Hotels, Restaurants, Catering, F&B)</span>
+                </span>
+              </label>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setStap(1); setPreview(null); }}>Terug</Button>
+              <Button
+                onClick={handleImport}
+                disabled={bezig || preview.geldigNieuw === 0}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {bezig ? 'Bezig met importeren...' : `Importeer ${preview.geldigNieuw} contact(en)`}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+
+        {/* ── Stap 3: resultaat ── */}
+        {stap === 3 && resultaat && (
+          <div className="space-y-4">
+            <div className="text-center py-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-3">
+                <Check className="h-6 w-6 text-green-700" />
+              </div>
+              <p className="text-lg font-semibold text-slate-800">Import voltooid</p>
+              <p className="text-sm text-slate-500 mt-1">
+                {resultaat.aangemaakt} aangemaakt · {resultaat.overgeslagen} overgeslagen
+              </p>
+            </div>
+
+            {resultaat.perTag.length > 0 && (
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Toegewezen functietags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {resultaat.perTag.map((t, i) => (
+                    <Badge key={i} variant="secondary" className="bg-purple-100 text-purple-700">
+                      {t.naam} <span className="ml-1 font-bold">{t.aantal}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {resultaat.fouten.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                <p className="text-xs font-semibold text-red-700 mb-1">Fouten ({resultaat.fouten.length})</p>
+                <ul className="text-xs text-red-600 space-y-0.5 max-h-24 overflow-y-auto">
+                  {resultaat.fouten.map((f, i) => <li key={i}>• {f}</li>)}
+                </ul>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button onClick={() => { onClose(); reset(); }} className="bg-purple-600 hover:bg-purple-700">Sluiten</Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function CsvImportModal({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved?: () => void }) {
   const { toast } = useToast();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -946,6 +1248,7 @@ export default function ProspectContactenTab() {
   const [addOpen, setAddOpen] = useState(false);
   const [editContact, setEditContact] = useState<any>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [apolloOpen, setApolloOpen] = useState(false);
   // Stats filter override
   const [statFilter, setStatFilter] = useState<null | { type?: string; status?: string }>(null);
 
@@ -1086,6 +1389,9 @@ export default function ProspectContactenTab() {
         </Select>
 
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setApolloOpen(true)} title="Apollo.io export importeren — kolommen + functietags worden automatisch herkend">
+            <Upload className="h-3.5 w-3.5" />Apollo CSV
+          </Button>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setImportOpen(true)}>
             <Upload className="h-3.5 w-3.5" />CSV import
           </Button>
@@ -1182,6 +1488,7 @@ export default function ProspectContactenTab() {
       {addOpen && <ContactFormModal open tagSuggestions={uniqueTags} onClose={() => setAddOpen(false)} onSaved={refetch} />}
       {editContact && <ContactFormModal open contact={editContact} tagSuggestions={uniqueTags} onClose={() => setEditContact(null)} onSaved={refetch} />}
       {importOpen && <CsvImportModal open onClose={() => setImportOpen(false)} onSaved={refetch} />}
+      {apolloOpen && <ApolloImportModal open onClose={() => setApolloOpen(false)} onSaved={refetch} />}
       {selectedId != null && (
         <ContactDetailSheet
           contactId={selectedId}
