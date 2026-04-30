@@ -108,10 +108,22 @@ export interface NormApolloRow {
   departments?: string;
 }
 
-export function normaliseerRij(row: Record<string, string>): NormApolloRow {
+// Excel zet voor lange numerieke velden vaak een ' (apostrof) zodat het niet
+// als getal wordt geïnterpreteerd. Strip die prefix + omringende whitespace.
+function schoonTelefoon(v: string | undefined): string | undefined {
+  if (!v) return undefined;
+  const t = v.replace(/^['`\s]+/, '').trim();
+  return t.length > 0 ? t : undefined;
+}
+
+export function normaliseerRij(
+  row: Record<string, string>,
+  extraMapping?: Record<string, keyof NormApolloRow>,
+): NormApolloRow {
   const norm: NormApolloRow = {};
   for (const [origKey, val] of Object.entries(row)) {
-    const sysField = APOLLO_HEADER_MAP[origKey.toLowerCase().trim()];
+    const lower = origKey.toLowerCase().trim();
+    const sysField = APOLLO_HEADER_MAP[lower] ?? extraMapping?.[lower];
     if (sysField && val) {
       (norm as any)[sysField] = val;
     }
@@ -122,23 +134,97 @@ export function normaliseerRij(row: Record<string, string>): NormApolloRow {
     const a = (norm.achternaam || '').trim();
     if (v || a) norm.naam = `${v} ${a}`.trim();
   }
+  // Telefoonnummers schoonmaken (Excel ' prefix)
+  norm.telefoon = schoonTelefoon(norm.telefoon);
+  norm.telefoonBedrijf = schoonTelefoon(norm.telefoonBedrijf);
   return norm;
+}
+
+// ─── 2b. AI-fallback: herken onbekende headers ───────────────────────────────
+// Wanneer Apollo (of een andere tool) niet-standaard kolomnamen exporteert die
+// niet in APOLLO_HEADER_MAP staan, vraag GPT om de mapping voor te stellen.
+// Cache binnen één request om dubbele AI-calls te voorkomen.
+const SYS_FIELDS: Array<keyof NormApolloRow> = [
+  'voornaam','achternaam','naam','functietitel','bedrijf','email','emailStatus',
+  'branche','stad','regio','land','telefoon','telefoonBedrijf','linkedin','website','seniority','departments',
+];
+
+export async function aiHeaderMapping(headers: string[]): Promise<Record<string, keyof NormApolloRow>> {
+  const onbekend = headers.filter(h => !APOLLO_HEADER_MAP[h.toLowerCase().trim()]);
+  if (onbekend.length === 0) return {};
+
+  let OpenAI: any;
+  try { OpenAI = (await import('openai')).default; } catch { return {}; }
+  if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY) return {};
+
+  const client = new OpenAI({
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY ?? 'unused',
+  });
+
+  const prompt = `Je krijgt een lijst CSV-kolomnamen uit een contact-export tool (Apollo, HubSpot, etc.).
+Map ELKE kolom naar exact één van deze interne velden, of null als de kolom niet relevant is voor een contact-import:
+${SYS_FIELDS.join(', ')}.
+
+Belangrijk: alleen contactgegevens herkennen. Negeer financiële velden, datums, scores, etc. → null.
+
+Kolommen om te mappen:
+${onbekend.map((h, i) => `${i + 1}. "${h}"`).join('\n')}
+
+Antwoord ALLEEN met JSON in dit formaat (geen uitleg, geen markdown):
+{"mapping": {"<originele kolomnaam>": "<intern veld of null>"}}`;
+
+  try {
+    const resp = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'Je bent een datamappings-expert. Antwoord uitsluitend met geldige JSON.' },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0,
+    });
+    const raw = resp.choices?.[0]?.message?.content || '{}';
+    const parsed = JSON.parse(raw);
+    const mapping: Record<string, keyof NormApolloRow> = {};
+    for (const [k, v] of Object.entries(parsed.mapping || {})) {
+      if (typeof v === 'string' && SYS_FIELDS.includes(v as any)) {
+        mapping[k.toLowerCase().trim()] = v as keyof NormApolloRow;
+      }
+    }
+    return mapping;
+  } catch (err: any) {
+    console.warn('[apollo-import] AI header mapping failed:', err?.message);
+    return {};
+  }
 }
 
 // ─── 3. Functietag-detectie op basis van Title ───────────────────────────────
 // Volgorde is belangrijk: meer-specifieke patronen eerst (F&B Director vóór
 // F&B Manager, Chef vóór Keukenbrigade).
+// Helper: F&B kan geschreven worden als "F&B", "F & B", "Food & Beverage",
+// "Food and Beverage" of "Food Beverage". Dit fragment vangt alle varianten.
+const FB = /(?:\bf\s*&\s*b\b|food\s*(?:&|and|\s)\s*beverage)/i;
+
 const TAG_KEYWORDS: Array<{ slug: string; patterns: RegExp[] }> = [
-  { slug: 'fb-director',         patterns: [/\bf\s*&?\s*b\b.*director/i, /food\s*&?\s*beverage\s*director/i] },
-  { slug: 'fb-manager',          patterns: [/\bf\s*&?\s*b\b.*manager/i, /food\s*&?\s*beverage\s*manager/i] },
-  { slug: 'banqueting',          patterns: [/\bbanquet/i, /\bevents?\s*manager/i, /\bgroup\s*&?\s*events/i, /banket/i] },
-  { slug: 'restaurant-manager',  patterns: [/restaurant\s*manager/i, /restaurantmanager/i, /\boutlet\s*manager/i] },
-  { slug: 'floor-manager',       patterns: [/floor\s*manager/i, /floormanager/i, /shift\s*leader/i, /supervisor/i] },
-  { slug: 'chef',                patterns: [/executive\s*chef/i, /head\s*chef/i, /chef\s*de\s*cuisine/i, /chef[-\s]?kok/i, /\bsous[-\s]?chef/i, /\bgastronomic\b/i] },
+  // Director vóór Manager — "Director of Food and Beverage" mag nooit als manager binnenkomen
+  { slug: 'fb-director',         patterns: [
+      new RegExp(`${FB.source}.*director`, 'i'),
+      new RegExp(`director\\s+of\\s+${FB.source}`, 'i'),
+      new RegExp(`(?:deputy|assistant)\\s+director\\s+of\\s+${FB.source}`, 'i'),
+  ]},
+  { slug: 'fb-manager',          patterns: [
+      new RegExp(`${FB.source}.*manager`, 'i'),
+      new RegExp(`(?:assistant|deputy)\\s+${FB.source}\\s+manager`, 'i'),
+  ]},
+  { slug: 'banqueting',          patterns: [/\bbanquet/i, /\bevents?\s*manager/i, /\bgroup\s*&?\s*events/i, /banket/i, /\bm\s*&\s*e\s+manager/i, /meetings?\s*&?\s*events?/i] },
+  { slug: 'restaurant-manager',  patterns: [/restaurant\s*manager/i, /restaurantmanager/i, /\boutlet\s*manager/i, /bedrijfsleider/i] },
+  { slug: 'floor-manager',       patterns: [/floor\s*manager/i, /floormanager/i, /shift\s*leader/i, /\bsupervisor\b/i, /assistant\s*manager/i] },
+  { slug: 'chef',                patterns: [/executive\s*chef/i, /head\s*chef/i, /chef\s*de\s*cuisine/i, /chef[-\s]?kok/i, /\bsous[-\s]?chef/i, /\bgastronomic\b/i, /culinary\s*director/i] },
   { slug: 'keukenbrigade',       patterns: [/\bcook\b/i, /\bkok\b/i, /\bcommis\b/i, /chef\s*de\s*partie/i, /demi[-\s]?chef/i, /\bgrillmaster/i] },
   { slug: 'housekeeping',        patterns: [/housekeep/i, /huishoud/i, /\bcamerista\b/i, /\broom\s*attendant/i] },
   { slug: 'receptie',            patterns: [/front\s*office/i, /\breceptie\b/i, /\breception(?:ist)?\b/i, /front\s*desk/i, /night\s*audit/i] },
-  { slug: 'algemeen-hotel',      patterns: [/general\s*manager/i, /hotel\s*manager/i, /\bdirecteur\b/i, /\bowner\b/i, /managing\s*director/i] },
+  { slug: 'algemeen-hotel',      patterns: [/general\s*manager/i, /hotel\s*manager/i, /\bdirecteur\b/i, /\bowner\b/i, /managing\s*director/i, /operations?\s*director/i, /operations?\s*manager/i] },
 ];
 
 export function detecteerFunctietagId(title: string | undefined, tags: FunctionTag[]): number | null {
@@ -172,15 +258,44 @@ export interface ApolloPreviewResultaat {
   perBranche: Array<{ branche: string; aantal: number }>;
   voorbeelden: ApolloPreviewRij[];   // eerste 50 rijen, voor tabel-preview
   alleNormRijen: ApolloPreviewRij[]; // volledig, gaat ook door naar commit
+  // Header-diagnostiek
+  totaalKolommen: number;
+  herkendeKolommen: number;
+  herkendeMapping: Array<{ kolom: string; veld: string; bron: 'standaard' | 'ai' }>;
+  niegmappedKolommen: string[];
+  aiGebruikt: boolean;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function maakPreview(csvText: string): Promise<ApolloPreviewResultaat> {
-  const { rows: ruweRijen } = parseCsv(csvText);
+  const { headers, rows: ruweRijen } = parseCsv(csvText);
   const tags = await storage.getFunctionTags();
   const bestaande = await storage.getProspectContacts({});
   const bestaandeEmails = new Set(bestaande.map(b => b.email.toLowerCase()));
+
+  // AI-fallback: probeer onbekende headers via GPT te mappen
+  const onbekendeHeaders = headers.filter(h => !APOLLO_HEADER_MAP[h.toLowerCase().trim()]);
+  let aiMapping: Record<string, keyof NormApolloRow> = {};
+  let aiGebruikt = false;
+  if (onbekendeHeaders.length > 0) {
+    aiMapping = await aiHeaderMapping(headers);
+    aiGebruikt = Object.keys(aiMapping).length > 0;
+  }
+
+  // Bouw mapping-overzicht voor diagnostiek in de UI
+  const herkendeMapping: Array<{ kolom: string; veld: string; bron: 'standaard' | 'ai' }> = [];
+  const niegmappedKolommen: string[] = [];
+  for (const h of headers) {
+    const lower = h.toLowerCase().trim();
+    if (APOLLO_HEADER_MAP[lower]) {
+      herkendeMapping.push({ kolom: h, veld: APOLLO_HEADER_MAP[lower], bron: 'standaard' });
+    } else if (aiMapping[lower]) {
+      herkendeMapping.push({ kolom: h, veld: aiMapping[lower], bron: 'ai' });
+    } else {
+      niegmappedKolommen.push(h);
+    }
+  }
 
   const emailsInBestand = new Set<string>();
   const norm: ApolloPreviewRij[] = [];
@@ -189,7 +304,7 @@ export async function maakPreview(csvText: string): Promise<ApolloPreviewResulta
   const brancheTeller = new Map<string, number>();
 
   for (const ruw of ruweRijen) {
-    const r = normaliseerRij(ruw);
+    const r = normaliseerRij(ruw, aiMapping);
     const email = (r.email || '').toLowerCase().trim();
     const tagId = detecteerFunctietagId(r.functietitel, tags);
     const tagNaam = tagId ? (tags.find(t => t.id === tagId)?.naam ?? null) : null;
@@ -226,6 +341,11 @@ export async function maakPreview(csvText: string): Promise<ApolloPreviewResulta
     perBranche,
     voorbeelden: norm.slice(0, 50),
     alleNormRijen: norm,
+    totaalKolommen: headers.length,
+    herkendeKolommen: herkendeMapping.length,
+    herkendeMapping,
+    niegmappedKolommen,
+    aiGebruikt,
   };
 }
 

@@ -392,6 +392,11 @@ interface ApolloPreview {
   perBranche: Array<{ branche: string; aantal: number }>;
   voorbeelden: Array<any>;
   alleNormRijen: Array<any>;
+  totaalKolommen?: number;
+  herkendeKolommen?: number;
+  herkendeMapping?: Array<{ kolom: string; veld: string; bron: 'standaard' | 'ai' }>;
+  niegmappedKolommen?: string[];
+  aiGebruikt?: boolean;
 }
 
 function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved?: () => void }) {
@@ -505,8 +510,46 @@ function ApolloImportModal({ open, onClose, onSaved }: { open: boolean; onClose:
         {stap === 2 && preview && (
           <div className="space-y-5">
             <p className="text-sm text-gray-600">
-              <strong>{bestandsnaam}</strong> — {preview.totaal} rijen ingelezen.
+              <strong>{bestandsnaam}</strong> — {preview.totaal} rijen ingelezen
+              {preview.totaalKolommen != null && (
+                <span className="text-gray-400">
+                  {' • '}{preview.herkendeKolommen}/{preview.totaalKolommen} kolommen herkend
+                  {preview.aiGebruikt && <span className="ml-1 text-purple-600 font-medium">(AI)</span>}
+                </span>
+              )}
             </p>
+
+            {/* Kolom-mapping overzicht (collapsible-style) */}
+            {preview.herkendeMapping && preview.herkendeMapping.length > 0 && (
+              <details className="bg-slate-50 rounded-xl border border-slate-200 p-3 group">
+                <summary className="cursor-pointer text-xs font-semibold text-slate-600 flex items-center gap-2 list-none">
+                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
+                  Kolom-mapping bekijken ({preview.herkendeMapping.length} herkend{preview.niegmappedKolommen && preview.niegmappedKolommen.length > 0 ? `, ${preview.niegmappedKolommen.length} genegeerd` : ''})
+                </summary>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                  {preview.herkendeMapping.map((m, i) => (
+                    <div key={i} className="flex items-center justify-between bg-white rounded px-2 py-1 border border-slate-100">
+                      <span className="text-slate-600 truncate">{m.kolom}</span>
+                      <span className="flex items-center gap-1 ml-2 shrink-0">
+                        <span className="text-slate-400">→</span>
+                        <span className="text-purple-700 font-medium">{m.veld}</span>
+                        {m.bron === 'ai' && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 rounded">AI</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {preview.niegmappedKolommen && preview.niegmappedKolommen.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <p className="text-[11px] text-slate-500 mb-1.5">Niet gebruikt (niet relevant voor contacten):</p>
+                    <div className="flex flex-wrap gap-1">
+                      {preview.niegmappedKolommen.map((k, i) => (
+                        <span key={i} className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{k}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </details>
+            )}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-center">
