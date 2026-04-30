@@ -538,6 +538,13 @@ export interface IStorage {
   updateProspectCampaign(id: number, data: Partial<InsertProspectCampaign>): Promise<ProspectCampaign | undefined>;
   deleteProspectCampaign(id: number): Promise<void>;
   getProspectCampaignRecipients(campaignId: number): Promise<ProspectCampaignRecipient[]>;
+  // Werkelijke ontvangers van een verzonden campagne (uit mail_sends + contacts + mail_events)
+  getProspectCampaignSentRecipients(campaignId: number): Promise<Array<{
+    id: number; campaignId: number; email: string; name: string | null;
+    company: string | null; functieTags: string[]; status: string;
+    sentAt: string | null; errorMessage: string | null;
+    openedAt: string | null; clickedAt: string | null; trackingToken: string | null;
+  }>>;
   addProspectCampaignRecipient(data: InsertProspectCampaignRecipient): Promise<ProspectCampaignRecipient>;
   deleteProspectCampaignRecipient(id: number): Promise<void>;
   updateProspectCampaignRecipient(id: number, data: Partial<InsertProspectCampaignRecipient>): Promise<void>;
@@ -4336,6 +4343,55 @@ export class MemStorage implements IStorage {
     return db.select().from(prospectCampaignRecipientsTable)
       .where(eq(prospectCampaignRecipientsTable.campaignId, campaignId))
       .orderBy(asc(prospectCampaignRecipientsTable.createdAt));
+  }
+
+  async getProspectCampaignSentRecipients(campaignId: number): Promise<Array<{
+    id: number; campaignId: number; email: string; name: string | null;
+    company: string | null; functieTags: string[]; status: string;
+    sentAt: string | null; errorMessage: string | null;
+    openedAt: string | null; clickedAt: string | null; trackingToken: string | null;
+  }>> {
+    // Haal de werkelijke verzendingen op uit mail_sends, met contact-gegevens
+    // en eerste open/klik per verzending uit mail_events.
+    const result = await db.execute(sql`
+      SELECT
+        ms.id,
+        ms.campaign_id,
+        ms.email,
+        c.name AS contact_name,
+        c.company AS contact_company,
+        c.functie_tags AS functie_tags,
+        ms.status,
+        ms.verzonden_op,
+        ms.fout_melding,
+        (SELECT MIN(me.timestamp) FROM mail_events me WHERE me.mail_send_id = ms.id AND me.type = 'open') AS opened_at,
+        (SELECT MIN(me.timestamp) FROM mail_events me WHERE me.mail_send_id = ms.id AND me.type = 'click') AS clicked_at
+      FROM mail_sends ms
+      LEFT JOIN prospect_contacts c ON c.id = ms.contact_id
+      WHERE ms.campaign_id = ${campaignId}
+      ORDER BY ms.verzonden_op DESC NULLS LAST, ms.id DESC
+    `);
+
+    const toIso = (v: any): string | null => {
+      if (!v) return null;
+      const d = v instanceof Date ? v : new Date(v);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    };
+
+    return (result.rows as any[]).map(r => ({
+      id: r.id,
+      campaignId: r.campaign_id,
+      email: r.email,
+      name: r.contact_name ?? null,
+      company: r.contact_company ?? null,
+      functieTags: Array.isArray(r.functie_tags) ? r.functie_tags : [],
+      status: r.status,
+      sentAt: toIso(r.verzonden_op),
+      errorMessage: r.fout_melding ?? null,
+      openedAt: toIso(r.opened_at),
+      clickedAt: toIso(r.clicked_at),
+      trackingToken: null,
+    }));
   }
 
   async addProspectCampaignRecipient(data: InsertProspectCampaignRecipient): Promise<ProspectCampaignRecipient> {

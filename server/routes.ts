@@ -5474,13 +5474,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ontvangers
+  // Ontvangers — toon werkelijke verzendingen uit mail_sends (inclusief
+  // bulk/segment-verzendingen). De handmatige tabel prospect_campaign_recipients
+  // wordt door deze endpoint niet gelezen; die heeft eigen POST/DELETE-endpoints.
   app.get("/api/admin/prospect-campaigns/:id/recipients", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const recipients = await storage.getProspectCampaignRecipients(id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const recipients = await storage.getProspectCampaignSentRecipients(id);
       return res.json(recipients);
     } catch (err) {
+      console.error("[ProspectCampaign] Ontvangers ophalen mislukt:", err);
       return res.status(500).json({ message: "Fout" });
     }
   });
