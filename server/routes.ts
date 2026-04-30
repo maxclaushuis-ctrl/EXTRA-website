@@ -5584,6 +5584,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (!campaign.contentA) return res.status(400).json({ message: "Geen e-mailinhoud ingesteld" });
 
+      // Veiligheid: weiger directe verzending als de campagne een toekomstig
+      // gepland verzendmoment heeft. De scheduler-loop pakt geplande
+      // campagnes (status='gepland') automatisch op werkelijk_verzend_op.
+      const werkelijk = campaign.werkelijkVerzendOp ? new Date(campaign.werkelijkVerzendOp) : null;
+      if (werkelijk && werkelijk.getTime() > Date.now() + 60_000) {
+        return res.status(400).json({
+          message: `Campagne is ingepland voor ${werkelijk.toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Amsterdam' })}. Annuleer eerst de planning of gebruik 'Direct verzenden' in het verzending-paneel.`,
+        });
+      }
+
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
       // Update status to actief

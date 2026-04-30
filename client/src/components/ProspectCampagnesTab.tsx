@@ -1749,17 +1749,6 @@ export default function ProspectCampagnesTab() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] }); },
   });
 
-  const sendMut = useMutation({
-    mutationFn: (id: number) => apiRequest('POST', `/api/admin/prospect-campaigns/${id}/send`),
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns', selectedId, 'stats'] });
-      const n = data?.verzonden ?? data?.sentCount ?? 0;
-      toast({ title: `Campagne verzonden naar ${n} contacten ✓` });
-    },
-    onError: (e: any) => toast({ title: e?.data?.message || e?.message || 'Verzenden mislukt', variant: 'destructive' }),
-  });
-
   // ── Filtered list
   const statusCounts = {
     alle: campaigns.length,
@@ -1968,14 +1957,6 @@ export default function ProspectCampagnesTab() {
               ) : (
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setBuilderOpen(true)}>
                   <Pencil className="h-3.5 w-3.5" />E-mail opmaken
-                </Button>
-              )}
-              {['concept','draft'].includes(selectedCampaign.status) && selectedCampaign.campagneType !== 'flow' && (
-                <Button size="sm" className="gap-1.5 bg-purple-600 hover:bg-purple-700"
-                  disabled={!selectedCampaign.htmlContent || sendMut.isPending}
-                  onClick={() => { if (window.confirm(`Campagne '${selectedCampaign.name}' activeren en verzenden?`)) sendMut.mutate(selectedCampaign.id); }}>
-                  {sendMut.isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Rocket className="h-3.5 w-3.5" />}
-                  {sendMut.isPending ? 'Bezig...' : 'Activeren'}
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 px-2"
