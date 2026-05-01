@@ -1286,13 +1286,12 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
     previewTimer.current = setTimeout(async () => {
       setPreviewLoading(true);
       try {
-        const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen-preview`, {
+        const data: any = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen-preview`, {
           verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind,
           verzendDagen: verzendDagen.length > 0 ? verzendDagen : undefined,
           verzendSlots: verzendSlots.length > 0 ? verzendSlots : undefined,
           verzendDirect: false,
         });
-        const data = await res.json();
         setPreview(data);
       } catch { setPreview(null); }
       finally { setPreviewLoading(false); }
@@ -1301,43 +1300,35 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
   }, [verzendOp, alleenWerkdagen, tijdvensterStart, tijdvensterEind, verzendDagen, verzendSlots, modus, campaign.id]);
 
   const planMut = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen`, payload);
-      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Fout'); }
-      return res.json();
-    },
-    onSuccess: (data) => {
+    mutationFn: (payload: Record<string, unknown>) =>
+      apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/plannen`, payload) as Promise<any>,
+    onSuccess: (data: any) => {
       onRefresh();
       setModus('idle');
       toast({
-        title: data.verzendDirect ? '✅ Campagne wordt direct verzonden' : '📅 Campagne ingepland',
-        description: data.leesbaar ? `Verzending: ${data.leesbaar}` : undefined,
+        title: data?.verzendDirect ? '✅ Campagne wordt direct verzonden' : '📅 Campagne ingepland',
+        description: data?.leesbaar ? `Verzending: ${data.leesbaar}` : undefined,
       });
     },
-    onError: (err: Error) => toast({ title: 'Fout bij inplannen', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: 'Fout bij inplannen', description: err?.data?.message || err?.message || 'Onbekende fout', variant: 'destructive' }),
   });
 
   const wijzigMut = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      const res = await apiRequest('PUT', `/api/admin/prospect-campaigns/${campaign.id}/verzendtijd`, payload);
-      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Fout'); }
-      return res.json();
-    },
-    onSuccess: (data) => {
+    mutationFn: (payload: Record<string, unknown>) =>
+      apiRequest('PUT', `/api/admin/prospect-campaigns/${campaign.id}/verzendtijd`, payload) as Promise<any>,
+    onSuccess: (data: any) => {
       onRefresh();
       setModus('idle');
-      toast({ title: '📅 Verzendmoment bijgewerkt', description: data.leesbaar ?? undefined });
+      toast({ title: '📅 Verzendmoment bijgewerkt', description: data?.leesbaar ?? undefined });
     },
-    onError: (err: Error) => toast({ title: 'Fout bij bijwerken', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: 'Fout bij bijwerken', description: err?.data?.message || err?.message || 'Onbekende fout', variant: 'destructive' }),
   });
 
   const annuleerMut = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/annuleer-planning`, {});
-      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Fout'); }
-    },
+    mutationFn: () =>
+      apiRequest('POST', `/api/admin/prospect-campaigns/${campaign.id}/annuleer-planning`, {}) as Promise<any>,
     onSuccess: () => { onRefresh(); toast({ title: 'Planning geannuleerd', description: 'Campagne is teruggezet naar concept.' }); },
-    onError: (err: Error) => toast({ title: 'Fout', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: 'Fout', description: err?.data?.message || err?.message || 'Onbekende fout', variant: 'destructive' }),
   });
 
   function openPlanForm() {
