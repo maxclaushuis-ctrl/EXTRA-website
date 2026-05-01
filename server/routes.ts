@@ -5479,10 +5479,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
-      // Only allow delete if concept/draft
+      const force = req.query.force === 'true';
       const campaign = await storage.getProspectCampaign(id);
-      if (campaign && !['concept', 'draft'].includes(campaign.status)) {
-        return res.status(400).json({ message: "Alleen conceptcampagnes kunnen worden verwijderd" });
+      if (campaign && !['concept', 'draft'].includes(campaign.status) && !force) {
+        return res.status(400).json({
+          message: "Alleen conceptcampagnes kunnen normaal worden verwijderd. Gebruik force=true om verzonden campagnes te verwijderen (statistieken gaan verloren).",
+          requiresForce: true,
+        });
       }
       await storage.deleteProspectCampaign(id);
       return res.json({ success: true });

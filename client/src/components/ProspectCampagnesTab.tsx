@@ -1825,6 +1825,7 @@ export default function ProspectCampagnesTab() {
   const [detailTab, setDetailTab] = useState('overzicht');
   const [wizardOpen, setWizardOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('alle');
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -1958,10 +1959,11 @@ export default function ProspectCampagnesTab() {
 
   // ── Mutations
   const deleteMut = useMutation({
-    mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/prospect-campaigns/${id}`),
+    mutationFn: ({ id, force }: { id: number; force?: boolean }) =>
+      apiRequest('DELETE', `/api/admin/prospect-campaigns/${id}${force ? '?force=true' : ''}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] });
-      setSelectedId(null); setDeleteId(null);
+      setSelectedId(null); setDeleteId(null); setDeleteConfirmText('');
       toast({ title: 'Campagne verwijderd' });
     },
     onError: (e: any) => toast({ title: e?.data?.message || 'Verwijderen mislukt', variant: 'destructive' }),
@@ -2280,11 +2282,9 @@ export default function ProspectCampagnesTab() {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          {['concept','draft'].includes(c.status) && (
-                            <DropdownMenuItem onClick={e => { e.stopPropagation(); setDeleteId(c.id); }} className="text-red-600">
-                              <Trash2 className="h-3.5 w-3.5 mr-2" />Verwijderen
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem onClick={e => { e.stopPropagation(); setDeleteId(c.id); setDeleteConfirmText(''); }} className="text-red-600">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />Verwijderen
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -2356,7 +2356,7 @@ export default function ProspectCampagnesTab() {
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 px-2 shrink-0"
-                onClick={() => setDeleteId(selectedCampaign.id)}
+                onClick={() => { setDeleteId(selectedCampaign.id); setDeleteConfirmText(''); }}
                 title="Verwijderen">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
@@ -2900,18 +2900,75 @@ export default function ProspectCampagnesTab() {
       )}
 
       {/* ── Delete confirm ── */}
-      <AlertDialog open={!!deleteId} onOpenChange={v => !v && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Campagne verwijderen?</AlertDialogTitle>
-            <AlertDialogDescription>Dit kan niet ongedaan worden gemaakt. Alleen conceptcampagnes kunnen worden verwijderd.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteId && deleteMut.mutate(deleteId)}>Verwijderen</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {(() => {
+        const target = deleteId ? campaigns.find(c => c.id === deleteId) : null;
+        const isConceptDelete = target ? ['concept','draft'].includes(target.status) : true;
+        const requireType = !isConceptDelete;
+        const canConfirm = !requireType || deleteConfirmText.trim().toUpperCase() === 'VERWIJDER';
+        return (
+          <AlertDialog open={!!deleteId} onOpenChange={v => { if (!v) { setDeleteId(null); setDeleteConfirmText(''); } }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {isConceptDelete ? 'Campagne verwijderen?' : 'Verzonden campagne verwijderen?'}
+                </AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  {isConceptDelete ? (
+                    <span>Dit kan niet ongedaan worden gemaakt.</span>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2 p-3 rounded-md bg-red-50 border border-red-200">
+                        <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-red-700">
+                          <p className="font-semibold mb-1">Let op — alle data van deze campagne wordt definitief verwijderd:</p>
+                          <ul className="list-disc list-inside space-y-0.5 text-xs">
+                            <li>Verzendgeschiedenis &amp; ontvangerslijst</li>
+                            <li>Open-, klik- en bouncestatistieken</li>
+                            <li>Antwoorden gekoppeld aan deze campagne worden ontkoppeld</li>
+                          </ul>
+                          <p className="mt-2 text-xs">Doe dit alleen voor test- of opgeschoonde campagnes.</p>
+                        </div>
+                      </div>
+                      {target && (
+                        <div className="text-xs text-slate-600">
+                          Campagne: <span className="font-medium text-slate-900">{target.name}</span>
+                          <br />Status: <span className="font-medium">{target.status}</span> · Verzonden: <span className="font-medium">{target.sentCount ?? 0}</span>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs font-medium text-slate-700 block mb-1">
+                          Typ <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">VERWIJDER</span> om te bevestigen
+                        </label>
+                        <Input
+                          autoFocus
+                          value={deleteConfirmText}
+                          onChange={e => setDeleteConfirmText(e.target.value)}
+                          placeholder="VERWIJDER"
+                          className="h-8 text-sm"
+                          data-testid="input-delete-confirm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                  disabled={!canConfirm || deleteMut.isPending}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (deleteId && canConfirm) deleteMut.mutate({ id: deleteId, force: requireType });
+                  }}
+                  data-testid="button-confirm-delete">
+                  {deleteMut.isPending ? 'Bezig…' : 'Verwijderen'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        );
+      })()}
     </div>
   );
 }
