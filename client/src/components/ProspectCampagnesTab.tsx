@@ -1402,27 +1402,27 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
     }
 
     return (
-      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="bg-blue-50 rounded-xl px-3 py-2.5 border border-blue-200 space-y-2">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center gap-1.5">
             <CalendarClock className="h-3.5 w-3.5" />Ingepland
           </p>
-          <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-mono">{countdown}</span>
+          <span className="text-[11px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-mono">{countdown}</span>
         </div>
         <div>
-          <p className="text-sm font-medium text-blue-900 capitalize">{werkelijkLeesbaar}</p>
+          <p className="text-sm font-medium text-blue-900 capitalize leading-tight">{werkelijkLeesbaar}</p>
           {campaign.scheduledAt && campaign.werkelijkVerzendOp &&
             campaign.scheduledAt !== campaign.werkelijkVerzendOp && (
-            <p className="text-xs text-blue-500 mt-0.5 flex items-center gap-1">
+            <p className="text-[11px] text-blue-500 mt-0.5 flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" />
               Gewenst: {new Date(campaign.scheduledAt).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
               {' '}— aangepast aan tijdvenster
             </p>
           )}
-          <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-blue-500">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-blue-500">
             {Array.isArray(campaign.verzendSlots) && campaign.verzendSlots.length > 0 ? (
               <span data-testid="badge-vaste-slots-actief">
-                Vaste slots: {campaign.verzendSlots.map(s => `${WEEKDAG_KORT[s.dag] ?? '?'} ${s.tijd}`).join(' / ')}
+                Slots: {campaign.verzendSlots.map(s => `${WEEKDAG_KORT[s.dag] ?? '?'} ${s.tijd}`).join(' / ')}
               </span>
             ) : (
               <>
@@ -1430,16 +1430,16 @@ function VerzendplanningSection({ campaign, onRefresh }: { campaign: Campaign; o
                 <span>Venster: {campaign.tijdvensterStart}–{campaign.tijdvensterEind}</span>
               </>
             )}
-            <span className="text-blue-400">Tijdzone: {campaign.tijdzone || 'Europe/Amsterdam'}</span>
+            <span className="text-blue-400">{campaign.tijdzone || 'Europe/Amsterdam'}</span>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100 flex-1" onClick={openPlanForm}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" />Wijzigen
+          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100 flex-1 h-7 text-xs" onClick={openPlanForm}>
+            <Pencil className="h-3 w-3 mr-1.5" />Wijzigen
           </Button>
-          <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" disabled={annuleerMut.isPending}
+          <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 h-7 px-2" disabled={annuleerMut.isPending}
             onClick={() => { if (window.confirm('Planning annuleren? De campagne wordt teruggezet naar concept.')) annuleerMut.mutate(); }}>
-            {annuleerMut.isPending ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <BanIcon className="h-3.5 w-3.5" />}
+            {annuleerMut.isPending ? <RefreshCw className="h-3 w-3 animate-spin" /> : <BanIcon className="h-3 w-3" />}
           </Button>
         </div>
       </div>
@@ -1780,20 +1780,18 @@ function SerieEditor({ campaign, alleSeries }: { campaign: Campaign; alleSeries:
     : alleSeries.slice(0, 5);
 
   return (
-    <div className="bg-purple-50/50 rounded-xl p-4 border border-purple-200">
-      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-        <FileText className="h-3.5 w-3.5" />Serie / Jaarcampagne
-      </p>
-      <div className="grid grid-cols-[2fr_1fr] gap-3">
-        <div className="relative">
-          <Label className="text-xs text-slate-500">Serie-naam</Label>
+    <div className="bg-purple-50/50 rounded-xl px-3 py-2.5 border border-purple-200">
+      <div className="flex items-center gap-2">
+        <FileText className="h-3.5 w-3.5 text-purple-600 flex-shrink-0" />
+        <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide whitespace-nowrap">Serie</span>
+        <div className="relative flex-1 min-w-0">
           <Input
             value={serie}
             onChange={e => { setSerie(e.target.value); setShowSuggesties(true); }}
             onFocus={() => setShowSuggesties(true)}
             onBlur={() => setTimeout(() => setShowSuggesties(false), 200)}
             placeholder="bv. Banqueting jaarcampagne"
-            className="h-8 text-sm bg-white"
+            className="h-7 text-xs bg-white"
           />
           {showSuggesties && suggesties.length > 0 && (
             <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg max-h-40 overflow-y-auto">
@@ -1806,20 +1804,16 @@ function SerieEditor({ campaign, alleSeries }: { campaign: Campaign; alleSeries:
             </div>
           )}
         </div>
-        <div>
-          <Label className="text-xs text-slate-500">Stap nr.</Label>
-          <Input type="number" min={1} value={stap} onChange={e => setStap(e.target.value)}
-            placeholder="1..N" className="h-8 text-sm bg-white" />
-        </div>
-      </div>
-      {dirty && (
-        <div className="mt-3 flex justify-end">
+        <span className="text-xs text-slate-500 whitespace-nowrap">Stap</span>
+        <Input type="number" min={1} value={stap} onChange={e => setStap(e.target.value)}
+          placeholder="1..N" className="h-7 text-xs bg-white w-16" />
+        {dirty && (
           <Button size="sm" onClick={() => opslaanMut.mutate()} disabled={opslaanMut.isPending}
-            className="bg-purple-600 hover:bg-purple-700 h-7 text-xs">
-            {opslaanMut.isPending ? 'Bezig...' : 'Opslaan'}
+            className="bg-purple-600 hover:bg-purple-700 h-7 text-xs px-2">
+            {opslaanMut.isPending ? '...' : 'Opslaan'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -2389,19 +2383,20 @@ export default function ProspectCampagnesTab() {
             </div>
 
             {/* Overzicht */}
-            <TabsContent value="overzicht" className="flex-1 overflow-auto p-6">
-              <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <TabsContent value="overzicht" className="flex-1 overflow-auto p-4">
+              <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-3">
                 {/* Hoofdkolom: instellingen */}
-                <div className="lg:col-span-2 space-y-5">
+                <div className="lg:col-span-2 space-y-3">
                   {/* Serie-toewijzing */}
                   <SerieEditor campaign={selectedCampaign} alleSeries={alleSeries} />
 
                   {/* Doelgroep samenvatting */}
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                      <SlidersHorizontal className="h-3.5 w-3.5" />Doelgroep
-                    </p>
-                    <p className="text-sm text-slate-700">{getSegmentSummary(selectedCampaign)}</p>
+                  <div className="bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200 flex items-start gap-2">
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mr-2">Doelgroep:</span>
+                      <span className="text-xs text-slate-700">{getSegmentSummary(selectedCampaign)}</span>
+                    </div>
                   </div>
 
                   {/* Verzendplanning sectie */}
@@ -2412,34 +2407,34 @@ export default function ProspectCampagnesTab() {
                 </div>
 
                 {/* Zijkolom: status & extra's */}
-                <div className="space-y-5">
+                <div className="space-y-3">
                   {/* E-mail inhoud status */}
-                  <div className={`rounded-xl p-4 border ${selectedCampaign.htmlContent ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-                    <div className="flex items-start gap-2 mb-3">
+                  <div className={`rounded-xl px-3 py-2.5 border ${selectedCampaign.htmlContent ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                    <div className="flex items-center gap-2 mb-2">
                       {selectedCampaign.htmlContent
-                        ? <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        : <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />}
-                      <p className={`text-sm font-medium ${selectedCampaign.htmlContent ? 'text-green-700' : 'text-amber-700'}`}>
-                        {selectedCampaign.htmlContent ? 'E-mail inhoud ingevuld' : 'E-mail inhoud nog niet ingevuld'}
+                        ? <CheckCircle className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                        : <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />}
+                      <p className={`text-xs font-medium ${selectedCampaign.htmlContent ? 'text-green-700' : 'text-amber-700'}`}>
+                        {selectedCampaign.htmlContent ? 'E-mail inhoud ingevuld' : 'E-mail inhoud ontbreekt'}
                       </p>
                     </div>
                     <Button size="sm" variant={selectedCampaign.htmlContent ? 'outline' : 'default'}
-                      className={`w-full ${selectedCampaign.htmlContent ? '' : 'bg-purple-600 hover:bg-purple-700'}`}
+                      className={`w-full h-7 text-xs ${selectedCampaign.htmlContent ? '' : 'bg-purple-600 hover:bg-purple-700'}`}
                       onClick={() => setBuilderOpen(true)}>
-                      <Pencil className="h-3.5 w-3.5 mr-1.5" />E-mail opmaken
+                      <Pencil className="h-3 w-3 mr-1.5" />E-mail opmaken
                     </Button>
                   </div>
 
                   {/* A/B test */}
                   {selectedCampaign.abTestActief && (
-                    <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
-                      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                        <FlaskConical className="h-3.5 w-3.5" />A/B Test
+                    <div className="bg-purple-50 rounded-xl px-3 py-2.5 border border-purple-200">
+                      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <FlaskConical className="h-3 w-3" />A/B Test
                       </p>
-                      <div className="space-y-2 text-sm">
-                        <div><p className="text-xs text-purple-400">Split</p><p className="font-medium text-purple-700">A: {selectedCampaign.abSplitPct}% / B: {100 - selectedCampaign.abSplitPct}%</p></div>
-                        <div><p className="text-xs text-purple-400">Winnaar op</p><p className="font-medium text-purple-700">{selectedCampaign.abWinnaarOp === 'open_rate' ? 'Open rate' : 'Click rate'} na {selectedCampaign.abWinnaarNaUren}u</p></div>
-                        {selectedCampaign.abWinnaarVariant && <div><p className="text-xs text-purple-400">Winnaar</p><p className="font-bold text-purple-700">Variant {selectedCampaign.abWinnaarVariant}</p></div>}
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between"><span className="text-purple-400">Split</span><span className="font-medium text-purple-700">A: {selectedCampaign.abSplitPct}% / B: {100 - selectedCampaign.abSplitPct}%</span></div>
+                        <div className="flex justify-between"><span className="text-purple-400">Winnaar op</span><span className="font-medium text-purple-700">{selectedCampaign.abWinnaarOp === 'open_rate' ? 'Open rate' : 'Click rate'} na {selectedCampaign.abWinnaarNaUren}u</span></div>
+                        {selectedCampaign.abWinnaarVariant && <div className="flex justify-between"><span className="text-purple-400">Winnaar</span><span className="font-bold text-purple-700">Variant {selectedCampaign.abWinnaarVariant}</span></div>}
                       </div>
                     </div>
                   )}
