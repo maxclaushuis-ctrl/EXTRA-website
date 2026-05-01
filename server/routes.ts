@@ -5181,7 +5181,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/prospect-contacts/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const body = { ...req.body };
+      const body: any = { ...req.body };
+      // Map Nederlandse alias-veldnamen naar de echte DB-kolommen.
+      // (Het frontend stuurt 'type', 'bedrijf', 'functietitel', 'notities'.)
+      if (body.type !== undefined) { body.contactType = body.type; delete body.type; }
+      if (body.bedrijf !== undefined) { body.company = body.bedrijf; delete body.bedrijf; }
+      if (body.functietitel !== undefined) { body.function = body.functietitel; delete body.functietitel; }
+      if (body.notities !== undefined) { body.notes = body.notities; delete body.notities; }
+      // contactType whitelist
+      if (body.contactType !== undefined && !['prospect','klant'].includes(body.contactType)) {
+        delete body.contactType;
+      }
+      // Branche/functiegroep ook bijwerken in de tag-arrays zodat campagne-segmentatie
+      // (die op brancheTags / functieTags filtert) consistent blijft met de POST-route.
+      if (body.branche !== undefined) {
+        body.brancheTags = body.branche ? [body.branche] : [];
+      }
+      if (body.functiegroep !== undefined) {
+        body.functieTags = body.functiegroep ? [body.functiegroep] : [];
+      }
       // Handle customTags serialization
       if (Array.isArray(body.customTags)) body.customTags = JSON.stringify(body.customTags);
       if (Array.isArray(body.tags)) body.customTags = JSON.stringify(body.tags);
