@@ -2390,57 +2390,60 @@ export default function ProspectCampagnesTab() {
 
             {/* Overzicht */}
             <TabsContent value="overzicht" className="flex-1 overflow-auto p-6">
-              <div className="max-w-xl space-y-5">
-                {/* Serie-toewijzing */}
-                <SerieEditor campaign={selectedCampaign} alleSeries={alleSeries} />
+              <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Hoofdkolom: instellingen */}
+                <div className="lg:col-span-2 space-y-5">
+                  {/* Serie-toewijzing */}
+                  <SerieEditor campaign={selectedCampaign} alleSeries={alleSeries} />
 
-                {/* Doelgroep samenvatting */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                    <SlidersHorizontal className="h-3.5 w-3.5" />Doelgroep
-                  </p>
-                  <p className="text-sm text-slate-700">{getSegmentSummary(selectedCampaign)}</p>
+                  {/* Doelgroep samenvatting */}
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                      <SlidersHorizontal className="h-3.5 w-3.5" />Doelgroep
+                    </p>
+                    <p className="text-sm text-slate-700">{getSegmentSummary(selectedCampaign)}</p>
+                  </div>
+
+                  {/* Verzendplanning sectie */}
+                  <VerzendplanningSection
+                    campaign={selectedCampaign}
+                    onRefresh={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] })}
+                  />
                 </div>
 
-                {/* Verzendplanning sectie */}
-                <VerzendplanningSection
-                  campaign={selectedCampaign}
-                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-campaigns'] })}
-                />
-
-                {/* A/B test */}
-                {selectedCampaign.abTestActief && (
-                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
-                    <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                      <FlaskConical className="h-3.5 w-3.5" />A/B Test
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><p className="text-xs text-purple-400">Split</p><p className="font-medium text-purple-700">A: {selectedCampaign.abSplitPct}% / B: {100 - selectedCampaign.abSplitPct}%</p></div>
-                      <div><p className="text-xs text-purple-400">Winnaar op</p><p className="font-medium text-purple-700">{selectedCampaign.abWinnaarOp === 'open_rate' ? 'Open rate' : 'Click rate'} na {selectedCampaign.abWinnaarNaUren}u</p></div>
-                      {selectedCampaign.abWinnaarVariant && <div><p className="text-xs text-purple-400">Winnaar</p><p className="font-bold text-purple-700">Variant {selectedCampaign.abWinnaarVariant}</p></div>}
-                    </div>
-                  </div>
-                )}
-
-                {/* E-mail inhoud status */}
-                <div className={`rounded-xl p-4 border ${selectedCampaign.htmlContent ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                {/* Zijkolom: status & extra's */}
+                <div className="space-y-5">
+                  {/* E-mail inhoud status */}
+                  <div className={`rounded-xl p-4 border ${selectedCampaign.htmlContent ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                    <div className="flex items-start gap-2 mb-3">
                       {selectedCampaign.htmlContent
-                        ? <CheckCircle className="h-4 w-4 text-green-600" />
-                        : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                        ? <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        : <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />}
                       <p className={`text-sm font-medium ${selectedCampaign.htmlContent ? 'text-green-700' : 'text-amber-700'}`}>
                         {selectedCampaign.htmlContent ? 'E-mail inhoud ingevuld' : 'E-mail inhoud nog niet ingevuld'}
                       </p>
                     </div>
                     <Button size="sm" variant={selectedCampaign.htmlContent ? 'outline' : 'default'}
-                      className={selectedCampaign.htmlContent ? '' : 'bg-purple-600 hover:bg-purple-700'}
+                      className={`w-full ${selectedCampaign.htmlContent ? '' : 'bg-purple-600 hover:bg-purple-700'}`}
                       onClick={() => setBuilderOpen(true)}>
                       <Pencil className="h-3.5 w-3.5 mr-1.5" />E-mail opmaken
                     </Button>
                   </div>
-                </div>
 
+                  {/* A/B test */}
+                  {selectedCampaign.abTestActief && (
+                    <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                      <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                        <FlaskConical className="h-3.5 w-3.5" />A/B Test
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div><p className="text-xs text-purple-400">Split</p><p className="font-medium text-purple-700">A: {selectedCampaign.abSplitPct}% / B: {100 - selectedCampaign.abSplitPct}%</p></div>
+                        <div><p className="text-xs text-purple-400">Winnaar op</p><p className="font-medium text-purple-700">{selectedCampaign.abWinnaarOp === 'open_rate' ? 'Open rate' : 'Click rate'} na {selectedCampaign.abWinnaarNaUren}u</p></div>
+                        {selectedCampaign.abWinnaarVariant && <div><p className="text-xs text-purple-400">Winnaar</p><p className="font-bold text-purple-700">Variant {selectedCampaign.abWinnaarVariant}</p></div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </TabsContent>
 
@@ -2459,7 +2462,7 @@ export default function ProspectCampagnesTab() {
                   <RefreshCw className="h-6 w-6 text-slate-300 animate-spin" />
                 </div>
               ) : (
-                <div className="max-w-2xl space-y-6">
+                <div className="max-w-5xl mx-auto space-y-6">
                   {/* Main KPI cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
@@ -2727,7 +2730,7 @@ export default function ProspectCampagnesTab() {
             {/* Ontvangers */}
             <TabsContent value="ontvangers" className="flex-1 overflow-hidden flex flex-col">
               <ScrollArea className="flex-1">
-                <div className="p-6">
+                <div className="p-6 max-w-5xl mx-auto">
                   {isPlannedOrConcept ? (
                     // Voor concept/geplande campagnes: live preview van wie er
                     // op verzendmoment in het segment zal zitten, met de mogelijkheid
