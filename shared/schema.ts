@@ -1480,6 +1480,9 @@ export const prospectCampaigns = pgTable("prospect_campaigns", {
   // Serie-velden voor groepering (bv. "Banqueting jaarcampagne", stap 1..8)
   serie: text("serie"),
   serieStapNr: integer("serie_stap_nr"),
+  // Per-campagne uitgesloten contacten — losse blokkering van individuele
+  // contacten zonder dat ze uit het hele segment hoeven (zie Ontvangers-tab).
+  excludedContactIds: integer("excluded_contact_ids").array().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

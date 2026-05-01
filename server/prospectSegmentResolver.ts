@@ -18,8 +18,14 @@ export async function resolveCampaignAudience(
     try { return JSON.parse((campaign as any).tagFilter || '[]'); } catch { return []; }
   })();
   const phaseFilter: string[] = Array.isArray((campaign as any).phaseFilter) ? (campaign as any).phaseFilter : [];
+  const excludedIds = new Set<number>(
+    Array.isArray((campaign as any).excludedContactIds)
+      ? ((campaign as any).excludedContactIds as number[])
+      : []
+  );
 
   return allContacts.filter(c => {
+    if (excludedIds.has(c.id)) return false;
     if (c.unsubscribed || c.contactStatus === 'uitgeschreven' || c.contactStatus === 'geblokkeerd') return false;
     if (campaign.typeFilter && campaign.typeFilter !== 'alles' && c.contactType !== campaign.typeFilter) return false;
     if (campaign.taalFilter && campaign.taalFilter !== 'alles' && c.taal !== campaign.taalFilter) return false;

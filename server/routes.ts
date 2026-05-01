@@ -5541,6 +5541,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Segment-preview — voor concept/geplande campagnes: bereken nu welke
+  // contacten op het verzendmoment in het segment zouden zitten op basis van
+  // de filters van de campagne. Markeer per contact of het is uitgesloten.
+  app.get("/api/admin/prospect-campaigns/:id/segment-preview", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+      const campaign = await storage.getProspectCampaign(id);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+      const excludedIds = new Set<number>(
+        Array.isArray((campaign as any).excludedContactIds)
+          ? ((campaign as any).excludedContactIds as number[])
+          : []
+      );
+      // Tijdelijk de exclusion uitschakelen zodat de resolver alle gematch'te
+      // contacten teruggeeft; we markeren ze daarna handmatig.
+      const campaignZonderExclusion = { ...campaign, excludedContactIds: [] as number[] };
+      const { resolveCampaignAudience } = await import('./prospectSegmentResolver');
+      const audience = await resolveCampaignAudience(campaignZonderExclusion as any);
+      const items = audience.map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        company: c.company,
+        function: c.function,
+        branche: c.branche,
+        functiegroep: c.functiegroep,
+        contactType: c.contactType,
+        phase: (c as any).phase,
+        excluded: excludedIds.has(c.id),
+      }));
+      return res.json({
+        totaal: items.length,
+        verzendBaar: items.filter(i => !i.excluded).length,
+        uitgesloten: items.filter(i => i.excluded).length,
+        contacts: items,
+      });
+    } catch (err) {
+      console.error("[ProspectCampaign] Segment-preview fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Sluit een contact uit voor deze specifieke campagne (zonder de pijplijn-
+  // fase van het contact zelf te wijzigen).
+  app.post("/api/admin/prospect-campaigns/:id/exclude/:contactId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contactId = parseInt(req.params.contactId);
+      if (isNaN(id) || isNaN(contactId)) return res.status(400).json({ message: "Ongeldig ID" });
+      const campaign = await storage.getProspectCampaign(id);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+      const current: number[] = Array.isArray((campaign as any).excludedContactIds)
+        ? ((campaign as any).excludedContactIds as number[])
+        : [];
+      if (!current.includes(contactId)) current.push(contactId);
+      await storage.updateProspectCampaign(id, { excludedContactIds: current } as any);
+      return res.json({ success: true, excludedContactIds: current });
+    } catch (err) {
+      console.error("[ProspectCampaign] Uitsluiten fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
+  // Hef de uitsluiting van een contact voor deze campagne weer op.
+  app.delete("/api/admin/prospect-campaigns/:id/exclude/:contactId", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contactId = parseInt(req.params.contactId);
+      if (isNaN(id) || isNaN(contactId)) return res.status(400).json({ message: "Ongeldig ID" });
+      const campaign = await storage.getProspectCampaign(id);
+      if (!campaign) return res.status(404).json({ message: "Campagne niet gevonden" });
+      const current: number[] = Array.isArray((campaign as any).excludedContactIds)
+        ? ((campaign as any).excludedContactIds as number[])
+        : [];
+      const next = current.filter(cid => cid !== contactId);
+      await storage.updateProspectCampaign(id, { excludedContactIds: next } as any);
+      return res.json({ success: true, excludedContactIds: next });
+    } catch (err) {
+      console.error("[ProspectCampaign] Uitsluiting opheffen fout:", err);
+      return res.status(500).json({ message: "Fout" });
+    }
+  });
+
   app.post("/api/admin/prospect-campaigns/:id/recipients", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const campaignId = parseInt(req.params.id);

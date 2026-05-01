@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -1861,6 +1861,80 @@ export default function ProspectCampagnesTab() {
     queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/recipients`, { credentials: 'include' }).then(r => r.json()),
   });
 
+  // Voor concept/geplande campagnes: bereken nu welke contacten op het
+  // verzendmoment in het segment zouden zitten (incl. uitsluitingen).
+  type SegmentPreviewItem = {
+    id: number; name: string; email: string; company: string | null;
+    function: string | null; branche: string | null; functiegroep: string | null;
+    contactType: string | null; phase: string | null; excluded: boolean;
+  };
+  type SegmentPreview = {
+    totaal: number; verzendBaar: number; uitgesloten: number;
+    contacts: SegmentPreviewItem[];
+  };
+  const isPlannedOrConcept = !!selectedCampaign && !['sent','voltooid','actief','gestopt'].includes(selectedCampaign.status);
+  const { data: segmentPreviewRaw, isLoading: segLoading } = useQuery<SegmentPreview>({
+    queryKey: ['/api/admin/prospect-campaigns', selectedId, 'segment-preview'],
+    enabled: !!selectedId && detailTab === 'ontvangers' && isPlannedOrConcept,
+    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/segment-preview`, { credentials: 'include' }).then(r => r.json()),
+  });
+
+  // Lokale shadow-state voor uitsluitingen. Gesynchroniseerd met server bij
+  // elke nieuwe fetch, maar synchroon updatebaar voor instant UI feedback.
+  const [excludedShadow, setExcludedShadow] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    if (segmentPreviewRaw) {
+      const set = new Set<number>(
+        segmentPreviewRaw.contacts.filter(c => c.excluded).map(c => c.id)
+      );
+      setExcludedShadow(set);
+    }
+  }, [segmentPreviewRaw]);
+
+  // Afgeleide preview die UI gebruikt: combineert de server data met de
+  // lokale shadow zodat klikken meteen zichtbaar is.
+  const segmentPreview = useMemo<SegmentPreview | undefined>(() => {
+    if (!segmentPreviewRaw) return segmentPreviewRaw;
+    const contacts = segmentPreviewRaw.contacts.map(c => ({
+      ...c, excluded: excludedShadow.has(c.id),
+    }));
+    const uitgesloten = contacts.filter(c => c.excluded).length;
+    return {
+      ...segmentPreviewRaw, contacts, uitgesloten,
+      verzendBaar: contacts.length - uitgesloten,
+    };
+  }, [segmentPreviewRaw, excludedShadow]);
+
+  const toggleExclusion = useMutation({
+    mutationFn: async ({ contactId, exclude }: { contactId: number; exclude: boolean }) => {
+      const url = `/api/admin/prospect-campaigns/${selectedId}/exclude/${contactId}`;
+      return (await apiRequest(exclude ? 'POST' : 'DELETE', url)) as { success: boolean; excludedContactIds: number[] };
+    },
+    onMutate: ({ contactId, exclude }) => {
+      // Synchroon de shadow-set bijwerken zodat de UI direct reageert.
+      setExcludedShadow(prev => {
+        const next = new Set(prev);
+        if (exclude) next.add(contactId); else next.delete(contactId);
+        return next;
+      });
+    },
+    onSuccess: (data) => {
+      // Server is bron-van-waarheid: sync de shadow met wat de server teruggeeft.
+      if (data && Array.isArray(data.excludedContactIds)) {
+        setExcludedShadow(new Set(data.excludedContactIds));
+      }
+    },
+    onError: (err: any, vars) => {
+      // Rollback: zet de shadow terug.
+      setExcludedShadow(prev => {
+        const next = new Set(prev);
+        if (vars.exclude) next.delete(vars.contactId); else next.add(vars.contactId);
+        return next;
+      });
+      toast({ title: err?.data?.message || err?.message || 'Fout bij wijzigen', variant: 'destructive' });
+    },
+  });
+
   type CampaignStats = {
     verzonden: number; geopend: number; geklikt: number; uitgeschreven: number; mislukt: number;
     geopend_pct: number; geklikt_pct: number; uitgeschreven_pct: number;
@@ -2654,13 +2728,89 @@ export default function ProspectCampagnesTab() {
             <TabsContent value="ontvangers" className="flex-1 overflow-hidden flex flex-col">
               <ScrollArea className="flex-1">
                 <div className="p-6">
-                  {recipLoading ? (
+                  {isPlannedOrConcept ? (
+                    // Voor concept/geplande campagnes: live preview van wie er
+                    // op verzendmoment in het segment zal zitten, met de mogelijkheid
+                    // om individuele contacten uit te sluiten.
+                    segLoading ? (
+                      <div className="text-center py-8 text-slate-400 text-sm">Verzendlijst laden...</div>
+                    ) : !segmentPreview || segmentPreview.contacts.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                        <p className="text-sm text-slate-400">Geen contacten in dit segment</p>
+                        <p className="text-xs text-slate-300 mt-1">Pas de filters in het Overzicht aan om contacten te selecteren</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-4 flex items-center gap-3 text-xs">
+                          <div className="px-3 py-1.5 rounded-lg bg-purple-50 border border-purple-100">
+                            <span className="text-slate-500">Verzendlijst </span>
+                            <span className="font-semibold text-purple-700">{segmentPreview.verzendBaar}</span>
+                            <span className="text-slate-400"> / {segmentPreview.totaal} contacten</span>
+                          </div>
+                          {segmentPreview.uitgesloten > 0 && (
+                            <div className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 font-medium">
+                              {segmentPreview.uitgesloten} uitgesloten
+                            </div>
+                          )}
+                          <p className="text-slate-400 text-[11px]">Live berekend op basis van de filters van deze campagne. Klik op "Uitsluiten" om een contact niet mee te laten doen.</p>
+                        </div>
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-xs text-slate-400 border-b border-slate-100">
+                              <th className="text-left py-2 font-medium">Contact</th>
+                              <th className="text-left py-2 font-medium">Bedrijf</th>
+                              <th className="text-left py-2 font-medium">Functie</th>
+                              <th className="text-left py-2 font-medium">Type</th>
+                              <th className="text-right py-2 font-medium pr-2">Actie</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {segmentPreview.contacts.map(c => (
+                              <tr key={c.id} className={`border-b border-slate-50 hover:bg-slate-50/50 ${c.excluded ? 'opacity-50' : ''}`}>
+                                <td className="py-2">
+                                  <p className={`font-medium text-xs ${c.excluded ? 'line-through text-slate-400' : 'text-slate-700'}`}>{c.name || c.email}</p>
+                                  {c.name && <p className="text-xs text-slate-400">{c.email}</p>}
+                                </td>
+                                <td className="py-2 text-xs text-slate-600">{c.company || '—'}</td>
+                                <td className="py-2 text-xs text-slate-600">
+                                  {c.function || c.functiegroep || '—'}
+                                  {c.branche && <span className="block text-[10px] text-slate-400">{c.branche}</span>}
+                                </td>
+                                <td className="py-2">
+                                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${c.contactType === 'klant' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'}`}>
+                                    {c.contactType === 'klant' ? 'Klant' : 'Prospect'}
+                                  </span>
+                                </td>
+                                <td className="py-2 text-right pr-2">
+                                  {c.excluded ? (
+                                    <Button size="sm" variant="outline" className="h-7 text-xs"
+                                      disabled={toggleExclusion.isPending}
+                                      onClick={() => toggleExclusion.mutate({ contactId: c.id, exclude: false })}
+                                      data-testid={`btn-include-${c.id}`}>
+                                      Toevoegen
+                                    </Button>
+                                  ) : (
+                                    <Button size="sm" variant="ghost" className="h-7 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                      disabled={toggleExclusion.isPending}
+                                      onClick={() => toggleExclusion.mutate({ contactId: c.id, exclude: true })}
+                                      data-testid={`btn-exclude-${c.id}`}>
+                                      Uitsluiten
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )
+                  ) : recipLoading ? (
                     <div className="text-center py-8 text-slate-400 text-sm">Laden...</div>
                   ) : recipients.length === 0 ? (
                     <div className="text-center py-12">
                       <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
                       <p className="text-sm text-slate-400">Geen ontvangers voor deze campagne</p>
-                      <p className="text-xs text-slate-300 mt-1">Ontvangers worden geladen bij verzending</p>
                     </div>
                   ) : (
                     <table className="w-full text-sm">
