@@ -349,9 +349,14 @@ export default function DashboardMockup() {
   const [aannemenApp, setAannemenApp] = useState<any | null>(null);
   const [aannemenForm, setAannemenForm] = useState<{ functie: string; branche: string; opdrachtgever: string; contractType: string; startDate: string; language: string }>({ functie: '', branche: '', opdrachtgever: '', contractType: '', startDate: '', language: 'Nederlands' });
   const [appNotesDraft, setAppNotesDraft] = useState<string>('');
+  // Bewerk-modus voor sollicitatieformulier
+  const [isEditingApp, setIsEditingApp] = useState(false);
+  const [editAppDraft, setEditAppDraft] = useState<any | null>(null);
   // Reset draft when a different application card is opened
   useEffect(() => {
     setAppNotesDraft(selectedApp?.adminNotes ?? '');
+    setIsEditingApp(false);
+    setEditAppDraft(null);
   }, [selectedApp?.id]);
 
   // Import modal state
@@ -501,6 +506,22 @@ export default function DashboardMockup() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
       setSelectedApp((prev: any) => prev ? { ...prev, adminNotes: data?.adminNotes ?? '' } : prev);
       toast({ title: 'Referentie opgeslagen' });
+    },
+  });
+
+  // Bewerken sollicitatieformulier — slaat top-level velden + formData op
+  const saveAppEditMutation = useMutation({
+    mutationFn: ({ id, patch }: { id: number; patch: any }) =>
+      apiRequest('PATCH', `/api/admin/applications/${id}`, patch),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/applications'] });
+      setSelectedApp((prev: any) => prev ? { ...prev, ...data } : prev);
+      setIsEditingApp(false);
+      setEditAppDraft(null);
+      toast({ title: 'Sollicitatieformulier opgeslagen' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Opslaan mislukt', description: err?.message || 'Probeer opnieuw', variant: 'destructive' });
     },
   });
 
@@ -2278,55 +2299,149 @@ export default function DashboardMockup() {
                     const fd = selectedApp.formData || {};
                     const fn = selectedApp.functionType;
 
-                    const renderStars = (val: any) => {
+                    // ── Bewerk-modus helpers ──
+                    const TOP_LEVEL_KEYS = ['firstName','lastName','email','phone','city','interviewer','salaryScale','assessmentRating'];
+                    const isTopLevel = (k: string) => TOP_LEVEL_KEYS.includes(k);
+                    const draftFd = (isEditingApp && editAppDraft ? editAppDraft.formData : fd) || {};
+                    const getFieldValue = (key: string) => {
+                      if (isTopLevel(key)) {
+                        return (isEditingApp && editAppDraft ? editAppDraft : selectedApp)[key];
+                      }
+                      return draftFd[key];
+                    };
+                    const setFieldValue = (key: string, value: any) => {
+                      setEditAppDraft((prev: any) => {
+                        const base = prev ?? { ...selectedApp, formData: { ...(selectedApp.formData || {}) } };
+                        if (isTopLevel(key)) return { ...base, [key]: value };
+                        return { ...base, formData: { ...(base.formData || {}), [key]: value } };
+                      });
+                    };
+
+                    type RowType = 'text' | 'bool' | 'date' | 'number' | 'years' | 'array';
+                    type Row = { label: string; key: string; type?: RowType };
+
+                    const renderStars = (val: any, onClick?: (n: number) => void) => {
                       const n = parseInt(val) || 0;
                       return (
                         <span className="flex gap-0.5">
                           {[1,2,3,4,5].map(i => (
-                            <Star key={i} className={`h-4 w-4 ${i <= n ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
+                            <Star
+                              key={i}
+                              onClick={onClick ? () => onClick(i === n ? 0 : i) : undefined}
+                              className={`h-4 w-4 ${i <= n ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'} ${onClick ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+                            />
                           ))}
                         </span>
                       );
                     };
 
-                    const renderBool = (val: any) => val === true || val === 'true' || val === 'ja' ? 
-                      <span className="text-green-600 font-medium">Ja</span> : 
-                      <span className="text-gray-400">Nee</span>;
+                    const renderBool = (val: any) => val === true || val === 'true' || val === 'ja' ?
+                      <span className="text-green-600 font-medium">Ja</span> :
+                      val === false || val === 'false' || val === 'nee' ?
+                      <span className="text-gray-400">Nee</span> :
+                      <span className="text-gray-300">—</span>;
 
-                    const renderVal = (val: any) => {
+                    const renderVal = (val: any, type?: RowType) => {
                       if (val === null || val === undefined || val === '') return <span className="text-gray-300">—</span>;
+                      if (type === 'years') return `${val} jaar`;
                       if (Array.isArray(val)) return val.length ? val.join(', ') : <span className="text-gray-300">—</span>;
-                      if (typeof val === 'boolean') return renderBool(val);
+                      if (typeof val === 'boolean' || type === 'bool') return renderBool(val);
+                      if (type === 'date') {
+                        try { return new Date(val).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }); }
+                        catch { return String(val); }
+                      }
                       return String(val);
                     };
 
-                    const Section = ({ title, rows }: { title: string; rows: [string, any][] }) => (
+                    const EditField = ({ row }: { row: Row }) => {
+                      const value = getFieldValue(row.key);
+                      const onChange = (v: any) => setFieldValue(row.key, v);
+                      if (row.type === 'bool') {
+                        const cur = value === true || value === 'ja' || value === 'true' ? 'ja' :
+                                    value === false || value === 'nee' || value === 'false' ? 'nee' : '';
+                        return (
+                          <select
+                            value={cur}
+                            onChange={e => onChange(e.target.value === '' ? null : e.target.value === 'ja')}
+                            className="text-sm border border-gray-200 rounded px-2 py-1 bg-white w-32"
+                          >
+                            <option value="">—</option>
+                            <option value="ja">Ja</option>
+                            <option value="nee">Nee</option>
+                          </select>
+                        );
+                      }
+                      if (row.type === 'date') {
+                        const dv = value ? String(value).slice(0, 10) : '';
+                        return <input type="date" value={dv} onChange={e => onChange(e.target.value || null)} className="text-sm border border-gray-200 rounded px-2 py-1 bg-white w-44" />;
+                      }
+                      if (row.type === 'number' || row.type === 'years') {
+                        return <input type="number" value={value ?? ''} onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))} className="text-sm border border-gray-200 rounded px-2 py-1 bg-white w-28 text-right" />;
+                      }
+                      if (row.type === 'array') {
+                        const str = Array.isArray(value) ? value.join(', ') : (value ?? '');
+                        return (
+                          <input
+                            type="text"
+                            value={str}
+                            onChange={e => onChange(e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+                            placeholder="komma-gescheiden"
+                            className="text-sm border border-gray-200 rounded px-2 py-1 bg-white w-full max-w-[260px]"
+                          />
+                        );
+                      }
+                      return <input type="text" value={value ?? ''} onChange={e => onChange(e.target.value)} className="text-sm border border-gray-200 rounded px-2 py-1 bg-white w-full max-w-[260px]" />;
+                    };
+
+                    const Section = ({ title, rows }: { title: string; rows: Row[] }) => (
                       <div className="mb-5">
                         <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">{title}</h4>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                          {rows.map(([label, val]) => (
-                            <div key={label} className="flex justify-between text-sm py-0.5">
-                              <span className="text-gray-500 shrink-0 mr-2">{label}</span>
-                              <span className="font-medium text-right text-gray-800">{renderVal(val)}</span>
+                          {rows.map((row) => (
+                            <div key={row.key} className="flex justify-between items-center text-sm py-0.5 min-h-[28px]">
+                              <span className="text-gray-500 shrink-0 mr-2">{row.label}</span>
+                              {isEditingApp
+                                ? <EditField row={row} />
+                                : <span className="font-medium text-right text-gray-800">{renderVal(getFieldValue(row.key), row.type)}</span>}
                             </div>
                           ))}
                         </div>
                       </div>
                     );
 
-                    const RatingSection = ({ title, rows }: { title: string; rows: [string, any][] }) => (
+                    const RatingSection = ({ title, rows }: { title: string; rows: { label: string; key: string }[] }) => (
                       <div className="mb-5">
                         <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">{title}</h4>
                         <div className="space-y-1.5">
-                          {rows.map(([label, val]) => (
-                            <div key={label} className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">{label}</span>
-                              {renderStars(val)}
+                          {rows.map((row) => (
+                            <div key={row.key} className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">{row.label}</span>
+                              {isEditingApp
+                                ? renderStars(getFieldValue(row.key), (n: number) => setFieldValue(row.key, n))
+                                : renderStars(getFieldValue(row.key))}
                             </div>
                           ))}
                         </div>
                       </div>
                     );
+
+                    // Helper voor checkbox-array veld (bv. chefClothing)
+                    const ArrayCheckRow = ({ label, fieldKey, value: optValue }: { label: string; fieldKey: string; value: string }) => {
+                      const arr: string[] = Array.isArray(getFieldValue(fieldKey)) ? getFieldValue(fieldKey) : [];
+                      const checked = arr.includes(optValue);
+                      const toggle = () => {
+                        const next = checked ? arr.filter(x => x !== optValue) : [...arr, optValue];
+                        setFieldValue(fieldKey, next);
+                      };
+                      return (
+                        <div className="flex justify-between items-center text-sm py-0.5 min-h-[28px]">
+                          <span className="text-gray-500 shrink-0 mr-2">{label}</span>
+                          {isEditingApp
+                            ? <input type="checkbox" checked={checked} onChange={toggle} className="h-4 w-4 cursor-pointer accent-purple-600" />
+                            : <span className="font-medium text-right text-gray-800">{renderBool(checked)}</span>}
+                        </div>
+                      );
+                    };
 
                     return (
                       <>
@@ -2343,7 +2458,26 @@ export default function DashboardMockup() {
                                 {getInitials(selectedApp.firstName, selectedApp.lastName)}
                               </div>
                               <div>
-                                <DialogTitle className="text-xl">{selectedApp.firstName} {selectedApp.lastName}</DialogTitle>
+                                {isEditingApp ? (
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={getFieldValue('firstName') ?? ''}
+                                      onChange={e => setFieldValue('firstName', e.target.value)}
+                                      placeholder="Voornaam"
+                                      className="text-lg font-semibold border border-gray-200 rounded px-2 py-1 w-36"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={getFieldValue('lastName') ?? ''}
+                                      onChange={e => setFieldValue('lastName', e.target.value)}
+                                      placeholder="Achternaam"
+                                      className="text-lg font-semibold border border-gray-200 rounded px-2 py-1 w-44"
+                                    />
+                                  </div>
+                                ) : (
+                                  <DialogTitle className="text-xl">{selectedApp.firstName} {selectedApp.lastName}</DialogTitle>
+                                )}
                                 <div className="flex items-center gap-2 mt-1">
                                   <Badge variant="outline" className={`text-xs ${getFunctionBadgeColor(fn)}`}>
                                     {fn === 'horecamedewerker' ? 'Horecamedewerker' :
@@ -2357,6 +2491,55 @@ export default function DashboardMockup() {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Bewerk-knoppen */}
+                            <div className="flex items-center gap-2 mr-8">
+                              {isEditingApp ? (
+                                <>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { setIsEditingApp(false); setEditAppDraft(null); }}
+                                    disabled={saveAppEditMutation.isPending}
+                                    data-testid="btn-app-cancel-edit"
+                                  >
+                                    Annuleren
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    className="bg-purple-600 hover:bg-purple-700"
+                                    disabled={saveAppEditMutation.isPending}
+                                    onClick={() => {
+                                      if (!editAppDraft) { setIsEditingApp(false); return; }
+                                      const patch: any = { formData: editAppDraft.formData ?? {} };
+                                      for (const k of TOP_LEVEL_KEYS) {
+                                        if (k in editAppDraft) patch[k] = editAppDraft[k];
+                                      }
+                                      saveAppEditMutation.mutate({ id: selectedApp.id, patch });
+                                    }}
+                                    data-testid="btn-app-save-edit"
+                                  >
+                                    {saveAppEditMutation.isPending ? 'Opslaan…' : 'Opslaan'}
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditAppDraft({ ...selectedApp, formData: { ...(selectedApp.formData || {}) } });
+                                    setIsEditingApp(true);
+                                  }}
+                                  data-testid="btn-app-edit"
+                                >
+                                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                                  Bewerken
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </DialogHeader>
 
@@ -2365,20 +2548,55 @@ export default function DashboardMockup() {
                           <Card className="bg-gray-50 border-0">
                             <CardContent className="p-3 space-y-1.5 text-sm">
                               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Contactgegevens</p>
-                              {selectedApp.email && <div className="flex items-center gap-2 text-gray-700"><Mail className="h-3.5 w-3.5 text-gray-400" />{selectedApp.email}</div>}
-                              {selectedApp.phone && <div className="flex items-center gap-2 text-gray-700"><Phone className="h-3.5 w-3.5 text-gray-400" />{selectedApp.phone}</div>}
-                              {selectedApp.city && <div className="flex items-center gap-2 text-gray-700"><Building2 className="h-3.5 w-3.5 text-gray-400" />{selectedApp.city}</div>}
-                              {fd.birthDate && <div className="flex items-center gap-2 text-gray-700"><Calendar className="h-3.5 w-3.5 text-gray-400" />Geboortedatum: <span className="font-medium">{new Date(fd.birthDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>}
-                              {selectedApp.interviewer && <div className="flex items-center gap-2 text-gray-700"><Users className="h-3.5 w-3.5 text-gray-400" />Interviewer: <span className="font-medium">{selectedApp.interviewer}</span></div>}
-                              {selectedApp.salaryScale && <div className="flex items-center gap-2 text-gray-700"><Receipt className="h-3.5 w-3.5 text-gray-400" />Salariswens: <span className="font-medium">{selectedApp.salaryScale}</span></div>}
+                              {isEditingApp ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                    <input type="email" value={getFieldValue('email') ?? ''} onChange={e => setFieldValue('email', e.target.value)} placeholder="E-mailadres" className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 bg-white" />
+                                  </div>
+                                  <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                    <input type="tel" value={getFieldValue('phone') ?? ''} onChange={e => setFieldValue('phone', e.target.value)} placeholder="Telefoon" className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 bg-white" />
+                                  </div>
+                                  <div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                    <input type="text" value={getFieldValue('city') ?? ''} onChange={e => setFieldValue('city', e.target.value)} placeholder="Woonplaats" className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 bg-white" />
+                                  </div>
+                                  <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                    <input type="date" value={draftFd.birthDate ? String(draftFd.birthDate).slice(0,10) : ''} onChange={e => setFieldValue('birthDate', e.target.value || null)} className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 bg-white" />
+                                  </div>
+                                  <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                    <input type="text" value={getFieldValue('interviewer') ?? ''} onChange={e => setFieldValue('interviewer', e.target.value)} placeholder="Interviewer" className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 bg-white" />
+                                  </div>
+                                  <div className="flex items-center gap-2"><Receipt className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                    <input type="text" value={getFieldValue('salaryScale') ?? ''} onChange={e => setFieldValue('salaryScale', e.target.value)} placeholder="Salariswens" className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 bg-white" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  {selectedApp.email && <div className="flex items-center gap-2 text-gray-700"><Mail className="h-3.5 w-3.5 text-gray-400" />{selectedApp.email}</div>}
+                                  {selectedApp.phone && <div className="flex items-center gap-2 text-gray-700"><Phone className="h-3.5 w-3.5 text-gray-400" />{selectedApp.phone}</div>}
+                                  {selectedApp.city && <div className="flex items-center gap-2 text-gray-700"><Building2 className="h-3.5 w-3.5 text-gray-400" />{selectedApp.city}</div>}
+                                  {fd.birthDate && <div className="flex items-center gap-2 text-gray-700"><Calendar className="h-3.5 w-3.5 text-gray-400" />Geboortedatum: <span className="font-medium">{new Date(fd.birthDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>}
+                                  {selectedApp.interviewer && <div className="flex items-center gap-2 text-gray-700"><Users className="h-3.5 w-3.5 text-gray-400" />Interviewer: <span className="font-medium">{selectedApp.interviewer}</span></div>}
+                                  {selectedApp.salaryScale && <div className="flex items-center gap-2 text-gray-700"><Receipt className="h-3.5 w-3.5 text-gray-400" />Salariswens: <span className="font-medium">{selectedApp.salaryScale}</span></div>}
+                                </>
+                              )}
                             </CardContent>
                           </Card>
                           <Card className="bg-gray-50 border-0">
                             <CardContent className="p-3 text-sm">
                               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Notities</p>
-                              {fd.remarks
-                                ? <p className="text-gray-600 text-xs italic">"{fd.remarks}"</p>
-                                : <p className="text-gray-400 text-xs">Geen opmerkingen</p>}
+                              {isEditingApp ? (
+                                <textarea
+                                  value={draftFd.remarks ?? ''}
+                                  onChange={e => setFieldValue('remarks', e.target.value)}
+                                  placeholder="Geen opmerkingen"
+                                  rows={5}
+                                  className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white resize-none"
+                                />
+                              ) : (
+                                fd.remarks
+                                  ? <p className="text-gray-600 text-xs italic">"{fd.remarks}"</p>
+                                  : <p className="text-gray-400 text-xs">Geen opmerkingen</p>
+                              )}
                             </CardContent>
                           </Card>
                         </div>
@@ -2387,44 +2605,44 @@ export default function DashboardMockup() {
                         {fn === 'horecamedewerker' && (
                           <>
                             <Section title="Achtergrond" rows={[
-                              ['Voertaal', fd.languages],
-                              ['Werkvergunning nodig', fd.needsWorkPermit],
-                              ['Nationaliteit', fd.nationality],
-                              ['Andere baan', fd.otherJob],
+                              { label: 'Voertaal', key: 'languages', type: 'array' },
+                              { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
+                              { label: 'Nationaliteit', key: 'nationality' },
+                              { label: 'Andere baan', key: 'otherJob' },
                             ]} />
                             <Section title="Werkervaring" rows={[
-                              ['Ervaring in', fd.experienceTypes],
-                              ['Horeca-ervaring', fd.horecaExperience ? `${fd.horecaExperience} jaar` : null],
-                              ['Zelfstandig werken', fd.canWorkIndependently],
-                              ['3 borden dragen', fd.canCarry3Plates],
-                              ['Barista', fd.isBarista],
-                              ['Cocktails', fd.canShakeCocktails],
-                              ['Gerechten afwassen', fd.canWashDishes],
-                              ['Assistent-kok', fd.isAssistantChef],
-                              ['Promowerk', fd.isPromoWorker],
+                              { label: 'Ervaring in', key: 'experienceTypes', type: 'array' },
+                              { label: 'Horeca-ervaring', key: 'horecaExperience', type: 'years' },
+                              { label: 'Zelfstandig werken', key: 'canWorkIndependently', type: 'bool' },
+                              { label: '3 borden dragen', key: 'canCarry3Plates', type: 'bool' },
+                              { label: 'Barista', key: 'isBarista', type: 'bool' },
+                              { label: 'Cocktails', key: 'canShakeCocktails', type: 'bool' },
+                              { label: 'Gerechten afwassen', key: 'canWashDishes', type: 'bool' },
+                              { label: 'Assistent-kok', key: 'isAssistantChef', type: 'bool' },
+                              { label: 'Promowerk', key: 'isPromoWorker', type: 'bool' },
                             ]} />
                             <RatingSection title="Vaardigheden (1–5)" rows={[
-                              ['Bediening', fd.serviceSkills],
-                              ['Bar', fd.barSkills],
-                              ['Diner', fd.dinerSkills],
+                              { label: 'Bediening', key: 'serviceSkills' },
+                              { label: 'Bar', key: 'barSkills' },
+                              { label: 'Diner', key: 'dinerSkills' },
                             ]} />
                             <Section title="Praktisch" rows={[
-                              ['Rijbewijs', fd.hasDriversLicense],
-                              ['OV-kaart', fd.hasStudentOV],
-                              ['OV-type', fd.ovType],
-                              ['Eigen kleding', fd.workClothing],
+                              { label: 'Rijbewijs', key: 'hasDriversLicense', type: 'bool' },
+                              { label: 'OV-kaart', key: 'hasStudentOV', type: 'bool' },
+                              { label: 'OV-type', key: 'ovType' },
+                              { label: 'Eigen kleding', key: 'workClothing' },
                             ]} />
                             <Section title="Beschikbaarheid" rows={[
-                              ['Uren per week', fd.availableHours],
-                              ['Voorkeursdagen', fd.preferredDays],
-                              ['Voorkeurstijden', fd.preferredTimes],
+                              { label: 'Uren per week', key: 'availableHours', type: 'number' },
+                              { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
+                              { label: 'Voorkeurstijden', key: 'preferredTimes', type: 'array' },
                             ]} />
                             <RatingSection title="Beoordeling interviewer" rows={[
-                              ['Ervaringsniveau', fd.experienceLevel],
-                              ['Verschijning', fd.appearance],
-                              ['Attitude', fd.attitude],
-                              ['Communicatie', fd.communicationSkills],
-                              ['Algemene indruk', fd.overallImpression],
+                              { label: 'Ervaringsniveau', key: 'experienceLevel' },
+                              { label: 'Verschijning', key: 'appearance' },
+                              { label: 'Attitude', key: 'attitude' },
+                              { label: 'Communicatie', key: 'communicationSkills' },
+                              { label: 'Algemene indruk', key: 'overallImpression' },
                             ]} />
                           </>
                         )}
@@ -2432,28 +2650,28 @@ export default function DashboardMockup() {
                         {fn === 'housekeeping' && (
                           <>
                             <Section title="Achtergrond" rows={[
-                              ['Voertaal', fd.voertaal],
-                              ['Werkvergunning nodig', fd.needsWorkPermit],
-                              ['Nationaliteit', fd.nationality],
+                              { label: 'Voertaal', key: 'voertaal' },
+                              { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
+                              { label: 'Nationaliteit', key: 'nationality' },
                             ]} />
                             <Section title="Werkervaring" rows={[
-                              ['Taken', fd.hkTasks],
-                              ['Jaren ervaring', fd.hkYearsExperience ? `${fd.hkYearsExperience} jaar` : null],
-                              ['Locatietypes', fd.hkLocationTypes],
-                              ['Hotelsterren', fd.hkHotelStars],
-                              ['Vorige werkgevers', fd.hkCompanies],
-                              ['Referentie', fd.hkReference],
+                              { label: 'Taken', key: 'hkTasks', type: 'array' },
+                              { label: 'Jaren ervaring', key: 'hkYearsExperience', type: 'years' },
+                              { label: 'Locatietypes', key: 'hkLocationTypes', type: 'array' },
+                              { label: 'Hotelsterren', key: 'hkHotelStars' },
+                              { label: 'Vorige werkgevers', key: 'hkCompanies' },
+                              { label: 'Referentie', key: 'hkReference' },
                             ]} />
                             <Section title="Beschikbaarheid" rows={[
-                              ['Uren per week', fd.availableHours],
-                              ['Voorkeursdagen', fd.preferredDays],
-                              ['Voorkeurstijden', fd.preferredTimes],
-                              ['Eigen auto', fd.hasCar],
+                              { label: 'Uren per week', key: 'availableHours', type: 'number' },
+                              { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
+                              { label: 'Voorkeurstijden', key: 'preferredTimes', type: 'array' },
+                              { label: 'Eigen auto', key: 'hasCar', type: 'bool' },
                             ]} />
                             <RatingSection title="Soft skills (1–5)" rows={[
-                              ['Betrouwbaarheid', fd.hkBetrouwbaarheid],
-                              ['Communicatie', fd.hkCommunicatie],
-                              ['Representativiteit', fd.hkRepresentativiteit],
+                              { label: 'Betrouwbaarheid', key: 'hkBetrouwbaarheid' },
+                              { label: 'Communicatie', key: 'hkCommunicatie' },
+                              { label: 'Representativiteit', key: 'hkRepresentativiteit' },
                             ]} />
                           </>
                         )}
@@ -2461,40 +2679,43 @@ export default function DashboardMockup() {
                         {fn === 'chef' && (
                           <>
                             <Section title="Achtergrond" rows={[
-                              ['Voertaal', fd.voertaal],
-                              ['Werkvergunning nodig', fd.needsWorkPermit],
-                              ['Nationaliteit', fd.nationality],
+                              { label: 'Voertaal', key: 'voertaal' },
+                              { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
+                              { label: 'Nationaliteit', key: 'nationality' },
                             ]} />
                             <Section title="Hard skills" rows={[
-                              ['Keukentypen', fd.chefKitchenTypes],
-                              ['Diploma', fd.chefDiplomas],
-                              ['Jaren als kok', fd.chefYearsAsKok ? `${fd.chefYearsAsKok} jaar` : null],
-                              ['Leiderschapservaring', fd.chefLeadershipExp],
-                              ['Hoofdkeuken', fd.chefMainKitchen],
-                              ['Vorige werkgevers', fd.chefCompanies],
+                              { label: 'Keukentypen', key: 'chefKitchenTypes', type: 'array' },
+                              { label: 'Diploma', key: 'chefDiplomas' },
+                              { label: 'Jaren als kok', key: 'chefYearsAsKok', type: 'years' },
+                              { label: 'Leiderschapservaring', key: 'chefLeadershipExp' },
+                              { label: 'Hoofdkeuken', key: 'chefMainKitchen' },
+                              { label: 'Vorige werkgevers', key: 'chefCompanies' },
                             ]} />
                             <Section title="Beschikbaarheid & Vervoer" rows={[
-                              ['Startdatum', fd.chefStartDate],
-                              ['Uren per week', fd.availableHours],
-                              ['Voorkeursdagen', fd.preferredDays],
-                              ['Voorkeurstijden', fd.preferredTimes],
-                              ['Eigen auto', fd.hasCar],
+                              { label: 'Startdatum', key: 'chefStartDate', type: 'date' },
+                              { label: 'Uren per week', key: 'availableHours', type: 'number' },
+                              { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
+                              { label: 'Voorkeurstijden', key: 'preferredTimes', type: 'array' },
+                              { label: 'Eigen auto', key: 'hasCar', type: 'bool' },
                             ]} />
-                            <Section title="Kleding" rows={[
-                              ['Koksbuis', fd.chefClothing?.includes?.('koksbuis') ?? (Array.isArray(fd.chefClothing) ? fd.chefClothing.includes('koksbuis') : null)],
-                              ['Koksbroek', fd.chefClothing?.includes?.('koksbroek') ?? null],
-                              ['Veiligheidsschoenen', fd.chefClothing?.includes?.('veiligheidsschoenen') ?? null],
-                              ['Messenset', fd.chefClothing?.includes?.('messenset') ?? null],
-                            ]} />
+                            <div className="mb-5">
+                              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 border-b pb-1">Kleding</h4>
+                              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                                <ArrayCheckRow label="Koksbuis" fieldKey="chefClothing" value="koksbuis" />
+                                <ArrayCheckRow label="Koksbroek" fieldKey="chefClothing" value="koksbroek" />
+                                <ArrayCheckRow label="Veiligheidsschoenen" fieldKey="chefClothing" value="veiligheidsschoenen" />
+                                <ArrayCheckRow label="Messenset" fieldKey="chefClothing" value="messenset" />
+                              </div>
+                            </div>
                             <RatingSection title="Tags & uitstraling (1–5)" rows={[
-                              ['Professionele uitstraling', fd.chefProfessioneleUitstraling],
-                              ['Communicatie', fd.communicationSkills],
-                              ['Algemene indruk', fd.overallImpression],
+                              { label: 'Professionele uitstraling', key: 'chefProfessioneleUitstraling' },
+                              { label: 'Communicatie', key: 'communicationSkills' },
+                              { label: 'Algemene indruk', key: 'overallImpression' },
                             ]} />
                             <RatingSection title="Beoordeling interviewer" rows={[
-                              ['Ervaringsniveau', fd.experienceLevel],
-                              ['Verschijning', fd.appearance],
-                              ['Attitude', fd.attitude],
+                              { label: 'Ervaringsniveau', key: 'experienceLevel' },
+                              { label: 'Verschijning', key: 'appearance' },
+                              { label: 'Attitude', key: 'attitude' },
                             ]} />
                           </>
                         )}
@@ -2502,48 +2723,48 @@ export default function DashboardMockup() {
                         {fn === 'logistiek' && (
                           <>
                             <Section title="Achtergrond" rows={[
-                              ['Nationaliteit', fd.nationality],
-                              ['Werkvergunning nodig', fd.needsWorkPermit],
-                              ['Taal', fd.languages],
+                              { label: 'Nationaliteit', key: 'nationality' },
+                              { label: 'Werkvergunning nodig', key: 'needsWorkPermit', type: 'bool' },
+                              { label: 'Taal', key: 'languages', type: 'array' },
                             ]} />
                             <Section title="Certificaten & Rijbewijzen" rows={[
-                              ['Rijbewijs B', fd.logLicenseB],
-                              ['Rijbewijs C/CE', fd.logLicenseCCE],
-                              ['Heftruck certificaat', fd.logHeftruckCert],
-                              ['VCA certificaat', fd.logVCA],
-                              ['Overige certificaten', fd.logOtherCertificates],
+                              { label: 'Rijbewijs B', key: 'logLicenseB', type: 'bool' },
+                              { label: 'Rijbewijs C/CE', key: 'logLicenseCCE', type: 'bool' },
+                              { label: 'Heftruck certificaat', key: 'logHeftruckCert', type: 'bool' },
+                              { label: 'VCA certificaat', key: 'logVCA', type: 'bool' },
+                              { label: 'Overige certificaten', key: 'logOtherCertificates' },
                             ]} />
                             <Section title="Ervaring & Vaardigheden" rows={[
-                              ['Werkervaring logistiek', fd.logExperience],
-                              ['Werkomgeving', fd.logWorkEnvironments],
-                              ['Scanapparatuur / RF', fd.logScanEquipment],
-                              ['Fysieke belastbaarheid', fd.logPhysicalLoad],
-                              ['Zelfstandig / team', fd.logWorkStyle],
-                              ['Andere bijbaan', fd.logOtherJob],
-                              ['Referentie beschikbaar', fd.logReference],
-                              ['Naam referentie', fd.logReferenceContact],
-                              ['Tel. referentie', fd.logReferencePhone],
+                              { label: 'Werkervaring logistiek', key: 'logExperience' },
+                              { label: 'Werkomgeving', key: 'logWorkEnvironments', type: 'array' },
+                              { label: 'Scanapparatuur / RF', key: 'logScanEquipment', type: 'bool' },
+                              { label: 'Fysieke belastbaarheid', key: 'logPhysicalLoad' },
+                              { label: 'Zelfstandig / team', key: 'logWorkStyle' },
+                              { label: 'Andere bijbaan', key: 'logOtherJob' },
+                              { label: 'Referentie beschikbaar', key: 'logReference', type: 'bool' },
+                              { label: 'Naam referentie', key: 'logReferenceContact' },
+                              { label: 'Tel. referentie', key: 'logReferencePhone' },
                             ]} />
                             <Section title="Praktische zaken" rows={[
-                              ['Eigen vervoer', fd.logTransport],
-                              ['Max. reistijd', fd.logMaxTravelTime],
-                              ['Werkkleding aanwezig', fd.logWorkClothing],
+                              { label: 'Eigen vervoer', key: 'logTransport' },
+                              { label: 'Max. reistijd', key: 'logMaxTravelTime' },
+                              { label: 'Werkkleding aanwezig', key: 'logWorkClothing', type: 'bool' },
                             ]} />
                             <Section title="Beschikbaarheid" rows={[
-                              ['Uren per week', fd.logAvailableHours],
-                              ['Beschikbaar vanaf', fd.logAvailableFrom],
-                              ['Voorkeur diensten', fd.logShiftPreference],
-                              ['Voorkeursdagen', fd.preferredDays],
+                              { label: 'Uren per week', key: 'logAvailableHours', type: 'number' },
+                              { label: 'Beschikbaar vanaf', key: 'logAvailableFrom', type: 'date' },
+                              { label: 'Voorkeur diensten', key: 'logShiftPreference', type: 'array' },
+                              { label: 'Voorkeursdagen', key: 'preferredDays', type: 'array' },
                             ]} />
                             <RatingSection title="Beoordeling interviewer" rows={[
-                              ['Communicatie', fd.communicationSkills],
-                              ['Algemene indruk', fd.overallImpression],
+                              { label: 'Communicatie', key: 'communicationSkills' },
+                              { label: 'Algemene indruk', key: 'overallImpression' },
                             ]} />
                             <Section title="Eindoordeel" rows={[
-                              ['Beoordeling', fd.assessmentRating],
-                              ['Ervaringsniveau', fd.experienceLevel],
-                              ['Verschijning', fd.appearance],
-                              ['Attitude', fd.attitude],
+                              { label: 'Beoordeling', key: 'assessmentRating' },
+                              { label: 'Ervaringsniveau', key: 'experienceLevel' },
+                              { label: 'Verschijning', key: 'appearance' },
+                              { label: 'Attitude', key: 'attitude' },
                             ]} />
                           </>
                         )}
@@ -2552,7 +2773,7 @@ export default function DashboardMockup() {
                           <Section title="Formuliergegevens" rows={
                             Object.entries(fd)
                               .filter(([k]) => !['functionType','interviewer','firstName','lastName','email','phone','city','salaryScale','assessmentRating','remarks','linkedCandidateId'].includes(k))
-                              .map(([k, v]) => [k, v] as [string, any])
+                              .map(([k]) => ({ label: k, key: k }))
                           } />
                         )}
                       </>

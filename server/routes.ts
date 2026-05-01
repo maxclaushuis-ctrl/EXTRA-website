@@ -8011,6 +8011,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sollicitatie (volledige formData + top-level velden)
+  app.patch("/api/admin/applications/:id", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig ID" });
+
+      const allowedTopLevel = [
+        'firstName', 'lastName', 'email', 'phone', 'city',
+        'interviewer', 'salaryScale', 'assessmentRating',
+      ] as const;
+      const patch: Record<string, any> = {};
+      for (const key of allowedTopLevel) {
+        if (key in req.body) patch[key] = req.body[key];
+      }
+      if ('formData' in req.body) {
+        if (req.body.formData !== null && typeof req.body.formData !== 'object') {
+          return res.status(400).json({ message: "formData moet een object zijn" });
+        }
+        patch.formData = req.body.formData;
+      }
+      if (Object.keys(patch).length === 0) {
+        return res.status(400).json({ message: "Geen velden om bij te werken" });
+      }
+
+      const [updated] = await db.update(applications)
+        .set(patch)
+        .where(eq(applications.id, id))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "Sollicitatie niet gevonden" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating application:", error);
+      return res.status(500).json({ message: "Fout bij bijwerken sollicitatie" });
+    }
+  });
+
   // Update admin notes (referenties) voor een sollicitatie
   app.patch("/api/admin/applications/:id/notes", adminMiddleware, async (req: Request, res: Response) => {
     try {
