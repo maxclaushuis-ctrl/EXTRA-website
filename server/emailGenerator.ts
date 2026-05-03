@@ -112,6 +112,13 @@ export function generateEmailHTML(
     return generateLegacyHTML(parsed as any[], contact, trackingPixelUrl, unsubscribeUrl, clickTrackingUrl);
   }
 
+  // ── Platte-tekst-modus: render zonder branded shell, banner of Poppins.
+  // Levert toch HTML af zodat link-tracking en de tracking-pixel werken,
+  // maar visueel oogt het als een persoonlijke 1-op-1 mail.
+  if (parsed.modus === 'plaintext') {
+    return generatePlainTextHTML(parsed, contact, trackingPixelUrl, unsubscribeUrl, clickTrackingUrl);
+  }
+
   const settings = parsed.instellingen ?? {};
   const bgEmail = settings.achtergrond_email || '#F9FAFB';
   const bgInhoud = settings.achtergrond_inhoud || '#FFFFFF';
@@ -266,6 +273,119 @@ function renderLegacyBlockHtml(b: any, contact: ContactData, clickUrl?: string):
   if (b.type === 'divider') return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>`;
   if (b.type === 'image' && b.url) return `<img src="${b.url}" alt="${b.alt || ''}" style="max-width:100%;border-radius:8px;display:block;margin:0 auto 12px"/>`;
   return '';
+}
+
+// Render een platte-tekstmail als minimal HTML: systeemfont, geen banner,
+// behoudt alinea-witregels, maakt URLs klikbaar (en houdt link-tracking intact).
+function generatePlainTextHTML(
+  parsed: BuilderContent,
+  contact: ContactData,
+  trackingPixelUrl?: string,
+  unsubscribeUrl?: string,
+  clickTrackingUrl?: string
+): string {
+  const nl = isNl(contact.taal);
+  const settings = parsed.instellingen ?? {};
+  const unsubTekst = settings.unsubscribe_tekst || (nl
+    ? 'Wil je geen mails meer ontvangen? Klik hier om je uit te schrijven.'
+    : 'No longer want to receive these emails? Unsubscribe here.');
+  const blokken = parsed.blokken ?? [];
+  const p = (t: string) => personalizeText(t || '', contact);
+
+  // Escape HTML special chars, dan inline-links omzetten naar <a>, dan \n → <br>
+  const renderTextAsHtml = (raw: string): string => {
+    const escaped = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    // Markdown-stijl links eerst
+    const withLinks = escaped.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label: string, url: string) => {
+      const trimmed = url.trim();
+      const safe = /^(https?:|mailto:|tel:)/i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/+/, '')}`;
+      const finalUrl = clickTrackingUrl && /^https?:/i.test(safe)
+        ? `${clickTrackingUrl}?dest=${encodeURIComponent(safe)}`
+        : safe;
+      return `<a href="${finalUrl.replace(/"/g, '&quot;')}" style="color:#2563eb;text-decoration:underline">${label}</a>`;
+    });
+    // Naakte URLs auto-linken (alleen die nog geen <a> wrap hebben)
+    const withAutoLinks = withLinks.replace(
+      /(^|[\s])((https?:\/\/|www\.)[^\s<]+)(?=[.,;!?)]?(\s|$))/g,
+      (_m, pre, url) => {
+        const safe = url.startsWith('www.') ? `https://${url}` : url;
+        const finalUrl = clickTrackingUrl ? `${clickTrackingUrl}?dest=${encodeURIComponent(safe)}` : safe;
+        return `${pre}<a href="${finalUrl}" style="color:#2563eb;text-decoration:underline">${url}</a>`;
+      }
+    );
+    return withAutoLinks.replace(/\n/g, '<br/>');
+  };
+
+  const paragraphs: string[] = [];
+  for (const blok of blokken) {
+    switch (blok.type) {
+      case 'aanhef': {
+        const aanhef = nl ? (blok.nl || 'Beste {{voornaam}},') : (blok.en || 'Hi {{voornaam}},');
+        paragraphs.push(renderTextAsHtml(p(aanhef)));
+        break;
+      }
+      case 'koptekst':
+      case 'paragraaf':
+        if (blok.tekst) paragraphs.push(renderTextAsHtml(p(blok.tekst)));
+        break;
+      case 'taalvariant': {
+        const tekst = nl ? (blok.nl || '') : (blok.en || '');
+        if (tekst) paragraphs.push(renderTextAsHtml(p(tekst)));
+        break;
+      }
+      case 'knop': {
+        const label = p(blok.tekst || '');
+        const url = p(blok.url || '');
+        if (label && url) {
+          const safe = /^(https?:|mailto:|tel:)/i.test(url) ? url : `https://${url.replace(/^\/+/, '')}`;
+          const finalUrl = clickTrackingUrl && /^https?:/i.test(safe)
+            ? `${clickTrackingUrl}?dest=${encodeURIComponent(safe)}`
+            : safe;
+          paragraphs.push(`${label}: <a href="${finalUrl}" style="color:#2563eb;text-decoration:underline">${safe}</a>`);
+        }
+        break;
+      }
+      case 'lijn':
+        paragraphs.push('---');
+        break;
+      case 'ruimte':
+        paragraphs.push('');
+        break;
+      case 'handtekening':
+        // Plain-text vriendelijke variant van de handtekening
+        paragraphs.push(SIGNATURE_TEXT.replace(/\n/g, '<br/>'));
+        break;
+      case 'afbeelding':
+      default:
+        // Afbeeldingen, knoppen-in-fancy etc. worden in plain-text-modus genegeerd.
+        break;
+    }
+  }
+
+  const bodyHtml = paragraphs
+    .map(par => par === '' ? '<br/>' : `<p style="margin:0 0 12px">${par}</p>`)
+    .join('');
+
+  const unsubHtml = unsubscribeUrl
+    ? `<p style="font-size:11px;color:#9ca3af;margin-top:24px"><a href="${unsubscribeUrl}" style="color:#9ca3af">${personalizeText(unsubTekst, contact)}</a></p>`
+    : '';
+
+  const pixel = trackingPixelUrl
+    ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none" alt="" />`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="${nl ? 'nl' : 'en'}">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:16px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#111827">
+${bodyHtml}
+${unsubHtml}
+${pixel}
+</body>
+</html>`;
 }
 
 export function generateEmailPlainText(
