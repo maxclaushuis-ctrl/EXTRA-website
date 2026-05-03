@@ -246,6 +246,120 @@ export async function sendSingleMail(mailSendId: number, baseUrl: string): Promi
   }
 }
 
+// ─── Send Single Flow Mail (per-stap content, P0-fix Flow Builder) ──────────
+// Verzendt een mail waarbij onderwerp + HTML/text uit de FLOW-STAP komen,
+// niet uit campaign.contentA. Ondersteunt {{voornaam}}, {{achternaam}},
+// {{naam}}, {{bedrijf}}, {{stad}}, {{functietitel}} placeholders. Click-
+// tracking, tracking-pixel en List-Unsubscribe worden net als bij
+// sendSingleMail toegevoegd.
+function personalize(s: string, c: ContactData): string {
+  return (s || '')
+    .replace(/\{\{voornaam\}\}/gi, c.voornaam || '')
+    .replace(/\{\{achternaam\}\}/gi, c.achternaam || '')
+    .replace(/\{\{naam\}\}/gi, c.naam || '')
+    .replace(/\{\{bedrijf\}\}/gi, c.bedrijf || c.company || '')
+    .replace(/\{\{stad\}\}/gi, (c as any).stad || '')
+    .replace(/\{\{functietitel\}\}/gi, (c as any).functietitel || '');
+}
+
+export async function sendSingleFlowMail(
+  mailSendId: number,
+  baseUrl: string,
+  override: { subject: string; html?: string; text?: string }
+): Promise<boolean> {
+  const mailSend = await storage.getMailSend(mailSendId);
+  if (!mailSend) {
+    console.error(`[EmailService] mailSend ${mailSendId} niet gevonden`);
+    return false;
+  }
+  try {
+    // Bouw contactData op
+    const contactData: ContactData = {
+      voornaam: '', achternaam: '', naam: '', bedrijf: '', company: '', taal: 'nl',
+      email: mailSend.email, id: mailSend.contactId ?? undefined,
+    };
+    if (mailSend.contactId) {
+      const contact = await storage.getProspectContact(mailSend.contactId) as any;
+      if (contact) {
+        contactData.voornaam = contact.voornaam || '';
+        contactData.achternaam = contact.achternaam || '';
+        contactData.naam = contact.name || '';
+        contactData.bedrijf = contact.bedrijf || contact.company || '';
+        (contactData as any).stad = contact.stad || '';
+        (contactData as any).functietitel = contact.functietitel || '';
+        contactData.taal = contact.taal || 'nl';
+      }
+    }
+
+    // Unsubscribe + tracking
+    let unsubUrl = `${baseUrl}/unsubscribe/0/invalid`;
+    if (mailSend.contactId) {
+      const token = await getOrGenerateUnsubscribeToken(mailSend.contactId);
+      unsubUrl = generateUnsubscribeLink(mailSend.contactId, token, baseUrl);
+    }
+    const pixelHtml = generateTrackingPixelHtml(mailSendId, baseUrl);
+
+    const subject = personalize(override.subject || '', contactData);
+    const rawText = personalize(override.text || '', contactData);
+
+    // HTML: gebruik aangeleverde HTML, of bouw vanuit text indien geen HTML
+    let html = override.html
+      ? personalize(override.html, contactData)
+      : `<!DOCTYPE html><html><body style="font-family:Helvetica,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;color:#111;max-width:640px;padding:20px">${
+          rawText.split(/\n\n+/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
+        }<hr style="border:none;border-top:1px solid #ddd;margin:24px 0"><p style="font-size:11px;color:#888"><a href="${unsubUrl}" style="color:#888">Uitschrijven</a></p></body></html>`;
+
+    // Click tracking + pixel
+    const { html: wrappedHtml, linkMap } = wrapLinksWithTracking(html, mailSendId, baseUrl);
+    html = wrappedHtml;
+    html = html.replace('</body>', `${pixelHtml}</body>`);
+    if (!html.includes(pixelHtml)) html = html + pixelHtml;
+    await storage.updateMailSend(mailSendId, { linkMap: JSON.stringify(linkMap) });
+
+    const text = rawText || (override.html ? override.html.replace(/<[^>]+>/g, '') : '');
+
+    const customArgs: Record<string, string> = {
+      mail_send_id: String(mailSendId),
+      campaign_id: String(mailSend.campaignId),
+      variant: mailSend.variant || 'A',
+    };
+    if (mailSend.contactId != null) customArgs.contact_id = String(mailSend.contactId);
+    const replyTo = process.env.SENDGRID_REPLY_TO || `${FROM_NAME} <${FROM_EMAIL}>`;
+
+    const result = await sendEmailWithResult({
+      to: mailSend.email,
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      subject,
+      html,
+      text,
+      replyTo,
+      customArgs,
+      headers: {
+        'List-Unsubscribe': `<${unsubUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
+
+    if (result.ok) {
+      await storage.updateMailSend(mailSendId, {
+        status: 'sent', verzondenOp: new Date(), sgMessageId: result.messageId,
+      } as any);
+      console.log(`[EmailService] ✓ Flow-mail verstuurd naar ${mailSend.email} (campagne ${mailSend.campaignId})`);
+      return true;
+    } else {
+      await storage.updateMailSend(mailSendId, {
+        status: 'failed', foutMelding: result.error?.message || 'SendGrid retourneerde geen succes',
+      } as any);
+      console.error(`[EmailService] ✗ Flow-mail mislukt voor ${mailSend.email}: ${result.error?.message}`);
+      return false;
+    }
+  } catch (err: any) {
+    await storage.updateMailSend(mailSendId, { status: 'failed', foutMelding: err?.message || 'Onbekende fout' });
+    console.error(`[EmailService] ✗ Flow-mail fout mailSend ${mailSendId}:`, err?.message);
+    return false;
+  }
+}
+
 // ─── Send Campaign Batch ──────────────────────────────────────────────────────
 
 export async function sendCampaignBatch(

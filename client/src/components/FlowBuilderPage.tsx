@@ -1,7 +1,8 @@
 // ─── Flow Builder Page — Stap 5 ───────────────────────────────────────────────
 // Visuele flow builder met ReactFlow v11, 6 node-types en auto-save.
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import ReactFlow, {
   addEdge,
   Background,
@@ -209,10 +210,22 @@ function stepsToNodesEdges(steps: FlowStep[]): { nodes: Node<FlowNodeData>[]; ed
 
 function typeToLabel(type: NodeType, config: Record<string, any>): string {
   switch (type) {
-    case 'trigger': return '▶ Flow gestart';
+    case 'trigger': {
+      const naam = config.bronCampagneNaam ? ` ${config.bronCampagneNaam}` : '';
+      if (config.triggerType === 'klik_in_campagne') return `▶ Klik in:${naam || ' …'}`;
+      if (config.triggerType === 'open_van_campagne') return `▶ Open van:${naam || ' …'}`;
+      return '▶ Flow gestart';
+    }
     case 'email': return config.onderwerp ? `✉ ${config.onderwerp}` : '✉ E-mail sturen';
     case 'wait': return `⏱ Wacht ${config.waarde || 1} ${config.eenheid || 'dagen'}`;
-    case 'condition': return `❓ ${config.conditie === 'mail_geopend' ? 'Geopend?' : config.conditie === 'link_geklikt' ? 'Geklikt?' : 'Geen actie?'}`;
+    case 'condition': {
+      const c = config.conditie;
+      if (c === 'mail_geopend') return '❓ Geopend?';
+      if (c === 'link_geklikt') return '❓ Geklikt?';
+      if (c === 'reply_ontvangen') return '❓ Reply ontvangen?';
+      if (c === 'geen_reply') return '❓ Geen reply?';
+      return '❓ Geen actie?';
+    }
     case 'tag_action': return `🏷 ${config.actie === 'verwijderen' ? 'Verwijder' : 'Voeg toe'}: ${config.tag || 'tag'}`;
     case 'end': return '⏹ Flow beëindigd';
     default: return type;
@@ -270,11 +283,15 @@ const NODE_LIBRARY: Array<{
 function PropertiesPanel({
   node,
   emailNodes,
+  campaigns,
+  currentCampaignId,
   onUpdate,
   onClose,
 }: {
   node: Node<FlowNodeData>;
   emailNodes: Node<FlowNodeData>[];
+  campaigns: Array<{ id: number; name: string }> | undefined;
+  currentCampaignId: number;
   onUpdate: (id: string, data: Partial<FlowNodeData>) => void;
   onClose: () => void;
 }) {
@@ -301,7 +318,58 @@ function PropertiesPanel({
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
         {data.type === 'trigger' && (
-          <p style={{ fontSize: 13, color: '#6B7280' }}>Dit is het startpunt van de flow. Wordt geactiveerd wanneer een contact aan de flow wordt toegevoegd.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <Label style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>Trigger type</Label>
+              <Select
+                value={config.triggerType || 'handmatig'}
+                onValueChange={v => {
+                  // bron-campagne wissen als type wisselt naar handmatig
+                  const newCfg: Record<string, any> = { ...config, triggerType: v };
+                  if (v === 'handmatig') { delete newCfg.bronCampagneId; delete newCfg.bronCampagneNaam; }
+                  onUpdate(node.id, { config: newCfg, label: typeToLabel('trigger', newCfg) });
+                }}
+              >
+                <SelectTrigger style={{ fontSize: 13 }}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="handmatig">Handmatig (Activeren-knop)</SelectItem>
+                  <SelectItem value="klik_in_campagne">Klik in andere campagne</SelectItem>
+                  <SelectItem value="open_van_campagne">Open van andere campagne</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(config.triggerType === 'klik_in_campagne' || config.triggerType === 'open_van_campagne') && (
+              <div>
+                <Label style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>Bron-campagne</Label>
+                <Select
+                  value={config.bronCampagneId ? String(config.bronCampagneId) : ''}
+                  onValueChange={v => {
+                    const camp = (campaigns || []).find((c: any) => String(c.id) === v);
+                    const newCfg = { ...config, bronCampagneId: Number(v), bronCampagneNaam: camp?.name || '' };
+                    onUpdate(node.id, { config: newCfg, label: typeToLabel('trigger', newCfg) });
+                  }}
+                >
+                  <SelectTrigger style={{ fontSize: 13 }}>
+                    <SelectValue placeholder="Kies een campagne..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(campaigns || []).filter((c: any) => c.id !== currentCampaignId).map((c: any) => (
+                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 6 }}>
+                  De flow start zodra een contact {config.triggerType === 'klik_in_campagne' ? 'klikt op een link' : 'de mail opent'} in deze campagne.
+                  De bron-campagne moet zelf ook status <strong>actief</strong> hebben en deze flow ook.
+                </p>
+              </div>
+            )}
+            {config.triggerType === 'handmatig' || !config.triggerType ? (
+              <p style={{ fontSize: 12, color: '#6B7280' }}>Bij <strong>handmatig</strong> start de flow voor alle contacten van het segment via de <em>Flow activeren</em>-knop.</p>
+            ) : null}
+          </div>
         )}
 
         {data.type === 'email' && (
@@ -311,21 +379,37 @@ function PropertiesPanel({
               <Input
                 value={config.onderwerp || ''}
                 onChange={e => updateConfig('onderwerp', e.target.value)}
-                placeholder="Onderwerp van de e-mail"
+                placeholder="bijv. Even checken — heb je het al kunnen bekijken?"
                 style={{ fontSize: 13 }}
               />
             </div>
             <div>
-              <Label style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>Inhoud (samenvatting)</Label>
+              <Label style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>Platte tekst (verplicht)</Label>
               <Textarea
-                value={config.preview || ''}
-                onChange={e => updateConfig('preview', e.target.value)}
-                placeholder="Korte beschrijving van de e-mail inhoud..."
-                rows={3}
-                style={{ fontSize: 12 }}
+                value={config.textContent || ''}
+                onChange={e => updateConfig('textContent', e.target.value)}
+                placeholder="Hallo {{voornaam}},\n\nJe kunt placeholders gebruiken: {{voornaam}}, {{naam}}, {{bedrijf}}, {{stad}}, {{functietitel}}.\n\nGroet,\nMax"
+                rows={6}
+                style={{ fontSize: 12, fontFamily: 'monospace' }}
               />
             </div>
-            <p style={{ fontSize: 11, color: '#9CA3AF' }}>Gebruik de E-mail Builder in de campagne voor de volledige opmaak.</p>
+            <div>
+              <Label style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>HTML (optioneel)</Label>
+              <Textarea
+                value={config.htmlContent || ''}
+                onChange={e => updateConfig('htmlContent', e.target.value)}
+                placeholder="<p>Hallo {{voornaam}},</p><p>...</p>"
+                rows={5}
+                style={{ fontSize: 12, fontFamily: 'monospace' }}
+              />
+              <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
+                Leeg laten? Dan wordt de platte tekst automatisch in een eenvoudige HTML-shell verstuurd.
+                Tracking-pixel, click-tracking en uitschrijflink worden automatisch toegevoegd.
+              </p>
+            </div>
+            <div style={{ background: '#F3F4F6', borderRadius: 6, padding: 8, fontSize: 11, color: '#6B7280' }}>
+              Geen onderwerp + content ingevuld? Dan valt deze stap terug op de hoofd-content van de campagne (campaign.contentA).
+            </div>
           </div>
         )}
 
@@ -374,6 +458,8 @@ function PropertiesPanel({
                   <SelectItem value="mail_geopend">Mail geopend</SelectItem>
                   <SelectItem value="link_geklikt">Link geklikt</SelectItem>
                   <SelectItem value="geen_actie">Geen actie na X dagen</SelectItem>
+                  <SelectItem value="reply_ontvangen">Reply ontvangen</SelectItem>
+                  <SelectItem value="geen_reply">Geen reply ontvangen</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -479,7 +565,7 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
             id: triggerId,
             type: 'flowNode',
             position: { x: 280, y: 60 },
-            data: { stapId: triggerId, type: 'trigger', label: '▶ Flow gestart', config: { type: 'trigger' } },
+            data: { stapId: triggerId, type: 'trigger', label: '▶ Flow gestart', config: { triggerType: 'handmatig' } },
           }]);
         }
         setLoaded(true);
@@ -522,15 +608,27 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
   const handleActivate = async () => {
     // Validatie
     const errors: string[] = [];
-    const hasTrigger = nodes.some(n => n.data.type === 'trigger');
-    if (!hasTrigger) errors.push('Geen trigger stap gevonden');
+    const triggerNode = nodes.find(n => n.data.type === 'trigger');
+    if (!triggerNode) errors.push('Geen trigger-stap gevonden');
+    if (triggerNode) {
+      const tt = triggerNode.data.config?.triggerType;
+      if ((tt === 'klik_in_campagne' || tt === 'open_van_campagne') && !triggerNode.data.config?.bronCampagneId) {
+        errors.push('Trigger-stap mist een bron-campagne');
+      }
+    }
     const emailNodes = nodes.filter(n => n.data.type === 'email');
     emailNodes.forEach(n => {
-      if (!n.data.config?.onderwerp) errors.push(`E-mail stap heeft geen onderwerp`);
+      if (!n.data.config?.onderwerp) errors.push(`E-mail stap "${n.data.label}" heeft geen onderwerp`);
+    });
+    // Detecteer losse blokken (geen inkomende verbinding, behalve trigger)
+    nodes.forEach(n => {
+      if (n.data.type === 'trigger') return;
+      const heeftIngang = edges.some(e => e.target === n.id);
+      if (!heeftIngang) errors.push(`Blok "${n.data.label}" is niet verbonden met de flow`);
     });
 
     if (errors.length > 0) {
-      toast({ title: `Validatiefout: ${errors[0]}`, variant: 'destructive' });
+      toast({ title: `Validatiefout: ${errors[0]}`, description: errors.length > 1 ? `+${errors.length - 1} andere problemen` : undefined, variant: 'destructive' });
       return;
     }
 
@@ -575,6 +673,8 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
     const config: Record<string, any> = type === 'wait' ? { waarde: 3, eenheid: 'dagen' }
       : type === 'condition' ? { conditie: 'mail_geopend' }
       : type === 'tag_action' ? { actie: 'toevoegen', tag: '' }
+      : type === 'trigger' ? { triggerType: 'handmatig' }
+      : type === 'email' ? { onderwerp: '', textContent: '', htmlContent: '' }
       : {};
     const label = typeToLabel(type, config);
     const newNode: Node<FlowNodeData> = {
@@ -588,6 +688,11 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
 
   const hasTrigger = nodes.some(n => n.data.type === 'trigger');
   const emailNodes = nodes.filter(n => n.data.type === 'email');
+
+  // Lijst met campagnes voor de bron-campagne dropdown in trigger-config
+  const { data: campaigns } = useQuery<Array<{ id: number; name: string; status: string }>>({
+    queryKey: ['/api/admin/prospect-campaigns'],
+  });
 
   return (
     <div style={{
@@ -800,6 +905,8 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
           <PropertiesPanel
             node={selectedNode}
             emailNodes={emailNodes}
+            campaigns={campaigns}
+            currentCampaignId={campaignId}
             onUpdate={updateNodeData}
             onClose={() => setSelectedNode(null)}
           />

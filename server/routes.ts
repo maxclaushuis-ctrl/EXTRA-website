@@ -10216,6 +10216,11 @@ ${posts.map(p => `  <url>
           const alOpengeregistreerd = bestaandeEvents.some(e => e.type === 'open');
           if (!alOpengeregistreerd) {
             await storage.createMailEvent({ mailSendId: id, type: 'open', ipAdres: req.ip || null, url: null });
+            // P0-fix Flow Builder: trigger flows met type 'open_van_campagne'
+            try {
+              const { triggerFlowsForEvent } = await import('./flowEngine');
+              await triggerFlowsForEvent(ms.campaignId, ms.contactId, 'open_van_campagne');
+            } catch (e) { /* silent */ }
           }
         }
       } catch (e) { /* silent */ }
@@ -10249,6 +10254,14 @@ ${posts.map(p => `  <url>
           ipAdres: req.ip || null,
           url: targetUrl,
         });
+        // P0-fix Flow Builder: trigger flows met type 'klik_in_campagne'
+        try {
+          const ms = await storage.getMailSend(id);
+          if (ms) {
+            const { triggerFlowsForEvent } = await import('./flowEngine');
+            await triggerFlowsForEvent(ms.campaignId, ms.contactId, 'klik_in_campagne');
+          }
+        } catch (e) { /* silent */ }
       } catch (e) { /* silent */ }
     }
 

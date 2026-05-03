@@ -1,0 +1,66 @@
+Op basis van je eerdere audit van de Flow Builder (waar je 
+de geprioriteerde fix-lijst hebt gegeven) wil ik nu de twee 
+P0-blokkades opgelost hebben. Voor mij is de use case: 
+follow-up flow op klik in een eerdere campagne, met eigen 
+mail-content per stap.
+
+WAT IK WIL DAT JE BOUWT
+
+P0-fix 1: Per-stap mail-content
+- Geef het e-mail-blok in de Flow Builder een eigen 
+  htmlContent / textContent / subject veld in de configuratie
+- Pas case 'email' in flowEngine.ts aan om step.config.subject 
+  en step.config.htmlContent (of textContent) te gebruiken in 
+  plaats van campaign.contentA
+- Hou backwards compatibility: als step.config geen eigen 
+  content heeft, val terug op campaign.contentA
+- In de UI: bij klikken op een e-mail-blok komt een paneel 
+  waar je onderwerp en body kunt invoeren (plain text + HTML, 
+  net als bij de gewone campagne-mail-editor)
+
+P0-fix 2: Trigger-types implementeren
+- In de Trigger-config-panel een dropdown met:
+  * handmatig (huidige gedrag - alle contacten van segment 
+    starten via Activeren-knop)
+  * klik_in_campagne + dropdown van bestaande campagnes
+  * open_van_campagne + dropdown van bestaande campagnes
+- Backend hooks:
+  * In track/click/:token: na het updaten van click-tellers, 
+    check of er actieve flows bestaan met trigger 
+    klik_in_campagne waar de campagne-ID matcht. Zo ja: 
+    maak voor dit contact een flow_contact_progress aan met 
+    status 'actief' en stap 1
+  * Idem voor track/open/:token met open_van_campagne
+- Voorkom dubbel-triggeren: als er al een actieve 
+  flow_contact_progress is voor dit contact + flow, maak 
+  geen nieuwe aan
+- Trigger-blok visualisatie: ververs het label automatisch 
+  als type wijzigt, bijvoorbeeld "▶ Klik in: Banqueting Mail 1"
+
+P1-fix (gewenst, niet blokkerend)
+- Voeg conditie-types reply_ontvangen en geen_reply toe aan 
+  de Conditie-blok dropdown en aan evaluateCondition. Werkt 
+  via prospect_replies tabel of contact.lastReplyAt > 
+  emailStep.verzondenOp
+- Validatie bij activeren: detecteer "los blok zonder 
+  verbinding" en weiger te activeren met duidelijke melding 
+  per los blok
+
+OUTPUT NA AFRONDING
+
+Een rapportage met:
+1. Per fix: status (klaar / probleem) en welke bestanden 
+   zijn aangepast
+2. Een testscenario hoe ik kan valideren dat het werkt: 
+   "maak een nieuwe flow-campagne met trigger klik_in_campagne 
+   op campagne X, voeg een wacht-stap van 1 minuut toe, 
+   voeg een e-mail-stap toe met eigen onderwerp 'Test' en 
+   body 'Hallo {{voornaam}}', verbind de blokken, activeer 
+   de flow. Daarna: klik op een link in een mail van 
+   campagne X. Verwacht resultaat: flow start, na 1 minuut 
+   krijg je een mail met onderwerp 'Test'."
+3. Eventuele resterende issues of beperkingen
+
+Begin met fix 1 en fix 2. Voor P1: alleen als fix 1 en 2 
+sneller klaar zijn dan verwacht. Geen andere wijzigingen 
+zonder mijn goedkeuring.

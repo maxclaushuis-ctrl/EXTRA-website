@@ -134,7 +134,64 @@ async function evaluateCondition(
     return dagenGeleden >= dagen;
   }
 
+  // P1-fix: reply-condities. We controleren of het contact heeft gereageerd
+  // NA het versturen van de referentie-mail. Zowel via contact.lastReplyAt als
+  // (als fallback) via prospect_replies tabel.
+  if (conditie === 'reply_ontvangen' || conditie === 'geen_reply') {
+    if (!contactMailSend.verzondenOp) {
+      return conditie === 'geen_reply';
+    }
+    const verzondenOp = new Date(contactMailSend.verzondenOp).getTime();
+    const contact = await storage.getProspectContact(contactId);
+    let heeftReply = !!(contact?.lastReplyAt && new Date(contact.lastReplyAt).getTime() >= verzondenOp);
+    if (!heeftReply) {
+      try {
+        const replies = await storage.listProspectReplies({ contactId, campaignId, limit: 50 });
+        heeftReply = replies.some((r: any) => r.receivedAt && new Date(r.receivedAt).getTime() >= verzondenOp);
+      } catch { /* tabel niet beschikbaar — val terug op lastReplyAt-resultaat */ }
+    }
+    return conditie === 'reply_ontvangen' ? heeftReply : !heeftReply;
+  }
+
   return false;
+}
+
+// ─── Trigger op event (klik/open in andere campagne) — P0-fix Flow Builder ──
+// Wordt aangeroepen vanuit /track/click en /track/open. Vindt actieve flow-
+// campagnes met een matching trigger-config en start dit contact in stap 1.
+export async function triggerFlowsForEvent(
+  sourceCampaignId: number,
+  contactId: number | null,
+  triggerType: 'klik_in_campagne' | 'open_van_campagne'
+): Promise<void> {
+  if (!contactId) return;
+  try {
+    const campaigns = await storage.getProspectCampaigns({});
+    for (const c of campaigns) {
+      if (c.status !== 'actief') continue;
+      const steps = await storage.getFlowSteps(c.id);
+      const trigger = steps.find(s => s.type === 'trigger');
+      if (!trigger) continue;
+      let cfg: any = {};
+      try { cfg = JSON.parse(trigger.config || '{}'); } catch {}
+      if (cfg.triggerType !== triggerType) continue;
+      if (Number(cfg.bronCampagneId) !== Number(sourceCampaignId)) continue;
+      // Skip-redenen: contact mag al uitgeschreven/klant/etc. zijn
+      const contact = await storage.getProspectContact(contactId);
+      if (bepaalSkipReden(contact)) continue;
+      const bestaand = await storage.getFlowContactProgress(c.id, contactId);
+      if (bestaand) continue;
+      const progress = await storage.createFlowContactProgress({
+        campaignId: c.id, contactId, huidigeStapId: trigger.stapId,
+        status: 'actief', wachtTot: null, foutMelding: null, bijgewerktOp: new Date(),
+      });
+      console.log(`[FlowEngine] Trigger ${triggerType} → flow ${c.id} gestart voor contact ${contactId}`);
+      // Direct doorzetten naar volgende stap
+      setTimeout(() => processFlowStep(progress.id).catch(err => console.error('[FlowEngine] processFlowStep na trigger:', err)), 100);
+    }
+  } catch (err) {
+    console.warn('[FlowEngine] triggerFlowsForEvent fout:', err);
+  }
 }
 
 // ─── Stap verwerking ──────────────────────────────────────────────────────────
@@ -183,11 +240,12 @@ export async function processFlowStep(progressId: number): Promise<void> {
         // Verzend e-mail via emailService
         const baseUrl = process.env.BASE_URL || 'https://doehetextra.nl';
 
-        // Maak een tijdelijke mail_send voor dit contact en verzend
+        // Vul email in vanuit contact (anders kan SendGrid het niet versturen)
+        const contactForMail = await storage.getProspectContact(progress.contactId);
         const mailSend = await storage.createMailSend({
           campaignId: progress.campaignId,
           contactId: progress.contactId,
-          email: '', // wordt gevuld door prepareMail via contactId
+          email: contactForMail?.email || '',
           variant: 'A',
           status: 'pending',
           verzondenOp: null,
@@ -195,8 +253,22 @@ export async function processFlowStep(progressId: number): Promise<void> {
           linkMap: null,
         });
 
-        const { sendSingleMail } = await import('./emailService');
-        await sendSingleMail(mailSend.id, baseUrl);
+        // P0-fix: per-stap eigen onderwerp + content. Valt terug op
+        // campaign.contentA wanneer de stap geen eigen onderwerp/content heeft.
+        const heeftEigenContent =
+          !!(config.onderwerp || config.subject) &&
+          !!(config.htmlContent || config.textContent);
+        if (heeftEigenContent) {
+          const { sendSingleFlowMail } = await import('./emailService');
+          await sendSingleFlowMail(mailSend.id, baseUrl, {
+            subject: config.onderwerp || config.subject,
+            html: config.htmlContent,
+            text: config.textContent,
+          });
+        } else {
+          const { sendSingleMail } = await import('./emailService');
+          await sendSingleMail(mailSend.id, baseUrl);
+        }
         await moveToNextStep(progress, step, null, progressId);
         break;
       }
