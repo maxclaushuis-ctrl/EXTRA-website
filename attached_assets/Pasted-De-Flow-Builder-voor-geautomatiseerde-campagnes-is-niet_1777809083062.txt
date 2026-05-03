@@ -1,0 +1,68 @@
+De Flow Builder voor geautomatiseerde campagnes is niet 
+volledig functioneel. Loop het na en rapporteer wat er werkt, 
+wat niet, en wat ontbreekt voor een werkend follow-up-scenario.
+
+CONTEXT
+
+Ik wil een follow-up-flow bouwen die:
+1. Triggert wanneer een contact klikt op een link in een 
+   specifieke mail (campagne: "Banqueting - Mail 1 - 
+   Acquisitie zomer (mei 2026)")
+2. 5 dagen wacht
+3. Checkt of de ontvanger heeft gereageerd op mail 1 
+   (reply-detectie via Inbound Parse)
+4. Bij reply: stop de flow
+5. Bij geen reply: stuurt mail 2 ("Even checken")
+6. Sluit af met Einde
+
+CONCRETE ISSUES OP DIT MOMENT
+
+- Het Trigger-blok ("Flow gestart") heeft geen configuratie-
+  paneel. Ik zie geen dropdown om het trigger-type of de 
+  bron-campagne te kiezen.
+- Wanneer ik een Tag-blok of E-mail-blok op het canvas plaats, 
+  blijven blokken los staan ("0 verbindingen"). Hoe verbind 
+  ik twee blokken zodat de flow een keten wordt?
+- Bij Wacht-blok: hoe stel ik wachttijd in? En respecteert 
+  het de campagne-verzendvenster (di/wo)?
+- Bij Conditie-blok: welke conditie-types zijn beschikbaar? 
+  Specifiek: is er een "geen_reply" of "reply_ontvangen" 
+  optie? In de eerdere audit was alleen "geen_actie" 
+  beschikbaar.
+- Bij E-mail-blok: hoe koppel ik een specifieke mail-template 
+  of mail-inhoud aan dit blok?
+
+WAT IK WIL DAT JE DOET
+
+1. Loop elk van de 6 blok-types af (Trigger, E-mail sturen, 
+   Tag toevoegen/verwijderen, Wacht, Conditie, Einde) en 
+   rapporteer per blok:
+   - Welke configuratie-opties moeten beschikbaar zijn?
+   - Welke zijn daadwerkelijk geïmplementeerd in de UI?
+   - Welke ontbreken of werken niet?
+
+2. Test het verbinden van blokken (lijntjes trekken tussen 
+   blokken). Werkt dat? Zo nee: wat ontbreekt?
+
+3. Test specifiek het scenario hierboven (trigger → wacht → 
+   conditie → email → einde). Kun je deze 5-stappen-flow 
+   succesvol opzetten? Of loop je tegen blokkades aan?
+
+4. Check de backend: zijn de flow-engine endpoints (zoals in 
+   server/flowEngine.ts) wel gebouwd voor deze use case? 
+   Specifiek: kan een flow getriggerd worden door een klik-
+   event op een specifieke campagne? En kan een conditie 
+   "geen_reply" evalueren via de prospect_replies tabel?
+
+5. Geef een geprioriteerde lijst van wat er moet worden 
+   gebouwd of gefixed om de flow van mijn use case werkend 
+   te krijgen.
+
+OUTPUT
+
+Een feitelijk rapport per blok met status (werkt / werkt 
+gedeeltelijk / niet aanwezig) plus de geprioriteerde 
+fix-lijst.
+
+Niets bouwen — alleen rapporteren. Ik bepaal daarna welke 
+fixes we doen.
