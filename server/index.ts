@@ -144,9 +144,15 @@ app.use(session({
   }
 }));
 
+// Maskeer WhatsApp-webhook secret in request-logs.
+// Pad: /api/whatsapp/webhook/<secret> → /api/whatsapp/webhook/***
+function maskSecretsInPath(p: string): string {
+  return p.replace(/^(\/api\/whatsapp\/webhook)\/[^/]+/, '$1/***');
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
+  const path = maskSecretsInPath(req.path);
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -270,7 +276,7 @@ async function ensureAdminAccounts() {
     scheduleFlowEngine();
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
-    // WhatsApp wordt beheerd via externe VPS (geconfigureerd via WHATSAPP_API_URL secret)
+    // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
   });
 })();
 

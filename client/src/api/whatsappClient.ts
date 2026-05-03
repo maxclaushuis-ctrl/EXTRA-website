@@ -1,42 +1,86 @@
 const BASE_URL = '/api/whatsapp';
 const headers = { 'Content-Type': 'application/json' };
 
-export async function haalAccountsOp() {
-  const res = await fetch(`${BASE_URL}/accounts`, { headers });
-  if (!res.ok) throw new Error('Ophalen mislukt');
-  return res.json();
+export interface Conversation {
+  id: number;
+  phoneNumber: string;
+  candidateId: number | null;
+  prospectContactId: number | null;
+  matchCategory: 'candidate' | 'prospect' | 'unmatched';
+  displayName: string | null;
+  lastMessageAt: string;
+  lastMessagePreview: string | null;
+  unreadCount: number;
+  lastInboundAt: string | null;
 }
 
-export async function haalBerichtenOp() {
-  const res = await fetch(`${BASE_URL}/berichten`, { headers });
-  if (!res.ok) throw new Error('Berichten ophalen mislukt');
-  return res.json();
+export interface Message {
+  id: number;
+  direction: 'inbound' | 'outbound';
+  waMessageId: string | null;
+  fromNumber: string;
+  toNumber: string;
+  messageType: string;
+  body: string | null;
+  mediaUrl: string | null;
+  mediaMimeType: string | null;
+  status: string;
+  errorCode: string | null;
+  errorMessage: string | null;
+  matchCategory: 'candidate' | 'prospect' | 'unmatched';
+  createdAt: string;
 }
 
-export async function stuurBericht(nummer: string, tekst: string) {
-  const res = await fetch(`${BASE_URL}/stuur`, {
+export interface Stats {
+  candidate: { total: number; unread: number };
+  prospect: { total: number; unread: number };
+  unmatched: { total: number; unread: number };
+  totalUnread: number;
+}
+
+export interface AccountInfo {
+  id: string;
+  label: string;
+  status: 'connected' | 'disconnected';
+  telefoon: string | null;
+}
+
+export interface WebhookStatus {
+  configured: boolean;
+  url: string | null;
+  secretSet: boolean;
+}
+
+async function get<T>(path: string): Promise<T> {
+  const r = await fetch(`${BASE_URL}${path}`, { headers, credentials: 'include' });
+  if (!r.ok) throw new Error(`${path}: ${r.status}`);
+  return r.json();
+}
+
+async function post<T>(path: string, body?: any): Promise<T> {
+  const r = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ nummer, tekst }),
+    credentials: 'include',
+    body: body ? JSON.stringify(body) : undefined,
   });
-  const data = await res.json();
-  if (!res.ok || data?.error) throw new Error(data?.error || 'Versturen mislukt');
-  return data;
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || (data as any)?.error) {
+    throw new Error((data as any)?.error || `${path}: ${r.status}`);
+  }
+  return data as T;
 }
 
-export async function haalWebhookStatus() {
-  const res = await fetch(`${BASE_URL}/webhook-status`, { headers });
-  if (!res.ok) throw new Error('Status ophalen mislukt');
-  return res.json();
-}
-
-export async function registreerWebhook(url?: string) {
-  const res = await fetch(`${BASE_URL}/registreer-webhook`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ url }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || 'Registreren mislukt');
-  return data;
-}
+export const haalAccounts = () => get<AccountInfo[]>('/accounts');
+export const haalGesprekken = (category?: 'candidate' | 'prospect' | 'unmatched') =>
+  get<Conversation[]>(`/conversations${category ? `?category=${category}` : ''}`);
+export const haalBerichten = (phoneNumber: string) =>
+  get<Message[]>(`/conversations/${encodeURIComponent(phoneNumber)}/messages`);
+export const markeerGelezen = (phoneNumber: string) =>
+  post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-read`);
+export const stuurBericht = (nummer: string, tekst: string) =>
+  post<{ success: boolean; messageId: string | null; dbId: number }>('/stuur', { nummer, tekst });
+export const haalStats = () => get<Stats>('/stats');
+export const haalWebhookStatus = () => get<WebhookStatus>('/webhook-status');
+export const registreerWebhook = (url?: string) =>
+  post<{ success: boolean; url: string }>('/registreer-webhook', { url });

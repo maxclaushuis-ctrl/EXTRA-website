@@ -855,6 +855,7 @@ export const candidates = pgTable("candidates", {
   lastName: text("last_name").notNull(),
   email: text("email"),
   phone: text("phone"),
+  phoneOriginal: text("phone_original"), // backup van originele waarde vóór WhatsApp E.164-normalisatie
   birthDate: date("birth_date"),
   nationality: text("nationality"),
   city: text("city"),
@@ -1319,11 +1320,82 @@ export type InsertCrmReminder = z.infer<typeof insertCrmReminderSchema>;
 export type CrmReminder = typeof crmReminders.$inferSelect;
 
 // ─── WhatsApp sessie-opslag ───────────────────────────────────────────────────
+// DEPRECATED: deze tabel was voor de Baileys (zelf-gehoste) implementatie die
+// per 2026-05 is gearchiveerd. Niet verwijderen zolang er nog data in zou
+// kunnen zitten. Nieuwe WhatsApp-integratie gebruikt 360dialog Cloud API +
+// whatsapp_messages / whatsapp_conversations hieronder.
 export const whatsappSessions = pgTable("whatsapp_sessions", {
   accountId: text("account_id").primaryKey(),
   credentialsJson: text("credentials_json").notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// ─── WhatsApp Fase 1: berichten + gesprekken (360dialog Cloud API) ───────────
+export const whatsappDirectionEnum = pgEnum('whatsapp_direction', ['inbound', 'outbound']);
+export const whatsappMatchCategoryEnum = pgEnum('whatsapp_match_category', ['candidate', 'prospect', 'unmatched']);
+
+export const whatsappMessages = pgTable("whatsapp_messages", {
+  id: serial("id").primaryKey(),
+  direction: whatsappDirectionEnum("direction").notNull(),
+  waMessageId: text("wa_message_id"), // 360dialog message-id; uniek wanneer aanwezig
+  fromNumber: text("from_number").notNull(), // E.164 zonder +
+  toNumber: text("to_number").notNull(),     // E.164 zonder +
+  messageType: text("message_type").notNull(), // text|image|audio|document|video|location|sticker|contacts|interactive|unknown
+  body: text("body"),                          // platte tekst, of beschrijving voor media
+  mediaUrl: text("media_url"),
+  mediaMimeType: text("media_mime_type"),
+  rawPayload: jsonb("raw_payload"),            // volledige 360dialog payload voor debugging
+  status: text("status").notNull().default('received'), // received|queued|sent|delivered|read|failed
+  errorCode: text("error_code"),
+  errorMessage: text("error_message"),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: 'set null' }),
+  prospectContactId: integer("prospect_contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
+  matchCategory: whatsappMatchCategoryEnum("match_category").notNull().default('unmatched'),
+  sentByUserId: integer("sent_by_user_id").references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  fromIdx: index("wa_msg_from_created_idx").on(table.fromNumber, table.createdAt),
+  toIdx: index("wa_msg_to_created_idx").on(table.toNumber, table.createdAt),
+  candidateIdx: index("wa_msg_candidate_idx").on(table.candidateId),
+  prospectIdx: index("wa_msg_prospect_idx").on(table.prospectContactId),
+  waIdIdx: uniqueIndex("wa_msg_wa_id_unique").on(table.waMessageId),
+}));
+
+export const whatsappConversations = pgTable("whatsapp_conversations", {
+  id: serial("id").primaryKey(),
+  phoneNumber: text("phone_number").notNull(), // E.164 zonder +
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: 'set null' }),
+  prospectContactId: integer("prospect_contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
+  matchCategory: whatsappMatchCategoryEnum("match_category").notNull().default('unmatched'),
+  displayName: text("display_name"),
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+  lastMessagePreview: text("last_message_preview"),
+  unreadCount: integer("unread_count").default(0).notNull(),
+  lastInboundAt: timestamp("last_inbound_at"), // gebruikt voor 24u-venster check
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  phoneIdx: uniqueIndex("wa_conv_phone_unique").on(table.phoneNumber),
+  lastMsgIdx: index("wa_conv_last_msg_idx").on(table.lastMessageAt),
+  categoryIdx: index("wa_conv_category_idx").on(table.matchCategory),
+}));
+
+// Telefoonnummer-normalisatie issues — losse tabel zodat we ongeldige
+// nummers handmatig kunnen nakijken zonder de bron-tabel te vervuilen.
+export const phoneNormalizationIssues = pgTable("phone_normalization_issues", {
+  id: serial("id").primaryKey(),
+  tableName: text("table_name").notNull(),     // 'candidates' | 'prospect_contacts'
+  recordId: integer("record_id").notNull(),
+  originalValue: text("original_value"),
+  reason: text("reason").notNull(),            // 'empty' | 'too_short' | 'too_long' | 'no_digits' | 'invalid_country'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
+export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
+export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
+export type InsertWhatsappConversation = typeof whatsappConversations.$inferInsert;
 
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
@@ -1369,6 +1441,7 @@ export const prospectContacts = pgTable("prospect_contacts", {
   voornaam: text("voornaam"),
   achternaam: text("achternaam"),
   telefoon: text("telefoon"),
+  telefoonOriginal: text("telefoon_original"), // backup van originele waarde vóór WhatsApp E.164-normalisatie
   stad: text("stad"),
   taal: text("taal").default("Nederlands"),
   branche: text("branche"),                            // Hotel | Restaurant | Cateraar | Evenementenlocatie | Logistiek

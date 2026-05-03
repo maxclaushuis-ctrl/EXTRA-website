@@ -9898,56 +9898,85 @@ ${posts.map(p => `  <url>
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
-  // ─── WHATSAPP BEHEER (360dialog API) ──────────────────────────────────────
+  // ─── WHATSAPP BEHEER (360dialog Cloud API — Fase 1) ────────────────────────
+  // Architectuur:
+  //   - Inkomende berichten via /api/whatsapp/webhook/:secret (URL-secret)
+  //   - Persistentie in whatsapp_messages + whatsapp_conversations
+  //   - Auto-koppeling aan candidates / prospect_contacts via matcher.ts
+  //   - Idempotentie op wa_message_id
+  // Env-vars: WHATSAPP_360_API_KEY, WHATSAPP_WEBHOOK_SECRET
+  // Zie server/whatsapp/README.md voor configuratie.
   const WA_BASE_URL = 'https://waba.360dialog.io/v1';
   const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
   const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
 
-  // In-memory berichtenopslag
-  const waBerichten: any[] = [];
+  const { normalizePhone } = await import('./whatsapp/phone');
+  const waStorage = await import('./whatsapp/storage');
+  const cryptoModule = await import('crypto');
+  const { whatsappMessages, whatsappConversations } = await import('@shared/schema');
+  const { eq: drizzleEq, sql: drizzleSql, desc: drizzleDesc } = await import('drizzle-orm');
 
-  // GET /api/whatsapp/accounts — altijd één account: WhatsApp Business
-  app.get('/api/whatsapp/accounts', adminMiddleware, async (_req: Request, res: Response) => {
-    try {
-      const r = await fetch(`${WA_BASE_URL}/configs/webhook`, { headers: wa360Headers });
-      const data = await r.json().catch(() => ({}));
-      res.json([{
-        id: 'whatsapp',
-        label: 'WhatsApp Business',
-        categorie: 'business',
-        status: 'connected',
-        telefoon: data?.url ? 'Actief' : 'Actief',
-        qr: null,
-        ongelezen: 0,
-      }]);
-    } catch {
-      res.json([{
-        id: 'whatsapp',
-        label: 'WhatsApp Business',
-        categorie: 'business',
-        status: 'connected',
-        telefoon: 'Actief',
-        qr: null,
-        ongelezen: 0,
-      }]);
+  function safeEqualSecret(provided: string, expected: string): boolean {
+    if (!expected) return false;
+    const a = Buffer.from(provided);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) {
+      // Constant-time compare vereist gelijke lengte; doe een dummy compare om timing-leak te vermijden
+      try { cryptoModule.timingSafeEqual(a, Buffer.alloc(a.length)); } catch { /* ignore */ }
+      return false;
     }
+    return cryptoModule.timingSafeEqual(a, b);
+  }
+
+  // GET /api/whatsapp/accounts — UI status-blok
+  app.get('/api/whatsapp/accounts', adminMiddleware, async (_req: Request, res: Response) => {
+    res.json([{
+      id: 'whatsapp',
+      label: 'WhatsApp Business',
+      categorie: 'business',
+      status: WA_360_KEY ? 'connected' : 'disconnected',
+      telefoon: WA_360_KEY ? 'Actief' : null,
+      qr: null,
+      ongelezen: 0,
+    }]);
   });
 
-  // POST /api/whatsapp/stuur — bericht sturen via 360dialog
+  // POST /api/whatsapp/stuur — bericht sturen via 360dialog (met DB-persistentie)
   app.post('/api/whatsapp/stuur', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
+    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
 
-    const cleanNummer = nummer.replace(/[^0-9]/g, '');
+    const normalized = normalizePhone(nummer);
+    if (!normalized) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
 
-    // 360dialog v1 berichtformaat
-    const payload = {
-      to: cleanNummer,
-      type: 'text',
-      text: { body: tekst },
-    };
+    const now = new Date();
+    const userId = req.session?.userId ?? null;
 
+    // 1. Insert als queued + match aan kandidaat/prospect + upsert conversation
+    const match = await waStorage.resolveAndUpsertConversation({
+      phoneNumber: normalized,
+      inbound: false,
+      bodyPreview: tekst,
+      at: now,
+    });
+
+    const messageRowId = await waStorage.insertOutboundQueued({
+      direction: 'outbound',
+      fromNumber: 'extra', // 360dialog regelt het werkelijke afzendernummer; placeholder
+      toNumber: normalized,
+      messageType: 'text',
+      body: tekst,
+      candidateId: match.candidateId,
+      prospectContactId: match.prospectContactId,
+      matchCategory: match.category,
+      sentByUserId: userId,
+      rawPayload: { type: 'text', text: { body: tekst }, to: normalized },
+    });
+
+    // 2. API-call naar 360dialog
     try {
+      const payload = { to: normalized, type: 'text', text: { body: tekst } };
       const r = await fetch(`${WA_BASE_URL}/messages`, {
         method: 'POST',
         headers: wa360Headers,
@@ -9955,82 +9984,164 @@ ${posts.map(p => `  <url>
       });
       const responseText = await r.text();
       let data: any = {};
-      try { data = JSON.parse(responseText); } catch {}
+      try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
 
-      console.log(`360dialog stuur → ${cleanNummer}: HTTP ${r.status} — ${responseText}`);
+      console.log(`360dialog stuur → ${normalized}: HTTP ${r.status}`);
 
-      // Geef fout terug als 360dialog het bericht afwijst (v1 gebruikt meta.developer_message)
       if (!r.ok || data?.error || data?.meta?.success === false) {
-        const errorMsg = data?.meta?.developer_message || data?.error || data?.message || responseText;
+        const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || data?.message || responseText.slice(0, 500);
+        const errorCode = data?.error?.code ? String(data.error.code) : String(r.status);
+        await waStorage.updateOutboundResult(messageRowId, {
+          status: 'failed',
+          errorCode,
+          errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+        });
         return res.status(r.ok ? 400 : r.status).json({ error: `360dialog: ${errorMsg}` });
       }
 
-      // Alleen opslaan als 360dialog bevestigt
-      const bericht = {
-        id: data?.messages?.[0]?.id || `out_${Date.now()}`,
-        inkomend: false,
-        naam: null,
-        van: null,
-        tekst,
-        tijdstip: new Date().toISOString(),
-      };
-      waBerichten.unshift(bericht);
-      return res.json({ success: true, messageId: bericht.id });
+      const waMessageId = data?.messages?.[0]?.id ?? null;
+      await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
+      return res.json({ success: true, messageId: waMessageId, dbId: messageRowId });
     } catch (err: any) {
       console.error('Fout bij versturen WhatsApp bericht:', err.message);
+      await waStorage.updateOutboundResult(messageRowId, {
+        status: 'failed',
+        errorCode: 'network_error',
+        errorMessage: err.message,
+      });
       return res.status(500).json({ error: err.message });
     }
   });
 
-  // GET /api/whatsapp/berichten — opgeslagen berichten ophalen
-  app.get('/api/whatsapp/berichten', adminMiddleware, (_req: Request, res: Response) => {
-    res.json(waBerichten);
-  });
+  // ─── WEBHOOK (secret in URL) ─────────────────────────────────────────────
+  // 360dialog moet POSTen naar https://<host>/api/whatsapp/webhook/<secret>
+  // Bij mismatch: 401 met lege body (stille afwijzing).
+  // Bij interne fout: 200 (anders blijft 360dialog retryen) — fout wordt gelogd.
+  const WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || '';
 
-  // POST /api/whatsapp/webhook — inkomende berichten van 360dialog
-  app.post('/api/whatsapp/webhook', (req: Request, res: Response) => {
-    const body = req.body;
-    if (body?.messages) {
-      for (const msg of body.messages) {
-        if (msg.type === 'text') {
-          waBerichten.unshift({
-            id: msg.id,
-            inkomend: true,
-            naam: body?.contacts?.[0]?.profile?.name || msg.from,
-            van: msg.from,
-            tekst: msg.text.body,
-            tijdstip: new Date(Number(msg.timestamp) * 1000).toISOString(),
-          });
+  async function handleWebhookGet(req: Request, res: Response) {
+    if (!safeEqualSecret(req.params.secret || '', WEBHOOK_SECRET)) {
+      return res.sendStatus(401);
+    }
+    return res.status(200).send(String(req.query['hub.challenge'] || 'ok'));
+  }
+
+  async function handleWebhookPost(req: Request, res: Response) {
+    if (!safeEqualSecret(req.params.secret || '', WEBHOOK_SECRET)) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const body = req.body || {};
+
+      // 1. Status-events (delivered/read/failed)
+      if (Array.isArray(body.statuses)) {
+        for (const s of body.statuses) {
+          try {
+            const id = s?.id;
+            const status = s?.status; // sent | delivered | read | failed
+            if (!id || !status) continue;
+            const errCode = s?.errors?.[0]?.code ? String(s.errors[0].code) : undefined;
+            const errMsg  = s?.errors?.[0]?.title || s?.errors?.[0]?.message;
+            const updated = await waStorage.applyStatusEvent(id, status, errCode, errMsg);
+            if (!updated) {
+              console.log(`[WA webhook] status-event voor onbekend wa_message_id=${id} (${status})`);
+            }
+          } catch (e: any) {
+            console.error('[WA webhook] fout bij status-event:', e?.message);
+          }
         }
       }
-    }
-    res.sendStatus(200);
-  });
 
-  // GET /api/whatsapp/webhook — verificatie door 360dialog
-  app.get('/api/whatsapp/webhook', (req: Request, res: Response) => {
-    res.status(200).send(req.query['hub.challenge'] || 'ok');
-  });
+      // 2. Inkomende berichten
+      if (Array.isArray(body.messages)) {
+        const contactProfile = body?.contacts?.[0]?.profile?.name as string | undefined;
+
+        for (const msg of body.messages) {
+          try {
+            const fromRaw = String(msg.from || '');
+            const normalizedFrom = normalizePhone(fromRaw);
+            if (!normalizedFrom) {
+              console.warn(`[WA webhook] ongeldig from-nummer: "${fromRaw}"`);
+              continue;
+            }
+
+            const at = msg.timestamp ? new Date(Number(msg.timestamp) * 1000) : new Date();
+            const type: string = msg.type || 'unknown';
+
+            let body_: string;
+            let mediaUrl: string | null = null;
+            let mediaMime: string | null = null;
+
+            if (type === 'text') {
+              body_ = msg.text?.body || '';
+            } else if (['image', 'audio', 'document', 'video', 'sticker'].includes(type)) {
+              body_ = waStorage.describeNonTextMessage(type, msg);
+              mediaUrl = msg[type]?.id || null; // 360dialog geeft een media-id; download-URL haal je later op met /media/{id}
+              mediaMime = msg[type]?.mime_type || null;
+            } else {
+              body_ = waStorage.describeNonTextMessage(type, msg);
+            }
+
+            const match = await waStorage.resolveAndUpsertConversation({
+              phoneNumber: normalizedFrom,
+              inbound: true,
+              bodyPreview: body_,
+              at,
+            });
+
+            const inserted = await waStorage.insertInboundMessage({
+              direction: 'inbound',
+              waMessageId: msg.id || null,
+              fromNumber: normalizedFrom,
+              toNumber: 'extra',
+              messageType: ['text', 'image', 'audio', 'document', 'video', 'location', 'sticker', 'contacts', 'interactive'].includes(type) ? type : 'unknown',
+              body: body_,
+              mediaUrl,
+              mediaMimeType: mediaMime,
+              rawPayload: msg,
+              status: 'received',
+              candidateId: match.candidateId,
+              prospectContactId: match.prospectContactId,
+              matchCategory: match.category,
+            });
+
+            if (inserted === null) {
+              console.log(`[WA webhook] duplicate wa_message_id=${msg.id} → skip`);
+            } else {
+              console.log(`[WA webhook] inbound ${type} van ${normalizedFrom} → match=${match.category} (${contactProfile || '?'})`);
+            }
+          } catch (e: any) {
+            console.error('[WA webhook] fout bij verwerken message:', e?.message, e?.stack);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error('[WA webhook] top-level fout:', e?.message, e?.stack);
+    }
+
+    // Altijd 200 — 360dialog mag niet retryen op interne fouten
+    return res.sendStatus(200);
+  }
+
+  app.get('/api/whatsapp/webhook/:secret', handleWebhookGet);
+  app.post('/api/whatsapp/webhook/:secret', handleWebhookPost);
 
   // POST /api/whatsapp/registreer-webhook — stel webhook-URL in via 360dialog API
   app.post('/api/whatsapp/registreer-webhook', adminMiddleware, async (req: Request, res: Response) => {
-    const webhookUrl = req.body?.url || 'https://doehetextra.nl/api/whatsapp/webhook';
-    if (!WA_360_KEY) {
-      return res.status(500).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
-    }
-
-    // 360dialog v1 — probeer PATCH, PUT en POST met correcte body-formaten
+    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+    if (!WEBHOOK_SECRET) return res.status(503).json({ error: 'WHATSAPP_WEBHOOK_SECRET niet ingesteld — kan geen veilige URL bouwen' });
+    const baseUrl = req.body?.url || `https://doehetextra.nl/api/whatsapp/webhook/${WEBHOOK_SECRET}`;
     const attempts = [
-      { method: 'PATCH', body: { url: webhookUrl } },
-      { method: 'PUT',   body: { url: webhookUrl, headers: {} } },
-      { method: 'POST',  body: { url: webhookUrl, headers: {} } },
-      { method: 'PUT',   body: { url: webhookUrl } },
-      { method: 'POST',  body: { url: webhookUrl } },
+      { method: 'PATCH', body: { url: baseUrl } },
+      { method: 'PUT',   body: { url: baseUrl, headers: {} } },
+      { method: 'POST',  body: { url: baseUrl, headers: {} } },
+      { method: 'PUT',   body: { url: baseUrl } },
+      { method: 'POST',  body: { url: baseUrl } },
     ];
 
     let lastStatus = 0;
     let lastBody = '';
-
     for (const attempt of attempts) {
       try {
         const r = await fetch(`${WA_BASE_URL}/configs/webhook`, {
@@ -10039,14 +10150,12 @@ ${posts.map(p => `  <url>
           body: JSON.stringify(attempt.body),
         });
         const text = await r.text();
-        let data: any = {};
-        try { data = JSON.parse(text); } catch {}
-
-        console.log(`360dialog webhook ${attempt.method} (body:${JSON.stringify(attempt.body)}): ${r.status} ${text}`);
-
+        // Log zonder secret te lekken
+        const maskedUrl = baseUrl.replace(WEBHOOK_SECRET, '***');
+        console.log(`360dialog webhook registreren ${attempt.method} (url:${maskedUrl}): ${r.status}`);
         if (r.ok) {
-          console.log('360dialog webhook geregistreerd:', webhookUrl);
-          return res.json({ success: true, url: webhookUrl, method: attempt.method, response: data });
+          let data: any = {}; try { data = JSON.parse(text); } catch {}
+          return res.json({ success: true, url: maskedUrl, method: attempt.method, response: data });
         }
         lastStatus = r.status;
         lastBody = text;
@@ -10054,24 +10163,62 @@ ${posts.map(p => `  <url>
         lastBody = err.message;
       }
     }
-
     console.error('Alle webhook-registratiepogingen mislukt. Laatste fout:', lastStatus, lastBody);
     return res.status(lastStatus || 500).json({ error: `360dialog fout na alle pogingen: ${lastBody}` });
   });
 
-  // GET /api/whatsapp/webhook-status — controleer welke webhook is ingesteld bij 360dialog
+  // GET /api/whatsapp/webhook-status
   app.get('/api/whatsapp/webhook-status', adminMiddleware, async (_req: Request, res: Response) => {
-    if (!WA_360_KEY) return res.json({ configured: false, url: null });
+    if (!WA_360_KEY) return res.json({ configured: false, url: null, secretSet: !!WEBHOOK_SECRET });
     try {
       const r = await fetch(`${WA_BASE_URL}/configs/webhook`, { headers: wa360Headers });
       const text = await r.text();
       let data: any = {};
       try { data = JSON.parse(text); } catch {}
-      return res.json({ configured: r.ok, url: data?.url || null, raw: data });
+      const url = data?.url || null;
+      // Mask secret in display
+      const maskedUrl = url && WEBHOOK_SECRET ? String(url).replace(WEBHOOK_SECRET, '***') : url;
+      return res.json({ configured: r.ok, url: maskedUrl, secretSet: !!WEBHOOK_SECRET });
     } catch {
-      return res.json({ configured: false, url: null });
+      return res.json({ configured: false, url: null, secretSet: !!WEBHOOK_SECRET });
     }
   });
+
+  // ─── Conversation endpoints ──────────────────────────────────────────────
+  app.get('/api/whatsapp/conversations', adminMiddleware, async (req: Request, res: Response) => {
+    const category = req.query.category as 'candidate' | 'prospect' | 'unmatched' | undefined;
+    const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 200);
+    const offset = parseInt(String(req.query.offset || '0'), 10) || 0;
+    if (category && !['candidate', 'prospect', 'unmatched'].includes(category)) {
+      return res.status(400).json({ error: 'category moet candidate, prospect of unmatched zijn' });
+    }
+    const rows = await waStorage.listConversations({ category, limit, offset });
+    res.json(rows);
+  });
+
+  app.get('/api/whatsapp/conversations/:phoneNumber/messages', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 500);
+    const rows = await waStorage.getMessagesForPhone(phone, limit);
+    res.json(rows);
+  });
+
+  app.post('/api/whatsapp/conversations/:phoneNumber/mark-read', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    await waStorage.markConversationRead(phone);
+    res.json({ success: true });
+  });
+
+  app.get('/api/whatsapp/stats', adminMiddleware, async (_req: Request, res: Response) => {
+    const stats = await waStorage.getStats();
+    res.json(stats);
+  });
+
+  // Voer een eenmalige startup-warning uit als secrets ontbreken
+  if (!WA_360_KEY) console.warn('[WA] WHATSAPP_360_API_KEY niet ingesteld — uitgaande berichten zullen falen');
+  if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');
   // ─────────────────────────────────────────────────────────────────────────
 
   // ─── Indeed Apply webhook ────────────────────────────────────────────────
