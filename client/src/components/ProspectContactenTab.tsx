@@ -767,15 +767,35 @@ function CsvImportModal({ open, onClose, onSaved }: { open: boolean; onClose: ()
     onError: () => toast({ title: 'Import mislukt', variant: 'destructive' }),
   });
 
+  const mapRow = (row: any) => {
+    const contact: any = {};
+    Object.entries(mapping).forEach(([csvCol, sysField]) => {
+      if (sysField && sysField !== 'skip') contact[sysField] = row[csvCol] || '';
+    });
+    return contact;
+  };
+
+  const dedupedRows = (() => {
+    const seen = new Set<string>();
+    const out: any[] = [];
+    for (const row of csvRows) {
+      const m = mapRow(row);
+      const email = (m.email || '').trim().toLowerCase();
+      if (!email) continue;
+      if (seen.has(email)) continue;
+      seen.add(email);
+      out.push(m);
+    }
+    return out;
+  })();
+
+  const duplicatesInFile = csvRows.filter(r => {
+    const e = (mapRow(r).email || '').trim().toLowerCase();
+    return !!e;
+  }).length - dedupedRows.length;
+
   const handleImport = () => {
-    const mapped = csvRows.map(row => {
-      const contact: any = {};
-      Object.entries(mapping).forEach(([csvCol, sysField]) => {
-        if (sysField && sysField !== 'skip') contact[sysField] = row[csvCol] || '';
-      });
-      return contact;
-    }).filter(r => r.email);
-    importMutation.mutate(mapped);
+    importMutation.mutate(dedupedRows);
   };
 
   const missingRequired = (row: any) => {
@@ -870,6 +890,15 @@ function CsvImportModal({ open, onClose, onSaved }: { open: boolean; onClose: ()
                 {csvRows.filter(missingRequired).length} rijen missen een e-mailadres en worden overgeslagen.
               </p>
             )}
+            {duplicatesInFile > 0 && (
+              <p className="text-xs text-orange-600 flex items-center gap-1">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {duplicatesInFile} dubbele e-mail{duplicatesInFile === 1 ? '' : 's'} in dit bestand worden automatisch samengevoegd.
+              </p>
+            )}
+            <p className="text-xs text-gray-500">
+              Reeds bestaande contacten in de database worden automatisch overgeslagen op basis van e-mailadres.
+            </p>
           </div>
         )}
 
@@ -878,8 +907,8 @@ function CsvImportModal({ open, onClose, onSaved }: { open: boolean; onClose: ()
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Aangemaakt', value: result.aangemaakt, color: 'text-green-700', bg: 'bg-green-50' },
-                { label: 'Overgeslagen', value: result.overgeslagen, color: 'text-orange-700', bg: 'bg-orange-50' },
+                { label: 'Nieuw aangemaakt', value: result.aangemaakt, color: 'text-green-700', bg: 'bg-green-50' },
+                { label: 'Bestonden al', value: result.overgeslagen, color: 'text-orange-700', bg: 'bg-orange-50' },
                 { label: 'Fouten', value: result.fouten?.length || 0, color: 'text-red-700', bg: 'bg-red-50' },
               ].map(c => (
                 <div key={c.label} className={`${c.bg} rounded-xl p-4 text-center`}>
@@ -904,8 +933,8 @@ function CsvImportModal({ open, onClose, onSaved }: { open: boolean; onClose: ()
           {step === 2 && (
             <>
               <Button variant="outline" onClick={() => { reset(); }}>Terug</Button>
-              <Button onClick={handleImport} disabled={importMutation.isPending} className="bg-purple-600 hover:bg-purple-700">
-                {importMutation.isPending ? 'Importeren...' : `${csvRows.filter(r => !missingRequired(r)).length} contacten importeren`}
+              <Button onClick={handleImport} disabled={importMutation.isPending || dedupedRows.length === 0} className="bg-purple-600 hover:bg-purple-700">
+                {importMutation.isPending ? 'Importeren...' : `${dedupedRows.length} unieke contact${dedupedRows.length === 1 ? '' : 'en'} importeren`}
               </Button>
             </>
           )}
