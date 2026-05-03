@@ -1,0 +1,213 @@
+Ik wil Fase 1 van de WhatsApp-integratie bouwen: het fundament op orde 
+brengen voordat we een bot eroverheen leggen. Lees deze hele prompt 
+eerst voordat je begint, en stel verduidelijkende vragen als iets 
+onduidelijk is.
+
+CONTEXT
+=======
+De huidige WhatsApp-integratie werkt via 360dialog Cloud API voor 
+handmatig versturen/ontvangen, maar:
+- Berichten staan in een in-memory array (verdwijnen bij restart)
+- Inkomende berichten worden niet gekoppeld aan kandidaten of prospects
+- Status-events (delivered/read/failed) worden niet verwerkt
+- Webhook heeft geen signature-verificatie
+- Alleen type='text' wordt verwerkt; media wordt genegeerd
+- Baileys-code is dood code
+
+DOEL VAN FASE 1
+===============
+Fundament leggen waarop we later (Fase 2: templates, Fase 3: bot) 
+kunnen bouwen. Géén bot-functionaliteit in deze fase.
+
+OPDRACHT
+========
+
+1. DATABASE-SCHEMA
+   Voeg de volgende tabellen toe aan shared/schema.ts:
+
+   a) whatsapp_messages
+      - id: serial PK
+      - direction: enum ('inbound' | 'outbound')
+      - wa_message_id: text (de ID van 360dialog, uniek)
+      - from_number: text (E.164 formaat, zonder +)
+      - to_number: text (E.164 formaat, zonder +)
+      - message_type: text ('text', 'image', 'audio', 'document', 
+        'video', 'location', 'sticker', 'contacts', 'interactive', 
+        'unknown')
+      - body: text (voor text-berichten; voor andere types een 
+        beschrijving zoals "[afbeelding: caption]")
+      - media_url: text nullable (voor media-berichten)
+      - media_mime_type: text nullable
+      - raw_payload: jsonb (de volledige 360dialog payload, voor 
+        debugging en latere uitbreiding)
+      - status: text ('received', 'sent', 'delivered', 'read', 
+        'failed', 'queued')
+      - error_code: text nullable
+      - error_message: text nullable
+      - candidate_id: integer nullable, FK naar candidates
+      - prospect_contact_id: integer nullable, FK naar prospect_contacts
+      - match_category: text ('candidate', 'prospect', 'unmatched')
+      - sent_by_user_id: integer nullable, FK naar users (alleen bij 
+        outbound, wie heeft 'm verstuurd; null betekent automatisch 
+        verzonden)
+      - created_at: timestamp default now()
+      - updated_at: timestamp default now()
+
+   b) whatsapp_conversations (één rij per uniek telefoonnummer)
+      - id: serial PK
+      - phone_number: text UNIQUE (E.164 zonder +)
+      - candidate_id: integer nullable, FK naar candidates
+      - prospect_contact_id: integer nullable, FK naar prospect_contacts
+      - match_category: text ('candidate', 'prospect', 'unmatched')
+      - display_name: text nullable (naam zoals bekend in CRM, of 
+        leeg bij unmatched)
+      - last_message_at: timestamp
+      - last_message_preview: text (eerste 100 chars van laatste 
+        bericht)
+      - unread_count: integer default 0
+      - last_inbound_at: timestamp nullable (voor 24u-venster check)
+      - created_at: timestamp default now()
+      - updated_at: timestamp default now()
+
+   Indexen:
+   - whatsapp_messages: (from_number, created_at), (to_number, 
+     created_at), (candidate_id), (prospect_contact_id), (wa_message_id)
+   - whatsapp_conversations: (phone_number) unique, (last_message_at), 
+     (match_category)
+
+   Schrijf de Drizzle migration en voer 'm uit.
+
+2. TELEFOONNUMMER-NORMALISATIE
+   Maak een utility server/whatsapp/phone.ts met:
+   - normalizePhone(input: string): string — geeft E.164 zonder + 
+     terug, bijv. "0612345678" → "31612345678", "+31612345678" → 
+     "31612345678", "+316 1234 5678" → "31612345678"
+   - Default landcode is NL (31) als er geen + en geen landcode is
+   - Geef null terug bij ongeldig formaat
+   - Schrijf unit tests voor deze functie (minimaal 10 cases incl. 
+     edge cases zoals lege strings, te kort, te lang, alleen cijfers, 
+     met spaties/streepjes/haakjes)
+
+3. MATCHING-LOGICA
+   Maak server/whatsapp/matcher.ts met functie:
+   matchPhoneToContact(normalizedPhone: string): Promise<{
+     candidateId: number | null;
+     prospectContactId: number | null;
+     category: 'candidate' | 'prospect' | 'unmatched';
+     displayName: string | null;
+   }>
+
+   Volgorde:
+   1. Eerst zoeken in candidates.phone (genormaliseerd vergelijken)
+   2. Dan in prospect_contacts.telefoon (genormaliseerd vergelijken)
+   3. Anders: unmatched
+   
+   Belangrijk: ook bestaande kandidaat- en prospect-nummers moeten 
+   genormaliseerd worden vóór vergelijking, want die staan vaak in 
+   verschillende formaten in de DB.
+
+4. WEBHOOK AANPASSEN (POST /api/whatsapp/webhook)
+   Vervang de huidige in-memory logica door:
+   
+   a) Signature-verificatie: 360dialog stuurt geen HMAC-signature in 
+      de standaard Cloud API setup, maar voeg WEL een check toe op 
+      een shared secret in de URL (bijv. 
+      /api/whatsapp/webhook/:secret) of in een custom header. 
+      Configureer dit via env var WHATSAPP_WEBHOOK_SECRET. Als de 
+      secret niet matcht: 401 teruggeven.
+   
+   b) Verwerk ALLE message types (text, image, audio, document, 
+      video, location, sticker, contacts, interactive). Voor 
+      niet-text: sla media_url en mime_type op, en zet body op een 
+      beschrijvende string.
+   
+   c) Verwerk ook status-events (delivered/read/failed) — die komen 
+      in body.statuses[] binnen. Update bestaande whatsapp_messages 
+      rij op basis van wa_message_id.
+   
+   d) Voor elk binnenkomend bericht:
+      - Normaliseer from-nummer
+      - Match aan kandidaat/prospect
+      - Insert in whatsapp_messages
+      - Upsert whatsapp_conversations (verhoog unread_count, update 
+        last_message_at, last_inbound_at, last_message_preview)
+   
+   e) Idempotentie: als wa_message_id al bestaat, skip de insert 
+      (360dialog kan retries sturen).
+   
+   f) Geef ALTIJD 200 terug, zelfs bij interne fouten (anders blijft 
+      360dialog retryen). Log fouten wel uitgebreid.
+
+5. UITGAANDE BERICHTEN AANPASSEN (POST /api/whatsapp/stuur)
+   - Sla elk verzonden bericht op in whatsapp_messages met 
+     status='queued' vóór de API-call
+   - Bij succes: update naar status='sent' met wa_message_id van 
+     360dialog
+   - Bij fout: update naar status='failed' met error_code en 
+     error_message
+   - Upsert whatsapp_conversations
+   - Sla sent_by_user_id op (uit req.session.userId of admin context)
+   - Match het ontvangende nummer ook aan candidate/prospect en sla 
+     dat op
+   
+6. NIEUWE ENDPOINTS (allen adminMiddleware)
+   - GET /api/whatsapp/conversations?category=candidate|prospect|
+     unmatched&limit=50&offset=0
+     → lijst gesprekken gesorteerd op last_message_at desc
+   - GET /api/whatsapp/conversations/:phoneNumber/messages?limit=50
+     → alle berichten van/aan dit nummer chronologisch
+   - POST /api/whatsapp/conversations/:phoneNumber/mark-read
+     → zet unread_count op 0
+   - GET /api/whatsapp/stats
+     → totaal aantal gesprekken per categorie, ongelezen count
+
+7. BAILEYS OPRUIMEN
+   - Verplaats server/whatsapp/manager.ts naar 
+     server/whatsapp/_archived/baileys-manager.ts.bak
+   - Verwijder de import in server/index.ts (commentaar regel 273)
+   - Laat de whatsapp_sessions tabel staan (geen data-verlies risico) 
+     maar markeer in een comment in schema.ts dat deze deprecated is
+   
+8. TESTS
+   - Unit tests voor phone.ts (al genoemd)
+   - Integration test: simuleer een 360dialog webhook POST met een 
+     text-bericht van een bekend kandidaat-nummer → verwacht: 
+     bericht in DB, conversation aangemaakt, candidate_id gevuld, 
+     match_category='candidate'
+   - Integration test: zelfde maar met onbekend nummer → 
+     match_category='unmatched'
+   - Integration test: status-event 'delivered' voor bestaand 
+     wa_message_id → status updated
+   - Integration test: dubbele webhook met zelfde wa_message_id → 
+     geen duplicate insert
+
+9. ENV-VARIABELEN
+   Voeg toe aan .env.example:
+   - WHATSAPP_WEBHOOK_SECRET (random string van 32+ chars)
+   
+   Documenteer in een README.md in server/whatsapp/ welke env-vars 
+   nodig zijn en hoe de webhook-URL bij 360dialog ingesteld moet 
+   worden.
+
+10. NIET DOEN IN DEZE FASE
+    - Geen template-versturen (komt in Fase 2)
+    - Geen bot-logica, geen Claude API integratie (komt in Fase 3)
+    - Geen frontend-aanpassingen aan WhatsAppBeheer.tsx behalve 
+      strikt nodig om de nieuwe endpoints te gebruiken (oude 
+      in-memory endpoint mag verwijderd worden)
+    - Geen koppeling met shifts/planning (komt in Fase 3)
+
+WERKWIJZE
+=========
+- Werk in kleine commits per onderdeel (schema → phone util → 
+  matcher → webhook → outbound → endpoints → cleanup → tests)
+- Run de tests na elke stap
+- Geef aan het eind een samenvatting van:
+  * Wat er nu in productie kan
+  * Welke env-vars ingesteld moeten worden
+  * Welke handmatige stap bij 360dialog gedaan moet worden 
+    (webhook-URL met secret)
+  * Welke bestaande data eventueel gemigreerd moet worden 
+    (bijv. genormaliseerde kandidaat-telefoonnummers)
+
+Stel vragen als iets onduidelijk is voordat je begint te bouwen.
