@@ -15,3 +15,5 @@ server/db.json
 .env.*.local
 *.env
 .env.production
+# Cookie-bestanden bevatten sessie-tokens — nooit committen
+cookies.txt
