@@ -20,9 +20,9 @@ const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 type Tab = 'candidate' | 'prospect' | 'unmatched';
 
 const TAB_LABELS: Record<Tab, string> = {
-  candidate: 'Kandidaten',
-  prospect: 'Prospects',
-  unmatched: 'Onbekend',
+  candidate: 'Medewerkers',
+  prospect: 'Klanten',
+  unmatched: 'Kandidaten',
 };
 
 const STATUS_LABEL: Record<string, string> = {
