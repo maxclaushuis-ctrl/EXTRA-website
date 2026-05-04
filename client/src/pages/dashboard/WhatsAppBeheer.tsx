@@ -400,24 +400,24 @@ export default function WhatsAppBeheer() {
                   <input
                     value={reply}
                     onChange={e => setReply(e.target.value)}
-                    placeholder={within24h ? 'Typ een antwoord...' : 'Buiten 24u-venster — alleen templates toegestaan'}
-                    disabled={!within24h || sending}
+                    placeholder={within24h ? 'Typ een antwoord...' : 'Typ een antwoord (24u-venster mogelijk verlopen)...'}
+                    disabled={sending}
                     style={{
                       flex: 1, padding: '10px 14px', fontSize: 13,
                       border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none',
                       fontFamily: FONT,
-                      background: !within24h ? '#F9FAFB' : '#fff',
+                      background: '#fff',
                     }}
                   />
                   <button
                     type="submit"
-                    disabled={!within24h || sending || !reply.trim()}
+                    disabled={sending || !reply.trim()}
                     style={{
-                      background: (!within24h || sending || !reply.trim()) ? '#E5E7EB' : NAVY,
-                      color: (!within24h || sending || !reply.trim()) ? '#9CA3AF' : '#fff',
+                      background: (sending || !reply.trim()) ? '#E5E7EB' : NAVY,
+                      color: (sending || !reply.trim()) ? '#9CA3AF' : '#fff',
                       border: 'none', borderRadius: 6, padding: '0 18px',
                       fontSize: 13, fontWeight: 600,
-                      cursor: (!within24h || sending || !reply.trim()) ? 'not-allowed' : 'pointer',
+                      cursor: (sending || !reply.trim()) ? 'not-allowed' : 'pointer',
                       fontFamily: FONT,
                     }}
                   >

@@ -57,8 +57,10 @@ export async function upsertConversation(args: {
         unreadCount: inbound
           ? sql`${whatsappConversations.unreadCount} + 1`
           : sql`${whatsappConversations.unreadCount}`,
-        lastInboundAt: inbound ? at : sql`${whatsappConversations.lastInboundAt}`,
-        updatedAt: at,
+        lastInboundAt: inbound
+          ? sql`GREATEST(${whatsappConversations.lastInboundAt}, ${at})`
+          : sql`${whatsappConversations.lastInboundAt}`,
+        updatedAt: sql`GREATEST(${whatsappConversations.updatedAt}, ${at})`,
       },
     });
 }
