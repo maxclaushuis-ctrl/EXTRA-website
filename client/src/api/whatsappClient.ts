@@ -240,3 +240,18 @@ export const haalNotities = (phoneNumber: string) =>
 
 export const maakNotitie = (phoneNumber: string, body: string) =>
   post<InternalNote>(`/conversations/${encodeURIComponent(phoneNumber)}/notes`, { body });
+
+export interface AiSettings {
+  id: number;
+  toneOfVoice: string;
+  guidelines: string;
+  cancellationProtocol: string;
+  extraContext: string;
+  updatedAt: string;
+}
+
+export const haalAiSettings = () => get<AiSettings>('/ai-settings');
+export const updateAiSettings = (data: Partial<Omit<AiSettings, 'id' | 'updatedAt'>>) =>
+  put<AiSettings>('/ai-settings', data);
+export const vraagAiSuggestie = (messages: Message[], contactName?: string | null, contactCompany?: string | null, mode?: 'individual' | 'bulk') =>
+  post<{ suggestion: string }>('/ai-suggest', { messages, contactName, contactCompany, mode: mode || 'individual' });

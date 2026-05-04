@@ -26,6 +26,9 @@ import {
   haalImportKandidaten,
   haalImportKlanten,
   parseCsv,
+  haalAiSettings,
+  updateAiSettings,
+  vraagAiSuggestie,
   type Conversation,
   type Message,
   type Stats,
@@ -39,6 +42,7 @@ import {
   type BulkSendRecord,
   type ImportCandidate,
   type ImportProspect,
+  type AiSettings,
 } from '../../api/whatsappClient';
 
 const NAVY = '#1F3A5F';
@@ -131,6 +135,18 @@ export default function WhatsAppBeheer() {
   const [showBulkHistory, setShowBulkHistory] = useState(false);
   const [confirmBulkSend, setConfirmBulkSend] = useState(false);
 
+  const [aiSuggestion, setAiSuggestion] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiDismissed, setAiDismissed] = useState(false);
+  const [aiLastInboundId, setAiLastInboundId] = useState<number | null>(null);
+  const [showAiSettings, setShowAiSettings] = useState(false);
+  const [aiSettings, setAiSettings] = useState<AiSettings | null>(null);
+  const [aiSettingsLoading, setAiSettingsLoading] = useState(false);
+  const [aiSettingsSaving, setAiSettingsSaving] = useState(false);
+  const [aiSettingsMsg, setAiSettingsMsg] = useState<string | null>(null);
+  const [bulkAiLoading, setBulkAiLoading] = useState(false);
+
   type ImportTab = 'whatsapp' | 'kandidaten' | 'klanten' | 'csv' | 'handmatig';
   const [importTab, setImportTab] = useState<ImportTab>('whatsapp');
   const [importCandidates, setImportCandidates] = useState<ImportCandidate[]>([]);
@@ -168,7 +184,7 @@ export default function WhatsAppBeheer() {
   }, []);
 
   useEffect(() => {
-    if (!selectedPhone) { setMessages([]); setNotes([]); setThreadView('messages'); return; }
+    if (!selectedPhone) { setMessages([]); setNotes([]); setThreadView('messages'); setAiSuggestion(''); setAiDismissed(false); setAiLastInboundId(null); return; }
     let stop = false;
     const tick = async () => {
       try {
@@ -186,6 +202,24 @@ export default function WhatsAppBeheer() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (messages.length === 0 || aiDismissed || aiLoading) return;
+    const lastInbound = [...messages].reverse().find(m => m.direction === 'inbound');
+    if (!lastInbound) return;
+    if (lastInbound.id === aiLastInboundId) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.direction !== 'inbound') return;
+    setAiLastInboundId(lastInbound.id);
+    setAiSuggestion('');
+    setAiError(null);
+    setAiLoading(true);
+    const conv = conversations.find(c => c.phoneNumber === selectedPhone);
+    vraagAiSuggestie(messages, conv?.displayName, conv?.contactCompany, 'individual')
+      .then(r => { setAiSuggestion(r.suggestion); })
+      .catch(e => { setAiError(e.message || 'AI suggestie mislukt'); })
+      .finally(() => setAiLoading(false));
+  }, [messages, selectedPhone]);
 
   useEffect(() => {
     notesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -269,12 +303,71 @@ export default function WhatsAppBeheer() {
     try {
       await stuurBericht(selectedPhone, reply);
       setReply('');
+      setAiSuggestion('');
+      setAiDismissed(false);
       const m = await haalBerichten(selectedPhone);
       setMessages(m);
     } catch (e: any) {
       setSendError(e.message || 'Versturen mislukt');
     } finally {
       setSending(false);
+    }
+  }
+
+  async function requestAiSuggestion() {
+    if (messages.length === 0 || aiLoading) return;
+    setAiLoading(true);
+    setAiError(null);
+    setAiDismissed(false);
+    const conv = conversations.find(c => c.phoneNumber === selectedPhone);
+    try {
+      const r = await vraagAiSuggestie(messages, conv?.displayName, conv?.contactCompany, 'individual');
+      setAiSuggestion(r.suggestion);
+    } catch (e: any) {
+      setAiError(e.message || 'AI suggestie mislukt');
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  async function requestBulkAiSuggestion() {
+    if (bulkAiLoading) return;
+    setBulkAiLoading(true);
+    try {
+      const fakeMessages = [{ id: 0, direction: 'inbound' as const, waMessageId: null, fromNumber: '', toNumber: '', messageType: 'text', body: 'Ik verwacht een groepsbericht voor deze groep', mediaUrl: null, mediaMimeType: null, status: 'received', errorCode: null, errorMessage: null, matchCategory: 'candidate' as const, createdAt: new Date().toISOString() }];
+      const r = await vraagAiSuggestie(fakeMessages, null, null, 'bulk');
+      setBulkText(r.suggestion);
+    } catch { /* ignore */ }
+    finally { setBulkAiLoading(false); }
+  }
+
+  async function loadAiSettings() {
+    setAiSettingsLoading(true);
+    try {
+      const s = await haalAiSettings();
+      setAiSettings(s);
+    } catch { /* ignore */ }
+    finally { setAiSettingsLoading(false); }
+  }
+
+  async function saveAiSettings() {
+    if (!aiSettings) return;
+    setAiSettingsSaving(true);
+    setAiSettingsMsg(null);
+    try {
+      const updated = await updateAiSettings({
+        toneOfVoice: aiSettings.toneOfVoice,
+        guidelines: aiSettings.guidelines,
+        cancellationProtocol: aiSettings.cancellationProtocol,
+        extraContext: aiSettings.extraContext,
+      });
+      setAiSettings(updated);
+      setAiSettingsMsg('Opgeslagen!');
+      setTimeout(() => setAiSettingsMsg(null), 2000);
+    } catch (e: any) {
+      setAiSettingsMsg(e.message || 'Opslaan mislukt');
+    } finally {
+      setAiSettingsSaving(false);
     }
   }
 
@@ -598,18 +691,81 @@ export default function WhatsAppBeheer() {
             </button>
           </div>
         </div>
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          title="Webhook-instellingen"
-          style={{
-            background: showSettings ? '#F0F4FA' : 'transparent',
-            border: '1px solid #E5E7EB', borderRadius: 8,
-            padding: '6px 10px', cursor: 'pointer', fontSize: 16, color: '#6B7280',
-          }}
-        >
-          \u2699
-        </button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            onClick={() => { setShowAiSettings(!showAiSettings); if (!showAiSettings && !aiSettings) loadAiSettings(); setShowSettings(false); }}
+            title="AI-instellingen"
+            style={{
+              background: showAiSettings ? '#F0F4FA' : 'transparent',
+              border: '1px solid #E5E7EB', borderRadius: 8,
+              padding: '6px 10px', cursor: 'pointer', fontSize: 14, color: showAiSettings ? NAVY : '#6B7280',
+              fontWeight: showAiSettings ? 600 : 400,
+            }}
+          >
+            \u2728 AI
+          </button>
+          <button
+            onClick={() => { setShowSettings(!showSettings); setShowAiSettings(false); }}
+            title="Webhook-instellingen"
+            style={{
+              background: showSettings ? '#F0F4FA' : 'transparent',
+              border: '1px solid #E5E7EB', borderRadius: 8,
+              padding: '6px 10px', cursor: 'pointer', fontSize: 16, color: '#6B7280',
+            }}
+          >
+            \u2699
+          </button>
+        </div>
       </div>
+
+      {showAiSettings && (
+        <div style={{
+          padding: '16px 20px', background: '#FAFBFC', border: '1px solid #E5E7EB',
+          borderRadius: 10, marginBottom: 12, fontSize: 12,
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 12 }}>\u2728 AI Richtlijnen</div>
+          {aiSettingsLoading ? (
+            <div style={{ color: '#9CA3AF', fontSize: 12 }}>Laden...</div>
+          ) : aiSettings ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Tone of voice</label>
+                <textarea value={aiSettings.toneOfVoice} onChange={e => setAiSettings({ ...aiSettings, toneOfVoice: e.target.value })}
+                  rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder="Bijv: Professioneel maar warm en persoonlijk..." />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Algemene richtlijnen</label>
+                <textarea value={aiSettings.guidelines} onChange={e => setAiSettings({ ...aiSettings, guidelines: e.target.value })}
+                  rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder="Bijv: Je bent een planningsassistent van EXTRA..." />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Afmeldprotocol</label>
+                <textarea value={aiSettings.cancellationProtocol} onChange={e => setAiSettings({ ...aiSettings, cancellationProtocol: e.target.value })}
+                  rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder="Bijv: Als iemand zich wil afmelden voor een dienst..." />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Extra context</label>
+                <textarea value={aiSettings.extraContext} onChange={e => setAiSettings({ ...aiSettings, extraContext: e.target.value })}
+                  rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder="Eventuele extra instructies of context voor de AI..." />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button onClick={saveAiSettings} disabled={aiSettingsSaving}
+                  style={{ background: aiSettingsSaving ? '#E5E7EB' : NAVY, color: aiSettingsSaving ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: aiSettingsSaving ? 'wait' : 'pointer', fontFamily: FONT }}>
+                  {aiSettingsSaving ? 'Opslaan...' : 'Opslaan'}
+                </button>
+                {aiSettingsMsg && <span style={{ fontSize: 11, color: aiSettingsMsg === 'Opgeslagen!' ? '#059669' : '#DC2626' }}>{aiSettingsMsg}</span>}
+              </div>
+            </div>
+          ) : null}
+          <div style={{ marginTop: 12, padding: '8px 10px', background: '#F0F4FA', borderRadius: 6, fontSize: 11, color: '#6B7280' }}>
+            Deze richtlijnen worden gebruikt door de AI om automatisch antwoordsuggesties te genereren bij inkomende WhatsApp-berichten. De planner kan suggesties accepteren, bewerken of afwijzen.
+          </div>
+        </div>
+      )}
 
       {showSettings && (
         <div style={{
@@ -1006,6 +1162,44 @@ export default function WhatsAppBeheer() {
                       </div>
 
                       <div style={{ padding: '12px 18px', borderTop: '1px solid #E5E7EB', background: '#fff' }}>
+                        {(aiLoading || aiSuggestion || aiError) && !aiDismissed && (
+                          <div style={{
+                            padding: '10px 14px', background: '#F0F4FA', border: '1px solid #C7D2E0',
+                            borderRadius: 8, marginBottom: 8, position: 'relative',
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiSuggestion ? 6 : 0 }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: NAVY, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                ✨ AI suggestie
+                                {aiLoading && <span style={{ fontSize: 10, color: '#6B7280', fontWeight: 400 }}>— bezig met genereren...</span>}
+                              </div>
+                              <button onClick={() => { setAiDismissed(true); setAiSuggestion(''); setAiError(null); }}
+                                style={{ background: 'none', border: 'none', fontSize: 14, color: '#9CA3AF', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+                                title="Sluiten">✕</button>
+                            </div>
+                            {aiError && (
+                              <div style={{ fontSize: 11, color: '#DC2626' }}>{aiError}</div>
+                            )}
+                            {aiSuggestion && (
+                              <>
+                                <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.5, padding: '4px 0', whiteSpace: 'pre-wrap' }}>{aiSuggestion}</div>
+                                <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                                  <button onClick={() => { setReply(aiSuggestion); setAiDismissed(true); setAiSuggestion(''); }}
+                                    style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 5, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                                    Overnemen
+                                  </button>
+                                  <button onClick={() => { setReply(aiSuggestion); setAiDismissed(true); setAiSuggestion(''); }}
+                                    style={{ background: '#fff', color: NAVY, border: '1px solid ' + NAVY, borderRadius: 5, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                                    Bewerken
+                                  </button>
+                                  <button onClick={requestAiSuggestion} disabled={aiLoading}
+                                    style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 5, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontFamily: FONT }}>
+                                    Opnieuw
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                         {!within24h && (
                           <div style={{
                             padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
@@ -1030,6 +1224,11 @@ export default function WhatsAppBeheer() {
                             disabled={sending}
                             style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
                           />
+                          <button type="button" onClick={requestAiSuggestion} disabled={aiLoading || messages.length === 0}
+                            title="AI suggestie opvragen"
+                            style={{ background: aiLoading ? '#E5E7EB' : '#F0F4FA', color: aiLoading ? '#9CA3AF' : NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '0 10px', fontSize: 15, cursor: aiLoading ? 'wait' : 'pointer' }}>
+                            {aiLoading ? '\u23F3' : '\u2728'}
+                          </button>
                           <button type="submit" disabled={sending || !reply.trim()}
                             style={{ background: (sending || !reply.trim()) ? '#E5E7EB' : NAVY, color: (sending || !reply.trim()) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: (sending || !reply.trim()) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
                             {sending ? '...' : 'Stuur'}
@@ -1623,7 +1822,14 @@ export default function WhatsAppBeheer() {
 
                     {/* Bulk bericht sectie */}
                     <div style={{ padding: '16px 18px', flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8 }}>Bericht sturen naar hele groep</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>Bericht sturen naar hele groep</div>
+                        <button onClick={requestBulkAiSuggestion} disabled={bulkAiLoading}
+                          title="AI suggestie voor groepsbericht"
+                          style={{ background: bulkAiLoading ? '#E5E7EB' : '#F0F4FA', color: bulkAiLoading ? '#9CA3AF' : NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: bulkAiLoading ? 'wait' : 'pointer', fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {bulkAiLoading ? '\u23F3' : '\u2728'} AI suggestie
+                        </button>
+                      </div>
                       <div style={{
                         padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
                         borderRadius: 6, fontSize: 11, color: '#9A3412', marginBottom: 10,

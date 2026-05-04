@@ -10698,6 +10698,120 @@ ${posts.map(p => `  <url>
     res.json({ contacts, errors });
   });
 
+  // ─── WhatsApp AI richtlijnen + suggestie ──────────────────────────────────
+  app.get('/api/whatsapp/ai-settings', adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const { whatsappAiSettings } = await import('../shared/schema');
+      const rows = await db.select().from(whatsappAiSettings).limit(1);
+      if (rows.length === 0) {
+        await db.insert(whatsappAiSettings).values({});
+        const fresh = await db.select().from(whatsappAiSettings).limit(1);
+        return res.json(fresh[0]);
+      }
+      res.json(rows[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/whatsapp/ai-settings', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { toneOfVoice, guidelines, cancellationProtocol, extraContext } = req.body;
+      const { whatsappAiSettings } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const rows = await db.select().from(whatsappAiSettings).limit(1);
+      if (rows.length === 0) {
+        await db.insert(whatsappAiSettings).values({
+          toneOfVoice: toneOfVoice ?? '',
+          guidelines: guidelines ?? '',
+          cancellationProtocol: cancellationProtocol ?? '',
+          extraContext: extraContext ?? '',
+        });
+      } else {
+        await db.update(whatsappAiSettings)
+          .set({
+            toneOfVoice: toneOfVoice ?? rows[0].toneOfVoice,
+            guidelines: guidelines ?? rows[0].guidelines,
+            cancellationProtocol: cancellationProtocol ?? rows[0].cancellationProtocol,
+            extraContext: extraContext ?? rows[0].extraContext,
+            updatedAt: new Date(),
+          })
+          .where(eq(whatsappAiSettings.id, rows[0].id));
+      }
+      const updated = await db.select().from(whatsappAiSettings).limit(1);
+      res.json(updated[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/whatsapp/ai-suggest', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { messages: chatMessages, contactName, contactCompany, mode } = req.body;
+      if (!chatMessages || !Array.isArray(chatMessages) || chatMessages.length === 0) {
+        return res.status(400).json({ error: 'Berichten zijn vereist' });
+      }
+
+      const { whatsappAiSettings } = await import('../shared/schema');
+      const settingsRows = await db.select().from(whatsappAiSettings).limit(1);
+      const settings = settingsRows[0] || { toneOfVoice: '', guidelines: '', cancellationProtocol: '', extraContext: '' };
+
+      let OpenAI: any;
+      try {
+        OpenAI = (await import('openai')).default;
+      } catch {
+        return res.status(503).json({ error: 'AI module niet beschikbaar' });
+      }
+
+      const client = new OpenAI({
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? 'unused',
+      });
+
+      let guidelinesBlock = '';
+      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;
+      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
+      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
+      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
+
+      let contactInfo = '';
+      if (contactName) contactInfo += `\nNaam contact: ${contactName}`;
+      if (contactCompany) contactInfo += `\nBedrijf: ${contactCompany}`;
+
+      const systemPrompt = `Je bent een AI-assistent die planners helpt bij EXTRA, een horeca uitzendbureau uit Amsterdam. Je taak is om een kort, professioneel WhatsApp-antwoord te suggereren op basis van het gesprek.
+
+BELANGRIJK:
+- Schrijf ALLEEN het antwoord-bericht zelf, geen uitleg of toelichting
+- Houd het kort en bondig (max 2-3 zinnen tenzij meer nodig is)
+- Schrijf in het Nederlands
+- Gebruik GEEN aanhalingstekens rond het bericht
+${mode === 'bulk' ? '- Dit is een groepsbericht dat naar meerdere ontvangers gaat, maak het dus algemeen toepasbaar' : '- Dit is een persoonlijk 1-op-1 gesprek'}
+${guidelinesBlock}
+${contactInfo}`;
+
+      const formattedMessages = chatMessages.slice(-10).map((m: any) => ({
+        role: m.direction === 'inbound' ? 'user' as const : 'assistant' as const,
+        content: m.body || '',
+      }));
+
+      const completion = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...formattedMessages,
+        ],
+        max_tokens: 300,
+        temperature: 0.7,
+      });
+
+      const suggestion = completion.choices?.[0]?.message?.content?.trim() || '';
+      res.json({ suggestion });
+    } catch (err: any) {
+      console.error('[AI suggest]', err);
+      res.status(500).json({ error: err.message || 'AI suggestie mislukt' });
+    }
+  });
+
   // Voer een eenmalige startup-warning uit als secrets ontbreken
   if (!WA_360_KEY) console.warn('[WA] WHATSAPP_360_API_KEY niet ingesteld — uitgaande berichten zullen falen');
   if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');

@@ -81,7 +81,13 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
 -   **Migratie**: `npx tsx server/whatsapp/migrate-phones.ts` (dry-run default, `--apply` voor schrijven). Backup in `phone_original` / `telefoon_original` kolommen.
 -   **Env-vars**: `WHATSAPP_360_API_KEY`, `WHATSAPP_WEBHOOK_SECRET`.
 -   **Docs**: `server/whatsapp/README.md`.
--   **Niet in Fase 1**: templates, bot/Claude, diensten-koppeling, media-download.
+-   **AI Reply Suggestions**: AI-powered antwoordsuggesties voor WhatsApp-berichten, aangedreven door OpenAI (gpt-4o-mini).
+    -   `GET /api/whatsapp/ai-settings` — AI-richtlijnen ophalen (tone of voice, algemene richtlijnen, afmeldprotocol, extra context).
+    -   `PUT /api/whatsapp/ai-settings` — AI-richtlijnen bijwerken.
+    -   `POST /api/whatsapp/ai-suggest` — AI-suggestie genereren op basis van gespreksgeschiedenis, contactinfo en richtlijnen.
+    -   Tabel: `whatsapp_ai_settings` — opslag voor configureerbare richtlijnen.
+    -   Frontend: Automatische AI-suggestie bij nieuw inbound bericht, ✨-knop voor handmatig opvragen, suggestiebalk met Overnemen/Bewerken/Opnieuw. AI-knop ook bij groepsberichten. AI-richtlijnen panel achter "✨ AI" knop in header.
+-   **Niet in Fase 1**: templates, diensten-koppeling, media-download.
 
 ### Brochure Pages (Slide-based Presentations)
 -   **`/brochure`** → `Brochure.tsx` — Algemene NL brochure.
@@ -99,4 +105,4 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
 -   **External Planning API**: Integration for workforce planning.
 -   **Google Analytics**: User behavior tracking.
 -   **Canvas Confetti**: Visual celebration effects.
--   **OpenAI**: AI content generation for the blog system.
+-   **OpenAI**: AI content generation for the blog system and WhatsApp reply suggestions.

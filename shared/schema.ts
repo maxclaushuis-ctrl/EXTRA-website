@@ -1445,9 +1445,19 @@ export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
 export type InsertWhatsappConversation = typeof whatsappConversations.$inferInsert;
 export type WhatsappInternalNote = typeof whatsappInternalNotes.$inferSelect;
 export type InsertWhatsappInternalNote = typeof whatsappInternalNotes.$inferInsert;
+export const whatsappAiSettings = pgTable("whatsapp_ai_settings", {
+  id: serial("id").primaryKey(),
+  toneOfVoice: text("tone_of_voice").default('').notNull(),
+  guidelines: text("guidelines").default('').notNull(),
+  cancellationProtocol: text("cancellation_protocol").default('').notNull(),
+  extraContext: text("extra_context").default('').notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type WhatsappGroup = typeof whatsappGroups.$inferSelect;
 export type WhatsappGroupMember = typeof whatsappGroupMembers.$inferSelect;
 export type WhatsappBulkSend = typeof whatsappBulkSends.$inferSelect;
+export type WhatsappAiSettings = typeof whatsappAiSettings.$inferSelect;
 
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
