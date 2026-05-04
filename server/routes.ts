@@ -9976,7 +9976,7 @@ ${posts.map(p => `  <url>
 
     // 2. API-call naar 360dialog
     try {
-      const payload = { to: normalized, type: 'text', text: { body: tekst } };
+      const payload = { messaging_product: 'whatsapp', to: normalized, type: 'text', text: { body: tekst } };
       const r = await fetch(`${WA_BASE_URL}/messages`, {
         method: 'POST',
         headers: wa360Headers,
