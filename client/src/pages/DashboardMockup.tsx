@@ -4536,10 +4536,6 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             </div>
           ) : activeTab === 'whatsapp' ? (
             <div className="p-6">
-              <div className="mb-5">
-                <h1 className="text-xl font-bold">WhatsApp</h1>
-                <p className="text-sm text-gray-500">Beheer 3 WhatsApp nummers — Horeca, Logistiek en Housekeeping</p>
-              </div>
               <WhatsAppBeheer />
             </div>
 

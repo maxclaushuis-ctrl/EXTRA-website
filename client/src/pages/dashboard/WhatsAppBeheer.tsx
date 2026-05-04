@@ -335,19 +335,23 @@ export default function WhatsAppBeheer() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <div style={{
-                      fontSize: 13, fontWeight: unread ? 700 : 500,
+                      fontSize: 13, fontWeight: unread ? 700 : 600,
                       color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {name}
                     </div>
-                    <div style={{ fontSize: 10, color: '#9CA3AF', flexShrink: 0, marginLeft: 6 }}>
+                    <div style={{ fontSize: 10, color: '#94A3B8', flexShrink: 0, marginLeft: 6 }}>
                       {timeAgo(c.lastMessageAt)}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>+{c.phoneNumber}</div>
+                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                    +{c.phoneNumber}
+                    {c.matchCategory === 'prospect' && c.contactCompany ? ` · ${c.contactCompany}` : ''}
+                    {c.matchCategory === 'unmatched' && c.contactCompany ? ` · ${c.contactCompany}` : ''}
+                  </div>
                   <div style={{
-                    fontSize: 12, color: unread ? '#1F2937' : '#6B7280',
+                    fontSize: 12, color: unread ? '#1F2937' : '#64748B',
                     fontWeight: unread ? 600 : 400,
                     marginTop: 4,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',

@@ -1,0 +1,94 @@
+Twee fixes op de WhatsApp-pagina die nog niet goed staan na de 
+vorige iteratie:
+
+==========================================================
+FIX 1: DUBBELE PAGE-TITLE
+==========================================================
+
+Op de WhatsApp-pagina (admin/whatsapp of waar deze ook gerouteerd 
+staat) verschijnt de titel "WhatsApp - Beheer 3 WhatsApp nummers — 
+Horeca, Logistiek en Housekeeping" TWEE KEER onder elkaar.
+
+Eén keer wordt hij gerenderd door de page-wrapper/layout, en één 
+keer door de WhatsAppBeheer-component zelf.
+
+Onderzoek welke twee plekken dit veroorzaken en verwijder de 
+dubbele. Behoud:
+- De grote "WhatsApp" titel
+- De subtitel "Beheer 3 WhatsApp nummers — Horeca, Logistiek en 
+  Housekeeping"
+- Het tandwiel-icoon rechtsboven (instellingen)
+
+Verwijder de bovenste/dubbele instantie. Zorg dat na de fix de 
+header maar één keer voorkomt op de pagina.
+
+==========================================================
+FIX 2: CONTACT-NAAM IN GESPREKKENLIJST
+==========================================================
+
+Probleem: in de chat-header rechtsboven werkt het al goed:
+   Test Sollicitatie
+   +31612345678 · Kandidaat · #173
+
+Maar in de gesprekkenlijst links staat het andersom/onvolledig:
+   Test Sollicitatie    14-11
+   +31612345678
+   verify secret
+
+Wat NU op regel 1 staat ("Test Sollicitatie") lijkt al goed - 
+checken of dit overal werkt. Maar het probleem is de structuur en 
+hierarchie:
+
+GEWENSTE WEERGAVE PER GESPREK IN DE LIJST:
+
+Voor KANDIDATEN:
+   [Voornaam Achternaam]                    [datum]
+   [+telefoonnummer in lichtgrijs]
+   [eerste 60 chars laatste bericht in grijs]
+
+Voor PROSPECTS:
+   [Voornaam Achternaam]                    [datum]
+   [+telefoonnummer in lichtgrijs] · [bedrijf]
+   [eerste 60 chars laatste bericht in grijs]
+
+Voor ONBEKEND zonder display_name:
+   Onbekend                                  [datum]
+   [+telefoonnummer in lichtgrijs]
+   [eerste 60 chars laatste bericht in grijs]
+
+Voor ONBEKEND met display_name (handmatig toegevoegd):
+   [display_name]                            [datum]
+   [+telefoonnummer in lichtgrijs] · [contact_company indien 
+                                             ingevuld]
+   [eerste 60 chars laatste bericht in grijs]
+
+VISUELE HIERARCHIE:
+- Regel 1 (naam): font-weight: 600 (semibold), donkere kleur 
+  (text-slate-900 of #1F3A5F navy)
+- Datum rechts op regel 1: text-xs, lichtgrijs (text-slate-400)
+- Regel 2 (nummer + evt. bedrijf): text-xs, lichtgrijs 
+  (text-slate-500)
+- Regel 3 (preview): text-sm, grijs (text-slate-500), max 60 
+  chars met ellipsis
+
+CONTROLEER:
+- Test Sollicitatie zou kandidaat #173 moeten zijn — toont de naam 
+  correct in de lijst?
+- Open een onbekend nummer zonder display_name — toont "Onbekend"?
+- Voeg via de UI een display_name toe — verandert de lijst meteen?
+
+Als regel 1 de naam al toont voor kandidaten/prospects, focus dan 
+op:
+1. Verwijder de dubbele page-title (FIX 1)
+2. Check dat de visuele hierarchie correct is (vetgedrukte naam, 
+   subtiel nummer, grijze preview)
+3. Test alle drie de categorieën (Kandidaat, Prospect, Onbekend)
+
+==========================================================
+WAT NIET DOEN
+==========================================================
+
+- Geen wijzigingen aan de chat-header rechts (die werkt al goed)
+- Geen wijzigingen aan de tabs (Kandidaten/Prospects/Onbekend)
+- Geen nieuwe features
+- Alleen deze twee fixes
