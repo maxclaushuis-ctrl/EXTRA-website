@@ -69,7 +69,13 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
     -   `POST /api/whatsapp/groups/:id/send` — bulk verzending naar alle leden.
     -   `GET /api/whatsapp/bulk-sends` — verzendgeschiedenis.
     -   Tabellen: `whatsapp_groups`, `whatsapp_group_members`, `whatsapp_bulk_sends`.
-    -   Frontend: toggle "Gesprekken" / "Groepen" in WhatsApp beheer; groepenbeheer met leden-picker uit bestaande contacten, bulk-verzending met bevestigingsstap, verzendgeschiedenis.
+    -   **Contact import (3 bronnen + handmatig)**:
+        -   `GET /api/whatsapp/import/candidates?groupId=X` — kandidaten met telefoon uit DB, gefilterd op functie/status.
+        -   `GET /api/whatsapp/import/prospects?groupId=X` — klanten/prospects met telefoon uit DB, gefilterd op branche.
+        -   `POST /api/whatsapp/import/csv` — CSV-parser: naam;telefoon of alleen telefoon per regel, auto-detectie kolommen, NL 06→+31 normalisatie.
+        -   Handmatig: enkel nummer + naam toevoegen.
+        -   Frontend: 5-tabs overlay (WhatsApp / Kandidaten / Klanten / CSV Upload / Handmatig) met zoeken, filters, selecteer-alles, en multi-select toevoegen.
+    -   Frontend: toggle "Gesprekken" / "Groepen" in WhatsApp beheer; groepenbeheer met leden-picker, bulk-verzending met bevestigingsstap, verzendgeschiedenis.
 -   **Frontend**: Tweekolommen UI in admin-dashboard tab "WhatsApp" met tabs Medewerkers/Klanten/Kandidaten, zoek, thread-view, 24u-venster check, status-indicators. Webhook-instellingen achter ⚙-icoon (niet standaard zichtbaar). Unmatched-contacten: inline bewerk-formulier voor naam/bedrijf/notities via ✏️-knop in thread header.
 -   **Phone-normalisatie**: `server/whatsapp/phone.ts` (NL 06→+31, strips whitespace/dashes, E.164 zonder +).
 -   **Migratie**: `npx tsx server/whatsapp/migrate-phones.ts` (dry-run default, `--apply` voor schrijven). Backup in `phone_original` / `telefoon_original` kolommen.

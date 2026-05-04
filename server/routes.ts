@@ -10548,6 +10548,156 @@ ${posts.map(p => `  <url>
     res.json(rows);
   });
 
+  // ─── IMPORT: Kandidaten uit database ────────────────────────────────────────
+  app.get('/api/whatsapp/import/candidates', adminMiddleware, async (req: Request, res: Response) => {
+    const groupId = parseInt(String(req.query.groupId || '0'));
+    const { candidates } = await import('@shared/schema');
+    const { isNotNull } = await import('drizzle-orm');
+
+    let existingPhones = new Set<string>();
+    if (groupId) {
+      const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
+        .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, groupId));
+      existingPhones = new Set(existing.map(e => e.phoneNumber));
+    }
+
+    const rows = await db.select({
+      id: candidates.id,
+      firstName: candidates.firstName,
+      lastName: candidates.lastName,
+      phone: candidates.phone,
+      functionType: candidates.functionType,
+      status: candidates.status,
+      city: candidates.city,
+    }).from(candidates).where(isNotNull(candidates.phone));
+
+    const result = rows
+      .filter(r => r.phone && r.phone.trim().length >= 8)
+      .map(r => {
+        const normalized = normalizePhone(r.phone!) || r.phone!;
+        return {
+          id: r.id,
+          name: `${r.firstName} ${r.lastName}`,
+          phone: normalized,
+          functionType: r.functionType,
+          status: r.status,
+          city: r.city || null,
+          alreadyInGroup: existingPhones.has(normalized),
+        };
+      });
+    res.json(result);
+  });
+
+  // ─── IMPORT: Klanten uit database ────────────────────────────────────────
+  app.get('/api/whatsapp/import/prospects', adminMiddleware, async (req: Request, res: Response) => {
+    const groupId = parseInt(String(req.query.groupId || '0'));
+    const { prospectContacts } = await import('@shared/schema');
+    const { isNotNull } = await import('drizzle-orm');
+
+    let existingPhones = new Set<string>();
+    if (groupId) {
+      const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
+        .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, groupId));
+      existingPhones = new Set(existing.map(e => e.phoneNumber));
+    }
+
+    const rows = await db.select({
+      id: prospectContacts.id,
+      name: prospectContacts.name,
+      voornaam: prospectContacts.voornaam,
+      achternaam: prospectContacts.achternaam,
+      telefoon: prospectContacts.telefoon,
+      company: prospectContacts.company,
+      branche: prospectContacts.branche,
+    }).from(prospectContacts).where(isNotNull(prospectContacts.telefoon));
+
+    const result = rows
+      .filter(r => r.telefoon && r.telefoon.trim().length >= 8)
+      .map(r => {
+        const normalized = normalizePhone(r.telefoon!) || r.telefoon!;
+        const displayName = (r.voornaam && r.achternaam) ? `${r.voornaam} ${r.achternaam}` : r.name;
+        return {
+          id: r.id,
+          name: displayName,
+          phone: normalized,
+          company: r.company || null,
+          branche: r.branche || null,
+          alreadyInGroup: existingPhones.has(normalized),
+        };
+      });
+    res.json(result);
+  });
+
+  // ─── IMPORT: CSV parse ────────────────────────────────────────────────────
+  app.post('/api/whatsapp/import/csv', adminMiddleware, async (req: Request, res: Response) => {
+    const { csvData, groupId } = req.body;
+    if (!csvData || typeof csvData !== 'string') {
+      return res.status(400).json({ error: 'csvData is verplicht (string)' });
+    }
+    const gId = parseInt(String(groupId || '0'));
+
+    let existingPhones = new Set<string>();
+    if (gId) {
+      const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
+        .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, gId));
+      existingPhones = new Set(existing.map(e => e.phoneNumber));
+    }
+
+    const lines = csvData.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length === 0) return res.json({ contacts: [], errors: [] });
+
+    const firstLine = lines[0].toLowerCase();
+    const hasHeader = firstLine.includes('naam') || firstLine.includes('name') || firstLine.includes('telefoon') || firstLine.includes('phone') || firstLine.includes('nummer');
+    const dataLines = hasHeader ? lines.slice(1) : lines;
+
+    const contacts: Array<{ name: string; phone: string; alreadyInGroup: boolean }> = [];
+    const errors: string[] = [];
+
+    for (let i = 0; i < dataLines.length; i++) {
+      const line = dataLines[i].trim();
+      if (!line) continue;
+
+      const parts = line.includes(';') ? line.split(';') : line.split(',');
+
+      if (parts.length === 1) {
+        const raw = parts[0].trim().replace(/['"]/g, '');
+        const normalized = normalizePhone(raw);
+        if (normalized) {
+          contacts.push({ name: '', phone: normalized, alreadyInGroup: existingPhones.has(normalized) });
+        } else {
+          errors.push(`Regel ${i + 1}: ongeldig nummer "${raw}"`);
+        }
+      } else {
+        const col0 = parts[0].trim().replace(/['"]/g, '');
+        const col1 = parts[1].trim().replace(/['"]/g, '');
+
+        const phoneLike0 = /^\+?\d[\d\s\-()]{6,}$/.test(col0);
+        const phoneLike1 = /^\+?\d[\d\s\-()]{6,}$/.test(col1);
+
+        let name = '';
+        let phoneRaw = '';
+        if (phoneLike1 && !phoneLike0) {
+          name = col0; phoneRaw = col1;
+        } else if (phoneLike0 && !phoneLike1) {
+          name = col1; phoneRaw = col0;
+        } else if (phoneLike0) {
+          phoneRaw = col0; name = col1;
+        } else {
+          phoneRaw = col1; name = col0;
+        }
+
+        const normalized = normalizePhone(phoneRaw);
+        if (normalized) {
+          contacts.push({ name, phone: normalized, alreadyInGroup: existingPhones.has(normalized) });
+        } else {
+          errors.push(`Regel ${i + 1}: ongeldig nummer "${phoneRaw}"`);
+        }
+      }
+    }
+
+    res.json({ contacts, errors });
+  });
+
   // Voer een eenmalige startup-warning uit als secrets ontbreken
   if (!WA_360_KEY) console.warn('[WA] WHATSAPP_360_API_KEY niet ingesteld — uitgaande berichten zullen falen');
   if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');

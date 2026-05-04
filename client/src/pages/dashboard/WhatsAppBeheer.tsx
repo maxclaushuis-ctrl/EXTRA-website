@@ -23,6 +23,9 @@ import {
   haalBeschikbareContacten,
   stuurBulkBericht,
   haalBulkVerzendingen,
+  haalImportKandidaten,
+  haalImportKlanten,
+  parseCsv,
   type Conversation,
   type Message,
   type Stats,
@@ -34,6 +37,8 @@ import {
   type AvailableContact,
   type BulkSendResult,
   type BulkSendRecord,
+  type ImportCandidate,
+  type ImportProspect,
 } from '../../api/whatsappClient';
 
 const NAVY = '#1F3A5F';
@@ -125,6 +130,21 @@ export default function WhatsAppBeheer() {
   const [bulkHistory, setBulkHistory] = useState<BulkSendRecord[]>([]);
   const [showBulkHistory, setShowBulkHistory] = useState(false);
   const [confirmBulkSend, setConfirmBulkSend] = useState(false);
+
+  type ImportTab = 'whatsapp' | 'kandidaten' | 'klanten' | 'csv' | 'handmatig';
+  const [importTab, setImportTab] = useState<ImportTab>('whatsapp');
+  const [importCandidates, setImportCandidates] = useState<ImportCandidate[]>([]);
+  const [importProspects, setImportProspects] = useState<ImportProspect[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [csvText, setCsvText] = useState('');
+  const [csvParsed, setCsvParsed] = useState<Array<{ name: string; phone: string; alreadyInGroup: boolean }>>([]);
+  const [csvErrors, setCsvErrors] = useState<string[]>([]);
+  const [csvParsing, setCsvParsing] = useState(false);
+  const [manualName, setManualName] = useState('');
+  const [manualPhone, setManualPhone] = useState('');
+  const [importFilterFunc, setImportFilterFunc] = useState<string>('all');
+  const [importFilterStatus, setImportFilterStatus] = useState<string>('all');
+  const [importFilterBranche, setImportFilterBranche] = useState<string>('all');
 
   useEffect(() => {
     let stop = false;
@@ -400,25 +420,109 @@ export default function WhatsAppBeheer() {
     setShowAddMembers(true);
     setSelectedContacts(new Set());
     setContactSearch('');
+    setImportTab('whatsapp');
+    setImportCandidates([]);
+    setImportProspects([]);
+    setCsvText('');
+    setCsvParsed([]);
+    setCsvErrors([]);
+    setManualName('');
+    setManualPhone('');
+    setImportFilterFunc('all');
+    setImportFilterStatus('all');
+    setImportFilterBranche('all');
     try {
       const contacts = await haalBeschikbareContacten(selectedGroupId);
       setAvailableContacts(contacts);
     } catch { /* ignore */ }
   }
 
+  async function loadImportTab(tab: ImportTab) {
+    if (!selectedGroupId) return;
+    setImportTab(tab);
+    setSelectedContacts(new Set());
+    setContactSearch('');
+    if (tab === 'kandidaten' && importCandidates.length === 0) {
+      setImportLoading(true);
+      try {
+        setImportCandidates(await haalImportKandidaten(selectedGroupId));
+      } catch { /* ignore */ }
+      setImportLoading(false);
+    }
+    if (tab === 'klanten' && importProspects.length === 0) {
+      setImportLoading(true);
+      try {
+        setImportProspects(await haalImportKlanten(selectedGroupId));
+      } catch { /* ignore */ }
+      setImportLoading(false);
+    }
+  }
+
+  async function handleParseCsv() {
+    if (!selectedGroupId || !csvText.trim()) return;
+    setCsvParsing(true);
+    try {
+      const result = await parseCsv(csvText, selectedGroupId);
+      setCsvParsed(result.contacts);
+      setCsvErrors(result.errors);
+      setSelectedContacts(new Set(result.contacts.filter(c => !c.alreadyInGroup).map(c => c.phone)));
+    } catch { /* ignore */ }
+    setCsvParsing(false);
+  }
+
   async function handleAddSelectedMembers() {
     if (!selectedGroupId || selectedContacts.size === 0) return;
     setAddingMembers(true);
-    const membersToAdd = Array.from(selectedContacts).map(phone => {
-      const c = availableContacts.find(ac => ac.phoneNumber === phone);
-      return { phoneNumber: phone, displayName: c?.displayName || undefined };
-    });
+
+    let membersToAdd: Array<{ phoneNumber: string; displayName?: string }> = [];
+
+    if (importTab === 'whatsapp') {
+      membersToAdd = Array.from(selectedContacts).map(phone => {
+        const c = availableContacts.find(ac => ac.phoneNumber === phone);
+        return { phoneNumber: phone, displayName: c?.displayName || undefined };
+      });
+    } else if (importTab === 'kandidaten') {
+      membersToAdd = Array.from(selectedContacts).map(phone => {
+        const c = importCandidates.find(ic => ic.phone === phone);
+        return { phoneNumber: phone, displayName: c?.name || undefined };
+      });
+    } else if (importTab === 'klanten') {
+      membersToAdd = Array.from(selectedContacts).map(phone => {
+        const c = importProspects.find(ip => ip.phone === phone);
+        return { phoneNumber: phone, displayName: c?.name || undefined };
+      });
+    } else if (importTab === 'csv') {
+      membersToAdd = Array.from(selectedContacts).map(phone => {
+        const c = csvParsed.find(cp => cp.phone === phone);
+        return { phoneNumber: phone, displayName: c?.name || undefined };
+      });
+    } else if (importTab === 'handmatig') {
+      if (manualPhone.trim()) {
+        membersToAdd = [{ phoneNumber: manualPhone.trim(), displayName: manualName.trim() || undefined }];
+      }
+    }
+
     try {
       await voegLedenToe(selectedGroupId, membersToAdd);
       setGroupMembers(await haalGroepLeden(selectedGroupId));
       setGroups(await haalGroepen());
       setShowAddMembers(false);
       setSelectedContacts(new Set());
+      setManualName('');
+      setManualPhone('');
+    } catch { /* ignore */ }
+    setAddingMembers(false);
+  }
+
+  async function handleAddManual() {
+    if (!selectedGroupId || !manualPhone.trim()) return;
+    setAddingMembers(true);
+    try {
+      await voegLedenToe(selectedGroupId, [{ phoneNumber: manualPhone.trim(), displayName: manualName.trim() || undefined }]);
+      setGroupMembers(await haalGroepLeden(selectedGroupId));
+      setGroups(await haalGroepen());
+      setManualName('');
+      setManualPhone('');
     } catch { /* ignore */ }
     setAddingMembers(false);
   }
@@ -1182,72 +1286,312 @@ export default function WhatsAppBeheer() {
                         </button>
                       </div>
 
-                      {/* Leden toevoegen overlay */}
-                      {showAddMembers && (
-                        <div style={{ padding: '10px 18px', background: '#F0F4FA', borderBottom: '1px solid #E5E7EB' }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8 }}>Contacten toevoegen aan groep</div>
-                          <input
-                            value={contactSearch}
-                            onChange={e => setContactSearch(e.target.value)}
-                            placeholder="Zoek op naam of nummer..."
-                            style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 8 }}
-                          />
-                          <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
-                            {filteredAvailable.length === 0 && (
-                              <div style={{ padding: 16, textAlign: 'center', color: '#9CA3AF', fontSize: 11 }}>
-                                {contactSearch ? 'Geen contacten gevonden' : 'Alle contacten zijn al lid van deze groep'}
-                              </div>
-                            )}
-                            {filteredAvailable.map(c => {
-                              const checked = selectedContacts.has(c.phoneNumber);
-                              return (
-                                <div
-                                  key={c.phoneNumber}
-                                  onClick={() => toggleContactSelection(c.phoneNumber)}
+                      {/* Leden importeren overlay */}
+                        {showAddMembers && (
+                          <div style={{ padding: '10px 18px', background: '#F0F4FA', borderBottom: '1px solid #E5E7EB' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>Contacten importeren</div>
+                              <button onClick={() => setShowAddMembers(false)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#6B7280', cursor: 'pointer' }}>{'\u2715'}</button>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 0, marginBottom: 10, background: '#E5E7EB', borderRadius: 6, padding: 2 }}>
+                              {([
+                                ['whatsapp', 'WhatsApp'],
+                                ['kandidaten', 'Kandidaten'],
+                                ['klanten', 'Klanten'],
+                                ['csv', 'CSV Upload'],
+                                ['handmatig', 'Handmatig'],
+                              ] as [ImportTab, string][]).map(([key, label]) => (
+                                <button
+                                  key={key}
+                                  onClick={() => loadImportTab(key)}
                                   style={{
-                                    padding: '8px 12px', borderBottom: '1px solid #F3F4F6',
-                                    display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                                    background: checked ? '#EEF2FF' : '#fff',
+                                    flex: 1, padding: '5px 4px', fontSize: 10, fontWeight: importTab === key ? 700 : 500,
+                                    background: importTab === key ? '#fff' : 'transparent',
+                                    color: importTab === key ? NAVY : '#6B7280',
+                                    border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: FONT,
                                   }}
                                 >
-                                  <div style={{
-                                    width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`,
-                                    background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0,
-                                  }}>
-                                    {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {(importTab === 'whatsapp' || importTab === 'kandidaten' || importTab === 'klanten') && (
+                              <input
+                                value={contactSearch}
+                                onChange={e => setContactSearch(e.target.value)}
+                                placeholder="Zoek op naam of nummer..."
+                                style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 6 }}
+                              />
+                            )}
+
+                            {importTab === 'kandidaten' && (
+                              <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                                <select value={importFilterFunc} onChange={e => setImportFilterFunc(e.target.value)}
+                                  style={{ padding: '4px 8px', fontSize: 10, border: '1px solid #D1D5DB', borderRadius: 5, fontFamily: FONT, color: '#374151', background: '#fff' }}>
+                                  <option value="all">Alle functies</option>
+                                  <option value="housekeeping">Housekeeping</option>
+                                  <option value="horecamedewerker">Horecamedewerker</option>
+                                  <option value="chef">Chef</option>
+                                  <option value="frontoffice">Front Office</option>
+                                  <option value="logistiek">Logistiek</option>
+                                </select>
+                                <select value={importFilterStatus} onChange={e => setImportFilterStatus(e.target.value)}
+                                  style={{ padding: '4px 8px', fontSize: 10, border: '1px solid #D1D5DB', borderRadius: 5, fontFamily: FONT, color: '#374151', background: '#fff' }}>
+                                  <option value="all">Alle statussen</option>
+                                  <option value="in_behandeling">In behandeling</option>
+                                  <option value="gepland">Gepland</option>
+                                  <option value="aangenomen">Aangenomen</option>
+                                  <option value="afgewezen">Afgewezen</option>
+                                </select>
+                              </div>
+                            )}
+
+                            {importTab === 'klanten' && (
+                              <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                                <select value={importFilterBranche} onChange={e => setImportFilterBranche(e.target.value)}
+                                  style={{ padding: '4px 8px', fontSize: 10, border: '1px solid #D1D5DB', borderRadius: 5, fontFamily: FONT, color: '#374151', background: '#fff' }}>
+                                  <option value="all">Alle branches</option>
+                                  {Array.from(new Set(importProspects.map(p => p.branche).filter(Boolean))).sort().map(b => (
+                                    <option key={b!} value={b!}>{b}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
+                            {importLoading && (
+                              <div style={{ padding: 20, textAlign: 'center', color: '#6B7280', fontSize: 12 }}>Laden...</div>
+                            )}
+
+                            {importTab === 'whatsapp' && !importLoading && (
+                              <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
+                                {filteredAvailable.length === 0 && (
+                                  <div style={{ padding: 16, textAlign: 'center', color: '#9CA3AF', fontSize: 11 }}>
+                                    {contactSearch ? 'Geen contacten gevonden' : 'Alle contacten zijn al lid'}
                                   </div>
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 600, color: c.displayName ? '#1F2937' : '#9CA3AF' }}>
-                                      {c.displayName || 'Onbekend'}
+                                )}
+                                {filteredAvailable.map(c => {
+                                  const checked = selectedContacts.has(c.phoneNumber);
+                                  return (
+                                    <div key={c.phoneNumber} onClick={() => toggleContactSelection(c.phoneNumber)}
+                                      style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                      <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
+                                      </div>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 12, fontWeight: 600, color: c.displayName ? '#1F2937' : '#9CA3AF' }}>{c.displayName || 'Onbekend'}</div>
+                                        <div style={{ fontSize: 10, color: '#6B7280' }}>
+                                          +{c.phoneNumber}
+                                          {c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
+                                          <span style={{ marginLeft: 4, fontSize: 9, color: '#94A3B8' }}>
+                                            {c.matchCategory === 'candidate' ? 'Medewerker' : c.matchCategory === 'prospect' ? 'Klant' : 'Kandidaat'}
+                                          </span>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div style={{ fontSize: 10, color: '#6B7280' }}>
-                                      +{c.phoneNumber}
-                                      {c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
-                                      <span style={{ marginLeft: 4, fontSize: 9, color: '#94A3B8' }}>
-                                        {c.matchCategory === 'candidate' ? 'Medewerker' : c.matchCategory === 'prospect' ? 'Klant' : 'Kandidaat'}
-                                      </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {importTab === 'kandidaten' && !importLoading && (() => {
+                              const q = contactSearch.toLowerCase();
+                              const filtered = importCandidates.filter(c => {
+                                if (c.alreadyInGroup) return false;
+                                if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(contactSearch)) return false;
+                                if (importFilterFunc !== 'all' && c.functionType !== importFilterFunc) return false;
+                                if (importFilterStatus !== 'all' && c.status !== importFilterStatus) return false;
+                                return true;
+                              });
+                              const funcLabels: Record<string, string> = { housekeeping: 'HK', horecamedewerker: 'Horeca', chef: 'Chef', frontoffice: 'FO', logistiek: 'Log' };
+                              const statusColors: Record<string, string> = { in_behandeling: '#F59E0B', gepland: '#3B82F6', aangenomen: '#10B981', afgewezen: '#EF4444' };
+                              return (
+                                <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
+                                  {filtered.length === 0 && (
+                                    <div style={{ padding: 16, textAlign: 'center', color: '#9CA3AF', fontSize: 11 }}>
+                                      {importCandidates.length === 0 ? 'Geen kandidaten met telefoonnummer' : 'Geen match met deze filters'}
                                     </div>
-                                  </div>
+                                  )}
+                                  {filtered.map(c => {
+                                    const checked = selectedContacts.has(c.phone);
+                                    return (
+                                      <div key={c.id} onClick={() => toggleContactSelection(c.phone)}
+                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                        <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                          {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{c.name}</div>
+                                          <div style={{ fontSize: 10, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                                            <span>+{c.phone}</span>
+                                            <span style={{ background: '#F3F4F6', padding: '1px 5px', borderRadius: 3, fontSize: 9, fontWeight: 600 }}>{funcLabels[c.functionType] || c.functionType}</span>
+                                            <span style={{ color: statusColors[c.status] || '#6B7280', fontSize: 9, fontWeight: 600 }}>{c.status.replace('_', ' ')}</span>
+                                            {c.city && <span style={{ color: '#94A3B8', fontSize: 9 }}>{c.city}</span>}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               );
-                            })}
+                            })()}
+
+                            {importTab === 'klanten' && !importLoading && (() => {
+                              const q = contactSearch.toLowerCase();
+                              const filtered = importProspects.filter(c => {
+                                if (c.alreadyInGroup) return false;
+                                if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(contactSearch) && !(c.company || '').toLowerCase().includes(q)) return false;
+                                if (importFilterBranche !== 'all' && c.branche !== importFilterBranche) return false;
+                                return true;
+                              });
+                              return (
+                                <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
+                                  {filtered.length === 0 && (
+                                    <div style={{ padding: 16, textAlign: 'center', color: '#9CA3AF', fontSize: 11 }}>
+                                      {importProspects.length === 0 ? 'Geen klanten met telefoonnummer' : 'Geen match met deze filters'}
+                                    </div>
+                                  )}
+                                  {filtered.map(c => {
+                                    const checked = selectedContacts.has(c.phone);
+                                    return (
+                                      <div key={c.id} onClick={() => toggleContactSelection(c.phone)}
+                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                        <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                          {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{c.name}</div>
+                                          <div style={{ fontSize: 10, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                                            <span>+{c.phone}</span>
+                                            {c.company && <span style={{ color: '#374151', fontWeight: 600, fontSize: 9 }}>{c.company}</span>}
+                                            {c.branche && <span style={{ background: '#F3F4F6', padding: '1px 5px', borderRadius: 3, fontSize: 9 }}>{c.branche}</span>}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+
+                            {importTab === 'csv' && (
+                              <div>
+                                <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 6 }}>
+                                  Plak CSV-data: <strong>naam;telefoonnummer</strong> of alleen <strong>telefoonnummer</strong> per regel. Nederlandse 06-nummers worden automatisch omgezet naar +31.
+                                </div>
+                                <textarea
+                                  value={csvText}
+                                  onChange={e => { setCsvText(e.target.value); setCsvParsed([]); setCsvErrors([]); }}
+                                  placeholder={"Jan de Vries;0612345678\nPiet Jansen;+31687654321\nof alleen nummers:\n0698765432"}
+                                  rows={5}
+                                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box', resize: 'vertical', marginBottom: 6 }}
+                                />
+                                <button onClick={handleParseCsv} disabled={csvParsing || !csvText.trim()}
+                                  style={{ background: csvParsing || !csvText.trim() ? '#E5E7EB' : NAVY, color: csvParsing || !csvText.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, marginBottom: 8 }}>
+                                  {csvParsing ? 'Verwerken...' : 'Verwerk CSV'}
+                                </button>
+                                {csvErrors.length > 0 && (
+                                  <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '6px 10px', marginBottom: 6, fontSize: 10, color: '#DC2626' }}>
+                                    {csvErrors.map((e, i) => <div key={i}>{e}</div>)}
+                                  </div>
+                                )}
+                                {csvParsed.length > 0 && (
+                                  <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
+                                    {csvParsed.map((c, i) => {
+                                      const checked = selectedContacts.has(c.phone);
+                                      return (
+                                        <div key={i} onClick={() => !c.alreadyInGroup && toggleContactSelection(c.phone)}
+                                          style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: c.alreadyInGroup ? 'default' : 'pointer', background: c.alreadyInGroup ? '#F9FAFB' : checked ? '#EEF2FF' : '#fff', opacity: c.alreadyInGroup ? 0.5 : 1 }}>
+                                          <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${c.alreadyInGroup ? '#E5E7EB' : checked ? NAVY : '#D1D5DB'}`, background: c.alreadyInGroup ? '#E5E7EB' : checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            {(checked || c.alreadyInGroup) && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
+                                          </div>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{c.name || '(geen naam)'}</div>
+                                            <div style={{ fontSize: 10, color: '#6B7280' }}>
+                                              +{c.phone}
+                                              {c.alreadyInGroup && <span style={{ marginLeft: 6, color: '#94A3B8', fontSize: 9 }}>al in groep</span>}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {importTab === 'handmatig' && (
+                              <div>
+                                <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 8 }}>
+                                  Voeg een enkel contact toe met naam en telefoonnummer.
+                                </div>
+                                <input
+                                  value={manualName}
+                                  onChange={e => setManualName(e.target.value)}
+                                  placeholder="Naam (optioneel)"
+                                  style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 6 }}
+                                />
+                                <input
+                                  value={manualPhone}
+                                  onChange={e => setManualPhone(e.target.value)}
+                                  placeholder="Telefoonnummer (bijv. 0612345678)"
+                                  style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 8 }}
+                                />
+                                <button onClick={handleAddManual} disabled={addingMembers || !manualPhone.trim()}
+                                  style={{ background: addingMembers || !manualPhone.trim() ? '#E5E7EB' : NAVY, color: addingMembers || !manualPhone.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                                  {addingMembers ? 'Toevoegen...' : 'Toevoegen'}
+                                </button>
+                              </div>
+                            )}
+
+                            {importTab !== 'handmatig' && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                  <span style={{ fontSize: 11, color: '#6B7280' }}>{selectedContacts.size} geselecteerd</span>
+                                  {selectedContacts.size > 0 && (
+                                    <button onClick={() => setSelectedContacts(new Set())} style={{ background: 'none', border: 'none', fontSize: 10, color: '#DC2626', cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT }}>wissen</button>
+                                  )}
+                                  {importTab === 'kandidaten' && (() => {
+                                    const q = contactSearch.toLowerCase();
+                                    const avail = importCandidates.filter(c => {
+                                      if (c.alreadyInGroup) return false;
+                                      if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(contactSearch)) return false;
+                                      if (importFilterFunc !== 'all' && c.functionType !== importFilterFunc) return false;
+                                      if (importFilterStatus !== 'all' && c.status !== importFilterStatus) return false;
+                                      return true;
+                                    });
+                                    return avail.length > 0 ? (
+                                      <button onClick={() => setSelectedContacts(new Set(avail.map(c => c.phone)))}
+                                        style={{ background: 'none', border: 'none', fontSize: 10, color: NAVY, cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT }}>
+                                        selecteer alles ({avail.length})
+                                      </button>
+                                    ) : null;
+                                  })()}
+                                  {importTab === 'klanten' && (() => {
+                                    const q = contactSearch.toLowerCase();
+                                    const avail = importProspects.filter(c => {
+                                      if (c.alreadyInGroup) return false;
+                                      if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(contactSearch) && !(c.company || '').toLowerCase().includes(q)) return false;
+                                      if (importFilterBranche !== 'all' && c.branche !== importFilterBranche) return false;
+                                      return true;
+                                    });
+                                    return avail.length > 0 ? (
+                                      <button onClick={() => setSelectedContacts(new Set(avail.map(c => c.phone)))}
+                                        style={{ background: 'none', border: 'none', fontSize: 10, color: NAVY, cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT }}>
+                                        selecteer alles ({avail.length})
+                                      </button>
+                                    ) : null;
+                                  })()}
+                                </div>
+                                <button onClick={handleAddSelectedMembers} disabled={addingMembers || selectedContacts.size === 0}
+                                  style={{ background: addingMembers || selectedContacts.size === 0 ? '#E5E7EB' : NAVY, color: addingMembers || selectedContacts.size === 0 ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                                  {addingMembers ? 'Toevoegen...' : `Toevoegen (${selectedContacts.size})`}
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                            <span style={{ fontSize: 11, color: '#6B7280' }}>{selectedContacts.size} geselecteerd</span>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <button onClick={() => setShowAddMembers(false)}
-                                style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontFamily: FONT }}>
-                                Annuleren
-                              </button>
-                              <button onClick={handleAddSelectedMembers} disabled={addingMembers || selectedContacts.size === 0}
-                                style={{ background: addingMembers || selectedContacts.size === 0 ? '#E5E7EB' : NAVY, color: addingMembers || selectedContacts.size === 0 ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
-                                {addingMembers ? 'Toevoegen...' : `Toevoegen (${selectedContacts.size})`}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                        )}
 
                       {/* Ledenlijst */}
                       <div style={{ maxHeight: 280, overflowY: 'auto' }}>
