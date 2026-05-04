@@ -10033,6 +10033,10 @@ ${posts.map(p => `  <url>
 
     try {
       const body = req.body || {};
+      console.log('[WA webhook] raw payload keys:', JSON.stringify(Object.keys(body)), 'messages?', Array.isArray(body.messages), 'entry?', Array.isArray(body.entry));
+      if (body.entry) {
+        console.log('[WA webhook] Cloud API format detected — entry[0]:', JSON.stringify(body.entry?.[0]?.changes?.[0]?.value ? Object.keys(body.entry[0].changes[0].value) : body.entry[0]).slice(0, 500));
+      }
 
       // 1. Status-events (delivered/read/failed)
       if (Array.isArray(body.statuses)) {
