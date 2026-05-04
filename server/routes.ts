@@ -10324,6 +10324,230 @@ ${posts.map(p => `  <url>
     res.json({ success: true });
   });
 
+  // ─── GROEPEN + BULK VERZENDING ──────────────────────────────────────────────
+  const { whatsappGroups, whatsappGroupMembers, whatsappBulkSends } = await import('@shared/schema');
+  const { and: drizzleAnd, asc: drizzleAsc, inArray: drizzleInArray } = await import('drizzle-orm');
+
+  app.get('/api/whatsapp/groups', adminMiddleware, async (_req: Request, res: Response) => {
+    const groups = await db.select().from(whatsappGroups).orderBy(drizzleDesc(whatsappGroups.updatedAt));
+    const counts = await db.select({
+      groupId: whatsappGroupMembers.groupId,
+      count: drizzleSql<number>`count(*)::int`,
+    }).from(whatsappGroupMembers).groupBy(whatsappGroupMembers.groupId);
+    const countMap = new Map(counts.map(c => [c.groupId, c.count]));
+    res.json(groups.map(g => ({ ...g, memberCount: countMap.get(g.id) || 0 })));
+  });
+
+  app.post('/api/whatsapp/groups', adminMiddleware, async (req: Request, res: Response) => {
+    const { name, description } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Naam is verplicht' });
+    }
+    const [group] = await db.insert(whatsappGroups).values({
+      name: name.trim(),
+      description: description?.trim() || null,
+    }).returning();
+    res.json({ ...group, memberCount: 0 });
+  });
+
+  app.put('/api/whatsapp/groups/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const { name, description } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Naam is verplicht' });
+    }
+    await db.update(whatsappGroups).set({
+      name: name.trim(),
+      description: description?.trim() || null,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappGroups.id, id));
+    res.json({ success: true });
+  });
+
+  app.delete('/api/whatsapp/groups/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    await db.delete(whatsappGroups).where(drizzleEq(whatsappGroups.id, id));
+    res.json({ success: true });
+  });
+
+  app.get('/api/whatsapp/groups/:id/members', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const members = await db.select().from(whatsappGroupMembers)
+      .where(drizzleEq(whatsappGroupMembers.groupId, id))
+      .orderBy(drizzleAsc(whatsappGroupMembers.displayName));
+    res.json(members);
+  });
+
+  app.post('/api/whatsapp/groups/:id/members', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const { members } = req.body;
+    if (!Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'members array is verplicht' });
+    }
+    const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
+      .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, id));
+    const existingSet = new Set(existing.map(e => e.phoneNumber));
+
+    const toInsert = members
+      .filter((m: any) => m.phoneNumber && !existingSet.has(normalizePhone(m.phoneNumber) || m.phoneNumber))
+      .map((m: any) => ({
+        groupId: id,
+        phoneNumber: normalizePhone(m.phoneNumber) || m.phoneNumber,
+        displayName: m.displayName || null,
+      }));
+
+    if (toInsert.length > 0) {
+      await db.insert(whatsappGroupMembers).values(toInsert);
+    }
+    await db.update(whatsappGroups).set({ updatedAt: new Date() }).where(drizzleEq(whatsappGroups.id, id));
+    res.json({ added: toInsert.length, skipped: members.length - toInsert.length });
+  });
+
+  app.delete('/api/whatsapp/groups/:id/members/:phone', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const phone = normalizePhone(req.params.phone) || req.params.phone;
+    await db.delete(whatsappGroupMembers).where(
+      drizzleAnd(
+        drizzleEq(whatsappGroupMembers.groupId, id),
+        drizzleEq(whatsappGroupMembers.phoneNumber, phone),
+      )
+    );
+    await db.update(whatsappGroups).set({ updatedAt: new Date() }).where(drizzleEq(whatsappGroups.id, id));
+    res.json({ success: true });
+  });
+
+  app.get('/api/whatsapp/groups/:id/available-contacts', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
+      .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, id));
+    const existingPhones = existing.map(e => e.phoneNumber);
+
+    let whereCond: any = undefined;
+    if (existingPhones.length > 0) {
+      whereCond = drizzleSql`${whatsappConversations.phoneNumber} NOT IN (${drizzleSql.join(existingPhones.map(p => drizzleSql`${p}`), drizzleSql`, `)})`;
+    }
+    const contacts = await db.select({
+      phoneNumber: whatsappConversations.phoneNumber,
+      displayName: whatsappConversations.displayName,
+      matchCategory: whatsappConversations.matchCategory,
+      contactCompany: whatsappConversations.contactCompany,
+    }).from(whatsappConversations)
+      .where(whereCond)
+      .orderBy(drizzleAsc(whatsappConversations.displayName))
+      .limit(200);
+    res.json(contacts);
+  });
+
+  app.post('/api/whatsapp/groups/:id/send', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const { tekst } = req.body;
+    if (!tekst || typeof tekst !== 'string' || !tekst.trim()) {
+      return res.status(400).json({ error: 'tekst is verplicht' });
+    }
+    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+
+    const group = await db.select().from(whatsappGroups).where(drizzleEq(whatsappGroups.id, id)).limit(1);
+    if (!group.length) return res.status(404).json({ error: 'Groep niet gevonden' });
+
+    const members = await db.select().from(whatsappGroupMembers)
+      .where(drizzleEq(whatsappGroupMembers.groupId, id));
+    if (members.length === 0) return res.status(400).json({ error: 'Groep heeft geen leden' });
+
+    const userId = (req.session as any).userId;
+    const { users: usersTable } = await import('@shared/schema');
+    const user = await db.select({ firstName: usersTable.firstName, lastName: usersTable.lastName })
+      .from(usersTable).where(drizzleEq(usersTable.id, userId)).limit(1);
+    const senderName = user.length ? `${user[0].firstName} ${user[0].lastName}` : 'Admin';
+
+    const [bulkRecord] = await db.insert(whatsappBulkSends).values({
+      groupId: id,
+      groupName: group[0].name,
+      messageBody: tekst.trim(),
+      totalRecipients: members.length,
+      sentCount: 0,
+      failedCount: 0,
+      sentByUserId: userId,
+      sentByName: senderName,
+    }).returning();
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const results: Array<{ phone: string; displayName: string | null; status: 'sent' | 'failed'; error?: string }> = [];
+
+    for (const member of members) {
+      const now = new Date();
+      try {
+        const match = await waStorage.resolveAndUpsertConversation({
+          phoneNumber: member.phoneNumber,
+          inbound: false,
+          bodyPreview: tekst.trim(),
+          at: now,
+        });
+
+        const messageRowId = await waStorage.insertOutboundQueued({
+          direction: 'outbound',
+          fromNumber: 'extra',
+          toNumber: member.phoneNumber,
+          messageType: 'text',
+          body: tekst.trim(),
+          candidateId: match.candidateId,
+          prospectContactId: match.prospectContactId,
+          matchCategory: match.category,
+          sentByUserId: userId,
+          rawPayload: { type: 'text', text: { body: tekst.trim() }, to: member.phoneNumber },
+        });
+
+        const payload = { messaging_product: 'whatsapp', to: member.phoneNumber, type: 'text', text: { body: tekst.trim() } };
+        const r = await fetch(`${WA_BASE_URL}/messages`, {
+          method: 'POST',
+          headers: wa360Headers,
+          body: JSON.stringify(payload),
+        });
+        const responseText = await r.text();
+        let data: any = {};
+        try { data = JSON.parse(responseText); } catch { /* */ }
+
+        if (!r.ok || data?.error || data?.meta?.success === false) {
+          const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || responseText.slice(0, 200);
+          await waStorage.updateOutboundResult(messageRowId, {
+            status: 'failed',
+            errorCode: String(data?.error?.code || r.status),
+            errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+          });
+          failedCount++;
+          results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'failed', error: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg) });
+        } else {
+          const waId = data?.messages?.[0]?.id || null;
+          await waStorage.updateOutboundResult(messageRowId, { waMessageId: waId, status: 'sent' });
+          sentCount++;
+          results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'sent' });
+        }
+      } catch (err: any) {
+        failedCount++;
+        results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'failed', error: err.message || 'Onbekende fout' });
+      }
+    }
+
+    await db.update(whatsappBulkSends).set({ sentCount, failedCount }).where(drizzleEq(whatsappBulkSends.id, bulkRecord.id));
+    console.log(`[WA Bulk] Groep "${group[0].name}" → ${sentCount} verzonden, ${failedCount} mislukt (door ${senderName})`);
+    res.json({ bulkSendId: bulkRecord.id, total: members.length, sent: sentCount, failed: failedCount, results });
+  });
+
+  app.get('/api/whatsapp/bulk-sends', adminMiddleware, async (req: Request, res: Response) => {
+    const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 100);
+    const rows = await db.select().from(whatsappBulkSends)
+      .orderBy(drizzleDesc(whatsappBulkSends.createdAt))
+      .limit(limit);
+    res.json(rows);
+  });
+
   // Voer een eenmalige startup-warning uit als secrets ontbreken
   if (!WA_360_KEY) console.warn('[WA] WHATSAPP_360_API_KEY niet ingesteld — uitgaande berichten zullen falen');
   if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');

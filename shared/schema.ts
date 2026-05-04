@@ -1408,12 +1408,46 @@ export const whatsappInternalNotes = pgTable("whatsapp_internal_notes", {
   convIdx: index("wa_note_conv_idx").on(table.conversationId),
 }));
 
+export const whatsappGroups = pgTable("whatsapp_groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const whatsappGroupMembers = pgTable("whatsapp_group_members", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => whatsappGroups.id, { onDelete: 'cascade' }).notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  displayName: text("display_name"),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+}, (table) => ({
+  groupPhoneIdx: index("wa_grp_member_idx").on(table.groupId, table.phoneNumber),
+}));
+
+export const whatsappBulkSends = pgTable("whatsapp_bulk_sends", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => whatsappGroups.id, { onDelete: 'set null' }),
+  groupName: text("group_name").notNull(),
+  messageBody: text("message_body").notNull(),
+  totalRecipients: integer("total_recipients").notNull(),
+  sentCount: integer("sent_count").default(0).notNull(),
+  failedCount: integer("failed_count").default(0).notNull(),
+  sentByUserId: integer("sent_by_user_id"),
+  sentByName: text("sent_by_name"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
 export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
 export type InsertWhatsappConversation = typeof whatsappConversations.$inferInsert;
 export type WhatsappInternalNote = typeof whatsappInternalNotes.$inferSelect;
 export type InsertWhatsappInternalNote = typeof whatsappInternalNotes.$inferInsert;
+export type WhatsappGroup = typeof whatsappGroups.$inferSelect;
+export type WhatsappGroupMember = typeof whatsappGroupMembers.$inferSelect;
+export type WhatsappBulkSend = typeof whatsappBulkSends.$inferSelect;
 
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [

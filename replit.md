@@ -60,6 +60,16 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
     -   `PUT /api/whatsapp/conversations/:phone/labels` — labels als text[] op conversatie.
     -   `GET/POST /api/whatsapp/conversations/:phone/notes` — interne notities (tabel `whatsapp_internal_notes`).
     -   Frontend: filter-dropdowns (ongelezen/toegewezen/label), toewijzing-dropdown in thread header, labels met + knop, Berichten/Interne notities toggle-tabs.
+-   **Groepen + Bulk verzending**: Contactgroepen aanmaken en berichten naar alle leden sturen als individuele 1-op-1 berichten.
+    -   `GET/POST /api/whatsapp/groups` — groepen ophalen/aanmaken.
+    -   `PUT/DELETE /api/whatsapp/groups/:id` — groep bewerken/verwijderen.
+    -   `GET/POST /api/whatsapp/groups/:id/members` — leden ophalen/toevoegen.
+    -   `DELETE /api/whatsapp/groups/:id/members/:phone` — lid verwijderen.
+    -   `GET /api/whatsapp/groups/:id/available-contacts` — beschikbare contacten (niet al lid).
+    -   `POST /api/whatsapp/groups/:id/send` — bulk verzending naar alle leden.
+    -   `GET /api/whatsapp/bulk-sends` — verzendgeschiedenis.
+    -   Tabellen: `whatsapp_groups`, `whatsapp_group_members`, `whatsapp_bulk_sends`.
+    -   Frontend: toggle "Gesprekken" / "Groepen" in WhatsApp beheer; groepenbeheer met leden-picker uit bestaande contacten, bulk-verzending met bevestigingsstap, verzendgeschiedenis.
 -   **Frontend**: Tweekolommen UI in admin-dashboard tab "WhatsApp" met tabs Medewerkers/Klanten/Kandidaten, zoek, thread-view, 24u-venster check, status-indicators. Webhook-instellingen achter ⚙-icoon (niet standaard zichtbaar). Unmatched-contacten: inline bewerk-formulier voor naam/bedrijf/notities via ✏️-knop in thread header.
 -   **Phone-normalisatie**: `server/whatsapp/phone.ts` (NL 06→+31, strips whitespace/dashes, E.164 zonder +).
 -   **Migratie**: `npx tsx server/whatsapp/migrate-phones.ts` (dry-run default, `--apply` voor schrijven). Backup in `phone_original` / `telefoon_original` kolommen.

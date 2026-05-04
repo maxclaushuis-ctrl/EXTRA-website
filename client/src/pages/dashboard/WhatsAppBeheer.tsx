@@ -13,12 +13,27 @@ import {
   updateLabels,
   haalNotities,
   maakNotitie,
+  haalGroepen,
+  maakGroep,
+  updateGroep,
+  verwijderGroep,
+  haalGroepLeden,
+  voegLedenToe,
+  verwijderLid,
+  haalBeschikbareContacten,
+  stuurBulkBericht,
+  haalBulkVerzendingen,
   type Conversation,
   type Message,
   type Stats,
   type WebhookStatus,
   type TeamMember,
   type InternalNote,
+  type Group,
+  type GroupMember,
+  type AvailableContact,
+  type BulkSendResult,
+  type BulkSendRecord,
 } from '../../api/whatsappClient';
 
 const NAVY = '#1F3A5F';
@@ -27,6 +42,7 @@ const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 type Tab = 'candidate' | 'prospect' | 'unmatched';
 type ThreadView = 'messages' | 'notes';
 type FilterUnread = 'all' | 'unread';
+type MainView = 'gesprekken' | 'groepen';
 
 const TAB_LABELS: Record<Tab, string> = {
   candidate: 'Medewerkers',
@@ -56,6 +72,7 @@ function labelColor(label: string): string {
 }
 
 export default function WhatsAppBeheer() {
+  const [mainView, setMainView] = useState<MainView>('gesprekken');
   const [tab, setTab] = useState<Tab>('candidate');
   const [search, setSearch] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -86,6 +103,28 @@ export default function WhatsAppBeheer() {
   const [showLabelInput, setShowLabelInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const notesEndRef = useRef<HTMLDivElement>(null);
+
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [availableContacts, setAvailableContacts] = useState<AvailableContact[]>([]);
+  const [showAddMembers, setShowAddMembers] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
+  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+  const [addingMembers, setAddingMembers] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(false);
+  const [editGroupName, setEditGroupName] = useState('');
+  const [editGroupDesc, setEditGroupDesc] = useState('');
+  const [bulkText, setBulkText] = useState('');
+  const [bulkSending, setBulkSending] = useState(false);
+  const [bulkResult, setBulkResult] = useState<BulkSendResult | null>(null);
+  const [bulkHistory, setBulkHistory] = useState<BulkSendRecord[]>([]);
+  const [showBulkHistory, setShowBulkHistory] = useState(false);
+  const [confirmBulkSend, setConfirmBulkSend] = useState(false);
 
   useEffect(() => {
     let stop = false;
@@ -132,6 +171,26 @@ export default function WhatsAppBeheer() {
     notesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [notes.length]);
 
+  useEffect(() => {
+    if (mainView === 'groepen') {
+      haalGroepen().then(setGroups).catch(() => {});
+    }
+  }, [mainView]);
+
+  useEffect(() => {
+    if (selectedGroupId) {
+      haalGroepLeden(selectedGroupId).then(setGroupMembers).catch(() => {});
+      setBulkResult(null);
+      setBulkText('');
+      setShowAddMembers(false);
+      setEditingGroup(false);
+      setConfirmBulkSend(false);
+      setShowBulkHistory(false);
+    } else {
+      setGroupMembers([]);
+    }
+  }, [selectedGroupId]);
+
   const allLabelsInUse = useMemo(() => {
     const set = new Set<string>();
     conversations.forEach(c => c.labels?.forEach(l => set.add(l)));
@@ -164,6 +223,7 @@ export default function WhatsAppBeheer() {
   }, [conversations, search, filterUnread, filterAssignee, filterLabel]);
 
   const selectedConv = conversations.find(c => c.phoneNumber === selectedPhone);
+  const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   const within24h = useMemo(() => {
     if (!selectedConv?.lastInboundAt) return false;
@@ -172,6 +232,14 @@ export default function WhatsAppBeheer() {
   }, [selectedConv]);
 
   const hasActiveFilters = filterUnread !== 'all' || filterAssignee !== 'all' || filterLabel !== 'all';
+
+  const filteredAvailable = useMemo(() => {
+    if (!contactSearch.trim()) return availableContacts;
+    const q = contactSearch.toLowerCase();
+    return availableContacts.filter(c =>
+      c.displayName?.toLowerCase().includes(q) || c.phoneNumber.includes(contactSearch)
+    );
+  }, [availableContacts, contactSearch]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -296,14 +364,135 @@ export default function WhatsAppBeheer() {
     return `${phone} \u00B7 Kandidaat`;
   }
 
+  async function handleCreateGroup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newGroupName.trim()) return;
+    setCreatingGroup(true);
+    try {
+      const g = await maakGroep(newGroupName.trim(), newGroupDesc.trim() || undefined);
+      setGroups(prev => [g, ...prev]);
+      setSelectedGroupId(g.id);
+      setNewGroupName('');
+      setNewGroupDesc('');
+      setShowNewGroup(false);
+    } catch { /* ignore */ }
+    setCreatingGroup(false);
+  }
+
+  async function handleUpdateGroup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedGroupId || !editGroupName.trim()) return;
+    await updateGroep(selectedGroupId, editGroupName.trim(), editGroupDesc.trim() || undefined);
+    setGroups(await haalGroepen());
+    setEditingGroup(false);
+  }
+
+  async function handleDeleteGroup() {
+    if (!selectedGroupId) return;
+    if (!confirm('Weet je zeker dat je deze groep wilt verwijderen?')) return;
+    await verwijderGroep(selectedGroupId);
+    setSelectedGroupId(null);
+    setGroups(await haalGroepen());
+  }
+
+  async function openAddMembers() {
+    if (!selectedGroupId) return;
+    setShowAddMembers(true);
+    setSelectedContacts(new Set());
+    setContactSearch('');
+    try {
+      const contacts = await haalBeschikbareContacten(selectedGroupId);
+      setAvailableContacts(contacts);
+    } catch { /* ignore */ }
+  }
+
+  async function handleAddSelectedMembers() {
+    if (!selectedGroupId || selectedContacts.size === 0) return;
+    setAddingMembers(true);
+    const membersToAdd = Array.from(selectedContacts).map(phone => {
+      const c = availableContacts.find(ac => ac.phoneNumber === phone);
+      return { phoneNumber: phone, displayName: c?.displayName || undefined };
+    });
+    try {
+      await voegLedenToe(selectedGroupId, membersToAdd);
+      setGroupMembers(await haalGroepLeden(selectedGroupId));
+      setGroups(await haalGroepen());
+      setShowAddMembers(false);
+      setSelectedContacts(new Set());
+    } catch { /* ignore */ }
+    setAddingMembers(false);
+  }
+
+  async function handleRemoveMember(phone: string) {
+    if (!selectedGroupId) return;
+    await verwijderLid(selectedGroupId, phone);
+    setGroupMembers(await haalGroepLeden(selectedGroupId));
+    setGroups(await haalGroepen());
+  }
+
+  function toggleContactSelection(phone: string) {
+    setSelectedContacts(prev => {
+      const next = new Set(prev);
+      if (next.has(phone)) next.delete(phone); else next.add(phone);
+      return next;
+    });
+  }
+
+  async function handleBulkSend() {
+    if (!selectedGroupId || !bulkText.trim()) return;
+    setBulkSending(true);
+    setBulkResult(null);
+    try {
+      const result = await stuurBulkBericht(selectedGroupId, bulkText.trim());
+      setBulkResult(result);
+      setBulkText('');
+      setConfirmBulkSend(false);
+    } catch (e: any) {
+      setBulkResult({ bulkSendId: 0, total: 0, sent: 0, failed: 0, results: [{ phone: '', displayName: null, status: 'failed', error: e.message || 'Onbekende fout' }] });
+    }
+    setBulkSending(false);
+  }
+
+  async function openBulkHistory() {
+    setShowBulkHistory(true);
+    try {
+      setBulkHistory(await haalBulkVerzendingen());
+    } catch { /* ignore */ }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', minHeight: 500, fontFamily: FONT }}>
 
-      {/* Titel + instellingen-icoon */}
+      {/* Titel + view toggle + instellingen */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: NAVY }}>WhatsApp</h2>
-          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>Beheer 3 WhatsApp nummers — Horeca, Logistiek en Housekeeping</div>
+          <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 8, padding: 2 }}>
+            <button
+              onClick={() => { setMainView('gesprekken'); setSelectedGroupId(null); }}
+              style={{
+                padding: '5px 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6,
+                background: mainView === 'gesprekken' ? '#fff' : 'transparent',
+                color: mainView === 'gesprekken' ? NAVY : '#6B7280',
+                cursor: 'pointer', fontFamily: FONT,
+                boxShadow: mainView === 'gesprekken' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              Gesprekken
+            </button>
+            <button
+              onClick={() => { setMainView('groepen'); setSelectedPhone(null); }}
+              style={{
+                padding: '5px 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6,
+                background: mainView === 'groepen' ? '#fff' : 'transparent',
+                color: mainView === 'groepen' ? NAVY : '#6B7280',
+                cursor: 'pointer', fontFamily: FONT,
+                boxShadow: mainView === 'groepen' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              Groepen
+            </button>
+          </div>
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}
@@ -362,316 +551,479 @@ export default function WhatsAppBeheer() {
       {/* Hoofdgrid */}
       <div style={{ display: 'flex', flex: 1, gap: 12, minHeight: 0 }}>
 
-        {/* Linkerkolom: gesprekkenlijst */}
-        <div style={{
-          width: 340, display: 'flex', flexDirection: 'column',
-          background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
-        }}>
-          {/* Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
-            {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
-              const active = tab === t;
-              const unread = stats?.[t]?.unread ?? 0;
-              return (
-                <button
-                  key={t}
-                  onClick={() => { setTab(t); setSelectedPhone(null); }}
-                  style={{
-                    flex: 1, padding: '12px 8px', border: 'none', background: 'none',
-                    fontSize: 12, fontWeight: 600,
-                    color: active ? NAVY : '#6B7280',
-                    borderBottom: active ? `2px solid ${NAVY}` : '2px solid transparent',
-                    cursor: 'pointer',
-                    fontFamily: FONT,
-                  }}
-                >
-                  {TAB_LABELS[t]} {unread > 0 && (
-                    <span style={{
-                      background: '#DC2626', color: '#fff', borderRadius: 10,
-                      padding: '1px 6px', fontSize: 10, marginLeft: 4,
-                    }}>{unread}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Zoekbalk + filters */}
-          <div style={{ padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Zoek op naam of nummer..."
-              style={{
-                width: '100%', padding: '7px 10px', fontSize: 12,
-                border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none',
-                fontFamily: FONT, boxSizing: 'border-box',
-              }}
-            />
-            <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-              <select
-                value={filterUnread}
-                onChange={e => setFilterUnread(e.target.value as FilterUnread)}
-                style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterUnread !== 'all' ? NAVY : '#6B7280', fontWeight: filterUnread !== 'all' ? 600 : 400 }}
-              >
-                <option value="all">Alle</option>
-                <option value="unread">Ongelezen</option>
-              </select>
-              <select
-                value={filterAssignee}
-                onChange={e => setFilterAssignee(e.target.value)}
-                style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterAssignee !== 'all' ? NAVY : '#6B7280', fontWeight: filterAssignee !== 'all' ? 600 : 400 }}
-              >
-                <option value="all">Iedereen</option>
-                <option value="unassigned">Niet toegewezen</option>
-                {teamMembers.map(m => (
-                  <option key={m.id} value={String(m.id)}>{m.name}</option>
-                ))}
-              </select>
-              {allLabelsInUse.length > 0 && (
-                <select
-                  value={filterLabel}
-                  onChange={e => setFilterLabel(e.target.value)}
-                  style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterLabel !== 'all' ? NAVY : '#6B7280', fontWeight: filterLabel !== 'all' ? 600 : 400 }}
-                >
-                  <option value="all">Labels</option>
-                  {allLabelsInUse.map(l => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </select>
-              )}
-              {hasActiveFilters && (
-                <button
-                  onClick={() => { setFilterUnread('all'); setFilterAssignee('all'); setFilterLabel('all'); }}
-                  style={{ fontSize: 10, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: '3px 4px' }}
-                >
-                  \u2715 Reset
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Gesprekkenlijst */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {filteredConversations.length === 0 && (
-              <div style={{ padding: 30, textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
-                {search || hasActiveFilters ? 'Geen resultaten' : 'Geen gesprekken in deze categorie'}
-              </div>
-            )}
-            {filteredConversations.map(c => {
-              const selected = c.phoneNumber === selectedPhone;
-              const unread = c.unreadCount > 0;
-              const name = convDisplayName(c);
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => setSelectedPhone(c.phoneNumber)}
-                  style={{
-                    padding: '10px 14px',
-                    background: selected ? '#F0F4FA' : '#fff',
-                    borderLeft: selected ? `3px solid ${NAVY}` : '3px solid transparent',
-                    borderBottom: '1px solid #F3F4F6',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <div style={{
-                      fontSize: 13, fontWeight: unread ? 700 : 600,
-                      color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {name}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#94A3B8', flexShrink: 0, marginLeft: 6 }}>
-                      {timeAgo(c.lastMessageAt)}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
-                    <span style={{ fontSize: 11, color: '#64748B' }}>
-                      +{c.phoneNumber}
-                      {c.matchCategory === 'prospect' && c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
-                      {c.matchCategory === 'unmatched' && c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
-                    </span>
-                    {c.assignedToName && (
-                      <span style={{ fontSize: 9, color: '#8B5CF6', background: '#EDE9FE', borderRadius: 3, padding: '0 4px', flexShrink: 0 }}>
-                        {c.assignedToName.split(' ')[0]}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{
-                    fontSize: 12, color: unread ? '#1F2937' : '#64748B',
-                    fontWeight: unread ? 600 : 400,
-                    marginTop: 3,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    maxWidth: 280,
-                  }}>
-                    {(c.lastMessagePreview || '\u2014').slice(0, 60)}
-                  </div>
-                  {(c.labels?.length || unread) ? (
-                    <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                      {unread && (
-                        <span style={{
-                          background: '#DC2626', color: '#fff', borderRadius: 10,
-                          padding: '0 7px', fontSize: 10, fontWeight: 700,
-                        }}>{c.unreadCount}</span>
-                      )}
-                      {c.labels?.map(l => (
-                        <span key={l} style={{
-                          fontSize: 9, padding: '1px 6px', borderRadius: 3,
-                          background: labelColor(l) + '18', color: labelColor(l),
-                          fontWeight: 600,
-                        }}>{l}</span>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Rechterkolom: thread */}
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
-          minWidth: 0,
-        }}>
-          {!selectedConv && (
+        {/* ════════ GESPREKKEN VIEW ════════ */}
+        {mainView === 'gesprekken' && (
+          <>
+            {/* Linkerkolom: gesprekkenlijst */}
             <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#9CA3AF', fontSize: 13,
+              width: 340, display: 'flex', flexDirection: 'column',
+              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
             }}>
-              Selecteer een gesprek links
-            </div>
-          )}
-
-          {selectedConv && (
-            <>
-              {/* Thread header */}
-              <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>
-                        {selectedConv.matchCategory === 'candidate' && selectedConv.candidateId ? (
-                          <a href={`/admin/kandidaten/${selectedConv.candidateId}`} style={{ color: NAVY, textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                          >
-                            {convDisplayName(selectedConv)}
-                          </a>
-                        ) : selectedConv.matchCategory === 'prospect' && selectedConv.prospectContactId ? (
-                          <a href={`/admin/prospects`} style={{ color: NAVY, textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                          >
-                            {convDisplayName(selectedConv)}
-                          </a>
-                        ) : (
-                          convDisplayName(selectedConv)
-                        )}
-                      </div>
-                      {selectedConv.matchCategory === 'unmatched' && (
-                        <button
-                          onClick={openEditContact}
-                          title={selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen'}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#6B7280', padding: '1px 3px' }}
-                        >
-                          \u270F\uFE0F
-                        </button>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
-                      {threadSubline(selectedConv)}
-                    </div>
-                    {/* Labels */}
-                    <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                      {selectedConv.labels?.map(l => (
-                        <span key={l} style={{
-                          fontSize: 10, padding: '1px 6px', borderRadius: 3,
-                          background: labelColor(l) + '18', color: labelColor(l),
-                          fontWeight: 600, cursor: 'pointer',
-                        }} onClick={() => handleRemoveLabel(l)} title={`Verwijder label "${l}"`}>
-                          {l} \u00D7
-                        </span>
-                      ))}
-                      {showLabelInput ? (
-                        <form onSubmit={handleAddLabel} style={{ display: 'inline-flex', gap: 2 }}>
-                          <input
-                            value={labelInput}
-                            onChange={e => setLabelInput(e.target.value)}
-                            placeholder="label..."
-                            autoFocus
-                            onBlur={() => { if (!labelInput.trim()) setShowLabelInput(false); }}
-                            style={{ width: 70, fontSize: 10, padding: '1px 4px', border: '1px solid #D1D5DB', borderRadius: 3, outline: 'none', fontFamily: FONT }}
-                          />
-                        </form>
-                      ) : (
-                        <button
-                          onClick={() => setShowLabelInput(true)}
-                          style={{ fontSize: 10, color: '#9CA3AF', background: 'none', border: '1px dashed #D1D5DB', borderRadius: 3, padding: '1px 6px', cursor: 'pointer' }}
-                        >
-                          + label
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {/* Toewijzing */}
-                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>Toegewezen aan</div>
-                    <select
-                      value={selectedConv.assignedToId ? String(selectedConv.assignedToId) : ''}
-                      onChange={e => handleAssign(e.target.value)}
+              <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
+                {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
+                  const active = tab === t;
+                  const unread = stats?.[t]?.unread ?? 0;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => { setTab(t); setSelectedPhone(null); }}
                       style={{
-                        fontSize: 11, padding: '4px 6px', borderRadius: 4,
-                        border: '1px solid #D1D5DB', fontFamily: FONT,
-                        color: selectedConv.assignedToId ? NAVY : '#9CA3AF',
-                        minWidth: 120,
+                        flex: 1, padding: '12px 8px', border: 'none', background: 'none',
+                        fontSize: 12, fontWeight: 600,
+                        color: active ? NAVY : '#6B7280',
+                        borderBottom: active ? `2px solid ${NAVY}` : '2px solid transparent',
+                        cursor: 'pointer', fontFamily: FONT,
                       }}
                     >
-                      <option value="">Niemand</option>
-                      {teamMembers.map(m => (
-                        <option key={m.id} value={String(m.id)}>{m.name}</option>
+                      {TAB_LABELS[t]} {unread > 0 && (
+                        <span style={{
+                          background: '#DC2626', color: '#fff', borderRadius: 10,
+                          padding: '1px 6px', fontSize: 10, marginLeft: 4,
+                        }}>{unread}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Zoek op naam of nummer..."
+                  style={{
+                    width: '100%', padding: '7px 10px', fontSize: 12,
+                    border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none',
+                    fontFamily: FONT, boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                  <select
+                    value={filterUnread}
+                    onChange={e => setFilterUnread(e.target.value as FilterUnread)}
+                    style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterUnread !== 'all' ? NAVY : '#6B7280', fontWeight: filterUnread !== 'all' ? 600 : 400 }}
+                  >
+                    <option value="all">Alle</option>
+                    <option value="unread">Ongelezen</option>
+                  </select>
+                  <select
+                    value={filterAssignee}
+                    onChange={e => setFilterAssignee(e.target.value)}
+                    style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterAssignee !== 'all' ? NAVY : '#6B7280', fontWeight: filterAssignee !== 'all' ? 600 : 400 }}
+                  >
+                    <option value="all">Iedereen</option>
+                    <option value="unassigned">Niet toegewezen</option>
+                    {teamMembers.map(m => (
+                      <option key={m.id} value={String(m.id)}>{m.name}</option>
+                    ))}
+                  </select>
+                  {allLabelsInUse.length > 0 && (
+                    <select
+                      value={filterLabel}
+                      onChange={e => setFilterLabel(e.target.value)}
+                      style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterLabel !== 'all' ? NAVY : '#6B7280', fontWeight: filterLabel !== 'all' ? 600 : 400 }}
+                    >
+                      <option value="all">Labels</option>
+                      {allLabelsInUse.map(l => (
+                        <option key={l} value={l}>{l}</option>
                       ))}
                     </select>
-                  </div>
+                  )}
+                  {hasActiveFilters && (
+                    <button
+                      onClick={() => { setFilterUnread('all'); setFilterAssignee('all'); setFilterLabel('all'); }}
+                      style={{ fontSize: 10, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: '3px 4px' }}
+                    >
+                      \u2715 Reset
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Contact bewerk-formulier */}
-              {editingContact && selectedConv.matchCategory === 'unmatched' && (
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {filteredConversations.length === 0 && (
+                  <div style={{ padding: 30, textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
+                    {search || hasActiveFilters ? 'Geen resultaten' : 'Geen gesprekken in deze categorie'}
+                  </div>
+                )}
+                {filteredConversations.map(c => {
+                  const selected = c.phoneNumber === selectedPhone;
+                  const unread = c.unreadCount > 0;
+                  const name = convDisplayName(c);
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelectedPhone(c.phoneNumber)}
+                      style={{
+                        padding: '10px 14px',
+                        background: selected ? '#F0F4FA' : '#fff',
+                        borderLeft: selected ? `3px solid ${NAVY}` : '3px solid transparent',
+                        borderBottom: '1px solid #F3F4F6',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <div style={{
+                          fontSize: 13, fontWeight: unread ? 700 : 600,
+                          color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {name}
+                        </div>
+                        <div style={{ fontSize: 10, color: '#94A3B8', flexShrink: 0, marginLeft: 6 }}>
+                          {timeAgo(c.lastMessageAt)}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                        <span style={{ fontSize: 11, color: '#64748B' }}>
+                          +{c.phoneNumber}
+                          {c.matchCategory === 'prospect' && c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
+                          {c.matchCategory === 'unmatched' && c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
+                        </span>
+                        {c.assignedToName && (
+                          <span style={{ fontSize: 9, color: '#8B5CF6', background: '#EDE9FE', borderRadius: 3, padding: '0 4px', flexShrink: 0 }}>
+                            {c.assignedToName.split(' ')[0]}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{
+                        fontSize: 12, color: unread ? '#1F2937' : '#64748B',
+                        fontWeight: unread ? 600 : 400,
+                        marginTop: 3,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        maxWidth: 280,
+                      }}>
+                        {(c.lastMessagePreview || '\u2014').slice(0, 60)}
+                      </div>
+                      {(c.labels?.length || unread) ? (
+                        <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {unread && (
+                            <span style={{
+                              background: '#DC2626', color: '#fff', borderRadius: 10,
+                              padding: '0 7px', fontSize: 10, fontWeight: 700,
+                            }}>{c.unreadCount}</span>
+                          )}
+                          {c.labels?.map(l => (
+                            <span key={l} style={{
+                              fontSize: 9, padding: '1px 6px', borderRadius: 3,
+                              background: labelColor(l) + '18', color: labelColor(l),
+                              fontWeight: 600,
+                            }}>{l}</span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Rechterkolom: thread */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
+              minWidth: 0,
+            }}>
+              {!selectedConv && (
                 <div style={{
-                  padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#9CA3AF', fontSize: 13,
                 }}>
-                  <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>Contact bewerken</div>
+                  Selecteer een gesprek links
+                </div>
+              )}
+
+              {selectedConv && (
+                <>
+                  <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>
+                            {selectedConv.matchCategory === 'candidate' && selectedConv.candidateId ? (
+                              <a href={`/admin/kandidaten/${selectedConv.candidateId}`} style={{ color: NAVY, textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                              >
+                                {convDisplayName(selectedConv)}
+                              </a>
+                            ) : selectedConv.matchCategory === 'prospect' && selectedConv.prospectContactId ? (
+                              <a href={`/admin/prospects`} style={{ color: NAVY, textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                              >
+                                {convDisplayName(selectedConv)}
+                              </a>
+                            ) : (
+                              convDisplayName(selectedConv)
+                            )}
+                          </div>
+                          {selectedConv.matchCategory === 'unmatched' && (
+                            <button
+                              onClick={openEditContact}
+                              title={selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen'}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#6B7280', padding: '1px 3px' }}
+                            >
+                              \u270F\uFE0F
+                            </button>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
+                          {threadSubline(selectedConv)}
+                        </div>
+                        <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {selectedConv.labels?.map(l => (
+                            <span key={l} style={{
+                              fontSize: 10, padding: '1px 6px', borderRadius: 3,
+                              background: labelColor(l) + '18', color: labelColor(l),
+                              fontWeight: 600, cursor: 'pointer',
+                            }} onClick={() => handleRemoveLabel(l)} title={`Verwijder label "${l}"`}>
+                              {l} \u00D7
+                            </span>
+                          ))}
+                          {showLabelInput ? (
+                            <form onSubmit={handleAddLabel} style={{ display: 'inline-flex', gap: 2 }}>
+                              <input
+                                value={labelInput}
+                                onChange={e => setLabelInput(e.target.value)}
+                                placeholder="label..."
+                                autoFocus
+                                onBlur={() => { if (!labelInput.trim()) setShowLabelInput(false); }}
+                                style={{ width: 70, fontSize: 10, padding: '1px 4px', border: '1px solid #D1D5DB', borderRadius: 3, outline: 'none', fontFamily: FONT }}
+                              />
+                            </form>
+                          ) : (
+                            <button
+                              onClick={() => setShowLabelInput(true)}
+                              style={{ fontSize: 10, color: '#9CA3AF', background: 'none', border: '1px dashed #D1D5DB', borderRadius: 3, padding: '1px 6px', cursor: 'pointer' }}
+                            >
+                              + label
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                        <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>Toegewezen aan</div>
+                        <select
+                          value={selectedConv.assignedToId ? String(selectedConv.assignedToId) : ''}
+                          onChange={e => handleAssign(e.target.value)}
+                          style={{
+                            fontSize: 11, padding: '4px 6px', borderRadius: 4,
+                            border: '1px solid #D1D5DB', fontFamily: FONT,
+                            color: selectedConv.assignedToId ? NAVY : '#9CA3AF',
+                            minWidth: 120,
+                          }}
+                        >
+                          <option value="">Niemand</option>
+                          {teamMembers.map(m => (
+                            <option key={m.id} value={String(m.id)}>{m.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {editingContact && selectedConv.matchCategory === 'unmatched' && (
+                    <div style={{ padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
+                      <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>Contact bewerken</div>
+                        <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Naam (verplicht)" required
+                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        <input value={editCompany} onChange={e => setEditCompany(e.target.value)} placeholder="Bedrijf / context (optioneel)"
+                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notities (optioneel)" rows={2}
+                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical' }} />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="submit" disabled={editSaving || !editName.trim()}
+                            style={{ background: editSaving || !editName.trim() ? '#E5E7EB' : NAVY, color: editSaving || !editName.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                            {editSaving ? 'Opslaan...' : 'Opslaan'}
+                          </button>
+                          <button type="button" onClick={() => setEditingContact(false)}
+                            style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: FONT }}>
+                            Annuleren
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB' }}>
+                    <button onClick={() => setThreadView('messages')}
+                      style={{ flex: 1, padding: '8px', fontSize: 12, fontWeight: 600, border: 'none', background: 'none', color: threadView === 'messages' ? NAVY : '#9CA3AF', borderBottom: threadView === 'messages' ? `2px solid ${NAVY}` : '2px solid transparent', cursor: 'pointer', fontFamily: FONT }}>
+                      Berichten
+                    </button>
+                    <button onClick={() => setThreadView('notes')}
+                      style={{ flex: 1, padding: '8px', fontSize: 12, fontWeight: 600, border: 'none', background: 'none', color: threadView === 'notes' ? '#F59E0B' : '#9CA3AF', borderBottom: threadView === 'notes' ? '2px solid #F59E0B' : '2px solid transparent', cursor: 'pointer', fontFamily: FONT }}>
+                      Interne notities {notes.length > 0 && <span style={{ fontSize: 10, background: '#FEF3C7', color: '#B45309', borderRadius: 10, padding: '0 5px', marginLeft: 4 }}>{notes.length}</span>}
+                    </button>
+                  </div>
+
+                  {threadView === 'messages' && (
+                    <>
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '18px', background: '#F8F9FB' }}>
+                        {messages.length === 0 && (
+                          <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, padding: 40 }}>Geen berichten in dit gesprek</div>
+                        )}
+                        {messages.map(m => (
+                          <div key={m.id} style={{
+                            display: 'flex',
+                            justifyContent: m.direction === 'inbound' ? 'flex-start' : 'flex-end',
+                            marginBottom: 10,
+                          }}>
+                            <div style={{
+                              maxWidth: '70%',
+                              background: m.direction === 'inbound' ? '#fff' : NAVY,
+                              color: m.direction === 'inbound' ? '#1F2937' : '#fff',
+                              padding: '8px 12px',
+                              borderRadius: m.direction === 'inbound' ? '10px 10px 10px 2px' : '10px 10px 2px 10px',
+                              border: m.direction === 'inbound' ? '1px solid #E5E7EB' : 'none',
+                              fontSize: 13, lineHeight: 1.5, wordBreak: 'break-word',
+                            }}>
+                              {m.body}
+                              <div style={{
+                                fontSize: 10, marginTop: 4,
+                                color: m.direction === 'inbound' ? '#9CA3AF' : 'rgba(255,255,255,0.7)',
+                                textAlign: 'right',
+                              }}>
+                                {new Date(m.createdAt).toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                                {m.direction === 'outbound' && (
+                                  <span style={{ marginLeft: 6, color: m.status === 'failed' ? '#FCA5A5' : 'inherit' }}>
+                                    {STATUS_LABEL[m.status] || m.status}
+                                  </span>
+                                )}
+                              </div>
+                              {m.errorMessage && (
+                                <div style={{ fontSize: 10, color: '#FCA5A5', marginTop: 2 }}>{m.errorMessage}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+
+                      <div style={{ padding: '12px 18px', borderTop: '1px solid #E5E7EB', background: '#fff' }}>
+                        {!within24h && (
+                          <div style={{
+                            padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
+                            borderRadius: 6, fontSize: 11, color: '#9A3412', marginBottom: 8,
+                          }}>
+                            \u26A0 24u-venster mogelijk verstreken — WhatsApp kan vrije tekstberichten afwijzen. Stuur een template of wacht tot deze persoon iets stuurt.
+                          </div>
+                        )}
+                        {sendError && (
+                          <div style={{
+                            padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA',
+                            borderRadius: 6, fontSize: 11, color: '#DC2626', marginBottom: 8,
+                          }}>
+                            {sendError}
+                          </div>
+                        )}
+                        <form onSubmit={handleSend} style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            value={reply}
+                            onChange={e => setReply(e.target.value)}
+                            placeholder={within24h ? 'Typ een antwoord...' : 'Typ een antwoord (24u-venster mogelijk verlopen)...'}
+                            disabled={sending}
+                            style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
+                          />
+                          <button type="submit" disabled={sending || !reply.trim()}
+                            style={{ background: (sending || !reply.trim()) ? '#E5E7EB' : NAVY, color: (sending || !reply.trim()) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: (sending || !reply.trim()) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
+                            {sending ? '...' : 'Stuur'}
+                          </button>
+                        </form>
+                      </div>
+                    </>
+                  )}
+
+                  {threadView === 'notes' && (
+                    <>
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '18px', background: '#FFFBEB' }}>
+                        {notes.length === 0 && (
+                          <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, padding: 40 }}>Nog geen interne notities voor dit gesprek</div>
+                        )}
+                        {[...notes].reverse().map(n => (
+                          <div key={n.id} style={{
+                            marginBottom: 12, padding: '10px 14px',
+                            background: '#fff', border: '1px solid #FDE68A', borderRadius: 8,
+                            borderLeft: '3px solid #F59E0B',
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: '#92400E' }}>{n.authorName}</span>
+                              <span style={{ fontSize: 10, color: '#9CA3AF' }}>
+                                {new Date(n.createdAt).toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: 13, color: '#1F2937', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{n.body}</div>
+                          </div>
+                        ))}
+                        <div ref={notesEndRef} />
+                      </div>
+
+                      <div style={{ padding: '12px 18px', borderTop: '1px solid #FDE68A', background: '#FFFBEB' }}>
+                        <form onSubmit={handleAddNote} style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            value={newNote}
+                            onChange={e => setNewNote(e.target.value)}
+                            placeholder="Schrijf een interne notitie..."
+                            disabled={noteSaving}
+                            style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #FDE68A', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
+                          />
+                          <button type="submit" disabled={noteSaving || !newNote.trim()}
+                            style={{ background: (noteSaving || !newNote.trim()) ? '#E5E7EB' : '#F59E0B', color: (noteSaving || !newNote.trim()) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 14px', fontSize: 13, fontWeight: 600, cursor: (noteSaving || !newNote.trim()) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
+                            {noteSaving ? '...' : 'Notitie'}
+                          </button>
+                        </form>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ════════ GROEPEN VIEW ════════ */}
+        {mainView === 'groepen' && (
+          <>
+            {/* Linkerkolom: groepenlijst */}
+            <div style={{
+              width: 300, display: 'flex', flexDirection: 'column',
+              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
+            }}>
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>Groepen</div>
+                <button
+                  onClick={() => { setShowNewGroup(true); setNewGroupName(''); setNewGroupDesc(''); }}
+                  style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}
+                >
+                  + Nieuwe groep
+                </button>
+              </div>
+
+              {showNewGroup && (
+                <div style={{ padding: '10px 14px', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}>
+                  <form onSubmit={handleCreateGroup}>
                     <input
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      placeholder="Naam (verplicht)"
+                      value={newGroupName}
+                      onChange={e => setNewGroupName(e.target.value)}
+                      placeholder="Groepsnaam (bijv. Horeca Amsterdam)"
+                      autoFocus
                       required
-                      style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }}
+                      style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 6 }}
                     />
                     <input
-                      value={editCompany}
-                      onChange={e => setEditCompany(e.target.value)}
-                      placeholder="Bedrijf / context (optioneel)"
-                      style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }}
+                      value={newGroupDesc}
+                      onChange={e => setNewGroupDesc(e.target.value)}
+                      placeholder="Beschrijving (optioneel)"
+                      style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 8 }}
                     />
-                    <textarea
-                      value={editNotes}
-                      onChange={e => setEditNotes(e.target.value)}
-                      placeholder="Notities (optioneel)"
-                      rows={2}
-                      style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical' }}
-                    />
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button type="submit" disabled={editSaving || !editName.trim()}
-                        style={{ background: editSaving || !editName.trim() ? '#E5E7EB' : NAVY, color: editSaving || !editName.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
-                        {editSaving ? 'Opslaan...' : 'Opslaan'}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button type="submit" disabled={creatingGroup || !newGroupName.trim()}
+                        style={{ background: creatingGroup || !newGroupName.trim() ? '#E5E7EB' : NAVY, color: creatingGroup || !newGroupName.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                        {creatingGroup ? 'Aanmaken...' : 'Aanmaken'}
                       </button>
-                      <button type="button" onClick={() => setEditingContact(false)}
-                        style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: FONT }}>
+                      <button type="button" onClick={() => setShowNewGroup(false)}
+                        style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontFamily: FONT }}>
                         Annuleren
                       </button>
                     </div>
@@ -679,151 +1031,345 @@ export default function WhatsAppBeheer() {
                 </div>
               )}
 
-              {/* Berichten / Notities toggle */}
-              <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB' }}>
-                <button onClick={() => setThreadView('messages')}
-                  style={{ flex: 1, padding: '8px', fontSize: 12, fontWeight: 600, border: 'none', background: 'none', color: threadView === 'messages' ? NAVY : '#9CA3AF', borderBottom: threadView === 'messages' ? `2px solid ${NAVY}` : '2px solid transparent', cursor: 'pointer', fontFamily: FONT }}>
-                  Berichten
-                </button>
-                <button onClick={() => setThreadView('notes')}
-                  style={{ flex: 1, padding: '8px', fontSize: 12, fontWeight: 600, border: 'none', background: 'none', color: threadView === 'notes' ? '#F59E0B' : '#9CA3AF', borderBottom: threadView === 'notes' ? '2px solid #F59E0B' : '2px solid transparent', cursor: 'pointer', fontFamily: FONT }}>
-                  Interne notities {notes.length > 0 && <span style={{ fontSize: 10, background: '#FEF3C7', color: '#B45309', borderRadius: 10, padding: '0 5px', marginLeft: 4 }}>{notes.length}</span>}
-                </button>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {groups.length === 0 && !showNewGroup && (
+                  <div style={{ padding: 30, textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
+                    Nog geen groepen aangemaakt
+                  </div>
+                )}
+                {groups.map(g => {
+                  const selected = g.id === selectedGroupId;
+                  return (
+                    <div
+                      key={g.id}
+                      onClick={() => setSelectedGroupId(g.id)}
+                      style={{
+                        padding: '12px 14px',
+                        background: selected ? '#F0F4FA' : '#fff',
+                        borderLeft: selected ? `3px solid ${NAVY}` : '3px solid transparent',
+                        borderBottom: '1px solid #F3F4F6',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{g.name}</div>
+                      {g.description && (
+                        <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {g.description}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>
+                        {g.memberCount} {g.memberCount === 1 ? 'lid' : 'leden'}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Berichten view */}
-              {threadView === 'messages' && (
-                <>
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '18px', background: '#F8F9FB' }}>
-                    {messages.length === 0 && (
-                      <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, padding: 40 }}>
-                        Geen berichten in dit gesprek
-                      </div>
-                    )}
-                    {messages.map(m => (
-                      <div key={m.id} style={{
-                        display: 'flex',
-                        justifyContent: m.direction === 'inbound' ? 'flex-start' : 'flex-end',
-                        marginBottom: 10,
-                      }}>
-                        <div style={{
-                          maxWidth: '70%',
-                          background: m.direction === 'inbound' ? '#fff' : NAVY,
-                          color: m.direction === 'inbound' ? '#1F2937' : '#fff',
-                          padding: '8px 12px',
-                          borderRadius: m.direction === 'inbound' ? '10px 10px 10px 2px' : '10px 10px 2px 10px',
-                          border: m.direction === 'inbound' ? '1px solid #E5E7EB' : 'none',
-                          fontSize: 13, lineHeight: 1.5, wordBreak: 'break-word',
-                        }}>
-                          {m.body}
-                          <div style={{
-                            fontSize: 10, marginTop: 4,
-                            color: m.direction === 'inbound' ? '#9CA3AF' : 'rgba(255,255,255,0.7)',
-                            textAlign: 'right',
-                          }}>
-                            {new Date(m.createdAt).toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
-                            {m.direction === 'outbound' && (
-                              <span style={{
-                                marginLeft: 6,
-                                color: m.status === 'failed' ? '#FCA5A5' : 'inherit',
-                              }}>
-                                {STATUS_LABEL[m.status] || m.status}
-                              </span>
-                            )}
-                          </div>
-                          {m.errorMessage && (
-                            <div style={{ fontSize: 10, color: '#FCA5A5', marginTop: 2 }}>{m.errorMessage}</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
+              <div style={{ padding: '10px 14px', borderTop: '1px solid #E5E7EB', background: '#FAFBFC' }}>
+                <button
+                  onClick={openBulkHistory}
+                  style={{ width: '100%', background: 'none', border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px', fontSize: 11, color: '#6B7280', cursor: 'pointer', fontFamily: FONT }}
+                >
+                  Verzendgeschiedenis
+                </button>
+              </div>
+            </div>
 
-                  {/* Reply-form */}
-                  <div style={{ padding: '12px 18px', borderTop: '1px solid #E5E7EB', background: '#fff' }}>
-                    {!within24h && (
-                      <div style={{
-                        padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
-                        borderRadius: 6, fontSize: 11, color: '#9A3412', marginBottom: 8,
-                      }}>
-                        \u26A0 24u-venster mogelijk verstreken — WhatsApp kan vrije tekstberichten afwijzen.
-                        Stuur een template of wacht tot deze persoon iets stuurt.
-                      </div>
-                    )}
-                    {sendError && (
-                      <div style={{
-                        padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA',
-                        borderRadius: 6, fontSize: 11, color: '#DC2626', marginBottom: 8,
-                      }}>
-                        {sendError}
-                      </div>
-                    )}
-                    <form onSubmit={handleSend} style={{ display: 'flex', gap: 8 }}>
-                      <input
-                        value={reply}
-                        onChange={e => setReply(e.target.value)}
-                        placeholder={within24h ? 'Typ een antwoord...' : 'Typ een antwoord (24u-venster mogelijk verlopen)...'}
-                        disabled={sending}
-                        style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
-                      />
-                      <button type="submit" disabled={sending || !reply.trim()}
-                        style={{ background: (sending || !reply.trim()) ? '#E5E7EB' : NAVY, color: (sending || !reply.trim()) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: (sending || !reply.trim()) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
-                        {sending ? '...' : 'Stuur'}
-                      </button>
-                    </form>
-                  </div>
-                </>
-              )}
-
-              {/* Interne notities view */}
-              {threadView === 'notes' && (
+            {/* Rechterkolom: groepdetails */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
+              minWidth: 0,
+            }}>
+              {/* Bulk history overlay */}
+              {showBulkHistory && (
                 <>
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '18px', background: '#FFFBEB' }}>
-                    {notes.length === 0 && (
-                      <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, padding: 40 }}>
-                        Nog geen interne notities voor dit gesprek
-                      </div>
+                  <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>Verzendgeschiedenis</div>
+                    <button onClick={() => setShowBulkHistory(false)}
+                      style={{ background: 'none', border: 'none', fontSize: 16, color: '#6B7280', cursor: 'pointer' }}>\u2715</button>
+                  </div>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '18px' }}>
+                    {bulkHistory.length === 0 && (
+                      <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, padding: 40 }}>Nog geen bulkverzendingen gedaan</div>
                     )}
-                    {[...notes].reverse().map(n => (
-                      <div key={n.id} style={{
-                        marginBottom: 12, padding: '10px 14px',
-                        background: '#fff', border: '1px solid #FDE68A', borderRadius: 8,
-                        borderLeft: '3px solid #F59E0B',
+                    {bulkHistory.map(b => (
+                      <div key={b.id} style={{
+                        padding: '12px 16px', marginBottom: 10, background: '#F9FAFB',
+                        border: '1px solid #E5E7EB', borderRadius: 8,
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: '#92400E' }}>{n.authorName}</span>
-                          <span style={{ fontSize: 10, color: '#9CA3AF' }}>
-                            {new Date(n.createdAt).toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{b.groupName}</span>
+                          <span style={{ fontSize: 10, color: '#94A3B8' }}>
+                            {new Date(b.createdAt).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <div style={{ fontSize: 13, color: '#1F2937', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{n.body}</div>
+                        <div style={{ fontSize: 12, color: '#374151', marginBottom: 6, whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>
+                          {b.messageBody.length > 120 ? b.messageBody.slice(0, 120) + '...' : b.messageBody}
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, fontSize: 11 }}>
+                          <span style={{ color: '#059669' }}>{b.sentCount} verzonden</span>
+                          {b.failedCount > 0 && <span style={{ color: '#DC2626' }}>{b.failedCount} mislukt</span>}
+                          <span style={{ color: '#94A3B8' }}>van {b.totalRecipients} ontvangers</span>
+                          {b.sentByName && <span style={{ color: '#6B7280' }}>door {b.sentByName}</span>}
+                        </div>
                       </div>
                     ))}
-                    <div ref={notesEndRef} />
-                  </div>
-
-                  {/* Notitie toevoegen */}
-                  <div style={{ padding: '12px 18px', borderTop: '1px solid #FDE68A', background: '#FFFBEB' }}>
-                    <form onSubmit={handleAddNote} style={{ display: 'flex', gap: 8 }}>
-                      <input
-                        value={newNote}
-                        onChange={e => setNewNote(e.target.value)}
-                        placeholder="Schrijf een interne notitie..."
-                        disabled={noteSaving}
-                        style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #FDE68A', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
-                      />
-                      <button type="submit" disabled={noteSaving || !newNote.trim()}
-                        style={{ background: (noteSaving || !newNote.trim()) ? '#E5E7EB' : '#F59E0B', color: (noteSaving || !newNote.trim()) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 14px', fontSize: 13, fontWeight: 600, cursor: (noteSaving || !newNote.trim()) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
-                        {noteSaving ? '...' : 'Notitie'}
-                      </button>
-                    </form>
                   </div>
                 </>
               )}
-            </>
-          )}
-        </div>
+
+              {!showBulkHistory && !selectedGroup && (
+                <div style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#9CA3AF', fontSize: 13,
+                }}>
+                  Selecteer een groep links of maak een nieuwe aan
+                </div>
+              )}
+
+              {!showBulkHistory && selectedGroup && (
+                <>
+                  {/* Groep header */}
+                  <div style={{ padding: '14px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
+                    {editingGroup ? (
+                      <form onSubmit={handleUpdateGroup} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input value={editGroupName} onChange={e => setEditGroupName(e.target.value)} placeholder="Groepsnaam" required
+                          style={{ flex: 1, padding: '6px 10px', fontSize: 13, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        <input value={editGroupDesc} onChange={e => setEditGroupDesc(e.target.value)} placeholder="Beschrijving"
+                          style={{ flex: 1, padding: '6px 10px', fontSize: 13, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        <button type="submit" style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>Opslaan</button>
+                        <button type="button" onClick={() => setEditingGroup(false)} style={{ background: 'none', border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px 12px', fontSize: 11, cursor: 'pointer', fontFamily: FONT, color: '#6B7280' }}>Annuleren</button>
+                      </form>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: NAVY }}>{selectedGroup.name}</div>
+                          {selectedGroup.description && (
+                            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{selectedGroup.description}</div>
+                          )}
+                          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>
+                            {groupMembers.length} {groupMembers.length === 1 ? 'lid' : 'leden'}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            onClick={() => { setEditingGroup(true); setEditGroupName(selectedGroup.name); setEditGroupDesc(selectedGroup.description || ''); }}
+                            style={{ background: 'none', border: '1px solid #D1D5DB', borderRadius: 6, padding: '5px 10px', fontSize: 11, color: '#6B7280', cursor: 'pointer', fontFamily: FONT }}
+                          >
+                            Bewerken
+                          </button>
+                          <button
+                            onClick={handleDeleteGroup}
+                            style={{ background: 'none', border: '1px solid #FECACA', borderRadius: 6, padding: '5px 10px', fontSize: 11, color: '#DC2626', cursor: 'pointer', fontFamily: FONT }}
+                          >
+                            Verwijderen
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Twee secties: leden + bulk bericht */}
+                  <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                    {/* Leden sectie */}
+                    <div style={{ borderBottom: '1px solid #E5E7EB' }}>
+                      <div style={{ padding: '10px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F9FAFB' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>Leden</div>
+                        <button onClick={openAddMembers}
+                          style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                          + Leden toevoegen
+                        </button>
+                      </div>
+
+                      {/* Leden toevoegen overlay */}
+                      {showAddMembers && (
+                        <div style={{ padding: '10px 18px', background: '#F0F4FA', borderBottom: '1px solid #E5E7EB' }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8 }}>Contacten toevoegen aan groep</div>
+                          <input
+                            value={contactSearch}
+                            onChange={e => setContactSearch(e.target.value)}
+                            placeholder="Zoek op naam of nummer..."
+                            style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 8 }}
+                          />
+                          <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
+                            {filteredAvailable.length === 0 && (
+                              <div style={{ padding: 16, textAlign: 'center', color: '#9CA3AF', fontSize: 11 }}>
+                                {contactSearch ? 'Geen contacten gevonden' : 'Alle contacten zijn al lid van deze groep'}
+                              </div>
+                            )}
+                            {filteredAvailable.map(c => {
+                              const checked = selectedContacts.has(c.phoneNumber);
+                              return (
+                                <div
+                                  key={c.phoneNumber}
+                                  onClick={() => toggleContactSelection(c.phoneNumber)}
+                                  style={{
+                                    padding: '8px 12px', borderBottom: '1px solid #F3F4F6',
+                                    display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                                    background: checked ? '#EEF2FF' : '#fff',
+                                  }}
+                                >
+                                  <div style={{
+                                    width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`,
+                                    background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                  }}>
+                                    {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>\u2713</span>}
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: c.displayName ? '#1F2937' : '#9CA3AF' }}>
+                                      {c.displayName || 'Onbekend'}
+                                    </div>
+                                    <div style={{ fontSize: 10, color: '#6B7280' }}>
+                                      +{c.phoneNumber}
+                                      {c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
+                                      <span style={{ marginLeft: 4, fontSize: 9, color: '#94A3B8' }}>
+                                        {c.matchCategory === 'candidate' ? 'Medewerker' : c.matchCategory === 'prospect' ? 'Klant' : 'Kandidaat'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                            <span style={{ fontSize: 11, color: '#6B7280' }}>{selectedContacts.size} geselecteerd</span>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button onClick={() => setShowAddMembers(false)}
+                                style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontFamily: FONT }}>
+                                Annuleren
+                              </button>
+                              <button onClick={handleAddSelectedMembers} disabled={addingMembers || selectedContacts.size === 0}
+                                style={{ background: addingMembers || selectedContacts.size === 0 ? '#E5E7EB' : NAVY, color: addingMembers || selectedContacts.size === 0 ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                                {addingMembers ? 'Toevoegen...' : `Toevoegen (${selectedContacts.size})`}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Ledenlijst */}
+                      <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                        {groupMembers.length === 0 && (
+                          <div style={{ padding: 20, textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
+                            Nog geen leden — klik op "+ Leden toevoegen" om te beginnen
+                          </div>
+                        )}
+                        {groupMembers.map(m => (
+                          <div key={m.id} style={{
+                            padding: '8px 18px', borderBottom: '1px solid #F3F4F6',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          }}>
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: m.displayName ? '#1F2937' : '#9CA3AF' }}>
+                                {m.displayName || 'Onbekend'}
+                              </div>
+                              <div style={{ fontSize: 10, color: '#6B7280' }}>+{m.phoneNumber}</div>
+                            </div>
+                            <button onClick={() => handleRemoveMember(m.phoneNumber)}
+                              style={{ background: 'none', border: 'none', fontSize: 12, color: '#DC2626', cursor: 'pointer', padding: '2px 6px' }}
+                              title="Lid verwijderen">
+                              \u2715
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Bulk bericht sectie */}
+                    <div style={{ padding: '16px 18px', flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8 }}>Bericht sturen naar hele groep</div>
+                      <div style={{
+                        padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
+                        borderRadius: 6, fontSize: 11, color: '#9A3412', marginBottom: 10,
+                      }}>
+                        Elk lid ontvangt dit als individueel 1-op-1 bericht. Let op: berichten buiten het 24u-venster kunnen door WhatsApp geweigerd worden.
+                      </div>
+
+                      <textarea
+                        value={bulkText}
+                        onChange={e => setBulkText(e.target.value)}
+                        placeholder="Typ hier je bericht voor de hele groep..."
+                        rows={4}
+                        disabled={bulkSending}
+                        style={{
+                          width: '100%', padding: '10px 14px', fontSize: 13, border: '1px solid #E5E7EB',
+                          borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+
+                      {!confirmBulkSend ? (
+                        <button
+                          onClick={() => setConfirmBulkSend(true)}
+                          disabled={!bulkText.trim() || groupMembers.length === 0 || bulkSending}
+                          style={{
+                            marginTop: 8, width: '100%',
+                            background: (!bulkText.trim() || groupMembers.length === 0 || bulkSending) ? '#E5E7EB' : NAVY,
+                            color: (!bulkText.trim() || groupMembers.length === 0 || bulkSending) ? '#9CA3AF' : '#fff',
+                            border: 'none', borderRadius: 6, padding: '10px', fontSize: 13, fontWeight: 600,
+                            cursor: (!bulkText.trim() || groupMembers.length === 0) ? 'not-allowed' : 'pointer',
+                            fontFamily: FONT,
+                          }}
+                        >
+                          Stuur naar {groupMembers.length} {groupMembers.length === 1 ? 'lid' : 'leden'}
+                        </button>
+                      ) : (
+                        <div style={{
+                          marginTop: 8, padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA',
+                          borderRadius: 8,
+                        }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: '#991B1B', marginBottom: 6 }}>
+                            Bevestig verzending
+                          </div>
+                          <div style={{ fontSize: 11, color: '#7F1D1D', marginBottom: 10 }}>
+                            Je staat op het punt om dit bericht naar <strong>{groupMembers.length}</strong> personen te sturen. Dit kan niet ongedaan gemaakt worden.
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={handleBulkSend} disabled={bulkSending}
+                              style={{ background: bulkSending ? '#E5E7EB' : '#DC2626', color: bulkSending ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: bulkSending ? 'wait' : 'pointer', fontFamily: FONT }}>
+                              {bulkSending ? 'Bezig met verzenden...' : `Ja, verstuur naar ${groupMembers.length} personen`}
+                            </button>
+                            <button onClick={() => setConfirmBulkSend(false)} disabled={bulkSending}
+                              style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '8px 16px', fontSize: 12, cursor: 'pointer', fontFamily: FONT }}>
+                              Annuleren
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Resultaat van bulk verzending */}
+                      {bulkResult && (
+                        <div style={{
+                          marginTop: 12, padding: '12px 16px', borderRadius: 8,
+                          background: bulkResult.failed === 0 ? '#F0FDF4' : '#FFF7ED',
+                          border: `1px solid ${bulkResult.failed === 0 ? '#BBF7D0' : '#FED7AA'}`,
+                        }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: bulkResult.failed === 0 ? '#059669' : '#9A3412', marginBottom: 6 }}>
+                            {bulkResult.failed === 0
+                              ? `Alle ${bulkResult.sent} berichten verzonden`
+                              : `${bulkResult.sent} verzonden, ${bulkResult.failed} mislukt`}
+                          </div>
+                          {bulkResult.results.filter(r => r.status === 'failed').length > 0 && (
+                            <div style={{ fontSize: 11, color: '#9A3412' }}>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>Mislukte verzendingen:</div>
+                              {bulkResult.results.filter(r => r.status === 'failed').map((r, i) => (
+                                <div key={i} style={{ marginBottom: 2 }}>
+                                  {r.displayName || r.phone}: {r.error || 'Onbekende fout'}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

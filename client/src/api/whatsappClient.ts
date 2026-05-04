@@ -121,6 +121,81 @@ export const registreerWebhook = (url?: string) =>
 export const updateContactInfo = (phoneNumber: string, data: { displayName: string; contactCompany?: string; contactNotes?: string }) =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/contact-info`, data);
 
+export interface Group {
+  id: number;
+  name: string;
+  description: string | null;
+  memberCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GroupMember {
+  id: number;
+  groupId: number;
+  phoneNumber: string;
+  displayName: string | null;
+  addedAt: string;
+}
+
+export interface AvailableContact {
+  phoneNumber: string;
+  displayName: string | null;
+  matchCategory: 'candidate' | 'prospect' | 'unmatched';
+  contactCompany: string | null;
+}
+
+export interface BulkSendResult {
+  bulkSendId: number;
+  total: number;
+  sent: number;
+  failed: number;
+  results: Array<{ phone: string; displayName: string | null; status: 'sent' | 'failed'; error?: string }>;
+}
+
+export interface BulkSendRecord {
+  id: number;
+  groupId: number | null;
+  groupName: string;
+  messageBody: string;
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  sentByName: string | null;
+  createdAt: string;
+}
+
+async function del<T>(path: string): Promise<T> {
+  const r = await fetch(`${BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers,
+    credentials: 'include',
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((data as any)?.error || `${path}: ${r.status}`);
+  return data as T;
+}
+
+export const haalGroepen = () => get<Group[]>('/groups');
+export const maakGroep = (name: string, description?: string) =>
+  post<Group>('/groups', { name, description });
+export const updateGroep = (id: number, name: string, description?: string) =>
+  put<{ success: boolean }>(`/groups/${id}`, { name, description });
+export const verwijderGroep = (id: number) =>
+  del<{ success: boolean }>(`/groups/${id}`);
+export const haalGroepLeden = (id: number) =>
+  get<GroupMember[]>(`/groups/${id}/members`);
+export const voegLedenToe = (id: number, members: Array<{ phoneNumber: string; displayName?: string }>) =>
+  post<{ added: number; skipped: number }>(`/groups/${id}/members`, { members });
+export const verwijderLid = (groupId: number, phone: string) =>
+  del<{ success: boolean }>(`/groups/${groupId}/members/${encodeURIComponent(phone)}`);
+export const haalBeschikbareContacten = (groupId: number) =>
+  get<AvailableContact[]>(`/groups/${groupId}/available-contacts`);
+export const stuurBulkBericht = (groupId: number, tekst: string) =>
+  post<BulkSendResult>(`/groups/${groupId}/send`, { tekst });
+export const haalBulkVerzendingen = () =>
+  get<BulkSendRecord[]>('/bulk-sends');
+
 export const haalTeamMembers = () => get<TeamMember[]>('/team-members');
 
 export const wijsGesprekToe = (phoneNumber: string, assignedToId: number | null, assignedToName: string | null) =>
