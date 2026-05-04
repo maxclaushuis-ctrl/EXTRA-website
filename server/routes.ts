@@ -10224,6 +10224,31 @@ ${posts.map(p => `  <url>
     res.json(stats);
   });
 
+  app.put('/api/whatsapp/conversations/:phoneNumber/contact-info', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+
+    const conv = await db.select().from(whatsappConversations).where(drizzleEq(whatsappConversations.phoneNumber, phone)).limit(1);
+    if (!conv.length) return res.status(404).json({ error: 'Gesprek niet gevonden' });
+    if (conv[0].matchCategory !== 'unmatched') {
+      return res.status(400).json({ error: 'Bewerk contactinfo via kandidaten- of prospects-beheer' });
+    }
+
+    const { displayName, contactCompany, contactNotes } = req.body;
+    if (!displayName || typeof displayName !== 'string' || !displayName.trim()) {
+      return res.status(400).json({ error: 'displayName is verplicht' });
+    }
+
+    await db.update(whatsappConversations).set({
+      displayName: displayName.trim(),
+      contactCompany: contactCompany?.trim() || null,
+      contactNotes: contactNotes?.trim() || null,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+
+    res.json({ success: true });
+  });
+
   // Voer een eenmalige startup-warning uit als secrets ontbreken
   if (!WA_360_KEY) console.warn('[WA] WHATSAPP_360_API_KEY niet ingesteld — uitgaande berichten zullen falen');
   if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');

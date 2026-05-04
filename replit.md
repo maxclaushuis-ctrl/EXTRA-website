@@ -53,7 +53,8 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
 -   **Status-events**: `statuses[]` van 360dialog (sent/delivered/read/failed) updaten het bericht in DB.
 -   **Outbound**: `POST /api/whatsapp/stuur` — slaat op als queued → sent/failed, koppelt aan candidate/prospect.
 -   **Endpoints**: `/conversations`, `/conversations/:phone/messages`, `/conversations/:phone/mark-read`, `/stats`.
--   **Frontend**: Tweekolommen UI in admin-dashboard tab "WhatsApp" met tabs kandidaat/prospect/onbekend, zoek, thread-view, 24u-venster check, status-indicators.
+-   **Contact-info**: `PUT /api/whatsapp/conversations/:phone/contact-info` — displayName/contactCompany/contactNotes voor unmatched contacten. Schema kolommen: `contact_company`, `contact_notes`.
+-   **Frontend**: Tweekolommen UI in admin-dashboard tab "WhatsApp" met tabs kandidaat/prospect/onbekend, zoek, thread-view, 24u-venster check, status-indicators. Webhook-instellingen achter ⚙-icoon (niet standaard zichtbaar). Unmatched-contacten: inline bewerk-formulier voor naam/bedrijf/notities via ✏️-knop in thread header.
 -   **Phone-normalisatie**: `server/whatsapp/phone.ts` (NL 06→+31, strips whitespace/dashes, E.164 zonder +).
 -   **Migratie**: `npx tsx server/whatsapp/migrate-phones.ts` (dry-run default, `--apply` voor schrijven). Backup in `phone_original` / `telefoon_original` kolommen.
 -   **Env-vars**: `WHATSAPP_360_API_KEY`, `WHATSAPP_WEBHOOK_SECRET`.

@@ -1364,15 +1364,17 @@ export const whatsappMessages = pgTable("whatsapp_messages", {
 
 export const whatsappConversations = pgTable("whatsapp_conversations", {
   id: serial("id").primaryKey(),
-  phoneNumber: text("phone_number").notNull(), // E.164 zonder +
+  phoneNumber: text("phone_number").notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: 'set null' }),
   prospectContactId: integer("prospect_contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
   matchCategory: whatsappMatchCategoryEnum("match_category").notNull().default('unmatched'),
   displayName: text("display_name"),
+  contactCompany: text("contact_company"),
+  contactNotes: text("contact_notes"),
   lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
   lastMessagePreview: text("last_message_preview"),
   unreadCount: integer("unread_count").default(0).notNull(),
-  lastInboundAt: timestamp("last_inbound_at"), // gebruikt voor 24u-venster check
+  lastInboundAt: timestamp("last_inbound_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

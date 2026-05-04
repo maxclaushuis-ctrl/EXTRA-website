@@ -1,0 +1,114 @@
+Twee UI-aanpassingen voor de WhatsApp-pagina (WhatsAppBeheer.tsx). 
+Geen architectuur-wijzigingen, geen migraties, geen database-schema 
+veranderingen voor punt 1. Focus op gebruiksvriendelijkheid.
+
+=================================================================
+AANPASSING 1: WEBHOOK-BAR UIT DE NORMALE VIEW
+=================================================================
+
+De webhook-status en de "Webhook registreren" knop bovenaan de 
+pagina mogen weg uit de hoofdview. Reden: dit is een eenmalige 
+setup-actie, geen dagelijkse beheerfunctie. Hij staat alleen maar 
+in de weg.
+
+Concreet:
+- Verwijder de webhook-balk uit de standaard layout van de 
+  WhatsApp-pagina
+- Zet de functionaliteit (status zien + registreren) achter een 
+  klein tandwiel/instellingen-icoon rechtsboven op de pagina, of 
+  in een sub-pagina /admin/whatsapp/instellingen
+- De backend-endpoints voor webhook-registratie blijven gewoon 
+  bestaan en bereikbaar - alleen de UI verschuift
+- Geen wijzigingen aan de webhook-functionaliteit zelf
+
+=================================================================
+AANPASSING 2: CONTACTBEHEER - NAAM TONEN EN BEWERKEN
+=================================================================
+
+Probleem: in de gesprekkenlijst en thread-view staat nu vaak alleen 
+het telefoonnummer (+31653813448), geen naam. Voor onbekende 
+nummers logisch, maar:
+- Voor bekende kandidaten/prospects moet de naam uit de DB komen
+- Voor onbekende nummers moet je handmatig een naam kunnen toevoegen 
+  zodat het bij volgende berichten herkenbaar is
+
+GEDRAG PER CATEGORIE:
+
+a) Categorie "Kandidaten":
+   - Toon de naam uit de candidates-tabel (firstName + lastName)
+   - Onder de naam: het telefoonnummer in lichtere kleur
+   - Naam is NIET bewerkbaar in deze UI (hoort thuis in 
+     kandidatenbeheer); klik op naam → link naar kandidaatprofiel
+   
+b) Categorie "Prospects":
+   - Toon de naam uit prospect_contacts (voornaam + achternaam, 
+     of bedrijf als persoon ontbreekt)
+   - Idem: niet bewerkbaar hier, klik → link naar prospect-profiel
+   
+c) Categorie "Onbekend":
+   - Standaard: tonen als "Onbekend - +31..." 
+   - Voeg een knop "Naam toevoegen" toe in de thread-header
+   - Klik op die knop opent een klein formulier:
+     * Voornaam (verplicht)
+     * Achternaam (optioneel)
+     * Bedrijf/context (optioneel, vrij tekstveld - bijv. 
+       "Hotel X - banqueting" of "Eigen contact Max")
+     * Bewerk-knop / Opslaan-knop
+   - Opslaan: deze naam wordt opgeslagen op het 
+     whatsapp_conversations record (display_name veld bestaat al)
+   - Vanaf dat moment toont de gesprekkenlijst de gegeven naam
+   - Naam moet ook achteraf bewerkbaar zijn (potlood-icoon naast 
+     de naam in de header)
+
+DATABASEVELDEN VOOR ONBEKENDE CONTACTEN:
+Op whatsapp_conversations bestaat al display_name. Voeg toe:
+- display_name (al aanwezig - gebruiken voor onbekend)
+- contact_company text nullable (voor bedrijf/context bij onbekend)
+- contact_notes text nullable (voor eventuele losse notities)
+
+Migratie nodig om deze kolommen toe te voegen. Geen wijziging aan 
+candidates/prospect_contacts tabellen - die blijven de bron voor 
+gematchte contacten.
+
+UI-DETAILS GESPREKKENLIJST (linker kolom):
+- Regel 1: Naam (vetgedrukt) of "Onbekend"
+- Regel 2: Telefoonnummer (klein, grijs)
+- Regel 3: Eerste 60 tekens van laatste bericht (grijs)
+- Rechts: timestamp laatste bericht
+- Bij onbekend zonder gegeven naam: "Onbekend" in plaats van naam
+
+UI-DETAILS THREAD-HEADER (rechts boven):
+- Naam (groot)
+- Onder de naam: 
+  * Bij kandidaat: "+31... · Kandidaat · #ID" (zoals nu)
+  * Bij prospect: "+31... · Prospect · Bedrijfsnaam"
+  * Bij onbekend met naam: "+31... · Onbekend · Bedrijf/context"
+  * Bij onbekend zonder naam: "+31... · Onbekend [+ Naam toevoegen 
+    knop]"
+- Potlood-icoon naast naam (alleen bij onbekend) → opent edit form
+- Bij gematchte contacten: klik naam → link naar profielpagina 
+  (kandidaat of prospect)
+
+NIEUWE ENDPOINTS:
+- PUT /api/whatsapp/conversations/:phoneNumber/contact-info
+  Body: { displayName, contactCompany?, contactNotes? }
+  Auth: adminMiddleware
+  Werkt alleen voor conversations met match_category='unmatched'.
+  Voor matched conversations: geef 400 terug met melding 
+  "Bewerk contactinfo via kandidaten- of prospects-beheer"
+
+WAT ER NU OOK NIET HOEFT:
+- Geen volledige contacten-pagina (komt later als losse module)
+- Geen import/export
+- Geen tags
+- Geen automatische herkenning ("dit nummer lijkt op andere 
+  contact X")
+
+WERKWIJZE:
+- Stap 1: Webhook-bar verplaatsen naar instellingen (klein, snel)
+- Stap 2: Database-migratie voor contact_company en contact_notes
+- Stap 3: Endpoint toevoegen voor bewerken
+- Stap 4: UI-aanpassingen in de gesprekkenlijst en thread-header
+- Stap 5: Edit-form voor onbekende contacten
+- Test handmatig: stuur bericht vanaf onbekend nummer, voeg naam 
+  toe, refresh, check of naam blijft staan

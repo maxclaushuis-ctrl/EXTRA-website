@@ -7,6 +7,7 @@ import {
   haalStats,
   haalWebhookStatus,
   registreerWebhook,
+  updateContactInfo,
   type Conversation,
   type Message,
   type Stats,
@@ -51,12 +52,17 @@ export default function WhatsAppBeheer() {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [webhookStatus, setWebhookStatus] = useState<WebhookStatus | null>(null);
   const [webhookBusy, setWebhookBusy] = useState(false);
   const [webhookMsg, setWebhookMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const [editingContact, setEditingContact] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editCompany, setEditCompany] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Periodieke refresh van gesprekkenlijst + stats
   useEffect(() => {
     let stop = false;
     const tick = async () => {
@@ -66,19 +72,15 @@ export default function WhatsAppBeheer() {
           setConversations(c);
           setStats(s);
         }
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
     };
     tick();
     const id = setInterval(tick, 5000);
     return () => { stop = true; clearInterval(id); };
   }, [tab]);
 
-  // Webhook-status eenmalig laden
   useEffect(() => { haalWebhookStatus().then(setWebhookStatus).catch(() => {}); }, []);
 
-  // Berichten laden bij selectie + periodiek refreshen
   useEffect(() => {
     if (!selectedPhone) { setMessages([]); return; }
     let stop = false;
@@ -89,13 +91,11 @@ export default function WhatsAppBeheer() {
       } catch { /* ignore */ }
     };
     tick();
-    // Markeer gesprek als gelezen
     markeerGelezen(selectedPhone).catch(() => {});
     const id = setInterval(tick, 4000);
     return () => { stop = true; clearInterval(id); };
   }, [selectedPhone]);
 
-  // Auto-scroll naar laatste bericht
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
@@ -110,7 +110,6 @@ export default function WhatsAppBeheer() {
 
   const selectedConv = conversations.find(c => c.phoneNumber === selectedPhone);
 
-  // 24u-venster check: laatste inkomend bericht binnen 24u?
   const within24h = useMemo(() => {
     if (!selectedConv?.lastInboundAt) return false;
     const last = new Date(selectedConv.lastInboundAt).getTime();
@@ -150,46 +149,113 @@ export default function WhatsAppBeheer() {
     }
   }
 
+  function openEditContact() {
+    if (!selectedConv) return;
+    setEditName(selectedConv.displayName || '');
+    setEditCompany(selectedConv.contactCompany || '');
+    setEditNotes(selectedConv.contactNotes || '');
+    setEditingContact(true);
+  }
+
+  async function handleSaveContact(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedPhone || !editName.trim()) return;
+    setEditSaving(true);
+    try {
+      await updateContactInfo(selectedPhone, {
+        displayName: editName.trim(),
+        contactCompany: editCompany.trim() || undefined,
+        contactNotes: editNotes.trim() || undefined,
+      });
+      setEditingContact(false);
+      const c = await haalGesprekken(tab);
+      setConversations(c);
+    } catch { /* ignore */ }
+    setEditSaving(false);
+  }
+
+  function convDisplayName(c: Conversation): string {
+    if (c.matchCategory === 'candidate' && c.displayName) return c.displayName;
+    if (c.matchCategory === 'prospect' && c.displayName) return c.displayName;
+    if (c.matchCategory === 'unmatched' && c.displayName) return c.displayName;
+    return 'Onbekend';
+  }
+
+  function threadSubline(c: Conversation): string {
+    const phone = `+${c.phoneNumber}`;
+    if (c.matchCategory === 'candidate') {
+      return `${phone} · Kandidaat${c.candidateId ? ` · #${c.candidateId}` : ''}`;
+    }
+    if (c.matchCategory === 'prospect') {
+      return `${phone} · Prospect${c.contactCompany ? ` · ${c.contactCompany}` : (c.prospectContactId ? ` · #${c.prospectContactId}` : '')}`;
+    }
+    if (c.displayName) {
+      return `${phone} · Onbekend${c.contactCompany ? ` · ${c.contactCompany}` : ''}`;
+    }
+    return `${phone} · Onbekend`;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', minHeight: 500, fontFamily: FONT }}>
 
-      {/* Webhook status-bar */}
-      <div style={{
-        padding: '10px 16px', background: '#fff', border: '1px solid #E5E7EB',
-        borderRadius: 10, marginBottom: 12,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-      }}>
-        <div style={{ fontSize: 12, color: '#374151', flex: 1 }}>
-          <strong style={{ color: NAVY }}>Webhook:</strong>{' '}
-          {webhookStatus?.configured && webhookStatus.url
-            ? <span style={{ color: '#059669', fontFamily: 'monospace' }}>{webhookStatus.url}</span>
-            : <span style={{ color: '#DC2626' }}>niet geregistreerd bij 360dialog</span>}
-          {!webhookStatus?.secretSet && (
-            <span style={{ color: '#DC2626', marginLeft: 8 }}>· WHATSAPP_WEBHOOK_SECRET ontbreekt</span>
-          )}
+      {/* Titel + instellingen-icoon */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: NAVY }}>WhatsApp</h2>
+          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>Beheer 3 WhatsApp nummers — Horeca, Logistiek en Housekeeping</div>
         </div>
         <button
-          onClick={handleRegisterWebhook}
-          disabled={webhookBusy || !webhookStatus?.secretSet}
+          onClick={() => setShowSettings(!showSettings)}
+          title="Webhook-instellingen"
           style={{
-            background: webhookBusy || !webhookStatus?.secretSet ? '#E5E7EB' : NAVY,
-            color: webhookBusy || !webhookStatus?.secretSet ? '#9CA3AF' : '#fff',
-            border: 'none', borderRadius: 6, padding: '6px 12px',
-            fontSize: 12, fontWeight: 600, cursor: webhookBusy ? 'wait' : 'pointer',
+            background: showSettings ? '#F0F4FA' : 'transparent',
+            border: '1px solid #E5E7EB', borderRadius: 8,
+            padding: '6px 10px', cursor: 'pointer', fontSize: 16, color: '#6B7280',
           }}
         >
-          {webhookBusy ? 'Bezig...' : 'Webhook registreren'}
+          ⚙
         </button>
       </div>
-      {webhookMsg && (
+
+      {/* Webhook-instellingen (opklapbaar) */}
+      {showSettings && (
         <div style={{
-          marginTop: -4, marginBottom: 8, padding: '8px 12px', borderRadius: 6,
-          fontSize: 12,
-          background: webhookMsg.kind === 'ok' ? '#F0FDF4' : '#FEF2F2',
-          color: webhookMsg.kind === 'ok' ? '#059669' : '#DC2626',
-          border: `1px solid ${webhookMsg.kind === 'ok' ? '#BBF7D0' : '#FECACA'}`,
+          padding: '12px 16px', background: '#FAFBFC', border: '1px solid #E5E7EB',
+          borderRadius: 10, marginBottom: 12, fontSize: 12,
         }}>
-          {webhookMsg.text}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ color: '#374151', flex: 1 }}>
+              <strong style={{ color: NAVY }}>Webhook:</strong>{' '}
+              {webhookStatus?.configured && webhookStatus.url
+                ? <span style={{ color: '#059669', fontFamily: 'monospace', wordBreak: 'break-all' }}>{webhookStatus.url}</span>
+                : <span style={{ color: '#DC2626' }}>niet geregistreerd bij 360dialog</span>}
+              {!webhookStatus?.secretSet && (
+                <span style={{ color: '#DC2626', marginLeft: 8 }}>· WHATSAPP_WEBHOOK_SECRET ontbreekt</span>
+              )}
+            </div>
+            <button
+              onClick={handleRegisterWebhook}
+              disabled={webhookBusy || !webhookStatus?.secretSet}
+              style={{
+                background: webhookBusy || !webhookStatus?.secretSet ? '#E5E7EB' : NAVY,
+                color: webhookBusy || !webhookStatus?.secretSet ? '#9CA3AF' : '#fff',
+                border: 'none', borderRadius: 6, padding: '6px 12px',
+                fontSize: 12, fontWeight: 600, cursor: webhookBusy ? 'wait' : 'pointer', flexShrink: 0,
+              }}
+            >
+              {webhookBusy ? 'Bezig...' : 'Webhook registreren'}
+            </button>
+          </div>
+          {webhookMsg && (
+            <div style={{
+              marginTop: 8, padding: '6px 10px', borderRadius: 6, fontSize: 11,
+              background: webhookMsg.kind === 'ok' ? '#F0FDF4' : '#FEF2F2',
+              color: webhookMsg.kind === 'ok' ? '#059669' : '#DC2626',
+              border: `1px solid ${webhookMsg.kind === 'ok' ? '#BBF7D0' : '#FECACA'}`,
+            }}>
+              {webhookMsg.text}
+            </div>
+          )}
         </div>
       )}
 
@@ -254,6 +320,7 @@ export default function WhatsAppBeheer() {
             {filteredConversations.map(c => {
               const selected = c.phoneNumber === selectedPhone;
               const unread = c.unreadCount > 0;
+              const name = convDisplayName(c);
               return (
                 <div
                   key={c.id}
@@ -269,24 +336,24 @@ export default function WhatsAppBeheer() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <div style={{
                       fontSize: 13, fontWeight: unread ? 700 : 500,
-                      color: NAVY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
-                      {c.displayName || `+${c.phoneNumber}`}
+                      {name}
                     </div>
                     <div style={{ fontSize: 10, color: '#9CA3AF', flexShrink: 0, marginLeft: 6 }}>
                       {timeAgo(c.lastMessageAt)}
                     </div>
                   </div>
-                  {c.displayName && (
-                    <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>+{c.phoneNumber}</div>
-                  )}
+                  <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>+{c.phoneNumber}</div>
                   <div style={{
                     fontSize: 12, color: unread ? '#1F2937' : '#6B7280',
                     fontWeight: unread ? 600 : 400,
                     marginTop: 4,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    maxWidth: 280,
                   }}>
-                    {c.lastMessagePreview || '—'}
+                    {(c.lastMessagePreview || '—').slice(0, 60)}
                   </div>
                   {unread && (
                     <div style={{
@@ -320,15 +387,108 @@ export default function WhatsAppBeheer() {
             <>
               {/* Thread header */}
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>
-                  {selectedConv.displayName || `+${selectedConv.phoneNumber}`}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>
+                    {selectedConv.matchCategory === 'candidate' && selectedConv.candidateId ? (
+                      <a href={`/admin/kandidaten/${selectedConv.candidateId}`} style={{ color: NAVY, textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                        onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                      >
+                        {convDisplayName(selectedConv)}
+                      </a>
+                    ) : selectedConv.matchCategory === 'prospect' && selectedConv.prospectContactId ? (
+                      <a href={`/admin/prospects`} style={{ color: NAVY, textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                        onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                      >
+                        {convDisplayName(selectedConv)}
+                      </a>
+                    ) : (
+                      convDisplayName(selectedConv)
+                    )}
+                  </div>
+                  {selectedConv.matchCategory === 'unmatched' && (
+                    <button
+                      onClick={openEditContact}
+                      title={selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen'}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 14, color: '#6B7280', padding: '2px 4px',
+                      }}
+                    >
+                      ✏️
+                    </button>
+                  )}
                 </div>
                 <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
-                  +{selectedConv.phoneNumber} · {TAB_LABELS[selectedConv.matchCategory as Tab]}
-                  {selectedConv.candidateId && ` · kandidaat #${selectedConv.candidateId}`}
-                  {selectedConv.prospectContactId && ` · prospect #${selectedConv.prospectContactId}`}
+                  {threadSubline(selectedConv)}
                 </div>
               </div>
+
+              {/* Contact bewerk-formulier */}
+              {editingContact && selectedConv.matchCategory === 'unmatched' && (
+                <div style={{
+                  padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB',
+                }}>
+                  <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>Contact bewerken</div>
+                    <input
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      placeholder="Voornaam (verplicht)"
+                      required
+                      style={{
+                        padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB',
+                        borderRadius: 6, outline: 'none', fontFamily: FONT,
+                      }}
+                    />
+                    <input
+                      value={editCompany}
+                      onChange={e => setEditCompany(e.target.value)}
+                      placeholder="Bedrijf / context (optioneel)"
+                      style={{
+                        padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB',
+                        borderRadius: 6, outline: 'none', fontFamily: FONT,
+                      }}
+                    />
+                    <textarea
+                      value={editNotes}
+                      onChange={e => setEditNotes(e.target.value)}
+                      placeholder="Notities (optioneel)"
+                      rows={2}
+                      style={{
+                        padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB',
+                        borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        type="submit"
+                        disabled={editSaving || !editName.trim()}
+                        style={{
+                          background: editSaving || !editName.trim() ? '#E5E7EB' : NAVY,
+                          color: editSaving || !editName.trim() ? '#9CA3AF' : '#fff',
+                          border: 'none', borderRadius: 6, padding: '6px 14px',
+                          fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                        }}
+                      >
+                        {editSaving ? 'Opslaan...' : 'Opslaan'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingContact(false)}
+                        style={{
+                          background: '#fff', color: '#6B7280',
+                          border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px 14px',
+                          fontSize: 12, cursor: 'pointer', fontFamily: FONT,
+                        }}
+                      >
+                        Annuleren
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               {/* Berichten */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '18px', background: '#F8F9FB' }}>
@@ -384,8 +544,8 @@ export default function WhatsAppBeheer() {
                     padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
                     borderRadius: 6, fontSize: 11, color: '#9A3412', marginBottom: 8,
                   }}>
-                    ⚠ 24u-venster verstreken — vrije tekstberichten worden door WhatsApp afgewezen.
-                    Wacht tot deze persoon iets stuurt, of gebruik een goedgekeurd template (komt in Fase 2).
+                    ⚠ 24u-venster mogelijk verstreken — WhatsApp kan vrije tekstberichten afwijzen.
+                    Stuur een template of wacht tot deze persoon iets stuurt.
                   </div>
                 )}
                 {sendError && (

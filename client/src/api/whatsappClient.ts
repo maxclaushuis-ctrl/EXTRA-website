@@ -8,6 +8,8 @@ export interface Conversation {
   prospectContactId: number | null;
   matchCategory: 'candidate' | 'prospect' | 'unmatched';
   displayName: string | null;
+  contactCompany: string | null;
+  contactNotes: string | null;
   lastMessageAt: string;
   lastMessagePreview: string | null;
   unreadCount: number;
@@ -71,6 +73,20 @@ async function post<T>(path: string, body?: any): Promise<T> {
   return data as T;
 }
 
+async function put<T>(path: string, body?: any): Promise<T> {
+  const r = await fetch(`${BASE_URL}${path}`, {
+    method: 'PUT',
+    headers,
+    credentials: 'include',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || (data as any)?.error) {
+    throw new Error((data as any)?.error || `${path}: ${r.status}`);
+  }
+  return data as T;
+}
+
 export const haalAccounts = () => get<AccountInfo[]>('/accounts');
 export const haalGesprekken = (category?: 'candidate' | 'prospect' | 'unmatched') =>
   get<Conversation[]>(`/conversations${category ? `?category=${category}` : ''}`);
@@ -84,3 +100,6 @@ export const haalStats = () => get<Stats>('/stats');
 export const haalWebhookStatus = () => get<WebhookStatus>('/webhook-status');
 export const registreerWebhook = (url?: string) =>
   post<{ success: boolean; url: string }>('/registreer-webhook', { url });
+
+export const updateContactInfo = (phoneNumber: string, data: { displayName: string; contactCompany?: string; contactNotes?: string }) =>
+  put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/contact-info`, data);
