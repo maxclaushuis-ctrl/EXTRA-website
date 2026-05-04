@@ -60,6 +60,15 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
 -   **Docs**: `server/whatsapp/README.md`.
 -   **Niet in Fase 1**: templates, bot/Claude, diensten-koppeling, media-download.
 
+### Brochure Pages (Slide-based Presentations)
+-   **`/brochure`** → `Brochure.tsx` — Algemene NL brochure.
+-   **`/brochures`** → `BrochureEN.tsx` — English brochure.
+-   **`/events`** → `BrochureEvents.tsx` — Brochure voor evenementenlocaties (Scheepvaartmuseum, H'ART, etc.).
+-   **`/lofi`** → `BrochureLofi.tsx` — Gepersonaliseerde brochure voor Lofi (evenementenlocatie). Focus op vaste gezichten/continuïteit. 11 slides: Hero (EXTRA × Lofi) → Waarom vaste gezichten → Diensten → Dezelfde gezichten → Kwaliteit → Kwalificatieproces → EXTRAATJE → Beoordelingen → Compliance → Persoonlijk contact → CTA.
+-   **`/BHG-group`** → `BHGGroupPage.tsx` — Brochure voor BHG Group.
+-   Format: fullscreen, framer-motion AnimatePresence, keyboard nav, progress dots, click-to-advance, Poppins font, dark gradient.
+-   Lofi logo asset: `client/src/assets/pitch/logo-lofi.png` (background removed).
+
 ## External Dependencies
 -   **PostgreSQL Database**: Primary data persistence.
 -   **SendGrid API**: Email delivery services and webhook processing.

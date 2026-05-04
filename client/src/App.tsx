@@ -9,6 +9,7 @@ const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
 const Brochure = lazy(() => import("@/pages/Brochure"));
 const BrochureEN = lazy(() => import("@/pages/BrochureEN"));
 const BrochureEvents = lazy(() => import("@/pages/BrochureEvents"));
+const BrochureLofi = lazy(() => import("@/pages/BrochureLofi"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const PersoneelGezocht = lazy(() => import("@/pages/PersoneelGezocht"));
 const HotelPersoneelGezocht = lazy(() => import("@/pages/HotelPersoneelGezocht"));
@@ -141,7 +142,7 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }:
 const PUBLIC_PATHS = [
   '/landing', '/personeel-gezocht', '/horeca-personeel-gezocht', '/personeelsaanvraag', '/aanmelden',
   '/hotel-personeel-gezocht', '/hotelpersoneel-inhuren', '/event-personeel-gezocht', '/eventpersoneel-inhuren', '/cateringpersoneel-gezocht', '/cateringpersoneel-inhuren', '/horecapersoneel-gezocht', '/horecapersoneel-restaurants', '/restaurant-personeel-gezocht',
-  '/brochure', '/brochures', '/events', '/nieuws', '/extraatje',
+  '/brochure', '/brochures', '/events', '/lofi', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
@@ -195,6 +196,7 @@ function Router() {
           <Route path="/brochure" component={Brochure} />
           <Route path="/brochures" component={BrochureEN} />
           <Route path="/events" component={BrochureEvents} />
+          <Route path="/lofi" component={BrochureLofi} />
           <Route path="/landing" component={LandingPage} />
 
           {/* Werkgever routes */}
