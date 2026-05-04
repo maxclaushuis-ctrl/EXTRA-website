@@ -10224,6 +10224,81 @@ ${posts.map(p => `  <url>
     res.json(stats);
   });
 
+  app.get('/api/whatsapp/team-members', adminMiddleware, async (_req: Request, res: Response) => {
+    const { users: usersTable } = await import('@shared/schema');
+    const admins = await db.select({
+      id: usersTable.id,
+      firstName: usersTable.firstName,
+      lastName: usersTable.lastName,
+    }).from(usersTable).where(drizzleEq(usersTable.role, 'admin'));
+    res.json(admins.map(a => ({ id: a.id, name: `${a.firstName} ${a.lastName}` })));
+  });
+
+  app.put('/api/whatsapp/conversations/:phoneNumber/assign', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { assignedToId, assignedToName } = req.body;
+    await db.update(whatsappConversations).set({
+      assignedToId: assignedToId || null,
+      assignedToName: assignedToName || null,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    res.json({ success: true });
+  });
+
+  app.put('/api/whatsapp/conversations/:phoneNumber/labels', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { labels } = req.body;
+    if (!Array.isArray(labels)) return res.status(400).json({ error: 'labels moet een array zijn' });
+    const cleaned = labels.filter((l: any) => typeof l === 'string' && l.trim()).map((l: string) => l.trim().toLowerCase());
+    await db.update(whatsappConversations).set({
+      labels: cleaned.length ? cleaned : null,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    res.json({ success: true });
+  });
+
+  const { whatsappInternalNotes } = await import('@shared/schema');
+
+  app.get('/api/whatsapp/conversations/:phoneNumber/notes', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const conv = await db.select({ id: whatsappConversations.id }).from(whatsappConversations)
+      .where(drizzleEq(whatsappConversations.phoneNumber, phone)).limit(1);
+    if (!conv.length) return res.json([]);
+    const notes = await db.select().from(whatsappInternalNotes)
+      .where(drizzleEq(whatsappInternalNotes.conversationId, conv[0].id))
+      .orderBy(drizzleDesc(whatsappInternalNotes.createdAt));
+    res.json(notes);
+  });
+
+  app.post('/api/whatsapp/conversations/:phoneNumber/notes', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { body: noteBody } = req.body;
+    if (!noteBody || typeof noteBody !== 'string' || !noteBody.trim()) {
+      return res.status(400).json({ error: 'body is verplicht' });
+    }
+    const conv = await db.select({ id: whatsappConversations.id }).from(whatsappConversations)
+      .where(drizzleEq(whatsappConversations.phoneNumber, phone)).limit(1);
+    if (!conv.length) return res.status(404).json({ error: 'Gesprek niet gevonden' });
+
+    const { users: usersTable } = await import('@shared/schema');
+    const userId = (req.session as any).userId;
+    const user = await db.select({ firstName: usersTable.firstName, lastName: usersTable.lastName })
+      .from(usersTable).where(drizzleEq(usersTable.id, userId)).limit(1);
+    const authorName = user.length ? `${user[0].firstName} ${user[0].lastName}` : 'Admin';
+
+    const [note] = await db.insert(whatsappInternalNotes).values({
+      conversationId: conv[0].id,
+      authorId: userId,
+      authorName,
+      body: noteBody.trim(),
+    }).returning();
+    res.json(note);
+  });
+
   app.put('/api/whatsapp/conversations/:phoneNumber/contact-info', adminMiddleware, async (req: Request, res: Response) => {
     const phone = normalizePhone(req.params.phoneNumber);
     if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });

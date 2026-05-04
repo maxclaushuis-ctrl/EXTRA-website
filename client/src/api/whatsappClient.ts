@@ -10,6 +10,9 @@ export interface Conversation {
   displayName: string | null;
   contactCompany: string | null;
   contactNotes: string | null;
+  assignedToId: number | null;
+  assignedToName: string | null;
+  labels: string[] | null;
   lastMessageAt: string;
   lastMessagePreview: string | null;
   unreadCount: number;
@@ -51,6 +54,20 @@ export interface WebhookStatus {
   configured: boolean;
   url: string | null;
   secretSet: boolean;
+}
+
+export interface TeamMember {
+  id: number;
+  name: string;
+}
+
+export interface InternalNote {
+  id: number;
+  conversationId: number;
+  authorId: number | null;
+  authorName: string;
+  body: string;
+  createdAt: string;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -103,3 +120,17 @@ export const registreerWebhook = (url?: string) =>
 
 export const updateContactInfo = (phoneNumber: string, data: { displayName: string; contactCompany?: string; contactNotes?: string }) =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/contact-info`, data);
+
+export const haalTeamMembers = () => get<TeamMember[]>('/team-members');
+
+export const wijsGesprekToe = (phoneNumber: string, assignedToId: number | null, assignedToName: string | null) =>
+  put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/assign`, { assignedToId, assignedToName });
+
+export const updateLabels = (phoneNumber: string, labels: string[]) =>
+  put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/labels`, { labels });
+
+export const haalNotities = (phoneNumber: string) =>
+  get<InternalNote[]>(`/conversations/${encodeURIComponent(phoneNumber)}/notes`);
+
+export const maakNotitie = (phoneNumber: string, body: string) =>
+  post<InternalNote>(`/conversations/${encodeURIComponent(phoneNumber)}/notes`, { body });

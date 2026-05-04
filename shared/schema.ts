@@ -1371,6 +1371,9 @@ export const whatsappConversations = pgTable("whatsapp_conversations", {
   displayName: text("display_name"),
   contactCompany: text("contact_company"),
   contactNotes: text("contact_notes"),
+  assignedToId: integer("assigned_to_id").references(() => users.id, { onDelete: 'set null' }),
+  assignedToName: text("assigned_to_name"),
+  labels: text("labels").array(),
   lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
   lastMessagePreview: text("last_message_preview"),
   unreadCount: integer("unread_count").default(0).notNull(),
@@ -1394,10 +1397,23 @@ export const phoneNormalizationIssues = pgTable("phone_normalization_issues", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const whatsappInternalNotes = pgTable("whatsapp_internal_notes", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => whatsappConversations.id, { onDelete: 'cascade' }).notNull(),
+  authorId: integer("author_id"),
+  authorName: text("author_name").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  convIdx: index("wa_note_conv_idx").on(table.conversationId),
+}));
+
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
 export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
 export type InsertWhatsappConversation = typeof whatsappConversations.$inferInsert;
+export type WhatsappInternalNote = typeof whatsappInternalNotes.$inferSelect;
+export type InsertWhatsappInternalNote = typeof whatsappInternalNotes.$inferInsert;
 
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
