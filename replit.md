@@ -46,9 +46,24 @@ The application employs a monorepo structure, separating the React frontend (`cl
 ### Deployment
 Configured for Replit autoscale deployment, using Vite for frontend builds and `tsx` for development. Environment variables (`DATABASE_URL`, `SENDGRID_API_KEY`, `NODE_ENV`, `BASE_URL`) manage configuration.
 
+### WhatsApp Integration (Fase 1 — 360dialog Cloud API)
+-   **Webhook**: `POST /api/whatsapp/webhook/:secret` — inkomende berichten van 360dialog. Secret in URL-pad met `timingSafeEqual`, gemaskeerd in logs (`/api/whatsapp/webhook/***`).
+-   **Persistentie**: `whatsapp_messages` + `whatsapp_conversations` tabellen met auto-koppeling aan `candidates` / `prospect_contacts` via phone-normalisatie.
+-   **Idempotentie**: duplicate `wa_message_id` wordt genegeerd.
+-   **Status-events**: `statuses[]` van 360dialog (sent/delivered/read/failed) updaten het bericht in DB.
+-   **Outbound**: `POST /api/whatsapp/stuur` — slaat op als queued → sent/failed, koppelt aan candidate/prospect.
+-   **Endpoints**: `/conversations`, `/conversations/:phone/messages`, `/conversations/:phone/mark-read`, `/stats`.
+-   **Frontend**: Tweekolommen UI in admin-dashboard tab "WhatsApp" met tabs kandidaat/prospect/onbekend, zoek, thread-view, 24u-venster check, status-indicators.
+-   **Phone-normalisatie**: `server/whatsapp/phone.ts` (NL 06→+31, strips whitespace/dashes, E.164 zonder +).
+-   **Migratie**: `npx tsx server/whatsapp/migrate-phones.ts` (dry-run default, `--apply` voor schrijven). Backup in `phone_original` / `telefoon_original` kolommen.
+-   **Env-vars**: `WHATSAPP_360_API_KEY`, `WHATSAPP_WEBHOOK_SECRET`.
+-   **Docs**: `server/whatsapp/README.md`.
+-   **Niet in Fase 1**: templates, bot/Claude, diensten-koppeling, media-download.
+
 ## External Dependencies
 -   **PostgreSQL Database**: Primary data persistence.
 -   **SendGrid API**: Email delivery services and webhook processing.
+-   **360dialog Cloud API**: WhatsApp Business messaging (Fase 1).
 -   **External Planning API**: Integration for workforce planning.
 -   **Google Analytics**: User behavior tracking.
 -   **Canvas Confetti**: Visual celebration effects.
