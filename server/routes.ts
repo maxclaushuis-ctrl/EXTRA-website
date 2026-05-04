@@ -9906,7 +9906,7 @@ ${posts.map(p => `  <url>
   //   - Idempotentie op wa_message_id
   // Env-vars: WHATSAPP_360_API_KEY, WHATSAPP_WEBHOOK_SECRET
   // Zie server/whatsapp/README.md voor configuratie.
-  const WA_BASE_URL = 'https://waba.360dialog.io/v1';
+  const WA_BASE_URL = process.env.WHATSAPP_360_BASE_URL || 'https://waba-v2.360dialog.io';
   const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
   const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
 
