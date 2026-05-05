@@ -11,6 +11,7 @@ import {
   registreerWebhook,
   updateContactInfo,
   koppelContactAanGesprek,
+  bewerkContactNaam,
   haalTeamMembers,
   wijsGesprekToe,
   updateLabels,
@@ -113,6 +114,9 @@ export default function WhatsAppBeheer() {
   const [webhookBusy, setWebhookBusy] = useState(false);
   const [webhookMsg, setWebhookMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [editingContact, setEditingContact] = useState(false);
+  // 'rename' = alleen voor/achternaam wijzigen op gekoppelde candidate/prospect.
+  // 'add'    = nieuw contact aanmaken vanuit een unmatched gesprek (bestaand gedrag).
+  const [editMode, setEditMode] = useState<'add' | 'rename'>('add');
   const [editVoornaam, setEditVoornaam] = useState('');
   const [editAchternaam, setEditAchternaam] = useState('');
   const [editCategorie, setEditCategorie] = useState<'klant' | 'medewerker' | 'kandidaat'>('kandidaat');
@@ -576,6 +580,10 @@ export default function WhatsAppBeheer() {
     setEditEmail('');
     setEditNotes(selectedConv.contactNotes || '');
     setEditError(null);
+    // Bekend contact (candidate of prospect) → alleen naam bewerken.
+    // Onbekend → volledige "toevoegen aan contacten"-flow.
+    const isKnown = !!(selectedConv.candidateId || selectedConv.prospectContactId);
+    setEditMode(isKnown ? 'rename' : 'add');
     setEditingContact(true);
   }
 
@@ -585,26 +593,37 @@ export default function WhatsAppBeheer() {
     setEditSaving(true);
     setEditError(null);
     try {
-      await koppelContactAanGesprek(selectedPhone, {
-        voornaam: editVoornaam.trim(),
-        achternaam: editAchternaam.trim(),
-        categorie: editCategorie,
-        email: editCategorie === 'klant' ? (editEmail.trim() || undefined) : undefined,
-        notities: editNotes.trim() || undefined,
-      });
-      // Synchroniseer manualCategory zodat het gesprek in de juiste tab blijft
-      // (en niet door de auto-matcher naar een andere tab wordt verplaatst).
-      const targetCategory: 'candidate' | 'prospect' | 'unmatched' =
-        editCategorie === 'klant' ? 'prospect'
-        : editCategorie === 'medewerker' ? 'candidate'
-        : 'candidate'; // 'kandidaat' creëert ook een candidate-rij
-      await updateConversationCategory(selectedPhone, targetCategory);
-      setEditingContact(false);
-      // Verversing: schakel naar het juiste tabblad zodat het gesprek zichtbaar blijft
-      const newTab: Tab = targetCategory;
-      setTab(newTab);
-      const c = await haalGesprekken(newTab);
-      setConversations(c);
+      if (editMode === 'rename') {
+        // Werk voor- en achternaam bij op de onderliggende candidate/prospect-rij.
+        await bewerkContactNaam(selectedPhone, {
+          voornaam: editVoornaam.trim(),
+          achternaam: editAchternaam.trim(),
+        });
+        setEditingContact(false);
+        const c = await haalGesprekken(tab);
+        setConversations(c);
+      } else {
+        await koppelContactAanGesprek(selectedPhone, {
+          voornaam: editVoornaam.trim(),
+          achternaam: editAchternaam.trim(),
+          categorie: editCategorie,
+          email: editCategorie === 'klant' ? (editEmail.trim() || undefined) : undefined,
+          notities: editNotes.trim() || undefined,
+        });
+        // Synchroniseer manualCategory zodat het gesprek in de juiste tab blijft
+        // (en niet door de auto-matcher naar een andere tab wordt verplaatst).
+        const targetCategory: 'candidate' | 'prospect' | 'unmatched' =
+          editCategorie === 'klant' ? 'prospect'
+          : editCategorie === 'medewerker' ? 'candidate'
+          : 'candidate'; // 'kandidaat' creëert ook een candidate-rij
+        await updateConversationCategory(selectedPhone, targetCategory);
+        setEditingContact(false);
+        // Verversing: schakel naar het juiste tabblad zodat het gesprek zichtbaar blijft
+        const newTab: Tab = targetCategory;
+        setTab(newTab);
+        const c = await haalGesprekken(newTab);
+        setConversations(c);
+      }
     } catch (err: any) {
       setEditError(err?.message || 'Opslaan mislukt');
     }
@@ -1345,18 +1364,20 @@ export default function WhatsAppBeheer() {
                               convDisplayName(selectedConv)
                             )}
                           </div>
-                          {/* Naam toevoegen/bewerken — beschikbaar zolang er nog geen onderliggend
-                              candidate- of prospect_contact-record aan dit gesprek is gekoppeld
-                              (bv. na handmatige verplaatsing tussen tabs via de Categorie-dropdown). */}
-                          {!selectedConv.candidateId && !selectedConv.prospectContactId && (
-                            <button
-                              onClick={openEditContact}
-                              title={selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen'}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}
-                            >
-                              <Pencil size={13} />
-                            </button>
-                          )}
+                          {/* Naam toevoegen/bewerken — voor onbekend contact = nieuw record aanmaken,
+                              voor bekend contact (candidate/prospect) = voor- en achternaam wijzigen
+                              op het onderliggende record. */}
+                          <button
+                            onClick={openEditContact}
+                            title={
+                              (selectedConv.candidateId || selectedConv.prospectContactId)
+                                ? 'Naam bewerken'
+                                : (selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen')
+                            }
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            <Pencil size={13} />
+                          </button>
                         </div>
                         <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
                           {threadSubline(selectedConv)}
@@ -1475,11 +1496,11 @@ export default function WhatsAppBeheer() {
                     </div>
                   </div>
 
-                  {editingContact && !selectedConv.candidateId && !selectedConv.prospectContactId && (
+                  {editingContact && (
                     <div style={{ padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
                       <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>
-                          Toevoegen aan contacten
+                          {editMode === 'rename' ? 'Naam bewerken' : 'Toevoegen aan contacten'}
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <input value={editVoornaam} onChange={e => setEditVoornaam(e.target.value)} placeholder="Voornaam *" required
@@ -1487,28 +1508,37 @@ export default function WhatsAppBeheer() {
                           <input value={editAchternaam} onChange={e => setEditAchternaam(e.target.value)} placeholder="Achternaam *" required
                             style={{ flex: 1, padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
                         </div>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 4 }}>Categorie</div>
-                          <select
-                            value={editCategorie}
-                            onChange={e => setEditCategorie(e.target.value as 'klant' | 'medewerker' | 'kandidaat')}
-                            style={{
-                              width: '100%', padding: '8px 10px', fontSize: 12,
-                              border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none',
-                              fontFamily: FONT, color: NAVY, background: '#fff', cursor: 'pointer',
-                            }}
-                          >
-                            <option value="klant">Klanten — bedrijfscontact</option>
-                            <option value="medewerker">Medewerkers — aangenomen</option>
-                            <option value="kandidaat">Kandidaten — sollicitant</option>
-                          </select>
-                        </div>
-                        {editCategorie === 'klant' && (
-                          <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" placeholder="E-mail (optioneel — voor mailcampagnes)"
-                            style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        {editMode === 'add' && (
+                          <>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 4 }}>Categorie</div>
+                              <select
+                                value={editCategorie}
+                                onChange={e => setEditCategorie(e.target.value as 'klant' | 'medewerker' | 'kandidaat')}
+                                style={{
+                                  width: '100%', padding: '8px 10px', fontSize: 12,
+                                  border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none',
+                                  fontFamily: FONT, color: NAVY, background: '#fff', cursor: 'pointer',
+                                }}
+                              >
+                                <option value="klant">Klanten — bedrijfscontact</option>
+                                <option value="medewerker">Medewerkers — aangenomen</option>
+                                <option value="kandidaat">Kandidaten — sollicitant</option>
+                              </select>
+                            </div>
+                            {editCategorie === 'klant' && (
+                              <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" placeholder="E-mail (optioneel — voor mailcampagnes)"
+                                style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                            )}
+                            <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notities op gesprek (optioneel)" rows={2}
+                              style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical' }} />
+                          </>
                         )}
-                        <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notities op gesprek (optioneel)" rows={2}
-                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical' }} />
+                        {editMode === 'rename' && (
+                          <div style={{ fontSize: 11, color: '#6B7280' }}>
+                            Wijzigt voor- en achternaam in {selectedConv.candidateId ? 'het kandidaten/medewerkers-record' : 'het klantcontact'}.
+                          </div>
+                        )}
                         {editError && (
                           <div style={{ fontSize: 11, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', padding: '6px 8px', borderRadius: 6 }}>
                             {editError}
@@ -1517,7 +1547,7 @@ export default function WhatsAppBeheer() {
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button type="submit" disabled={editSaving || !editVoornaam.trim() || !editAchternaam.trim()}
                             style={{ background: editSaving || !editVoornaam.trim() || !editAchternaam.trim() ? '#E5E7EB' : NAVY, color: editSaving || !editVoornaam.trim() || !editAchternaam.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
-                            {editSaving ? 'Opslaan...' : 'Opslaan als contact'}
+                            {editSaving ? 'Opslaan...' : (editMode === 'rename' ? 'Naam opslaan' : 'Opslaan als contact')}
                           </button>
                           <button type="button" onClick={() => setEditingContact(false)}
                             style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: FONT }}>

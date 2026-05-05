@@ -10942,6 +10942,58 @@ OTHER RULES:
     res.json({ success: true });
   });
 
+  // Bewerk voor- en achternaam van een BEKEND WhatsApp-contact (gekoppeld aan
+  // een candidate of prospect_contact). Werkt het onderliggende record bij en
+  // re-matcht het gesprek zodat de nieuwe naam ook in de threadkop verschijnt.
+  app.put('/api/whatsapp/conversations/:phoneNumber/edit-naam', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const phone = normalizePhone(req.params.phoneNumber);
+      if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+
+      const conv = await db.select().from(whatsappConversations).where(drizzleEq(whatsappConversations.phoneNumber, phone)).limit(1);
+      if (!conv.length) return res.status(404).json({ error: 'Gesprek niet gevonden' });
+
+      const { voornaam, achternaam } = req.body ?? {};
+      const vn = typeof voornaam === 'string' ? voornaam.trim() : '';
+      const an = typeof achternaam === 'string' ? achternaam.trim() : '';
+      if (!vn || !an) return res.status(400).json({ error: 'Voornaam en achternaam zijn verplicht' });
+
+      const c = conv[0];
+      if (c.candidateId) {
+        const { candidates } = await import('@shared/schema');
+        await db.update(candidates).set({
+          firstName: vn,
+          lastName: an,
+          updatedAt: new Date(),
+        } as any).where(drizzleEq(candidates.id, c.candidateId));
+      } else if (c.prospectContactId) {
+        const { prospectContacts } = await import('@shared/schema');
+        await db.update(prospectContacts).set({
+          voornaam: vn,
+          achternaam: an,
+          name: `${vn} ${an}`.trim(),
+          updatedAt: new Date(),
+        } as any).where(drizzleEq(prospectContacts.id, c.prospectContactId));
+      } else {
+        return res.status(400).json({ error: 'Dit gesprek heeft geen gekoppeld contact — gebruik "Toevoegen aan contacten"' });
+      }
+
+      // Re-match zodat displayName op het gesprek wordt ververst
+      const { resolveAndUpsertConversation } = await import('./whatsapp/storage');
+      await resolveAndUpsertConversation({
+        phoneNumber: phone,
+        inbound: false,
+        bodyPreview: c.lastMessagePreview ?? '',
+        at: c.lastMessageAt ?? new Date(),
+      });
+
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error('edit-naam mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Bewerken mislukt' });
+    }
+  });
+
   // Koppel een 'unmatched' WhatsApp-gesprek aan een echte contact-rij
   // (creëert een nieuwe candidate of prospect_contact en re-matcht het gesprek).
   // Categorieën: 'klant' → prospect_contacts, 'medewerker'/'kandidaat' → candidates
