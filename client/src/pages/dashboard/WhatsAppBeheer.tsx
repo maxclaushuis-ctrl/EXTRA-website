@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Sparkles, Settings as SettingsIcon, Hourglass } from 'lucide-react';
+import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle } from 'lucide-react';
 import {
   haalGesprekken,
   haalBerichten,
@@ -1453,7 +1453,7 @@ export default function WhatsAppBeheer() {
                             padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA',
                             borderRadius: 6, fontSize: 11, color: '#9A3412', marginBottom: 8,
                           }}>
-                            \u26A0 24u-venster mogelijk verstreken — WhatsApp kan vrije tekstberichten afwijzen. Stuur een template of wacht tot deze persoon iets stuurt.
+                            <AlertTriangle size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> 24u-venster mogelijk verstreken — WhatsApp kan vrije tekstberichten afwijzen. Stuur een template of wacht tot deze persoon iets stuurt.
                           </div>
                         )}
                         {sendError && (

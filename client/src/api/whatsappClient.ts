@@ -119,7 +119,7 @@ export const stuurMedia = async (nummer: string, file: File, caption?: string) =
   fd.append('nummer', nummer);
   fd.append('file', file);
   if (caption) fd.append('caption', caption);
-  const r = await fetch(`${BASE}/stuur-media`, {
+  const r = await fetch(`${BASE_URL}/stuur-media`, {
     method: 'POST',
     credentials: 'include',
     body: fd,
