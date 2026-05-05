@@ -11308,7 +11308,7 @@ OTHER RULES:
   // ─── IMPORT: Kandidaten uit database ────────────────────────────────────────
   app.get('/api/whatsapp/import/candidates', adminMiddleware, async (req: Request, res: Response) => {
     const groupId = parseInt(String(req.query.groupId || '0'));
-    const { candidates } = await import('@shared/schema');
+    const { candidates, employees } = await import('@shared/schema');
     const { isNotNull } = await import('drizzle-orm');
 
     let existingPhones = new Set<string>();
@@ -11316,6 +11316,24 @@ OTHER RULES:
       const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
         .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, groupId));
       existingPhones = new Set(existing.map(e => e.phoneNumber));
+    }
+
+    // Telefoons en candidate-ids die al gepromoveerd zijn naar de employees-tabel.
+    // Deze worden uit de "Kandidaten"-import gefilterd zodat aangenomen
+    // medewerkers (zoals Jimarro) niet meer met hun oude candidate-status
+    // verschijnen — die staan in de "Medewerkers"-tab.
+    const empRows = await db.select({
+      phone: employees.phone,
+      candidateId: employees.candidateId,
+    }).from(employees);
+    const employeePhones = new Set<string>();
+    const employeeCandidateIds = new Set<number>();
+    for (const e of empRows) {
+      if (e.phone) {
+        const n = normalizePhone(e.phone) || e.phone;
+        if (n) employeePhones.add(n);
+      }
+      if (e.candidateId) employeeCandidateIds.add(e.candidateId);
     }
 
     const rows = await db.select({
@@ -11339,6 +11357,49 @@ OTHER RULES:
           functionType: r.functionType,
           status: r.status,
           city: r.city || null,
+          alreadyInGroup: existingPhones.has(normalized),
+        };
+      })
+      .filter(r => !employeeCandidateIds.has(r.id) && !employeePhones.has(r.phone));
+    res.json(result);
+  });
+
+  // ─── IMPORT: Medewerkers uit database ────────────────────────────────────
+  app.get('/api/whatsapp/import/employees', adminMiddleware, async (req: Request, res: Response) => {
+    const groupId = parseInt(String(req.query.groupId || '0'));
+    const { employees } = await import('@shared/schema');
+    const { isNotNull } = await import('drizzle-orm');
+
+    let existingPhones = new Set<string>();
+    if (groupId) {
+      const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
+        .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, groupId));
+      existingPhones = new Set(existing.map(e => e.phoneNumber));
+    }
+
+    const rows = await db.select({
+      id: employees.id,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+      phone: employees.phone,
+      functie: employees.functie,
+      status: employees.status,
+      opdrachtgever: employees.opdrachtgever,
+      branche: employees.branche,
+    }).from(employees).where(isNotNull(employees.phone));
+
+    const result = rows
+      .filter(r => r.phone && r.phone.trim().length >= 8)
+      .map(r => {
+        const normalized = normalizePhone(r.phone!) || r.phone!;
+        return {
+          id: r.id,
+          name: `${r.firstName} ${r.lastName}`,
+          phone: normalized,
+          functie: r.functie || null,
+          status: r.status,
+          opdrachtgever: r.opdrachtgever || null,
+          branche: r.branche || null,
           alreadyInGroup: existingPhones.has(normalized),
         };
       });

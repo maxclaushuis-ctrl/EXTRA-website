@@ -29,6 +29,7 @@ import {
   haalBulkVerzendingen,
   updateConversationCategory,
   haalImportKandidaten,
+  haalImportMedewerkers,
   haalImportKlanten,
   parseCsv,
   haalAiSettings,
@@ -58,6 +59,7 @@ import {
   type BulkSendRecord,
   type ImportCandidate,
   type ImportProspect,
+  type ImportEmployee,
   type AiSettings,
 } from '../../api/whatsappClient';
 
@@ -178,10 +180,11 @@ export default function WhatsAppBeheer() {
   const [aiAttachments, setAiAttachments] = useState<AiAttachment[]>([]);
   const [attachmentUploadingKey, setAttachmentUploadingKey] = useState<string | null>(null);
 
-  type ImportTab = 'whatsapp' | 'kandidaten' | 'klanten' | 'csv' | 'handmatig';
+  type ImportTab = 'whatsapp' | 'medewerkers' | 'kandidaten' | 'klanten' | 'csv' | 'handmatig';
   const [importTab, setImportTab] = useState<ImportTab>('whatsapp');
   const [importCandidates, setImportCandidates] = useState<ImportCandidate[]>([]);
   const [importProspects, setImportProspects] = useState<ImportProspect[]>([]);
+  const [importEmployees, setImportEmployees] = useState<ImportEmployee[]>([]);
   const [importLoading, setImportLoading] = useState(false);
   const [csvText, setCsvText] = useState('');
   const [csvParsed, setCsvParsed] = useState<Array<{ name: string; phone: string; alreadyInGroup: boolean }>>([]);
@@ -734,6 +737,7 @@ export default function WhatsAppBeheer() {
     setImportTab('whatsapp');
     setImportCandidates([]);
     setImportProspects([]);
+    setImportEmployees([]);
     setCsvText('');
     setCsvParsed([]);
     setCsvErrors([]);
@@ -767,6 +771,13 @@ export default function WhatsAppBeheer() {
       } catch { /* ignore */ }
       setImportLoading(false);
     }
+    if (tab === 'medewerkers' && importEmployees.length === 0) {
+      setImportLoading(true);
+      try {
+        setImportEmployees(await haalImportMedewerkers(selectedGroupId));
+      } catch { /* ignore */ }
+      setImportLoading(false);
+    }
   }
 
   async function handleParseCsv() {
@@ -795,6 +806,11 @@ export default function WhatsAppBeheer() {
     } else if (importTab === 'kandidaten') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = importCandidates.find(ic => ic.phone === phone);
+        return { phoneNumber: phone, displayName: c?.name || undefined };
+      });
+    } else if (importTab === 'medewerkers') {
+      membersToAdd = Array.from(selectedContacts).map(phone => {
+        const c = importEmployees.find(ie => ie.phone === phone);
         return { phoneNumber: phone, displayName: c?.name || undefined };
       });
     } else if (importTab === 'klanten') {
@@ -1984,6 +2000,7 @@ export default function WhatsAppBeheer() {
                             <div style={{ display: 'flex', gap: 0, marginBottom: 10, background: '#E5E7EB', borderRadius: 6, padding: 2 }}>
                               {([
                                 ['whatsapp', 'WhatsApp'],
+                                ['medewerkers', 'Medewerkers'],
                                 ['kandidaten', 'Kandidaten'],
                                 ['klanten', 'Klanten'],
                                 ['csv', 'CSV Upload'],
@@ -2004,7 +2021,7 @@ export default function WhatsAppBeheer() {
                               ))}
                             </div>
 
-                            {(importTab === 'whatsapp' || importTab === 'kandidaten' || importTab === 'klanten') && (
+                            {(importTab === 'whatsapp' || importTab === 'medewerkers' || importTab === 'kandidaten' || importTab === 'klanten') && (
                               <input
                                 value={contactSearch}
                                 onChange={e => setContactSearch(e.target.value)}
@@ -2081,6 +2098,45 @@ export default function WhatsAppBeheer() {
                                 })}
                               </div>
                             )}
+
+                            {importTab === 'medewerkers' && !importLoading && (() => {
+                              const q = contactSearch.toLowerCase();
+                              const filtered = importEmployees.filter(c => {
+                                if (c.alreadyInGroup) return false;
+                                if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(contactSearch) && !(c.opdrachtgever || '').toLowerCase().includes(q)) return false;
+                                return true;
+                              });
+                              const empStatusColors: Record<string, string> = { nieuw: '#3B82F6', actief: '#10B981', inactief: '#94A3B8', uit_dienst: '#9CA3AF' };
+                              return (
+                                <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6, background: '#fff' }}>
+                                  {filtered.length === 0 && (
+                                    <div style={{ padding: 16, textAlign: 'center', color: '#9CA3AF', fontSize: 11 }}>
+                                      {importEmployees.length === 0 ? 'Geen medewerkers met telefoonnummer' : 'Geen match met deze zoekterm'}
+                                    </div>
+                                  )}
+                                  {filtered.map(c => {
+                                    const checked = selectedContacts.has(c.phone);
+                                    return (
+                                      <div key={c.id} onClick={() => toggleContactSelection(c.phone)}
+                                        style={{ padding: '8px 12px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: checked ? '#EEF2FF' : '#fff' }}>
+                                        <div style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${checked ? NAVY : '#D1D5DB'}`, background: checked ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                          {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>{'\u2713'}</span>}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{c.name}</div>
+                                          <div style={{ fontSize: 10, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                                            <span>+{c.phone}</span>
+                                            {c.functie && <span style={{ background: '#F3F4F6', padding: '1px 5px', borderRadius: 3, fontSize: 9 }}>{c.functie}</span>}
+                                            <span style={{ color: empStatusColors[c.status] || '#6B7280', fontWeight: 600, fontSize: 9 }}>{c.status}</span>
+                                            {c.opdrachtgever && <span style={{ color: '#374151', fontSize: 9 }}>{c.opdrachtgever}</span>}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
 
                             {importTab === 'kandidaten' && !importLoading && (() => {
                               const q = contactSearch.toLowerCase();
@@ -2239,6 +2295,20 @@ export default function WhatsAppBeheer() {
                                   {selectedContacts.size > 0 && (
                                     <button onClick={() => setSelectedContacts(new Set())} style={{ background: 'none', border: 'none', fontSize: 10, color: '#DC2626', cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT }}>wissen</button>
                                   )}
+                                  {importTab === 'medewerkers' && (() => {
+                                    const q = contactSearch.toLowerCase();
+                                    const avail = importEmployees.filter(c => {
+                                      if (c.alreadyInGroup) return false;
+                                      if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(contactSearch) && !(c.opdrachtgever || '').toLowerCase().includes(q)) return false;
+                                      return true;
+                                    });
+                                    return avail.length > 0 ? (
+                                      <button onClick={() => setSelectedContacts(new Set(avail.map(c => c.phone)))}
+                                        style={{ background: 'none', border: 'none', fontSize: 10, color: NAVY, cursor: 'pointer', textDecoration: 'underline', fontFamily: FONT }}>
+                                        selecteer alles ({avail.length})
+                                      </button>
+                                    ) : null;
+                                  })()}
                                   {importTab === 'kandidaten' && (() => {
                                     const q = contactSearch.toLowerCase();
                                     const avail = importCandidates.filter(c => {

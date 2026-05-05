@@ -243,6 +243,17 @@ export interface ImportProspect {
   alreadyInGroup: boolean;
 }
 
+export interface ImportEmployee {
+  id: number;
+  name: string;
+  phone: string;
+  functie: string | null;
+  status: string;
+  opdrachtgever: string | null;
+  branche: string | null;
+  alreadyInGroup: boolean;
+}
+
 export interface CsvParseResult {
   contacts: Array<{ name: string; phone: string; alreadyInGroup: boolean }>;
   errors: string[];
@@ -252,6 +263,8 @@ export const haalImportKandidaten = (groupId: number) =>
   get<ImportCandidate[]>(`/import/candidates?groupId=${groupId}`);
 export const haalImportKlanten = (groupId: number) =>
   get<ImportProspect[]>(`/import/prospects?groupId=${groupId}`);
+export const haalImportMedewerkers = (groupId: number) =>
+  get<ImportEmployee[]>(`/import/employees?groupId=${groupId}`);
 export const parseCsv = (csvData: string, groupId: number) =>
   post<CsvParseResult>('/import/csv', { csvData, groupId });
 
