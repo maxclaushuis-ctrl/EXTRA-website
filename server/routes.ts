@@ -9928,6 +9928,17 @@ ${posts.map(p => `  <url>
     return cryptoModule.timingSafeEqual(a, b);
   }
 
+  // ─── Hulp: bepaal taal uit gesprek-labels (snelle override vóór AI-detectie) ──
+  // Planner kan een gesprek labelen met "nl" of "en" zodat de AI gegarandeerd in
+  // die taal antwoordt — overruled de auto-detectie. Andere labels worden genegeerd.
+  function resolveLanguageFromLabels(labels: string[] | null | undefined): { code: string; name: string } | null {
+    if (!labels || !Array.isArray(labels)) return null;
+    const lower = labels.map(l => (l || '').toString().trim().toLowerCase());
+    if (lower.includes('nl')) return { code: 'nl', name: 'Nederlands' };
+    if (lower.includes('en')) return { code: 'en', name: 'English' };
+    return null;
+  }
+
   // ─── Hulp: detecteer taal van de laatste inkomende boodschap (snelle pre-call) ──
   // Retourneert ISO-taalcode + leesbare naam. Bij fout: nl/Nederlands als veilige default.
   async function detectMessageLanguage(text: string): Promise<{ code: string; name: string }> {
@@ -10029,9 +10040,15 @@ ${posts.map(p => `  <url>
         .where(eq(whatsappAiKnowledge.enabled, true))
         .orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
 
-      // 5b. Detecteer taal van laatste inkomende bericht
+      // 5b. Bepaal taal: gespreks-label "nl"/"en" overruled detectie, anders auto-detect
+      const convLabelRow = await db.select({ labels: whatsappConversations.labels })
+        .from(whatsappConversations)
+        .where(eq(whatsappConversations.phoneNumber, opts.phoneNumber))
+        .limit(1);
+      const labelLang = resolveLanguageFromLabels(convLabelRow[0]?.labels ?? null);
       const lastInbound = [...allMessages].reverse().find((m: any) => m.direction === 'inbound');
-      const lang = lastInbound?.body ? await detectMessageLanguage(lastInbound.body) : { code: 'nl', name: 'Nederlands' };
+      const lang = labelLang ?? (lastInbound?.body ? await detectMessageLanguage(lastInbound.body) : { code: 'nl', name: 'Nederlands' });
+      if (labelLang) console.log(`[WA auto-reply] taal-override via label → ${labelLang.code}`);
 
       // 6. OpenAI-call
       let OpenAI: any;
@@ -11247,7 +11264,7 @@ OTHER RULES:
 
   app.post('/api/whatsapp/ai-suggest', adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { messages: chatMessages, contactName, contactCompany, mode } = req.body;
+      const { messages: chatMessages, contactName, contactCompany, mode, phoneNumber: reqPhone } = req.body;
       if (!chatMessages || !Array.isArray(chatMessages) || chatMessages.length === 0) {
         return res.status(400).json({ error: 'Berichten zijn vereist' });
       }
@@ -11272,9 +11289,21 @@ OTHER RULES:
         apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? 'unused',
       });
 
-      // Detecteer taal van het laatste inkomende bericht
+      // Bepaal taal: gespreks-label "nl"/"en" overruled detectie, anders auto-detect
+      let labelLang: { code: string; name: string } | null = null;
+      if (typeof reqPhone === 'string' && reqPhone.trim()) {
+        const normalizedPhone = normalizePhone(reqPhone);
+        if (normalizedPhone) {
+          const convLabelRow = await db.select({ labels: whatsappConversations.labels })
+            .from(whatsappConversations)
+            .where(eq(whatsappConversations.phoneNumber, normalizedPhone))
+            .limit(1);
+          labelLang = resolveLanguageFromLabels(convLabelRow[0]?.labels ?? null);
+        }
+      }
       const lastInboundMsg = [...chatMessages].reverse().find((m: any) => m.direction === 'inbound');
-      const lang = lastInboundMsg?.body ? await detectMessageLanguage(lastInboundMsg.body) : { code: 'nl', name: 'Nederlands' };
+      const lang = labelLang ?? (lastInboundMsg?.body ? await detectMessageLanguage(lastInboundMsg.body) : { code: 'nl', name: 'Nederlands' });
+      if (labelLang) console.log(`[ai-suggest] taal-override via label → ${labelLang.code}`);
 
       let guidelinesBlock = '';
       if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;

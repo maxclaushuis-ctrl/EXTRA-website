@@ -291,8 +291,8 @@ export interface AiKnowledgeEntry {
 export const haalAiSettings = () => get<AiSettings>('/ai-settings');
 export const updateAiSettings = (data: Partial<Omit<AiSettings, 'id' | 'updatedAt'>>) =>
   put<AiSettings>('/ai-settings', data);
-export const vraagAiSuggestie = (messages: Message[], contactName?: string | null, contactCompany?: string | null, mode?: 'individual' | 'bulk') =>
-  post<{ suggestion: string }>('/ai-suggest', { messages, contactName, contactCompany, mode: mode || 'individual' });
+export const vraagAiSuggestie = (messages: Message[], contactName?: string | null, contactCompany?: string | null, mode?: 'individual' | 'bulk', phoneNumber?: string | null) =>
+  post<{ suggestion: string }>('/ai-suggest', { messages, contactName, contactCompany, mode: mode || 'individual', phoneNumber: phoneNumber || undefined });
 
 export const haalAiKnowledge = () => get<AiKnowledgeEntry[]>('/ai-knowledge');
 export const maakAiKnowledge = (data: { title: string; content: string; enabled?: boolean }) =>

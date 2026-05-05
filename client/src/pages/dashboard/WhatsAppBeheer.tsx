@@ -233,7 +233,7 @@ export default function WhatsAppBeheer() {
     setAiError(null);
     setAiLoading(true);
     const conv = conversations.find(c => c.phoneNumber === selectedPhone);
-    vraagAiSuggestie(messages, conv?.displayName, conv?.contactCompany, 'individual')
+    vraagAiSuggestie(messages, conv?.displayName, conv?.contactCompany, 'individual', selectedPhone)
       .then(r => { setAiSuggestion(r.suggestion); })
       .catch(e => { setAiError(e.message || 'AI suggestie mislukt'); })
       .finally(() => setAiLoading(false));
@@ -346,7 +346,7 @@ export default function WhatsAppBeheer() {
     setAiDismissed(false);
     const conv = conversations.find(c => c.phoneNumber === selectedPhone);
     try {
-      const r = await vraagAiSuggestie(messages, conv?.displayName, conv?.contactCompany, 'individual');
+      const r = await vraagAiSuggestie(messages, conv?.displayName, conv?.contactCompany, 'individual', selectedPhone);
       setAiSuggestion(r.suggestion);
     } catch (e: any) {
       setAiError(e.message || 'AI suggestie mislukt');
@@ -1245,9 +1245,37 @@ export default function WhatsAppBeheer() {
                               background: labelColor(l) + '18', color: labelColor(l),
                               fontWeight: 600, cursor: 'pointer',
                             }} onClick={() => handleRemoveLabel(l)} title={`Verwijder label "${l}"`}>
-                              {l} \u00D7
+                              {l} ×
                             </span>
                           ))}
+                          {(['nl', 'en'] as const).map(presetLang => {
+                            const active = selectedConv.labels?.includes(presetLang);
+                            if (active) return null;
+                            return (
+                              <button
+                                key={presetLang}
+                                onClick={async () => {
+                                  if (!selectedPhone) return;
+                                  const current = selectedConv.labels || [];
+                                  // Wissel: andere taal-label verwijderen, deze toevoegen
+                                  const other = presetLang === 'nl' ? 'en' : 'nl';
+                                  const next = [...current.filter(l => l !== other), presetLang];
+                                  await updateLabels(selectedPhone, next);
+                                  const c = await haalGesprekken(tab);
+                                  setConversations(c);
+                                }}
+                                title={`Markeer dit gesprek als ${presetLang === 'nl' ? 'Nederlands' : 'Engels'} — AI antwoordt voortaan in deze taal`}
+                                style={{
+                                  fontSize: 10, fontWeight: 700, color: '#6B7280',
+                                  background: '#F3F4F6', border: '1px solid #E5E7EB',
+                                  borderRadius: 3, padding: '1px 6px', cursor: 'pointer',
+                                  fontFamily: FONT, letterSpacing: 0.3,
+                                }}
+                              >
+                                + {presetLang.toUpperCase()}
+                              </button>
+                            );
+                          })}
                           {showLabelInput ? (
                             <form onSubmit={handleAddLabel} style={{ display: 'inline-flex', gap: 2 }}>
                               <input
