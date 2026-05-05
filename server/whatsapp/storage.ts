@@ -245,32 +245,52 @@ export async function resolveAndUpsertConversation(args: {
   return m;
 }
 
-// ─── Sollicitant → WhatsApp contact ─────────────────────────────────────────
-// Wordt vanuit /api/sollicitatie aangeroepen: zet de sollicitant direct als
-// contact in de WhatsApp-lijst zodat planners hem kunnen aanschrijven, met de
-// juiste functie- en taal-labels al ingevuld.
-const SOLLICITATIE_FUNCTIE_LABEL: Record<string, string> = {
+// ─── Sollicitanten + Medewerkers → WhatsApp contact ────────────────────────
+// Wordt aangeroepen vanuit /api/sollicitatie en /api/admin/employees-flows:
+// zet de persoon direct als contact in de WhatsApp-lijst zodat planners hem
+// kunnen aanschrijven, met de juiste functie- en taal-labels al ingevuld.
+
+// Mapping van alle bekende functie-strings (sollicitant-categorieën én
+// medewerker-functies) naar één van de 4 conversatie-functie-labels.
+const FUNCTIE_TO_LABEL: Record<string, string> = {
+  // sollicitant categorieën
   horecamedewerker: 'horeca',
   chef: 'chef',
   housekeeping: 'housekeeping',
   logistiek: 'logistiek',
   frontoffice: 'horeca',
+  // medewerker functie-waarden
+  bediening: 'horeca',
+  'front-office': 'horeca',
+  orderpicker: 'logistiek',
+  // alias-veiligheid
+  horeca: 'horeca',
 };
 
 const TAAL_GROUP_LABELS = new Set(['nl', 'en']);
 const FUNCTIE_GROUP_LABELS = new Set(['horeca', 'chef', 'housekeeping', 'logistiek']);
 
-function languagesToTaalLabel(languages: unknown): string | null {
-  if (!Array.isArray(languages)) return null;
-  const lower = languages
-    .map((l) => (typeof l === 'string' ? l.trim().toLowerCase() : ''))
-    .filter(Boolean);
-  if (lower.includes('nederlands')) return 'nl';
-  if (lower.includes('engels')) return 'en';
+function functieToLabel(functie: string | null | undefined): string | null {
+  if (!functie) return null;
+  return FUNCTIE_TO_LABEL[String(functie).trim().toLowerCase()] || null;
+}
+
+// Accepteert zowel een array (sollicitatieformulier) als een string
+// ("Nederlands" / "Engels" / "Engels, Nederlands").
+function languageToTaalLabel(input: unknown): string | null {
+  let parts: string[] = [];
+  if (Array.isArray(input)) {
+    parts = input.map((l) => (typeof l === 'string' ? l : ''));
+  } else if (typeof input === 'string') {
+    parts = input.split(/[,;]/);
+  }
+  const lower = parts.map((l) => l.trim().toLowerCase()).filter(Boolean);
+  if (lower.includes('nederlands') || lower.includes('nl')) return 'nl';
+  if (lower.includes('engels') || lower.includes('en') || lower.includes('english')) return 'en';
   return null;
 }
 
-export interface UpsertSollicitantResult {
+export interface UpsertContactResult {
   ok: boolean;
   reason?: 'invalid_phone';
   conversationId?: number;
@@ -279,22 +299,20 @@ export interface UpsertSollicitantResult {
   created?: boolean;
 }
 
-export async function upsertSollicitantContact(args: {
+// Lage-niveau upsert die de feitelijke insert/update + label-merge doet.
+async function upsertContactWithLabels(args: {
   rawPhone: string | null | undefined;
-  candidateId: number;
+  candidateId: number | null;
   firstName: string | null | undefined;
   lastName: string | null | undefined;
-  functionType: string | null | undefined;
-  languages: unknown;
-}): Promise<UpsertSollicitantResult> {
+  functieLabel: string | null;
+  taalLabel: string | null;
+  newPreview: string;
+}): Promise<UpsertContactResult> {
   const phoneNumber = normalizePhone(args.rawPhone || '');
   if (!phoneNumber) return { ok: false, reason: 'invalid_phone' };
 
   const displayName = `${args.firstName ?? ''} ${args.lastName ?? ''}`.trim() || null;
-  const functieLabel = args.functionType
-    ? SOLLICITATIE_FUNCTIE_LABEL[String(args.functionType).toLowerCase()] || null
-    : null;
-  const taalLabel = languagesToTaalLabel(args.languages);
 
   const existing = await db
     .select({ id: whatsappConversations.id, labels: whatsappConversations.labels })
@@ -307,11 +325,12 @@ export async function upsertSollicitantContact(args: {
     (l) => !TAAL_GROUP_LABELS.has(l) && !FUNCTIE_GROUP_LABELS.has(l),
   );
   const merged = [...preserved];
-  if (taalLabel) merged.push(taalLabel);
-  if (functieLabel) merged.push(functieLabel);
+  if (args.taalLabel) merged.push(args.taalLabel);
+  if (args.functieLabel) merged.push(args.functieLabel);
   const finalLabels = Array.from(new Set(merged));
 
   const now = new Date();
+  const targetCategory: MatchCategory = args.candidateId ? 'candidate' : 'unmatched';
 
   if (existing.length === 0) {
     const [row] = await db
@@ -319,11 +338,11 @@ export async function upsertSollicitantContact(args: {
       .values({
         phoneNumber,
         candidateId: args.candidateId,
-        matchCategory: 'candidate',
+        matchCategory: targetCategory,
         displayName,
         labels: finalLabels.length ? finalLabels : null,
         lastMessageAt: now,
-        lastMessagePreview: '[Sollicitant — nog geen bericht]',
+        lastMessagePreview: args.newPreview,
         unreadCount: 0,
       })
       .returning({ id: whatsappConversations.id });
@@ -339,8 +358,13 @@ export async function upsertSollicitantContact(args: {
   await db
     .update(whatsappConversations)
     .set({
-      candidateId: args.candidateId,
-      matchCategory: sql`COALESCE(${whatsappConversations.manualCategory}, 'candidate')`,
+      // Alleen overschrijven als we daadwerkelijk een candidate-link hebben.
+      candidateId: args.candidateId
+        ? args.candidateId
+        : sql`${whatsappConversations.candidateId}`,
+      matchCategory: args.candidateId
+        ? sql`COALESCE(${whatsappConversations.manualCategory}, 'candidate')`
+        : sql`COALESCE(${whatsappConversations.manualCategory}, ${whatsappConversations.matchCategory})`,
       displayName: sql`COALESCE(${whatsappConversations.displayName}, ${displayName})`,
       labels: finalLabels.length ? finalLabels : null,
       updatedAt: now,
@@ -354,4 +378,42 @@ export async function upsertSollicitantContact(args: {
     labels: finalLabels,
     created: false,
   };
+}
+
+export async function upsertSollicitantContact(args: {
+  rawPhone: string | null | undefined;
+  candidateId: number;
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+  functionType: string | null | undefined;
+  languages: unknown;
+}): Promise<UpsertContactResult> {
+  return upsertContactWithLabels({
+    rawPhone: args.rawPhone,
+    candidateId: args.candidateId,
+    firstName: args.firstName,
+    lastName: args.lastName,
+    functieLabel: functieToLabel(args.functionType),
+    taalLabel: languageToTaalLabel(args.languages),
+    newPreview: '[Sollicitant — nog geen bericht]',
+  });
+}
+
+export async function upsertEmployeeContact(args: {
+  rawPhone: string | null | undefined;
+  candidateId?: number | null;
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+  functie: string | null | undefined;
+  language: string | null | undefined;
+}): Promise<UpsertContactResult> {
+  return upsertContactWithLabels({
+    rawPhone: args.rawPhone,
+    candidateId: args.candidateId ?? null,
+    firstName: args.firstName,
+    lastName: args.lastName,
+    functieLabel: functieToLabel(args.functie),
+    taalLabel: languageToTaalLabel(args.language),
+    newPreview: '[Medewerker — nog geen bericht]',
+  });
 }

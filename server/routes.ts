@@ -7362,10 +7362,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper: synchroniseer een (zojuist aangemaakte) medewerker naar de
+  // WhatsApp-contactenlijst — met functie- + taal-label, zonder ooit een
+  // create-flow te breken bij fouten.
+  async function syncEmployeeToWhatsappContact(employee: any, source: string): Promise<void> {
+    if (!employee?.phone) return;
+    try {
+      const { upsertEmployeeContact } = await import('./whatsapp/storage');
+      const r = await upsertEmployeeContact({
+        rawPhone: employee.phone,
+        candidateId: employee.candidateId ?? null,
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        functie: employee.functie,
+        language: employee.language,
+      });
+      if (!r.ok) {
+        console.warn(`[Medewerker→WA-contact] (${source}) Overgeslagen:`, r.reason);
+      } else {
+        console.log(
+          `[Medewerker→WA-contact] (${source}) ${r.created ? 'Aangemaakt' : 'Bijgewerkt'} voor ${r.phoneNumber} (labels: ${(r.labels || []).join(', ') || 'geen'})`,
+        );
+      }
+    } catch (e: any) {
+      console.error(`[Medewerker→WA-contact] (${source}) Fout:`, e?.message || e);
+    }
+  }
+
   app.post("/api/admin/employees", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const data = insertEmployeeSchema.parse(req.body);
       const employee = await storage.createEmployee(data);
+      await syncEmployeeToWhatsappContact(employee, '/api/admin/employees');
       return res.status(201).json(employee);
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -7556,6 +7584,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateCandidateStatus(application.candidateId, 'aangenomen').catch(() => {});
       }
 
+      await syncEmployeeToWhatsappContact(employee, '/api/admin/applications/:id/aannemen');
+
       return res.status(201).json({ employee });
     } catch (error: any) {
       console.error("Error aannemen application:", error);
@@ -7595,6 +7625,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update sollicitant naar aangenomen
       await storage.updateCandidateStatus(candidateId, 'aangenomen');
+
+      await syncEmployeeToWhatsappContact(employee, '/api/admin/candidates/:id/aannemen');
 
       return res.status(201).json({ employee });
     } catch (error: any) {
