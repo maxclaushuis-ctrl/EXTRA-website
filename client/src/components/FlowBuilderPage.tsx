@@ -696,7 +696,7 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 100,
+      position: 'fixed', inset: 0, zIndex: 40,
       display: 'flex', flexDirection: 'column',
       background: '#F8F8F8',
       fontFamily: 'Inter, sans-serif',
