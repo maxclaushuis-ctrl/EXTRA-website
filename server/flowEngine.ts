@@ -394,7 +394,7 @@ export async function runFlowScheduler(): Promise<void> {
 
 // ─── Flow activeren ───────────────────────────────────────────────────────────
 
-export async function activateFlow(campaignId: number): Promise<{ gestart: number }> {
+export async function activateFlow(campaignId: number): Promise<{ gestart: number; modus?: string }> {
   const campaign = await storage.getProspectCampaign(campaignId);
   if (!campaign) throw new Error('Campagne niet gevonden');
 
@@ -403,11 +403,31 @@ export async function activateFlow(campaignId: number): Promise<{ gestart: numbe
   const trigger = steps.find(s => s.type === 'trigger');
   if (!trigger) throw new Error('Geen trigger stap gevonden');
 
-  // Haal contacten op die voldoen aan de segmentfilters (incl. Blok 1 phase + functionTagIds)
+  let triggerCfg: any = {};
+  try { triggerCfg = JSON.parse(trigger.config || '{}'); } catch {}
+  const triggerType: string = triggerCfg.triggerType || 'handmatig';
+
+  // ─── Klik / Open trigger: NIET vooraf alle contacten in de flow zetten ────
+  // Anders zou de trigger-stap (die direct doorzet naar de volgende stap)
+  // meteen Mail 2 sturen naar het hele segment, ongeacht of iemand op
+  // Mail 1 had geklikt. Voor klik/open wachten we op werkelijke events
+  // in de bron-campagne — die starten een contact via triggerFlowsForEvent
+  // (zie /api/track/click + /api/track/open in routes.ts).
+  if (triggerType === 'klik_in_campagne' || triggerType === 'open_van_campagne') {
+    if (!triggerCfg.bronCampagneId) {
+      throw new Error('Bron-campagne ontbreekt in de trigger-configuratie');
+    }
+    await storage.updateProspectCampaign(campaignId, { status: 'actief' });
+    console.log(
+      `[FlowEngine] Flow ${campaignId} geactiveerd in '${triggerType}'-modus — wacht op events in bron-campagne ${triggerCfg.bronCampagneId}`,
+    );
+    return { gestart: 0, modus: triggerType };
+  }
+
+  // ─── Handmatig: pre-populate alle contacten in het segment ──────────────
   const { resolveCampaignAudience } = await import('./prospectSegmentResolver');
   const targets = await resolveCampaignAudience(campaign);
 
-  // Maak flow_contact_progress records aan
   let gestart = 0;
   for (const contact of targets) {
     if (!contact.id) continue;
@@ -425,13 +445,11 @@ export async function activateFlow(campaignId: number): Promise<{ gestart: numbe
     gestart++;
   }
 
-  // Update campagne status
   await storage.updateProspectCampaign(campaignId, { status: 'actief' });
-
-  console.log(`[FlowEngine] Flow ${campaignId} geactiveerd voor ${gestart} contacten`);
+  console.log(`[FlowEngine] Flow ${campaignId} geactiveerd voor ${gestart} contacten (handmatig)`);
 
   // Direct de eerste stap verwerken
   setTimeout(() => runFlowScheduler().catch(console.error), 100);
 
-  return { gestart };
+  return { gestart, modus: 'handmatig' };
 }

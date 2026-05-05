@@ -632,13 +632,27 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
       return;
     }
 
-    if (!window.confirm(`Flow activeren voor campagne "${campaignName}"?\n\nDe flow wordt gestart voor alle contacten die voldoen aan de segmentfilters.`)) return;
+    const triggerType = triggerNode?.data.config?.triggerType || 'handmatig';
+    const bevestiging = triggerType === 'klik_in_campagne'
+      ? `Flow activeren voor campagne "${campaignName}"?\n\nDe vervolgmail wordt automatisch verzonden zodra een contact KLIKT op een link in de bron-campagne. (Dus niet meteen naar het hele segment.)`
+      : triggerType === 'open_van_campagne'
+        ? `Flow activeren voor campagne "${campaignName}"?\n\nDe vervolgmail wordt automatisch verzonden zodra een contact de bron-campagne OPENT. (Dus niet meteen naar het hele segment.)`
+        : `Flow activeren voor campagne "${campaignName}"?\n\nDe flow wordt gestart voor alle contacten die voldoen aan de segmentfilters.`;
+    if (!window.confirm(bevestiging)) return;
 
     setActivating(true);
     try {
       await handleSave(true);
       const result: any = await apiRequest('POST', `/api/admin/prospect-campaigns/${campaignId}/flow-activate`);
-      toast({ title: `Flow geactiveerd voor ${result?.gestart ?? 0} contacten ✓` });
+      const modus = result?.modus;
+      if (modus === 'klik_in_campagne' || modus === 'open_van_campagne') {
+        toast({
+          title: 'Flow staat live ✓',
+          description: `Mail wordt verstuurd zodra een contact ${modus === 'klik_in_campagne' ? 'klikt op een link' : 'de mail opent'} in de bron-campagne.`,
+        });
+      } else {
+        toast({ title: `Flow geactiveerd voor ${result?.gestart ?? 0} contacten ✓` });
+      }
       onActivate?.();
     } catch (e: any) {
       toast({ title: e?.data?.message || 'Activeren mislukt', variant: 'destructive' });
