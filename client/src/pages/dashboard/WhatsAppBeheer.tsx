@@ -466,7 +466,12 @@ export default function WhatsAppBeheer() {
     const parts = (selectedConv.displayName || '').trim().split(/\s+/);
     setEditVoornaam(parts[0] || '');
     setEditAchternaam(parts.slice(1).join(' ') || '');
-    setEditCategorie('kandidaat');
+    // Pre-selecteer categorie op basis van huidig tabblad / matchCategory
+    const initCat: 'klant' | 'medewerker' | 'kandidaat' =
+      selectedConv.matchCategory === 'prospect' ? 'klant'
+      : selectedConv.matchCategory === 'candidate' ? 'medewerker'
+      : 'kandidaat';
+    setEditCategorie(initCat);
     setEditEmail('');
     setEditNotes(selectedConv.contactNotes || '');
     setEditError(null);
@@ -486,9 +491,16 @@ export default function WhatsAppBeheer() {
         email: editCategorie === 'klant' ? (editEmail.trim() || undefined) : undefined,
         notities: editNotes.trim() || undefined,
       });
+      // Synchroniseer manualCategory zodat het gesprek in de juiste tab blijft
+      // (en niet door de auto-matcher naar een andere tab wordt verplaatst).
+      const targetCategory: 'candidate' | 'prospect' | 'unmatched' =
+        editCategorie === 'klant' ? 'prospect'
+        : editCategorie === 'medewerker' ? 'candidate'
+        : 'candidate'; // 'kandidaat' creëert ook een candidate-rij
+      await updateConversationCategory(selectedPhone, targetCategory);
       setEditingContact(false);
-      // Verversing: gesprekken-lijst (kan in andere tab terechtkomen) + huidige selectie
-      const newTab: Tab = editCategorie === 'klant' ? 'prospect' : 'candidate';
+      // Verversing: schakel naar het juiste tabblad zodat het gesprek zichtbaar blijft
+      const newTab: Tab = targetCategory;
       setTab(newTab);
       const c = await haalGesprekken(newTab);
       setConversations(c);
@@ -1226,7 +1238,10 @@ export default function WhatsAppBeheer() {
                               convDisplayName(selectedConv)
                             )}
                           </div>
-                          {selectedConv.matchCategory === 'unmatched' && (
+                          {/* Naam toevoegen/bewerken — beschikbaar zolang er nog geen onderliggend
+                              candidate- of prospect_contact-record aan dit gesprek is gekoppeld
+                              (bv. na handmatige verplaatsing tussen tabs via de Categorie-dropdown). */}
+                          {!selectedConv.candidateId && !selectedConv.prospectContactId && (
                             <button
                               onClick={openEditContact}
                               title={selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen'}
@@ -1353,7 +1368,7 @@ export default function WhatsAppBeheer() {
                     </div>
                   </div>
 
-                  {editingContact && selectedConv.matchCategory === 'unmatched' && (
+                  {editingContact && !selectedConv.candidateId && !selectedConv.prospectContactId && (
                     <div style={{ padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
                       <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>
