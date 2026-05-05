@@ -10556,12 +10556,20 @@ OTHER RULES:
 
   app.get('/api/whatsapp/team-members', adminMiddleware, async (_req: Request, res: Response) => {
     const { users: usersTable } = await import('@shared/schema');
+    const { and: drizzleAnd, ne: drizzleNe } = await import('drizzle-orm');
+    // Alleen echte admin-personen: Lea, Charlotte, Max, Eveline (geen technische seed-admin)
     const admins = await db.select({
       id: usersTable.id,
       firstName: usersTable.firstName,
       lastName: usersTable.lastName,
-    }).from(usersTable).where(drizzleEq(usersTable.role, 'admin'));
-    res.json(admins.map(a => ({ id: a.id, name: `${a.firstName} ${a.lastName}` })));
+    }).from(usersTable).where(drizzleAnd(
+      drizzleEq(usersTable.role, 'admin'),
+      drizzleNe(usersTable.email, 'admin@extra.nl'),
+    ));
+    res.json(admins.map(a => ({
+      id: a.id,
+      name: `${a.firstName ?? ''} ${a.lastName ?? ''}`.trim() || 'Admin',
+    })));
   });
 
   app.put('/api/whatsapp/conversations/:phoneNumber/assign', adminMiddleware, async (req: Request, res: Response) => {

@@ -1302,33 +1302,21 @@ export default function WhatsAppBeheer() {
                           <input value={editAchternaam} onChange={e => setEditAchternaam(e.target.value)} placeholder="Achternaam *" required
                             style={{ flex: 1, padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginTop: 2 }}>Categorie</div>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {([
-                            { v: 'klant', label: 'Klant', help: 'Bedrijfscontact' },
-                            { v: 'medewerker', label: 'Medewerker', help: 'Aangenomen' },
-                            { v: 'kandidaat', label: 'Kandidaat', help: 'Sollicitant' },
-                          ] as const).map(opt => {
-                            const active = editCategorie === opt.v;
-                            return (
-                              <button
-                                type="button"
-                                key={opt.v}
-                                onClick={() => setEditCategorie(opt.v)}
-                                style={{
-                                  flex: 1, minWidth: 90,
-                                  background: active ? NAVY : '#fff',
-                                  color: active ? '#fff' : '#374151',
-                                  border: `1px solid ${active ? NAVY : '#D1D5DB'}`,
-                                  borderRadius: 6, padding: '6px 8px', fontSize: 11, fontWeight: 600,
-                                  cursor: 'pointer', fontFamily: FONT, lineHeight: 1.3, textAlign: 'center',
-                                }}
-                              >
-                                {opt.label}
-                                <div style={{ fontSize: 9, fontWeight: 400, opacity: 0.85, marginTop: 1 }}>{opt.help}</div>
-                              </button>
-                            );
-                          })}
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 4 }}>Categorie</div>
+                          <select
+                            value={editCategorie}
+                            onChange={e => setEditCategorie(e.target.value as 'klant' | 'medewerker' | 'kandidaat')}
+                            style={{
+                              width: '100%', padding: '8px 10px', fontSize: 12,
+                              border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none',
+                              fontFamily: FONT, color: NAVY, background: '#fff', cursor: 'pointer',
+                            }}
+                          >
+                            <option value="klant">Klanten — bedrijfscontact</option>
+                            <option value="medewerker">Medewerkers — aangenomen</option>
+                            <option value="kandidaat">Kandidaten — sollicitant</option>
+                          </select>
                         </div>
                         {editCategorie === 'klant' && (
                           <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" placeholder="E-mail (optioneel — voor mailcampagnes)"
