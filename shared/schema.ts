@@ -1448,6 +1448,7 @@ export type InsertWhatsappInternalNote = typeof whatsappInternalNotes.$inferInse
 export const whatsappAiSettings = pgTable("whatsapp_ai_settings", {
   id: serial("id").primaryKey(),
   toneOfVoice: text("tone_of_voice").default('').notNull(),
+  voiceExamples: text("voice_examples").default('').notNull(),
   guidelines: text("guidelines").default('').notNull(),
   cancellationProtocol: text("cancellation_protocol").default('').notNull(),
   extraContext: text("extra_context").default('').notNull(),

@@ -113,6 +113,21 @@ export const markeerGelezen = (phoneNumber: string) =>
   post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-read`);
 export const stuurBericht = (nummer: string, tekst: string) =>
   post<{ success: boolean; messageId: string | null; dbId: number }>('/stuur', { nummer, tekst });
+
+export const stuurMedia = async (nummer: string, file: File, caption?: string) => {
+  const fd = new FormData();
+  fd.append('nummer', nummer);
+  fd.append('file', file);
+  if (caption) fd.append('caption', caption);
+  const r = await fetch(`${BASE}/stuur-media`, {
+    method: 'POST',
+    credentials: 'include',
+    body: fd,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || (data as any)?.error) throw new Error((data as any)?.error || `stuur-media: ${r.status}`);
+  return data as { success: boolean; messageId: string | null; dbId: number; mediaType: string; mediaId: string };
+};
 export const haalStats = () => get<Stats>('/stats');
 export const haalWebhookStatus = () => get<WebhookStatus>('/webhook-status');
 export const registreerWebhook = (url?: string) =>
@@ -244,6 +259,7 @@ export const maakNotitie = (phoneNumber: string, body: string) =>
 export interface AiSettings {
   id: number;
   toneOfVoice: string;
+  voiceExamples: string;
   guidelines: string;
   cancellationProtocol: string;
   extraContext: string;

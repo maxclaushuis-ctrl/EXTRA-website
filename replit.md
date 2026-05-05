@@ -82,13 +82,16 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
 -   **Env-vars**: `WHATSAPP_360_API_KEY`, `WHATSAPP_WEBHOOK_SECRET`.
 -   **Docs**: `server/whatsapp/README.md`.
 -   **AI Reply Suggestions + Auto-reply**: AI-powered antwoordsuggesties én volledig autonome bot-modus voor WhatsApp-berichten, aangedreven door OpenAI (gpt-4o-mini).
-    -   `GET/PUT /api/whatsapp/ai-settings` — AI-richtlijnen (tone of voice, algemene richtlijnen, afmeldprotocol, extra context) + auto-reply config (`autoReplyEnabled`, `autoReplyOnlyForKnown`, `autoReplyMinIntervalSec`).
-    -   `POST /api/whatsapp/ai-suggest` — AI-suggestie genereren op basis van gespreksgeschiedenis, contactinfo, richtlijnen en kennisbank.
+    -   `GET/PUT /api/whatsapp/ai-settings` — AI-richtlijnen (tone of voice, voorbeeldberichten van eigen schrijfstijl, algemene richtlijnen, afmeldprotocol, extra context) + auto-reply config (`autoReplyEnabled`, `autoReplyOnlyForKnown`, `autoReplyMinIntervalSec`).
+    -   `POST /api/whatsapp/ai-suggest` — AI-suggestie genereren op basis van gespreksgeschiedenis, contactinfo, richtlijnen, kennisbank en voorbeeldberichten.
     -   `GET/POST/PUT/DELETE /api/whatsapp/ai-knowledge` — CRUD op kennisbank-entries (genoemde protocollen die de AI als context krijgt).
-    -   Tabellen: `whatsapp_ai_settings` (config + auto-reply flags), `whatsapp_ai_knowledge` (titel, content, enabled, sortOrder).
+    -   `POST /api/whatsapp/stuur-media` — Multipart-upload voor foto's, video's, audio en documenten (max 16MB). Server uploadt eerst naar 360dialog `/media`, daarna verstuurt het bericht met media-id; mime → WhatsApp-type-mapping (image/video/audio/document) automatisch.
+    -   Tabellen: `whatsapp_ai_settings` (config + auto-reply flags + `voiceExamples`), `whatsapp_ai_knowledge` (titel, content, enabled, sortOrder).
+    -   **Tone-of-voice + voorbeeldberichten**: planner plakt eigen WhatsApp-berichten in `voiceExamples`-veld; AI bootst toon, lengte en emoji-gebruik na maar VERTAALT die stijl naar de juiste taal.
+    -   **Multi-language detection**: Helper `detectMessageLanguage()` doet een snelle gpt-4o-mini call (max_tokens=20, temperature=0) voor de laatste inkomende boodschap, retourneert ISO-code + naam. Beide endpoints (auto-reply en suggest) injecteren de gedetecteerde taal HARD in het system prompt zodat het model gegarandeerd in dezelfde taal antwoordt (NL/EN/ES/PL/DE/FR/AR/TR/RO/PT/IT etc.) — onafhankelijk van de taal van de voorbeeldberichten/protocollen. Fallback bij detectie-fout = Nederlands.
     -   Auto-reply: Bij ingeschakelde modus genereert/verstuurt de bot zelfstandig antwoorden op inkomende tekstberichten. Veiligheidsmaatregelen: alleen-bekende-contacten toggle, rate-limit (min interval), AI-escalatie naar planner bij twijfel/gevoelige onderwerpen (model retourneert "ESCALATE"). Geactiveerd via webhook handler `tryAutoReply()` in `server/routes.ts`.
-    -   Frontend: Automatische AI-suggestie bij nieuw inbound bericht, ✨-knop voor handmatig opvragen, suggestiebalk met Overnemen/Bewerken/Opnieuw. AI-knop ook bij groepsberichten. AI-richtlijnen panel achter "✨ AI" knop in header met kennisbank-beheer (add/edit/delete protocollen) en auto-antwoord toggle met safety opties.
--   **Niet in Fase 1**: templates, diensten-koppeling, media-download.
+    -   Frontend: Automatische AI-suggestie bij nieuw inbound bericht, ✨-knop voor handmatig opvragen, suggestiebalk met Overnemen/Bewerken/Opnieuw. AI-knop ook bij groepsberichten. AI-richtlijnen panel achter "✨ AI" knop in header met voorbeeldberichten-veld, kennisbank-beheer (add/edit/delete protocollen) en auto-antwoord toggle met safety opties. **+** knop in chat-input opent file-picker (foto/video/audio/PDF/Office) met preview-balk en bijschrift-veld.
+-   **Niet in Fase 1**: templates, diensten-koppeling, inbound media-download.
 
 ### Brochure Pages (Slide-based Presentations)
 -   **`/brochure`** → `Brochure.tsx` — Algemene NL brochure.

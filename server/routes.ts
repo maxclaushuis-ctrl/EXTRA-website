@@ -9928,6 +9928,45 @@ ${posts.map(p => `  <url>
     return cryptoModule.timingSafeEqual(a, b);
   }
 
+  // ─── Hulp: detecteer taal van de laatste inkomende boodschap (snelle pre-call) ──
+  // Retourneert ISO-taalcode + leesbare naam. Bij fout: nl/Nederlands als veilige default.
+  async function detectMessageLanguage(text: string): Promise<{ code: string; name: string }> {
+    const fallback = { code: 'nl', name: 'Nederlands' };
+    try {
+      const cleaned = (text || '').trim();
+      if (cleaned.length < 2) return fallback;
+
+      let OpenAI: any;
+      try { OpenAI = (await import('openai')).default; } catch { return fallback; }
+      const client = new OpenAI({
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? 'unused',
+      });
+
+      const completion = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a language detector. Respond with ONLY one line in this exact format: "<ISO 639-1 code>|<English language name>". Examples: "nl|Dutch", "en|English", "es|Spanish", "pl|Polish", "de|German", "fr|French", "ar|Arabic", "tr|Turkish", "ro|Romanian", "pt|Portuguese", "it|Italian". No quotes, no other text, no JSON.' },
+          { role: 'user', content: cleaned.slice(0, 300) },
+        ],
+        max_tokens: 20,
+        temperature: 0,
+      });
+      const raw = (completion.choices?.[0]?.message?.content || '').trim().replace(/^["']|["']$/g, '');
+      const parts = raw.split('|').map(s => s.trim());
+      if (parts.length >= 2 && parts[0] && parts[1]) {
+        const result = { code: parts[0].toLowerCase().slice(0, 5), name: parts[1] };
+        console.log(`[lang-detect] "${cleaned.slice(0, 40)}…" → ${result.code}/${result.name}`);
+        return result;
+      }
+      console.log(`[lang-detect] FALLBACK (kon "${raw}" niet parsen) voor: ${cleaned.slice(0, 40)}`);
+      return fallback;
+    } catch (err: any) {
+      console.log(`[lang-detect] FOUT (${err?.message}) — fallback Nederlands`);
+      return fallback;
+    }
+  }
+
   // ─── Auto-reply helper: genereer + verstuur AI-antwoord op inkomend bericht ──
   async function tryAutoReply(opts: {
     phoneNumber: string;
@@ -9990,6 +10029,10 @@ ${posts.map(p => `  <url>
         .where(eq(whatsappAiKnowledge.enabled, true))
         .orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
 
+      // 5b. Detecteer taal van laatste inkomende bericht
+      const lastInbound = [...allMessages].reverse().find((m: any) => m.direction === 'inbound');
+      const lang = lastInbound?.body ? await detectMessageLanguage(lastInbound.body) : { code: 'nl', name: 'Nederlands' };
+
       // 6. OpenAI-call
       let OpenAI: any;
       try { OpenAI = (await import('openai')).default; } catch { return; }
@@ -10000,6 +10043,7 @@ ${posts.map(p => `  <url>
 
       let guidelinesBlock = '';
       if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;
+      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}`;
       if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
       if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
       if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
@@ -10009,15 +10053,19 @@ ${posts.map(p => `  <url>
       }
 
       const contactInfo = opts.contactName ? `\nNaam contact: ${opts.contactName}` : '';
-      const systemPrompt = `Je bent de officiële WhatsApp-assistent van EXTRA, een horeca uitzendbureau uit Amsterdam. Je beantwoordt berichten ZELFSTANDIG, zonder menselijke tussenkomst.
+      const systemPrompt = `You are the official WhatsApp assistant for EXTRA, a hospitality staffing agency in Amsterdam. You answer messages AUTONOMOUSLY without human intervention.
 
-BELANGRIJK:
-- Schrijf ALLEEN het antwoord-bericht zelf, geen uitleg of toelichting
-- Houd het kort en bondig (max 2-3 zinnen tenzij meer nodig is)
-- Schrijf in het Nederlands
-- Gebruik GEEN aanhalingstekens rond het bericht
-- Als je het antwoord NIET zeker weet of het gaat om iets gevoeligs (klachten, betalingen, juridisch), antwoord dan EXACT met: "ESCALATE" (zonder verdere tekst). Een planner pakt dan over.
-- Doe nooit toezeggingen die je niet kunt waarmaken${guidelinesBlock}${contactInfo}`;
+🌍 LANGUAGE — ABSOLUTE HARD RULE (overrides everything else):
+The user's last incoming message has been detected as: ${lang.name} (ISO: ${lang.code}).
+You MUST write your ENTIRE reply in ${lang.name} ONLY. Do not switch languages mid-message. Do not respond in Dutch unless ${lang.name} IS Dutch.
+Voice/style examples below are in another language — copy only their TONE, LENGTH and emoji usage, but TRANSLATE everything into ${lang.name}.
+
+OTHER RULES:
+- Write ONLY the reply message itself, no explanation or commentary
+- Keep it short (max 2-3 sentences unless more is truly needed)
+- Do NOT wrap the message in quotes
+- If you're NOT sure about the answer, or if the topic is sensitive (complaints, payments, legal), respond EXACTLY with: "ESCALATE" (no other text). A human planner will then take over.
+- Never make promises you cannot keep${guidelinesBlock}${contactInfo}`;
 
       const formatted = allMessages.map((m: any) => ({
         role: (m.direction === 'inbound' ? 'user' : 'assistant') as 'user' | 'assistant',
@@ -10157,6 +10205,125 @@ BELANGRIJK:
       return res.json({ success: true, messageId: waMessageId, dbId: messageRowId });
     } catch (err: any) {
       console.error('Fout bij versturen WhatsApp bericht:', err.message);
+      await waStorage.updateOutboundResult(messageRowId, {
+        status: 'failed',
+        errorCode: 'network_error',
+        errorMessage: err.message,
+      });
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/whatsapp/stuur-media — bestand uploaden + verzenden via 360dialog
+  // Multipart upload: file (binary) + nummer + optionele caption
+  const whatsappMediaUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 16 * 1024 * 1024 }, // 16MB conform WhatsApp Cloud API limiet voor de meeste types
+  });
+
+  app.post('/api/whatsapp/stuur-media', whatsappSendLimiter, adminMiddleware, whatsappMediaUpload.single('file'), async (req: Request, res: Response) => {
+    const nummer = (req.body?.nummer || '').toString();
+    const caption = (req.body?.caption || '').toString().trim();
+    const file = req.file;
+    if (!nummer || !file) return res.status(400).json({ error: 'nummer en file zijn verplicht' });
+    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+
+    const normalized = normalizePhone(nummer);
+    if (!normalized) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+
+    // Bepaal WhatsApp media-type op basis van MIME
+    const mime = file.mimetype || 'application/octet-stream';
+    let waType: 'image' | 'video' | 'audio' | 'document' = 'document';
+    if (mime.startsWith('image/')) waType = 'image';
+    else if (mime.startsWith('video/')) waType = 'video';
+    else if (mime.startsWith('audio/')) waType = 'audio';
+
+    const now = new Date();
+    const userId = req.session?.userId ?? null;
+    const bodyPreview = caption || file.originalname || `[${waType}]`;
+
+    const match = await waStorage.resolveAndUpsertConversation({
+      phoneNumber: normalized,
+      inbound: false,
+      bodyPreview,
+      at: now,
+    });
+
+    const messageRowId = await waStorage.insertOutboundQueued({
+      direction: 'outbound',
+      fromNumber: 'extra',
+      toNumber: normalized,
+      messageType: waType,
+      body: caption || null,
+      mediaUrl: null,
+      candidateId: match.candidateId,
+      prospectContactId: match.prospectContactId,
+      matchCategory: match.category,
+      sentByUserId: userId,
+      rawPayload: { type: waType, to: normalized, filename: file.originalname, mime, size: file.size, caption },
+    });
+
+    try {
+      // Stap 1: upload media naar 360dialog (gebruik Node's native FormData/Blob — Node 18+)
+      const fd = new FormData();
+      fd.append('messaging_product', 'whatsapp');
+      fd.append('type', mime);
+      fd.append('file', new Blob([file.buffer], { type: mime }), file.originalname || 'upload');
+
+      const uploadResp = await fetch(`${WA_BASE_URL}/media`, {
+        method: 'POST',
+        headers: { 'D360-API-KEY': WA_360_KEY }, // Geen Content-Type — fetch zet die met multipart-boundary zelf
+        body: fd,
+      });
+      const uploadText = await uploadResp.text();
+      let uploadData: any = {};
+      try { uploadData = JSON.parse(uploadText); } catch { /* niet-JSON */ }
+
+      if (!uploadResp.ok || !uploadData?.id) {
+        const errMsg = uploadData?.error?.message || uploadData?.message || uploadText.slice(0, 500);
+        await waStorage.updateOutboundResult(messageRowId, {
+          status: 'failed',
+          errorCode: String(uploadResp.status),
+          errorMessage: `media-upload: ${errMsg}`,
+        });
+        return res.status(uploadResp.status >= 400 ? uploadResp.status : 400).json({ error: `media-upload mislukt: ${errMsg}` });
+      }
+
+      const mediaId = uploadData.id as string;
+
+      // Stap 2: verstuur bericht met media-id
+      const mediaPayload: any = { id: mediaId };
+      if (caption && (waType === 'image' || waType === 'video' || waType === 'document')) mediaPayload.caption = caption;
+      if (waType === 'document' && file.originalname) mediaPayload.filename = file.originalname;
+
+      const sendPayload = { messaging_product: 'whatsapp', to: normalized, type: waType, [waType]: mediaPayload };
+      const r = await fetch(`${WA_BASE_URL}/messages`, {
+        method: 'POST',
+        headers: wa360Headers,
+        body: JSON.stringify(sendPayload),
+      });
+      const responseText = await r.text();
+      let data: any = {};
+      try { data = JSON.parse(responseText); } catch { /* niet-JSON */ }
+
+      console.log(`360dialog stuur-media (${waType}) → ${normalized}: HTTP ${r.status}`);
+
+      if (!r.ok || data?.error || data?.meta?.success === false) {
+        const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || data?.message || responseText.slice(0, 500);
+        const errorCode = data?.error?.code ? String(data.error.code) : String(r.status);
+        await waStorage.updateOutboundResult(messageRowId, {
+          status: 'failed',
+          errorCode,
+          errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+        });
+        return res.status(r.ok ? 400 : r.status).json({ error: `360dialog: ${errorMsg}` });
+      }
+
+      const waMessageId = data?.messages?.[0]?.id ?? null;
+      await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
+      return res.json({ success: true, messageId: waMessageId, dbId: messageRowId, mediaType: waType, mediaId });
+    } catch (err: any) {
+      console.error('Fout bij versturen WhatsApp media:', err.message);
       await waStorage.updateOutboundResult(messageRowId, {
         status: 'failed',
         errorCode: 'network_error',
@@ -10879,13 +11046,14 @@ BELANGRIJK:
 
   app.put('/api/whatsapp/ai-settings', adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { toneOfVoice, guidelines, cancellationProtocol, extraContext, autoReplyEnabled, autoReplyOnlyForKnown, autoReplyMinIntervalSec } = req.body;
+      const { toneOfVoice, voiceExamples, guidelines, cancellationProtocol, extraContext, autoReplyEnabled, autoReplyOnlyForKnown, autoReplyMinIntervalSec } = req.body;
       const { whatsappAiSettings } = await import('../shared/schema');
       const { eq } = await import('drizzle-orm');
       const rows = await db.select().from(whatsappAiSettings).limit(1);
       if (rows.length === 0) {
         await db.insert(whatsappAiSettings).values({
           toneOfVoice: toneOfVoice ?? '',
+          voiceExamples: voiceExamples ?? '',
           guidelines: guidelines ?? '',
           cancellationProtocol: cancellationProtocol ?? '',
           extraContext: extraContext ?? '',
@@ -10897,6 +11065,7 @@ BELANGRIJK:
         await db.update(whatsappAiSettings)
           .set({
             toneOfVoice: toneOfVoice ?? rows[0].toneOfVoice,
+            voiceExamples: voiceExamples ?? rows[0].voiceExamples,
             guidelines: guidelines ?? rows[0].guidelines,
             cancellationProtocol: cancellationProtocol ?? rows[0].cancellationProtocol,
             extraContext: extraContext ?? rows[0].extraContext,
@@ -11008,8 +11177,13 @@ BELANGRIJK:
         apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? 'unused',
       });
 
+      // Detecteer taal van het laatste inkomende bericht
+      const lastInboundMsg = [...chatMessages].reverse().find((m: any) => m.direction === 'inbound');
+      const lang = lastInboundMsg?.body ? await detectMessageLanguage(lastInboundMsg.body) : { code: 'nl', name: 'Nederlands' };
+
       let guidelinesBlock = '';
       if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;
+      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}`;
       if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
       if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
       if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
@@ -11024,14 +11198,18 @@ BELANGRIJK:
       if (contactName) contactInfo += `\nNaam contact: ${contactName}`;
       if (contactCompany) contactInfo += `\nBedrijf: ${contactCompany}`;
 
-      const systemPrompt = `Je bent een AI-assistent die planners helpt bij EXTRA, een horeca uitzendbureau uit Amsterdam. Je taak is om een kort, professioneel WhatsApp-antwoord te suggereren op basis van het gesprek.
+      const systemPrompt = `You are an AI assistant helping planners at EXTRA, a hospitality staffing agency in Amsterdam. Your task is to suggest a short, professional WhatsApp reply based on the conversation.
 
-BELANGRIJK:
-- Schrijf ALLEEN het antwoord-bericht zelf, geen uitleg of toelichting
-- Houd het kort en bondig (max 2-3 zinnen tenzij meer nodig is)
-- Schrijf in het Nederlands
-- Gebruik GEEN aanhalingstekens rond het bericht
-${mode === 'bulk' ? '- Dit is een groepsbericht dat naar meerdere ontvangers gaat, maak het dus algemeen toepasbaar' : '- Dit is een persoonlijk 1-op-1 gesprek'}
+🌍 LANGUAGE — ABSOLUTE HARD RULE (overrides everything else):
+The user's last incoming message has been detected as: ${lang.name} (ISO: ${lang.code}).
+You MUST write your ENTIRE reply in ${lang.name} ONLY. Do not switch languages mid-message. Do not respond in Dutch unless ${lang.name} IS Dutch.
+Voice/style examples below are in another language — copy only their TONE, LENGTH and emoji usage, but TRANSLATE everything into ${lang.name}.
+
+OTHER RULES:
+- Write ONLY the reply message itself, no explanation or commentary
+- Keep it short (max 2-3 sentences unless more is truly needed)
+- Do NOT wrap the message in quotes
+${mode === 'bulk' ? '- This is a group message going to multiple recipients, so make it generally applicable' : '- This is a personal 1-on-1 conversation'}
 ${guidelinesBlock}
 ${contactInfo}`;
 

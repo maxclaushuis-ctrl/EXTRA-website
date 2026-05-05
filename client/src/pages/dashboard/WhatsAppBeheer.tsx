@@ -3,6 +3,7 @@ import {
   haalGesprekken,
   haalBerichten,
   stuurBericht,
+  stuurMedia,
   markeerGelezen,
   haalStats,
   haalWebhookStatus,
@@ -96,6 +97,8 @@ export default function WhatsAppBeheer() {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [webhookStatus, setWebhookStatus] = useState<WebhookStatus | null>(null);
   const [webhookBusy, setWebhookBusy] = useState(false);
@@ -307,12 +310,19 @@ export default function WhatsAppBeheer() {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!reply.trim() || !selectedPhone) return;
+    if (!selectedPhone) return;
+    if (!reply.trim() && !attachedFile) return;
     setSending(true);
     setSendError(null);
     try {
-      await stuurBericht(selectedPhone, reply);
+      if (attachedFile) {
+        await stuurMedia(selectedPhone, attachedFile, reply.trim() || undefined);
+      } else {
+        await stuurBericht(selectedPhone, reply);
+      }
       setReply('');
+      setAttachedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setAiSuggestion('');
       setAiDismissed(false);
       const m = await haalBerichten(selectedPhone);
@@ -369,6 +379,7 @@ export default function WhatsAppBeheer() {
     try {
       const updated = await updateAiSettings({
         toneOfVoice: aiSettings.toneOfVoice,
+        voiceExamples: aiSettings.voiceExamples,
         guidelines: aiSettings.guidelines,
         cancellationProtocol: aiSettings.cancellationProtocol,
         extraContext: aiSettings.extraContext,
@@ -789,6 +800,17 @@ export default function WhatsAppBeheer() {
                 <textarea value={aiSettings.toneOfVoice} onChange={e => setAiSettings({ ...aiSettings, toneOfVoice: e.target.value })}
                   rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="Bijv: Professioneel maar warm en persoonlijk..." />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>
+                  ✍️ Voorbeeldberichten (eigen schrijfstijl)
+                </label>
+                <div style={{ fontSize: 10, color: '#6B7280', marginBottom: 4 }}>
+                  Plak hier 3-5 berichten die jij of je collega's eerder hebben gestuurd. De AI bootst deze stijl na — toon, lengte, emoji-gebruik, aanspreekvorm. Scheid berichten met een lege regel of "---".
+                </div>
+                <textarea value={aiSettings.voiceExamples} onChange={e => setAiSettings({ ...aiSettings, voiceExamples: e.target.value })}
+                  rows={6} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder={`Hé! Bedankt voor je bericht 🙌 Ik kijk er even naar en kom zo bij je terug.\n\n---\n\nTop dat je beschikbaar bent! Ik zet je in de planning, je krijgt vanavond bevestiging.\n\n---\n\nGoedemorgen, hoe is je shift gisteren bevallen?`} />
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Algemene richtlijnen</label>
@@ -1382,11 +1404,48 @@ export default function WhatsAppBeheer() {
                             {sendError}
                           </div>
                         )}
+                        {attachedFile && (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '8px 12px', background: '#EFF6FF', border: '1px solid #BFDBFE',
+                            borderRadius: 6, fontSize: 12, color: '#1E40AF', marginBottom: 8,
+                          }}>
+                            <span style={{ fontSize: 16 }}>📎</span>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {attachedFile.name} <span style={{ color: '#6B7280' }}>({(attachedFile.size / 1024).toFixed(0)} KB)</span>
+                            </span>
+                            <button type="button" onClick={() => { setAttachedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                              style={{ background: 'transparent', color: '#DC2626', border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 700, padding: '0 4px' }}
+                              title="Bijlage verwijderen">×</button>
+                          </div>
+                        )}
                         <form onSubmit={handleSend} style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*,video/*,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                            onChange={e => {
+                              const f = e.target.files?.[0];
+                              if (!f) return;
+                              if (f.size > 16 * 1024 * 1024) {
+                                setSendError('Bestand te groot (max 16 MB)');
+                                if (fileInputRef.current) fileInputRef.current.value = '';
+                                return;
+                              }
+                              setAttachedFile(f);
+                              setSendError(null);
+                            }}
+                            style={{ display: 'none' }}
+                          />
+                          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={sending}
+                            title="Bijlage toevoegen (foto, video, document)"
+                            style={{ background: attachedFile ? '#DBEAFE' : '#F0F4FA', color: NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '0 12px', fontSize: 18, fontWeight: 700, cursor: sending ? 'not-allowed' : 'pointer', lineHeight: 1 }}>
+                            +
+                          </button>
                           <input
                             value={reply}
                             onChange={e => setReply(e.target.value)}
-                            placeholder={within24h ? 'Typ een antwoord...' : 'Typ een antwoord (24u-venster mogelijk verlopen)...'}
+                            placeholder={attachedFile ? 'Optioneel: bijschrift bij bijlage...' : (within24h ? 'Typ een antwoord...' : 'Typ een antwoord (24u-venster mogelijk verlopen)...')}
                             disabled={sending}
                             style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
                           />
@@ -1395,8 +1454,8 @@ export default function WhatsAppBeheer() {
                             style={{ background: aiLoading ? '#E5E7EB' : '#F0F4FA', color: aiLoading ? '#9CA3AF' : NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '0 10px', fontSize: 15, cursor: aiLoading ? 'wait' : 'pointer' }}>
                             {aiLoading ? '\u23F3' : '\u2728'}
                           </button>
-                          <button type="submit" disabled={sending || !reply.trim()}
-                            style={{ background: (sending || !reply.trim()) ? '#E5E7EB' : NAVY, color: (sending || !reply.trim()) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: (sending || !reply.trim()) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
+                          <button type="submit" disabled={sending || (!reply.trim() && !attachedFile)}
+                            style={{ background: (sending || (!reply.trim() && !attachedFile)) ? '#E5E7EB' : NAVY, color: (sending || (!reply.trim() && !attachedFile)) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: (sending || (!reply.trim() && !attachedFile)) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
                             {sending ? '...' : 'Stuur'}
                           </button>
                         </form>
