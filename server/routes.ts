@@ -5324,6 +5324,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── vCard (.vcf) import — voor iPhone/iCloud/Google contacten-export ─────
+  app.post("/api/admin/prospect-contacts/import-vcard/preview", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const vcf: string = (req.body?.vcf || '').toString();
+      if (!vcf.trim()) return res.status(400).json({ message: 'Lege vCard-inhoud' });
+      if (vcf.length > 10_000_000) return res.status(413).json({ message: 'vCard te groot (>10 MB)' });
+      const { maakVcardPreview } = await import('./vcardImport');
+      const preview = await maakVcardPreview(vcf);
+      return res.json(preview);
+    } catch (err: any) {
+      console.error('[VcardImport] preview-fout:', err);
+      return res.status(500).json({ message: err?.message || 'Preview mislukt' });
+    }
+  });
+
+  app.post("/api/admin/prospect-contacts/import-vcard/commit", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const rijen = req.body?.rijen;
+      if (!Array.isArray(rijen) || rijen.length === 0) {
+        return res.status(400).json({ message: 'Geen contacten om te importeren' });
+      }
+      const { commitVcardImport } = await import('./vcardImport');
+      const resultaat = await commitVcardImport(rijen);
+      return res.json(resultaat);
+    } catch (err: any) {
+      console.error('[VcardImport] commit-fout:', err);
+      return res.status(500).json({ message: err?.message || 'Import mislukt' });
+    }
+  });
+
   // Import CRM contacts into prospect contacts list
   app.post("/api/admin/prospect-contacts/import-crm", adminMiddleware, async (req: Request, res: Response) => {
     try {

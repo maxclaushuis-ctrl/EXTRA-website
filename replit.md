@@ -31,6 +31,7 @@ The application employs a monorepo structure, separating the React frontend (`cl
     -   **Performance Dashboard**: Comprehensive analytics with KPIs, charts, and export options.
     -   **Scheduled Sending**: Timezone-aware scheduling infrastructure with flexible sending slots and workday considerations.
     -   **Apollo.io CSV Import**: One-click import with AI-powered header mapping and deduplication.
+    -   **vCard (.vcf) Import**: iPhone/iCloud/Google contacten-export rechtstreeks importeren als prospect-contacten. Parser ondersteunt vCard 2.1/3.0/4.0 (incl. quoted-printable, line-folding, mobiel-voorrang bij meerdere TEL's). Telefoon-only contacten krijgen een `wa+<nr>@no-email.local` placeholder zodat ze de WhatsApp-matcher voeden. Dedupe op email + genormaliseerd telefoonnummer.
     -   **Smart Flow Management**: Auto-stopping campaigns based on contact activity (replies, bounces, unsubscribes) and intelligent wait calculations respecting campaign sending windows.
     -   **SendGrid Integration**: Webhook handling for email events (deliveries, opens, clicks, bounces, spam reports) and inbound replies, updating contact status and campaign metrics.
     -   **Pipelining & Segmentation**: Contact phasing (new, in-campaign, in-conversation, client) and function-tag based segmentation for targeted campaigns.

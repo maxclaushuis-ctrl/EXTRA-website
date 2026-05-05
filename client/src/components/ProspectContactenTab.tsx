@@ -1300,6 +1300,224 @@ function FilterPanel({ filters, onChange, tagOptions, onClose }: {
   );
 }
 
+// ── vCard (.vcf) Import Modal ──────────────────────────────────────────────
+// Voor iPhone/iCloud/Google contacten-export. Backend parst de vCard, doet
+// dedupe op email + telefoon en laat preview zien voor commit.
+
+interface VcardRijFE {
+  voornaam: string | null;
+  achternaam: string | null;
+  fullName: string;
+  email: string | null;
+  emailIsPlaceholder: boolean;
+  telefoon: string | null;
+  telefoonOriginal: string | null;
+  bedrijf: string | null;
+  functietitel: string | null;
+}
+
+interface VcardPreviewFE {
+  totaalKaarten: number;
+  geldigNieuw: number;
+  zonderEmailEnTel: number;
+  dubbelInBestand: number;
+  dubbelInDb: number;
+  metEmail: number;
+  alleenTelefoon: number;
+  voorbeelden: VcardRijFE[];
+  alleRijen: VcardRijFE[];
+}
+
+function VcardImportModal({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved?: () => void }) {
+  const { toast } = useToast();
+  const [stap, setStap] = useState<1 | 2 | 3>(1);
+  const [bezig, setBezig] = useState(false);
+  const [preview, setPreview] = useState<VcardPreviewFE | null>(null);
+  const [resultaat, setResultaat] = useState<{ aangemaakt: number; overgeslagen: number; fouten: string[] } | null>(null);
+  const [bestandsnaam, setBestandsnaam] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const reset = () => {
+    setStap(1); setPreview(null); setResultaat(null); setBestandsnaam('');
+  };
+
+  const verwerkBestand = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.vcf')) {
+      toast({ title: 'Alleen .vcf bestanden', description: file.name, variant: 'destructive' });
+      return;
+    }
+    if (file.size === 0) { toast({ title: 'Bestand is leeg', variant: 'destructive' }); return; }
+    setBestandsnaam(file.name);
+    setBezig(true);
+    try {
+      const tekst = await file.text();
+      const data = await apiRequest('POST', '/api/admin/prospect-contacts/import-vcard/preview', { vcf: tekst }) as VcardPreviewFE;
+      setPreview(data);
+      setStap(2);
+    } catch (err: any) {
+      toast({ title: 'Inlezen mislukt', description: err?.message || 'Onbekende fout', variant: 'destructive' });
+    } finally { setBezig(false); }
+  };
+
+  const handleImport = async () => {
+    if (!preview || preview.alleRijen.length === 0) return;
+    setBezig(true);
+    try {
+      const data = await apiRequest('POST', '/api/admin/prospect-contacts/import-vcard/commit', {
+        rijen: preview.alleRijen,
+      }) as { aangemaakt: number; overgeslagen: number; fouten: string[] };
+      setResultaat(data);
+      setStap(3);
+      onSaved?.();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/prospect-contacts'] });
+      toast({ title: `${data.aangemaakt} contact(en) geïmporteerd uit vCard` });
+    } catch (err: any) {
+      toast({ title: 'Import mislukt', description: err?.message || 'Onbekende fout', variant: 'destructive' });
+    } finally { setBezig(false); }
+  };
+
+  const handleClose = () => { reset(); onClose(); };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5 text-purple-600" />
+            vCard (.vcf) importeren
+          </DialogTitle>
+          <p className="text-xs text-gray-500 mt-1">
+            iPhone/iCloud-tip: open <strong>iCloud.com → Contacten</strong>, selecteer alles (Cmd+A) en kies onderin tandwiel → <em>Exporteer vCard</em>.
+          </p>
+        </DialogHeader>
+
+        {stap === 1 && (
+          <div
+            onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault(); setIsDragging(false);
+              const f = e.dataTransfer.files?.[0]; if (f) verwerkBestand(f);
+            }}
+            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-purple-400'}`}
+            onClick={() => fileRef.current?.click()}
+          >
+            <Upload className="h-10 w-10 mx-auto mb-3 text-gray-400" />
+            <p className="text-sm font-medium text-gray-700">Sleep een .vcf hier of klik om te kiezen</p>
+            <p className="text-xs text-gray-400 mt-1">Eén bestand met al je contacten</p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".vcf,text/vcard,text/x-vcard"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) verwerkBestand(f); }}
+            />
+            {bezig && <p className="text-xs text-purple-600 mt-3">Bezig met inlezen...</p>}
+          </div>
+        )}
+
+        {stap === 2 && preview && (
+          <div className="space-y-4">
+            <div className="text-xs text-gray-500">Bestand: <strong>{bestandsnaam}</strong></div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+              <div className="bg-purple-50 border border-purple-100 rounded p-3">
+                <div className="text-2xl font-bold text-purple-700">{preview.totaalKaarten}</div>
+                <div className="text-[10px] uppercase tracking-wide text-purple-600 mt-0.5">Gevonden</div>
+              </div>
+              <div className="bg-green-50 border border-green-100 rounded p-3">
+                <div className="text-2xl font-bold text-green-700">{preview.geldigNieuw}</div>
+                <div className="text-[10px] uppercase tracking-wide text-green-600 mt-0.5">Nieuw</div>
+              </div>
+              <div className="bg-amber-50 border border-amber-100 rounded p-3">
+                <div className="text-2xl font-bold text-amber-700">{preview.dubbelInDb + preview.dubbelInBestand}</div>
+                <div className="text-[10px] uppercase tracking-wide text-amber-600 mt-0.5">Duplicaten</div>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                <div className="text-2xl font-bold text-gray-600">{preview.zonderEmailEnTel}</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-500 mt-0.5">Onbruikbaar</div>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded p-2 space-y-0.5">
+              <div>• <strong>{preview.metEmail}</strong> contact(en) met e-mailadres</div>
+              <div>• <strong>{preview.alleenTelefoon}</strong> contact(en) met alleen telefoonnummer (krijgen tijdelijke placeholder-mail)</div>
+              {preview.dubbelInDb > 0 && <div>• <strong>{preview.dubbelInDb}</strong> al in EXTRA aanwezig (overgeslagen)</div>}
+              {preview.dubbelInBestand > 0 && <div>• <strong>{preview.dubbelInBestand}</strong> dubbel binnen bestand</div>}
+              {preview.zonderEmailEnTel > 0 && <div>• <strong>{preview.zonderEmailEnTel}</strong> zonder e-mail én zonder telefoon (genegeerd)</div>}
+            </div>
+
+            {preview.voorbeelden.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-gray-700 mb-1.5">Voorbeeld (eerste {preview.voorbeelden.length}):</div>
+                <div className="border border-gray-200 rounded text-xs max-h-48 overflow-y-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 text-gray-500">
+                      <tr>
+                        <th className="text-left px-2 py-1 font-medium">Naam</th>
+                        <th className="text-left px-2 py-1 font-medium">E-mail</th>
+                        <th className="text-left px-2 py-1 font-medium">Telefoon</th>
+                        <th className="text-left px-2 py-1 font-medium">Bedrijf</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {preview.voorbeelden.map((r, i) => (
+                        <tr key={i} className="border-t border-gray-100">
+                          <td className="px-2 py-1">{r.fullName}</td>
+                          <td className="px-2 py-1 text-gray-500">{r.emailIsPlaceholder ? <span className="italic text-amber-600">(geen)</span> : r.email}</td>
+                          <td className="px-2 py-1 text-gray-500">{r.telefoon || '—'}</td>
+                          <td className="px-2 py-1 text-gray-500">{r.bedrijf || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { reset(); }}>Ander bestand</Button>
+              <Button
+                disabled={bezig || preview.geldigNieuw === 0}
+                onClick={handleImport}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {bezig ? 'Bezig met importeren...' : `Importeer ${preview.geldigNieuw} contact(en)`}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+
+        {stap === 3 && resultaat && (
+          <div className="space-y-4 text-center py-4">
+            <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold">Klaar!</div>
+              <div className="text-sm text-gray-600 mt-1">
+                {resultaat.aangemaakt} nieuwe contact(en) toegevoegd
+                {resultaat.overgeslagen > 0 && `, ${resultaat.overgeslagen} overgeslagen`}
+              </div>
+            </div>
+            {resultaat.fouten.length > 0 && (
+              <div className="text-left bg-red-50 border border-red-100 rounded p-2 text-xs text-red-700 max-h-32 overflow-y-auto">
+                <div className="font-semibold mb-1">Fouten:</div>
+                {resultaat.fouten.map((f, i) => <div key={i}>• {f}</div>)}
+              </div>
+            )}
+            <DialogFooter>
+              <Button onClick={handleClose} className="bg-purple-600 hover:bg-purple-700">Sluiten</Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function ProspectContactenTab() {
@@ -1312,6 +1530,7 @@ export default function ProspectContactenTab() {
   const [editContact, setEditContact] = useState<any>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [apolloOpen, setApolloOpen] = useState(false);
+  const [vcardOpen, setVcardOpen] = useState(false);
   // Stats filter override
   const [statFilter, setStatFilter] = useState<null | { type?: string; status?: string }>(null);
 
@@ -1438,6 +1657,9 @@ export default function ProspectContactenTab() {
         </Select>
 
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setVcardOpen(true)} title="iPhone/iCloud/Google contacten-export (.vcf) importeren">
+            <Upload className="h-3.5 w-3.5" />vCard (.vcf)
+          </Button>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setApolloOpen(true)} title="Apollo.io export importeren — kolommen + functietags worden automatisch herkend">
             <Upload className="h-3.5 w-3.5" />Apollo CSV
           </Button>
@@ -1538,6 +1760,7 @@ export default function ProspectContactenTab() {
       {editContact && <ContactFormModal open contact={editContact} tagSuggestions={uniqueTags} onClose={() => setEditContact(null)} onSaved={refetch} />}
       {importOpen && <CsvImportModal open onClose={() => setImportOpen(false)} onSaved={refetch} />}
       {apolloOpen && <ApolloImportModal open onClose={() => setApolloOpen(false)} onSaved={refetch} />}
+      {vcardOpen && <VcardImportModal open onClose={() => setVcardOpen(false)} onSaved={refetch} />}
       {selectedId != null && (
         <ContactDetailSheet
           contactId={selectedId}
