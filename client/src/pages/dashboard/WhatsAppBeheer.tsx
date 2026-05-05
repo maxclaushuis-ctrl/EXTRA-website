@@ -37,7 +37,13 @@ import {
   maakAiKnowledge,
   updateAiKnowledge,
   verwijderAiKnowledge,
+  haalAiAttachments,
+  uploadAiAttachment,
+  updateAiAttachment,
+  verwijderAiAttachment,
   type AiKnowledgeEntry,
+  type AiAttachment,
+  type AiAttachmentFieldKey,
   type Conversation,
   type Message,
   type Stats,
@@ -165,6 +171,8 @@ export default function WhatsAppBeheer() {
   const [newKnowledgeTitle, setNewKnowledgeTitle] = useState('');
   const [newKnowledgeContent, setNewKnowledgeContent] = useState('');
   const [knowledgeSavingId, setKnowledgeSavingId] = useState<number | 'new' | null>(null);
+  const [aiAttachments, setAiAttachments] = useState<AiAttachment[]>([]);
+  const [attachmentUploadingKey, setAttachmentUploadingKey] = useState<string | null>(null);
 
   type ImportTab = 'whatsapp' | 'kandidaten' | 'klanten' | 'csv' | 'handmatig';
   const [importTab, setImportTab] = useState<ImportTab>('whatsapp');
@@ -371,11 +379,104 @@ export default function WhatsAppBeheer() {
     setAiSettingsLoading(true);
     setAiKnowledgeLoading(true);
     try {
-      const [s, k] = await Promise.all([haalAiSettings(), haalAiKnowledge()]);
+      const [s, k, a] = await Promise.all([haalAiSettings(), haalAiKnowledge(), haalAiAttachments()]);
       setAiSettings(s);
       setAiKnowledge(k);
+      setAiAttachments(a);
     } catch { /* ignore */ }
     finally { setAiSettingsLoading(false); setAiKnowledgeLoading(false); }
+  }
+
+  async function handleAttachmentUpload(fieldKey: AiAttachmentFieldKey, file: File, knowledgeId?: number | null) {
+    if (file.type !== 'application/pdf') {
+      alert('Alleen PDF-bestanden zijn toegestaan');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      alert('Bestand is groter dan 25 MB');
+      return;
+    }
+    const key = `${fieldKey}:${knowledgeId ?? ''}`;
+    setAttachmentUploadingKey(key);
+    try {
+      const created = await uploadAiAttachment(fieldKey, file, knowledgeId ?? null);
+      setAiAttachments(prev => [...prev, created]);
+    } catch (e: any) {
+      alert(e.message || 'Upload mislukt');
+    } finally {
+      setAttachmentUploadingKey(null);
+    }
+  }
+
+  async function handleAttachmentToggle(att: AiAttachment) {
+    try {
+      const updated = await updateAiAttachment(att.id, { enabled: !att.enabled });
+      setAiAttachments(prev => prev.map(a => a.id === att.id ? updated : a));
+    } catch (e: any) {
+      alert(e.message || 'Wijzigen mislukt');
+    }
+  }
+
+  async function handleAttachmentDelete(att: AiAttachment) {
+    if (!window.confirm(`PDF "${att.filename}" verwijderen?`)) return;
+    try {
+      await verwijderAiAttachment(att.id);
+      setAiAttachments(prev => prev.filter(a => a.id !== att.id));
+    } catch (e: any) {
+      alert(e.message || 'Verwijderen mislukt');
+    }
+  }
+
+  function renderAttachmentList(fieldKey: AiAttachmentFieldKey, knowledgeId?: number | null) {
+    const filtered = aiAttachments.filter(a =>
+      a.fieldKey === fieldKey && (fieldKey !== 'knowledge' || a.knowledgeId === (knowledgeId ?? null))
+    );
+    const key = `${fieldKey}:${knowledgeId ?? ''}`;
+    const isUploading = attachmentUploadingKey === key;
+    const fmtBytes = (n: number) => n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+    return (
+      <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+        {filtered.map(att => (
+          <div key={att.id}
+            title={att.enabled ? `Geüpload ${new Date(att.uploadedAt).toLocaleDateString('nl-NL')} · klik om uit te schakelen` : 'Klik om in te schakelen'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 8px',
+              background: att.enabled ? '#EFF6FF' : '#F3F4F6',
+              border: `1px solid ${att.enabled ? '#BFDBFE' : '#E5E7EB'}`,
+              borderRadius: 12, fontSize: 11,
+              color: att.enabled ? NAVY : '#6B7280',
+              opacity: att.enabled ? 1 : 0.7,
+            }}>
+            <span onClick={() => handleAttachmentToggle(att)} style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span>📎</span>
+              <span style={{ fontWeight: 600, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.filename}</span>
+              <span style={{ color: '#9CA3AF', fontSize: 10 }}>({fmtBytes(att.fileSize)})</span>
+              {!att.enabled && <span style={{ fontSize: 10, color: '#9CA3AF' }}>uit</span>}
+            </span>
+            <button onClick={() => handleAttachmentDelete(att)} title="Verwijderen"
+              style={{ background: 'transparent', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
+          </div>
+        ))}
+        <label style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '4px 8px', borderRadius: 12,
+          background: isUploading ? '#F3F4F6' : '#fff',
+          border: '1px dashed #CBD5E1', color: '#6B7280',
+          fontSize: 11, cursor: isUploading ? 'wait' : 'pointer',
+        }}>
+          <span>📄</span>
+          <span>{isUploading ? 'Uploaden...' : 'PDF toevoegen'}</span>
+          <input type="file" accept="application/pdf" disabled={isUploading}
+            onChange={e => {
+              const f = e.target.files?.[0];
+              if (f) handleAttachmentUpload(fieldKey, f, knowledgeId);
+              e.target.value = '';
+            }}
+            style={{ display: 'none' }} />
+        </label>
+      </div>
+    );
   }
 
   async function saveAiSettings() {
@@ -832,6 +933,7 @@ export default function WhatsAppBeheer() {
                 <textarea value={aiSettings.toneOfVoice} onChange={e => setAiSettings({ ...aiSettings, toneOfVoice: e.target.value })}
                   rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="Bijv: Professioneel maar warm en persoonlijk..." />
+                {renderAttachmentList('tone_of_voice')}
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>
@@ -843,24 +945,28 @@ export default function WhatsAppBeheer() {
                 <textarea value={aiSettings.voiceExamples} onChange={e => setAiSettings({ ...aiSettings, voiceExamples: e.target.value })}
                   rows={6} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder={`Hé! Bedankt voor je bericht 🙌 Ik kijk er even naar en kom zo bij je terug.\n\n---\n\nTop dat je beschikbaar bent! Ik zet je in de planning, je krijgt vanavond bevestiging.\n\n---\n\nGoedemorgen, hoe is je shift gisteren bevallen?`} />
+                {renderAttachmentList('voice_examples')}
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Algemene richtlijnen</label>
                 <textarea value={aiSettings.guidelines} onChange={e => setAiSettings({ ...aiSettings, guidelines: e.target.value })}
                   rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="Bijv: Je bent een planningsassistent van EXTRA..." />
+                {renderAttachmentList('guidelines')}
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Afmeldprotocol</label>
                 <textarea value={aiSettings.cancellationProtocol} onChange={e => setAiSettings({ ...aiSettings, cancellationProtocol: e.target.value })}
                   rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="Bijv: Als iemand zich wil afmelden voor een dienst..." />
+                {renderAttachmentList('cancellation_protocol')}
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Extra context</label>
                 <textarea value={aiSettings.extraContext} onChange={e => setAiSettings({ ...aiSettings, extraContext: e.target.value })}
                   rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="Eventuele extra instructies of context voor de AI..." />
+                {renderAttachmentList('extra_context')}
               </div>
 
               {/* ─── Kennisbank / Protocollen ───────────────────────────── */}
@@ -902,6 +1008,7 @@ export default function WhatsAppBeheer() {
                           onChange={e => setAiKnowledge(prev => prev.map(k => k.id === entry.id ? { ...k, content: e.target.value } : k))}
                           rows={3} style={{ width: '100%', padding: '6px 8px', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 4, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
                           placeholder="Inhoud van het protocol..." />
+                        {renderAttachmentList('knowledge', entry.id)}
                       </div>
                     ))}
 

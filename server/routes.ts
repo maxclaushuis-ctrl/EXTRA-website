@@ -46,7 +46,7 @@ import { db } from "./db";
 import { users, candidates as candidatesTable, applications } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
-import { getSupabaseAdmin, extractCvStoragePath, downloadCvBuffer } from './supabase';
+import { getSupabaseAdmin, extractCvStoragePath, downloadCvBuffer, uploadWaAiAttachment, downloadWaAiAttachmentBuffer, deleteWaAiAttachmentStorage } from './supabase';
 
 async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName: string): Promise<string> {
   const ext = path.extname(originalName);
@@ -10008,6 +10008,126 @@ ${posts.map(p => `  <url>
     }
   }
 
+  // ─── AI bijlagen-helpers (gedeeld door auto-reply en ai-suggest) ───────────
+  type WaAiAttachmentRow = { id: number; fieldKey: string; knowledgeId: number | null; filename: string; storagePath: string; mimeType: string; extractedText: string; enabled: boolean };
+
+  /** Bouw de PDF-tekstblokken die direct na een tekstveld in de prompt komen. */
+  function appendAttachmentTextForField(attachments: WaAiAttachmentRow[], fieldKey: string): string {
+    let out = '';
+    for (const a of attachments) {
+      if (a.fieldKey === fieldKey && a.extractedText) {
+        out += `\n[Bijlage PDF "${a.filename}"]\n${a.extractedText}`;
+      }
+    }
+    return out;
+  }
+
+  /** Bouw het "beschikbare PDF-bijlagen" overzicht onderaan de prompt. */
+  function buildAvailableAttachmentsBlock(attachments: WaAiAttachmentRow[], knowledge: { id: number; title: string }[]): string {
+    if (attachments.length === 0) return '';
+    const ctxFor = (a: WaAiAttachmentRow): string => {
+      if (a.fieldKey === 'knowledge' && a.knowledgeId != null) {
+        const k = knowledge.find(kk => kk.id === a.knowledgeId);
+        return k ? `kennisbank: ${k.title}` : 'kennisbank';
+      }
+      switch (a.fieldKey) {
+        case 'cancellation_protocol': return 'afmeldprotocol';
+        case 'guidelines': return 'algemene richtlijnen';
+        case 'extra_context': return 'extra context';
+        case 'tone_of_voice': return 'tone of voice';
+        case 'voice_examples': return 'voorbeeldberichten';
+        default: return a.fieldKey;
+      }
+    };
+    let block = `\n\n=== AVAILABLE PDF ATTACHMENTS ===\nIf a PDF attachment is GENUINELY relevant for your reply (e.g. the user asks for the cancellation protocol or another protocol document), end your reply on a NEW LINE with EXACTLY:\n[BIJLAGE:<id>]\nRules: max 1 attachment per reply. Only include the marker if a PDF is truly relevant — NEVER attach just because attachments exist. Do NOT explain the marker to the user.\nAvailable PDFs:`;
+    for (const a of attachments) {
+      block += `\n  - [BIJLAGE:${a.id}] ${a.filename} (${ctxFor(a)})`;
+    }
+    return block;
+  }
+
+  /** Parseert eventuele [BIJLAGE:<id>] marker uit een AI-antwoord. */
+  function parseAttachmentMarker(text: string): { cleanText: string; attachmentId: number | null } {
+    const m = text.match(/\[BIJLAGE:(\d+)\]/i);
+    if (!m) return { cleanText: text, attachmentId: null };
+    return {
+      cleanText: text.replace(/\s*\[BIJLAGE:\d+\]\s*/gi, ' ').replace(/\s+\n/g, '\n').trim(),
+      attachmentId: Number(m[1]),
+    };
+  }
+
+  /** Stuur een opgeslagen PDF-bijlage als WhatsApp document naar het opgegeven nummer. */
+  async function sendPdfAttachmentToWa(phoneNumber: string, attachmentId: number): Promise<void> {
+    if (!WA_360_KEY) return;
+    try {
+      const { whatsappAiAttachments } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const rows = await db.select().from(whatsappAiAttachments).where(eq(whatsappAiAttachments.id, attachmentId)).limit(1);
+      const att = rows[0];
+      if (!att || !att.enabled) {
+        console.warn(`[WA AI bijlage] id=${attachmentId} niet gevonden of uitgeschakeld`);
+        return;
+      }
+      const buffer = await downloadWaAiAttachmentBuffer(att.storagePath);
+      if (!buffer) {
+        console.warn(`[WA AI bijlage] download mislukt voor id=${attachmentId}`);
+        return;
+      }
+      // Stap 1: upload naar 360dialog media
+      const fd = new FormData();
+      fd.append('messaging_product', 'whatsapp');
+      fd.append('type', att.mimeType);
+      fd.append('file', new Blob([buffer], { type: att.mimeType }), att.filename);
+      const uploadResp = await fetch(`${WA_BASE_URL}/media`, {
+        method: 'POST',
+        headers: { 'D360-API-KEY': WA_360_KEY },
+        body: fd,
+      });
+      const uploadData: any = await uploadResp.json().catch(() => ({}));
+      if (!uploadResp.ok || !uploadData?.id) {
+        console.warn(`[WA AI bijlage] 360dialog media-upload mislukt:`, uploadData?.error?.message || uploadData);
+        return;
+      }
+      const mediaId = uploadData.id as string;
+
+      // Stap 2: stuur document
+      const now = new Date();
+      const match = await waStorage.resolveAndUpsertConversation({
+        phoneNumber,
+        inbound: false,
+        bodyPreview: `[PDF: ${att.filename}]`,
+        at: now,
+      });
+      const dbId = await waStorage.insertOutboundQueued({
+        direction: 'outbound',
+        fromNumber: 'extra',
+        toNumber: phoneNumber,
+        messageType: 'document',
+        body: null,
+        mediaUrl: null,
+        candidateId: match.candidateId,
+        prospectContactId: match.prospectContactId,
+        matchCategory: match.category,
+        sentByUserId: null,
+        rawPayload: { type: 'document', to: phoneNumber, filename: att.filename, mediaId, autoReply: true, aiAttachmentId: attachmentId },
+      });
+      const sendPayload = { messaging_product: 'whatsapp', to: phoneNumber, type: 'document', document: { id: mediaId, filename: att.filename } };
+      const r = await fetch(`${WA_BASE_URL}/messages`, { method: 'POST', headers: wa360Headers, body: JSON.stringify(sendPayload) });
+      const data: any = await r.json().catch(() => ({}));
+      if (!r.ok || data?.error) {
+        const errMsg = data?.error?.message || data?.message || `HTTP ${r.status}`;
+        await waStorage.updateOutboundResult(dbId, { status: 'failed', errorCode: String(r.status), errorMessage: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg) });
+        console.warn(`[WA AI bijlage] verzending mislukt:`, errMsg);
+        return;
+      }
+      const waMessageId = data?.messages?.[0]?.id ?? null;
+      await waStorage.updateOutboundResult(dbId, { waMessageId, status: 'sent' });
+      console.log(`[WA AI bijlage] PDF ${att.filename} verzonden naar ${phoneNumber}`);
+    } catch (err: any) {
+      console.error('[WA AI bijlage] onverwachte fout:', err?.message);
+    }
+  }
+
   // ─── Auto-reply helper: genereer + verstuur AI-antwoord op inkomend bericht ──
   async function tryAutoReply(opts: {
     phoneNumber: string;
@@ -10019,7 +10139,7 @@ ${posts.map(p => `  <url>
     try {
       if (!WA_360_KEY) return; // Kan niet versturen zonder API key
 
-      const { whatsappAiSettings, whatsappAiKnowledge, whatsappMessages: wm } = await import('@shared/schema');
+      const { whatsappAiSettings, whatsappAiKnowledge, whatsappAiAttachments, whatsappMessages: wm } = await import('@shared/schema');
       const { eq, asc, desc, and } = await import('drizzle-orm');
 
       // 1. Settings ophalen
@@ -10070,6 +10190,11 @@ ${posts.map(p => `  <url>
         .where(eq(whatsappAiKnowledge.enabled, true))
         .orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
 
+      // 5a. PDF-bijlagen (alleen ingeschakelde)
+      const attachmentRows = (await db.select().from(whatsappAiAttachments)
+        .where(eq(whatsappAiAttachments.enabled, true))
+        .orderBy(asc(whatsappAiAttachments.id))) as WaAiAttachmentRow[];
+
       // 5b. Bepaal taal: gespreks-label "nl"/"en" overruled detectie, anders auto-detect
       const convLabelRow = await db.select({ labels: whatsappConversations.labels })
         .from(whatsappConversations)
@@ -10089,15 +10214,23 @@ ${posts.map(p => `  <url>
       });
 
       let guidelinesBlock = '';
-      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;
-      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}`;
-      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
-      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
-      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
+      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}${appendAttachmentTextForField(attachmentRows, 'tone_of_voice')}`;
+      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}${appendAttachmentTextForField(attachmentRows, 'voice_examples')}`;
+      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}${appendAttachmentTextForField(attachmentRows, 'guidelines')}`;
+      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}${appendAttachmentTextForField(attachmentRows, 'cancellation_protocol')}`;
+      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}${appendAttachmentTextForField(attachmentRows, 'extra_context')}`;
       if (knowledgeRows.length > 0) {
         guidelinesBlock += `\n\n=== KENNISBANK / PROTOCOLLEN ===`;
-        for (const k of knowledgeRows) guidelinesBlock += `\n\n[${k.title}]\n${k.content}`;
+        for (const k of knowledgeRows) {
+          guidelinesBlock += `\n\n[${k.title}]\n${k.content}`;
+          for (const a of attachmentRows) {
+            if (a.fieldKey === 'knowledge' && a.knowledgeId === k.id && a.extractedText) {
+              guidelinesBlock += `\n[Bijlage PDF "${a.filename}"]\n${a.extractedText}`;
+            }
+          }
+        }
       }
+      guidelinesBlock += buildAvailableAttachmentsBlock(attachmentRows, knowledgeRows);
 
       const contactInfo = opts.contactName ? `\nNaam contact: ${opts.contactName}` : '';
       const systemPrompt = `You are the official WhatsApp assistant for EXTRA, a hospitality staffing agency in Amsterdam. You answer messages AUTONOMOUSLY without human intervention.
@@ -10125,9 +10258,16 @@ OTHER RULES:
         max_tokens: 300,
         temperature: 0.5,
       });
-      const reply = completion.choices?.[0]?.message?.content?.trim() || '';
-      if (!reply || reply === 'ESCALATE' || reply.startsWith('ESCALATE')) {
+      const rawReply = completion.choices?.[0]?.message?.content?.trim() || '';
+      if (!rawReply || rawReply === 'ESCALATE' || rawReply.startsWith('ESCALATE')) {
         console.log(`[WA auto-reply] AI escaleert ${opts.phoneNumber} → planner moet overnemen`);
+        return;
+      }
+
+      // 6a. Bijlage-marker uit antwoord extraheren
+      const { cleanText: reply, attachmentId } = parseAttachmentMarker(rawReply);
+      if (!reply) {
+        console.log(`[WA auto-reply] AI gaf alleen marker, geen tekst → skip`);
         return;
       }
 
@@ -10149,7 +10289,7 @@ OTHER RULES:
         prospectContactId: match.prospectContactId,
         matchCategory: match.category,
         sentByUserId: null, // Geen menselijke afzender = AI
-        rawPayload: { type: 'text', text: { body: reply }, to: opts.phoneNumber, autoReply: true },
+        rawPayload: { type: 'text', text: { body: reply }, to: opts.phoneNumber, autoReply: true, aiAttachmentId: attachmentId },
       });
 
       const payload = { messaging_product: 'whatsapp', to: opts.phoneNumber, type: 'text', text: { body: reply } };
@@ -10171,6 +10311,11 @@ OTHER RULES:
       const waMessageId = data?.messages?.[0]?.id ?? null;
       await waStorage.updateOutboundResult(dbId, { waMessageId, status: 'sent' });
       console.log(`[WA auto-reply] verzonden naar ${opts.phoneNumber} (${reply.slice(0, 60)}...)`);
+
+      // 8. Optioneel: stuur PDF-bijlage mee als de AI hierom vroeg
+      if (attachmentId != null) {
+        await sendPdfAttachmentToWa(opts.phoneNumber, attachmentId);
+      }
     } catch (err: any) {
       console.error('[WA auto-reply] fout:', err?.message);
     }
@@ -11325,6 +11470,129 @@ OTHER RULES:
     }
   });
 
+  // ─── WhatsApp AI Bijlagen (PDF protocollen) ────────────────────────────
+  // Geldige fieldKey-waarden voor AI-richtlijn-bijlagen
+  const WA_AI_FIELD_KEYS = ['tone_of_voice', 'voice_examples', 'guidelines', 'cancellation_protocol', 'extra_context', 'knowledge'] as const;
+  type WaAiFieldKey = typeof WA_AI_FIELD_KEYS[number];
+
+  // Multer-instance voor AI-bijlagen (max 25MB, alleen PDF accepteren)
+  const waAiAttachUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 25 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (file.mimetype === 'application/pdf') cb(null, true);
+      else cb(new Error('Alleen PDF-bestanden zijn toegestaan'));
+    },
+  });
+
+  // PDF → tekst-extractie via pdf-parse (dynamic import om import-time test-file lookup te vermijden)
+  async function extractPdfText(buffer: Buffer): Promise<string> {
+    try {
+      const pdfParseModule: any = await import('pdf-parse/lib/pdf-parse.js' as any);
+      const pdfParse = pdfParseModule.default || pdfParseModule;
+      const data = await pdfParse(buffer);
+      return (data?.text || '').trim();
+    } catch (err: any) {
+      console.warn('[WA AI bijlage] pdf-extract mislukt:', err?.message);
+      return '';
+    }
+  }
+
+  app.get('/api/whatsapp/ai-attachments', adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const { whatsappAiAttachments } = await import('../shared/schema');
+      const { asc } = await import('drizzle-orm');
+      const rows = await db.select().from(whatsappAiAttachments).orderBy(asc(whatsappAiAttachments.uploadedAt));
+      res.json(rows);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/whatsapp/ai-attachments', adminMiddleware, (req: Request, res: Response, next: NextFunction) => {
+    waAiAttachUpload.single('file')(req, res, (err: any) => {
+      if (err) return res.status(400).json({ error: err.message || 'Upload geweigerd' });
+      next();
+    });
+  }, async (req: Request, res: Response) => {
+    try {
+      const fieldKey = (req.body?.fieldKey || '').toString();
+      const knowledgeIdRaw = req.body?.knowledgeId;
+      const file = req.file;
+      if (!file) return res.status(400).json({ error: 'Geen bestand ontvangen' });
+      if (!WA_AI_FIELD_KEYS.includes(fieldKey as WaAiFieldKey)) {
+        return res.status(400).json({ error: `Ongeldige fieldKey (toegestaan: ${WA_AI_FIELD_KEYS.join(', ')})` });
+      }
+      let knowledgeId: number | null = null;
+      if (fieldKey === 'knowledge') {
+        knowledgeId = Number(knowledgeIdRaw);
+        if (!Number.isInteger(knowledgeId) || knowledgeId <= 0) {
+          return res.status(400).json({ error: 'knowledgeId is verplicht bij fieldKey=knowledge' });
+        }
+      }
+
+      // 1. Upload naar Supabase Storage
+      const storagePath = await uploadWaAiAttachment(file.buffer, file.originalname, file.mimetype);
+
+      // 2. Extract tekst (best-effort; lege string is OK)
+      const extractedText = await extractPdfText(file.buffer);
+
+      // 3. DB-record
+      const { whatsappAiAttachments } = await import('../shared/schema');
+      const inserted = await db.insert(whatsappAiAttachments).values({
+        fieldKey,
+        knowledgeId,
+        filename: file.originalname,
+        storagePath,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        extractedText,
+        enabled: true,
+      }).returning();
+      res.json(inserted[0]);
+    } catch (err: any) {
+      console.error('[WA AI bijlage] upload-fout:', err);
+      res.status(500).json({ error: err.message || 'Upload mislukt' });
+    }
+  });
+
+  app.put('/api/whatsapp/ai-attachments/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Ongeldig id' });
+      const { enabled, knowledgeId } = req.body;
+      const { whatsappAiAttachments } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const updateSet: Record<string, any> = {};
+      if (typeof enabled === 'boolean') updateSet.enabled = enabled;
+      if (knowledgeId === null || (typeof knowledgeId === 'number' && Number.isInteger(knowledgeId))) {
+        updateSet.knowledgeId = knowledgeId;
+      }
+      if (Object.keys(updateSet).length === 0) return res.status(400).json({ error: 'Niets om bij te werken' });
+      const updated = await db.update(whatsappAiAttachments).set(updateSet).where(eq(whatsappAiAttachments.id, id)).returning();
+      if (updated.length === 0) return res.status(404).json({ error: 'Niet gevonden' });
+      res.json(updated[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/whatsapp/ai-attachments/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Ongeldig id' });
+      const { whatsappAiAttachments } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const rows = await db.select().from(whatsappAiAttachments).where(eq(whatsappAiAttachments.id, id)).limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: 'Niet gevonden' });
+      await deleteWaAiAttachmentStorage(rows[0].storagePath).catch(() => false);
+      await db.delete(whatsappAiAttachments).where(eq(whatsappAiAttachments.id, id));
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post('/api/whatsapp/ai-suggest', adminMiddleware, async (req: Request, res: Response) => {
     try {
       const { messages: chatMessages, contactName, contactCompany, mode, phoneNumber: reqPhone } = req.body;
@@ -11332,13 +11600,16 @@ OTHER RULES:
         return res.status(400).json({ error: 'Berichten zijn vereist' });
       }
 
-      const { whatsappAiSettings, whatsappAiKnowledge } = await import('../shared/schema');
+      const { whatsappAiSettings, whatsappAiKnowledge, whatsappAiAttachments } = await import('../shared/schema');
       const { eq, asc } = await import('drizzle-orm');
       const settingsRows = await db.select().from(whatsappAiSettings).limit(1);
       const settings = settingsRows[0] || { toneOfVoice: '', guidelines: '', cancellationProtocol: '', extraContext: '' };
       const knowledgeRows = await db.select().from(whatsappAiKnowledge)
         .where(eq(whatsappAiKnowledge.enabled, true))
         .orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
+      const attachmentRows = (await db.select().from(whatsappAiAttachments)
+        .where(eq(whatsappAiAttachments.enabled, true))
+        .orderBy(asc(whatsappAiAttachments.id))) as WaAiAttachmentRow[];
 
       let OpenAI: any;
       try {
@@ -11369,17 +11640,23 @@ OTHER RULES:
       if (labelLang) console.log(`[ai-suggest] taal-override via label → ${labelLang.code}`);
 
       let guidelinesBlock = '';
-      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;
-      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}`;
-      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
-      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
-      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
+      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}${appendAttachmentTextForField(attachmentRows, 'tone_of_voice')}`;
+      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}${appendAttachmentTextForField(attachmentRows, 'voice_examples')}`;
+      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}${appendAttachmentTextForField(attachmentRows, 'guidelines')}`;
+      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}${appendAttachmentTextForField(attachmentRows, 'cancellation_protocol')}`;
+      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}${appendAttachmentTextForField(attachmentRows, 'extra_context')}`;
       if (knowledgeRows.length > 0) {
         guidelinesBlock += `\n\n=== KENNISBANK / PROTOCOLLEN ===`;
         for (const k of knowledgeRows) {
           guidelinesBlock += `\n\n[${k.title}]\n${k.content}`;
+          for (const a of attachmentRows) {
+            if (a.fieldKey === 'knowledge' && a.knowledgeId === k.id && a.extractedText) {
+              guidelinesBlock += `\n[Bijlage PDF "${a.filename}"]\n${a.extractedText}`;
+            }
+          }
         }
       }
+      guidelinesBlock += buildAvailableAttachmentsBlock(attachmentRows, knowledgeRows);
 
       let contactInfo = '';
       if (contactName) contactInfo += `\nNaam contact: ${contactName}`;
@@ -11415,8 +11692,10 @@ ${contactInfo}`;
         temperature: 0.7,
       });
 
-      const suggestion = completion.choices?.[0]?.message?.content?.trim() || '';
-      res.json({ suggestion });
+      const rawSuggestion = completion.choices?.[0]?.message?.content?.trim() || '';
+      // Strip eventuele [BIJLAGE:<id>] marker — bij ai-suggest beslist de planner zelf wat te sturen
+      const { cleanText: suggestion, attachmentId: suggestedAttachmentId } = parseAttachmentMarker(rawSuggestion);
+      res.json({ suggestion, suggestedAttachmentId });
     } catch (err: any) {
       console.error('[AI suggest]', err);
       res.status(500).json({ error: err.message || 'AI suggestie mislukt' });

@@ -132,3 +132,63 @@ export async function deleteOnboardingBijlageStorage(url: string): Promise<boole
 export function isOnboardingBijlageUrl(bestandspad: string): boolean {
   return /^https?:\/\//.test(bestandspad) && bestandspad.includes(`/${ONBOARDING_BUCKET}/`);
 }
+
+// ───────────────────────── WhatsApp AI bijlagen (PDF protocollen) ─────────────────────────
+const WA_AI_BUCKET = 'whatsapp-ai-protocollen';
+let _waAiBucketEnsured = false;
+
+async function ensureWaAiBucket() {
+  if (_waAiBucketEnsured) return;
+  try {
+    const sb = getSupabaseAdmin();
+    const { data: buckets } = await sb.storage.listBuckets();
+    const exists = (buckets || []).some((b: any) => b.name === WA_AI_BUCKET);
+    if (!exists) {
+      await sb.storage.createBucket(WA_AI_BUCKET, {
+        public: false,
+        fileSizeLimit: 25 * 1024 * 1024,
+        allowedMimeTypes: ['application/pdf'],
+      });
+      console.log(`[Supabase] Bucket '${WA_AI_BUCKET}' aangemaakt`);
+    }
+    _waAiBucketEnsured = true;
+  } catch (e) {
+    console.warn('[Supabase] Kon WA-AI bucket niet controleren/aanmaken:', e);
+  }
+}
+
+/** Upload een WhatsApp AI bijlage (PDF) naar Supabase Storage. Retourneert de storage-path. */
+export async function uploadWaAiAttachment(buffer: Buffer, originalFilename: string, mimeType: string): Promise<string> {
+  await ensureWaAiBucket();
+  const safe = originalFilename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `${Date.now()}-${safe}`;
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.storage
+    .from(WA_AI_BUCKET)
+    .upload(storagePath, buffer, { contentType: mimeType, upsert: false });
+  if (error) throw new Error(`Supabase upload mislukt: ${error.message}`);
+  return storagePath;
+}
+
+/** Download een WA-AI bijlage uit Supabase Storage op basis van storage-path. */
+export async function downloadWaAiAttachmentBuffer(storagePath: string): Promise<Buffer | null> {
+  if (!storagePath) return null;
+  try {
+    const { data, error } = await getSupabaseAdmin().storage.from(WA_AI_BUCKET).download(storagePath);
+    if (error || !data) return null;
+    return Buffer.from(await data.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+/** Verwijder een WA-AI bijlage uit Supabase Storage. */
+export async function deleteWaAiAttachmentStorage(storagePath: string): Promise<boolean> {
+  if (!storagePath) return false;
+  try {
+    const { error } = await getSupabaseAdmin().storage.from(WA_AI_BUCKET).remove([storagePath]);
+    return !error;
+  } catch {
+    return false;
+  }
+}

@@ -1470,12 +1470,27 @@ export const whatsappAiKnowledge = pgTable("whatsapp_ai_knowledge", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const whatsappAiAttachments = pgTable("whatsapp_ai_attachments", {
+  id: serial("id").primaryKey(),
+  fieldKey: text("field_key").notNull(),
+  knowledgeId: integer("knowledge_id"),
+  filename: text("filename").notNull(),
+  storagePath: text("storage_path").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileSize: integer("file_size").default(0).notNull(),
+  extractedText: text("extracted_text").default('').notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
 export type WhatsappGroup = typeof whatsappGroups.$inferSelect;
 export type WhatsappGroupMember = typeof whatsappGroupMembers.$inferSelect;
 export type WhatsappBulkSend = typeof whatsappBulkSends.$inferSelect;
 export type WhatsappAiSettings = typeof whatsappAiSettings.$inferSelect;
 export type WhatsappAiKnowledge = typeof whatsappAiKnowledge.$inferSelect;
 export type InsertWhatsappAiKnowledge = typeof whatsappAiKnowledge.$inferInsert;
+export type WhatsappAiAttachment = typeof whatsappAiAttachments.$inferSelect;
+export type InsertWhatsappAiAttachment = typeof whatsappAiAttachments.$inferInsert;
 
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [

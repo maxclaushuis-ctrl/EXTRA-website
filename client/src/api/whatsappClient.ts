@@ -304,3 +304,51 @@ export const updateAiKnowledge = (id: number, data: Partial<{ title: string; con
   put<AiKnowledgeEntry>(`/ai-knowledge/${id}`, data);
 export const verwijderAiKnowledge = (id: number) =>
   del(`/ai-knowledge/${id}`);
+
+export type AiAttachmentFieldKey =
+  | 'tone_of_voice'
+  | 'voice_examples'
+  | 'guidelines'
+  | 'cancellation_protocol'
+  | 'extra_context'
+  | 'knowledge';
+
+export interface AiAttachment {
+  id: number;
+  fieldKey: AiAttachmentFieldKey;
+  knowledgeId: number | null;
+  filename: string;
+  storagePath: string;
+  mimeType: string;
+  fileSize: number;
+  extractedText: string;
+  enabled: boolean;
+  uploadedAt: string;
+}
+
+export const haalAiAttachments = () => get<AiAttachment[]>('/ai-attachments');
+
+export const uploadAiAttachment = async (
+  fieldKey: AiAttachmentFieldKey,
+  file: File,
+  knowledgeId?: number | null,
+): Promise<AiAttachment> => {
+  const fd = new FormData();
+  fd.append('fieldKey', fieldKey);
+  fd.append('file', file);
+  if (knowledgeId != null) fd.append('knowledgeId', String(knowledgeId));
+  const r = await fetch(`${BASE_URL}/ai-attachments`, {
+    method: 'POST',
+    credentials: 'include',
+    body: fd,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || (data as any)?.error) throw new Error((data as any)?.error || `ai-attachments: ${r.status}`);
+  return data as AiAttachment;
+};
+
+export const updateAiAttachment = (id: number, data: { enabled?: boolean; knowledgeId?: number | null }) =>
+  put<AiAttachment>(`/ai-attachments/${id}`, data);
+
+export const verwijderAiAttachment = (id: number) =>
+  del(`/ai-attachments/${id}`);
