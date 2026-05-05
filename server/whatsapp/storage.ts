@@ -6,6 +6,7 @@ import { db } from '../db';
 import { whatsappMessages, whatsappConversations, type InsertWhatsappMessage } from '@shared/schema';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { matchPhoneToContact, type MatchCategory } from './matcher';
+import { normalizePhone } from './phone';
 
 const PREVIEW_LEN = 100;
 
@@ -242,4 +243,115 @@ export async function resolveAndUpsertConversation(args: {
     at: args.at,
   });
   return m;
+}
+
+// ─── Sollicitant → WhatsApp contact ─────────────────────────────────────────
+// Wordt vanuit /api/sollicitatie aangeroepen: zet de sollicitant direct als
+// contact in de WhatsApp-lijst zodat planners hem kunnen aanschrijven, met de
+// juiste functie- en taal-labels al ingevuld.
+const SOLLICITATIE_FUNCTIE_LABEL: Record<string, string> = {
+  horecamedewerker: 'horeca',
+  chef: 'chef',
+  housekeeping: 'housekeeping',
+  logistiek: 'logistiek',
+  frontoffice: 'horeca',
+};
+
+const TAAL_GROUP_LABELS = new Set(['nl', 'en']);
+const FUNCTIE_GROUP_LABELS = new Set(['horeca', 'chef', 'housekeeping', 'logistiek']);
+
+function languagesToTaalLabel(languages: unknown): string | null {
+  if (!Array.isArray(languages)) return null;
+  const lower = languages
+    .map((l) => (typeof l === 'string' ? l.trim().toLowerCase() : ''))
+    .filter(Boolean);
+  if (lower.includes('nederlands')) return 'nl';
+  if (lower.includes('engels')) return 'en';
+  return null;
+}
+
+export interface UpsertSollicitantResult {
+  ok: boolean;
+  reason?: 'invalid_phone';
+  conversationId?: number;
+  phoneNumber?: string;
+  labels?: string[];
+  created?: boolean;
+}
+
+export async function upsertSollicitantContact(args: {
+  rawPhone: string | null | undefined;
+  candidateId: number;
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+  functionType: string | null | undefined;
+  languages: unknown;
+}): Promise<UpsertSollicitantResult> {
+  const phoneNumber = normalizePhone(args.rawPhone || '');
+  if (!phoneNumber) return { ok: false, reason: 'invalid_phone' };
+
+  const displayName = `${args.firstName ?? ''} ${args.lastName ?? ''}`.trim() || null;
+  const functieLabel = args.functionType
+    ? SOLLICITATIE_FUNCTIE_LABEL[String(args.functionType).toLowerCase()] || null
+    : null;
+  const taalLabel = languagesToTaalLabel(args.languages);
+
+  const existing = await db
+    .select({ id: whatsappConversations.id, labels: whatsappConversations.labels })
+    .from(whatsappConversations)
+    .where(eq(whatsappConversations.phoneNumber, phoneNumber))
+    .limit(1);
+
+  const existingLabels = (existing[0]?.labels ?? []) as string[];
+  const preserved = existingLabels.filter(
+    (l) => !TAAL_GROUP_LABELS.has(l) && !FUNCTIE_GROUP_LABELS.has(l),
+  );
+  const merged = [...preserved];
+  if (taalLabel) merged.push(taalLabel);
+  if (functieLabel) merged.push(functieLabel);
+  const finalLabels = Array.from(new Set(merged));
+
+  const now = new Date();
+
+  if (existing.length === 0) {
+    const [row] = await db
+      .insert(whatsappConversations)
+      .values({
+        phoneNumber,
+        candidateId: args.candidateId,
+        matchCategory: 'candidate',
+        displayName,
+        labels: finalLabels.length ? finalLabels : null,
+        lastMessageAt: now,
+        lastMessagePreview: '[Sollicitant — nog geen bericht]',
+        unreadCount: 0,
+      })
+      .returning({ id: whatsappConversations.id });
+    return {
+      ok: true,
+      conversationId: row?.id,
+      phoneNumber,
+      labels: finalLabels,
+      created: true,
+    };
+  }
+
+  await db
+    .update(whatsappConversations)
+    .set({
+      candidateId: args.candidateId,
+      matchCategory: sql`COALESCE(${whatsappConversations.manualCategory}, 'candidate')`,
+      displayName: sql`COALESCE(${whatsappConversations.displayName}, ${displayName})`,
+      labels: finalLabels.length ? finalLabels : null,
+      updatedAt: now,
+    })
+    .where(eq(whatsappConversations.id, existing[0].id));
+
+  return {
+    ok: true,
+    conversationId: existing[0].id,
+    phoneNumber,
+    labels: finalLabels,
+    created: false,
+  };
 }

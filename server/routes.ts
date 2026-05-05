@@ -8281,6 +8281,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const candidate = await storage.createCandidate(candidateData as any);
 
+      // Sollicitant direct als WhatsApp-contact opslaan met functie- en taal-label
+      // zodat hij meteen aanschrijfbaar is vanuit het WhatsApp-paneel.
+      try {
+        const { upsertSollicitantContact } = await import('./whatsapp/storage');
+        const contactRes = await upsertSollicitantContact({
+          rawPhone: data.phone,
+          candidateId: candidate.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          functionType: data.functionType,
+          languages: data.languages,
+        });
+        if (!contactRes.ok) {
+          console.warn('[Sollicitatie→WA-contact] Overgeslagen:', contactRes.reason);
+        } else {
+          console.log(
+            `[Sollicitatie→WA-contact] ${contactRes.created ? 'Aangemaakt' : 'Bijgewerkt'} voor ${contactRes.phoneNumber} (labels: ${(contactRes.labels || []).join(', ') || 'geen'})`,
+          );
+        }
+      } catch (e: any) {
+        console.error('[Sollicitatie→WA-contact] Fout:', e?.message || e);
+      }
+
       // Als het formulier gekoppeld is aan een bestaande kandidaat (gepland/uitgenodigd),
       // zet die kandidaat op 'aangenomen' zodat hij uit "Gesprek gepland" verdwijnt
       // en als sollicitant wordt geregistreerd.
