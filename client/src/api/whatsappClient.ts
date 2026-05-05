@@ -260,6 +260,9 @@ export const wijsGesprekToe = (phoneNumber: string, assignedToId: number | null,
 export const updateLabels = (phoneNumber: string, labels: string[]) =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/labels`, { labels });
 
+export const updateConversationCategory = (phoneNumber: string, category: 'candidate' | 'prospect' | 'unmatched' | null) =>
+  put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/category`, { category });
+
 export const haalNotities = (phoneNumber: string) =>
   get<InternalNote[]>(`/conversations/${encodeURIComponent(phoneNumber)}/notes`);
 

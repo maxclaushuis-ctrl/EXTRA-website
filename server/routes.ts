@@ -10631,6 +10631,39 @@ OTHER RULES:
     res.json({ success: true });
   });
 
+  // Handmatige categorie-override — verplaatst gesprek tussen tabs
+  // (Medewerkers / Klanten / Kandidaten) zonder dat de matcher het terugzet.
+  app.put('/api/whatsapp/conversations/:phoneNumber/category', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { category } = req.body ?? {};
+    const allowed = ['candidate', 'prospect', 'unmatched'] as const;
+    if (category !== null && !allowed.includes(category)) {
+      return res.status(400).json({ error: `category moet ${allowed.join('/')} of null zijn` });
+    }
+    await db.update(whatsappConversations).set({
+      manualCategory: category || null,
+      // Effectieve categorie meteen syncen zodat de UI direct schakelt
+      matchCategory: category || sql`${whatsappConversations.matchCategory}`,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    // Bij terugzetten naar 'auto' (null): re-match meteen om de juiste categorie te bepalen
+    if (!category) {
+      const conv = await db.select().from(whatsappConversations)
+        .where(drizzleEq(whatsappConversations.phoneNumber, phone)).limit(1);
+      if (conv.length) {
+        const { resolveAndUpsertConversation } = await import('./whatsapp/storage');
+        await resolveAndUpsertConversation({
+          phoneNumber: phone,
+          inbound: false,
+          bodyPreview: conv[0].lastMessagePreview ?? '',
+          at: conv[0].lastMessageAt ?? new Date(),
+        });
+      }
+    }
+    res.json({ success: true });
+  });
+
   app.put('/api/whatsapp/conversations/:phoneNumber/labels', adminMiddleware, async (req: Request, res: Response) => {
     const phone = normalizePhone(req.params.phoneNumber);
     if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });

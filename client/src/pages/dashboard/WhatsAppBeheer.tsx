@@ -26,6 +26,7 @@ import {
   haalBeschikbareContacten,
   stuurBulkBericht,
   haalBulkVerzendingen,
+  updateConversationCategory,
   haalImportKandidaten,
   haalImportKlanten,
   parseCsv,
@@ -1306,23 +1307,48 @@ export default function WhatsAppBeheer() {
                           )}
                         </div>
                       </div>
-                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                        <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>Toegewezen aan</div>
-                        <select
-                          value={selectedConv.assignedToId ? String(selectedConv.assignedToId) : ''}
-                          onChange={e => handleAssign(e.target.value)}
-                          style={{
-                            fontSize: 11, padding: '4px 6px', borderRadius: 4,
-                            border: '1px solid #D1D5DB', fontFamily: FONT,
-                            color: selectedConv.assignedToId ? NAVY : '#9CA3AF',
-                            minWidth: 120,
-                          }}
-                        >
-                          <option value="">Niemand</option>
-                          {teamMembers.map(m => (
-                            <option key={m.id} value={String(m.id)}>{m.name}</option>
-                          ))}
-                        </select>
+                      <div style={{ flexShrink: 0, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>Categorie</div>
+                          <select
+                            value={selectedConv.matchCategory}
+                            onChange={async e => {
+                              if (!selectedPhone) return;
+                              const next = e.target.value as 'candidate' | 'prospect' | 'unmatched';
+                              await updateConversationCategory(selectedPhone, next);
+                              const c = await haalGesprekken(tab);
+                              setConversations(c);
+                            }}
+                            title="Verplaats dit gesprek naar een ander tabblad. Handmatige keuze blijft staan ook bij nieuwe berichten."
+                            style={{
+                              fontSize: 11, padding: '4px 6px', borderRadius: 4,
+                              border: '1px solid #D1D5DB', fontFamily: FONT,
+                              color: NAVY, minWidth: 120,
+                            }}
+                          >
+                            <option value="candidate">Medewerkers</option>
+                            <option value="prospect">Klanten</option>
+                            <option value="unmatched">Kandidaten</option>
+                          </select>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>Toegewezen aan</div>
+                          <select
+                            value={selectedConv.assignedToId ? String(selectedConv.assignedToId) : ''}
+                            onChange={e => handleAssign(e.target.value)}
+                            style={{
+                              fontSize: 11, padding: '4px 6px', borderRadius: 4,
+                              border: '1px solid #D1D5DB', fontFamily: FONT,
+                              color: selectedConv.assignedToId ? NAVY : '#9CA3AF',
+                              minWidth: 120,
+                            }}
+                          >
+                            <option value="">Niemand</option>
+                            {teamMembers.map(m => (
+                              <option key={m.id} value={String(m.id)}>{m.name}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>

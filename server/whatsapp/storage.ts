@@ -50,7 +50,8 @@ export async function upsertConversation(args: {
       set: {
         candidateId: candidateId ?? sql`${whatsappConversations.candidateId}`,
         prospectContactId: prospectContactId ?? sql`${whatsappConversations.prospectContactId}`,
-        matchCategory: category,
+        // Handmatige override (manualCategory) wint van auto-match
+        matchCategory: sql`COALESCE(${whatsappConversations.manualCategory}, ${category})`,
         displayName: displayName ?? sql`${whatsappConversations.displayName}`,
         lastMessageAt: at,
         lastMessagePreview: previewText,

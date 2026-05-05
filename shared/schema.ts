@@ -1368,6 +1368,9 @@ export const whatsappConversations = pgTable("whatsapp_conversations", {
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: 'set null' }),
   prospectContactId: integer("prospect_contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
   matchCategory: whatsappMatchCategoryEnum("match_category").notNull().default('unmatched'),
+  // Handmatige override: wanneer gezet, blijft matchCategory hieraan vastzitten
+  // ondanks wat de matcher op basis van candidates/prospect_contacts vindt.
+  manualCategory: whatsappMatchCategoryEnum("manual_category"),
   displayName: text("display_name"),
   contactCompany: text("contact_company"),
   contactNotes: text("contact_notes"),
