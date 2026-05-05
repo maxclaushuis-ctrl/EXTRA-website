@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { Sparkles, Settings as SettingsIcon, Hourglass } from 'lucide-react';
 import {
   haalGesprekken,
   haalBerichten,
@@ -782,11 +783,11 @@ export default function WhatsAppBeheer() {
             style={{
               background: showAiSettings ? '#F0F4FA' : 'transparent',
               border: '1px solid #E5E7EB', borderRadius: 8,
-              padding: '6px 10px', cursor: 'pointer', fontSize: 14, color: showAiSettings ? NAVY : '#6B7280',
-              fontWeight: showAiSettings ? 600 : 400,
+              padding: '6px 10px', cursor: 'pointer', fontSize: 13, color: showAiSettings ? NAVY : '#6B7280',
+              fontWeight: showAiSettings ? 600 : 500, display: 'flex', alignItems: 'center', gap: 6,
             }}
           >
-            \u2728 AI
+            <Sparkles size={14} /> AI
           </button>
           <button
             onClick={() => { setShowSettings(!showSettings); setShowAiSettings(false); }}
@@ -794,10 +795,11 @@ export default function WhatsAppBeheer() {
             style={{
               background: showSettings ? '#F0F4FA' : 'transparent',
               border: '1px solid #E5E7EB', borderRadius: 8,
-              padding: '6px 10px', cursor: 'pointer', fontSize: 16, color: '#6B7280',
+              padding: '6px 10px', cursor: 'pointer', color: showSettings ? NAVY : '#6B7280',
+              display: 'flex', alignItems: 'center',
             }}
           >
-            \u2699
+            <SettingsIcon size={16} />
           </button>
         </div>
       </div>
@@ -807,7 +809,7 @@ export default function WhatsAppBeheer() {
           padding: '16px 20px', background: '#FAFBFC', border: '1px solid #E5E7EB',
           borderRadius: 10, marginBottom: 12, fontSize: 12,
         }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 12 }}>\u2728 AI Richtlijnen</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={16} /> AI Richtlijnen</div>
           {aiSettingsLoading ? (
             <div style={{ color: '#9CA3AF', fontSize: 12 }}>Laden...</div>
           ) : aiSettings ? (
@@ -1415,7 +1417,7 @@ export default function WhatsAppBeheer() {
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiSuggestion ? 6 : 0 }}>
                               <div style={{ fontSize: 11, fontWeight: 600, color: NAVY, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                ✨ AI suggestie
+                                <Sparkles size={12} /> AI suggestie
                                 {aiLoading && <span style={{ fontSize: 10, color: '#6B7280', fontWeight: 400 }}>— bezig met genereren...</span>}
                               </div>
                               <button onClick={() => { setAiDismissed(true); setAiSuggestion(''); setAiError(null); }}
@@ -1509,8 +1511,8 @@ export default function WhatsAppBeheer() {
                           />
                           <button type="button" onClick={requestAiSuggestion} disabled={aiLoading || messages.length === 0}
                             title="AI suggestie opvragen"
-                            style={{ background: aiLoading ? '#E5E7EB' : '#F0F4FA', color: aiLoading ? '#9CA3AF' : NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '0 10px', fontSize: 15, cursor: aiLoading ? 'wait' : 'pointer' }}>
-                            {aiLoading ? '\u23F3' : '\u2728'}
+                            style={{ background: aiLoading ? '#E5E7EB' : '#F0F4FA', color: aiLoading ? '#9CA3AF' : NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '0 10px', cursor: aiLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center' }}>
+                            {aiLoading ? <Hourglass size={14} /> : <Sparkles size={14} />}
                           </button>
                           <button type="submit" disabled={sending || (!reply.trim() && !attachedFile)}
                             style={{ background: (sending || (!reply.trim() && !attachedFile)) ? '#E5E7EB' : NAVY, color: (sending || (!reply.trim() && !attachedFile)) ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: (sending || (!reply.trim() && !attachedFile)) ? 'not-allowed' : 'pointer', fontFamily: FONT }}>
@@ -2110,7 +2112,7 @@ export default function WhatsAppBeheer() {
                         <button onClick={requestBulkAiSuggestion} disabled={bulkAiLoading}
                           title="AI suggestie voor groepsbericht"
                           style={{ background: bulkAiLoading ? '#E5E7EB' : '#F0F4FA', color: bulkAiLoading ? '#9CA3AF' : NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: bulkAiLoading ? 'wait' : 'pointer', fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          {bulkAiLoading ? '\u23F3' : '\u2728'} AI suggestie
+                          {bulkAiLoading ? <Hourglass size={12} /> : <Sparkles size={12} />} AI suggestie
                         </button>
                       </div>
                       <div style={{
