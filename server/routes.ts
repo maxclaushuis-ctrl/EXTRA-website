@@ -11151,11 +11151,18 @@ OTHER RULES:
 
     const toInsert = members
       .filter((m: any) => m.phoneNumber && !existingSet.has(normalizePhone(m.phoneNumber) || m.phoneNumber))
-      .map((m: any) => ({
-        groupId: id,
-        phoneNumber: normalizePhone(m.phoneNumber) || m.phoneNumber,
-        displayName: m.displayName || null,
-      }));
+      .map((m: any) => {
+        const first = (m.firstName || '').trim() || null;
+        const last = (m.lastName || '').trim() || null;
+        const composed = [first, last].filter(Boolean).join(' ') || null;
+        return {
+          groupId: id,
+          phoneNumber: normalizePhone(m.phoneNumber) || m.phoneNumber,
+          displayName: (m.displayName && m.displayName.trim()) || composed,
+          firstName: first,
+          lastName: last,
+        };
+      });
 
     if (toInsert.length > 0) {
       await db.insert(whatsappGroupMembers).values(toInsert);
@@ -11238,13 +11245,26 @@ OTHER RULES:
     let failedCount = 0;
     const results: Array<{ phone: string; displayName: string | null; status: 'sent' | 'failed'; error?: string }> = [];
 
+    // Personalisatie helper — vervangt {{voornaam}} / {{achternaam}} / {{naam}}
+    // case-insensitive en valt terug op een lege string als veld ontbreekt.
+    const renderTemplate = (tpl: string, m: typeof members[number]): string => {
+      const first = (m.firstName || '').trim();
+      const last = (m.lastName || '').trim();
+      const full = (m.displayName || `${first} ${last}`).trim();
+      return tpl
+        .replace(/\{\{\s*voornaam\s*\}\}/gi, first)
+        .replace(/\{\{\s*achternaam\s*\}\}/gi, last)
+        .replace(/\{\{\s*naam\s*\}\}/gi, full);
+    };
+
     for (const member of members) {
       const now = new Date();
+      const personalizedBody = renderTemplate(tekst.trim(), member);
       try {
         const match = await waStorage.resolveAndUpsertConversation({
           phoneNumber: member.phoneNumber,
           inbound: false,
-          bodyPreview: tekst.trim(),
+          bodyPreview: personalizedBody,
           at: now,
         });
 
@@ -11253,15 +11273,15 @@ OTHER RULES:
           fromNumber: 'extra',
           toNumber: member.phoneNumber,
           messageType: 'text',
-          body: tekst.trim(),
+          body: personalizedBody,
           candidateId: match.candidateId,
           prospectContactId: match.prospectContactId,
           matchCategory: match.category,
           sentByUserId: userId,
-          rawPayload: { type: 'text', text: { body: tekst.trim() }, to: member.phoneNumber },
+          rawPayload: { type: 'text', text: { body: personalizedBody }, to: member.phoneNumber },
         });
 
-        const payload = { messaging_product: 'whatsapp', to: member.phoneNumber, type: 'text', text: { body: tekst.trim() } };
+        const payload = { messaging_product: 'whatsapp', to: member.phoneNumber, type: 'text', text: { body: personalizedBody } };
         const r = await fetch(`${WA_BASE_URL}/messages`, {
           method: 'POST',
           headers: wa360Headers,
@@ -11353,6 +11373,8 @@ OTHER RULES:
         return {
           id: r.id,
           name: `${r.firstName} ${r.lastName}`,
+          firstName: r.firstName,
+          lastName: r.lastName,
           phone: normalized,
           functionType: r.functionType,
           status: r.status,
@@ -11395,6 +11417,8 @@ OTHER RULES:
         return {
           id: r.id,
           name: `${r.firstName} ${r.lastName}`,
+          firstName: r.firstName,
+          lastName: r.lastName,
           phone: normalized,
           functie: r.functie || null,
           status: r.status,
@@ -11434,9 +11458,19 @@ OTHER RULES:
       .map(r => {
         const normalized = normalizePhone(r.telefoon!) || r.telefoon!;
         const displayName = (r.voornaam && r.achternaam) ? `${r.voornaam} ${r.achternaam}` : r.name;
+        // Splits naam-veld als voornaam/achternaam ontbreken (eerste woord = voornaam, rest = achternaam).
+        let firstName = r.voornaam || '';
+        let lastName = r.achternaam || '';
+        if (!firstName && !lastName && r.name) {
+          const parts = r.name.trim().split(/\s+/);
+          firstName = parts[0] || '';
+          lastName = parts.slice(1).join(' ');
+        }
         return {
           id: r.id,
           name: displayName,
+          firstName,
+          lastName,
           phone: normalized,
           company: r.company || null,
           branche: r.branche || null,

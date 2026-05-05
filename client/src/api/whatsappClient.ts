@@ -213,7 +213,7 @@ export const verwijderGroep = (id: number) =>
   del<{ success: boolean }>(`/groups/${id}`);
 export const haalGroepLeden = (id: number) =>
   get<GroupMember[]>(`/groups/${id}/members`);
-export const voegLedenToe = (id: number, members: Array<{ phoneNumber: string; displayName?: string }>) =>
+export const voegLedenToe = (id: number, members: Array<{ phoneNumber: string; displayName?: string; firstName?: string; lastName?: string }>) =>
   post<{ added: number; skipped: number }>(`/groups/${id}/members`, { members });
 export const verwijderLid = (groupId: number, phone: string) =>
   del<{ success: boolean }>(`/groups/${groupId}/members/${encodeURIComponent(phone)}`);
@@ -227,6 +227,8 @@ export const haalBulkVerzendingen = () =>
 export interface ImportCandidate {
   id: number;
   name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   functionType: string;
   status: string;
@@ -237,6 +239,8 @@ export interface ImportCandidate {
 export interface ImportProspect {
   id: number;
   name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   company: string | null;
   branche: string | null;
@@ -246,6 +250,8 @@ export interface ImportProspect {
 export interface ImportEmployee {
   id: number;
   name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   functie: string | null;
   status: string;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil } from 'lucide-react';
+import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil, MessageCircle, Briefcase, UserPlus, Building2, Upload, Plus, X, Trash2 } from 'lucide-react';
 import {
   haalGesprekken,
   haalBerichten,
@@ -190,7 +190,8 @@ export default function WhatsAppBeheer() {
   const [csvParsed, setCsvParsed] = useState<Array<{ name: string; phone: string; alreadyInGroup: boolean }>>([]);
   const [csvErrors, setCsvErrors] = useState<string[]>([]);
   const [csvParsing, setCsvParsing] = useState(false);
-  const [manualName, setManualName] = useState('');
+  const [manualFirstName, setManualFirstName] = useState('');
+  const [manualLastName, setManualLastName] = useState('');
   const [manualPhone, setManualPhone] = useState('');
   const [importFilterFunc, setImportFilterFunc] = useState<string>('all');
   const [importFilterStatus, setImportFilterStatus] = useState<string>('all');
@@ -741,7 +742,8 @@ export default function WhatsAppBeheer() {
     setCsvText('');
     setCsvParsed([]);
     setCsvErrors([]);
-    setManualName('');
+    setManualFirstName('');
+    setManualLastName('');
     setManualPhone('');
     setImportFilterFunc('all');
     setImportFilterStatus('all');
@@ -796,36 +798,57 @@ export default function WhatsAppBeheer() {
     if (!selectedGroupId || selectedContacts.size === 0) return;
     setAddingMembers(true);
 
-    let membersToAdd: Array<{ phoneNumber: string; displayName?: string }> = [];
+    let membersToAdd: Array<{ phoneNumber: string; displayName?: string; firstName?: string; lastName?: string }> = [];
 
     if (importTab === 'whatsapp') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = availableContacts.find(ac => ac.phoneNumber === phone);
-        return { phoneNumber: phone, displayName: c?.displayName || undefined };
+        // displayName uit het bestaande WA-contact opsplitsen op de eerste spatie
+        // zodat {{voornaam}}/{{achternaam}}-variabelen ook hier werken.
+        const dn = c?.displayName || '';
+        const parts = dn.trim().split(/\s+/);
+        const firstName = parts[0] || undefined;
+        const lastName = parts.slice(1).join(' ') || undefined;
+        return { phoneNumber: phone, displayName: dn || undefined, firstName, lastName };
       });
     } else if (importTab === 'kandidaten') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = importCandidates.find(ic => ic.phone === phone);
-        return { phoneNumber: phone, displayName: c?.name || undefined };
+        return { phoneNumber: phone, displayName: c?.name || undefined, firstName: c?.firstName, lastName: c?.lastName };
       });
     } else if (importTab === 'medewerkers') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = importEmployees.find(ie => ie.phone === phone);
-        return { phoneNumber: phone, displayName: c?.name || undefined };
+        return { phoneNumber: phone, displayName: c?.name || undefined, firstName: c?.firstName, lastName: c?.lastName };
       });
     } else if (importTab === 'klanten') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = importProspects.find(ip => ip.phone === phone);
-        return { phoneNumber: phone, displayName: c?.name || undefined };
+        return { phoneNumber: phone, displayName: c?.name || undefined, firstName: c?.firstName, lastName: c?.lastName };
       });
     } else if (importTab === 'csv') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = csvParsed.find(cp => cp.phone === phone);
-        return { phoneNumber: phone, displayName: c?.name || undefined };
+        const dn = c?.name || '';
+        const parts = dn.trim().split(/\s+/);
+        return {
+          phoneNumber: phone,
+          displayName: dn || undefined,
+          firstName: parts[0] || undefined,
+          lastName: parts.slice(1).join(' ') || undefined,
+        };
       });
     } else if (importTab === 'handmatig') {
       if (manualPhone.trim()) {
-        membersToAdd = [{ phoneNumber: manualPhone.trim(), displayName: manualName.trim() || undefined }];
+        const fn = manualFirstName.trim();
+        const ln = manualLastName.trim();
+        const composed = [fn, ln].filter(Boolean).join(' ');
+        membersToAdd = [{
+          phoneNumber: manualPhone.trim(),
+          displayName: composed || undefined,
+          firstName: fn || undefined,
+          lastName: ln || undefined,
+        }];
       }
     }
 
@@ -835,7 +858,8 @@ export default function WhatsAppBeheer() {
       setGroups(await haalGroepen());
       setShowAddMembers(false);
       setSelectedContacts(new Set());
-      setManualName('');
+      setManualFirstName('');
+      setManualLastName('');
       setManualPhone('');
     } catch { /* ignore */ }
     setAddingMembers(false);
@@ -845,10 +869,19 @@ export default function WhatsAppBeheer() {
     if (!selectedGroupId || !manualPhone.trim()) return;
     setAddingMembers(true);
     try {
-      await voegLedenToe(selectedGroupId, [{ phoneNumber: manualPhone.trim(), displayName: manualName.trim() || undefined }]);
+      const fn = manualFirstName.trim();
+      const ln = manualLastName.trim();
+      const composed = [fn, ln].filter(Boolean).join(' ');
+      await voegLedenToe(selectedGroupId, [{
+        phoneNumber: manualPhone.trim(),
+        displayName: composed || undefined,
+        firstName: fn || undefined,
+        lastName: ln || undefined,
+      }]);
       setGroupMembers(await haalGroepLeden(selectedGroupId));
       setGroups(await haalGroepen());
-      setManualName('');
+      setManualFirstName('');
+      setManualLastName('');
       setManualPhone('');
     } catch { /* ignore */ }
     setAddingMembers(false);
@@ -1256,7 +1289,7 @@ export default function WhatsAppBeheer() {
                       onClick={() => { setFilterUnread('all'); setFilterAssignee('all'); setFilterLabel('all'); }}
                       style={{ fontSize: 10, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: '3px 4px' }}
                     >
-                      \u2715 Reset
+                      {'\u2715'} Reset
                     </button>
                   )}
                 </div>
@@ -1894,7 +1927,7 @@ export default function WhatsAppBeheer() {
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>Verzendgeschiedenis</div>
                     <button onClick={() => setShowBulkHistory(false)}
-                      style={{ background: 'none', border: 'none', fontSize: 16, color: '#6B7280', cursor: 'pointer' }}>\u2715</button>
+                      style={{ background: 'none', border: 'none', fontSize: 16, color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><X size={16} /></button>
                   </div>
                   <div style={{ flex: 1, overflowY: 'auto', padding: '18px' }}>
                     {bulkHistory.length === 0 && (
@@ -1991,33 +2024,64 @@ export default function WhatsAppBeheer() {
 
                       {/* Leden importeren overlay */}
                         {showAddMembers && (
-                          <div style={{ padding: '10px 18px', background: '#F0F4FA', borderBottom: '1px solid #E5E7EB' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>Contacten importeren</div>
-                              <button onClick={() => setShowAddMembers(false)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#6B7280', cursor: 'pointer' }}>{'\u2715'}</button>
+                          <div style={{ padding: '14px 18px', background: '#F8FAFC', borderBottom: '1px solid #E5E7EB' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>Leden toevoegen</div>
+                                <div style={{ fontSize: 10, color: '#6B7280', marginTop: 1 }}>Kies waar je contacten vandaan wilt halen</div>
+                              </div>
+                              <button onClick={() => setShowAddMembers(false)} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }} title="Sluiten"><X size={16} /></button>
                             </div>
 
-                            <div style={{ display: 'flex', gap: 0, marginBottom: 10, background: '#E5E7EB', borderRadius: 6, padding: 2 }}>
+                            {/* Tab-strip in twee groepen: "Uit database" en "Zelf invoeren" */}
+                            <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
                               {([
-                                ['whatsapp', 'WhatsApp'],
-                                ['medewerkers', 'Medewerkers'],
-                                ['kandidaten', 'Kandidaten'],
-                                ['klanten', 'Klanten'],
-                                ['csv', 'CSV Upload'],
-                                ['handmatig', 'Handmatig'],
-                              ] as [ImportTab, string][]).map(([key, label]) => (
-                                <button
-                                  key={key}
-                                  onClick={() => loadImportTab(key)}
-                                  style={{
-                                    flex: 1, padding: '5px 4px', fontSize: 10, fontWeight: importTab === key ? 700 : 500,
-                                    background: importTab === key ? '#fff' : 'transparent',
-                                    color: importTab === key ? NAVY : '#6B7280',
-                                    border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: FONT,
-                                  }}
-                                >
-                                  {label}
-                                </button>
+                                { group: 'database', label: 'Uit database', tabs: [
+                                  { key: 'medewerkers' as ImportTab, label: 'Medewerkers', icon: Briefcase, count: importEmployees.length },
+                                  { key: 'kandidaten' as ImportTab, label: 'Kandidaten', icon: UserPlus, count: importCandidates.length },
+                                  { key: 'klanten' as ImportTab, label: 'Klanten', icon: Building2, count: importProspects.length },
+                                  { key: 'whatsapp' as ImportTab, label: 'WhatsApp', icon: MessageCircle, count: availableContacts.length },
+                                ]},
+                                { group: 'invoer', label: 'Zelf invoeren', tabs: [
+                                  { key: 'csv' as ImportTab, label: 'CSV', icon: Upload, count: 0 },
+                                  { key: 'handmatig' as ImportTab, label: 'Handmatig', icon: Plus, count: 0 },
+                                ]},
+                              ]).map(grp => (
+                                <div key={grp.group} style={{ flex: grp.group === 'database' ? '1 1 320px' : '0 0 auto' }}>
+                                  <div style={{ fontSize: 9, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4, paddingLeft: 2 }}>{grp.label}</div>
+                                  <div style={{ display: 'flex', gap: 4, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, padding: 3 }}>
+                                    {grp.tabs.map(t => {
+                                      const Icon = t.icon;
+                                      const active = importTab === t.key;
+                                      return (
+                                        <button
+                                          key={t.key}
+                                          onClick={() => loadImportTab(t.key)}
+                                          title={t.label}
+                                          style={{
+                                            flex: 1, minWidth: 64, padding: '8px 10px', fontSize: 11,
+                                            fontWeight: active ? 700 : 500,
+                                            background: active ? NAVY : 'transparent',
+                                            color: active ? '#fff' : '#475569',
+                                            border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: FONT,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                                            transition: 'all 0.12s',
+                                          }}
+                                        >
+                                          <Icon size={13} />
+                                          <span>{t.label}</span>
+                                          {t.count > 0 && (
+                                            <span style={{
+                                              background: active ? 'rgba(255,255,255,0.22)' : '#F1F5F9',
+                                              color: active ? '#fff' : '#64748B',
+                                              fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 8,
+                                            }}>{t.count}</span>
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
                               ))}
                             </div>
 
@@ -2265,25 +2329,42 @@ export default function WhatsAppBeheer() {
                             )}
 
                             {importTab === 'handmatig' && (
-                              <div>
-                                <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 8 }}>
-                                  Voeg een enkel contact toe met naam en telefoonnummer.
+                              <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, padding: 14 }}>
+                                <div style={{ fontSize: 11, color: '#475569', marginBottom: 12, lineHeight: 1.5 }}>
+                                  Voor- en achternaam apart invullen — die kun je dan in groepsberichten gebruiken als <code style={{ background: '#F1F5F9', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>{'{{voornaam}}'}</code> en <code style={{ background: '#F1F5F9', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>{'{{achternaam}}'}</code>.
                                 </div>
-                                <input
-                                  value={manualName}
-                                  onChange={e => setManualName(e.target.value)}
-                                  placeholder="Naam (optioneel)"
-                                  style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 6 }}
-                                />
-                                <input
-                                  value={manualPhone}
-                                  onChange={e => setManualPhone(e.target.value)}
-                                  placeholder="Telefoonnummer (bijv. 0612345678)"
-                                  style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box', marginBottom: 8 }}
-                                />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                  <div>
+                                    <label style={{ fontSize: 10, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 3 }}>Voornaam</label>
+                                    <input
+                                      value={manualFirstName}
+                                      onChange={e => setManualFirstName(e.target.value)}
+                                      placeholder="Bijv. Jan"
+                                      style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box' }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ fontSize: 10, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 3 }}>Achternaam</label>
+                                    <input
+                                      value={manualLastName}
+                                      onChange={e => setManualLastName(e.target.value)}
+                                      placeholder="Bijv. de Vries"
+                                      style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box' }}
+                                    />
+                                  </div>
+                                </div>
+                                <div style={{ marginBottom: 10 }}>
+                                  <label style={{ fontSize: 10, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 3 }}>Telefoonnummer <span style={{ color: '#DC2626' }}>*</span></label>
+                                  <input
+                                    value={manualPhone}
+                                    onChange={e => setManualPhone(e.target.value)}
+                                    placeholder="0612345678 of +31612345678"
+                                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, boxSizing: 'border-box' }}
+                                  />
+                                </div>
                                 <button onClick={handleAddManual} disabled={addingMembers || !manualPhone.trim()}
-                                  style={{ background: addingMembers || !manualPhone.trim() ? '#E5E7EB' : NAVY, color: addingMembers || !manualPhone.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
-                                  {addingMembers ? 'Toevoegen...' : 'Toevoegen'}
+                                  style={{ width: '100%', background: addingMembers || !manualPhone.trim() ? '#E5E7EB' : NAVY, color: addingMembers || !manualPhone.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: addingMembers || !manualPhone.trim() ? 'not-allowed' : 'pointer', fontFamily: FONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                  <Plus size={14} /> {addingMembers ? 'Bezig met toevoegen...' : 'Toevoegen aan groep'}
                                 </button>
                               </div>
                             )}
@@ -2357,24 +2438,38 @@ export default function WhatsAppBeheer() {
                             Nog geen leden — klik op "+ Leden toevoegen" om te beginnen
                           </div>
                         )}
-                        {groupMembers.map(m => (
+                        {groupMembers.map(m => {
+                          const initials = (m.displayName || '?').trim().split(/\s+/).slice(0, 2).map(s => s[0]?.toUpperCase()).join('') || '?';
+                          return (
                           <div key={m.id} style={{
-                            padding: '8px 18px', borderBottom: '1px solid #F3F4F6',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '10px 18px', borderBottom: '1px solid #F3F4F6',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
                           }}>
-                            <div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: m.displayName ? '#1F2937' : '#9CA3AF' }}>
-                                {m.displayName || 'Onbekend'}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                              <div style={{
+                                width: 32, height: 32, borderRadius: '50%',
+                                background: m.displayName ? '#E0E7FF' : '#F1F5F9',
+                                color: m.displayName ? NAVY : '#94A3B8',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 11, fontWeight: 700, flexShrink: 0,
+                              }}>{initials}</div>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: m.displayName ? '#1F2937' : '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {m.displayName || 'Naam onbekend'}
+                                </div>
+                                <div style={{ fontSize: 10, color: '#6B7280' }}>+{m.phoneNumber}</div>
                               </div>
-                              <div style={{ fontSize: 10, color: '#6B7280' }}>+{m.phoneNumber}</div>
                             </div>
                             <button onClick={() => handleRemoveMember(m.phoneNumber)}
-                              style={{ background: 'none', border: 'none', fontSize: 12, color: '#DC2626', cursor: 'pointer', padding: '2px 6px' }}
+                              style={{ background: 'none', border: '1px solid transparent', borderRadius: 6, color: '#9CA3AF', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.borderColor = '#FECACA'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.borderColor = 'transparent'; }}
                               title="Lid verwijderen">
-                              \u2715
+                              <Trash2 size={14} />
                             </button>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -2398,7 +2493,7 @@ export default function WhatsAppBeheer() {
                       <textarea
                         value={bulkText}
                         onChange={e => setBulkText(e.target.value)}
-                        placeholder="Typ hier je bericht voor de hele groep..."
+                        placeholder="Typ hier je bericht voor de hele groep — gebruik {{voornaam}} voor personalisatie..."
                         rows={4}
                         disabled={bulkSending}
                         style={{
@@ -2407,6 +2502,18 @@ export default function WhatsAppBeheer() {
                           boxSizing: 'border-box',
                         }}
                       />
+                      <div style={{ fontSize: 10, color: '#6B7280', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                        <span>Variabelen:</span>
+                        {(['{{voornaam}}', '{{achternaam}}', '{{naam}}'] as const).map(v => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setBulkText(t => (t || '') + (t && !t.endsWith(' ') ? ' ' : '') + v)}
+                            style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 4, padding: '1px 6px', fontSize: 10, color: NAVY, cursor: 'pointer', fontFamily: 'monospace' }}
+                            title="Klik om in te voegen"
+                          >{v}</button>
+                        ))}
+                      </div>
 
                       {!confirmBulkSend ? (
                         <button

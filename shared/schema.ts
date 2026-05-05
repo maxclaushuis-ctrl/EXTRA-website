@@ -1424,6 +1424,9 @@ export const whatsappGroupMembers = pgTable("whatsapp_group_members", {
   groupId: integer("group_id").references(() => whatsappGroups.id, { onDelete: 'cascade' }).notNull(),
   phoneNumber: text("phone_number").notNull(),
   displayName: text("display_name"),
+  // Apart opgeslagen voor gebruik in groepsbericht-variabelen ({{voornaam}}/{{achternaam}}).
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   addedAt: timestamp("added_at").defaultNow().notNull(),
 }, (table) => ({
   groupPhoneIdx: index("wa_grp_member_idx").on(table.groupId, table.phoneNumber),
