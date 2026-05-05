@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle } from 'lucide-react';
+import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil } from 'lucide-react';
 import {
   haalGesprekken,
   haalBerichten,
@@ -1229,9 +1229,9 @@ export default function WhatsAppBeheer() {
                             <button
                               onClick={openEditContact}
                               title={selectedConv.displayName ? 'Naam bewerken' : 'Naam toevoegen'}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#6B7280', padding: '1px 3px' }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}
                             >
-                              \u270F\uFE0F
+                              <Pencil size={13} />
                             </button>
                           )}
                         </div>
