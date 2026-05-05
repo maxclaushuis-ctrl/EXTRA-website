@@ -81,12 +81,13 @@ Configured for Replit autoscale deployment, using Vite for frontend builds and `
 -   **Migratie**: `npx tsx server/whatsapp/migrate-phones.ts` (dry-run default, `--apply` voor schrijven). Backup in `phone_original` / `telefoon_original` kolommen.
 -   **Env-vars**: `WHATSAPP_360_API_KEY`, `WHATSAPP_WEBHOOK_SECRET`.
 -   **Docs**: `server/whatsapp/README.md`.
--   **AI Reply Suggestions**: AI-powered antwoordsuggesties voor WhatsApp-berichten, aangedreven door OpenAI (gpt-4o-mini).
-    -   `GET /api/whatsapp/ai-settings` — AI-richtlijnen ophalen (tone of voice, algemene richtlijnen, afmeldprotocol, extra context).
-    -   `PUT /api/whatsapp/ai-settings` — AI-richtlijnen bijwerken.
-    -   `POST /api/whatsapp/ai-suggest` — AI-suggestie genereren op basis van gespreksgeschiedenis, contactinfo en richtlijnen.
-    -   Tabel: `whatsapp_ai_settings` — opslag voor configureerbare richtlijnen.
-    -   Frontend: Automatische AI-suggestie bij nieuw inbound bericht, ✨-knop voor handmatig opvragen, suggestiebalk met Overnemen/Bewerken/Opnieuw. AI-knop ook bij groepsberichten. AI-richtlijnen panel achter "✨ AI" knop in header.
+-   **AI Reply Suggestions + Auto-reply**: AI-powered antwoordsuggesties én volledig autonome bot-modus voor WhatsApp-berichten, aangedreven door OpenAI (gpt-4o-mini).
+    -   `GET/PUT /api/whatsapp/ai-settings` — AI-richtlijnen (tone of voice, algemene richtlijnen, afmeldprotocol, extra context) + auto-reply config (`autoReplyEnabled`, `autoReplyOnlyForKnown`, `autoReplyMinIntervalSec`).
+    -   `POST /api/whatsapp/ai-suggest` — AI-suggestie genereren op basis van gespreksgeschiedenis, contactinfo, richtlijnen en kennisbank.
+    -   `GET/POST/PUT/DELETE /api/whatsapp/ai-knowledge` — CRUD op kennisbank-entries (genoemde protocollen die de AI als context krijgt).
+    -   Tabellen: `whatsapp_ai_settings` (config + auto-reply flags), `whatsapp_ai_knowledge` (titel, content, enabled, sortOrder).
+    -   Auto-reply: Bij ingeschakelde modus genereert/verstuurt de bot zelfstandig antwoorden op inkomende tekstberichten. Veiligheidsmaatregelen: alleen-bekende-contacten toggle, rate-limit (min interval), AI-escalatie naar planner bij twijfel/gevoelige onderwerpen (model retourneert "ESCALATE"). Geactiveerd via webhook handler `tryAutoReply()` in `server/routes.ts`.
+    -   Frontend: Automatische AI-suggestie bij nieuw inbound bericht, ✨-knop voor handmatig opvragen, suggestiebalk met Overnemen/Bewerken/Opnieuw. AI-knop ook bij groepsberichten. AI-richtlijnen panel achter "✨ AI" knop in header met kennisbank-beheer (add/edit/delete protocollen) en auto-antwoord toggle met safety opties.
 -   **Niet in Fase 1**: templates, diensten-koppeling, media-download.
 
 ### Brochure Pages (Slide-based Presentations)

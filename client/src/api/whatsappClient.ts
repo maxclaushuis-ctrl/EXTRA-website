@@ -247,6 +247,18 @@ export interface AiSettings {
   guidelines: string;
   cancellationProtocol: string;
   extraContext: string;
+  autoReplyEnabled: boolean;
+  autoReplyOnlyForKnown: boolean;
+  autoReplyMinIntervalSec: number;
+  updatedAt: string;
+}
+
+export interface AiKnowledgeEntry {
+  id: number;
+  title: string;
+  content: string;
+  enabled: boolean;
+  sortOrder: number;
   updatedAt: string;
 }
 
@@ -255,3 +267,11 @@ export const updateAiSettings = (data: Partial<Omit<AiSettings, 'id' | 'updatedA
   put<AiSettings>('/ai-settings', data);
 export const vraagAiSuggestie = (messages: Message[], contactName?: string | null, contactCompany?: string | null, mode?: 'individual' | 'bulk') =>
   post<{ suggestion: string }>('/ai-suggest', { messages, contactName, contactCompany, mode: mode || 'individual' });
+
+export const haalAiKnowledge = () => get<AiKnowledgeEntry[]>('/ai-knowledge');
+export const maakAiKnowledge = (data: { title: string; content: string; enabled?: boolean }) =>
+  post<AiKnowledgeEntry>('/ai-knowledge', data);
+export const updateAiKnowledge = (id: number, data: Partial<{ title: string; content: string; enabled: boolean; sortOrder: number }>) =>
+  put<AiKnowledgeEntry>(`/ai-knowledge/${id}`, data);
+export const verwijderAiKnowledge = (id: number) =>
+  del(`/ai-knowledge/${id}`);

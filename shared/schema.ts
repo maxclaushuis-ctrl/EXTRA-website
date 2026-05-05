@@ -1451,6 +1451,18 @@ export const whatsappAiSettings = pgTable("whatsapp_ai_settings", {
   guidelines: text("guidelines").default('').notNull(),
   cancellationProtocol: text("cancellation_protocol").default('').notNull(),
   extraContext: text("extra_context").default('').notNull(),
+  autoReplyEnabled: boolean("auto_reply_enabled").default(false).notNull(),
+  autoReplyOnlyForKnown: boolean("auto_reply_only_for_known").default(true).notNull(),
+  autoReplyMinIntervalSec: integer("auto_reply_min_interval_sec").default(60).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const whatsappAiKnowledge = pgTable("whatsapp_ai_knowledge", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -1458,6 +1470,8 @@ export type WhatsappGroup = typeof whatsappGroups.$inferSelect;
 export type WhatsappGroupMember = typeof whatsappGroupMembers.$inferSelect;
 export type WhatsappBulkSend = typeof whatsappBulkSends.$inferSelect;
 export type WhatsappAiSettings = typeof whatsappAiSettings.$inferSelect;
+export type WhatsappAiKnowledge = typeof whatsappAiKnowledge.$inferSelect;
+export type InsertWhatsappAiKnowledge = typeof whatsappAiKnowledge.$inferInsert;
 
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [

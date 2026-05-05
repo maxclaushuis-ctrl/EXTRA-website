@@ -9928,6 +9928,159 @@ ${posts.map(p => `  <url>
     return cryptoModule.timingSafeEqual(a, b);
   }
 
+  // ─── Auto-reply helper: genereer + verstuur AI-antwoord op inkomend bericht ──
+  async function tryAutoReply(opts: {
+    phoneNumber: string;
+    matchCategory: 'candidate' | 'prospect' | 'unmatched';
+    candidateId: number | null;
+    prospectContactId: number | null;
+    contactName: string | null;
+  }): Promise<void> {
+    try {
+      if (!WA_360_KEY) return; // Kan niet versturen zonder API key
+
+      const { whatsappAiSettings, whatsappAiKnowledge, whatsappMessages: wm } = await import('@shared/schema');
+      const { eq, asc, desc, and } = await import('drizzle-orm');
+
+      // 1. Settings ophalen
+      const settingsRows = await db.select().from(whatsappAiSettings).limit(1);
+      const settings = settingsRows[0];
+      if (!settings || !settings.autoReplyEnabled) return;
+
+      // 2. Veiligheid: alleen voor bekende contacten?
+      if (settings.autoReplyOnlyForKnown && opts.matchCategory === 'unmatched') {
+        console.log(`[WA auto-reply] skip ${opts.phoneNumber}: onbekend contact`);
+        return;
+      }
+
+      // 3. Rate-limit: niet binnen N seconden van vorig uitgaand bericht
+      const minIntervalMs = (settings.autoReplyMinIntervalSec ?? 60) * 1000;
+      const recent = await db.select({ createdAt: wm.createdAt })
+        .from(wm)
+        .where(and(eq(wm.toNumber, opts.phoneNumber), eq(wm.direction, 'outbound')))
+        .orderBy(desc(wm.createdAt))
+        .limit(1);
+      if (recent.length > 0) {
+        const ageMs = Date.now() - new Date(recent[0].createdAt).getTime();
+        if (ageMs < minIntervalMs) {
+          console.log(`[WA auto-reply] skip ${opts.phoneNumber}: rate-limit (${Math.round(ageMs/1000)}s < ${settings.autoReplyMinIntervalSec}s)`);
+          return;
+        }
+      }
+
+      // 4. Recente berichten ophalen (laatste 10) als context
+      const history = await db.select()
+        .from(wm)
+        .where(eq(wm.fromNumber, opts.phoneNumber))
+        .orderBy(desc(wm.createdAt))
+        .limit(10);
+      const outgoing = await db.select()
+        .from(wm)
+        .where(and(eq(wm.toNumber, opts.phoneNumber), eq(wm.direction, 'outbound')))
+        .orderBy(desc(wm.createdAt))
+        .limit(10);
+      const allMessages = [...history, ...outgoing]
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        .slice(-10);
+
+      if (allMessages.length === 0) return;
+
+      // 5. Knowledge entries
+      const knowledgeRows = await db.select().from(whatsappAiKnowledge)
+        .where(eq(whatsappAiKnowledge.enabled, true))
+        .orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
+
+      // 6. OpenAI-call
+      let OpenAI: any;
+      try { OpenAI = (await import('openai')).default; } catch { return; }
+      const client = new OpenAI({
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? 'unused',
+      });
+
+      let guidelinesBlock = '';
+      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}`;
+      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
+      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
+      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
+      if (knowledgeRows.length > 0) {
+        guidelinesBlock += `\n\n=== KENNISBANK / PROTOCOLLEN ===`;
+        for (const k of knowledgeRows) guidelinesBlock += `\n\n[${k.title}]\n${k.content}`;
+      }
+
+      const contactInfo = opts.contactName ? `\nNaam contact: ${opts.contactName}` : '';
+      const systemPrompt = `Je bent de officiële WhatsApp-assistent van EXTRA, een horeca uitzendbureau uit Amsterdam. Je beantwoordt berichten ZELFSTANDIG, zonder menselijke tussenkomst.
+
+BELANGRIJK:
+- Schrijf ALLEEN het antwoord-bericht zelf, geen uitleg of toelichting
+- Houd het kort en bondig (max 2-3 zinnen tenzij meer nodig is)
+- Schrijf in het Nederlands
+- Gebruik GEEN aanhalingstekens rond het bericht
+- Als je het antwoord NIET zeker weet of het gaat om iets gevoeligs (klachten, betalingen, juridisch), antwoord dan EXACT met: "ESCALATE" (zonder verdere tekst). Een planner pakt dan over.
+- Doe nooit toezeggingen die je niet kunt waarmaken${guidelinesBlock}${contactInfo}`;
+
+      const formatted = allMessages.map((m: any) => ({
+        role: (m.direction === 'inbound' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: m.body || '',
+      }));
+
+      const completion = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: systemPrompt }, ...formatted],
+        max_tokens: 300,
+        temperature: 0.5,
+      });
+      const reply = completion.choices?.[0]?.message?.content?.trim() || '';
+      if (!reply || reply === 'ESCALATE' || reply.startsWith('ESCALATE')) {
+        console.log(`[WA auto-reply] AI escaleert ${opts.phoneNumber} → planner moet overnemen`);
+        return;
+      }
+
+      // 7. Insert outbound + verstuur via 360dialog
+      const now = new Date();
+      const match = await waStorage.resolveAndUpsertConversation({
+        phoneNumber: opts.phoneNumber,
+        inbound: false,
+        bodyPreview: reply,
+        at: now,
+      });
+      const dbId = await waStorage.insertOutboundQueued({
+        direction: 'outbound',
+        fromNumber: 'extra',
+        toNumber: opts.phoneNumber,
+        messageType: 'text',
+        body: reply,
+        candidateId: match.candidateId,
+        prospectContactId: match.prospectContactId,
+        matchCategory: match.category,
+        sentByUserId: null, // Geen menselijke afzender = AI
+        rawPayload: { type: 'text', text: { body: reply }, to: opts.phoneNumber, autoReply: true },
+      });
+
+      const payload = { messaging_product: 'whatsapp', to: opts.phoneNumber, type: 'text', text: { body: reply } };
+      const r = await fetch(`${WA_BASE_URL}/messages`, { method: 'POST', headers: wa360Headers, body: JSON.stringify(payload) });
+      const responseText = await r.text();
+      let data: any = {};
+      try { data = JSON.parse(responseText); } catch { /* niet-JSON */ }
+
+      if (!r.ok || data?.error || data?.meta?.success === false) {
+        const errMsg = data?.meta?.developer_message || data?.error?.message || responseText.slice(0, 300);
+        await waStorage.updateOutboundResult(dbId, {
+          status: 'failed',
+          errorCode: String(r.status),
+          errorMessage: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg),
+        });
+        console.error(`[WA auto-reply] verzending mislukt naar ${opts.phoneNumber}: ${errMsg}`);
+        return;
+      }
+      const waMessageId = data?.messages?.[0]?.id ?? null;
+      await waStorage.updateOutboundResult(dbId, { waMessageId, status: 'sent' });
+      console.log(`[WA auto-reply] verzonden naar ${opts.phoneNumber} (${reply.slice(0, 60)}...)`);
+    } catch (err: any) {
+      console.error('[WA auto-reply] fout:', err?.message);
+    }
+  }
+
   // GET /api/whatsapp/accounts — UI status-blok
   app.get('/api/whatsapp/accounts', adminMiddleware, async (_req: Request, res: Response) => {
     res.json([{
@@ -10118,6 +10271,16 @@ ${posts.map(p => `  <url>
               console.log(`[WA webhook] duplicate wa_message_id=${msg.id} → skip`);
             } else {
               console.log(`[WA webhook] inbound ${type} van ${normalizedFrom} → match=${match.category} (${contactProfile || '?'})`);
+              // Auto-reply alleen voor tekstberichten (geen audio/image/etc.)
+              if (type === 'text' && body_) {
+                tryAutoReply({
+                  phoneNumber: normalizedFrom,
+                  matchCategory: match.category,
+                  candidateId: match.candidateId,
+                  prospectContactId: match.prospectContactId,
+                  contactName: contactProfile || null,
+                }).catch((e: any) => console.error('[WA webhook] auto-reply error:', e?.message));
+              }
             }
           } catch (e: any) {
             console.error('[WA webhook] fout bij verwerken message:', e?.message, e?.stack);
@@ -10716,7 +10879,7 @@ ${posts.map(p => `  <url>
 
   app.put('/api/whatsapp/ai-settings', adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { toneOfVoice, guidelines, cancellationProtocol, extraContext } = req.body;
+      const { toneOfVoice, guidelines, cancellationProtocol, extraContext, autoReplyEnabled, autoReplyOnlyForKnown, autoReplyMinIntervalSec } = req.body;
       const { whatsappAiSettings } = await import('../shared/schema');
       const { eq } = await import('drizzle-orm');
       const rows = await db.select().from(whatsappAiSettings).limit(1);
@@ -10726,6 +10889,9 @@ ${posts.map(p => `  <url>
           guidelines: guidelines ?? '',
           cancellationProtocol: cancellationProtocol ?? '',
           extraContext: extraContext ?? '',
+          autoReplyEnabled: autoReplyEnabled ?? false,
+          autoReplyOnlyForKnown: autoReplyOnlyForKnown ?? true,
+          autoReplyMinIntervalSec: autoReplyMinIntervalSec ?? 60,
         });
       } else {
         await db.update(whatsappAiSettings)
@@ -10734,12 +10900,82 @@ ${posts.map(p => `  <url>
             guidelines: guidelines ?? rows[0].guidelines,
             cancellationProtocol: cancellationProtocol ?? rows[0].cancellationProtocol,
             extraContext: extraContext ?? rows[0].extraContext,
+            autoReplyEnabled: typeof autoReplyEnabled === 'boolean' ? autoReplyEnabled : rows[0].autoReplyEnabled,
+            autoReplyOnlyForKnown: typeof autoReplyOnlyForKnown === 'boolean' ? autoReplyOnlyForKnown : rows[0].autoReplyOnlyForKnown,
+            autoReplyMinIntervalSec: typeof autoReplyMinIntervalSec === 'number' ? autoReplyMinIntervalSec : rows[0].autoReplyMinIntervalSec,
             updatedAt: new Date(),
           })
           .where(eq(whatsappAiSettings.id, rows[0].id));
       }
       const updated = await db.select().from(whatsappAiSettings).limit(1);
       res.json(updated[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ─── WhatsApp AI Kennisbank (CRUD) ─────────────────────────────────────────
+  app.get('/api/whatsapp/ai-knowledge', adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const { whatsappAiKnowledge } = await import('../shared/schema');
+      const { asc } = await import('drizzle-orm');
+      const rows = await db.select().from(whatsappAiKnowledge).orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
+      res.json(rows);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/whatsapp/ai-knowledge', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { title, content, enabled } = req.body;
+      if (!title || typeof title !== 'string' || !content || typeof content !== 'string') {
+        return res.status(400).json({ error: 'title en content zijn verplicht' });
+      }
+      const { whatsappAiKnowledge } = await import('../shared/schema');
+      const { sql } = await import('drizzle-orm');
+      const maxRow = await db.select({ max: sql<number>`COALESCE(MAX(${whatsappAiKnowledge.sortOrder}), -1)` }).from(whatsappAiKnowledge);
+      const nextOrder = (maxRow[0]?.max ?? -1) + 1;
+      const inserted = await db.insert(whatsappAiKnowledge).values({
+        title: title.trim(),
+        content: content.trim(),
+        enabled: enabled !== false,
+        sortOrder: nextOrder,
+      }).returning();
+      res.json(inserted[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/whatsapp/ai-knowledge/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Ongeldig id' });
+      const { title, content, enabled, sortOrder } = req.body;
+      const { whatsappAiKnowledge } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const updateSet: Record<string, any> = { updatedAt: new Date() };
+      if (typeof title === 'string') updateSet.title = title.trim();
+      if (typeof content === 'string') updateSet.content = content.trim();
+      if (typeof enabled === 'boolean') updateSet.enabled = enabled;
+      if (typeof sortOrder === 'number') updateSet.sortOrder = sortOrder;
+      const updated = await db.update(whatsappAiKnowledge).set(updateSet).where(eq(whatsappAiKnowledge.id, id)).returning();
+      if (updated.length === 0) return res.status(404).json({ error: 'Niet gevonden' });
+      res.json(updated[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/whatsapp/ai-knowledge/:id', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Ongeldig id' });
+      const { whatsappAiKnowledge } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      await db.delete(whatsappAiKnowledge).where(eq(whatsappAiKnowledge.id, id));
+      res.json({ success: true });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
@@ -10752,9 +10988,13 @@ ${posts.map(p => `  <url>
         return res.status(400).json({ error: 'Berichten zijn vereist' });
       }
 
-      const { whatsappAiSettings } = await import('../shared/schema');
+      const { whatsappAiSettings, whatsappAiKnowledge } = await import('../shared/schema');
+      const { eq, asc } = await import('drizzle-orm');
       const settingsRows = await db.select().from(whatsappAiSettings).limit(1);
       const settings = settingsRows[0] || { toneOfVoice: '', guidelines: '', cancellationProtocol: '', extraContext: '' };
+      const knowledgeRows = await db.select().from(whatsappAiKnowledge)
+        .where(eq(whatsappAiKnowledge.enabled, true))
+        .orderBy(asc(whatsappAiKnowledge.sortOrder), asc(whatsappAiKnowledge.id));
 
       let OpenAI: any;
       try {
@@ -10773,6 +11013,12 @@ ${posts.map(p => `  <url>
       if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}`;
       if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}`;
       if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}`;
+      if (knowledgeRows.length > 0) {
+        guidelinesBlock += `\n\n=== KENNISBANK / PROTOCOLLEN ===`;
+        for (const k of knowledgeRows) {
+          guidelinesBlock += `\n\n[${k.title}]\n${k.content}`;
+        }
+      }
 
       let contactInfo = '';
       if (contactName) contactInfo += `\nNaam contact: ${contactName}`;
