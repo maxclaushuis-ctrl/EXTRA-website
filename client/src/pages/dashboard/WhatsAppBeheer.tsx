@@ -1248,34 +1248,43 @@ export default function WhatsAppBeheer() {
                               {l} ×
                             </span>
                           ))}
-                          {(['nl', 'en'] as const).map(presetLang => {
-                            const active = selectedConv.labels?.includes(presetLang);
-                            if (active) return null;
-                            return (
-                              <button
-                                key={presetLang}
-                                onClick={async () => {
-                                  if (!selectedPhone) return;
-                                  const current = selectedConv.labels || [];
-                                  // Wissel: andere taal-label verwijderen, deze toevoegen
-                                  const other = presetLang === 'nl' ? 'en' : 'nl';
-                                  const next = [...current.filter(l => l !== other), presetLang];
-                                  await updateLabels(selectedPhone, next);
-                                  const c = await haalGesprekken(tab);
-                                  setConversations(c);
-                                }}
-                                title={`Markeer dit gesprek als ${presetLang === 'nl' ? 'Nederlands' : 'Engels'} — AI antwoordt voortaan in deze taal`}
-                                style={{
-                                  fontSize: 10, fontWeight: 700, color: '#6B7280',
-                                  background: '#F3F4F6', border: '1px solid #E5E7EB',
-                                  borderRadius: 3, padding: '1px 6px', cursor: 'pointer',
-                                  fontFamily: FONT, letterSpacing: 0.3,
-                                }}
-                              >
-                                + {presetLang.toUpperCase()}
-                              </button>
-                            );
-                          })}
+                          {/* Preset-knoppen — binnen elke groep onderling exclusief, tussen groepen vrij combineerbaar.
+                              Taalgroep stuurt ook de AI-reply-taal aan (zie backend resolveLanguageFromLabels). */}
+                          {([
+                            { key: 'taal',     labels: ['nl', 'en'] as const,
+                              display: (l: string) => l.toUpperCase(),
+                              titel:   (l: string) => `Markeer als ${l === 'nl' ? 'Nederlands' : 'Engels'} — AI antwoordt in deze taal` },
+                            { key: 'functie',  labels: ['horeca', 'chef', 'housekeeping', 'logistiek'] as const,
+                              display: (l: string) => l.charAt(0).toUpperCase() + l.slice(1),
+                              titel:   (l: string) => `Markeer als ${l.charAt(0).toUpperCase() + l.slice(1)}` },
+                          ] as const).flatMap(groep =>
+                            groep.labels
+                              .filter(l => !selectedConv.labels?.includes(l))
+                              .map(presetLabel => (
+                                <button
+                                  key={`${groep.key}-${presetLabel}`}
+                                  onClick={async () => {
+                                    if (!selectedPhone) return;
+                                    const current = selectedConv.labels || [];
+                                    // Verwijder andere labels uit dezelfde groep, voeg deze toe
+                                    const sameGroup: readonly string[] = groep.labels;
+                                    const next = [...current.filter(l => !sameGroup.includes(l)), presetLabel];
+                                    await updateLabels(selectedPhone, next);
+                                    const c = await haalGesprekken(tab);
+                                    setConversations(c);
+                                  }}
+                                  title={groep.titel(presetLabel)}
+                                  style={{
+                                    fontSize: 10, fontWeight: 700, color: '#6B7280',
+                                    background: '#F3F4F6', border: '1px solid #E5E7EB',
+                                    borderRadius: 3, padding: '1px 6px', cursor: 'pointer',
+                                    fontFamily: FONT, letterSpacing: 0.3,
+                                  }}
+                                >
+                                  + {groep.display(presetLabel)}
+                                </button>
+                              ))
+                          )}
                           {showLabelInput ? (
                             <form onSubmit={handleAddLabel} style={{ display: 'inline-flex', gap: 2 }}>
                               <input
