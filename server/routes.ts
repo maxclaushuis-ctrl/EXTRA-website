@@ -10654,6 +10654,93 @@ OTHER RULES:
     res.json({ success: true });
   });
 
+  // Koppel een 'unmatched' WhatsApp-gesprek aan een echte contact-rij
+  // (creëert een nieuwe candidate of prospect_contact en re-matcht het gesprek).
+  // Categorieën: 'klant' → prospect_contacts, 'medewerker'/'kandidaat' → candidates
+  // (medewerker = status 'aangenomen', kandidaat = status 'in_behandeling').
+  app.post('/api/whatsapp/conversations/:phoneNumber/koppel-contact', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const phone = normalizePhone(req.params.phoneNumber);
+      if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+
+      const conv = await db.select().from(whatsappConversations).where(drizzleEq(whatsappConversations.phoneNumber, phone)).limit(1);
+      if (!conv.length) return res.status(404).json({ error: 'Gesprek niet gevonden' });
+
+      const { voornaam, achternaam, categorie, email, notities } = req.body ?? {};
+      const vn = typeof voornaam === 'string' ? voornaam.trim() : '';
+      const an = typeof achternaam === 'string' ? achternaam.trim() : '';
+      if (!vn || !an) return res.status(400).json({ error: 'Voornaam en achternaam zijn verplicht' });
+      if (!['klant', 'medewerker', 'kandidaat'].includes(categorie)) {
+        return res.status(400).json({ error: 'Ongeldige categorie (kies klant, medewerker of kandidaat)' });
+      }
+
+      const { candidates, prospectContacts } = await import('@shared/schema');
+      const { resolveAndUpsertConversation } = await import('./whatsapp/storage');
+
+      let createdId: number;
+      let createdType: 'candidate' | 'prospect';
+
+      if (categorie === 'klant') {
+        const cleanEmail = (typeof email === 'string' ? email.trim() : '') || `wa-${phone.replace(/\+/g, '')}@onbekend.local`;
+        const [row] = await db.insert(prospectContacts).values({
+          name: `${vn} ${an}`.trim(),
+          email: cleanEmail,
+          voornaam: vn,
+          achternaam: an,
+          telefoon: phone,
+          contactType: 'klant',
+          contactStatus: 'actief',
+          phase: 'klant',
+          source: 'whatsapp',
+        }).returning({ id: prospectContacts.id });
+        createdId = row.id;
+        createdType = 'prospect';
+      } else {
+        const status = categorie === 'medewerker' ? 'aangenomen' : 'in_behandeling';
+        // Valideer dat session.userId daadwerkelijk in users-tabel staat (FK), anders null
+        let creatorId: number | null = null;
+        const sessionUserId = req.session?.userId;
+        if (typeof sessionUserId === 'number' && sessionUserId > 0) {
+          const { users } = await import('@shared/schema');
+          const exists = await db.select({ id: users.id }).from(users).where(drizzleEq(users.id, sessionUserId)).limit(1);
+          if (exists.length > 0) creatorId = sessionUserId;
+        }
+        const [row] = await db.insert(candidates).values({
+          firstName: vn,
+          lastName: an,
+          phone,
+          phoneOriginal: phone,
+          functionType: 'horecamedewerker',
+          status,
+          createdByUserId: creatorId,
+        } as any).returning({ id: candidates.id });
+        createdId = row.id;
+        createdType = 'candidate';
+      }
+
+      // Re-match het gesprek zodat candidateId/prospectContactId, displayName en matchCategory geüpdatet worden
+      await resolveAndUpsertConversation({
+        phoneNumber: phone,
+        inbound: false,
+        bodyPreview: conv[0].lastMessagePreview ?? '',
+        at: conv[0].lastMessageAt ?? new Date(),
+      });
+
+      // Notities optioneel meenemen op de conversation
+      if (typeof notities === 'string' && notities.trim()) {
+        await db.update(whatsappConversations).set({
+          contactNotes: notities.trim(),
+          updatedAt: new Date(),
+        }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+      }
+
+      res.json({ success: true, createdType, createdId, categorie });
+    } catch (err: any) {
+      console.error('[koppel-contact] fout:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij koppelen contact' });
+    }
+  });
+
   // ─── GROEPEN + BULK VERZENDING ──────────────────────────────────────────────
   const { whatsappGroups, whatsappGroupMembers, whatsappBulkSends } = await import('@shared/schema');
   const { and: drizzleAnd, asc: drizzleAsc, inArray: drizzleInArray } = await import('drizzle-orm');

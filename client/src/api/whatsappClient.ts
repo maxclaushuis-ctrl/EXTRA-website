@@ -136,6 +136,16 @@ export const registreerWebhook = (url?: string) =>
 export const updateContactInfo = (phoneNumber: string, data: { displayName: string; contactCompany?: string; contactNotes?: string }) =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/contact-info`, data);
 
+export type KoppelContactCategorie = 'klant' | 'medewerker' | 'kandidaat';
+export const koppelContactAanGesprek = (
+  phoneNumber: string,
+  data: { voornaam: string; achternaam: string; categorie: KoppelContactCategorie; email?: string; notities?: string },
+) =>
+  post<{ success: boolean; createdType: 'candidate' | 'prospect'; createdId: number; categorie: KoppelContactCategorie }>(
+    `/conversations/${encodeURIComponent(phoneNumber)}/koppel-contact`,
+    data,
+  );
+
 export interface Group {
   id: number;
   name: string;

@@ -9,6 +9,7 @@ import {
   haalWebhookStatus,
   registreerWebhook,
   updateContactInfo,
+  koppelContactAanGesprek,
   haalTeamMembers,
   wijsGesprekToe,
   updateLabels,
@@ -104,10 +105,13 @@ export default function WhatsAppBeheer() {
   const [webhookBusy, setWebhookBusy] = useState(false);
   const [webhookMsg, setWebhookMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [editingContact, setEditingContact] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editCompany, setEditCompany] = useState('');
+  const [editVoornaam, setEditVoornaam] = useState('');
+  const [editAchternaam, setEditAchternaam] = useState('');
+  const [editCategorie, setEditCategorie] = useState<'klant' | 'medewerker' | 'kandidaat'>('kandidaat');
+  const [editEmail, setEditEmail] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [threadView, setThreadView] = useState<ThreadView>('messages');
   const [notes, setNotes] = useState<InternalNote[]>([]);
@@ -456,26 +460,39 @@ export default function WhatsAppBeheer() {
 
   function openEditContact() {
     if (!selectedConv) return;
-    setEditName(selectedConv.displayName || '');
-    setEditCompany(selectedConv.contactCompany || '');
+    // Splits bestaande displayName op spatie als voor-/achternaam-suggestie
+    const parts = (selectedConv.displayName || '').trim().split(/\s+/);
+    setEditVoornaam(parts[0] || '');
+    setEditAchternaam(parts.slice(1).join(' ') || '');
+    setEditCategorie('kandidaat');
+    setEditEmail('');
     setEditNotes(selectedConv.contactNotes || '');
+    setEditError(null);
     setEditingContact(true);
   }
 
   async function handleSaveContact(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedPhone || !editName.trim()) return;
+    if (!selectedPhone || !editVoornaam.trim() || !editAchternaam.trim()) return;
     setEditSaving(true);
+    setEditError(null);
     try {
-      await updateContactInfo(selectedPhone, {
-        displayName: editName.trim(),
-        contactCompany: editCompany.trim() || undefined,
-        contactNotes: editNotes.trim() || undefined,
+      await koppelContactAanGesprek(selectedPhone, {
+        voornaam: editVoornaam.trim(),
+        achternaam: editAchternaam.trim(),
+        categorie: editCategorie,
+        email: editCategorie === 'klant' ? (editEmail.trim() || undefined) : undefined,
+        notities: editNotes.trim() || undefined,
       });
       setEditingContact(false);
-      const c = await haalGesprekken(tab);
+      // Verversing: gesprekken-lijst (kan in andere tab terechtkomen) + huidige selectie
+      const newTab: Tab = editCategorie === 'klant' ? 'prospect' : 'candidate';
+      setTab(newTab);
+      const c = await haalGesprekken(newTab);
       setConversations(c);
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      setEditError(err?.message || 'Opslaan mislukt');
+    }
     setEditSaving(false);
   }
 
@@ -1274,17 +1291,58 @@ export default function WhatsAppBeheer() {
                   {editingContact && selectedConv.matchCategory === 'unmatched' && (
                     <div style={{ padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
                       <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>Contact bewerken</div>
-                        <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Naam (verplicht)" required
-                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
-                        <input value={editCompany} onChange={e => setEditCompany(e.target.value)} placeholder="Bedrijf / context (optioneel)"
-                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
-                        <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notities (optioneel)" rows={2}
-                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical' }} />
+                        <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 2 }}>
+                          Toevoegen aan contacten
+                        </div>
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="submit" disabled={editSaving || !editName.trim()}
-                            style={{ background: editSaving || !editName.trim() ? '#E5E7EB' : NAVY, color: editSaving || !editName.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
-                            {editSaving ? 'Opslaan...' : 'Opslaan'}
+                          <input value={editVoornaam} onChange={e => setEditVoornaam(e.target.value)} placeholder="Voornaam *" required
+                            style={{ flex: 1, padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                          <input value={editAchternaam} onChange={e => setEditAchternaam(e.target.value)} placeholder="Achternaam *" required
+                            style={{ flex: 1, padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginTop: 2 }}>Categorie</div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {([
+                            { v: 'klant', label: 'Klant', help: 'Bedrijfscontact' },
+                            { v: 'medewerker', label: 'Medewerker', help: 'Aangenomen' },
+                            { v: 'kandidaat', label: 'Kandidaat', help: 'Sollicitant' },
+                          ] as const).map(opt => {
+                            const active = editCategorie === opt.v;
+                            return (
+                              <button
+                                type="button"
+                                key={opt.v}
+                                onClick={() => setEditCategorie(opt.v)}
+                                style={{
+                                  flex: 1, minWidth: 90,
+                                  background: active ? NAVY : '#fff',
+                                  color: active ? '#fff' : '#374151',
+                                  border: `1px solid ${active ? NAVY : '#D1D5DB'}`,
+                                  borderRadius: 6, padding: '6px 8px', fontSize: 11, fontWeight: 600,
+                                  cursor: 'pointer', fontFamily: FONT, lineHeight: 1.3, textAlign: 'center',
+                                }}
+                              >
+                                {opt.label}
+                                <div style={{ fontSize: 9, fontWeight: 400, opacity: 0.85, marginTop: 1 }}>{opt.help}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {editCategorie === 'klant' && (
+                          <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" placeholder="E-mail (optioneel — voor mailcampagnes)"
+                            style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }} />
+                        )}
+                        <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notities op gesprek (optioneel)" rows={2}
+                          style={{ padding: '8px 10px', fontSize: 12, border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT, resize: 'vertical' }} />
+                        {editError && (
+                          <div style={{ fontSize: 11, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', padding: '6px 8px', borderRadius: 6 }}>
+                            {editError}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="submit" disabled={editSaving || !editVoornaam.trim() || !editAchternaam.trim()}
+                            style={{ background: editSaving || !editVoornaam.trim() || !editAchternaam.trim() ? '#E5E7EB' : NAVY, color: editSaving || !editVoornaam.trim() || !editAchternaam.trim() ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>
+                            {editSaving ? 'Opslaan...' : 'Opslaan als contact'}
                           </button>
                           <button type="button" onClick={() => setEditingContact(false)}
                             style={{ background: '#fff', color: '#6B7280', border: '1px solid #D1D5DB', borderRadius: 6, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: FONT }}>
