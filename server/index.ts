@@ -277,8 +277,30 @@ async function ensureAdminAccounts() {
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
+    // Eenmalige opruiming van placeholder-conversaties die zijn aangemaakt door de
+    // (inmiddels uitgeschakelde) auto-sync van sollicitanten/medewerkers naar de
+    // WhatsApp-inbox. Idempotent: verwijdert alleen rijen waar nog géén echt bericht
+    // voor is verstuurd of ontvangen.
+    cleanupPlaceholderConversations().catch(err => console.warn('Cleanup placeholder-conversaties mislukt (niet-kritiek):', err?.message || err));
   });
 })();
+
+async function cleanupPlaceholderConversations() {
+  const sql = `
+    DELETE FROM whatsapp_conversations c
+    WHERE c.last_message_preview IN ('[Sollicitant — nog geen bericht]', '[Medewerker — nog geen bericht]')
+      AND NOT EXISTS (
+        SELECT 1 FROM whatsapp_messages m
+        WHERE m.from_number = c.phone_number OR m.to_number = c.phone_number
+      )
+    RETURNING phone_number, display_name
+  `;
+  const r: any = await pool.query(sql);
+  if (r?.rowCount && r.rowCount > 0) {
+    console.log(`[WA cleanup] ${r.rowCount} placeholder-conversatie(s) verwijderd:`,
+      r.rows.map((x: any) => `${x.display_name || '?'} (${x.phone_number})`).join(', '));
+  }
+}
 
 async function backfillRejectionReasons() {
   // Haalt voor elke afgewezen kandidaat zonder rejection_reason de meest recente

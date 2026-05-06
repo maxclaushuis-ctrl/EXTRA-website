@@ -7363,30 +7363,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Helper: synchroniseer een (zojuist aangemaakte) medewerker naar de
-  // WhatsApp-contactenlijst — met functie- + taal-label, zonder ooit een
-  // create-flow te breken bij fouten.
-  async function syncEmployeeToWhatsappContact(employee: any, source: string): Promise<void> {
-    if (!employee?.phone) return;
-    try {
-      const { upsertEmployeeContact } = await import('./whatsapp/storage');
-      const r = await upsertEmployeeContact({
-        rawPhone: employee.phone,
-        candidateId: employee.candidateId ?? null,
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        functie: employee.functie,
-        language: employee.language,
-      });
-      if (!r.ok) {
-        console.warn(`[Medewerker→WA-contact] (${source}) Overgeslagen:`, r.reason);
-      } else {
-        console.log(
-          `[Medewerker→WA-contact] (${source}) ${r.created ? 'Aangemaakt' : 'Bijgewerkt'} voor ${r.phoneNumber} (labels: ${(r.labels || []).join(', ') || 'geen'})`,
-        );
-      }
-    } catch (e: any) {
-      console.error(`[Medewerker→WA-contact] (${source}) Fout:`, e?.message || e);
-    }
+  // WhatsApp-contactenlijst.
+  //
+  // FASE 1 (mei 2026): uitgeschakeld. Medewerkers verschijnen nu automatisch
+  // in de Contacten-pagina (op basis van de employees-tabel) zonder dat we
+  // een lege placeholder-conversatie hoeven aan te maken in de gesprekkenlijst.
+  // Een conversatie wordt pas aangemaakt zodra er daadwerkelijk een bericht
+  // wordt gestuurd of ontvangen.
+  async function syncEmployeeToWhatsappContact(_employee: any, _source: string): Promise<void> {
+    return;
   }
 
   app.post("/api/admin/employees", adminMiddleware, async (req: Request, res: Response) => {
@@ -8313,28 +8298,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const candidate = await storage.createCandidate(candidateData as any);
 
-      // Sollicitant direct als WhatsApp-contact opslaan met functie- en taal-label
-      // zodat hij meteen aanschrijfbaar is vanuit het WhatsApp-paneel.
-      try {
-        const { upsertSollicitantContact } = await import('./whatsapp/storage');
-        const contactRes = await upsertSollicitantContact({
-          rawPhone: data.phone,
-          candidateId: candidate.id,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          functionType: data.functionType,
-          languages: data.languages,
-        });
-        if (!contactRes.ok) {
-          console.warn('[Sollicitatie→WA-contact] Overgeslagen:', contactRes.reason);
-        } else {
-          console.log(
-            `[Sollicitatie→WA-contact] ${contactRes.created ? 'Aangemaakt' : 'Bijgewerkt'} voor ${contactRes.phoneNumber} (labels: ${(contactRes.labels || []).join(', ') || 'geen'})`,
-          );
-        }
-      } catch (e: any) {
-        console.error('[Sollicitatie→WA-contact] Fout:', e?.message || e);
-      }
+      // FASE 1 (mei 2026): de auto-aanmaak van een placeholder-conversatie
+      // ("[Sollicitant — nog geen bericht]") is uitgeschakeld. Sollicitanten
+      // verschijnen nu automatisch in de Contacten-pagina op basis van de
+      // candidates-tabel. Een gesprek in de WhatsApp-inbox wordt pas
+      // aangemaakt zodra er een echt bericht wordt verstuurd of ontvangen.
 
       // Als het formulier gekoppeld is aan een bestaande kandidaat (gepland/uitgenodigd),
       // zet die kandidaat op 'aangenomen' zodat hij uit "Gesprek gepland" verdwijnt
