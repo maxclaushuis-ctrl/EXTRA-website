@@ -378,3 +378,24 @@
     padding-right: 1.25rem;
   }
 }
+
+/* ───────────────────────────────────────────────────────────
+   Inklapbare hoofd-sidebar (DashboardMockup)
+   Wanneer aside.dh-sidebar-collapsed actief is wordt de menubalk
+   teruggebracht tot een rail van iconen. We gebruiken positionele
+   selectors zodat we niet elk individueel menu-item hoeven te
+   markeren.
+   ─────────────────────────────────────────────────────────── */
+aside.dh-sidebar-collapsed nav button.justify-between { display: none !important; }
+aside.dh-sidebar-collapsed nav button.gap-3 > span,
+aside.dh-sidebar-collapsed .dh-userinfo button.gap-3 > span,
+aside.dh-sidebar-collapsed .dh-systeem-row { display: none !important; }
+aside.dh-sidebar-collapsed nav button.gap-3,
+aside.dh-sidebar-collapsed .dh-userinfo button.gap-3 {
+  justify-content: center !important;
+  gap: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+aside.dh-sidebar-collapsed .dh-userinfo > div:first-child { display: none !important; }
+aside.dh-sidebar-collapsed .dh-logo-text { display: none !important; }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil, MessageCircle, Briefcase, UserPlus, Building2, Upload, Plus, X, Trash2 } from 'lucide-react';
+import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil, MessageCircle, Briefcase, UserPlus, Building2, Upload, Plus, X, Trash2, SlidersHorizontal, Tag } from 'lucide-react';
 import {
   haalGesprekken,
   haalBerichten,
@@ -146,6 +146,12 @@ export default function WhatsAppBeheer() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  // Popover-state voor de gebundelde sub-filters (Iedereen + Labels) achter het filter-icoon
+  // naast de zoekbalk. Vervangt de losse drie dropdowns die de zoekbalk te druk maakten.
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+  // Popover voor "+ Label toevoegen" boven het geopende gesprek — bevat presets én vrije input,
+  // zodat de header rustig blijft.
+  const [showLabelPopover, setShowLabelPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const notesEndRef = useRef<HTMLDivElement>(null);
 
@@ -1232,7 +1238,7 @@ export default function WhatsAppBeheer() {
                 2-koloms layout (sidebar verwijderd op 2026-05-06): inbox-status zit nu
                 als pill-rij boven de zoekbalk, label-filters via de bestaande dropdown. */}
             <div style={{
-              width: 380, flexShrink: 0, display: 'flex', flexDirection: 'column',
+              width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column',
               background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
             }}>
               {/* Categorie-tabs (Medewerkers/Klanten/Kandidaten) */}
@@ -1305,59 +1311,102 @@ export default function WhatsAppBeheer() {
                 })}
               </div>
 
-              {/* Zoekbalk + sub-filters */}
-              <div style={{ padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Zoek op naam of nummer..."
-                  style={{
-                    width: '100%', padding: '7px 10px', fontSize: 12,
-                    border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none',
-                    fontFamily: FONT, boxSizing: 'border-box',
-                  }}
-                />
-                <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-                  <select
-                    value={filterUnread}
-                    onChange={e => setFilterUnread(e.target.value as FilterUnread)}
-                    style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterUnread !== 'all' ? NAVY : '#6B7280', fontWeight: filterUnread !== 'all' ? 600 : 400 }}
+              {/* Zoekbalk + filter-icoon (sub-filters in popover).
+                  De vorige drie losse dropdowns (Alle/Iedereen/Labels) zijn vervangen door één
+                  filter-knop naast de zoekbalk; sub-filters klap je open via dat icoon. */}
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid #E5E7EB', position: 'relative' }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Zoek op naam of nummer..."
+                    style={{
+                      flex: 1, padding: '7px 10px', fontSize: 12,
+                      border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none',
+                      fontFamily: FONT, boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowFilterPopover(v => !v)}
+                    title="Sub-filters (toegewezen aan / labels)"
+                    aria-label="Sub-filters tonen"
+                    style={{
+                      flexShrink: 0, width: 28, height: 28, display: 'inline-flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      borderRadius: 6, cursor: 'pointer',
+                      background: (filterAssignee !== 'all' || filterLabel !== 'all') ? '#F3E8FF' : '#fff',
+                      border: '1px solid ' + ((filterAssignee !== 'all' || filterLabel !== 'all') ? '#C4B5FD' : '#E5E7EB'),
+                      color: (filterAssignee !== 'all' || filterLabel !== 'all') ? NAVY : '#6B7280',
+                      position: 'relative',
+                    }}
                   >
-                    <option value="all">Alle</option>
-                    <option value="unread">Ongelezen</option>
-                  </select>
-                  <select
-                    value={filterAssignee}
-                    onChange={e => setFilterAssignee(e.target.value)}
-                    style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterAssignee !== 'all' ? NAVY : '#6B7280', fontWeight: filterAssignee !== 'all' ? 600 : 400 }}
-                  >
-                    <option value="all">Iedereen</option>
-                    <option value="unassigned">Niet toegewezen</option>
-                    {teamMembers.map(m => (
-                      <option key={m.id} value={String(m.id)}>{m.name}</option>
-                    ))}
-                  </select>
-                  {allLabelsInUse.length > 0 && (
-                    <select
-                      value={filterLabel}
-                      onChange={e => setFilterLabel(e.target.value)}
-                      style={{ fontSize: 11, padding: '3px 6px', borderRadius: 4, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterLabel !== 'all' ? NAVY : '#6B7280', fontWeight: filterLabel !== 'all' ? 600 : 400 }}
-                    >
-                      <option value="all">Labels</option>
-                      {allLabelsInUse.map(l => (
-                        <option key={l} value={l}>{l}</option>
-                      ))}
-                    </select>
-                  )}
-                  {hasActiveFilters && (
-                    <button
-                      onClick={() => { setFilterUnread('all'); setFilterAssignee('all'); setFilterLabel('all'); }}
-                      style={{ fontSize: 10, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: '3px 4px' }}
-                    >
-                      {'\u2715'} Reset
-                    </button>
-                  )}
+                    <SlidersHorizontal size={14} />
+                    {(filterAssignee !== 'all' || filterLabel !== 'all') && (
+                      <span style={{
+                        position: 'absolute', top: -3, right: -3,
+                        width: 8, height: 8, borderRadius: '50%', background: NAVY,
+                        border: '1px solid #fff',
+                      }} />
+                    )}
+                  </button>
                 </div>
+                {showFilterPopover && (
+                  <div style={{
+                    position: 'absolute', top: '100%', right: 10, marginTop: 4,
+                    background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8,
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.08)', padding: 12, zIndex: 20,
+                    minWidth: 220, display: 'flex', flexDirection: 'column', gap: 10,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>
+                        Toegewezen aan
+                      </div>
+                      <select
+                        value={filterAssignee}
+                        onChange={e => setFilterAssignee(e.target.value)}
+                        style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterAssignee !== 'all' ? NAVY : '#374151', background: '#fff' }}
+                      >
+                        <option value="all">Iedereen</option>
+                        <option value="unassigned">Niet toegewezen</option>
+                        {teamMembers.map(m => (
+                          <option key={m.id} value={String(m.id)}>{m.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {allLabelsInUse.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>
+                          Label
+                        </div>
+                        <select
+                          value={filterLabel}
+                          onChange={e => setFilterLabel(e.target.value)}
+                          style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid #E5E7EB', fontFamily: FONT, color: filterLabel !== 'all' ? NAVY : '#374151', background: '#fff' }}
+                        >
+                          <option value="all">Alle labels</option>
+                          {allLabelsInUse.map(l => (
+                            <option key={l} value={l}>{l}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {(filterAssignee !== 'all' || filterLabel !== 'all') && (
+                      <button
+                        onClick={() => { setFilterAssignee('all'); setFilterLabel('all'); }}
+                        style={{ fontSize: 11, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}
+                      >
+                        {'\u2715'} Filters resetten
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowFilterPopover(false)}
+                      style={{ alignSelf: 'flex-end', fontSize: 11, color: NAVY, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', fontWeight: 600 }}
+                    >
+                      Sluiten
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -1457,7 +1506,7 @@ export default function WhatsAppBeheer() {
 
               {selectedConv && (
                 <>
-                  <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
+                  <div style={{ padding: '16px 22px', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1498,71 +1547,117 @@ export default function WhatsAppBeheer() {
                         <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
                           {threadSubline(selectedConv)}
                         </div>
-                        <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                        {/* Compacte label-rij: alleen toegekende labels + één "+ Label toevoegen"-knop.
+                            De preset-knoppen (taal/functie) en custom-input zitten in de popover hieronder. */}
+                        <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap', alignItems: 'center', position: 'relative' }}>
                           {selectedConv.labels?.map(l => (
                             <span key={l} style={{
-                              fontSize: 10, padding: '1px 6px', borderRadius: 3,
+                              fontSize: 10, padding: '2px 7px', borderRadius: 3,
                               background: labelColor(l) + '18', color: labelColor(l),
                               fontWeight: 600, cursor: 'pointer',
                             }} onClick={() => handleRemoveLabel(l)} title={`Verwijder label "${l}"`}>
                               {l} ×
                             </span>
                           ))}
-                          {/* Preset-knoppen — binnen elke groep onderling exclusief, tussen groepen vrij combineerbaar.
-                              Taalgroep stuurt ook de AI-reply-taal aan (zie backend resolveLanguageFromLabels). */}
-                          {([
-                            { key: 'taal',     labels: ['nl', 'en'] as const,
-                              display: (l: string) => l.toUpperCase(),
-                              titel:   (l: string) => `Markeer als ${l === 'nl' ? 'Nederlands' : 'Engels'} — AI antwoordt in deze taal` },
-                            { key: 'functie',  labels: ['horeca', 'chef', 'housekeeping', 'logistiek'] as const,
-                              display: (l: string) => l.charAt(0).toUpperCase() + l.slice(1),
-                              titel:   (l: string) => `Markeer als ${l.charAt(0).toUpperCase() + l.slice(1)}` },
-                          ] as const).flatMap(groep =>
-                            groep.labels
-                              .filter(l => !selectedConv.labels?.includes(l))
-                              .map(presetLabel => (
-                                <button
-                                  key={`${groep.key}-${presetLabel}`}
-                                  onClick={async () => {
-                                    if (!selectedPhone) return;
-                                    const current = selectedConv.labels || [];
-                                    // Verwijder andere labels uit dezelfde groep, voeg deze toe
-                                    const sameGroup: readonly string[] = groep.labels;
-                                    const next = [...current.filter(l => !sameGroup.includes(l)), presetLabel];
-                                    await updateLabels(selectedPhone, next);
-                                    const c = await haalGesprekken(tab);
-                                    setConversations(c);
-                                  }}
-                                  title={groep.titel(presetLabel)}
-                                  style={{
-                                    fontSize: 10, fontWeight: 700, color: '#6B7280',
-                                    background: '#F3F4F6', border: '1px solid #E5E7EB',
-                                    borderRadius: 3, padding: '1px 6px', cursor: 'pointer',
-                                    fontFamily: FONT, letterSpacing: 0.3,
-                                  }}
-                                >
-                                  + {groep.display(presetLabel)}
-                                </button>
-                              ))
-                          )}
-                          {showLabelInput ? (
-                            <form onSubmit={handleAddLabel} style={{ display: 'inline-flex', gap: 2 }}>
-                              <input
-                                value={labelInput}
-                                onChange={e => setLabelInput(e.target.value)}
-                                placeholder="label..."
-                                autoFocus
-                                onBlur={() => { if (!labelInput.trim()) setShowLabelInput(false); }}
-                                style={{ width: 70, fontSize: 10, padding: '1px 4px', border: '1px solid #D1D5DB', borderRadius: 3, outline: 'none', fontFamily: FONT }}
-                              />
-                            </form>
-                          ) : (
-                            <button
-                              onClick={() => setShowLabelInput(true)}
-                              style={{ fontSize: 10, color: '#9CA3AF', background: 'none', border: '1px dashed #D1D5DB', borderRadius: 3, padding: '1px 6px', cursor: 'pointer' }}
-                            >
-                              + label
-                            </button>
+                          <button
+                            onClick={() => setShowLabelPopover(v => !v)}
+                            style={{
+                              fontSize: 10, color: NAVY, background: 'none',
+                              border: '1px dashed #C4B5FD', borderRadius: 3,
+                              padding: '2px 7px', cursor: 'pointer', display: 'inline-flex',
+                              alignItems: 'center', gap: 3, fontWeight: 600,
+                            }}
+                          >
+                            <Tag size={9} /> Label toevoegen
+                          </button>
+                          {showLabelPopover && (
+                            <div style={{
+                              position: 'absolute', top: '100%', left: 0, marginTop: 6,
+                              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8,
+                              boxShadow: '0 6px 20px rgba(0,0,0,0.1)', padding: 12,
+                              zIndex: 20, minWidth: 260, display: 'flex',
+                              flexDirection: 'column', gap: 10,
+                            }}>
+                              {/* Preset-groepen — binnen elke groep onderling exclusief, tussen groepen vrij combineerbaar.
+                                  Taalgroep stuurt ook de AI-reply-taal aan (zie backend resolveLanguageFromLabels). */}
+                              {([
+                                { key: 'taal',    titel: 'Taal',    labels: ['nl', 'en'] as const,
+                                  display: (l: string) => l.toUpperCase() },
+                                { key: 'functie', titel: 'Functie', labels: ['horeca', 'chef', 'housekeeping', 'logistiek'] as const,
+                                  display: (l: string) => l.charAt(0).toUpperCase() + l.slice(1) },
+                              ] as const).map(groep => (
+                                <div key={groep.key}>
+                                  <div style={{ fontSize: 10, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>
+                                    {groep.titel}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                    {groep.labels.map(presetLabel => {
+                                      const isAssigned = selectedConv.labels?.includes(presetLabel);
+                                      return (
+                                        <button
+                                          key={presetLabel}
+                                          disabled={isAssigned}
+                                          onClick={async () => {
+                                            if (!selectedPhone) return;
+                                            const current = selectedConv.labels || [];
+                                            const sameGroup: readonly string[] = groep.labels;
+                                            const next = [...current.filter(l => !sameGroup.includes(l)), presetLabel];
+                                            await updateLabels(selectedPhone, next);
+                                            const c = await haalGesprekken(tab);
+                                            setConversations(c);
+                                            setShowLabelPopover(false);
+                                          }}
+                                          style={{
+                                            fontSize: 11, fontWeight: 600,
+                                            color: isAssigned ? '#9CA3AF' : '#374151',
+                                            background: isAssigned ? '#F3F4F6' : '#fff',
+                                            border: '1px solid ' + (isAssigned ? '#E5E7EB' : '#D1D5DB'),
+                                            borderRadius: 4, padding: '3px 9px',
+                                            cursor: isAssigned ? 'not-allowed' : 'pointer',
+                                            fontFamily: FONT,
+                                          }}
+                                        >
+                                          {isAssigned ? '✓ ' : '+ '}{groep.display(presetLabel)}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                              <div>
+                                <div style={{ fontSize: 10, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>
+                                  Eigen label
+                                </div>
+                                <form onSubmit={(e) => { handleAddLabel(e); setShowLabelPopover(false); }} style={{ display: 'flex', gap: 4 }}>
+                                  <input
+                                    value={labelInput}
+                                    onChange={e => setLabelInput(e.target.value)}
+                                    placeholder="bv. spoed, vip..."
+                                    autoFocus
+                                    style={{ flex: 1, fontSize: 12, padding: '5px 8px', border: '1px solid #D1D5DB', borderRadius: 6, outline: 'none', fontFamily: FONT }}
+                                  />
+                                  <button
+                                    type="submit"
+                                    disabled={!labelInput.trim()}
+                                    style={{
+                                      fontSize: 11, fontWeight: 600,
+                                      background: labelInput.trim() ? NAVY : '#E5E7EB',
+                                      color: labelInput.trim() ? '#fff' : '#9CA3AF',
+                                      border: 'none', borderRadius: 6, padding: '0 12px',
+                                      cursor: labelInput.trim() ? 'pointer' : 'not-allowed',
+                                    }}
+                                  >
+                                    Voeg toe
+                                  </button>
+                                </form>
+                              </div>
+                              <button
+                                onClick={() => setShowLabelPopover(false)}
+                                style={{ alignSelf: 'flex-end', fontSize: 11, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0' }}
+                              >
+                                Sluiten
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1821,12 +1916,20 @@ export default function WhatsAppBeheer() {
                             style={{ background: attachedFile ? '#DBEAFE' : '#F0F4FA', color: NAVY, border: '1px solid #C7D2E0', borderRadius: 6, padding: '0 12px', fontSize: 18, fontWeight: 700, cursor: sending ? 'not-allowed' : 'pointer', lineHeight: 1 }}>
                             +
                           </button>
-                          <input
+                          <textarea
                             value={reply}
                             onChange={e => setReply(e.target.value)}
+                            onKeyDown={e => {
+                              // Enter zonder Shift = verzenden (zoals bij andere chat-clients).
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSend(e as unknown as React.FormEvent);
+                              }
+                            }}
                             placeholder={attachedFile ? 'Optioneel: bijschrift bij bijlage...' : (within24h ? 'Typ een antwoord...' : 'Typ een antwoord (24u-venster mogelijk verlopen)...')}
                             disabled={sending}
-                            style={{ flex: 1, padding: '10px 14px', fontSize: 13, border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff' }}
+                            rows={2}
+                            style={{ flex: 1, padding: '12px 14px', fontSize: 13, border: '1px solid #E5E7EB', borderRadius: 6, outline: 'none', fontFamily: FONT, background: '#fff', resize: 'vertical', minHeight: 60, lineHeight: 1.4 }}
                           />
                           <button type="button" onClick={requestAiSuggestion} disabled={aiLoading || messages.length === 0}
                             title="AI suggestie opvragen"

@@ -225,6 +225,18 @@ export default function DashboardMockup() {
   const [weekDayFilter, setWeekDayFilter] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Hoofdsidebar inklapbaar (alleen desktop). State leeft in localStorage
+  // zodat de keuze blijft na refresh of paginanavigatie.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem('sidebar_collapsed') === '1'; } catch { return false; }
+  });
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      try { localStorage.setItem('sidebar_collapsed', next ? '1' : '0'); } catch {}
+      return next;
+    });
+  };
   const [selectedKandidate, setSelectedKandidate] = useState<Candidate | null>(null);
   const [kanDetailOpen, setKanDetailOpen] = useState(false);
   const [rejectConfirmId, setRejectConfirmId] = useState<number | null>(null);
@@ -856,14 +868,24 @@ export default function DashboardMockup() {
       )}
 
       {/* Sidebar */}
-      <aside className={`w-56 bg-white border-r border-gray-200 flex flex-col fixed h-full z-30 transition-transform duration-200
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-56'} bg-white border-r border-gray-200 flex flex-col fixed h-full z-30 transition-[width,transform] duration-200
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        ${sidebarCollapsed ? 'dh-sidebar-collapsed' : ''}`}>
+        {/* Desktop collapse-knop: kleine ronde knop op de rechterrand, half over de border (VS Code stijl). */}
+        <button
+          onClick={toggleSidebarCollapsed}
+          title={sidebarCollapsed ? 'Menu uitklappen' : 'Menu inklappen'}
+          aria-label={sidebarCollapsed ? 'Menu uitklappen' : 'Menu inklappen'}
+          className="hidden md:flex absolute -right-3 top-6 z-40 w-6 h-6 rounded-full bg-white border border-gray-200 shadow-sm items-center justify-center text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-colors"
+        >
+          {sidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
         <div className="p-4 border-b flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <LayoutDashboard className="h-4 w-4 text-white" />
             </div>
-            <div>
+            <div className="dh-logo-text min-w-0">
               <div className="font-bold text-purple-600 text-sm">EXTRAATJE</div>
               <div className="text-xs text-gray-400">Beheerdersdashboard</div>
             </div>
@@ -894,6 +916,7 @@ export default function DashboardMockup() {
             <>
               <button
                 onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
+                title="Gesprekken"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'whatsapp' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -903,6 +926,7 @@ export default function DashboardMockup() {
               </button>
               <button
                 onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}
+                title="Contacten"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'whatsapp-contacten' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -912,6 +936,7 @@ export default function DashboardMockup() {
               </button>
               <button
                 onClick={() => { setActiveTab('whatsapp-ai'); setSidebarOpen(false); }}
+                title="AI-instellingen"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'whatsapp-ai' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -941,6 +966,7 @@ export default function DashboardMockup() {
                 <button
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  title={item.label}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                     activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -972,6 +998,7 @@ export default function DashboardMockup() {
                 <button
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  title={item.label}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                     activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -1007,6 +1034,7 @@ export default function DashboardMockup() {
                 <button
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
+                  title={item.label}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                     activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -1030,6 +1058,7 @@ export default function DashboardMockup() {
             <>
               <button
                 onClick={() => { setActiveTab('blog'); setSidebarOpen(false); }}
+                title="Blog & SEO"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'blog' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -1044,6 +1073,7 @@ export default function DashboardMockup() {
               </button>
               <button
                 onClick={() => { setActiveTab('vacatures-cms'); setSidebarOpen(false); }}
+                title="Vacatures & SEO"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'vacatures-cms' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -1058,6 +1088,7 @@ export default function DashboardMockup() {
               </button>
               <button
                 onClick={() => { setActiveTab('stats'); setSidebarOpen(false); }}
+                title="Website Statistieken"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'stats' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -1067,6 +1098,7 @@ export default function DashboardMockup() {
               </button>
               <button
                 onClick={() => { setActiveTab('kpi'); setSidebarOpen(false); }}
+                title="KPI & Rapportage"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'kpi' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
@@ -1079,12 +1111,13 @@ export default function DashboardMockup() {
         </nav>
 
         {/* Systeem */}
-        <div className="px-3 mt-3 mb-1">
+        <div className="px-3 mt-3 mb-1 dh-systeem-row">
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Systeem</span>
         </div>
         <button
           onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+          title="Admin-accounts"
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 mx-2 transition-colors text-sm ${
             activeTab === 'admin-beheer' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
@@ -1092,10 +1125,11 @@ export default function DashboardMockup() {
           <span>Admin-accounts</span>
         </button>
 
-        <div className="p-2 border-t mt-2">
+        <div className="p-2 border-t mt-2 dh-userinfo">
           <div className="px-3 py-1.5 text-xs text-gray-400 truncate">{user?.firstName} {user?.lastName}</div>
           <button
             onClick={() => { setChangePwData({ current: '', next: '', confirm: '' }); setChangePwError(''); setChangePasswordOpen(true); }}
+            title="Wachtwoord wijzigen"
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <Settings2 className="h-4 w-4" />
@@ -1103,6 +1137,7 @@ export default function DashboardMockup() {
           </button>
           <button
             onClick={() => logout()}
+            title="Uitloggen"
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
             <LogOut className="h-4 w-4" />
@@ -1188,8 +1223,8 @@ export default function DashboardMockup() {
         </Dialog>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 md:ml-56 overflow-auto">
+      {/* Main Content — offset volgt sidebar-breedte (collapsed = 4rem, anders 14rem) */}
+      <main className={`flex-1 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-56'} overflow-auto transition-[margin] duration-200`}>
         {/* Header */}
         <header className="bg-white border-b px-6 py-3 sticky top-0 z-10">
           <div className="flex items-center justify-between">

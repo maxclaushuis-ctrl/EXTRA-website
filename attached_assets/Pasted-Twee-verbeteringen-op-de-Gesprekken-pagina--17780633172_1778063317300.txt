@@ -1,0 +1,112 @@
+Twee verbeteringen op de Gesprekken-pagina:
+
+==========================================================
+VERBETERING 1: INKLAPBAAR HOOFDMENU
+==========================================================
+
+Maak het complete hoofdmenu (linker zijbalk met EXTRAATJE-logo, 
+Communicatie/Medewerkers/Bedrijven/Systeem secties) inklapbaar.
+
+GEDRAG:
+- Standaard uitgeklapt zoals nu (~280px breed)
+- Kleine knop bovenaan de zijbalk (chevron-left/right of hamburger-
+  icoon) om in/uit te klappen
+- Ingeklapt: smalle rail (~64px) met alleen de iconen, geen tekst
+- Tooltips bij hover over iconen tonen de label
+- State persisteren in localStorage (bijv. "sidebar_collapsed")
+- Smooth transition (250ms ease-in-out)
+- De groep-headers (COMMUNICATIE, MEDEWERKERS, etc.) zijn 
+  verborgen in ingeklapte modus
+- Sub-items van uitgeklapte groepen tonen alleen hun icoon in 
+  ingeklapte modus
+- Het EXTRAATJE-logo bovenaan: in ingeklapt alleen het icoon, 
+  geen tekst
+
+POSITIE VAN DE INKLAP-KNOP:
+- Rechtsboven in de zijbalk, naast/op de bovenkant
+- Of: aan de rand van de zijbalk een dunne strook waarop je kunt 
+  klikken (zoals VS Code)
+- Voorkeur: een kleine ronde knop aan de rechterkant van de 
+  zijbalk-grens, half over de border, met chevron-icoon
+
+VOORDEEL: gebruikers met smallere schermen of die de chat-pane 
+groter willen kunnen het menu wegklikken. Komt terug zoals ze het 
+laatst gebruikten dankzij localStorage.
+
+==========================================================
+VERBETERING 2: CHAT-PANE RUIMER MAKEN
+==========================================================
+
+Het chatvenster voelt nog te klein, ook na de twee-kolommen-
+herziening. Twee dingen aanpakken:
+
+A) GESPREKKENLIJST (KOLOM 1) IETS SMALLER MAKEN
+   - Van ~380px naar ~340px
+   - Zorg dat preview-tekst nog steeds leesbaar blijft (gebruik 
+     ellipsis bij overflow)
+
+B) FILTER-DROPDOWNS OPSCHONEN
+   Onder de zoekbalk staan nu drie dropdowns: "Alle", "Iedereen", 
+   "Labels" - die voelen rommelig nu we al de filter-pills 
+   (Open/Opgelost/Spam/Alle) en categorie-tabs hebben.
+   
+   Aanpak:
+   - "Alle" dropdown: WEG (overlapt met filter-pills)
+   - "Iedereen" dropdown: behouden maar verplaats achter een 
+     filter-icoon naast de zoekbalk (alleen tonen bij klik)
+   - "Labels" dropdown: behouden maar idem - achter filter-icoon
+   
+   Resultaat: zoekbalk + sort-knop + klein filter-icoon op één 
+   regel. Sub-filters klap je open via het icoon.
+
+C) PADDING IN DE CHAT-PANE VERRUIMEN
+   - Header (naam, telefoon, categorie-dropdown, toegewezen-
+     dropdown): wat meer verticale padding
+   - Berichten-area: minimum-height vergroten zodat ook lege 
+     gesprekken minder leeg ogen
+   - Composer onderaan: tekstveld iets hoger maken (min-height 
+     44px → 60px)
+
+D) LABEL-PILLS BOVENAAN GESPREK COMPACTER
+   De rij `nl × horeca × + EN + Chef + Housekeeping + Logistiek 
+   + label` neemt te veel ruimte. Aanpak:
+   - Toegekende labels (`nl ×`, `horeca ×`) tonen
+   - Een "+ Label toevoegen" knop in plaats van alle suggesties 
+     direct uitspreiden
+   - Klik op die knop opent een dropdown/popover met alle 
+     beschikbare labels
+   - Resultaat: rustige header, snel toevoegen mogelijk maar 
+     niet visueel dominant
+
+==========================================================
+WAT NIET DOEN
+==========================================================
+
+- Geen wijzigingen aan backend
+- Geen wijzigingen aan andere paginas (Kandidaten, Sollicitanten, 
+  enz.) behalve dat ze ook profiteren van het inklapbare menu
+- Geen wijzigingen aan de filter-pills zelf (Open/Opgelost/Spam/
+  Alle blijven zoals ze zijn)
+- Geen wijzigingen aan categorie-tabs (Medewerkers/Klanten/
+  Kandidaten blijven zoals ze zijn)
+- Geen avatars toevoegen
+- Geen contact-drawer rechts toevoegen
+
+==========================================================
+WERKWIJZE
+==========================================================
+
+1. Eerst het inklapbare hoofdmenu - dit raakt het hele dashboard, 
+   dus extra zorgvuldig. Test dat alle paginas (Kandidaten, 
+   Sollicitanten, Campagnes etc.) ook nog goed werken in 
+   ingeklapte modus.
+2. Daarna de Gesprekken-pagina chat-pane verbeteringen.
+3. Stuur een screenshot van: 
+   a) Hoofdmenu uitgeklapt (zoals nu)
+   b) Hoofdmenu ingeklapt
+   c) Chat-pane met geopend gesprek (in beide menu-states)
+
+VOORDAT JE BEGINT:
+Onderzoek of er al een sidebar-collapse mechanisme bestaat in het 
+dashboard (sommige UI-libraries hebben dit ingebouwd). Zo ja, 
+gebruik dat. Zo nee, bouw het zelf met CSS-transitions.
