@@ -379,3 +379,65 @@ export const updateAiAttachment = (id: number, data: { enabled?: boolean; knowle
 
 export const verwijderAiAttachment = (id: number) =>
   del(`/ai-attachments/${id}`);
+
+// ─── Fase 1: Contacten ───────────────────────────────────────────────────────
+export type WaContactType = 'sollicitant' | 'kandidaat' | 'medewerker';
+export type WaOptInStatus = 'actief' | 'opt_out' | 'verzending_faalt';
+
+export interface WaContact {
+  contactType: WaContactType;
+  contactId: number;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  email: string | null;
+  language: string | null;
+  sourceStatus: string | null;
+  whatsappOptInStatus: WaOptInStatus;
+  whatsappOptInChangedAt: string | null;
+  whatsappOptInReason: string | null;
+}
+
+export interface WaContactenLijst {
+  total: number;
+  items: WaContact[];
+}
+
+export interface WaContactenStats {
+  sollicitant: { actief: number; opt_out: number; verzending_faalt: number; totaal: number };
+  kandidaat:   { actief: number; opt_out: number; verzending_faalt: number; totaal: number };
+  medewerker:  { actief: number; opt_out: number; verzending_faalt: number; totaal: number };
+}
+
+export interface WaContactenFilter {
+  type?: 'alle' | WaContactType;
+  opt_in?: 'alle' | WaOptInStatus;
+  language?: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export const haalContacten = (filter: WaContactenFilter = {}) => {
+  const qs = new URLSearchParams();
+  if (filter.type)     qs.set('type', filter.type);
+  if (filter.opt_in)   qs.set('opt_in', filter.opt_in);
+  if (filter.language) qs.set('language', filter.language);
+  if (filter.q)        qs.set('q', filter.q);
+  if (filter.page)     qs.set('page', String(filter.page));
+  if (filter.pageSize) qs.set('pageSize', String(filter.pageSize));
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return get<WaContactenLijst>(`/contacten${suffix}`);
+};
+
+export const haalContactenStats = () => get<WaContactenStats>('/contacten/stats');
+
+export const updateContactOptIn = (
+  type: WaContactType,
+  contactId: number,
+  status: WaOptInStatus,
+  reden?: string,
+) => put<{ success: boolean; name: string | null; status: WaOptInStatus }>(
+  `/contacten/${type}/${contactId}/opt-in`,
+  { status, reden },
+);

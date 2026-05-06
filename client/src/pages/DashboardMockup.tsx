@@ -31,6 +31,7 @@ import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
+import WhatsAppContacten from './dashboard/WhatsAppContacten';
 import NotificationCenter from '@/components/NotificationCenter';
 import NotificatieBel from '@/components/NotificatieBel';
 import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
@@ -4608,17 +4609,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'whatsapp-contacten' ? (
             <div className="p-6">
-              <div className="mb-4">
-                <h1 className="text-xl font-bold">Contacten</h1>
-                <p className="text-xs text-gray-500 hidden sm:block">WhatsApp-contactenoverzicht — los van campagnes en kandidaten</p>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
-                <Users className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                <div className="text-sm font-medium text-gray-700 mb-1">Komt binnenkort</div>
-                <p className="text-xs text-gray-500 max-w-md mx-auto">
-                  Een centraal overzicht van alle WhatsApp-contacten met zoek-, filter- en label-functionaliteit. Werk in uitvoering.
-                </p>
-              </div>
+              <WhatsAppContacten />
             </div>
 
           ) : activeTab === 'whatsapp-ai' ? (

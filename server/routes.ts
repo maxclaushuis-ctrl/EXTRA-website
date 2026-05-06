@@ -10000,6 +10000,7 @@ ${posts.map(p => `  <url>
   const cryptoModule = await import('crypto');
   const { whatsappMessages, whatsappConversations } = await import('@shared/schema');
   const { eq: drizzleEq, sql: drizzleSql, desc: drizzleDesc } = await import('drizzle-orm');
+  const optInService = await import('./whatsapp/optInService');
 
   function safeEqualSecret(provided: string, expected: string): boolean {
     if (!expected) return false;
@@ -10621,6 +10622,27 @@ OTHER RULES:
             const updated = await waStorage.applyStatusEvent(id, status, errCode, errMsg);
             if (!updated) {
               console.log(`[WA webhook] status-event voor onbekend wa_message_id=${id} (${status})`);
+              continue;
+            }
+            // Fase 1: Meta error → opt-out detectie. Bij failed delivery met
+            // "user blocked"-signaal zetten we de bijbehorende contacten op opt_out.
+            if (status === 'failed' && optInService.isBlockedByUserError(errCode, errMsg)) {
+              try {
+                const recipient = String(s?.recipient_id || '');
+                const normalized = recipient ? (normalizePhone(recipient) || recipient) : '';
+                if (normalized) {
+                  const ids = await optInService.findConversationContact(normalized);
+                  await optInService.handleBlockedByUser({
+                    phoneNumber: normalized,
+                    candidateId: ids.candidateId,
+                    prospectContactId: ids.prospectContactId,
+                    errorCode: errCode,
+                    errorMessage: errMsg,
+                  });
+                }
+              } catch (e: any) {
+                console.error('[WA webhook] blocked-by-user-handler error:', e?.message);
+              }
             }
           } catch (e: any) {
             console.error('[WA webhook] fout bij status-event:', e?.message);
@@ -10685,8 +10707,24 @@ OTHER RULES:
               console.log(`[WA webhook] duplicate wa_message_id=${msg.id} → skip`);
             } else {
               console.log(`[WA webhook] inbound ${type} van ${normalizedFrom} → match=${match.category} (${contactProfile || '?'})`);
-              // Auto-reply alleen voor tekstberichten (geen audio/image/etc.)
-              if (type === 'text' && body_) {
+
+              // Fase 1: STOP-detectie. Bij een opt-out keyword:
+              //   - opt-in op 'opt_out' zetten voor candidate/employee/prospect
+              //   - interne notitie aanmaken voor de planner
+              //   - GEEN auto-reply sturen
+              const isStop = type === 'text' && body_ && optInService.isStopMessage(body_);
+              if (isStop) {
+                optInService.handleIncomingStop({
+                  phoneNumber: normalizedFrom,
+                  candidateId: match.candidateId,
+                  prospectContactId: match.prospectContactId,
+                  matchCategory: match.category,
+                  contactName: contactProfile || null,
+                  rawBody: body_,
+                }).catch((e: any) => console.error('[WA webhook] STOP-handler error:', e?.message));
+              } else if (type === 'text' && body_) {
+                // Auto-reply alleen voor tekstberichten (geen audio/image/etc.) en
+                // alleen als het géén STOP-bericht is.
                 tryAutoReply({
                   phoneNumber: normalizedFrom,
                   matchCategory: match.category,
@@ -11174,9 +11212,15 @@ OTHER RULES:
     if (!Array.isArray(members) || members.length === 0) {
       return res.status(400).json({ error: 'members array is verplicht' });
     }
+    const userId = (req.session as any)?.userId || null;
     const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
       .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, id));
     const existingSet = new Set(existing.map(e => e.phoneNumber));
+
+    // Fase 1: leden kunnen optioneel een contact_type + contact_id meegeven.
+    // Geldige types: 'sollicitant' | 'kandidaat' | 'medewerker'. Bij ontbreken
+    // werkt het lid alleen op phoneNumber (legacy gedrag, blijft compatibel).
+    const ALLOWED_TYPES = new Set(['sollicitant', 'kandidaat', 'medewerker']);
 
     const toInsert = members
       .filter((m: any) => m.phoneNumber && !existingSet.has(normalizePhone(m.phoneNumber) || m.phoneNumber))
@@ -11184,12 +11228,17 @@ OTHER RULES:
         const first = (m.firstName || '').trim() || null;
         const last = (m.lastName || '').trim() || null;
         const composed = [first, last].filter(Boolean).join(' ') || null;
+        const ct = m.contactType && ALLOWED_TYPES.has(m.contactType) ? m.contactType : null;
+        const cid = ct && Number.isFinite(Number(m.contactId)) ? Number(m.contactId) : null;
         return {
           groupId: id,
           phoneNumber: normalizePhone(m.phoneNumber) || m.phoneNumber,
           displayName: (m.displayName && m.displayName.trim()) || composed,
           firstName: first,
           lastName: last,
+          contactType: ct as any,
+          contactId: cid,
+          addedByUserId: userId,
         };
       });
 
@@ -11199,6 +11248,31 @@ OTHER RULES:
     await db.update(whatsappGroups).set({ updatedAt: new Date() }).where(drizzleEq(whatsappGroups.id, id));
     res.json({ added: toInsert.length, skipped: members.length - toInsert.length });
   });
+
+  // ─── DELETE lid uit groep op basis van contactType+contactId ──────────────
+  // Naast de legacy /:id/members/:phone-route. Wordt gebruikt door de nieuwe
+  // Contacten-pagina om gericht een persoon (i.p.v. een telefoonnummer) te
+  // verwijderen — handig als een persoon meerdere nummers heeft of een nummer
+  // door meerdere mensen wordt gedeeld (zeldzaam, maar mogelijk).
+  app.delete('/api/whatsapp/groups/:id/members/by-contact/:type/:contactId',
+    adminMiddleware, async (req: Request, res: Response) => {
+      const id = parseInt(req.params.id);
+      const contactId = parseInt(req.params.contactId);
+      const type = req.params.type;
+      if (isNaN(id) || isNaN(contactId)) return res.status(400).json({ error: 'Ongeldig ID' });
+      if (!['sollicitant', 'kandidaat', 'medewerker'].includes(type)) {
+        return res.status(400).json({ error: 'Ongeldig contact_type' });
+      }
+      await db.delete(whatsappGroupMembers).where(
+        drizzleAnd(
+          drizzleEq(whatsappGroupMembers.groupId, id),
+          drizzleEq(whatsappGroupMembers.contactType, type as any),
+          drizzleEq(whatsappGroupMembers.contactId, contactId),
+        ),
+      );
+      await db.update(whatsappGroups).set({ updatedAt: new Date() }).where(drizzleEq(whatsappGroups.id, id));
+      res.json({ success: true });
+    });
 
   app.delete('/api/whatsapp/groups/:id/members/:phone', adminMiddleware, async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
@@ -11235,6 +11309,190 @@ OTHER RULES:
       .orderBy(drizzleAsc(whatsappConversations.displayName))
       .limit(200);
     res.json(contacts);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FASE 1 — CONTACTEN (sollicitanten + kandidaten + medewerkers)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Levert een unified lijst van contactpersonen die in WhatsApp-context staan,
+  // met opt-in-status per persoon. Bron-tabellen:
+  //   - candidates.status='in_behandeling'  → categorie 'sollicitant'
+  //   - candidates.status='gepland'         → categorie 'kandidaat'
+  //   - employees.status IN ('nieuw','actief') → categorie 'medewerker'
+  // 'aangenomen', 'afgewezen', 'inactief', 'uitgestroomd' worden GEFILTERD.
+  app.get('/api/whatsapp/contacten', adminMiddleware, async (req: Request, res: Response) => {
+    const { candidates: candidatesTable, employees: employeesTable } = await import('@shared/schema');
+    const type = String(req.query.type || 'alle');           // alle | sollicitant | kandidaat | medewerker
+    const optIn = String(req.query.opt_in || 'alle');        // alle | actief | opt_out | verzending_faalt
+    const language = String(req.query.language || '').trim();
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const limit = Math.min(parseInt(String(req.query.pageSize || '100')) || 100, 500);
+    const offset = Math.max(0, (parseInt(String(req.query.page || '1')) - 1) * limit);
+
+    type Row = {
+      contactType: 'sollicitant' | 'kandidaat' | 'medewerker';
+      contactId: number;
+      firstName: string | null;
+      lastName: string | null;
+      phone: string | null;
+      email: string | null;
+      language: string | null;
+      sourceStatus: string | null;
+      whatsappOptInStatus: string;
+      whatsappOptInChangedAt: Date | null;
+      whatsappOptInReason: string | null;
+    };
+
+    const rows: Row[] = [];
+
+    if (type === 'alle' || type === 'sollicitant' || type === 'kandidaat') {
+      const candRows = await db.select({
+        id: candidatesTable.id,
+        firstName: candidatesTable.firstName,
+        lastName: candidatesTable.lastName,
+        phone: candidatesTable.phone,
+        email: candidatesTable.email,
+        language: candidatesTable.language,
+        status: candidatesTable.status,
+        whatsappOptInStatus: candidatesTable.whatsappOptInStatus,
+        whatsappOptInChangedAt: candidatesTable.whatsappOptInChangedAt,
+        whatsappOptInReason: candidatesTable.whatsappOptInReason,
+      }).from(candidatesTable).where(
+        drizzleSql`${candidatesTable.status} IN ('in_behandeling', 'gepland')`
+      );
+      for (const c of candRows) {
+        const cat: 'sollicitant' | 'kandidaat' = c.status === 'in_behandeling' ? 'sollicitant' : 'kandidaat';
+        if (type !== 'alle' && type !== cat) continue;
+        rows.push({
+          contactType: cat,
+          contactId: c.id,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          phone: c.phone || null,
+          email: c.email || null,
+          language: c.language || null,
+          sourceStatus: c.status,
+          whatsappOptInStatus: c.whatsappOptInStatus,
+          whatsappOptInChangedAt: c.whatsappOptInChangedAt,
+          whatsappOptInReason: c.whatsappOptInReason,
+        });
+      }
+    }
+
+    if (type === 'alle' || type === 'medewerker') {
+      const empRows = await db.select({
+        id: employeesTable.id,
+        firstName: employeesTable.firstName,
+        lastName: employeesTable.lastName,
+        phone: employeesTable.phone,
+        email: employeesTable.email,
+        language: employeesTable.language,
+        status: employeesTable.status,
+        whatsappOptInStatus: employeesTable.whatsappOptInStatus,
+        whatsappOptInChangedAt: employeesTable.whatsappOptInChangedAt,
+        whatsappOptInReason: employeesTable.whatsappOptInReason,
+      }).from(employeesTable).where(
+        drizzleSql`${employeesTable.status} IN ('nieuw', 'actief')`
+      );
+      for (const e of empRows) {
+        rows.push({
+          contactType: 'medewerker',
+          contactId: e.id,
+          firstName: e.firstName,
+          lastName: e.lastName,
+          phone: e.phone || null,
+          email: e.email || null,
+          language: e.language || null,
+          sourceStatus: e.status,
+          whatsappOptInStatus: e.whatsappOptInStatus,
+          whatsappOptInChangedAt: e.whatsappOptInChangedAt,
+          whatsappOptInReason: e.whatsappOptInReason,
+        });
+      }
+    }
+
+    // Filteren in JS — eenvoudig en transparant. Bij grote datasets later
+    // verplaatsen naar SQL-niveau.
+    let filtered = rows;
+    if (optIn !== 'alle') filtered = filtered.filter(r => r.whatsappOptInStatus === optIn);
+    if (language) {
+      const lang = language.toLowerCase();
+      filtered = filtered.filter(r => (r.language || '').toLowerCase() === lang);
+    }
+    if (q) {
+      filtered = filtered.filter(r => {
+        const naam = `${r.firstName || ''} ${r.lastName || ''}`.toLowerCase();
+        return naam.includes(q)
+          || (r.phone || '').toLowerCase().includes(q)
+          || (r.email || '').toLowerCase().includes(q);
+      });
+    }
+
+    // Stabiel sorteren op naam.
+    filtered.sort((a, b) => {
+      const A = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+      const B = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+      return A.localeCompare(B);
+    });
+
+    const total = filtered.length;
+    const items = filtered.slice(offset, offset + limit);
+    res.json({ total, items });
+  });
+
+  // Statistieken voor de Contacten-pagina (per categorie en per opt-in-status).
+  app.get('/api/whatsapp/contacten/stats', adminMiddleware, async (_req: Request, res: Response) => {
+    const { candidates: candidatesTable, employees: employeesTable } = await import('@shared/schema');
+
+    const candAgg = await db.execute(drizzleSql`
+      SELECT status, whatsapp_opt_in_status AS opt, COUNT(*)::int AS n
+      FROM candidates
+      WHERE status IN ('in_behandeling', 'gepland')
+      GROUP BY status, whatsapp_opt_in_status
+    `);
+    const empAgg = await db.execute(drizzleSql`
+      SELECT whatsapp_opt_in_status AS opt, COUNT(*)::int AS n
+      FROM employees
+      WHERE status IN ('nieuw', 'actief')
+      GROUP BY whatsapp_opt_in_status
+    `);
+
+    const stats: Record<string, Record<string, number>> = {
+      sollicitant: { actief: 0, opt_out: 0, verzending_faalt: 0, totaal: 0 },
+      kandidaat:   { actief: 0, opt_out: 0, verzending_faalt: 0, totaal: 0 },
+      medewerker:  { actief: 0, opt_out: 0, verzending_faalt: 0, totaal: 0 },
+    };
+    for (const r of (candAgg.rows as any[])) {
+      const cat = r.status === 'in_behandeling' ? 'sollicitant' : 'kandidaat';
+      stats[cat][r.opt] = (stats[cat][r.opt] || 0) + r.n;
+      stats[cat].totaal += r.n;
+    }
+    for (const r of (empAgg.rows as any[])) {
+      stats.medewerker[r.opt] = (stats.medewerker[r.opt] || 0) + r.n;
+      stats.medewerker.totaal += r.n;
+    }
+    res.json(stats);
+  });
+
+  // Handmatige opt-in wijziging (planner geeft door dat iemand zich heeft afgemeld
+  // of juist weer aanmeldt). Wordt ook gebruikt om 'verzending_faalt' terug te
+  // zetten naar 'actief' nadat de oorzaak is opgelost.
+  app.put('/api/whatsapp/contacten/:type/:id/opt-in', adminMiddleware, async (req: Request, res: Response) => {
+    const type = req.params.type;
+    const id = parseInt(req.params.id);
+    const { status, reden } = req.body || {};
+    if (!['sollicitant', 'kandidaat', 'medewerker'].includes(type)) {
+      return res.status(400).json({ error: 'Ongeldig contact_type' });
+    }
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    if (!['actief', 'opt_out', 'verzending_faalt'].includes(status)) {
+      return res.status(400).json({ error: 'Ongeldige status' });
+    }
+    const userId = (req.session as any)?.userId;
+    const reason = (reden && String(reden).trim()) || `Handmatig gewijzigd${userId ? ` door user #${userId}` : ''}`;
+    const result = await optInService.setOptInStatus(type as any, id, status as any, reason);
+    if (!result) return res.status(404).json({ error: 'Contact niet gevonden' });
+    res.json({ success: true, name: result.name, status });
   });
 
   app.post('/api/whatsapp/groups/:id/send', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {

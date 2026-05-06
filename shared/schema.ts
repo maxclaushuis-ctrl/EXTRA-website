@@ -837,6 +837,20 @@ export const candidateStatusEnum = pgEnum('candidate_status', ['in_behandeling',
 // Functie types voor sollicitanten
 export const candidateFunctionEnum = pgEnum('candidate_function', ['housekeeping', 'horecamedewerker', 'chef', 'frontoffice', 'logistiek']);
 
+// ─── WhatsApp Fase 1 enums (vooruitgeschoven omdat candidates/employees ze gebruiken) ─
+// Per-contact WhatsApp opt-in status. Wordt gebruikt om bulk-broadcasts te
+// filteren (alleen 'actief' ontvangt berichten). 'opt_out' wordt automatisch
+// gezet door STOP-detectie of Meta 'user blocked' error; 'verzending_faalt'
+// is gereserveerd voor toekomstige delivery-failure tracking (Fase 2).
+export const whatsappOptInStatusEnum = pgEnum('whatsapp_opt_in_status', ['actief', 'opt_out', 'verzending_faalt']);
+
+// Categorie-label voor groep-leden. Drie categorieën komen uit drie tabellen:
+//   sollicitant → candidates (status='in_behandeling')
+//   kandidaat   → candidates (status='gepland')
+//   medewerker  → employees  (status='nieuw' of 'actief')
+// Snapshot bij toevoegen — verandert niet automatisch als de status wijzigt.
+export const whatsappContactTypeEnum = pgEnum('whatsapp_contact_type', ['sollicitant', 'kandidaat', 'medewerker']);
+
 // Audit action types
 export const candidateAuditActionEnum = pgEnum('candidate_audit_action', ['created', 'updated', 'status_changed', 'imported', 'anonymized', 'deleted', 'photo_uploaded', 'interview_scheduled']);
 
@@ -952,6 +966,11 @@ export const candidates = pgTable("candidates", {
   retentionUntil: date("retention_until"), // Datum tot wanneer data bewaard mag worden
   anonymizedAt: timestamp("anonymized_at"), // Wanneer geanonimiseerd
   
+  // WhatsApp opt-in status — Fase 1 Contacten + STOP-detectie
+  whatsappOptInStatus: whatsappOptInStatusEnum("whatsapp_opt_in_status").default('actief').notNull(),
+  whatsappOptInChangedAt: timestamp("whatsapp_opt_in_changed_at"),
+  whatsappOptInReason: text("whatsapp_opt_in_reason"),
+
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1431,9 +1450,18 @@ export const whatsappGroupMembers = pgTable("whatsapp_group_members", {
   // Apart opgeslagen voor gebruik in groepsbericht-variabelen ({{voornaam}}/{{achternaam}}).
   firstName: text("first_name"),
   lastName: text("last_name"),
+  // Fase 1: optionele koppeling aan een contact-record.
+  // Legacy-leden (toegevoegd vóór deze migratie) hebben beide velden NULL en
+  // werken alleen op phoneNumber. Nieuwe leden (toegevoegd via Contacten-pagina)
+  // krijgen contactType + contactId zodat we groep-membership per persoon
+  // kunnen tonen in "in welke groepen zit deze persoon".
+  contactType: whatsappContactTypeEnum("contact_type"),
+  contactId: integer("contact_id"),
   addedAt: timestamp("added_at").defaultNow().notNull(),
+  addedByUserId: integer("added_by_user_id").references(() => users.id),
 }, (table) => ({
   groupPhoneIdx: index("wa_grp_member_idx").on(table.groupId, table.phoneNumber),
+  contactIdx: index("wa_grp_member_contact_idx").on(table.contactType, table.contactId),
 }));
 
 export const whatsappBulkSends = pgTable("whatsapp_bulk_sends", {
@@ -1562,6 +1590,10 @@ export const prospectContacts = pgTable("prospect_contacts", {
   spamReportedAt: timestamp("spam_reported_at"),
   lastReplyAt: timestamp("last_reply_at"),
   notes: text("notes"),
+  // WhatsApp opt-in status — Fase 1 Contacten + STOP-detectie (los van e-mail unsubscribe)
+  whatsappOptInStatus: whatsappOptInStatusEnum("whatsapp_opt_in_status").default('actief').notNull(),
+  whatsappOptInChangedAt: timestamp("whatsapp_opt_in_changed_at"),
+  whatsappOptInReason: text("whatsapp_opt_in_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -1927,6 +1959,11 @@ export const employees = pgTable("employees", {
 
   // Koppeling
   candidateId: integer("candidate_id").references(() => candidates.id),
+
+  // WhatsApp opt-in status — Fase 1 Contacten + STOP-detectie
+  whatsappOptInStatus: whatsappOptInStatusEnum("whatsapp_opt_in_status").default('actief').notNull(),
+  whatsappOptInChangedAt: timestamp("whatsapp_opt_in_changed_at"),
+  whatsappOptInReason: text("whatsapp_opt_in_reason"),
 
   // Meta
   notes: text("notes"),
