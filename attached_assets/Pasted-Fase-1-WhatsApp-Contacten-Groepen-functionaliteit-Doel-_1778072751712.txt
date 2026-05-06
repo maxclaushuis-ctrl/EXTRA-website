@@ -1,0 +1,274 @@
+Fase 1: WhatsApp Contacten + Groepen functionaliteit. Doel: 
+fundament voor latere bulk-broadcasts en automation, voor nu 
+alleen de doelgroep-builder.
+
+==========================================================
+SCOPE
+==========================================================
+
+Een nieuwe pagina "Contacten" onder Communicatie → WhatsApp 
+(de placeholder bestaat al).
+
+Contacten zijn:
+- Sollicitanten (uit sollicitanten-tabel)
+- Kandidaten (uit candidates-tabel met status='applying' of 
+  vergelijkbaar)
+- Medewerkers (uit candidates-tabel met status='active' of 
+  vergelijkbaar)
+
+Geen klanten, geen prospects, geen leads in deze tab.
+
+==========================================================
+DATABASE WIJZIGINGEN
+==========================================================
+
+VOEG TOE aan candidates-tabel (en sollicitanten-tabel als die 
+aparte tabel is):
+- whatsapp_opt_in_status: enum('actief', 'opt_out', 
+  'verzending_faalt') default 'actief'
+- whatsapp_opt_in_changed_at: timestamp nullable
+- whatsapp_opt_in_reason: text nullable
+
+NIEUWE TABEL whatsapp_groepen:
+- id: serial PK
+- naam: text NOT NULL UNIQUE
+- beschrijving: text nullable
+- gemaakt_door_user_id: integer FK naar users
+- gemaakt_op: timestamp default now()
+- bijgewerkt_op: timestamp default now()
+
+NIEUWE TABEL whatsapp_groep_leden (koppeltabel):
+- id: serial PK
+- groep_id: integer FK naar whatsapp_groepen ON DELETE CASCADE
+- contact_type: enum('sollicitant', 'kandidaat', 'medewerker')
+- contact_id: integer (verwijst naar de juiste tabel op basis 
+  van contact_type)
+- toegevoegd_op: timestamp default now()
+- toegevoegd_door_user_id: integer FK naar users
+
+UNIQUE constraint op (groep_id, contact_type, contact_id) - 
+zelfde persoon niet dubbel in dezelfde groep.
+
+Index op (contact_type, contact_id) voor snelle "in welke 
+groepen zit deze persoon" queries.
+
+==========================================================
+BACKEND ENDPOINTS
+==========================================================
+
+GET /api/whatsapp/contacten?categorie=&functie=&taal=&status=&
+    groep_id=&zoek=&limit=50&offset=0
+- Geeft lijst contacten terug met:
+  * id, contact_type, naam, telefoon, email, functie(s), 
+    talen, status (binnen hun categorie), 
+    whatsapp_opt_in_status, datum_laatste_whatsapp_contact, 
+    in_groepen (array van groep-ids)
+- Filtert sollicitanten/kandidaten/medewerkers ZONDER 
+  telefoonnummer eruit
+- Multi-filter mogelijk (AND-logica)
+- Sorteerbaar op naam, laatste contact, etc.
+
+GET /api/whatsapp/contacten/stats
+- Totaal aantal per categorie
+- Totaal aantal opt-out
+- Totaal aantal verzending_faalt
+
+PUT /api/whatsapp/contacten/:contact_type/:id/opt-in
+- Body: { status, reason? }
+- Wijzigt opt-in status handmatig
+
+GET /api/whatsapp/groepen
+- Lijst van alle groepen met aantal leden
+
+POST /api/whatsapp/groepen
+- Body: { naam, beschrijving? }
+- Maakt nieuwe groep
+
+PUT /api/whatsapp/groepen/:id
+- Body: { naam?, beschrijving? }
+- Wijzigt groep
+
+DELETE /api/whatsapp/groepen/:id
+- Verwijdert groep (CASCADE verwijdert leden)
+
+GET /api/whatsapp/groepen/:id
+- Details inclusief alle leden
+
+POST /api/whatsapp/groepen/:id/leden
+- Body: { leden: [{ contact_type, contact_id }, ...] }
+- Voegt 1 of meer leden toe (bulk)
+
+DELETE /api/whatsapp/groepen/:id/leden/:contact_type/:contact_id
+- Verwijdert één lid uit een groep
+
+==========================================================
+WEBHOOK UITBREIDING - AUTO STOP DETECTIE
+==========================================================
+
+In de bestaande webhook (POST /api/whatsapp/webhook):
+- Bij elk inkomend tekstbericht: check of de tekst (case-
+  insensitive, na trim) één van deze waarden is of bevat:
+  'stop', 'STOP', 'stop berichten', 'geen berichten', 
+  'unsubscribe', 'afmelden'
+- Zo ja: zoek het matchende contact (via match_category) 
+  en zet whatsapp_opt_in_status='opt_out', 
+  whatsapp_opt_in_reason='Auto-gedetecteerd uit STOP-bericht', 
+  whatsapp_opt_in_changed_at=now()
+- Stuur ook een interne notificatie naar de planner: "STOP 
+  ontvangen van [naam]"
+- Reageer NIET automatisch op het STOP-bericht (geen reply)
+
+Bij Meta-error 'user blocked' of vergelijkbaar in delivery 
+status:
+- Zet whatsapp_opt_in_status='opt_out' met reason='Meta: user 
+  blocked'
+
+Bij 3x failed delivery binnen 30 dagen:
+- Zet whatsapp_opt_in_status='verzending_faalt' met reason='3x 
+  niet bezorgd'
+
+==========================================================
+FRONTEND - CONTACTEN PAGINA
+==========================================================
+
+LOCATIE:
+- Pagina komt onder Communicatie → WhatsApp → Contacten
+- Vervang de huidige placeholder
+
+PAGE-HEADER:
+<h1>Contacten</h1>
+<p>Beheer wie je via WhatsApp kunt bereiken</p>
+- Rechtsboven: knop "Nieuwe groep" (paars, primaire actie)
+
+LAYOUT - Twee secties:
+
+SECTIE 1: GROEPEN (bovenaan, klein, horizontaal scrollbaar)
+- Toont alle aangemaakte groepen als kaartjes
+- Per kaartje: naam + aantal leden + klik-actie "Bekijken"
+- "Nieuwe groep" knop helemaal rechts in de rij
+- Bij klik op groep: opent groep-detail-modal/drawer met 
+  ledenlijst + verwijder-actie per lid + "Lid toevoegen" knop
+
+SECTIE 2: CONTACTENLIJST (onderaan, hoofd-content)
+
+Bovenaan filters in één rij:
+- Categorie tabs: [Alle] [Medewerkers] [Kandidaten] 
+  [Sollicitanten] - met aantal-badge per tab
+- Onder de tabs: filter-pills:
+  Functie: [Alle] [Horeca] [Housekeeping] [Logistiek] [Chef]
+  Taal: [Alle] [NL] [EN]
+  Status: [Alle] [Actief] [Opt-out] [Verzending faalt]
+- Daaronder: zoekbalk + sort-knop ("Naam A-Z" / "Laatste 
+  contact" / etc.)
+
+Tabel/lijst (compact):
+- Checkbox links (voor bulk-acties)
+- Naam (semibold)
+- Telefoonnummer (klein, grijs)
+- Functie-tags (pills)
+- Talen (kleine pills)
+- Status binnen categorie (bijv. "actief", "in proces")
+- WhatsApp-status (groene/rode/grijze stip + tooltip)
+- Laatste contact (datum)
+- Actie-knoppen rechts: "..." menu met opties:
+  * "Voeg toe aan groep ▶" (sub-menu met groepen)
+  * "Open WhatsApp-gesprek"
+  * "Wijzig opt-in status"
+
+BULK ACTIES (verschijnen bovenaan zodra 1+ checkbox aangevinkt):
+- "Voeg toe aan groep ▶" (kies bestaande of maak nieuwe)
+- "Wijzig opt-in status"
+- "Annuleren" (deselecteer alles)
+
+OPT-OUT-CONTACTEN:
+- In de lijst grijs maken
+- Tooltip: "Opt-out: [reden]"
+- Niet selecteerbaar voor bulk-acties (checkbox disabled)
+
+GEEN-TELEFOONNUMMER-CONTACTEN:
+- Worden helemaal niet getoond in de lijst (zoals afgesproken)
+
+EMPTY STATES:
+- Geen contacten in deze filter-combinatie: "Geen contacten 
+  gevonden. Pas filters aan of zoek op naam."
+- Geen groepen aangemaakt: in groepen-sectie tonen we een 
+  empty state "Maak je eerste groep om sneller te kunnen 
+  communiceren"
+
+==========================================================
+GROEP-DETAIL MODAL/DRAWER
+==========================================================
+
+Wanneer gebruiker klikt op een groep-kaartje, opent een drawer 
+of modal met:
+- Groepsnaam (bewerkbaar via potlood-icoon)
+- Beschrijving (bewerkbaar)
+- Aantal leden
+- Knop "Lid toevoegen" - opent een sub-modal met zoekbalk en 
+  filters om leden te zoeken en toe te voegen
+- Lijst van huidige leden met "x" knop per lid om te verwijderen
+- Knop "Groep verwijderen" (rood, met bevestiging)
+
+==========================================================
+WAT NIET DOEN (voor nu)
+==========================================================
+
+- Geen broadcast-functionaliteit (Fase 2)
+- Geen automation/triggers (Fase 3)
+- Geen template beheer (Fase 4)
+- Geen klant-data tonen
+- Geen prospect-data tonen
+- Geen smart-segmenten met opgeslagen filter-combinaties
+- Geen klant-historie ("heeft gewerkt bij X")
+- Geen CSV-import (komt later als nodig)
+- Geen lead/prospect handmatig toevoegen
+
+==========================================================
+HUISSTIJL
+==========================================================
+
+Match exact de stijl van andere paginas (Kandidaten, 
+Sollicitanten, Campagnes):
+- Paars als primair (purple-600)
+- Witte cards met subtle shadow
+- Page-header zoals andere paginas
+- Filter-pills in dezelfde stijl als de WhatsApp-pagina
+- Lijst-items compact en informatief
+
+==========================================================
+WERKWIJZE
+==========================================================
+
+1. ONDERZOEK:
+   - Identificeer de juiste tabel(len) voor sollicitanten, 
+     kandidaten en medewerkers
+   - Bepaal hoe je onderscheid maakt tussen kandidaat vs 
+     medewerker (status-veld of aparte tabel?)
+   - Bepaal welk veld de functie aanduidt
+   - Geef terug: een mapping-rapport met velden + voorgestelde 
+     migratie + endpoints-overzicht
+   - WACHT op mijn akkoord vóór implementatie
+
+2. DATABASE:
+   - Migratie schrijven en draaien (eerst dry-run)
+
+3. BACKEND:
+   - Endpoints implementeren
+   - Webhook uitbreiden met STOP-detectie
+   - Tests voor de belangrijkste paden
+
+4. FRONTEND:
+   - Nieuwe pagina component
+   - Twee secties (groepen boven, contacten onder)
+   - Modal/drawer voor groep-detail
+
+5. TEST:
+   - Maak een groep aan
+   - Voeg leden toe via filters + bulk-actie
+   - Voeg leden toe één voor één
+   - Verwijder een lid
+   - Stuur "STOP" naar WhatsApp-nummer en check dat opt-out 
+     wordt gezet
+   - Filter op opt-out status werkt
+
+6. STUUR ME ONDERZOEKSRAPPORT VÓÓR JE GAAT BOUWEN
