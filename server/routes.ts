@@ -11305,6 +11305,7 @@ OTHER RULES:
       phone: string | null;
       email: string | null;
       language: string | null;
+      functie: string | null;
       sourceStatus: string | null;
       whatsappOptInStatus: string;
       whatsappOptInChangedAt: Date | null;
@@ -11322,6 +11323,7 @@ OTHER RULES:
         email: candidatesTable.email,
         language: candidatesTable.language,
         status: candidatesTable.status,
+        functionType: candidatesTable.functionType,
         whatsappOptInStatus: candidatesTable.whatsappOptInStatus,
         whatsappOptInChangedAt: candidatesTable.whatsappOptInChangedAt,
         whatsappOptInReason: candidatesTable.whatsappOptInReason,
@@ -11339,6 +11341,7 @@ OTHER RULES:
           phone: c.phone || null,
           email: c.email || null,
           language: c.language || null,
+          functie: c.functionType || null,
           sourceStatus: c.status,
           whatsappOptInStatus: c.whatsappOptInStatus,
           whatsappOptInChangedAt: c.whatsappOptInChangedAt,
@@ -11356,6 +11359,7 @@ OTHER RULES:
         email: employeesTable.email,
         language: employeesTable.language,
         status: employeesTable.status,
+        functie: employeesTable.functie,
         whatsappOptInStatus: employeesTable.whatsappOptInStatus,
         whatsappOptInChangedAt: employeesTable.whatsappOptInChangedAt,
         whatsappOptInReason: employeesTable.whatsappOptInReason,
@@ -11371,6 +11375,7 @@ OTHER RULES:
           phone: e.phone || null,
           email: e.email || null,
           language: e.language || null,
+          functie: e.functie || null,
           sourceStatus: e.status,
           whatsappOptInStatus: e.whatsappOptInStatus,
           whatsappOptInChangedAt: e.whatsappOptInChangedAt,

@@ -918,13 +918,13 @@ export default function DashboardMockup() {
             <>
               <button
                 onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
-                title="Gesprekken"
+                title="WhatsApp"
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
                   activeTab === 'whatsapp' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <MessageSquare className="h-4 w-4" />
-                <span>Gesprekken</span>
+                <span>WhatsApp</span>
               </button>
               <button
                 onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}

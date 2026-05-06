@@ -48,6 +48,26 @@ const OPTIN_KLEUR: Record<WaOptInStatus, { bg: string; fg: string; icon: typeof 
   verzending_faalt: { bg: '#FEF3C7', fg: '#92400E', icon: AlertTriangle },
 };
 
+// Sollicitant-functies komen uit de candidate_function-enum (lowercase tokens),
+// medewerker-functies zijn vrije tekst maar in de praktijk ook deze waarden.
+// Via deze map maken we het leesbaar (en consistent) in de tabel.
+const FUNCTIE_LABEL: Record<string, string> = {
+  housekeeping:     'Housekeeping',
+  horecamedewerker: 'Bediening',
+  bediening:        'Bediening',
+  chef:             'Chef',
+  frontoffice:      'Front-office',
+  'front-office':   'Front-office',
+  logistiek:        'Logistiek',
+  orderpicker:      'Logistiek',
+};
+
+function functieLabel(raw: string | null): string {
+  if (!raw) return '—';
+  const key = raw.trim().toLowerCase();
+  return FUNCTIE_LABEL[key] || raw;
+}
+
 function StatBlok({ titel, totaal, actief, optOut, faalt }: {
   titel: string; totaal: number; actief: number; optOut: number; faalt: number;
 }) {
@@ -101,6 +121,7 @@ export default function WhatsAppContacten() {
   const [filterType, setFilterType] = useState<'alle' | WaContactType>('alle');
   const [filterOpt, setFilterOpt] = useState<'alle' | WaOptInStatus>('alle');
   const [filterLang, setFilterLang] = useState('');
+  const [filterFunctie, setFilterFunctie] = useState('');
   const [zoek, setZoek] = useState('');
   const [zoekDebounced, setZoekDebounced] = useState('');
   const [foutmelding, setFoutmelding] = useState<string | null>(null);
@@ -144,6 +165,27 @@ export default function WhatsAppContacten() {
     items.forEach(i => { if (i.language) set.add(i.language); });
     return Array.from(set).sort();
   }, [items]);
+
+  // Functie-opties op basis van data — toon de leesbare labels en bewaar
+  // de genormaliseerde sleutel zodat het filter robuust blijft als de
+  // ruwe schrijfwijze tussen sollicitanten en medewerkers verschilt.
+  const functieOpties = useMemo(() => {
+    const map = new Map<string, string>(); // key (lowercase) → label
+    items.forEach(i => {
+      if (!i.functie) return;
+      const key = i.functie.trim().toLowerCase();
+      if (!map.has(key)) map.set(key, functieLabel(i.functie));
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [items]);
+
+  // Functie-filter wordt cliënt-side toegepast (vergelijkbaar met taal),
+  // omdat de bron-velden op verschillende tabellen staan.
+  const zichtbareItems = useMemo(() => {
+    if (!filterFunctie) return items;
+    const fk = filterFunctie.toLowerCase();
+    return items.filter(i => (i.functie || '').trim().toLowerCase() === fk);
+  }, [items, filterFunctie]);
 
   async function wijzigOptIn(rij: WaContact, nieuw: WaOptInStatus) {
     const huidigeStatus = rij.whatsappOptInStatus;
@@ -240,6 +282,12 @@ export default function WhatsAppContacten() {
           {talenOpties.map(l => <option key={l} value={l}>{l}</option>)}
         </select>
 
+        <select value={filterFunctie} onChange={e => setFilterFunctie(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12, fontFamily: FONT, background: '#fff' }}>
+          <option value="">Alle functies</option>
+          {functieOpties.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+        </select>
+
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
           <input value={zoek} onChange={e => setZoek(e.target.value)} placeholder="Zoek op naam, telefoon of e-mail…"
@@ -249,7 +297,9 @@ export default function WhatsAppContacten() {
                  }} />
         </div>
 
-        <span style={{ fontSize: 12, color: '#6B7280' }}>{total} resultaten</span>
+        <span style={{ fontSize: 12, color: '#6B7280' }}>
+          {filterFunctie ? `${zichtbareItems.length} van ${total}` : `${total}`} resultaten
+        </span>
       </div>
 
       {/* Foutmelding */}
@@ -264,9 +314,9 @@ export default function WhatsAppContacten() {
 
       {/* Lijst */}
       <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, overflow: 'hidden' }}>
-        {loading && items.length === 0 ? (
+        {loading && zichtbareItems.length === 0 ? (
           <div style={{ padding: 32, textAlign: 'center', color: '#6B7280', fontSize: 13 }}>Laden…</div>
-        ) : items.length === 0 ? (
+        ) : zichtbareItems.length === 0 ? (
           <div style={{ padding: 32, textAlign: 'center', color: '#6B7280', fontSize: 13 }}>
             Geen contacten gevonden met deze filters.
           </div>
@@ -277,6 +327,7 @@ export default function WhatsAppContacten() {
                 <tr style={{ textAlign: 'left' }}>
                   <th style={th}>Naam</th>
                   <th style={th}>Type</th>
+                  <th style={th}>Functie</th>
                   <th style={th}>Telefoon</th>
                   <th style={th}>Taal</th>
                   <th style={th}>Status</th>
@@ -286,7 +337,7 @@ export default function WhatsAppContacten() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((i) => {
+                {zichtbareItems.map((i) => {
                   const sleutel = `${i.contactType}:${i.contactId}`;
                   const isBezig = bezig === sleutel;
                   return (
@@ -298,6 +349,14 @@ export default function WhatsAppContacten() {
                         {i.email && <div style={{ fontSize: 11, color: '#6B7280' }}>{i.email}</div>}
                       </td>
                       <td style={td}><TypeBadge type={i.contactType} /></td>
+                      <td style={td}>
+                        {i.functie
+                          ? <span style={{
+                              padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                              background: '#F3F4F6', color: '#374151',
+                            }}>{functieLabel(i.functie)}</span>
+                          : <span style={{ color: '#9CA3AF', fontSize: 12 }}>—</span>}
+                      </td>
                       <td style={{ ...td, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>{i.phone || '—'}</td>
                       <td style={td}>{i.language || '—'}</td>
                       <td style={td}><OptInBadge status={i.whatsappOptInStatus} /></td>

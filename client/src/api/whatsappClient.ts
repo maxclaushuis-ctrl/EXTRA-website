@@ -392,6 +392,7 @@ export interface WaContact {
   phone: string | null;
   email: string | null;
   language: string | null;
+  functie: string | null;
   sourceStatus: string | null;
   whatsappOptInStatus: WaOptInStatus;
   whatsappOptInChangedAt: string | null;
