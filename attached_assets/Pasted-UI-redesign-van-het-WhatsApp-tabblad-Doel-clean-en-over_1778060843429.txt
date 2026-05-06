@@ -1,0 +1,202 @@
+UI-redesign van het WhatsApp-tabblad. Doel: clean en overzichtelijk. 
+Gebruiker wil in één blik zien welke gesprekken ongelezen zijn 
+en in welke categorie (Medewerkers/Klanten/Kandidaten). Geen 
+overdreven Trengo-clone, geen feature-overload.
+
+Geen backend-wijzigingen. Alleen frontend.
+
+==========================================================
+LAYOUT
+==========================================================
+
+Driekoloms layout binnen het WhatsApp-tabblad:
+
+[KOLOM 1: SIDEBAR — smal, ~200px]
+[KOLOM 2: GESPREKKENLIJST — medium, ~340px]
+[KOLOM 3: CHAT — flexibel]
+
+==========================================================
+KOLOM 1: SIDEBAR (clean, minimaal)
+==========================================================
+
+Bovenaan een kleine kop:
+"INBOX"
+
+Daaronder vier filter-items, verticaal:
+  ● Open               [3]
+  ● Opgelost
+  ● Spam
+  ● Alle
+
+- "Open" is default geselecteerd
+- Cijfer achter "Open" toont aantal open ongelezen gesprekken
+- Actief item heeft EXTRA-navy achtergrond (#1F3A5F) met witte 
+  tekst, andere items zijn grijs
+- Hover: lichtgrijze achtergrond
+
+Onder een kleine spacer en kop:
+"LABELS"
+
+Daaronder dynamisch lijstje van labels die in gesprekken voorkomen:
+  • horeca         (12)
+  • logistiek      (5)
+  • housekeeping   (3)
+  • urgent         (1)
+
+- Klikken filtert de gesprekkenlijst op dat label
+- Multi-select mogelijk (klik meerdere labels = AND-filter)
+- Klik nogmaals = deselecteren
+- Geselecteerde labels: lichtblauwe achtergrond
+- Maximaal 10 labels tonen, daarna "Meer..."
+
+Geen andere secties. Geen Teams, geen Personal, geen Channels, 
+geen Mentioned. Houd het simpel.
+
+==========================================================
+KOLOM 2: GESPREKKENLIJST
+==========================================================
+
+BOVENAAN VAN DE LIJST (in deze volgorde):
+
+1. Drie hoofd-categorie tabs (zoals nu, blijven hier):
+   [Medewerkers] [Klanten] [Kandidaten]
+   - Cijfer achter elke tab toont aantal ongelezen gesprekken in 
+     die categorie, alleen als > 0
+   - Actieve tab onderstreept met EXTRA-navy
+
+2. Zoekbalk: "Zoek op naam of nummer..."
+
+3. Sort-knop rechts: "Nieuwste eerst ▼" / "Oudste eerst"
+
+PER GESPREK (compact, geen avatars):
+
+┌────────────────────────────────────────────┐
+│ ● Naam van persoon              15:32  [3]│
+│   Eerste 50 tekens van laatste bericht...  │
+│   [horeca] [urgent]                        │
+└────────────────────────────────────────────┘
+
+ELEMENTEN:
+- Status-stip links (8px diameter):
+  * Blauw = Open + ongelezen
+  * Lichtgrijs = Open + gelezen
+  * Groen = Opgelost
+  * Donkergrijs = Spam
+- Naam: 14px, semibold, donkernavy bij ongelezen, donkergrijs 
+  bij gelezen
+- Timestamp rechtsboven: 11px, lichtgrijs
+- Ongelezen-badge (cijfer in cirkel): alleen tonen als > 0, 
+  EXTRA-navy achtergrond, witte tekst
+- Preview: 12px, grijs (donkerder bij ongelezen, lichter bij 
+  gelezen), max 1 regel met ellipsis
+- Tags: kleine pills onder preview, max 3 zichtbaar, lichtgrijze 
+  achtergrond
+- Actief geselecteerd gesprek: lichte EXTRA-blauwe achtergrond 
+  (#E8F0F8)
+- Hover-state: heel licht grijs (#F8FAFC)
+- Tussen gesprekken: 1px lichtgrijze divider
+- Padding per gesprek: 12px verticaal, 16px horizontaal
+
+GEEN GESPREKKEN STATE:
+- Centered tekst "Geen gesprekken in deze categorie"
+- Klein chat-icoon erboven (lucide MessageCircle, lichtgrijs)
+
+==========================================================
+KOLOM 3: CHAT-PANE
+==========================================================
+
+GEEN GESPREK GESELECTEERD:
+- Centered chat-icoon (groot, lichtgrijs)
+- Tekst eronder: "Selecteer een gesprek"
+
+GESPREK GESELECTEERD - HEADER (vast bovenaan, witte achtergrond, 
+1px border-bottom):
+- Naam (groot, semibold, donkernavy)
+- Eronder: "telefoonnummer · categorie · #ID" in lichtgrijs
+  Voorbeeld: "+31 6 5381 3448 · Medewerker · #173"
+- Rechtsboven: 
+  * Status-dropdown ("Open ▼")
+  * Meer-knop (...) met opties: "Markeer ongelezen", "Verplaats 
+    naar Spam", "Sluit gesprek"
+
+GESPREK INHOUD (scrollbaar):
+- Inkomende berichten: links, lichtgrijze bubble (#F1F5F9), 
+  max 70% breed
+- Uitgaande berichten: rechts, EXTRA-blauwe bubble (#1F3A5F), 
+  witte tekst, max 70% breed
+- Timestamp onder elk bericht in 11px lichtgrijs
+- Datum-scheiding tussen verschillende dagen ("Vandaag", 
+  "Gisteren", "Maandag 4 mei", "20 april 2026")
+- Status-icoon onder uitgaand bericht: ✓ verzonden, ✓✓ bezorgd, 
+  ✓✓ blauw = gelezen
+
+CHAT-COMPOSER (vast onderaan):
+- Tekstveld: "Typ een bericht..."
+- Links naast veld: paperclip-icoon (file upload, niet 
+  functioneel maken nu)
+- Rechts: verzend-knop (alleen actief als veld niet leeg, 
+  EXTRA-navy)
+- Boven het invoerveld: 24u-venster waarschuwing wanneer 
+  verstreken (bestaande functionaliteit behouden)
+
+==========================================================
+HUISSTIJL
+==========================================================
+
+KLEUREN:
+- Primair (navy): #1F3A5F
+- Active background: #E8F0F8 (lichtblauw)
+- Hover background: #F8FAFC (heel licht grijs)
+- Border: #E5E7EB
+- Text primary: #1F3A5F (donkernavy)
+- Text secondary: #6B7280 (medium grijs)
+- Text muted: #9CA3AF (lichter grijs)
+- Status-stip kleuren: zoals beschreven boven
+
+TYPOGRAFIE:
+- Behoud huidige font (Poppins of equivalent)
+- Headers: 14px semibold
+- Body: 14px regular
+- Small: 12px
+- Numeriek: 11px
+
+SPACING:
+- Sidebar items: 8px verticale padding, 12px horizontale
+- Gesprekkenlijst items: 12px verticale, 16px horizontale
+- Chat berichten: 12px tussen berichten, 24px tussen datum-groepen
+
+==========================================================
+RESPONSIVE
+==========================================================
+
+- Desktop (>1280px): driekoloms naast elkaar
+- Tablet (768-1280px): sidebar inklapbaar via icoon
+- Mobiel (<768px): één kolom tegelijk, navigatie via terug-knop
+
+==========================================================
+WAT NIET DOEN
+==========================================================
+
+- Geen backend-wijzigingen
+- Geen avatars/foto's
+- Geen toewijzing aan medewerkers (komt later)
+- Geen Teams, Personal, Channels-secties
+- Geen volledige feature-parity met Trengo
+- Geen wijzigingen aan andere paginas dan WhatsApp-tab
+- Geen nieuwe endpoints
+
+==========================================================
+WERKWIJZE
+==========================================================
+
+1. Onderzoek de bestaande WhatsApp-pagina component(s)
+2. Bouw de drie kolommen op met placeholder content
+3. Werk per kolom uit (sidebar → lijst → chat)
+4. Polish: spacing, kleuren, hover-states
+5. Test in browser en stuur tussentijds een screenshot
+6. Stel vragen als iets niet duidelijk is
+
+VOORDAT JE BEGINT: 
+Stuur een korte beschrijving van welke bestaande componenten je 
+hergebruikt en welke je vervangt. Wacht op mijn akkoord vóór 
+de daadwerkelijke build.
