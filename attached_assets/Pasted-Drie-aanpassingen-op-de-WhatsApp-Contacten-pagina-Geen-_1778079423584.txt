@@ -1,0 +1,113 @@
+Drie aanpassingen op de WhatsApp Contacten-pagina. Geen 
+herbouw - alleen verbeteringen.
+
+==========================================================
+AANPASSING 1: AFMELDEN-KNOP VERVANGEN DOOR KEBAB-MENU
+==========================================================
+
+De huidige rij van rode "Afmelden"-knoppen is te dominant. 
+Afmelden is een zeldzame actie, geen primaire actie.
+
+Vervang de "ACTIE" kolom door een drie-puntjes menu (kebab, 
+verticale ⋮) per rij dat een dropdown opent met:
+
+  💬 WhatsApp openen        (opent gesprek met deze persoon 
+                             in de Gesprekken-tab)
+  ➕ Toevoegen aan groep ▶  (sub-menu met bestaande groepen 
+                             + "Nieuwe groep")
+  🚫 Opt-out instellen      (huidige "Afmelden"-functie, met 
+                             bevestiging-modal)
+  
+Voor contacten die AL op opt-out staan:
+  💬 WhatsApp openen
+  ✅ Opt-out ongedaan maken (terug naar 'actief')
+
+KOLOMBREEDTE: kebab-kolom wordt smal (50-60px), niet de hele 
+ACTIE-kolom met grote knoppen.
+
+==========================================================
+AANPASSING 2: GROEPEN-SECTIE TOEVOEGEN
+==========================================================
+
+Boven de contactenlijst (onder de stats-tegels en boven de 
+filters) een nieuwe sectie "Groepen" toevoegen.
+
+DESIGN:
+- Sectie-header: "Groepen" + telling rechts (bijv. "3 groepen")
+- Horizontaal scrollbare rij van groep-kaartjes
+- Rechts in de rij: knop "+ Nieuwe groep" (paars accent)
+
+PER GROEP-KAARTJE (compact, ~200px breed):
+- Groepsnaam (semibold)
+- Aantal leden (klein, grijs)
+- Klein "stuur bericht" icoon rechtsboven (binnen kaartje, 
+  voor latere broadcast - voor nu disabled met tooltip 
+  "Komt in volgende fase")
+- Klikbaar → opent groep-detail-modal
+
+GROEP-DETAIL-MODAL/DRAWER:
+- Groepsnaam (bewerkbaar)
+- Beschrijving (bewerkbaar)
+- Aantal leden
+- Lijst leden met "x" om te verwijderen per persoon
+- Knop "Lid toevoegen" → opent zoek-modal om uit contacten 
+  toe te voegen
+- Knop "Groep verwijderen" (rood, met bevestiging)
+
+NIEUWE GROEP MAKEN:
+- Klik op "+ Nieuwe groep" knop opent een modal
+- Veld: Naam (verplicht)
+- Veld: Beschrijving (optioneel)
+- Knop "Aanmaken"
+
+==========================================================
+AANPASSING 3: BULK-ACTIES
+==========================================================
+
+Voeg checkboxes toe links in de contactenlijst voor selectie.
+
+WANNEER 1+ CONTACT GESELECTEERD:
+- Verschijnt een actie-balk bovenaan de lijst (onder de 
+  filters, sticky):
+  
+  "5 geselecteerd" 
+  [➕ Toevoegen aan groep ▼] 
+  [💬 Stuur bericht] (disabled met tooltip "Komt in Fase 2") 
+  [🚫 Opt-out] 
+  [✕ Annuleren]
+
+- "Toevoegen aan groep" dropdown:
+  * Lijst van bestaande groepen
+  * "Nieuwe groep maken..."
+  * Toevoegen voert bulk-API-call uit
+
+- Header-checkbox bovenaan om alles te (de)selecteren
+
+==========================================================
+WAT NIET DOEN
+==========================================================
+
+- Geen broadcast-functionaliteit nu (Fase 2)
+- Geen wijziging aan de stats-tegels bovenaan
+- Geen wijziging aan de filters
+- Geen wijziging aan opt-in/opt-out backend-logica
+- Geen wijziging aan de WhatsApp-pagina (Gesprekken)
+- Bevestigingsmodals NIET overslaan voor opt-out (behoud 
+  veiligheid)
+
+==========================================================
+WERKWIJZE
+==========================================================
+
+1. Eerst aanpassing 1 (kebab-menu) - kleine, snelle fix
+2. Dan aanpassing 2 (groepen-sectie) - grootste werk
+3. Dan aanpassing 3 (bulk-acties) - integreert met groepen
+4. Stuur tussentijds screenshot voor mijn akkoord op nummer 1 
+   en 2 voordat je 3 bouwt
+
+VOORDAT JE BEGINT:
+Korte check: zijn er al backend endpoints voor 
+groepen-functionaliteit (zoals besproken in onderzoeksrapport 
+- Optie B met whatsapp_group_members uitgebreid met 
+contact_type/contact_id)? Zo ja, gebruik die. Zo nee, eerst 
+de backend opzetten zoals besproken.

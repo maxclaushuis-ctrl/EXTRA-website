@@ -95,6 +95,23 @@ export default function WhatsAppBeheer() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
+
+  // Deeplink vanuit Contacten-pagina: wanneer daar op "WhatsApp openen" wordt
+  // geklikt, zet die het telefoonnummer in sessionStorage en triggert een
+  // tab-switch. Bij mount lezen we het op zodat het juiste gesprek direct
+  // geselecteerd wordt. Het nummer wordt daarna gewist zodat het niet opnieuw
+  // wordt toegepast bij volgende mounts.
+  useEffect(() => {
+    try {
+      const phone = sessionStorage.getItem('extra_open_wa_phone');
+      if (phone) {
+        setSelectedPhone(phone);
+        setMainView('gesprekken');
+        sessionStorage.removeItem('extra_open_wa_phone');
+        sessionStorage.removeItem('extra_open_wa_name');
+      }
+    } catch {}
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);

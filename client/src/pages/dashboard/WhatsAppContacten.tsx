@@ -9,16 +9,23 @@
  * backend afgehandeld — dit scherm visualiseert de huidige status en biedt
  * een handmatige override-knop.
  */
-import { useEffect, useMemo, useState } from 'react';
-import { Users, Search, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Filter } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Users, Search, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Filter,
+  MoreVertical, MessageCircle, UserPlus, Ban, RotateCcw, Plus, ChevronRight,
+} from 'lucide-react';
 import {
   haalContacten,
   haalContactenStats,
   updateContactOptIn,
+  haalGroepen,
+  maakGroep,
+  voegLedenToe,
   type WaContact,
   type WaContactType,
   type WaOptInStatus,
   type WaContactenStats,
+  type Group,
 } from '../../api/whatsappClient';
 
 const NAVY = '#7E22CE';
@@ -126,6 +133,102 @@ export default function WhatsAppContacten() {
   const [zoekDebounced, setZoekDebounced] = useState('');
   const [foutmelding, setFoutmelding] = useState<string | null>(null);
   const [bezig, setBezig] = useState<string | null>(null); // "<type>:<id>" tijdens opt-in update
+
+  // Kebab-menu: welke rij heeft het menu open + of de "Toevoegen aan groep"-submenu open is.
+  const [openKebab, setOpenKebab] = useState<string | null>(null); // "<type>:<id>"
+  const [openSubmenu, setOpenSubmenu] = useState(false);
+  const [groepen, setGroepen] = useState<Group[]>([]);
+  const [groepenGeladen, setGroepenGeladen] = useState(false);
+  const [toast, setToast] = useState<{ kind: 'ok' | 'err'; tekst: string } | null>(null);
+  const kebabContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Klik buiten het menu sluit het. Eén globale listener i.p.v. per rij.
+  useEffect(() => {
+    if (!openKebab) return;
+    const handler = (e: MouseEvent) => {
+      if (kebabContainerRef.current && !kebabContainerRef.current.contains(e.target as Node)) {
+        setOpenKebab(null);
+        setOpenSubmenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [openKebab]);
+
+  // Toast verdwijnt na 3s.
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  async function laadGroepenIndienNodig() {
+    if (groepenGeladen) return;
+    try {
+      const g = await haalGroepen();
+      setGroepen(g);
+      setGroepenGeladen(true);
+    } catch (e: any) {
+      setToast({ kind: 'err', tekst: 'Kon groepen niet laden: ' + (e?.message || 'onbekende fout') });
+    }
+  }
+
+  function openWhatsAppGesprek(rij: WaContact) {
+    if (!rij.phone) {
+      setToast({ kind: 'err', tekst: 'Geen telefoonnummer bekend voor dit contact.' });
+      return;
+    }
+    // Deeplink naar WhatsApp-tab. DashboardMockup luistert op dit event en
+    // schakelt naar tab 'whatsapp'. WhatsAppBeheer leest de phone uit
+    // sessionStorage en selecteert (of maakt) het gesprek.
+    try {
+      sessionStorage.setItem('extra_open_wa_phone', rij.phone);
+      sessionStorage.setItem('extra_open_wa_name',
+        `${rij.firstName || ''} ${rij.lastName || ''}`.trim() || rij.phone);
+    } catch {}
+    window.dispatchEvent(new CustomEvent('extra:switch-tab', { detail: { tab: 'whatsapp' } }));
+    setOpenKebab(null);
+    setOpenSubmenu(false);
+  }
+
+  async function voegToeAanGroep(rij: WaContact, groep: Group) {
+    if (!rij.phone) {
+      setToast({ kind: 'err', tekst: 'Geen telefoonnummer bekend voor dit contact.' });
+      return;
+    }
+    try {
+      const r = await voegLedenToe(groep.id, [{
+        phoneNumber: rij.phone,
+        displayName: `${rij.firstName || ''} ${rij.lastName || ''}`.trim() || rij.phone,
+        firstName: rij.firstName || undefined,
+        lastName: rij.lastName || undefined,
+      }]);
+      if (r.added > 0) {
+        setToast({ kind: 'ok', tekst: `Toegevoegd aan "${groep.name}".` });
+      } else {
+        setToast({ kind: 'ok', tekst: `Zat al in "${groep.name}".` });
+      }
+    } catch (e: any) {
+      setToast({ kind: 'err', tekst: e?.message || 'Toevoegen mislukt' });
+    } finally {
+      setOpenKebab(null);
+      setOpenSubmenu(false);
+    }
+  }
+
+  async function nieuweGroepEnVoegToe(rij: WaContact) {
+    const naam = window.prompt('Naam van de nieuwe groep:', '');
+    if (!naam || !naam.trim()) return;
+    try {
+      const nieuwe = await maakGroep(naam.trim());
+      // Lijst verversen zodat de nieuwe groep verschijnt.
+      const g = await haalGroepen();
+      setGroepen(g);
+      await voegToeAanGroep(rij, nieuwe);
+    } catch (e: any) {
+      setToast({ kind: 'err', tekst: e?.message || 'Aanmaken mislukt' });
+    }
+  }
 
   // Debounce zoek-input
   useEffect(() => {
@@ -333,7 +436,7 @@ export default function WhatsAppContacten() {
                   <th style={th}>Status</th>
                   <th style={th}>Sinds</th>
                   <th style={th}>Reden</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Actie</th>
+                  <th style={{ ...th, textAlign: 'right', width: 56 }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -371,16 +474,109 @@ export default function WhatsAppContacten() {
                           textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle',
                         }}>{i.whatsappOptInReason || '—'}</span>
                       </td>
-                      <td style={{ ...td, textAlign: 'right' }}>
-                        {i.whatsappOptInStatus === 'opt_out' ? (
-                          <button disabled={isBezig} onClick={() => wijzigOptIn(i, 'actief')} style={btnSecondary(isBezig)}>
-                            Heractiveren
+                      <td style={{ ...td, textAlign: 'right', width: 56, position: 'relative' }}>
+                        <div ref={openKebab === sleutel ? kebabContainerRef : undefined}
+                             style={{ display: 'inline-block', position: 'relative' }}>
+                          <button
+                            disabled={isBezig}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const open = openKebab === sleutel;
+                              setOpenKebab(open ? null : sleutel);
+                              setOpenSubmenu(false);
+                              if (!open) laadGroepenIndienNodig();
+                            }}
+                            title="Acties"
+                            style={{
+                              padding: 6, borderRadius: 6, border: '1px solid transparent',
+                              background: openKebab === sleutel ? '#F3F4F6' : 'transparent',
+                              cursor: isBezig ? 'wait' : 'pointer', color: '#6B7280',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            }}
+                          >
+                            <MoreVertical size={16} />
                           </button>
-                        ) : (
-                          <button disabled={isBezig} onClick={() => wijzigOptIn(i, 'opt_out')} style={btnDanger(isBezig)}>
-                            Afmelden
-                          </button>
-                        )}
+
+                          {openKebab === sleutel && (
+                            <div style={{
+                              position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                              minWidth: 220, background: '#fff', border: '1px solid #E5E7EB',
+                              borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                              zIndex: 30, overflow: 'visible', fontFamily: FONT, fontSize: 13,
+                              textAlign: 'left',
+                            }}>
+                              <KebabItem
+                                icon={<MessageCircle size={14} />}
+                                label="WhatsApp openen"
+                                onClick={() => openWhatsAppGesprek(i)}
+                                disabled={!i.phone}
+                              />
+                              <div
+                                onMouseEnter={() => { setOpenSubmenu(true); laadGroepenIndienNodig(); }}
+                                onMouseLeave={() => setOpenSubmenu(false)}
+                                style={{ position: 'relative' }}
+                              >
+                                <KebabItem
+                                  icon={<UserPlus size={14} />}
+                                  label="Toevoegen aan groep"
+                                  trailing={<ChevronRight size={14} color="#9CA3AF" />}
+                                  onClick={() => { setOpenSubmenu(s => !s); laadGroepenIndienNodig(); }}
+                                  disabled={!i.phone}
+                                />
+                                {openSubmenu && (
+                                  <div style={{
+                                    position: 'absolute', right: '100%', top: 0, marginRight: 4,
+                                    minWidth: 220, maxHeight: 280, overflowY: 'auto',
+                                    background: '#fff', border: '1px solid #E5E7EB',
+                                    borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                                    padding: '4px 0',
+                                  }}>
+                                    {!groepenGeladen ? (
+                                      <div style={{ padding: '8px 12px', color: '#6B7280', fontSize: 12 }}>Laden…</div>
+                                    ) : groepen.length === 0 ? (
+                                      <div style={{ padding: '8px 12px', color: '#6B7280', fontSize: 12 }}>
+                                        Nog geen groepen.
+                                      </div>
+                                    ) : (
+                                      groepen.map(g => (
+                                        <KebabItem
+                                          key={g.id}
+                                          label={g.name}
+                                          trailing={<span style={{ fontSize: 11, color: '#9CA3AF' }}>{g.memberCount}</span>}
+                                          onClick={() => voegToeAanGroep(i, g)}
+                                        />
+                                      ))
+                                    )}
+                                    <div style={{ borderTop: '1px solid #F3F4F6', marginTop: 4, paddingTop: 4 }}>
+                                      <KebabItem
+                                        icon={<Plus size={14} />}
+                                        label="Nieuwe groep…"
+                                        onClick={() => nieuweGroepEnVoegToe(i)}
+                                        accent
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ borderTop: '1px solid #F3F4F6', marginTop: 4, paddingTop: 4 }}>
+                                {i.whatsappOptInStatus === 'opt_out' ? (
+                                  <KebabItem
+                                    icon={<RotateCcw size={14} />}
+                                    label="Opt-out ongedaan maken"
+                                    onClick={() => { setOpenKebab(null); setOpenSubmenu(false); wijzigOptIn(i, 'actief'); }}
+                                  />
+                                ) : (
+                                  <KebabItem
+                                    icon={<Ban size={14} />}
+                                    label="Opt-out instellen"
+                                    onClick={() => { setOpenKebab(null); setOpenSubmenu(false); wijzigOptIn(i, 'opt_out'); }}
+                                    danger
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -391,8 +587,53 @@ export default function WhatsAppContacten() {
         )}
       </div>
 
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 100,
+          padding: '10px 14px', borderRadius: 8,
+          background: toast.kind === 'ok' ? '#ECFDF5' : '#FEF2F2',
+          border: `1px solid ${toast.kind === 'ok' ? '#A7F3D0' : '#FCA5A5'}`,
+          color: toast.kind === 'ok' ? '#065F46' : '#991B1B',
+          fontSize: 13, fontFamily: FONT, fontWeight: 500,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.08)', maxWidth: 360,
+        }}>
+          {toast.tekst}
+        </div>
+      )}
+
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
+  );
+}
+
+function KebabItem({ icon, label, trailing, onClick, disabled, danger, accent }: {
+  icon?: React.ReactNode;
+  label: string;
+  trailing?: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '8px 12px', background: 'transparent', border: 'none',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        color: disabled ? '#9CA3AF' : danger ? '#B91C1C' : accent ? NAVY : '#374151',
+        fontFamily: FONT, fontSize: 13, fontWeight: 500, textAlign: 'left',
+      }}
+      onMouseEnter={(e) => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.background = '#F9FAFB'; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+    >
+      {icon && <span style={{ display: 'inline-flex', color: 'inherit' }}>{icon}</span>}
+      <span style={{ flex: 1 }}>{label}</span>
+      {trailing}
+    </button>
   );
 }
 

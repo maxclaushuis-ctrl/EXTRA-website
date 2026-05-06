@@ -196,6 +196,18 @@ export default function DashboardMockup() {
   }, [notifications, toast]);
 
   const [activeTab, setActiveTab] = useState('kandidaten');
+
+  // Cross-component navigatie: andere dashboard-pagina's kunnen via dit
+  // window-event verzoeken om naar een andere tab te schakelen (bv. de
+  // Contacten-pagina die een WhatsApp-gesprek wil openen).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tab = (e as CustomEvent).detail?.tab;
+      if (typeof tab === 'string') setActiveTab(tab);
+    };
+    window.addEventListener('extra:switch-tab', handler);
+    return () => window.removeEventListener('extra:switch-tab', handler);
+  }, []);
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
   const [bedrijvenExpanded, setBedrijvenExpanded] = useState(true);
   const [communicatieExpanded, setCommunicatieExpanded] = useState(() => {
