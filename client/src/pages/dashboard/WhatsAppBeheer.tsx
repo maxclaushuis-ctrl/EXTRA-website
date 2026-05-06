@@ -34,20 +34,7 @@ import {
   haalImportMedewerkers,
   haalImportKlanten,
   parseCsv,
-  haalAiSettings,
-  updateAiSettings,
   vraagAiSuggestie,
-  haalAiKnowledge,
-  maakAiKnowledge,
-  updateAiKnowledge,
-  verwijderAiKnowledge,
-  haalAiAttachments,
-  uploadAiAttachment,
-  updateAiAttachment,
-  verwijderAiAttachment,
-  type AiKnowledgeEntry,
-  type AiAttachment,
-  type AiAttachmentFieldKey,
   type Conversation,
   type Message,
   type Stats,
@@ -62,7 +49,6 @@ import {
   type ImportCandidate,
   type ImportProspect,
   type ImportEmployee,
-  type AiSettings,
 } from '../../api/whatsappClient';
 
 // Primaire accentkleur — afgestemd op de rest van het dashboard (Tailwind purple-700).
@@ -182,19 +168,7 @@ export default function WhatsAppBeheer() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiDismissed, setAiDismissed] = useState(false);
   const [aiLastInboundId, setAiLastInboundId] = useState<number | null>(null);
-  const [showAiSettings, setShowAiSettings] = useState(false);
-  const [aiSettings, setAiSettings] = useState<AiSettings | null>(null);
-  const [aiSettingsLoading, setAiSettingsLoading] = useState(false);
-  const [aiSettingsSaving, setAiSettingsSaving] = useState(false);
-  const [aiSettingsMsg, setAiSettingsMsg] = useState<string | null>(null);
   const [bulkAiLoading, setBulkAiLoading] = useState(false);
-  const [aiKnowledge, setAiKnowledge] = useState<AiKnowledgeEntry[]>([]);
-  const [aiKnowledgeLoading, setAiKnowledgeLoading] = useState(false);
-  const [newKnowledgeTitle, setNewKnowledgeTitle] = useState('');
-  const [newKnowledgeContent, setNewKnowledgeContent] = useState('');
-  const [knowledgeSavingId, setKnowledgeSavingId] = useState<number | 'new' | null>(null);
-  const [aiAttachments, setAiAttachments] = useState<AiAttachment[]>([]);
-  const [attachmentUploadingKey, setAttachmentUploadingKey] = useState<string | null>(null);
 
   type ImportTab = 'whatsapp' | 'medewerkers' | 'kandidaten' | 'klanten' | 'csv' | 'handmatig';
   const [importTab, setImportTab] = useState<ImportTab>('whatsapp');
@@ -428,176 +402,6 @@ export default function WhatsAppBeheer() {
       setBulkText(r.suggestion);
     } catch { /* ignore */ }
     finally { setBulkAiLoading(false); }
-  }
-
-  async function loadAiSettings() {
-    setAiSettingsLoading(true);
-    setAiKnowledgeLoading(true);
-    try {
-      const [s, k, a] = await Promise.all([haalAiSettings(), haalAiKnowledge(), haalAiAttachments()]);
-      setAiSettings(s);
-      setAiKnowledge(k);
-      setAiAttachments(a);
-    } catch { /* ignore */ }
-    finally { setAiSettingsLoading(false); setAiKnowledgeLoading(false); }
-  }
-
-  async function handleAttachmentUpload(fieldKey: AiAttachmentFieldKey, file: File, knowledgeId?: number | null) {
-    if (file.type !== 'application/pdf') {
-      alert('Alleen PDF-bestanden zijn toegestaan');
-      return;
-    }
-    if (file.size > 25 * 1024 * 1024) {
-      alert('Bestand is groter dan 25 MB');
-      return;
-    }
-    const key = `${fieldKey}:${knowledgeId ?? ''}`;
-    setAttachmentUploadingKey(key);
-    try {
-      const created = await uploadAiAttachment(fieldKey, file, knowledgeId ?? null);
-      setAiAttachments(prev => [...prev, created]);
-    } catch (e: any) {
-      alert(e.message || 'Upload mislukt');
-    } finally {
-      setAttachmentUploadingKey(null);
-    }
-  }
-
-  async function handleAttachmentToggle(att: AiAttachment) {
-    try {
-      const updated = await updateAiAttachment(att.id, { enabled: !att.enabled });
-      setAiAttachments(prev => prev.map(a => a.id === att.id ? updated : a));
-    } catch (e: any) {
-      alert(e.message || 'Wijzigen mislukt');
-    }
-  }
-
-  async function handleAttachmentDelete(att: AiAttachment) {
-    if (!window.confirm(`PDF "${att.filename}" verwijderen?`)) return;
-    try {
-      await verwijderAiAttachment(att.id);
-      setAiAttachments(prev => prev.filter(a => a.id !== att.id));
-    } catch (e: any) {
-      alert(e.message || 'Verwijderen mislukt');
-    }
-  }
-
-  function renderAttachmentList(fieldKey: AiAttachmentFieldKey, knowledgeId?: number | null) {
-    const filtered = aiAttachments.filter(a =>
-      a.fieldKey === fieldKey && (fieldKey !== 'knowledge' || a.knowledgeId === (knowledgeId ?? null))
-    );
-    const key = `${fieldKey}:${knowledgeId ?? ''}`;
-    const isUploading = attachmentUploadingKey === key;
-    const fmtBytes = (n: number) => n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
-    return (
-      <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-        {filtered.map(att => (
-          <div key={att.id}
-            title={att.enabled ? `Geüpload ${new Date(att.uploadedAt).toLocaleDateString('nl-NL')} · klik om uit te schakelen` : 'Klik om in te schakelen'}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '4px 8px',
-              background: att.enabled ? '#EFF6FF' : '#F3F4F6',
-              border: `1px solid ${att.enabled ? '#BFDBFE' : '#E5E7EB'}`,
-              borderRadius: 12, fontSize: 11,
-              color: att.enabled ? NAVY : '#6B7280',
-              opacity: att.enabled ? 1 : 0.7,
-            }}>
-            <span onClick={() => handleAttachmentToggle(att)} style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span>📎</span>
-              <span style={{ fontWeight: 600, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.filename}</span>
-              <span style={{ color: '#9CA3AF', fontSize: 10 }}>({fmtBytes(att.fileSize)})</span>
-              {!att.enabled && <span style={{ fontSize: 10, color: '#9CA3AF' }}>uit</span>}
-            </span>
-            <button onClick={() => handleAttachmentDelete(att)} title="Verwijderen"
-              style={{ background: 'transparent', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
-          </div>
-        ))}
-        <label style={{
-          display: 'inline-flex', alignItems: 'center', gap: 4,
-          padding: '4px 8px', borderRadius: 12,
-          background: isUploading ? '#F3F4F6' : '#fff',
-          border: '1px dashed #CBD5E1', color: '#6B7280',
-          fontSize: 11, cursor: isUploading ? 'wait' : 'pointer',
-        }}>
-          <span>📄</span>
-          <span>{isUploading ? 'Uploaden...' : 'PDF toevoegen'}</span>
-          <input type="file" accept="application/pdf" disabled={isUploading}
-            onChange={e => {
-              const f = e.target.files?.[0];
-              if (f) handleAttachmentUpload(fieldKey, f, knowledgeId);
-              e.target.value = '';
-            }}
-            style={{ display: 'none' }} />
-        </label>
-      </div>
-    );
-  }
-
-  async function saveAiSettings() {
-    if (!aiSettings) return;
-    setAiSettingsSaving(true);
-    setAiSettingsMsg(null);
-    try {
-      const updated = await updateAiSettings({
-        toneOfVoice: aiSettings.toneOfVoice,
-        voiceExamples: aiSettings.voiceExamples,
-        guidelines: aiSettings.guidelines,
-        cancellationProtocol: aiSettings.cancellationProtocol,
-        extraContext: aiSettings.extraContext,
-        autoReplyEnabled: aiSettings.autoReplyEnabled,
-        autoReplyOnlyForKnown: aiSettings.autoReplyOnlyForKnown,
-        autoReplyMinIntervalSec: aiSettings.autoReplyMinIntervalSec,
-      });
-      setAiSettings(updated);
-      setAiSettingsMsg('Opgeslagen!');
-      setTimeout(() => setAiSettingsMsg(null), 2000);
-    } catch (e: any) {
-      setAiSettingsMsg(e.message || 'Opslaan mislukt');
-    } finally {
-      setAiSettingsSaving(false);
-    }
-  }
-
-  async function addKnowledgeEntry() {
-    if (!newKnowledgeTitle.trim() || !newKnowledgeContent.trim()) return;
-    setKnowledgeSavingId('new');
-    try {
-      const created = await maakAiKnowledge({ title: newKnowledgeTitle.trim(), content: newKnowledgeContent.trim() });
-      setAiKnowledge(prev => [...prev, created]);
-      setNewKnowledgeTitle('');
-      setNewKnowledgeContent('');
-    } catch (e: any) {
-      alert(e.message || 'Toevoegen mislukt');
-    } finally {
-      setKnowledgeSavingId(null);
-    }
-  }
-
-  async function saveKnowledgeEntry(entry: AiKnowledgeEntry) {
-    setKnowledgeSavingId(entry.id);
-    try {
-      const updated = await updateAiKnowledge(entry.id, {
-        title: entry.title,
-        content: entry.content,
-        enabled: entry.enabled,
-      });
-      setAiKnowledge(prev => prev.map(k => k.id === entry.id ? updated : k));
-    } catch (e: any) {
-      alert(e.message || 'Opslaan mislukt');
-    } finally {
-      setKnowledgeSavingId(null);
-    }
-  }
-
-  async function removeKnowledgeEntry(id: number) {
-    if (!window.confirm('Weet je zeker dat je dit protocol wilt verwijderen?')) return;
-    try {
-      await verwijderAiKnowledge(id);
-      setAiKnowledge(prev => prev.filter(k => k.id !== id));
-    } catch (e: any) {
-      alert(e.message || 'Verwijderen mislukt');
-    }
   }
 
   async function handleRegisterWebhook() {
@@ -985,19 +789,7 @@ export default function WhatsAppBeheer() {
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
-            onClick={() => { setShowAiSettings(!showAiSettings); if (!showAiSettings && !aiSettings) loadAiSettings(); setShowSettings(false); }}
-            title="AI-instellingen"
-            style={{
-              background: showAiSettings ? '#F0F4FA' : 'transparent',
-              border: '1px solid #E5E7EB', borderRadius: 8,
-              padding: '6px 10px', cursor: 'pointer', fontSize: 13, color: showAiSettings ? NAVY : '#6B7280',
-              fontWeight: showAiSettings ? 600 : 500, display: 'flex', alignItems: 'center', gap: 6,
-            }}
-          >
-            <Sparkles size={14} /> AI
-          </button>
-          <button
-            onClick={() => { setShowSettings(!showSettings); setShowAiSettings(false); }}
+            onClick={() => setShowSettings(!showSettings)}
             title="Webhook-instellingen"
             style={{
               background: showSettings ? '#F0F4FA' : 'transparent',
@@ -1011,181 +803,6 @@ export default function WhatsAppBeheer() {
         </div>
       </div>
 
-      {showAiSettings && (
-        <div style={{
-          padding: '16px 20px', background: '#FAFBFC', border: '1px solid #E5E7EB',
-          borderRadius: 10, marginBottom: 12, fontSize: 12,
-        }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={16} /> AI Richtlijnen</div>
-          {aiSettingsLoading ? (
-            <div style={{ color: '#9CA3AF', fontSize: 12 }}>Laden...</div>
-          ) : aiSettings ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Tone of voice</label>
-                <textarea value={aiSettings.toneOfVoice} onChange={e => setAiSettings({ ...aiSettings, toneOfVoice: e.target.value })}
-                  rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
-                  placeholder="Bijv: Professioneel maar warm en persoonlijk..." />
-                {renderAttachmentList('tone_of_voice')}
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>
-                  ✍️ Voorbeeldberichten (eigen schrijfstijl)
-                </label>
-                <div style={{ fontSize: 10, color: '#6B7280', marginBottom: 4 }}>
-                  Plak hier 3-5 berichten die jij of je collega's eerder hebben gestuurd. De AI bootst deze stijl na — toon, lengte, emoji-gebruik, aanspreekvorm. Scheid berichten met een lege regel of "---".
-                </div>
-                <textarea value={aiSettings.voiceExamples} onChange={e => setAiSettings({ ...aiSettings, voiceExamples: e.target.value })}
-                  rows={6} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
-                  placeholder={`Hé! Bedankt voor je bericht 🙌 Ik kijk er even naar en kom zo bij je terug.\n\n---\n\nTop dat je beschikbaar bent! Ik zet je in de planning, je krijgt vanavond bevestiging.\n\n---\n\nGoedemorgen, hoe is je shift gisteren bevallen?`} />
-                {renderAttachmentList('voice_examples')}
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Algemene richtlijnen</label>
-                <textarea value={aiSettings.guidelines} onChange={e => setAiSettings({ ...aiSettings, guidelines: e.target.value })}
-                  rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
-                  placeholder="Bijv: Je bent een planningsassistent van EXTRA..." />
-                {renderAttachmentList('guidelines')}
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Afmeldprotocol</label>
-                <textarea value={aiSettings.cancellationProtocol} onChange={e => setAiSettings({ ...aiSettings, cancellationProtocol: e.target.value })}
-                  rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
-                  placeholder="Bijv: Als iemand zich wil afmelden voor een dienst..." />
-                {renderAttachmentList('cancellation_protocol')}
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Extra context</label>
-                <textarea value={aiSettings.extraContext} onChange={e => setAiSettings({ ...aiSettings, extraContext: e.target.value })}
-                  rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
-                  placeholder="Eventuele extra instructies of context voor de AI..." />
-                {renderAttachmentList('extra_context')}
-              </div>
-
-              {/* ─── Kennisbank / Protocollen ───────────────────────────── */}
-              <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid #E5E7EB' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 4 }}>📚 Kennisbank / Protocollen</div>
-                <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 10 }}>
-                  Voeg zoveel protocollen of context-stukken toe als je wilt. De AI gebruikt elk ingeschakeld item bij het genereren van antwoorden.
-                </div>
-                {aiKnowledgeLoading ? (
-                  <div style={{ color: '#9CA3AF', fontSize: 12 }}>Laden...</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {aiKnowledge.map(entry => (
-                      <div key={entry.id} style={{
-                        border: '1px solid #E5E7EB', borderRadius: 8, padding: 10,
-                        background: entry.enabled ? '#fff' : '#F9FAFB', opacity: entry.enabled ? 1 : 0.6,
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                          <input type="checkbox" checked={entry.enabled}
-                            onChange={e => setAiKnowledge(prev => prev.map(k => k.id === entry.id ? { ...k, enabled: e.target.checked } : k))}
-                            title="Actief"
-                            style={{ cursor: 'pointer' }} />
-                          <input type="text" value={entry.title}
-                            onChange={e => setAiKnowledge(prev => prev.map(k => k.id === entry.id ? { ...k, title: e.target.value } : k))}
-                            placeholder="Titel (bijv. Afmeldprotocol)"
-                            style={{ flex: 1, padding: '6px 8px', fontSize: 12, fontWeight: 600, border: '1px solid #E5E7EB', borderRadius: 4, fontFamily: FONT, color: NAVY, boxSizing: 'border-box' }} />
-                          <button onClick={() => saveKnowledgeEntry(entry)} disabled={knowledgeSavingId === entry.id}
-                            style={{ background: knowledgeSavingId === entry.id ? '#E5E7EB' : '#10B981', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
-                            title="Opslaan">
-                            {knowledgeSavingId === entry.id ? '...' : 'Opslaan'}
-                          </button>
-                          <button onClick={() => removeKnowledgeEntry(entry.id)}
-                            style={{ background: 'transparent', color: '#DC2626', border: '1px solid #FECACA', borderRadius: 4, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}
-                            title="Verwijderen">
-                            ×
-                          </button>
-                        </div>
-                        <textarea value={entry.content}
-                          onChange={e => setAiKnowledge(prev => prev.map(k => k.id === entry.id ? { ...k, content: e.target.value } : k))}
-                          rows={3} style={{ width: '100%', padding: '6px 8px', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 4, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box' }}
-                          placeholder="Inhoud van het protocol..." />
-                        {renderAttachmentList('knowledge', entry.id)}
-                      </div>
-                    ))}
-
-                    {/* Nieuw protocol toevoegen */}
-                    <div style={{ border: '1px dashed #D1D5DB', borderRadius: 8, padding: 10, background: '#FAFBFC' }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>➕ Nieuw protocol toevoegen</div>
-                      <input type="text" value={newKnowledgeTitle} onChange={e => setNewKnowledgeTitle(e.target.value)}
-                        placeholder="Titel (bijv. Vakantieperiode)"
-                        style={{ width: '100%', padding: '6px 8px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 4, fontFamily: FONT, marginBottom: 6, boxSizing: 'border-box' }} />
-                      <textarea value={newKnowledgeContent} onChange={e => setNewKnowledgeContent(e.target.value)}
-                        rows={2} style={{ width: '100%', padding: '6px 8px', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 4, fontFamily: FONT, resize: 'vertical', boxSizing: 'border-box', marginBottom: 6 }}
-                        placeholder="Inhoud van het protocol..." />
-                      <button onClick={addKnowledgeEntry}
-                        disabled={knowledgeSavingId === 'new' || !newKnowledgeTitle.trim() || !newKnowledgeContent.trim()}
-                        style={{
-                          background: (knowledgeSavingId === 'new' || !newKnowledgeTitle.trim() || !newKnowledgeContent.trim()) ? '#E5E7EB' : NAVY,
-                          color: (knowledgeSavingId === 'new' || !newKnowledgeTitle.trim() || !newKnowledgeContent.trim()) ? '#9CA3AF' : '#fff',
-                          border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                        }}>
-                        {knowledgeSavingId === 'new' ? 'Toevoegen...' : 'Toevoegen'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* ─── Auto-antwoord modus ───────────────────────────────── */}
-              <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid #E5E7EB' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 4 }}>🤖 Auto-antwoord modus</div>
-                <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 10 }}>
-                  Wanneer ingeschakeld, beantwoordt de AI inkomende berichten zelfstandig zonder dat een planner hoeft te bevestigen.
-                </div>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: aiSettings.autoReplyEnabled ? '#FEF3C7' : '#fff', border: `1px solid ${aiSettings.autoReplyEnabled ? '#F59E0B' : '#E5E7EB'}`, borderRadius: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={aiSettings.autoReplyEnabled}
-                    onChange={e => setAiSettings({ ...aiSettings, autoReplyEnabled: e.target.checked })}
-                    style={{ cursor: 'pointer', width: 16, height: 16 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: aiSettings.autoReplyEnabled ? '#92400E' : NAVY }}>
-                      {aiSettings.autoReplyEnabled ? '🟢 AAN — bot reageert automatisch' : '⚪ UIT — alleen suggesties tonen'}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#6B7280', marginTop: 2 }}>
-                      Bij twijfel of gevoelige onderwerpen escaleert de AI automatisch naar de planner.
-                    </div>
-                  </div>
-                </label>
-
-                {aiSettings.autoReplyEnabled && (
-                  <div style={{ marginTop: 10, padding: 10, background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#374151', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={aiSettings.autoReplyOnlyForKnown}
-                        onChange={e => setAiSettings({ ...aiSettings, autoReplyOnlyForKnown: e.target.checked })}
-                        style={{ cursor: 'pointer' }} />
-                      <span>Alleen automatisch antwoorden bij <strong>bekende contacten</strong> (kandidaten/klanten in de database)</span>
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#374151' }}>
-                      <span>Minimaal interval tussen auto-antwoorden:</span>
-                      <input type="number" min={0} max={3600}
-                        value={aiSettings.autoReplyMinIntervalSec}
-                        onChange={e => setAiSettings({ ...aiSettings, autoReplyMinIntervalSec: Math.max(0, Number(e.target.value) || 0) })}
-                        style={{ width: 60, padding: '4px 6px', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 4, fontFamily: FONT, boxSizing: 'border-box' }} />
-                      <span>seconden</span>
-                    </div>
-                    <div style={{ fontSize: 10, color: '#92400E', background: '#FEF3C7', padding: '6px 8px', borderRadius: 4, border: '1px solid #FDE68A' }}>
-                      ⚠ Let op: berichten worden direct verstuurd. Test dit eerst grondig en houd de eerste dagen het gesprek in de gaten.
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button onClick={saveAiSettings} disabled={aiSettingsSaving}
-                  style={{ background: aiSettingsSaving ? '#E5E7EB' : NAVY, color: aiSettingsSaving ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: aiSettingsSaving ? 'wait' : 'pointer', fontFamily: FONT }}>
-                  {aiSettingsSaving ? 'Opslaan...' : 'Instellingen opslaan'}
-                </button>
-                {aiSettingsMsg && <span style={{ fontSize: 11, color: aiSettingsMsg === 'Opgeslagen!' ? '#059669' : '#DC2626' }}>{aiSettingsMsg}</span>}
-              </div>
-            </div>
-          ) : null}
-          <div style={{ marginTop: 12, padding: '8px 10px', background: '#F0F4FA', borderRadius: 6, fontSize: 11, color: '#6B7280' }}>
-            Deze richtlijnen + kennisbank worden gebruikt door de AI om antwoordsuggesties te genereren bij inkomende WhatsApp-berichten. Met de auto-antwoord modus reageert de bot zelf zonder tussenkomst.
-          </div>
-        </div>
-      )}
 
       {showSettings && (
         <div style={{

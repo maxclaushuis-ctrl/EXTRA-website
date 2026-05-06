@@ -30,6 +30,7 @@ import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
 import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
+import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import NotificationCenter from '@/components/NotificationCenter';
 import NotificatieBel from '@/components/NotificatieBel';
 import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
@@ -4621,19 +4622,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             </div>
 
           ) : activeTab === 'whatsapp-ai' ? (
-            <div className="p-6">
-              <div className="mb-4">
-                <h1 className="text-xl font-bold">AI-instellingen</h1>
-                <p className="text-xs text-gray-500 hidden sm:block">Tone of voice, voorbeeldberichten, kennisbank en bijlagen voor de AI-reply-assistent</p>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
-                <Sparkles className="h-10 w-10 mx-auto text-purple-300 mb-3" />
-                <div className="text-sm font-medium text-gray-700 mb-1">Wordt verplaatst</div>
-                <p className="text-xs text-gray-500 max-w-md mx-auto">
-                  De AI-instellingen verhuizen vanuit de Gesprekken-pagina naar deze tab. Tot het zo ver is, vind je ze achter de tandwiel-knop bij Gesprekken.
-                </p>
-              </div>
-            </div>
+            <WhatsAppAIInstellingen />
 
           ) : activeTab === 'crm-leads' ? (
             <CrmLeadsTab />

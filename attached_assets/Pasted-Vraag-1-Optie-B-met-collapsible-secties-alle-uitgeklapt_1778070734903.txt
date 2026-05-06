@@ -1,0 +1,18 @@
+Vraag 1: Optie B met collapsible secties, alle uitgeklapt bij eerste bezoek - akkoord?
+Ja, akkoord. Met één toevoeging: laat de inklap-state ook persisteren in localStorage per sectie (bijv. ai_section_stijl_collapsed, ai_section_protocollen_collapsed, ai_section_modus_collapsed). Reden: als ik vaak terugkom om alleen de protocollen te bewerken, wil ik dat 'Stijl & toon' en 'Modus & context' ingeklapt blijven zoals ik ze laatst had. Patroon zoals nav_campagnes_ingeklapt dat al elders wordt gebruikt.
+Vraag 2: Sparkle-AI-knop in Gesprekken-header weg, of snelkoppeling?
+Weg. Geen snelkoppeling toevoegen. De sub-navigatie in het hoofdmenu is al duidelijk genoeg ("AI-instellingen" staat onder Communicatie → WhatsApp). Eén plek voor één ding houdt de UI clean. De AI-suggestie-knop in de chat-composer blijft wel - dat is een ander ding (suggestie genereren tijdens een gesprek), niet een instellingen-shortcut.
+Vraag 3: Niet-opgeslagen-indicator alleen op 8 hoofdvelden - akkoord?
+Akkoord. Protocollen hebben hun eigen per-item Opslaan-knop, dus een aparte indicator daarvoor is overbodig en zou alleen verwarring scheppen. Houd de indicator dus puur op de 8 hoofdvelden (Tone of voice, voorbeeldberichten, algemene richtlijnen, afmeldprotocol-textarea, auto-antwoord modus, interval, alleen-bekenden toggle, extra context).
+Eén aanvulling op het migratieplan
+In het rapport staat: "Sticky top-bar rechts: paarse Opslaan-knop + (niet opgeslagen wijzigingen) indicator + groene Opgeslagen ✓-toast (2s)"
+Laat de Opslaan-knop in rust-state een lichtere kleur hebben (bijv. paars-uitgegrijsd of disabled-stijl) als er geen wijzigingen zijn. Wordt actief paars (bg-purple-600) zodra er wijzigingen zijn. Dan zie je in één blik of er iets te bewaren valt of niet. Dit voelt natuurlijker dan altijd dezelfde knop tonen.
+Akkoord, ga bouwen
+Met die drie kleine toevoegingen: ga maar verhuizen. Test goed dat alle ingevulde data zichtbaar is na de migratie - dat is mijn grootste zorg. We hebben uren werk in die velden zitten en het zou zonde zijn als de Tone of voice of de Voorbeeldberichten leeg zijn na de overheveling.
+Stuur me het resultaat met deze checks:
+
+Open whatsapp-ai tab → alle data nog zichtbaar?
+Wijzig één veld → indicator verschijnt → opslaan → indicator weg?
+Refresh de pagina → wijziging persistent?
+Klap een sectie in → ga naar andere pagina → kom terug → blijft ingeklapt?
+Open Gesprekken-pagina → AI-paneel weg, tandwiel werkt nog voor webhook-instellingen?
