@@ -6,6 +6,8 @@ import {
   stuurBericht,
   stuurMedia,
   markeerGelezen,
+  markeerOngelezen,
+  updateInboxStatus,
   haalStats,
   haalWebhookStatus,
   registreerWebhook,
@@ -136,6 +138,12 @@ export default function WhatsAppBeheer() {
   const [filterLabel, setFilterLabel] = useState<string>('all');
   const [labelInput, setLabelInput] = useState('');
   const [showLabelInput, setShowLabelInput] = useState(false);
+  // Nieuwe sidebar-filters (Open/Opgelost/Spam/Alle + multi-select labels) en sort-order.
+  const [inboxFilter, setInboxFilter] = useState<'open' | 'resolved' | 'spam' | 'all'>('open');
+  const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const notesEndRef = useRef<HTMLDivElement>(null);
 
@@ -286,8 +294,25 @@ export default function WhatsAppBeheer() {
     return Array.from(set).sort();
   }, [conversations]);
 
+  // Tellingen voor de inbox-sidebar (Open / Opgelost / Spam / Alle).
+  // Dit telt binnen de huidige categorie-tab (gesprekken is al daarop gefilterd).
+  const inboxCounts = useMemo(() => {
+    const counts = { open: 0, resolved: 0, spam: 0, all: conversations.length };
+    for (const c of conversations) {
+      const s = (c.inboxStatus ?? 'open') as 'open' | 'resolved' | 'spam';
+      counts[s]++;
+    }
+    return counts;
+  }, [conversations]);
+
+  // Per-categorie ongelezen-tellingen voor de tabs bovenaan kolom 2.
+  // Houdt rekening met de huidige inbox-filter zodat het overeenkomt met wat zichtbaar is.
   const filteredConversations = useMemo(() => {
     let list = conversations;
+    // Inbox-status filter (sidebar — primair filter)
+    if (inboxFilter !== 'all') {
+      list = list.filter(c => (c.inboxStatus ?? 'open') === inboxFilter);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(c =>
@@ -308,8 +333,22 @@ export default function WhatsAppBeheer() {
     if (filterLabel !== 'all') {
       list = list.filter(c => c.labels?.includes(filterLabel));
     }
-    return list;
-  }, [conversations, search, filterUnread, filterAssignee, filterLabel]);
+    // Multi-select labels uit sidebar (AND-filter — toon alleen gesprekken met ALLE geselecteerde labels).
+    if (selectedLabels.size > 0) {
+      list = list.filter(c => {
+        const lbls = c.labels ?? [];
+        for (const want of selectedLabels) if (!lbls.includes(want)) return false;
+        return true;
+      });
+    }
+    // Sortering — nieuwste eerst is default; oudste eerst toggle voor afhandelen oude berichten.
+    const sorted = [...list].sort((a, b) => {
+      const at = new Date(a.lastMessageAt).getTime();
+      const bt = new Date(b.lastMessageAt).getTime();
+      return sortOrder === 'newest' ? bt - at : at - bt;
+    });
+    return sorted;
+  }, [conversations, search, filterUnread, filterAssignee, filterLabel, inboxFilter, selectedLabels, sortOrder]);
 
   const selectedConv = conversations.find(c => c.phoneNumber === selectedPhone);
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
@@ -1209,9 +1248,105 @@ export default function WhatsAppBeheer() {
         {/* ════════ GESPREKKEN VIEW ════════ */}
         {mainView === 'gesprekken' && (
           <>
-            {/* Linkerkolom: gesprekkenlijst */}
+            {/* ─── Kolom 1: Sidebar (Inbox + Labels) ─────────────────────────── */}
             <div style={{
-              width: 340, display: 'flex', flexDirection: 'column',
+              width: 200, flexShrink: 0, display: 'flex', flexDirection: 'column',
+              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10,
+              overflow: 'hidden',
+            }}>
+              <div style={{ padding: '14px 14px 8px', flex: 1, overflowY: 'auto' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', letterSpacing: 0.6, marginBottom: 6 }}>
+                  INBOX
+                </div>
+                {([
+                  { key: 'open',     label: 'Open',     count: inboxCounts.open,     showBadge: true  },
+                  { key: 'resolved', label: 'Opgelost', count: inboxCounts.resolved, showBadge: false },
+                  { key: 'spam',     label: 'Spam',     count: inboxCounts.spam,     showBadge: false },
+                  { key: 'all',      label: 'Alle',     count: inboxCounts.all,      showBadge: false },
+                ] as const).map(item => {
+                  const active = inboxFilter === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => setInboxFilter(item.key)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '7px 10px', marginBottom: 2,
+                        background: active ? '#E8F0F8' : 'transparent',
+                        color: active ? NAVY : '#374151',
+                        fontWeight: active ? 600 : 500,
+                        border: 'none', borderRadius: 6, cursor: 'pointer',
+                        fontSize: 13, fontFamily: FONT, textAlign: 'left',
+                      }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#F8FAFC'; }}
+                      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span>{item.label}</span>
+                      {item.showBadge && item.count > 0 && (
+                        <span style={{
+                          background: NAVY, color: '#fff', fontSize: 10, fontWeight: 700,
+                          padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
+                        }}>{item.count}</span>
+                      )}
+                      {!item.showBadge && item.count > 0 && (
+                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>{item.count}</span>
+                      )}
+                    </button>
+                  );
+                })}
+
+                {allLabelsInUse.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', letterSpacing: 0.6, marginTop: 18, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>LABELS</span>
+                      {selectedLabels.size > 0 && (
+                        <button
+                          onClick={() => setSelectedLabels(new Set())}
+                          style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 10, cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: 0 }}
+                          title="Alle labelfilters wissen"
+                        >
+                          wis
+                        </button>
+                      )}
+                    </div>
+                    {allLabelsInUse.map(l => {
+                      const active = selectedLabels.has(l);
+                      return (
+                        <button
+                          key={l}
+                          onClick={() => {
+                            const next = new Set(selectedLabels);
+                            if (next.has(l)) next.delete(l); else next.add(l);
+                            setSelectedLabels(next);
+                          }}
+                          style={{
+                            width: '100%', display: 'flex', alignItems: 'center', gap: 7,
+                            padding: '6px 10px', marginBottom: 2,
+                            background: active ? '#E8F0F8' : 'transparent',
+                            color: active ? NAVY : '#374151',
+                            fontWeight: active ? 600 : 500,
+                            border: 'none', borderRadius: 6, cursor: 'pointer',
+                            fontSize: 12, fontFamily: FONT, textAlign: 'left',
+                          }}
+                          onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#F8FAFC'; }}
+                          onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <span style={{
+                            width: 8, height: 8, borderRadius: 2, flexShrink: 0,
+                            background: labelColor(l),
+                          }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l}</span>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ─── Kolom 2: Gesprekkenlijst ─────────────────────────────────── */}
+            <div style={{
+              width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column',
               background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
             }}>
               <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
@@ -1305,68 +1440,70 @@ export default function WhatsAppBeheer() {
                   const selected = c.phoneNumber === selectedPhone;
                   const unread = c.unreadCount > 0;
                   const name = convDisplayName(c);
+                  const status = (c.inboxStatus ?? 'open') as 'open' | 'resolved' | 'spam';
+                  // Status-stip: blauw = open, groen = opgelost, rood = spam.
+                  // Wanneer ongelezen: rood pulsje overheen voor visuele urgentie.
+                  const statusColor = status === 'resolved' ? '#10B981' : status === 'spam' ? '#DC2626' : NAVY;
                   return (
                     <div
                       key={c.id}
                       onClick={() => setSelectedPhone(c.phoneNumber)}
                       style={{
-                        padding: '10px 14px',
-                        background: selected ? '#F0F4FA' : '#fff',
-                        borderLeft: selected ? `3px solid ${NAVY}` : '3px solid transparent',
+                        padding: '11px 14px 11px 12px',
+                        background: selected ? '#E8F0F8' : '#fff',
                         borderBottom: '1px solid #F3F4F6',
                         cursor: 'pointer',
+                        display: 'flex', gap: 10,
                       }}
+                      onMouseEnter={e => { if (!selected) e.currentTarget.style.background = '#F8FAFC'; }}
+                      onMouseLeave={e => { if (!selected) e.currentTarget.style.background = '#fff'; }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      {/* Status-stip links */}
+                      <div style={{ flexShrink: 0, paddingTop: 5 }}>
+                        <span style={{
+                          display: 'block', width: 8, height: 8, borderRadius: '50%',
+                          background: unread ? '#DC2626' : statusColor,
+                        }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
+                          <div style={{
+                            fontSize: 13, fontWeight: unread ? 700 : 600,
+                            color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {name}
+                          </div>
+                          <div style={{ fontSize: 10, color: '#9CA3AF', flexShrink: 0 }}>
+                            {timeAgo(c.lastMessageAt)}
+                          </div>
+                        </div>
                         <div style={{
-                          fontSize: 13, fontWeight: unread ? 700 : 600,
-                          color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
+                          fontSize: 12, color: unread ? '#1F2937' : '#6B7280',
+                          fontWeight: unread ? 600 : 400,
+                          marginTop: 3,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
-                          {name}
+                          {(c.lastMessagePreview || '\u2014').slice(0, 50)}
                         </div>
-                        <div style={{ fontSize: 10, color: '#94A3B8', flexShrink: 0, marginLeft: 6 }}>
-                          {timeAgo(c.lastMessageAt)}
-                        </div>
+                        {(c.labels?.length || unread) ? (
+                          <div style={{ display: 'flex', gap: 4, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+                            {c.labels?.slice(0, 3).map(l => (
+                              <span key={l} style={{
+                                fontSize: 9, padding: '1px 6px', borderRadius: 3,
+                                background: labelColor(l) + '18', color: labelColor(l),
+                                fontWeight: 600,
+                              }}>{l}</span>
+                            ))}
+                            {unread && (
+                              <span style={{
+                                background: '#DC2626', color: '#fff', borderRadius: 10,
+                                padding: '0 7px', fontSize: 10, fontWeight: 700, marginLeft: 'auto',
+                              }}>{c.unreadCount}</span>
+                            )}
+                          </div>
+                        ) : null}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
-                        <span style={{ fontSize: 11, color: '#64748B' }}>
-                          +{c.phoneNumber}
-                          {c.matchCategory === 'prospect' && c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
-                          {c.matchCategory === 'unmatched' && c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
-                        </span>
-                        {c.assignedToName && (
-                          <span style={{ fontSize: 9, color: '#8B5CF6', background: '#EDE9FE', borderRadius: 3, padding: '0 4px', flexShrink: 0 }}>
-                            {c.assignedToName.split(' ')[0]}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{
-                        fontSize: 12, color: unread ? '#1F2937' : '#64748B',
-                        fontWeight: unread ? 600 : 400,
-                        marginTop: 3,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        maxWidth: 280,
-                      }}>
-                        {(c.lastMessagePreview || '\u2014').slice(0, 60)}
-                      </div>
-                      {(c.labels?.length || unread) ? (
-                        <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                          {unread && (
-                            <span style={{
-                              background: '#DC2626', color: '#fff', borderRadius: 10,
-                              padding: '0 7px', fontSize: 10, fontWeight: 700,
-                            }}>{c.unreadCount}</span>
-                          )}
-                          {c.labels?.map(l => (
-                            <span key={l} style={{
-                              fontSize: 9, padding: '1px 6px', borderRadius: 3,
-                              background: labelColor(l) + '18', color: labelColor(l),
-                              fontWeight: 600,
-                            }}>{l}</span>
-                          ))}
-                        </div>
-                      ) : null}
                     </div>
                   );
                 })}

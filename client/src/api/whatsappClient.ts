@@ -17,6 +17,7 @@ export interface Conversation {
   lastMessagePreview: string | null;
   unreadCount: number;
   lastInboundAt: string | null;
+  inboxStatus: 'open' | 'resolved' | 'spam';
 }
 
 export interface Message {
@@ -111,6 +112,10 @@ export const haalBerichten = (phoneNumber: string) =>
   get<Message[]>(`/conversations/${encodeURIComponent(phoneNumber)}/messages`);
 export const markeerGelezen = (phoneNumber: string) =>
   post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-read`);
+export const markeerOngelezen = (phoneNumber: string) =>
+  post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-unread`);
+export const updateInboxStatus = (phoneNumber: string, status: 'open' | 'resolved' | 'spam') =>
+  put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/inbox-status`, { status });
 export const stuurBericht = (nummer: string, tekst: string) =>
   post<{ success: boolean; messageId: string | null; dbId: number }>('/stuur', { nummer, tekst });
 

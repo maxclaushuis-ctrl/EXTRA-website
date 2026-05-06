@@ -10864,6 +10864,35 @@ OTHER RULES:
     res.json({ success: true });
   });
 
+  // Inbox-status (open/resolved/spam) — gebruikt door de UI-sidebar (Open/Opgelost/Spam/Alle)
+  // en door de chat-header acties "Verplaats naar Spam" / "Sluit gesprek".
+  app.put('/api/whatsapp/conversations/:phoneNumber/inbox-status', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { status } = req.body ?? {};
+    const allowed = ['open', 'resolved', 'spam'] as const;
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ error: `status moet ${allowed.join('/')} zijn` });
+    }
+    await db.update(whatsappConversations).set({
+      inboxStatus: status,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    res.json({ success: true });
+  });
+
+  // Markeer een gesprek opnieuw als ongelezen (zet unreadCount op 1).
+  // Wordt gebruikt door het 3-dots menu in de chat-header.
+  app.post('/api/whatsapp/conversations/:phoneNumber/mark-unread', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    await db.update(whatsappConversations).set({
+      unreadCount: 1,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    res.json({ success: true });
+  });
+
   app.put('/api/whatsapp/conversations/:phoneNumber/labels', adminMiddleware, async (req: Request, res: Response) => {
     const phone = normalizePhone(req.params.phoneNumber);
     if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });

@@ -1333,6 +1333,7 @@ export const whatsappSessions = pgTable("whatsapp_sessions", {
 // ─── WhatsApp Fase 1: berichten + gesprekken (360dialog Cloud API) ───────────
 export const whatsappDirectionEnum = pgEnum('whatsapp_direction', ['inbound', 'outbound']);
 export const whatsappMatchCategoryEnum = pgEnum('whatsapp_match_category', ['candidate', 'prospect', 'unmatched']);
+export const whatsappInboxStatusEnum = pgEnum('whatsapp_inbox_status', ['open', 'resolved', 'spam']);
 
 export const whatsappMessages = pgTable("whatsapp_messages", {
   id: serial("id").primaryKey(),
@@ -1381,12 +1382,15 @@ export const whatsappConversations = pgTable("whatsapp_conversations", {
   lastMessagePreview: text("last_message_preview"),
   unreadCount: integer("unread_count").default(0).notNull(),
   lastInboundAt: timestamp("last_inbound_at"),
+  // Inbox-status voor Open/Opgelost/Spam-filter in de UI.
+  inboxStatus: whatsappInboxStatusEnum("inbox_status").notNull().default('open'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   phoneIdx: uniqueIndex("wa_conv_phone_unique").on(table.phoneNumber),
   lastMsgIdx: index("wa_conv_last_msg_idx").on(table.lastMessageAt),
   categoryIdx: index("wa_conv_category_idx").on(table.matchCategory),
+  inboxStatusIdx: index("wa_conv_inbox_status_idx").on(table.inboxStatus),
 }));
 
 // Telefoonnummer-normalisatie issues — losse tabel zodat we ongeldige
