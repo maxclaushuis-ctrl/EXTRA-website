@@ -196,6 +196,9 @@ export default function DashboardMockup() {
   const [activeTab, setActiveTab] = useState('kandidaten');
   const [medewerkerExpanded, setMedewerkerExpanded] = useState(true);
   const [bedrijvenExpanded, setBedrijvenExpanded] = useState(true);
+  const [communicatieExpanded, setCommunicatieExpanded] = useState(() => {
+    try { return localStorage.getItem('nav_communicatie_ingeklapt') !== '1'; } catch { return true; }
+  });
   const [campagnesExpanded, setCampagnesExpanded] = useState(() => {
     try { return localStorage.getItem('nav_campagnes_ingeklapt') !== '1'; } catch { return true; }
   });
@@ -874,22 +877,50 @@ export default function DashboardMockup() {
         </div>
 
         <nav className="flex-1 px-2 overflow-y-auto pt-3">
-          {/* Group: Communicatie */}
+          {/* Group: Communicatie — uitklapbaar, klikken op header toggelt alleen,
+              navigatie gebeurt via de sub-items (Gesprekken / Contacten / AI-instellingen). */}
           <button
+            onClick={() => {
+              const next = !communicatieExpanded;
+              setCommunicatieExpanded(next);
+              try { localStorage.setItem('nav_communicatie_ingeklapt', next ? '0' : '1'); } catch {}
+            }}
             className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mb-0.5"
-            onClick={() => setActiveTab('whatsapp')}
           >
             <span>Communicatie</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${communicatieExpanded ? '' : '-rotate-90'}`} />
           </button>
-          <button
-            onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-              activeTab === 'whatsapp' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span>WhatsApp</span>
-          </button>
+          {communicatieExpanded && (
+            <>
+              <button
+                onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'whatsapp' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Gesprekken</span>
+              </button>
+              <button
+                onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'whatsapp-contacten' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <span>Contacten</span>
+              </button>
+              <button
+                onClick={() => { setActiveTab('whatsapp-ai'); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
+                  activeTab === 'whatsapp-ai' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>AI-instellingen</span>
+              </button>
+            </>
+          )}
 
           {/* Group: Medewerkers */}
           <button
@@ -4537,6 +4568,36 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
           ) : activeTab === 'whatsapp' ? (
             <div className="p-6">
               <WhatsAppBeheer />
+            </div>
+
+          ) : activeTab === 'whatsapp-contacten' ? (
+            <div className="p-6">
+              <div className="mb-4">
+                <h1 className="text-xl font-bold">Contacten</h1>
+                <p className="text-xs text-gray-500 hidden sm:block">WhatsApp-contactenoverzicht — los van campagnes en kandidaten</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
+                <Users className="h-10 w-10 mx-auto text-gray-300 mb-3" />
+                <div className="text-sm font-medium text-gray-700 mb-1">Komt binnenkort</div>
+                <p className="text-xs text-gray-500 max-w-md mx-auto">
+                  Een centraal overzicht van alle WhatsApp-contacten met zoek-, filter- en label-functionaliteit. Werk in uitvoering.
+                </p>
+              </div>
+            </div>
+
+          ) : activeTab === 'whatsapp-ai' ? (
+            <div className="p-6">
+              <div className="mb-4">
+                <h1 className="text-xl font-bold">AI-instellingen</h1>
+                <p className="text-xs text-gray-500 hidden sm:block">Tone of voice, voorbeeldberichten, kennisbank en bijlagen voor de AI-reply-assistent</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
+                <Sparkles className="h-10 w-10 mx-auto text-purple-300 mb-3" />
+                <div className="text-sm font-medium text-gray-700 mb-1">Wordt verplaatst</div>
+                <p className="text-xs text-gray-500 max-w-md mx-auto">
+                  De AI-instellingen verhuizen vanuit de Gesprekken-pagina naar deze tab. Tot het zo ver is, vind je ze achter de tandwiel-knop bij Gesprekken.
+                </p>
+              </div>
             </div>
 
           ) : activeTab === 'crm-leads' ? (
