@@ -1,0 +1,169 @@
+Stage 3: AI-instellingenpaneel verhuizen naar dedicated 
+whatsapp-ai tab. 
+
+==========================================================
+HUIDIGE SITUATIE
+==========================================================
+
+Het AI-instellingenpaneel zit nu achter het tandwiel/AI-icoon 
+rechtsboven op de Gesprekken-pagina. Het bevat:
+
+- Tone of voice (textarea, gevuld door gebruiker)
+- Voorbeeldberichten / eigen schrijfstijl (textarea)
+- Algemene richtlijnen (textarea)
+- Afmeldprotocol (textarea, uitgebreid)
+- Kennisbank/Protocollen (dynamische lijst van protocol-items 
+  met titel + inhoud + checkbox actief/inactief, plus 
+  "Nieuw protocol toevoegen" formulier)
+- Auto-antwoord modus (toggle: UIT = alleen suggesties, AAN = 
+  autonoom)
+- Extra context (textarea)
+- "Instellingen opslaan" knop onderaan
+
+In de sidebar is al een placeholder gemaakt voor "AI-instellingen" 
+onder Communicatie → WhatsApp. Die toont nu een placeholder-tekst 
+zoals "Achter het tandwiel op Gesprekken-pagina, tot we het 
+overhevelen".
+
+==========================================================
+DOEL
+==========================================================
+
+Het volledige AI-paneel verhuist naar de whatsapp-ai tab. Geen 
+functionele wijzigingen, geen data-verlies, geen inhoudelijke 
+wijzigingen aan de velden.
+
+==========================================================
+WAT TE DOEN
+==========================================================
+
+1. ONDERZOEK
+   - Vind in de codebase waar het AI-paneel nu wordt gerenderd 
+     (waarschijnlijk in WhatsAppBeheer.tsx als een drawer/modal/
+     panel-component achter een state als showAIPanel of 
+     vergelijkbaar)
+   - Identificeer de component(s) die het paneel uitmaken
+   - Identificeer hoe de data wordt opgeslagen (welke endpoint, 
+     welke state, lokaal/server)
+   - Geef terug: een overzicht van componenten + data-flow + 
+     plan voor migratie. WACHT op mijn akkoord voordat je 
+     daadwerkelijk verhuist.
+
+2. MIGRATIE
+   - Maak een nieuwe pagina-component voor de whatsapp-ai tab 
+     (bijv. WhatsAppAIInstellingen.tsx)
+   - Verplaats de inhoud van het AI-paneel naar deze pagina:
+     * Behoud alle bestaande velden, validatie, opslag-logica
+     * Behoud alle bestaande styling van de inputs/textareas
+     * Behoud de "Kennisbank/Protocollen" sectie inclusief 
+       toevoeg-formulier
+     * Behoud de Auto-antwoord toggle
+   - Pas de styling aan zodat het past bij andere standalone 
+     paginas (Kandidaten, Sollicitanten, Campagnes):
+     * Page-header bovenaan: 
+       <h1>AI-instellingen</h1>
+       <p>Configureer hoe de WhatsApp-bot reageert</p>
+     * Rechtsboven: "Opslaan" knop in paars (purple-600), 
+       altijd zichtbaar (sticky bovenaan kan ook)
+     * Pagina-padding zoals andere paginas
+   - Verwijder het AI-paneel/drawer van de Gesprekken-pagina
+   - Verwijder de placeholder-tekst uit de whatsapp-ai tab
+
+3. NAVIGATIE
+   - "AI-instellingen" sub-item in de sidebar (onder Communicatie 
+     → WhatsApp) leidt nu naar deze nieuwe pagina
+   - De tandwiel-knop op Gesprekken-pagina blijft bestaan maar 
+     toont alleen nog WhatsApp-instellingen die niets met AI te 
+     maken hebben (webhook, bulk historie, KPI). De AI-knop 
+     (sparkle-icoon naast het tandwiel) mag weg, of vervangen 
+     worden door een snelkoppeling-knop "Naar AI-instellingen →" 
+     die de nieuwe pagina opent.
+
+4. STRUCTUUR VAN DE NIEUWE PAGINA
+   Aanbevolen lay-out (kies wat het beste werkt visueel):
+   
+   Optie A - één doorlopende kolom:
+   - Tone of voice
+   - Voorbeeldberichten
+   - Algemene richtlijnen
+   - Afmeldprotocol
+   - Kennisbank/Protocollen (met sub-formulier)
+   - Auto-antwoord modus
+   - Extra context
+   
+   Optie B - met collapsible secties:
+   - 🎯 Stijl & toon (bevat: tone of voice, voorbeeldberichten, 
+     algemene richtlijnen)
+   - 📋 Protocollen (bevat: afmeldprotocol, kennisbank/
+     protocollen)
+   - ⚙️ Modus (bevat: auto-antwoord toggle, extra context)
+   
+   Mijn voorkeur is B - voorkomt dat de pagina één hele lange 
+   scroll wordt. Maak het wel zo dat secties uitgeklapt staan 
+   bij eerste bezoek, en gebruiker kan inklappen wat hij niet 
+   nodig heeft.
+
+5. OPSLAAN-GEDRAG
+   - "Opslaan" knop slaat alle velden tegelijk op (zoals nu)
+   - Toon een korte bevestiging na opslaan ("Instellingen 
+     opgeslagen")
+   - Behoud autosave als dat al bestaat - anders niet toevoegen
+   - Niet-opgeslagen wijzigingen indicator: kleine "(niet 
+     opgeslagen)" tekst naast de Opslaan-knop als er 
+     wijzigingen zijn
+
+==========================================================
+WAT NIET DOEN
+==========================================================
+
+- Geen wijziging aan de inhoud van velden (jouw EXTRA tone-of-
+  voice, voorbeeldberichten, protocollen blijven exact zoals ze 
+  zijn)
+- Geen wijziging aan hoe de bot reageert
+- Geen nieuwe AI-features toevoegen
+- Geen wijziging aan endpoints of data-schema (tenzij strikt 
+  nodig voor de migratie)
+- Geen wijziging aan andere paginas
+- Geen verwijdering van bestaande functionaliteit
+
+==========================================================
+RISICO'S OM REKENING MEE TE HOUDEN
+==========================================================
+
+- Als het AI-paneel componenten deelt met andere delen van de 
+  app: breek niets. Refactor naar een gedeelde component als 
+  dat nodig is, of dupliceer als dat veiliger is.
+- Test dat alle bestaande data zichtbaar is na de migratie 
+  (Tone of voice, voorbeeldberichten, protocollen, etc. moeten 
+  allemaal nog ingevuld zijn zoals ze waren)
+- Test dat opslaan werkt en de data persistent is
+
+==========================================================
+WERKWIJZE
+==========================================================
+
+1. Onderzoek de huidige implementatie en geef een rapport
+2. WACHT op mijn akkoord op het migratie-plan
+3. Bouw de nieuwe pagina-component
+4. Migreer de inhoud
+5. Pas navigatie aan
+6. Verwijder de oude paneel-locatie
+7. Test handmatig:
+   - Open whatsapp-ai tab → alle data zichtbaar?
+   - Wijzig iets → opslaan → refresh → nog steeds aanwezig?
+   - Open Gesprekken-pagina → AI-paneel weg, tandwiel werkt nog?
+   - Bot reageert nog op berichten zoals voorheen?
+8. Stuur screenshots van:
+   - De nieuwe AI-instellingen pagina (uitgeklapt en eventueel 
+     ingeklapte secties)
+   - De Gesprekken-pagina zonder AI-paneel
+
+VOORDAT JE BEGINT:
+Stuur een onderzoeksrapport met:
+- Welke component(s) bevatten nu het AI-paneel
+- Welke data-velden worden getoond en hoe worden ze opgeslagen
+- Plan voor de migratie (welke files maken/aanpassen, welke 
+  verwijderen)
+- Eventuele risico's of vragen
+
+Wacht op mijn akkoord op dat plan voordat je gaat verhuizen.
