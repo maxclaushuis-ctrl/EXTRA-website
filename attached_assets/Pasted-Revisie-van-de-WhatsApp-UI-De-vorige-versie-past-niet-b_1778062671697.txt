@@ -1,0 +1,164 @@
+Revisie van de WhatsApp-UI. De vorige versie past niet bij de stijl 
+van de rest van het EXTRA-dashboard en voelt te gekropt. We gaan 
+het anders aanpakken.
+
+==========================================================
+PROBLEEM MET DE HUIDIGE VERSIE
+==========================================================
+
+1. Kleuren wijken af - dashboard gebruikt paars als accent, niet 
+   navy
+2. Drie kolommen (sidebar + lijst + chat) maakt de chat te smal
+3. Labels in sidebar nemen ruimte zonder waarde te leveren
+4. Stijl voelt anders dan andere paginas (Kandidaten, Sollicitanten, 
+   Campagnes)
+
+==========================================================
+NIEUWE STRUCTUUR: SUB-MENU IN HOOFDNAVIGATIE
+==========================================================
+
+Maak van "WhatsApp" een uitklapbare sectie in het linker hoofdmenu 
+(zoals "Medewerkers" en "Bedrijven" al uitklapbaar zijn).
+
+Onder Communicatie → WhatsApp:
+  • Gesprekken    (de huidige inbox-functionaliteit)
+  • Contacten     (nieuwe pagina, voor nu placeholder)
+  • AI-instellingen (link naar de bestaande AI-settings pagina)
+
+Geen "Groepen" en "Templates" nu - die volgen later. Maak ze niet 
+zichtbaar in het menu tot ze functioneel zijn.
+
+Klikken op "Gesprekken" toont de inbox + chat.
+Klikken op "Contacten" toont een placeholder-pagina met "Komt 
+binnenkort".
+
+==========================================================
+NIEUWE LAYOUT: TWEE KOLOMMEN
+==========================================================
+
+Verwijder de aparte Inbox/Labels-sidebar uit kolom 1. Die 
+functionaliteit verhuist naar BOVEN de gesprekkenlijst als 
+filter-pills.
+
+Layout wordt nu:
+
+[KOLOM 1: GESPREKKENLIJST — ~380px]
+[KOLOM 2: CHAT — flexibel, neemt resterende ruimte]
+
+==========================================================
+KOLOM 1: GESPREKKENLIJST
+==========================================================
+
+BOVENAAN:
+1. Categorie-tabs (Medewerkers / Klanten / Kandidaten) - zoals nu
+2. Filter-pills onder de tabs (één regel, klein):
+   [Open] [Opgelost] [Spam] [Alle]
+   Active pill: paarse achtergrond (matchend met dashboard), 
+   witte tekst
+   Inactive: lichtgrijze achtergrond, grijze tekst
+   Cijfer in pill als > 0 ongelezen
+3. Zoekbalk: "Zoek op naam of nummer..."
+4. Sort-knop rechts: "Nieuwste eerst ▼"
+
+PER GESPREK (zoals eerder gespecificeerd, blijft hetzelfde):
+- Status-stip links (gekleurd)
+- Naam (semibold)
+- Timestamp rechtsboven
+- Ongelezen-badge cijfer
+- Preview tekst
+- Tags onder preview
+
+==========================================================
+KOLOM 2: CHAT-PANE
+==========================================================
+
+Deze wordt nu veel ruimer omdat we de extra sidebar weg hebben. 
+Berichten krijgen meer ademruimte en de composer is groter.
+
+Inhoud blijft hetzelfde als vorige spec:
+- Header met naam, telefoon, status-dropdown, meer-knop
+- Berichten thread (links inkomend, rechts uitgaand)
+- Composer onderaan met tekstveld + verzendknop
+- 24u-venster waarschuwing waar nodig
+
+Verschil met vorige versie: groter, meer padding, ruimer ogend.
+
+==========================================================
+HUISSTIJL — MATCH HET BESTAANDE DASHBOARD
+==========================================================
+
+KIJK GOED naar de bestaande paginas (Kandidaten, Sollicitanten, 
+Campagnes) en kopieer:
+
+KLEUREN:
+- Primair accent: PAARS (zoals in "Nieuwe campagne"-knop, in de 
+  Sollicitanten-tab "Alle" pill, in de "E-mail campagnes" 
+  highlight in linker menu) - vermoedelijk #7C3AED of #8B5CF6
+- Active state lichtpaars: #F3E8FF of vergelijkbaar
+- Achtergrond: #F8FAFC (lichtgrijs)
+- Cards: wit met subtiele shadow
+
+KAARTEN/CONTAINERS:
+- Witte achtergrond
+- Border-radius: 12px (zoals andere cards)
+- Subtiele shadow: shadow-sm
+- Padding: 24px
+
+TYPOGRAFIE:
+- Page titel: groot, semibold (zoals "Kandidaten", "Sollicitanten")
+- Subtitel onder titel in lichtgrijs (zoals "Alle aanmeldingen 
+  via /aanmelden — realtime gesynchroniseerd")
+- Match exact dezelfde fontgrootte en gewicht als andere paginas
+
+KNOPPEN:
+- Primair: paarse achtergrond, witte tekst, border-radius 8-12px
+- Secondair: witte achtergrond, paarse border en tekst
+- Match exact de stijl van "Vernieuwen" en "Intakeformulier" 
+  knoppen op Sollicitanten-pagina
+
+ICONOGRAFIE:
+- Lucide icons in lichtgrijs
+- 18-20px standaard
+
+==========================================================
+PAGE LAYOUT
+==========================================================
+
+Bovenaan de pagina (boven de twee kolommen):
+- Page titel: "WhatsApp" (groot, semibold)
+- Subtitel: "Beheer je WhatsApp-gesprekken" (klein, lichtgrijs)
+- Rechtsboven: tandwiel-icoon voor instellingen (webhook, AI, 
+  enz.) - zoals nu
+- GEEN aparte tabs voor "Gesprekken/Groepen" - dat zit nu in 
+  het hoofdmenu
+
+Daaronder de twee kolommen.
+
+==========================================================
+WAT NIET DOEN
+==========================================================
+
+- Geen Trengo-stijl sidebar binnen de WhatsApp-tab
+- Geen "Inbox/Labels" navigatie-kolom (verhuisd naar pills)
+- Geen drie kolommen
+- Geen navy accent-kleur (gebruik paars zoals de rest)
+- Geen extra features die niet gevraagd zijn
+
+==========================================================
+WERKWIJZE
+==========================================================
+
+1. Onderzoek eerst de stijling van bestaande paginas (Kandidaten, 
+   Sollicitanten, Campagnes) - identificeer de exacte kleuren, 
+   border-radius, shadows, padding-waarden
+2. Maak het sub-menu "Gesprekken / Contacten / AI-instellingen" 
+   onder WhatsApp in het hoofdmenu
+3. Pas de WhatsApp-pagina (Gesprekken) aan naar twee kolommen
+4. Match de styling exact aan de andere paginas
+5. Stuur een screenshot voor mijn akkoord voordat je verdere 
+   polish doet
+
+VOORDAT JE BEGINT: 
+Stuur een korte beschrijving van welke kleuren/stijlen je in de 
+andere paginas hebt gevonden en hoe je die gaat toepassen. Wacht 
+op mijn akkoord.
