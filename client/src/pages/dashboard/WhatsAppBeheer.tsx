@@ -1037,9 +1037,14 @@ export default function WhatsAppBeheer() {
                   const unread = c.unreadCount > 0;
                   const name = convDisplayName(c);
                   const status = (c.inboxStatus ?? 'open') as 'open' | 'resolved' | 'spam';
-                  // Status-stip: blauw = open, groen = opgelost, rood = spam.
-                  // Wanneer ongelezen: rood pulsje overheen voor visuele urgentie.
+                  // Status-stip alleen tonen wanneer er actie nodig is (ongelezen)
+                  // of wanneer de status afwijkt van 'open' (voor herkenbaarheid in het
+                  // Alle-tabblad). Een 'open'-gesprek zonder ongelezen berichten krijgt
+                  // dus géén stip meer — die wekte ten onrechte de indruk van "nog niet
+                  // beantwoord".
                   const statusColor = status === 'resolved' ? '#10B981' : status === 'spam' ? '#DC2626' : NAVY;
+                  const showDot = unread || status !== 'open';
+                  const dotColor = unread ? NAVY : statusColor;
                   return (
                     <div
                       key={c.id}
@@ -1054,12 +1059,14 @@ export default function WhatsAppBeheer() {
                       onMouseEnter={e => { if (!selected) e.currentTarget.style.background = '#F8FAFC'; }}
                       onMouseLeave={e => { if (!selected) e.currentTarget.style.background = '#fff'; }}
                     >
-                      {/* Status-stip links */}
-                      <div style={{ flexShrink: 0, paddingTop: 5 }}>
-                        <span style={{
-                          display: 'block', width: 8, height: 8, borderRadius: '50%',
-                          background: unread ? '#DC2626' : statusColor,
-                        }} />
+                      {/* Status-stip links — alleen bij ongelezen of niet-open status */}
+                      <div style={{ flexShrink: 0, paddingTop: 5, width: 8 }}>
+                        {showDot && (
+                          <span style={{
+                            display: 'block', width: 8, height: 8, borderRadius: '50%',
+                            background: dotColor,
+                          }} />
+                        )}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
