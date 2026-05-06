@@ -20,12 +20,17 @@ import {
   updateContactOptIn,
   haalGroepen,
   maakGroep,
+  updateGroep,
+  verwijderGroep,
+  haalGroepLeden,
   voegLedenToe,
+  verwijderLid,
   type WaContact,
   type WaContactType,
   type WaOptInStatus,
   type WaContactenStats,
   type Group,
+  type GroupMember,
 } from '../../api/whatsappClient';
 
 const NAVY = '#7E22CE';
@@ -142,6 +147,11 @@ export default function WhatsAppContacten() {
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; tekst: string } | null>(null);
   const kebabContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Groepen-modals
+  const [toonNieuweGroepModal, setToonNieuweGroepModal] = useState(false);
+  const [openGroepId, setOpenGroepId] = useState<number | null>(null);
+  const [addMembersToGroupId, setAddMembersToGroupId] = useState<number | null>(null);
+
   // Klik buiten het menu sluit het. Eén globale listener i.p.v. per rij.
   useEffect(() => {
     if (!openKebab) return;
@@ -162,8 +172,7 @@ export default function WhatsAppContacten() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  async function laadGroepenIndienNodig() {
-    if (groepenGeladen) return;
+  async function herlaadGroepen() {
     try {
       const g = await haalGroepen();
       setGroepen(g);
@@ -172,6 +181,11 @@ export default function WhatsAppContacten() {
       setToast({ kind: 'err', tekst: 'Kon groepen niet laden: ' + (e?.message || 'onbekende fout') });
     }
   }
+  async function laadGroepenIndienNodig() {
+    if (!groepenGeladen) await herlaadGroepen();
+  }
+  // Groepen direct laden bij mount zodat de Groepen-sectie meteen gevuld is.
+  useEffect(() => { herlaadGroepen(); /* eslint-disable-next-line */ }, []);
 
   function openWhatsAppGesprek(rij: WaContact) {
     if (!rij.phone) {
@@ -356,6 +370,37 @@ export default function WhatsAppContacten() {
                     actief={stats.medewerker.actief} optOut={stats.medewerker.opt_out} faalt={stats.medewerker.verzending_faalt} />
         </div>
       )}
+
+      {/* Groepen-sectie — horizontaal scrollbare rij van groep-kaartjes. */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: '#111827' }}>Groepen</h2>
+            <span style={{ fontSize: 12, color: '#6B7280' }}>
+              {groepen.length} {groepen.length === 1 ? 'groep' : 'groepen'}
+            </span>
+          </div>
+        </div>
+        <div style={{
+          display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4,
+          scrollbarWidth: 'thin',
+        }}>
+          {groepen.map(g => (
+            <GroepKaartje key={g.id} groep={g} onOpen={() => setOpenGroepId(g.id)} />
+          ))}
+          <button
+            onClick={() => setToonNieuweGroepModal(true)}
+            style={{
+              flex: '0 0 auto', minWidth: 200, height: 76, borderRadius: 10,
+              border: `1.5px dashed ${NAVY}`, background: '#FAF5FF',
+              cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600,
+              color: NAVY, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}
+          >
+            <Plus size={16} /> Nieuwe groep
+          </button>
+        </div>
+      </div>
 
       {/* Filterbalk */}
       <div style={{
@@ -587,6 +632,51 @@ export default function WhatsAppContacten() {
         )}
       </div>
 
+      {/* Modals */}
+      {toonNieuweGroepModal && (
+        <NieuweGroepModal
+          onClose={() => setToonNieuweGroepModal(false)}
+          onCreated={async (g) => {
+            setToonNieuweGroepModal(false);
+            await herlaadGroepen();
+            setOpenGroepId(g.id);
+            setToast({ kind: 'ok', tekst: `Groep "${g.name}" aangemaakt.` });
+          }}
+          onError={(msg) => setToast({ kind: 'err', tekst: msg })}
+        />
+      )}
+
+      {openGroepId !== null && (
+        <GroepDetailModal
+          groep={groepen.find(g => g.id === openGroepId) || null}
+          alleContacten={items}
+          onClose={() => setOpenGroepId(null)}
+          onChanged={async () => { await herlaadGroepen(); }}
+          onDeleted={async () => {
+            const naam = groepen.find(g => g.id === openGroepId)?.name || 'Groep';
+            setOpenGroepId(null);
+            await herlaadGroepen();
+            setToast({ kind: 'ok', tekst: `Groep "${naam}" verwijderd.` });
+          }}
+          onAddMembersClick={() => setAddMembersToGroupId(openGroepId)}
+          onError={(msg) => setToast({ kind: 'err', tekst: msg })}
+        />
+      )}
+
+      {addMembersToGroupId !== null && (
+        <LidToevoegenModal
+          groep={groepen.find(g => g.id === addMembersToGroupId) || null}
+          alleContacten={items}
+          onClose={() => setAddMembersToGroupId(null)}
+          onAdded={async (n) => {
+            setAddMembersToGroupId(null);
+            await herlaadGroepen();
+            setToast({ kind: 'ok', tekst: `${n} ${n === 1 ? 'lid' : 'leden'} toegevoegd.` });
+          }}
+          onError={(msg) => setToast({ kind: 'err', tekst: msg })}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -606,6 +696,408 @@ export default function WhatsAppContacten() {
     </div>
   );
 }
+
+// ─── Groepen UI ──────────────────────────────────────────────────────────────
+
+function GroepKaartje({ groep, onOpen }: { groep: Group; onOpen: () => void }) {
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        flex: '0 0 auto', minWidth: 200, height: 76, padding: '10px 12px',
+        borderRadius: 10, border: '1px solid #E5E7EB', background: '#fff',
+        cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
+        position: 'relative', display: 'flex', flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = NAVY; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#E5E7EB'; }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{
+          fontSize: 13, fontWeight: 600, color: '#111827',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140,
+        }}>{groep.name}</span>
+        <span
+          title="Komt in volgende fase"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 24, height: 24, borderRadius: 6, color: '#D1D5DB',
+            cursor: 'not-allowed',
+          }}
+        >
+          <MessageCircle size={14} />
+        </span>
+      </div>
+      <span style={{ fontSize: 11, color: '#6B7280' }}>
+        {groep.memberCount} {groep.memberCount === 1 ? 'lid' : 'leden'}
+      </span>
+    </button>
+  );
+}
+
+function NieuweGroepModal({ onClose, onCreated, onError }: {
+  onClose: () => void;
+  onCreated: (g: Group) => void;
+  onError: (msg: string) => void;
+}) {
+  const [naam, setNaam] = useState('');
+  const [omschrijving, setOmschrijving] = useState('');
+  const [bezig, setBezig] = useState(false);
+
+  async function aanmaken() {
+    if (!naam.trim()) return;
+    setBezig(true);
+    try {
+      const g = await maakGroep(naam.trim(), omschrijving.trim() || undefined);
+      onCreated(g);
+    } catch (e: any) {
+      onError(e?.message || 'Aanmaken mislukt');
+    } finally {
+      setBezig(false);
+    }
+  }
+
+  return (
+    <ModalShell onClose={onClose} titel="Nieuwe groep">
+      <Veld label="Naam *">
+        <input
+          autoFocus value={naam} onChange={e => setNaam(e.target.value)}
+          placeholder="bijv. Bediening Amsterdam"
+          style={inputStyle}
+        />
+      </Veld>
+      <Veld label="Beschrijving (optioneel)">
+        <textarea
+          value={omschrijving} onChange={e => setOmschrijving(e.target.value)}
+          rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: FONT }}
+        />
+      </Veld>
+      <div style={modalActions}>
+        <button onClick={onClose} style={btnGhost}>Annuleren</button>
+        <button onClick={aanmaken} disabled={!naam.trim() || bezig} style={btnPrimary(!naam.trim() || bezig)}>
+          {bezig ? 'Aanmaken…' : 'Aanmaken'}
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+function GroepDetailModal({ groep, alleContacten, onClose, onChanged, onDeleted, onAddMembersClick, onError }: {
+  groep: Group | null;
+  alleContacten: WaContact[];
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+  onDeleted: () => Promise<void>;
+  onAddMembersClick: () => void;
+  onError: (msg: string) => void;
+}) {
+  const [leden, setLeden] = useState<GroupMember[] | null>(null);
+  const [naam, setNaam] = useState('');
+  const [omschrijving, setOmschrijving] = useState('');
+  const [opslaanBezig, setOpslaanBezig] = useState(false);
+  const [verwijderBezig, setVerwijderBezig] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!groep) return;
+    setNaam(groep.name);
+    setOmschrijving(groep.description || '');
+    haalGroepLeden(groep.id).then(setLeden).catch(e => onError(e?.message || 'Kon leden niet laden'));
+  }, [groep?.id]);
+
+  if (!groep) return null;
+
+  const isVeranderd = naam.trim() !== groep.name || (omschrijving || '') !== (groep.description || '');
+
+  async function herlaadLeden() {
+    if (!groep) return;
+    try { setLeden(await haalGroepLeden(groep.id)); } catch {}
+  }
+
+  async function opslaan() {
+    if (!groep || !naam.trim()) return;
+    setOpslaanBezig(true);
+    try {
+      await updateGroep(groep.id, naam.trim(), omschrijving.trim() || undefined);
+      await onChanged();
+    } catch (e: any) {
+      onError(e?.message || 'Opslaan mislukt');
+    } finally {
+      setOpslaanBezig(false);
+    }
+  }
+
+  async function verwijderen() {
+    if (!groep) return;
+    if (!window.confirm(`Groep "${groep.name}" definitief verwijderen? Leden worden uit de groep gehaald (contacten zelf blijven bestaan).`)) return;
+    try {
+      await verwijderGroep(groep.id);
+      await onDeleted();
+    } catch (e: any) {
+      onError(e?.message || 'Verwijderen mislukt');
+    }
+  }
+
+  async function lidVerwijderen(phone: string) {
+    if (!groep) return;
+    setVerwijderBezig(phone);
+    try {
+      await verwijderLid(groep.id, phone);
+      await herlaadLeden();
+      await onChanged();
+    } catch (e: any) {
+      onError(e?.message || 'Lid verwijderen mislukt');
+    } finally {
+      setVerwijderBezig(null);
+    }
+  }
+
+  return (
+    <ModalShell onClose={onClose} titel={`Groep: ${groep.name}`} breed>
+      <Veld label="Groepsnaam">
+        <input value={naam} onChange={e => setNaam(e.target.value)} style={inputStyle} />
+      </Veld>
+      <Veld label="Beschrijving">
+        <textarea value={omschrijving} onChange={e => setOmschrijving(e.target.value)} rows={2}
+                  style={{ ...inputStyle, resize: 'vertical', fontFamily: FONT }} />
+      </Veld>
+      {isVeranderd && (
+        <div style={{ marginBottom: 12 }}>
+          <button onClick={opslaan} disabled={opslaanBezig || !naam.trim()} style={btnPrimary(opslaanBezig || !naam.trim())}>
+            {opslaanBezig ? 'Opslaan…' : 'Wijzigingen opslaan'}
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, marginBottom: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          Leden ({leden?.length ?? '…'})
+        </div>
+        <button onClick={onAddMembersClick} style={btnPrimary(false)}>
+          <Plus size={13} style={{ marginRight: 4, verticalAlign: -2 }} /> Lid toevoegen
+        </button>
+      </div>
+
+      <div style={{
+        border: '1px solid #E5E7EB', borderRadius: 8, maxHeight: 320, overflowY: 'auto', background: '#fff',
+      }}>
+        {leden === null ? (
+          <div style={{ padding: 16, textAlign: 'center', color: '#6B7280', fontSize: 13 }}>Laden…</div>
+        ) : leden.length === 0 ? (
+          <div style={{ padding: 16, textAlign: 'center', color: '#6B7280', fontSize: 13 }}>
+            Nog geen leden in deze groep.
+          </div>
+        ) : (
+          leden.map(l => {
+            const koppel = alleContacten.find(c => (c.phone || '').replace(/\D/g, '') === (l.phoneNumber || '').replace(/\D/g, ''));
+            return (
+              <div key={l.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 12px', borderTop: '1px solid #F3F4F6', fontSize: 13,
+              }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {l.displayName || `${l.firstName || ''} ${l.lastName || ''}`.trim() || l.phoneNumber}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6B7280', fontFamily: 'ui-monospace, monospace' }}>
+                    {l.phoneNumber}{koppel?.contactType ? ` · ${TYPE_LABEL[koppel.contactType]}` : ''}
+                  </div>
+                </div>
+                <button
+                  onClick={() => lidVerwijderen(l.phoneNumber)}
+                  disabled={verwijderBezig === l.phoneNumber}
+                  title="Verwijder uit groep"
+                  style={{
+                    border: 'none', background: 'transparent', cursor: 'pointer',
+                    color: '#9CA3AF', padding: 6, borderRadius: 6,
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#FEE2E2'; (e.currentTarget as HTMLButtonElement).style.color = '#B91C1C'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#9CA3AF'; }}
+                >
+                  <XCircle size={16} />
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between' }}>
+        <button onClick={verwijderen} style={{
+          padding: '8px 12px', borderRadius: 8, border: '1px solid #FCA5A5', background: '#FEF2F2',
+          color: '#B91C1C', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+        }}>
+          Groep verwijderen
+        </button>
+        <button onClick={onClose} style={btnGhost}>Sluiten</button>
+      </div>
+    </ModalShell>
+  );
+}
+
+function LidToevoegenModal({ groep, alleContacten, onClose, onAdded, onError }: {
+  groep: Group | null;
+  alleContacten: WaContact[];
+  onClose: () => void;
+  onAdded: (n: number) => void;
+  onError: (msg: string) => void;
+}) {
+  const [zoek, setZoek] = useState('');
+  const [bestaandeLeden, setBestaandeLeden] = useState<Set<string>>(new Set());
+  const [geselecteerd, setGeselecteerd] = useState<Set<number>>(new Set()); // contactId
+  const [bezig, setBezig] = useState(false);
+
+  useEffect(() => {
+    if (!groep) return;
+    haalGroepLeden(groep.id).then(leden => {
+      setBestaandeLeden(new Set(leden.map(l => (l.phoneNumber || '').replace(/\D/g, ''))));
+    }).catch(() => {});
+  }, [groep?.id]);
+
+  if (!groep) return null;
+
+  // Alleen contacten met telefoon EN niet al in de groep EN actief opt-in.
+  const z = zoek.trim().toLowerCase();
+  const beschikbaar = alleContacten.filter(c => {
+    if (!c.phone) return false;
+    if (c.whatsappOptInStatus !== 'actief') return false;
+    if (bestaandeLeden.has(c.phone.replace(/\D/g, ''))) return false;
+    if (z) {
+      const naam = `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase();
+      if (!naam.includes(z) && !(c.phone || '').includes(z) && !(c.email || '').toLowerCase().includes(z)) return false;
+    }
+    return true;
+  });
+
+  function toggle(c: WaContact) {
+    setGeselecteerd(prev => {
+      const n = new Set(prev);
+      const key = c.contactId * 10 + (c.contactType === 'sollicitant' ? 1 : c.contactType === 'kandidaat' ? 2 : 3);
+      if (n.has(key)) n.delete(key); else n.add(key);
+      return n;
+    });
+  }
+  function isGeselecteerd(c: WaContact) {
+    const key = c.contactId * 10 + (c.contactType === 'sollicitant' ? 1 : c.contactType === 'kandidaat' ? 2 : 3);
+    return geselecteerd.has(key);
+  }
+
+  async function toevoegen() {
+    if (!groep) return;
+    const teVoegen = beschikbaar.filter(isGeselecteerd);
+    if (teVoegen.length === 0) return;
+    setBezig(true);
+    try {
+      const r = await voegLedenToe(groep.id, teVoegen.map(c => ({
+        phoneNumber: c.phone!,
+        displayName: `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.phone!,
+        firstName: c.firstName || undefined,
+        lastName: c.lastName || undefined,
+      })));
+      onAdded(r.added);
+    } catch (e: any) {
+      onError(e?.message || 'Toevoegen mislukt');
+    } finally {
+      setBezig(false);
+    }
+  }
+
+  return (
+    <ModalShell onClose={onClose} titel={`Leden toevoegen aan: ${groep.name}`} breed>
+      <div style={{ position: 'relative', marginBottom: 10 }}>
+        <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+        <input value={zoek} onChange={e => setZoek(e.target.value)} placeholder="Zoek op naam, telefoon of e-mail…"
+               style={{ ...inputStyle, paddingLeft: 30 }} />
+      </div>
+      <div style={{
+        border: '1px solid #E5E7EB', borderRadius: 8, maxHeight: 360, overflowY: 'auto',
+      }}>
+        {beschikbaar.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#6B7280', fontSize: 13 }}>
+            Geen contacten gevonden. Alleen actieve contacten met telefoonnummer kunnen toegevoegd worden.
+          </div>
+        ) : (
+          beschikbaar.slice(0, 200).map(c => (
+            <label key={`${c.contactType}:${c.contactId}`} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+              borderTop: '1px solid #F3F4F6', cursor: 'pointer', fontSize: 13,
+            }}>
+              <input type="checkbox" checked={isGeselecteerd(c)} onChange={() => toggle(c)} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.firstName || ''} {c.lastName || ''}
+                </div>
+                <div style={{ fontSize: 11, color: '#6B7280' }}>
+                  {TYPE_LABEL[c.contactType]} · <span style={{ fontFamily: 'ui-monospace, monospace' }}>{c.phone}</span>
+                </div>
+              </div>
+            </label>
+          ))
+        )}
+      </div>
+      <div style={{ ...modalActions, justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 12, color: '#6B7280' }}>{geselecteerd.size} geselecteerd</span>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onClose} style={btnGhost}>Annuleren</button>
+          <button onClick={toevoegen} disabled={geselecteerd.size === 0 || bezig} style={btnPrimary(geselecteerd.size === 0 || bezig)}>
+            {bezig ? 'Toevoegen…' : `Toevoegen (${geselecteerd.size})`}
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function ModalShell({ titel, breed, children, onClose }: {
+  titel: string; breed?: boolean; children: React.ReactNode; onClose: () => void;
+}) {
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.5)', zIndex: 80,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: FONT,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#fff', borderRadius: 12, width: '100%', maxWidth: breed ? 640 : 460,
+        maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#111827' }}>{titel}</h2>
+          <button onClick={onClose} style={{
+            border: 'none', background: 'transparent', cursor: 'pointer', color: '#9CA3AF', padding: 4,
+          }}><XCircle size={20} /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Veld({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #E5E7EB',
+  fontSize: 13, fontFamily: FONT, background: '#fff', boxSizing: 'border-box',
+};
+const modalActions: React.CSSProperties = {
+  display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16,
+};
+const btnGhost: React.CSSProperties = {
+  padding: '8px 14px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff',
+  fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer', fontFamily: FONT,
+};
+const btnPrimary = (disabled: boolean): React.CSSProperties => ({
+  padding: '8px 14px', borderRadius: 8, border: 'none',
+  background: disabled ? '#D1D5DB' : NAVY, color: '#fff',
+  fontSize: 13, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: FONT,
+});
 
 function KebabItem({ icon, label, trailing, onClick, disabled, danger, accent }: {
   icon?: React.ReactNode;
