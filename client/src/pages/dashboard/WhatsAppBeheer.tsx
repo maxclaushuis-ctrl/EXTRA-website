@@ -65,7 +65,9 @@ import {
   type AiSettings,
 } from '../../api/whatsappClient';
 
-const NAVY = '#1F3A5F';
+// Primaire accentkleur — afgestemd op de rest van het dashboard (Tailwind purple-700).
+// Variabele heet nog NAVY voor backwards compatibiliteit met alle inline-styles in dit bestand.
+const NAVY = '#7E22CE';
 const FONT = "'Poppins', system-ui, -apple-system, sans-serif";
 
 type Tab = 'candidate' | 'prospect' | 'unmatched';
@@ -966,36 +968,14 @@ export default function WhatsAppBeheer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', minHeight: 500, fontFamily: FONT }}>
 
-      {/* Titel + view toggle + instellingen */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: NAVY }}>WhatsApp</h2>
-          <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 8, padding: 2 }}>
-            <button
-              onClick={() => { setMainView('gesprekken'); setSelectedGroupId(null); }}
-              style={{
-                padding: '5px 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6,
-                background: mainView === 'gesprekken' ? '#fff' : 'transparent',
-                color: mainView === 'gesprekken' ? NAVY : '#6B7280',
-                cursor: 'pointer', fontFamily: FONT,
-                boxShadow: mainView === 'gesprekken' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              }}
-            >
-              Gesprekken
-            </button>
-            <button
-              onClick={() => { setMainView('groepen'); setSelectedPhone(null); }}
-              style={{
-                padding: '5px 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6,
-                background: mainView === 'groepen' ? '#fff' : 'transparent',
-                color: mainView === 'groepen' ? NAVY : '#6B7280',
-                cursor: 'pointer', fontFamily: FONT,
-                boxShadow: mainView === 'groepen' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              }}
-            >
-              Groepen
-            </button>
-          </div>
+      {/* Page header — zelfde patroon als Kandidaten/Sollicitanten:
+          h1 + subtitel links, action-knoppen rechts. De Gesprekken/Groepen-toggle is bewust
+          verwijderd: groepen-functionaliteit blijft in de code maar is niet meer bereikbaar
+          via deze view (zie groepen-tab in de Communicatie-submenu — komt later). */}
+      <div className="flex items-center justify-between mb-4" style={{ fontFamily: FONT }}>
+        <div>
+          <h1 className="text-xl font-bold">WhatsApp</h1>
+          <p className="text-xs text-gray-500 hidden sm:block">Beheer al je WhatsApp-gesprekken op één plek</p>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
@@ -1248,107 +1228,14 @@ export default function WhatsAppBeheer() {
         {/* ════════ GESPREKKEN VIEW ════════ */}
         {mainView === 'gesprekken' && (
           <>
-            {/* ─── Kolom 1: Sidebar (Inbox + Labels) ─────────────────────────── */}
+            {/* ─── Kolom 1: Gesprekkenlijst ─────────────────────────────────────
+                2-koloms layout (sidebar verwijderd op 2026-05-06): inbox-status zit nu
+                als pill-rij boven de zoekbalk, label-filters via de bestaande dropdown. */}
             <div style={{
-              width: 200, flexShrink: 0, display: 'flex', flexDirection: 'column',
-              background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10,
-              overflow: 'hidden',
-            }}>
-              <div style={{ padding: '14px 14px 8px', flex: 1, overflowY: 'auto' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', letterSpacing: 0.6, marginBottom: 6 }}>
-                  INBOX
-                </div>
-                {([
-                  { key: 'open',     label: 'Open',     count: inboxCounts.open,     showBadge: true  },
-                  { key: 'resolved', label: 'Opgelost', count: inboxCounts.resolved, showBadge: false },
-                  { key: 'spam',     label: 'Spam',     count: inboxCounts.spam,     showBadge: false },
-                  { key: 'all',      label: 'Alle',     count: inboxCounts.all,      showBadge: false },
-                ] as const).map(item => {
-                  const active = inboxFilter === item.key;
-                  return (
-                    <button
-                      key={item.key}
-                      onClick={() => setInboxFilter(item.key)}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '7px 10px', marginBottom: 2,
-                        background: active ? '#E8F0F8' : 'transparent',
-                        color: active ? NAVY : '#374151',
-                        fontWeight: active ? 600 : 500,
-                        border: 'none', borderRadius: 6, cursor: 'pointer',
-                        fontSize: 13, fontFamily: FONT, textAlign: 'left',
-                      }}
-                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#F8FAFC'; }}
-                      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <span>{item.label}</span>
-                      {item.showBadge && item.count > 0 && (
-                        <span style={{
-                          background: NAVY, color: '#fff', fontSize: 10, fontWeight: 700,
-                          padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
-                        }}>{item.count}</span>
-                      )}
-                      {!item.showBadge && item.count > 0 && (
-                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>{item.count}</span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {allLabelsInUse.length > 0 && (
-                  <>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', letterSpacing: 0.6, marginTop: 18, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>LABELS</span>
-                      {selectedLabels.size > 0 && (
-                        <button
-                          onClick={() => setSelectedLabels(new Set())}
-                          style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 10, cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: 0 }}
-                          title="Alle labelfilters wissen"
-                        >
-                          wis
-                        </button>
-                      )}
-                    </div>
-                    {allLabelsInUse.map(l => {
-                      const active = selectedLabels.has(l);
-                      return (
-                        <button
-                          key={l}
-                          onClick={() => {
-                            const next = new Set(selectedLabels);
-                            if (next.has(l)) next.delete(l); else next.add(l);
-                            setSelectedLabels(next);
-                          }}
-                          style={{
-                            width: '100%', display: 'flex', alignItems: 'center', gap: 7,
-                            padding: '6px 10px', marginBottom: 2,
-                            background: active ? '#E8F0F8' : 'transparent',
-                            color: active ? NAVY : '#374151',
-                            fontWeight: active ? 600 : 500,
-                            border: 'none', borderRadius: 6, cursor: 'pointer',
-                            fontSize: 12, fontFamily: FONT, textAlign: 'left',
-                          }}
-                          onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#F8FAFC'; }}
-                          onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-                        >
-                          <span style={{
-                            width: 8, height: 8, borderRadius: 2, flexShrink: 0,
-                            background: labelColor(l),
-                          }} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l}</span>
-                        </button>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* ─── Kolom 2: Gesprekkenlijst ─────────────────────────────────── */}
-            <div style={{
-              width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column',
+              width: 380, flexShrink: 0, display: 'flex', flexDirection: 'column',
               background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden',
             }}>
+              {/* Categorie-tabs (Medewerkers/Klanten/Kandidaten) */}
               <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#FAFBFC' }}>
                 {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
                   const active = tab === t;
@@ -1376,6 +1263,49 @@ export default function WhatsAppBeheer() {
                 })}
               </div>
 
+              {/* Inbox-status filter-pills (vervanging van de oude sidebar).
+                  Active = paars (purple-600), inactive = wit met grijze rand,
+                  identiek aan de pill-rij in Sollicitanten. */}
+              <div style={{
+                display: 'flex', gap: 6, padding: '10px 10px 8px',
+                borderBottom: '1px solid #F3F4F6', overflowX: 'auto',
+              }}>
+                {([
+                  { key: 'open',     label: 'Open',     count: inboxCounts.open     },
+                  { key: 'resolved', label: 'Opgelost', count: inboxCounts.resolved },
+                  { key: 'spam',     label: 'Spam',     count: inboxCounts.spam     },
+                  { key: 'all',      label: 'Alle',     count: inboxCounts.all      },
+                ] as const).map(item => {
+                  const active = inboxFilter === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => setInboxFilter(item.key)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '4px 10px', borderRadius: 999, flexShrink: 0,
+                        fontSize: 11, fontWeight: 600, fontFamily: FONT, cursor: 'pointer',
+                        background: active ? '#9333EA' : '#fff',
+                        color: active ? '#fff' : '#4B5563',
+                        border: active ? '1px solid #9333EA' : '1px solid #E5E7EB',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span>{item.label}</span>
+                      {item.count > 0 && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700,
+                          padding: '0 6px', borderRadius: 999, minWidth: 16, textAlign: 'center',
+                          background: active ? 'rgba(255,255,255,0.25)' : '#F3F4F6',
+                          color: active ? '#fff' : '#6B7280',
+                        }}>{item.count}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Zoekbalk + sub-filters */}
               <div style={{ padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>
                 <input
                   value={search}
