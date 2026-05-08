@@ -892,6 +892,8 @@ export const candidates = pgTable("candidates", {
   interviewDate: date("interview_date"),
   interviewTime: time("interview_time"),
   interviewLocation: text("interview_location").default("Kantoor EXTRA"),
+  calendlyInviteSentAt: timestamp("calendly_invite_sent_at"),       // Wanneer de Calendly-uitnodiging (mail) is verstuurd na CV-goedkeuring
+  calendlyReminderSentAt: timestamp("calendly_reminder_sent_at"),   // Wanneer de WhatsApp-reminder na 3 dagen is verstuurd
   
   // Foto
   photoUrl: text("photo_url"),

@@ -1860,22 +1860,57 @@ export default function DashboardMockup() {
                     <span>⏳</span> Uitgenodigd — wacht op Calendly boeking ({kanUitgenodigd.length})
                   </p>
                   <div className="flex flex-col gap-1.5">
-                    {kanUitgenodigd.map(c => (
-                      <div key={c.id} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100 text-xs">
-                        <Avatar className="h-5 w-5 flex-shrink-0">
-                          <AvatarFallback className={`text-[10px] ${getFunctionBadgeColor(c.functionType)}`}>{getInitials(c.firstName, c.lastName)}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-gray-800">{c.firstName} {c.lastName}</span>
-                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${getFunctionBadgeColor(c.functionType)}`}>{c.functionType || '—'}</Badge>
-                        <span className="text-gray-400 ml-auto">{c.email || c.phone || '—'}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-xs text-red-500 hover:bg-red-50"
-                          onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
-                        >✗</Button>
-                      </div>
-                    ))}
+                    {kanUitgenodigd.map(c => {
+                      const wachtDagen = (c as any).calendlyInviteSentAt
+                        ? Math.floor((Date.now() - new Date((c as any).calendlyInviteSentAt).getTime()) / 86400000)
+                        : null;
+                      const reminderSent = !!(c as any).calendlyReminderSentAt;
+                      const heeftPhone = !!c.phone;
+                      const optedOut = (c as any).whatsappOptInStatus && (c as any).whatsappOptInStatus !== 'actief';
+                      return (
+                        <div key={c.id} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100 text-xs">
+                          <Avatar className="h-5 w-5 flex-shrink-0">
+                            <AvatarFallback className={`text-[10px] ${getFunctionBadgeColor(c.functionType)}`}>{getInitials(c.firstName, c.lastName)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium text-gray-800">{c.firstName} {c.lastName}</span>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${getFunctionBadgeColor(c.functionType)}`}>{c.functionType || '—'}</Badge>
+                          {wachtDagen !== null && wachtDagen >= 3 && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${reminderSent ? 'bg-gray-100 text-gray-500' : 'bg-amber-200 text-amber-800'}`}>
+                              {wachtDagen}d {reminderSent ? '· WA verstuurd' : ''}
+                            </span>
+                          )}
+                          <span className="text-gray-400 ml-auto">{c.email || c.phone || '—'}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs text-purple-700 hover:bg-purple-50"
+                            disabled={!heeftPhone || optedOut || reminderSent}
+                            title={!heeftPhone ? 'Geen telefoonnummer' : optedOut ? 'Opt-out' : reminderSent ? 'WhatsApp-reminder al verstuurd' : 'WhatsApp-reminder versturen'}
+                            onClick={async () => {
+                              if (!confirm(`WhatsApp-reminder versturen naar ${c.firstName} ${c.lastName}?`)) return;
+                              try {
+                                const r = await apiRequest('POST', `/api/admin/candidates/${c.id}/calendly-reminder-whatsapp`, {});
+                                const j = await r.json();
+                                if (j.success) {
+                                  toast({ title: 'WhatsApp-reminder verstuurd', description: `Taal: ${j.gebruikteTaal === 'nl' ? 'Nederlands' : 'Engels'}` });
+                                  queryClient.invalidateQueries({ queryKey: ['/api/admin/candidates'] });
+                                } else {
+                                  toast({ title: 'Versturen mislukt', description: j.error || 'Onbekende fout', variant: 'destructive' });
+                                }
+                              } catch (e: any) {
+                                toast({ title: 'Versturen mislukt', description: e?.message || 'Onbekende fout', variant: 'destructive' });
+                              }
+                            }}
+                          >WA</Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs text-red-500 hover:bg-red-50"
+                            onClick={() => { setRejectReason('diensten'); setRejectConfirmId(c.id); }}
+                          >✗</Button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

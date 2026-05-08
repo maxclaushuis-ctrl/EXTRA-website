@@ -6825,6 +6825,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} was al geaccepteerd.</h2><p>Er is al een Calendly-link verstuurd.</p></body></html>`);
       }
       await storage.updateCandidateStatus(id, 'gepland', undefined);
+      // Markeer wanneer de Calendly-uitnodiging is verstuurd zodat de WhatsApp-reminder
+      // na 3 dagen weet vanaf welk moment te tellen.
+      await storage.updateCandidate(id, { calendlyInviteSentAt: new Date() } as any).catch(() => {});
       if (candidate.email && candidate.firstName) {
         await sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email });
       }
@@ -6879,6 +6882,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (action === 'accept') {
         await storage.updateCandidateStatus(id, 'gepland', undefined);
+        // Markeer wanneer de Calendly-uitnodiging is verstuurd (bron-of-truth voor WA-reminder na 3 dagen).
+        await storage.updateCandidate(id, { calendlyInviteSentAt: new Date() } as any).catch(() => {});
         if (candidate.email && candidate.firstName) {
           sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
             console.error('Fout bij versturen Calendly-mail:', err)
@@ -8878,6 +8883,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   scheduleTwvCheck();
+
+  // ─── Calendly-reminder scheduler (dagelijks om 9:00) ─────────────────────
+  // Stuurt 1× een WhatsApp-template-bericht naar kandidaten die >= 3 dagen geleden
+  // op status 'gepland' zijn gezet maar nog geen Calendly-afspraak hebben geboekt.
+  // Respecteert opt-in-status; reageert kandidaat, dan pakt het team het zelf op.
+  async function checkCalendlyReminders(): Promise<number> {
+    const { stuurCalendlyReminderTemplate, bepaalTaal } = await import('./whatsapp/sendTemplate');
+    let remindersSent = 0;
+    try {
+      // Pak alle kandidaten met status='gepland' (de UI-bucket).
+      const list = await storage.getCandidates({ status: 'gepland', page: 1, limit: 1000 });
+      const candidates = (list as any).candidates || list || [];
+      const drempel = new Date(); drempel.setDate(drempel.getDate() - 3);
+
+      for (const c of candidates) {
+        if (c.interviewDate) continue;                                // al een gesprek geboekt
+        if (c.calendlyReminderSentAt) continue;                       // al gehad
+        if (!c.calendlyInviteSentAt) continue;                        // geen ankerpunt
+        if (new Date(c.calendlyInviteSentAt) > drempel) continue;     // < 3 dagen geleden
+        if (!c.phone) continue;                                       // geen telefoonnummer
+        if (c.whatsappOptInStatus && c.whatsappOptInStatus !== 'actief') continue;
+
+        const taal = bepaalTaal(c.language);
+        console.log(`[Calendly-WA] Reminder versturen → ${c.firstName} ${c.lastName} (${c.phone}, taal=${taal})`);
+
+        const result = await stuurCalendlyReminderTemplate({
+          phone: c.phone,
+          voornaam: c.firstName || '',
+          taal,
+          candidateId: c.id,
+          triggeredByUserId: null,
+        });
+
+        if (result.success) {
+          await storage.updateCandidate(c.id, { calendlyReminderSentAt: new Date() } as any);
+          remindersSent++;
+        } else {
+          console.error(`[Calendly-WA] Mislukt voor ${c.firstName} ${c.lastName}: ${result.error}`);
+        }
+      }
+    } catch (error) {
+      console.error('[Calendly-WA] Fout bij verwerken reminders:', error);
+    }
+    return remindersSent;
+  }
+
+  function scheduleCalendlyReminderCheck() {
+    const now = new Date();
+    const next9am = new Date(now);
+    next9am.setHours(9, 5, 0, 0); // 09:05 — net na TWV-check
+    if (next9am <= now) next9am.setDate(next9am.getDate() + 1);
+    const msUntil = next9am.getTime() - now.getTime();
+    const minutesUntil = Math.round(msUntil / 60000);
+    console.log(`[Calendly-WA] Volgende reminder-check gepland om ${next9am.toLocaleString('nl-NL')} (over ${minutesUntil} minuten)`);
+    setTimeout(async () => {
+      const sent = await checkCalendlyReminders();
+      console.log(`[Calendly-WA] Reminder-check klaar — ${sent} herinneringen verstuurd`);
+      scheduleCalendlyReminderCheck();
+    }, msUntil);
+  }
+  scheduleCalendlyReminderCheck();
+
+  // Admin endpoint — handmatig 1 reminder versturen (negeert 3-dagen-check, respecteert opt-in).
+  app.post('/api/admin/candidates/:id/calendly-reminder-whatsapp', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig candidate-ID' });
+      const candidate = await storage.getCandidate(id);
+      if (!candidate) return res.status(404).json({ error: 'Kandidaat niet gevonden' });
+      if (!candidate.phone) return res.status(400).json({ error: 'Geen telefoonnummer bij deze kandidaat' });
+      if ((candidate as any).whatsappOptInStatus && (candidate as any).whatsappOptInStatus !== 'actief') {
+        return res.status(400).json({ error: 'Kandidaat heeft zich afgemeld voor WhatsApp' });
+      }
+
+      const { stuurCalendlyReminderTemplate, bepaalTaal } = await import('./whatsapp/sendTemplate');
+      const taal = bepaalTaal((candidate as any).language);
+      const result = await stuurCalendlyReminderTemplate({
+        phone: candidate.phone,
+        voornaam: candidate.firstName || '',
+        taal,
+        candidateId: candidate.id,
+        triggeredByUserId: req.session?.userId ?? null,
+      });
+
+      if (!result.success) return res.status(502).json({ error: result.error });
+
+      await storage.updateCandidate(id, { calendlyReminderSentAt: new Date() } as any).catch(() => {});
+      return res.json({ success: true, waMessageId: result.waMessageId, gebruikteTaal: result.gebruikteTaal });
+    } catch (err: any) {
+      console.error('[Calendly-WA] Handmatige reminder fout:', err);
+      return res.status(500).json({ error: err?.message || 'Onbekende fout' });
+    }
+  });
 
   // ─── Verjaardag-herinnering opdrachtgevers (dagelijks om 8:00) ─────────────
   async function checkClientBirthdayReminders(): Promise<void> {
