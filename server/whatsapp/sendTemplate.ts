@@ -24,7 +24,7 @@ interface TemplateConfig {
 }
 
 const CALENDLY_REMINDER_TEMPLATES: Record<Taal, TemplateConfig | null> = {
-  nl: null,                                                            // TODO: invullen zodra approved (bv. { name: 'gesprek_inplannen_reminder', language: 'nl' })
+  nl: { name: 'gesprek_inplannen_reminder', language: 'nl' },
   en: { name: 'interview_scheduling_reminder', language: 'en' },
 };
 
