@@ -86,7 +86,7 @@ export async function stuurCalendlyReminderTemplate(args: {
       components: [
         {
           type: 'body',
-          parameters: [{ type: 'text', text: voornaam }],
+          parameters: [{ type: 'text', parameter_name: 'variable_1', text: voornaam }],
         },
       ],
     },
