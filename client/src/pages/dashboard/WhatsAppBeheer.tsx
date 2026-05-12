@@ -1344,6 +1344,34 @@ export default function WhatsAppBeheer() {
                             ))}
                           </select>
                         </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>Inbox</div>
+                          <select
+                            value={(selectedConv.inboxStatus ?? 'open') as 'open' | 'resolved' | 'spam'}
+                            onChange={async e => {
+                              if (!selectedPhone) return;
+                              const next = e.target.value as 'open' | 'resolved' | 'spam';
+                              await updateInboxStatus(selectedPhone, next);
+                              const c = await haalGesprekken(tab);
+                              setConversations(c);
+                            }}
+                            title="Verplaats dit gesprek naar Open / Opgelost / Spam."
+                            style={{
+                              fontSize: 11, padding: '4px 6px', borderRadius: 4,
+                              border: '1px solid #D1D5DB', fontFamily: FONT,
+                              color: ((selectedConv.inboxStatus ?? 'open') === 'resolved')
+                                ? '#059669'
+                                : ((selectedConv.inboxStatus ?? 'open') === 'spam')
+                                  ? '#DC2626'
+                                  : NAVY,
+                              minWidth: 110,
+                            }}
+                          >
+                            <option value="open">Open</option>
+                            <option value="resolved">Opgelost</option>
+                            <option value="spam">Spam</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
