@@ -8888,7 +8888,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stuurt 1× een WhatsApp-template-bericht naar kandidaten die >= 3 dagen geleden
   // op status 'gepland' zijn gezet maar nog geen Calendly-afspraak hebben geboekt.
   // Respecteert opt-in-status; reageert kandidaat, dan pakt het team het zelf op.
-  async function checkCalendlyReminders(): Promise<number> {
+  async function checkCalendlyReminders(opts?: { bypassDrempel?: boolean }): Promise<number> {
+    const bypassDrempel = !!opts?.bypassDrempel;
     const { stuurCalendlyReminderTemplate, bepaalTaal } = await import('./whatsapp/sendTemplate');
     let remindersSent = 0;
     try {
@@ -8900,12 +8901,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const c of candidates) {
         if (c.interviewDate) continue;                                // al een gesprek geboekt
         if (c.calendlyReminderSentAt) continue;                       // al gehad
-        // Ankerpunt: bij voorkeur calendlyInviteSentAt; voor de bestaande backlog
-        // (kandidaten geaccepteerd vóór de invoer van dit veld) vallen we terug
-        // op updatedAt — dat is in de praktijk het moment van de status-wijziging.
-        const anker = c.calendlyInviteSentAt || c.updatedAt;
-        if (!anker) continue;                                         // geen ankerpunt
-        if (new Date(anker) > drempel) continue;                      // < 3 dagen geleden
+        if (!bypassDrempel) {
+          // Ankerpunt: bij voorkeur calendlyInviteSentAt; voor de bestaande backlog
+          // (kandidaten geaccepteerd vóór de invoer van dit veld) vallen we terug
+          // op updatedAt — dat is in de praktijk het moment van de status-wijziging.
+          const anker = c.calendlyInviteSentAt || c.updatedAt;
+          if (!anker) continue;                                       // geen ankerpunt
+          if (new Date(anker) > drempel) continue;                    // < 3 dagen geleden
+        }
         if (!c.phone) continue;                                       // geen telefoonnummer
         if (c.whatsappOptInStatus && c.whatsappOptInStatus !== 'actief') continue;
 
