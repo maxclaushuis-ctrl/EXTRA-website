@@ -36,19 +36,21 @@ const CALENDLY_REMINDER_TEMPLATES: Record<Taal, TemplateConfig | null> = {
     name: 'gesprek_inplannen_reminder',
     language: 'nl',
     body:
-      'Hi {{voornaam}}! 👋 Je hebt je aangemeld bij EXTRA, maar nog geen ' +
-      'kennismakingsgesprek ingepland. Plan hier eenvoudig een moment dat jou ' +
-      'uitkomt: https://calendly.com/max-_zs/30min\n\n' +
-      'Tot snel! Groet, Team EXTRA',
+      'Hi {{voornaam}}, leuk dat je je bij ons hebt aangemeld! 🔥\n\n' +
+      'We zien dat je de Calendly-link voor het kennismakingsgesprek nog niet ' +
+      'hebt ingevuld. Zou je nog bij ons op gesprek willen komen?\n\n' +
+      'Laat het ons even weten, dan plannen we samen een moment in.\n\n' +
+      'Groet,\nteam EXTRA',
   },
   en: {
     name: 'interview_scheduling_reminder',
     language: 'en',
     body:
-      'Hi {{voornaam}}! 👋 You signed up with EXTRA but haven\'t scheduled an ' +
-      'introductory call yet. Pick a time that suits you here: ' +
-      'https://calendly.com/max-_zs/30min\n\n' +
-      'Talk soon! Team EXTRA',
+      'Hi {{voornaam}}, great to have you on board with us! 🔥\n\n' +
+      'We noticed you haven\'t booked a time for your introductory call via ' +
+      'the Calendly link yet. Are you still interested in meeting with us?\n\n' +
+      'Just let us know and we\'ll plan a moment together.\n\n' +
+      'Team EXTRA',
   },
 };
 
