@@ -8952,6 +8952,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   scheduleCalendlyReminderCheck();
 
+  // ─── EENMALIGE backlog-run vandaag 17:00 (12 mei 2026) ──────────────────────
+  // Negeert de 3-dagen-drempel zodat de bestaande backlog (kandidaten die
+  // vóór de uitrol van calendlyInviteSentAt op 'gepland' zijn gezet) in één
+  // keer hun reminder krijgt. Daarna pakt de normale 09:05-cron het over.
+  // Restart-safe: alleen scheduled als we daadwerkelijk vóór de cutoff zitten.
+  function scheduleOneShotBacklogRun() {
+    const cutoff = new Date('2026-05-12T17:00:00+02:00'); // CEST
+    const now = new Date();
+    if (now >= cutoff) {
+      console.log('[Calendly-WA] One-shot backlog-run niet meer gepland (tijd al voorbij).');
+      return;
+    }
+    const msUntil = cutoff.getTime() - now.getTime();
+    const minutesUntil = Math.round(msUntil / 60000);
+    console.log(`[Calendly-WA] Eenmalige backlog-run gepland om ${cutoff.toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })} CEST (over ${minutesUntil} minuten, bypass 3-dagen-drempel).`);
+    setTimeout(async () => {
+      console.log('[Calendly-WA] Start eenmalige backlog-run (bypass 3-dagen-drempel)…');
+      try {
+        const sent = await checkCalendlyReminders({ bypassDrempel: true });
+        console.log(`[Calendly-WA] Backlog-run klaar — ${sent} herinneringen verstuurd`);
+      } catch (e) {
+        console.error('[Calendly-WA] Fout in backlog-run:', e);
+      }
+    }, msUntil);
+  }
+  scheduleOneShotBacklogRun();
+
   // Admin endpoint — handmatig 1 reminder versturen (negeert 3-dagen-check, respecteert opt-in).
   app.post('/api/admin/candidates/:id/calendly-reminder-whatsapp', adminMiddleware, async (req: Request, res: Response) => {
     try {
