@@ -8958,7 +8958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // keer hun reminder krijgt. Daarna pakt de normale 09:05-cron het over.
   // Restart-safe: alleen scheduled als we daadwerkelijk vóór de cutoff zitten.
   function scheduleOneShotBacklogRun() {
-    const cutoff = new Date('2026-05-12T17:00:00+02:00'); // CEST
+    const cutoff = new Date('2026-05-12T17:30:00+02:00'); // CEST
     const now = new Date();
     if (now >= cutoff) {
       console.log('[Calendly-WA] One-shot backlog-run niet meer gepland (tijd al voorbij).');
