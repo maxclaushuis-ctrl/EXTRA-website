@@ -282,8 +282,34 @@ async function ensureAdminAccounts() {
     // WhatsApp-inbox. Idempotent: verwijdert alleen rijen waar nog géén echt bericht
     // voor is verstuurd of ontvangen.
     cleanupPlaceholderConversations().catch(err => console.warn('Cleanup placeholder-conversaties mislukt (niet-kritiek):', err?.message || err));
+    // Eenmalige backfill: kandidaten in WhatsApp-inbox die nog niet 'aangenomen' zijn
+    // moeten in het Kandidaten-tabblad staan ('unmatched'), niet in Medewerkers
+    // ('candidate'). Idempotent en respecteert handmatige overrides via manual_category.
+    backfillKandidaatInboxCategory().catch(err => console.warn('Backfill kandidaat-inbox-category mislukt (niet-kritiek):', err?.message || err));
   });
 })();
+
+async function backfillKandidaatInboxCategory() {
+  const sql = `
+    UPDATE whatsapp_conversations wc
+    SET match_category = 'unmatched', updated_at = NOW()
+    FROM candidates c
+    WHERE c.id = wc.candidate_id
+      AND wc.manual_category IS NULL
+      AND wc.match_category = 'candidate'
+      AND c.status <> 'aangenomen'
+    RETURNING wc.id
+  `;
+  try {
+    const { pool } = await import('./db');
+    const r: any = await pool.query(sql);
+    if (r?.rowCount && r.rowCount > 0) {
+      log(`[WA backfill] ${r.rowCount} gesprek(ken) verplaatst van Medewerkers naar Kandidaten-tab`);
+    }
+  } catch (err: any) {
+    console.warn('backfillKandidaatInboxCategory SQL-fout:', err?.message || err);
+  }
+}
 
 async function cleanupPlaceholderConversations() {
   const sql = `

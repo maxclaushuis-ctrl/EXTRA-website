@@ -308,6 +308,9 @@ async function upsertContactWithLabels(args: {
   functieLabel: string | null;
   taalLabel: string | null;
   newPreview: string;
+  // 'candidate' = Medewerkers-tab, 'unmatched' = Kandidaten-tab.
+  // Sollicitanten/kandidaten horen op Kandidaten; pas bij 'aangenomen' op Medewerkers.
+  targetCategory: MatchCategory;
 }): Promise<UpsertContactResult> {
   const phoneNumber = normalizePhone(args.rawPhone || '');
   if (!phoneNumber) return { ok: false, reason: 'invalid_phone' };
@@ -330,7 +333,7 @@ async function upsertContactWithLabels(args: {
   const finalLabels = Array.from(new Set(merged));
 
   const now = new Date();
-  const targetCategory: MatchCategory = args.candidateId ? 'candidate' : 'unmatched';
+  const targetCategory: MatchCategory = args.targetCategory;
 
   if (existing.length === 0) {
     const [row] = await db
@@ -362,9 +365,7 @@ async function upsertContactWithLabels(args: {
       candidateId: args.candidateId
         ? args.candidateId
         : sql`${whatsappConversations.candidateId}`,
-      matchCategory: args.candidateId
-        ? sql`COALESCE(${whatsappConversations.manualCategory}, 'candidate')`
-        : sql`COALESCE(${whatsappConversations.manualCategory}, ${whatsappConversations.matchCategory})`,
+      matchCategory: sql`COALESCE(${whatsappConversations.manualCategory}, ${targetCategory})`,
       displayName: sql`COALESCE(${whatsappConversations.displayName}, ${displayName})`,
       labels: finalLabels.length ? finalLabels : null,
       updatedAt: now,
@@ -396,6 +397,7 @@ export async function upsertSollicitantContact(args: {
     functieLabel: functieToLabel(args.functionType),
     taalLabel: languageToTaalLabel(args.languages),
     newPreview: '[Sollicitant — nog geen bericht]',
+    targetCategory: 'unmatched', // Sollicitant/kandidaat → Kandidaten-tab
   });
 }
 
@@ -415,5 +417,6 @@ export async function upsertEmployeeContact(args: {
     functieLabel: functieToLabel(args.functie),
     taalLabel: languageToTaalLabel(args.language),
     newPreview: '[Medewerker — nog geen bericht]',
+    targetCategory: 'candidate', // Aangenomen → Medewerkers-tab
   });
 }

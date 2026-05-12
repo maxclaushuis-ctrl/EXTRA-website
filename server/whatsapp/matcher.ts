@@ -38,16 +38,21 @@ export async function matchPhoneToContact(normalizedPhone: string): Promise<Matc
       phone: candidates.phone,
       firstName: candidates.firstName,
       lastName: candidates.lastName,
+      status: candidates.status,
     })
     .from(candidates)
     .where(isNotNull(candidates.phone));
 
   for (const row of candidateRows) {
     if (normalizePhone(row.phone) === normalizedPhone) {
+      // Pas wanneer iemand 'aangenomen' is, hoort 'ie thuis op het Medewerkers-
+      // tabblad. Sollicitanten/kandidaten in alle eerdere statussen blijven op
+      // het Kandidaten-tabblad ('unmatched'), maar houden wel de candidate-link.
+      const isMedewerker = row.status === 'aangenomen';
       return {
         candidateId: row.id,
         prospectContactId: null,
-        category: 'candidate',
+        category: isMedewerker ? 'candidate' : 'unmatched',
         displayName: `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim() || null,
       };
     }
