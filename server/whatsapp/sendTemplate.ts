@@ -63,8 +63,11 @@ export interface CalendlyReminderResultaat {
 export async function stuurCalendlyReminderTemplate(args: {
   phone: string;
   voornaam: string;
+  achternaam?: string | null;
   taal: Taal;
   candidateId: number;
+  functionType?: string | null;
+  language?: string | null;
   triggeredByUserId?: number | null;
 }): Promise<CalendlyReminderResultaat> {
   if (!WA_360_KEY) return { success: false, error: 'WHATSAPP_360_API_KEY niet ingesteld' };
@@ -92,7 +95,23 @@ export async function stuurCalendlyReminderTemplate(args: {
     },
   };
 
-  // 1. Conversation upsert + queued-rij in DB.
+  // 1a. Zet eerst functie- en taal-labels op het gesprek (zelfde mapping als
+  // het sollicitatieformulier gebruikt). Veilig idempotent.
+  try {
+    await waStorage.upsertSollicitantContact({
+      rawPhone: normalized,
+      candidateId: args.candidateId,
+      firstName: args.voornaam || null,
+      lastName: args.achternaam || null,
+      functionType: args.functionType ?? null,
+      languages: args.language ?? null,
+    });
+  } catch (e) {
+    // Niet-fataal — versturen blijft doorgaan, alleen labels missen dan.
+    console.error('[Calendly-WA] Label-upsert fout (niet-fataal):', e);
+  }
+
+  // 1b. Conversation upsert + queued-rij in DB.
   const now = new Date();
   const match = await waStorage.resolveAndUpsertConversation({
     phoneNumber: normalized,

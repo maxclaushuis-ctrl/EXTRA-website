@@ -8918,8 +8918,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const result = await stuurCalendlyReminderTemplate({
           phone: c.phone,
           voornaam: c.firstName || '',
+          achternaam: c.lastName || null,
           taal,
           candidateId: c.id,
+          functionType: c.functionType ?? null,
+          language: c.language ?? null,
           triggeredByUserId: null,
         });
 
@@ -8996,8 +8999,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await stuurCalendlyReminderTemplate({
         phone: candidate.phone,
         voornaam: candidate.firstName || '',
+        achternaam: candidate.lastName || null,
         taal,
         candidateId: candidate.id,
+        functionType: (candidate as any).functionType ?? null,
+        language: (candidate as any).language ?? null,
         triggeredByUserId: req.session?.userId ?? null,
       });
 
