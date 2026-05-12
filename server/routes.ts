@@ -8900,8 +8900,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const c of candidates) {
         if (c.interviewDate) continue;                                // al een gesprek geboekt
         if (c.calendlyReminderSentAt) continue;                       // al gehad
-        if (!c.calendlyInviteSentAt) continue;                        // geen ankerpunt
-        if (new Date(c.calendlyInviteSentAt) > drempel) continue;     // < 3 dagen geleden
+        // Ankerpunt: bij voorkeur calendlyInviteSentAt; voor de bestaande backlog
+        // (kandidaten geaccepteerd vóór de invoer van dit veld) vallen we terug
+        // op updatedAt — dat is in de praktijk het moment van de status-wijziging.
+        const anker = c.calendlyInviteSentAt || c.updatedAt;
+        if (!anker) continue;                                         // geen ankerpunt
+        if (new Date(anker) > drempel) continue;                      // < 3 dagen geleden
         if (!c.phone) continue;                                       // geen telefoonnummer
         if (c.whatsappOptInStatus && c.whatsappOptInStatus !== 'actief') continue;
 
