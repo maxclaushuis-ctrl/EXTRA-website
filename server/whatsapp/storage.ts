@@ -258,17 +258,17 @@ const FUNCTIE_TO_LABEL: Record<string, string> = {
   chef: 'chef',
   housekeeping: 'housekeeping',
   logistiek: 'logistiek',
-  frontoffice: 'horeca',
+  frontoffice: 'frontoffice',
   // medewerker functie-waarden
   bediening: 'horeca',
-  'front-office': 'horeca',
+  'front-office': 'frontoffice',
   orderpicker: 'logistiek',
   // alias-veiligheid
   horeca: 'horeca',
 };
 
 const TAAL_GROUP_LABELS = new Set(['nl', 'en']);
-const FUNCTIE_GROUP_LABELS = new Set(['horeca', 'chef', 'housekeeping', 'logistiek']);
+const FUNCTIE_GROUP_LABELS = new Set(['horeca', 'chef', 'housekeeping', 'logistiek', 'frontoffice']);
 
 function functieToLabel(functie: string | null | undefined): string | null {
   if (!functie) return null;

@@ -21,12 +21,41 @@ export type Taal = 'nl' | 'en';
 interface TemplateConfig {
   name: string;
   language: string;     // BCP-47 / 360dialog code, bv. 'nl', 'en', 'en_US'
+  /**
+   * Volledige body-tekst van de Meta-approved template, met `{{voornaam}}`
+   * als placeholder voor variable_1. Wordt voor het versturen gerenderd en
+   * als bericht-tekst in de DB / inbox opgeslagen, zodat de inbox laat zien
+   * wat er feitelijk verstuurd is (i.p.v. alleen de template-naam).
+   * BELANGRIJK: hou deze tekst 1-op-1 gelijk met wat in Meta is goedgekeurd.
+   */
+  body: string;
 }
 
 const CALENDLY_REMINDER_TEMPLATES: Record<Taal, TemplateConfig | null> = {
-  nl: { name: 'gesprek_inplannen_reminder', language: 'nl' },
-  en: { name: 'interview_scheduling_reminder', language: 'en' },
+  nl: {
+    name: 'gesprek_inplannen_reminder',
+    language: 'nl',
+    body:
+      'Hi {{voornaam}}! 👋 Je hebt je aangemeld bij EXTRA, maar nog geen ' +
+      'kennismakingsgesprek ingepland. Plan hier eenvoudig een moment dat jou ' +
+      'uitkomt: https://calendly.com/max-_zs/30min\n\n' +
+      'Tot snel! Groet, Team EXTRA',
+  },
+  en: {
+    name: 'interview_scheduling_reminder',
+    language: 'en',
+    body:
+      'Hi {{voornaam}}! 👋 You signed up with EXTRA but haven\'t scheduled an ' +
+      'introductory call yet. Pick a time that suits you here: ' +
+      'https://calendly.com/max-_zs/30min\n\n' +
+      'Talk soon! Team EXTRA',
+  },
 };
+
+/** Render template-tekst met {{voornaam}}-substitutie. */
+function renderTemplateBody(body: string, voornaam: string): string {
+  return body.replace(/\{\{\s*(voornaam|variable_1|1)\s*\}\}/gi, voornaam);
+}
 
 /** Geeft de template terug die we voor deze taal willen gebruiken, met fallback. */
 function kiesCalendlyTemplate(taal: Taal): { config: TemplateConfig; gebruikteTaal: Taal } {
@@ -111,12 +140,16 @@ export async function stuurCalendlyReminderTemplate(args: {
     console.error('[Calendly-WA] Label-upsert fout (niet-fataal):', e);
   }
 
-  // 1b. Conversation upsert + queued-rij in DB.
+  // 1b. Render volledige template-tekst zodat de inbox laat zien wat er
+  // feitelijk verstuurd is (i.p.v. alleen de template-naam).
+  const renderedBody = renderTemplateBody(config.body, voornaam);
+
+  // 1c. Conversation upsert + queued-rij in DB.
   const now = new Date();
   const match = await waStorage.resolveAndUpsertConversation({
     phoneNumber: normalized,
     inbound: false,
-    bodyPreview: `[template:${config.name}] Hi ${voornaam}, …`,
+    bodyPreview: renderedBody,
     at: now,
   });
 
@@ -125,7 +158,7 @@ export async function stuurCalendlyReminderTemplate(args: {
     fromNumber: 'extra',
     toNumber: normalized,
     messageType: 'template',
-    body: `[template:${config.name}/${config.language}] Hi ${voornaam}, …`,
+    body: renderedBody,
     candidateId: match.candidateId ?? args.candidateId,
     prospectContactId: match.prospectContactId,
     matchCategory: match.category,
