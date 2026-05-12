@@ -1372,6 +1372,27 @@ export default function WhatsAppBeheer() {
                             <option value="spam">Spam</option>
                           </select>
                         </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>&nbsp;</div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!selectedPhone) return;
+                              await markeerOngelezen(selectedPhone);
+                              const [c, s] = await Promise.all([haalGesprekken(tab), haalStats()]);
+                              setConversations(c);
+                              setStats(s);
+                            }}
+                            title="Markeer dit gesprek als ongelezen — komt terug bovenaan met blauwe stip."
+                            style={{
+                              fontSize: 11, padding: '4px 8px', borderRadius: 4,
+                              border: '1px solid #D1D5DB', background: '#fff',
+                              color: NAVY, cursor: 'pointer', fontFamily: FONT, fontWeight: 600,
+                            }}
+                          >
+                            Ongelezen
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
