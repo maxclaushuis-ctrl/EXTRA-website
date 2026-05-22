@@ -475,6 +475,23 @@ export default function DashboardMockup() {
     enabled: isAuthenticated,
   });
 
+  // WhatsApp-ongelezen badge in de zijbalk — polling elke 30s zodat
+  // iedereen ook buiten de WhatsApp-omgeving ziet dat er ongelezen
+  // berichten zijn.
+  const { data: waStats } = useQuery<{
+    candidate: { total: number; unread: number };
+    prospect: { total: number; unread: number };
+    unmatched: { total: number; unread: number };
+  }>({
+    queryKey: ['/api/whatsapp/stats'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+  });
+  const waUnreadTotal = (waStats?.candidate.unread ?? 0)
+    + (waStats?.prospect.unread ?? 0)
+    + (waStats?.unmatched.unread ?? 0);
+
   const { data: candidatesData, isLoading: candidatesLoading, refetch: refetchCandidates } = useQuery<{ candidates: Candidate[]; total: number }>({
     queryKey: ['/api/admin/candidates'],
     enabled: isAuthenticated && user?.role === 'admin',
@@ -937,6 +954,15 @@ export default function DashboardMockup() {
               >
                 <MessageSquare className="h-4 w-4" />
                 <span>WhatsApp</span>
+                {waUnreadTotal > 0 && (
+                  <span
+                    className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold shadow-sm"
+                    title={`${waUnreadTotal} ongelezen bericht${waUnreadTotal === 1 ? '' : 'en'}`}
+                    data-testid="badge-whatsapp-unread"
+                  >
+                    {waUnreadTotal > 99 ? '99+' : waUnreadTotal}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}
