@@ -1857,7 +1857,7 @@ export default function DashboardMockup() {
               {kandidatenSubtab === 'gesprek_gepland' && kanUitgenodigd.length > 0 && (
                 <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                   <p className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1.5">
-                    <span>⏳</span> Uitgenodigd — wacht op Calendly boeking ({kanUitgenodigd.length})
+                    <span>⏳</span> Geaccepteerd — neem handmatig contact op ({kanUitgenodigd.length})
                   </p>
                   <div className="flex flex-col gap-1.5">
                     {kanUitgenodigd.map(c => {
@@ -1883,9 +1883,9 @@ export default function DashboardMockup() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 px-2 text-xs text-purple-700 hover:bg-purple-50"
-                            disabled={!heeftPhone || optedOut || reminderSent}
-                            title={!heeftPhone ? 'Geen telefoonnummer' : optedOut ? 'Opt-out' : reminderSent ? 'WhatsApp-reminder al verstuurd' : 'WhatsApp-reminder versturen'}
+                            className="h-6 px-2 text-xs text-gray-400 cursor-not-allowed"
+                            disabled
+                            title="WhatsApp-reminder staat op pauze — neem handmatig contact op"
                             onClick={async () => {
                               if (!confirm(`WhatsApp-reminder versturen naar ${c.firstName} ${c.lastName}?`)) return;
                               try {

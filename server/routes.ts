@@ -6822,17 +6822,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).send('Deze link is verlopen. Open het dashboard om de kandidaat te beoordelen.');
       }
       if (candidate.status === 'gepland' || candidate.status === 'aangenomen') {
-        return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} was al geaccepteerd.</h2><p>Er is al een Calendly-link verstuurd.</p></body></html>`);
+        return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} was al geaccepteerd.</h2></body></html>`);
       }
       await storage.updateCandidateStatus(id, 'gepland', undefined);
-      // Markeer wanneer de Calendly-uitnodiging is verstuurd zodat de WhatsApp-reminder
-      // na 3 dagen weet vanaf welk moment te tellen.
-      await storage.updateCandidate(id, { calendlyInviteSentAt: new Date() } as any).catch(() => {});
-      if (candidate.email && candidate.firstName) {
-        await sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email });
-      }
+      // [PAUZE] Calendly-uitnodiging en WhatsApp-reminder zijn tijdelijk uitgezet —
+      // we nemen handmatig contact op. Daarom géén sendCalendlyInviteEmail en géén
+      // calendlyInviteSentAt-timestamp (de WA-reminder-cron gebruikt dat als anker).
       const dashboardUrl = `${req.protocol}://${req.get('host')}/dashboard`;
-      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} geaccepteerd!</h2><p>Een Calendly-uitnodiging is verstuurd naar ${candidate.email || 'het opgegeven e-mailadres'}.</p><a href="${dashboardUrl}" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
+      return res.send(`<html><body style="font-family:Arial;text-align:center;padding:60px;"><h2 style="color:#16a34a;">✅ ${candidate.firstName} ${candidate.lastName} geaccepteerd!</h2><p>Status staat nu op <b>Gesprek gepland</b>. Neem zelf contact op om een afspraak in te plannen.</p><a href="${dashboardUrl}" style="color:#7c3aed;font-weight:bold;">Terug naar dashboard →</a></body></html>`);
     } catch (err) {
       console.error('Accept kandidaat fout:', err);
       return res.status(500).send('Er is iets misgegaan');
@@ -6882,14 +6879,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (action === 'accept') {
         await storage.updateCandidateStatus(id, 'gepland', undefined);
-        // Markeer wanneer de Calendly-uitnodiging is verstuurd (bron-of-truth voor WA-reminder na 3 dagen).
-        await storage.updateCandidate(id, { calendlyInviteSentAt: new Date() } as any).catch(() => {});
-        if (candidate.email && candidate.firstName) {
-          sendCalendlyInviteEmail({ firstName: candidate.firstName, email: candidate.email }).catch(err =>
-            console.error('Fout bij versturen Calendly-mail:', err)
-          );
-        }
-        return res.json({ message: 'Kandidaat geaccepteerd, Calendly-uitnodiging verstuurd' });
+        // [PAUZE] Calendly-uitnodiging en WhatsApp-reminder zijn tijdelijk uitgezet —
+        // we nemen handmatig contact op. Geen sendCalendlyInviteEmail, geen
+        // calendlyInviteSentAt (anker voor WA-reminder-cron).
+        return res.json({ message: 'Kandidaat verplaatst naar Gesprek gepland — neem zelf contact op' });
       } else {
         await storage.updateCandidateStatus(id, 'afgewezen', undefined);
         if (candidate.email && candidate.firstName) {
@@ -8888,7 +8881,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stuurt 1× een WhatsApp-template-bericht naar kandidaten die >= 3 dagen geleden
   // op status 'gepland' zijn gezet maar nog geen Calendly-afspraak hebben geboekt.
   // Respecteert opt-in-status; reageert kandidaat, dan pakt het team het zelf op.
+  // [PAUZE] Wanneer true: geen Calendly-WA-reminders meer (cron, backlog en admin-endpoint zijn no-ops).
+  // We nemen handmatig contact op met geaccepteerde kandidaten i.p.v. via WhatsApp.
+  const CALENDLY_WA_PAUSED = true;
+
   async function checkCalendlyReminders(opts?: { bypassDrempel?: boolean }): Promise<number> {
+    if (CALENDLY_WA_PAUSED) {
+      console.log('[Calendly-WA] Reminder-flow staat op pauze (CALENDLY_WA_PAUSED=true) — niets verstuurd.');
+      return 0;
+    }
     const bypassDrempel = !!opts?.bypassDrempel;
     const { stuurCalendlyReminderTemplate, bepaalTaal } = await import('./whatsapp/sendTemplate');
     let remindersSent = 0;
@@ -8953,7 +8954,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       scheduleCalendlyReminderCheck();
     }, msUntil);
   }
-  scheduleCalendlyReminderCheck();
+  if (CALENDLY_WA_PAUSED) {
+    console.log('[Calendly-WA] Dagelijkse reminder-cron NIET gestart — flow op pauze.');
+  } else {
+    scheduleCalendlyReminderCheck();
+  }
 
   // ─── EENMALIGE backlog-run vandaag 17:00 (12 mei 2026) ──────────────────────
   // Negeert de 3-dagen-drempel zodat de bestaande backlog (kandidaten die
@@ -8984,6 +8989,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin endpoint — handmatig 1 reminder versturen (negeert 3-dagen-check, respecteert opt-in).
   app.post('/api/admin/candidates/:id/calendly-reminder-whatsapp', adminMiddleware, async (req: Request, res: Response) => {
+    if (CALENDLY_WA_PAUSED) {
+      return res.status(423).json({ error: 'Calendly-WA-reminder staat op pauze — neem handmatig contact op.' });
+    }
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig candidate-ID' });
