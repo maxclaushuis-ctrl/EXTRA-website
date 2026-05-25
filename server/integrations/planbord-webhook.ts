@@ -56,6 +56,10 @@ export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<vo
   const url = process.env.PLANBORD_WEBHOOK_URL;
   const secret = process.env.WEBHOOK_SECRET;
 
+  console.error(
+    '[planbord-webhook] called, url=', !!url, 'secret=', !!secret, 'employeeId=', data.id
+  );
+
   if (!url || !secret) {
     console.warn(
       '[planbord-webhook] PLANBORD_WEBHOOK_URL of WEBHOOK_SECRET ontbreekt — call overgeslagen'
@@ -79,18 +83,17 @@ export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<vo
       signal: AbortSignal.timeout(8000),
     });
 
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      console.error(
-        `[planbord-webhook] foutstatus ${res.status}: ${txt.slice(0, 300)}`
-      );
-      return;
-    }
+    const txt = await res.text().catch(() => '');
+    console.error(
+      '[planbord-webhook] result status=', res.status, 'body=', txt.slice(0, 300)
+    );
+
+    if (!res.ok) return;
 
     console.log(
       `[planbord-webhook] verstuurd voor employee #${data.id} (${data.firstName} ${data.lastName})`
     );
   } catch (err: any) {
-    console.error('[planbord-webhook] network error:', err?.message ?? err);
+    console.error('[planbord-webhook] result status= NONE err=', err?.message ?? err);
   }
 }

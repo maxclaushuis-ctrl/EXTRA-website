@@ -1,0 +1,39 @@
+Het planbord ziet 0 inkomende calls (sync-log + server-log allebei leeg).
+Geen 401-fouten zelfs. Onze code wordt dus niet uitgevoerd. Doe deze 3 checks:
+
+CHECK 1 — Wordt de hire-handler überhaupt aangeroepen?
+Voeg tijdelijk bovenaan POST /api/admin/applications/:id/aannemen toe:
+    console.error("[HIRE-HANDLER] geraakt voor application", req.params.id);
+Klik dan opnieuw "Aannemen als medewerker" en kijk in de console.
+- Géén regel zichtbaar → de admin-knop hit een ANDER endpoint. Zoek in de
+  React-frontend wat de knop daadwerkelijk POST't (search op "Aannemen als
+  medewerker", "hire", "aannemen") en plaats sendPlanbordWebhook() in dat
+  endpoint.
+- Wél zichtbaar → ga door naar CHECK 2.
+
+CHECK 2 — Wordt sendPlanbordWebhook aangeroepen, en log hij iets?
+Bovenaan sendPlanbordWebhook() voeg toe:
+    console.error("[planbord-webhook] called, url=", !!process.env.PLANBORD_WEBHOOK_URL, "secret=", !!process.env.WEBHOOK_SECRET);
+Klik weer "Aannemen". Verwacht in console één van drie:
+  a) Niks → de try/catch in de hire-handler vangt een eerdere error af.
+     Check of `await sendPlanbordWebhook(...)` daadwerkelijk wordt bereikt.
+  b) "url= false" of "secret= false" → env-vars zijn niet geladen. Herstart
+     de workflow (Stop dan Run, niet alleen file-save) en probeer opnieuw.
+  c) "url= true secret= true" → ga naar CHECK 3.
+
+CHECK 3 — Komt de fetch er wel uit?
+In de catch én na res.ok-check, log altijd:
+    console.error("[planbord-webhook] result status=", res?.status, "err=", err);
+Verwacht bij een geslaagde call status=200. Bij status 401 → secret klopt
+niet (dan in beide projecten EXACT dezelfde waarde zetten, geen spaties).
+Bij network error → typo in URL.
+
+EXTRA: bewijs dat dit project de planbord kan bereiken. Run in shell:
+    curl -i -X POST https://admin-portal-max687.replit.app/api/webhooks/applicant-sync \
+      -H "Content-Type: application/json" \
+      -H "x-webhook-secret: $WEBHOOK_SECRET" \
+      -d '{"event":"applicant.ready","timestamp":"2026-05-25T15:30:00Z","data":{"id":"manual_test_1","firstName":"Manueel","lastName":"Test","function":"Bediening"}}'
+Verwacht HTTP/2 200 en {"success":true,...}. Als dit werkt is netwerk + secret
+OK en zit het probleem 100% in de hire-handler. Als dit 401 geeft is je
+WEBHOOK_SECRET in dit project anders dan in het planbord-project — kopieer
+opnieuw.

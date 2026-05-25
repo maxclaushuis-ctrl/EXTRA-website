@@ -7484,6 +7484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sollicitatie aannemen vanuit application-record (rijke versie)
   // Combineert: application-kolommen + form_data + eventueel gekoppelde candidate
   app.post("/api/admin/applications/:id/aannemen", adminMiddleware, async (req: Request, res: Response) => {
+    console.error("[HIRE-HANDLER] geraakt voor application", req.params.id);
     try {
       const applicationId = parseInt(req.params.id);
       const application = await storage.getApplicationById(applicationId);
