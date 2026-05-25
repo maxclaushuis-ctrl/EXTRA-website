@@ -1,0 +1,36 @@
+Ik moet een koppeling bouwen tussen dit EXTRA-website project en een ander project (EXTRA B.V. Planbord). De agent in dat andere project heeft inzicht nodig in hoe sollicitanten/intake hier zijn opgezet. Doe geen wijzigingen, lever alleen de onderstaande informatie in één bericht terug.
+
+LEVER MIJ:
+
+1. Projectstructuur (top-level)
+   Output van: `ls -la` in project root, plus `tree -L 3 -I 'node_modules|.git|dist|build|.next'` (of een fallback met find).
+
+2. Stack-detectie
+   - Inhoud van `package.json` (volledig).
+   - Of er een `prisma/schema.prisma`, `drizzle.config.*`, of vergelijkbaar DB-schema bestand bestaat — geef het pad en de volledige inhoud.
+   - Welke framework: Next.js / Vite+React / Express+React / iets anders. Hoe wordt de admin-UI gerouteerd?
+
+3. Datamodel sollicitant
+   Vind het type/model voor een sollicitant/applicant/kandidaat:
+     `rg -l "sollicitant|applicant|kandidaat" --type=ts | head -10`
+   Geef voor elk gevonden bestand: pad + volledige inhoud (max 300 regels per bestand, anders de relevante interface/model definitie + omliggende context).
+
+4. De "Aannemen als medewerker"-knop
+   `rg -n "Aannemen als medewerker"` — geef voor elke hit: bestandspad, regel, en de volledige inhoud van het component-bestand waarin de knop staat. Inclusief de onClick handler en eventueel aanroepen van een API-route of mutation.
+
+5. De Sollicitanten-tabel (admin overzicht)
+   `rg -n "Softskills|Sollicitanten"` — geef het bestand dat de admin-tabel met kolommen Softskills/Bar/Bediening/Diner/Telefoon/Taal/TWV rendert. Volledige inhoud.
+
+6. Het intakeformulier zelf (sterren + tags)
+   `rg -n "Ervaringsniveau|Verschijning|Attitude|Communicatie|Algemene indruk"` — geef het bestand dat dit formulier rendert (sterren-component, tag-pickers voor Profiel/Talen/Vaardigheden, opmerking-veld, referenties). Volledige inhoud, plus de API-route/mutation die het opslaat.
+
+7. Bestaande webhook/API-uitgaande calls
+   `rg -n "webhook|fetch\\(|axios" --type=ts | grep -i "applicant\\|planbord\\|sync" || echo "geen bestaande planbord-koppeling gevonden"`
+
+8. Environment-variabelen die nu gebruikt worden (alleen namen, GEEN waarden)
+   `rg -n "process\\.env\\.|import\\.meta\\.env\\." --type=ts | sort -u`
+
+9. Twee voorbeeld-records uit de DB (geanonimiseerd indien gewenst)
+   Run een SQL query of script die 2 willekeurige sollicitanten dumpt met alle velden incl. intake-data — als JSON. Verberg/anonimiseer naam/email/telefoon.
+
+Format je antwoord als één lang markdown-bericht met genummerde secties. Geen edits aan de code, alleen informatie.
