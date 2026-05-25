@@ -1,0 +1,170 @@
+Mijn ander Replit-project (EXTRA-planbord) ontvangt webhooks van deze website
+zodra een sollicitant wordt aangenomen. De endpoint LEEFT en werkt
+(handmatige test bewijst dit: HTTP 401 zonder secret, HTTP 200 met secret).
+Maar er komt geen enkele POST-call binnen — dit project verstuurt nog niets.
+
+Doel: zorg dat zodra een admin op "Aannemen als medewerker" klikt, één
+HTTP POST naar het planbord wordt gedaan met de intake-data.
+
+## Configuratie (al gedaan, alleen verifiëren)
+In Replit Secrets van DIT project staan:
+- PLANBORD_WEBHOOK_URL = https://admin-portal-max687.replit.app/api/webhooks/applicant-sync
+- WEBHOOK_SECRET       = (dezelfde waarde als in het planbord-project)
+
+Verifieer dat beide secrets bestaan en NIET leeg zijn. Print géén waardes.
+
+## Stap 1 — Helper-functie
+
+Maak (of vervang) het bestand `server/integrations/planbord-webhook.ts`:
+
+```ts
+import { logger } from "../lib/logger"; // pas pad aan als je logger ergens anders staat
+
+interface PlanbordPayloadData {
+  id: string;
+  applicationId?: number;
+  candidateId?: number;
+  employeeId?: number;
+  firstName: string;
+  lastName: string;
+  function: string;
+  email?: string;
+  phone?: string;
+  region?: string;
+  birthDate?: string;
+  city?: string;
+  nationality?: string;
+  tags?: {
+    profiel?: string[];
+    talen?: string[];
+    vaardigheden?: string[];
+  };
+  sterren?: {
+    ervaringsniveau?: number;
+    verschijning?: number;
+    attitude?: number;
+    communicatie?: number;
+    algemeneIndruk?: number;
+  };
+  scores?: {
+    softskills?: number;
+    bar?: number;
+    bediening?: number;
+    diner?: number;
+  };
+  opmerking?: string;
+  referentie?: { naam?: string; relatie?: string; telefoon?: string };
+  branche?: string;
+  opdrachtgever?: string;
+  contractType?: string;
+  startDate?: string;
+  language?: string;
+}
+
+export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<void> {
+  const url    = process.env.PLANBORD_WEBHOOK_URL;
+  const secret = process.env.WEBHOOK_SECRET;
+  if (!url || !secret) {
+    logger.warn("[planbord-webhook] PLANBORD_WEBHOOK_URL of WEBHOOK_SECRET ontbreekt — call overgeslagen");
+    return;
+  }
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type":     "application/json",
+        "x-webhook-secret": secret,
+      },
+      body: JSON.stringify({
+        event:     "applicant.ready",
+        timestamp: new Date().toISOString(),
+        source:    "EXTRA Horecapersoneel",
+        data,
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      logger.error({ status: res.status, body: txt }, "[planbord-webhook] foutstatus");
+      return;
+    }
+    logger.info({ externalId: data.id }, "[planbord-webhook] verstuurd");
+  } catch (err) {
+    logger.error({ err }, "[planbord-webhook] network error");
+  }
+}
+```
+
+De functie mag NOOIT een fout gooien — webhook-falen mag de "Aannemen"-flow
+nooit blokkeren. Try/catch is dus verplicht.
+
+## Stap 2 — Aanroep in routes.ts
+
+Zoek in `server/routes.ts` de handler die "Aannemen als medewerker" afhandelt.
+Aanwijzingen om hem te vinden:
+- Zet `applications.outcome = 'hired'`
+- Roept `syncEmployeeToWhatsappContact(...)` aan
+- Maakt een nieuwe row in `employees` aan
+- Staat ongeveer rond regel 7528–7580 (kan verschoven zijn)
+
+Voeg DIRECT NA `syncEmployeeToWhatsappContact(...)` en VOOR de `res.json(...)`
+deze blok toe:
+
+```ts
+try {
+  await sendPlanbordWebhook({
+    id:            String(newEmployee.id),
+    applicationId: application.id,
+    candidateId:   candidate.id,
+    employeeId:    newEmployee.id,
+    firstName:     newEmployee.firstName,
+    lastName:      newEmployee.lastName,
+    function:      newEmployee.function ?? candidate.function,
+    email:         newEmployee.email,
+    phone:         newEmployee.phone,
+    region:        newEmployee.region,
+    birthDate:     candidate.birthDate,
+    city:          candidate.city,
+    nationality:   candidate.nationality,
+    // Map intake-data vanuit candidate.tags / application.beoordeling / application.scores
+    // naar het schema in de helper. Onbekende velden mogen weg.
+    tags: {
+      profiel:      /* candidate-tags categorie 'profiel'      */ undefined,
+      talen:        /* candidate-tags categorie 'taal'          */ undefined,
+      vaardigheden: /* candidate-tags categorie 'vaardigheid'  */ undefined,
+    },
+    sterren:    application.beoordeling?.sterren,
+    scores:     application.scores,
+    opmerking:  application.beoordeling?.opmerking,
+    referentie: application.beoordeling?.referentie,
+    branche:       application.branche,
+    opdrachtgever: application.opdrachtgever,
+    contractType:  application.contractType,
+    startDate:     application.startDate,
+    language:      application.language ?? "Nederlands",
+  });
+} catch (err) {
+  console.error("[planbord-webhook] sync mislukt:", err);
+}
+```
+
+Pas de exacte veld-namen aan op het werkelijke Drizzle-schema. Onbekend?
+Stuur het mee als `undefined` — alleen `id`, `firstName`, `lastName`, `function`
+zijn verplicht aan planbord-zijde.
+
+## Stap 3 — Verifiëren
+
+1. Herstart de Express-workflow zodat env-vars worden geladen.
+2. Klik in de admin op "Aannemen als medewerker" bij een test-applicant.
+3. Check console-logs van DIT project — er moet `[planbord-webhook] verstuurd`
+   of een error verschijnen.
+4. Laat de planbord-eigenaar checken onder Contracten → Koppeling →
+   Stap 5 "Recente inkomende webhooks". Daar moet een groene "Aangemaakt"
+   entry verschijnen.
+
+## Belangrijk
+
+- Geen retry-logica, geen queue, geen bulk-sync. Eén fire-and-forget call.
+- Niet opnieuw aanroepen bij andere events (bv. "Verwerpen"). Alléén bij
+  succesvolle "Aannemen als medewerker"-actie.
+- Idempotent: het planbord doet UPSERT op `data.id`, dus dezelfde call
+  meerdere keren is veilig.

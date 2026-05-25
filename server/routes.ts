@@ -39,6 +39,7 @@ import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./bi
 import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail, sendAdminWelcomeEmail } from "./mail";
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
+import { sendPlanbordWebhook } from "./integrations/planbord-webhook";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
@@ -140,49 +141,6 @@ async function sendJaicobWebhook(candidate: {
     return { success: false, error: err?.message ?? 'Netwerkfout' };
   }
 }
-
-// ─── EXTRA Planbord webhook helper ────────────────────────────────────────────
-const PLANBORD_WEBHOOK_URL = process.env.PLANBORD_WEBHOOK_URL || '';
-
-async function sendPlanbordWebhook(candidate: { id: number; firstName: string; lastName: string; functionType: string }): Promise<{ success: boolean; error?: string }> {
-  try {
-    const secret = process.env.WEBHOOK_SECRET;
-    if (!secret) {
-      console.warn('[Webhook] WEBHOOK_SECRET niet geconfigureerd, webhook overgeslagen');
-      return { success: false, error: 'WEBHOOK_SECRET ontbreekt' };
-    }
-    const body = JSON.stringify({
-      event: 'applicant.ready',
-      timestamp: new Date().toISOString(),
-      data: {
-        id: String(candidate.id),
-        firstName: candidate.firstName,
-        lastName: candidate.lastName,
-        function: candidate.functionType,
-      },
-    });
-    const response = await fetch(PLANBORD_WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-webhook-secret': secret,
-      },
-      body,
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      console.error(`[Webhook] Planbord antwoordde ${response.status}: ${text}`);
-      return { success: false, error: `Planbord: HTTP ${response.status}` };
-    }
-    console.log(`[Webhook] Kandidaat #${candidate.id} (${candidate.firstName} ${candidate.lastName}) doorgestuurd naar Planbord`);
-    return { success: true };
-  } catch (err: any) {
-    console.error('[Webhook] Fout bij versturen naar Planbord:', err?.message ?? err);
-    return { success: false, error: err?.message ?? 'Netwerkfout' };
-  }
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 const registrationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -7569,6 +7527,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await syncEmployeeToWhatsappContact(employee, '/api/admin/applications/:id/aannemen');
 
+      // ─── Planbord webhook: fire-and-forget, mag de aannemen-flow nooit blokkeren ───
+      try {
+        const num = (v: any): number | undefined => {
+          const n = typeof v === 'string' ? Number(v) : v;
+          return typeof n === 'number' && Number.isFinite(n) ? n : undefined;
+        };
+        const str = (v: any): string | undefined => {
+          if (v == null) return undefined;
+          const s = String(v).trim();
+          return s ? s : undefined;
+        };
+
+        await sendPlanbordWebhook({
+          id: String(employee.id),
+          applicationId: application.id,
+          candidateId: application.candidateId ?? candidate?.id ?? undefined,
+          employeeId: employee.id,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          function: employee.functie || mappedFunctie || application.functionType,
+          email: employee.email ?? null,
+          phone: employee.phone ?? null,
+          birthDate: (employee.birthDate as any) ?? (candidate?.birthDate as any) ?? null,
+          city: employee.city ?? candidate?.city ?? null,
+          nationality: candidate?.nationality ?? str(fd.nationality) ?? null,
+          tags: {
+            talen: Array.isArray(fd.languages) ? fd.languages : undefined,
+            vaardigheden: Array.isArray(fd.experienceTypes) ? fd.experienceTypes : undefined,
+          },
+          sterren: {
+            communicatie: num(fd.communicationSkills) ?? candidate?.communicationScore ?? undefined,
+            algemeneIndruk: num(fd.overallImpression) ?? candidate?.overallImpressionScore ?? undefined,
+          },
+          scores: {
+            softskills: application.softskillsScore ?? candidate?.softSkillsScore ?? undefined,
+            bar: application.barScore ?? candidate?.barScore ?? undefined,
+            bediening: application.bedieningScore ?? candidate?.serviceScore ?? undefined,
+            diner: application.dinerScore ?? candidate?.dinerScore ?? undefined,
+          },
+          opmerking: str(fd.remarks) ?? candidate?.notes ?? null,
+          referentie: application.adminNotes ? { naam: application.adminNotes } : undefined,
+          branche: employee.branche ?? mappedBranche ?? null,
+          opdrachtgever: employee.opdrachtgever ?? null,
+          contractType: employee.contractType ?? null,
+          startDate: (employee.startDate as any) ?? null,
+          language: employee.language ?? 'Nederlands',
+        });
+      } catch (err: any) {
+        console.error('[planbord-webhook] sync mislukt:', err?.message ?? err);
+      }
+
       return res.status(201).json({ employee });
     } catch (error: any) {
       console.error("Error aannemen application:", error);
@@ -8382,13 +8391,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dinerScore: dinerScore ?? undefined,
       });
 
-      // Stuur direct door naar Planbord — iedereen die niet afgewezen wordt, is aangenomen
-      sendPlanbordWebhook({
-        id: application.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        functionType: data.functionType ?? '',
-      }).catch(err => console.error('[Webhook] Fout na createApplication:', err));
+      // Planbord-webhook gebeurt nu uitsluitend bij "Aannemen als medewerker"
+      // (POST /api/admin/applications/:id/aannemen), niet bij intake-submission.
 
       return res.status(201).json({ 
         message: "Sollicitatie succesvol opgeslagen",
