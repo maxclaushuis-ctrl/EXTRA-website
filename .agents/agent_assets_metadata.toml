@@ -5,7 +5,7 @@ generated = []
 id = "6Jkpu834J9Z4BjhP4pHvY"
 uri = "file://client/public/email-banner-extra.png"
 type = "image"
-title = "EXTRA banner — PNG (aanbevolen voor Word)"
+title = "EXTRA email-banner (1024×333, PNG)"
 
 [[outputs]]
 id = "tunj_kzV2cWeWUurZ76jF"
@@ -36,3 +36,9 @@ id = "5hNGmfqz4WB4N8__op3U9"
 uri = "file://attached_assets/banners/extra-banner-no-logo-1600x300.jpg"
 type = "image"
 title = "EXTRA banner zonder logo (JPG, 1600x300)"
+
+[[outputs]]
+id = "kc3R3oxtZEZZ8soaIqcNp"
+uri = "file://.local/email-template-prompt.md"
+type = "text"
+title = "Prompt voor ander Replit-project — EXTRA email-template"
