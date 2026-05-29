@@ -105,7 +105,7 @@ export async function haalBijlagenOp(
 ): Promise<{ attachments: OnboardingAttachment[]; ontbrekend: string[] }> {
   const attachments: OnboardingAttachment[] = [];
   const ontbrekend: string[] = [];
-  const { isOnboardingBijlageUrl, downloadOnboardingBijlageBuffer } = await import('./supabase');
+  const { isOnboardingBijlageUrl, downloadOnboardingBijlageBuffer } = await import('./objectStorageBijlagen');
 
   for (const b of template.bijlagen || []) {
     try {
@@ -184,6 +184,15 @@ export async function verstuurOnboardingMail(
 
   const { attachments, ontbrekend } = await haalBijlagenOp(template);
   console.log(`[Onboarding] Template ${template.id} (${template.naam}) → ${medewerker.email}: ${template.bijlagen?.length || 0} gekoppeld in DB, ${attachments.length} bijlage(n) ingelezen${attachments.length ? ' (' + attachments.map(a => `${a.bestandsnaam} ${(a.bestandsgrootte/1024).toFixed(0)}KB`).join(', ') + ')' : ''}${ontbrekend.length ? ', ontbrekend op disk: ' + ontbrekend.join(', ') : ''}`);
+  // Fail closed: als er gekoppelde bijlagen zijn die niet geladen konden worden,
+  // versturen we GEEN onvolledige mail. Beter een duidelijke fout dan een mail
+  // zonder de verwachte PDF('s).
+  if (ontbrekend.length > 0) {
+    throw new Error(
+      `Onboarding-mail niet verstuurd: ${ontbrekend.length} bijlage(n) konden niet uit de opslag worden geladen (${ontbrekend.join(', ')}). Controleer de bijlage(n) en probeer opnieuw.`
+    );
+  }
+
   const sizeCheck = controleerBijlagenGrootte(attachments);
   if (!sizeCheck.geldig) throw new Error(sizeCheck.melding);
 

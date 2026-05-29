@@ -7816,8 +7816,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!naam) {
         return res.status(400).json({ message: 'Naam is verplicht' });
       }
-      // Upload naar Supabase Storage (persistent over deploys)
-      const { uploadOnboardingBijlage } = await import('./supabase');
+      // Upload naar Object Storage (persistent over deploys)
+      const { uploadOnboardingBijlage } = await import('./objectStorageBijlagen');
       const publicUrl = await uploadOnboardingBijlage(file.buffer, file.originalname);
       const bijlage = await storage.createOnboardingBijlage({
         naam,
@@ -7839,8 +7839,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const b = await storage.getOnboardingBijlage(parseInt(req.params.id));
       if (!b) return res.status(404).json({ message: 'Bijlage niet gevonden' });
-      const { isOnboardingBijlageUrl, downloadOnboardingBijlageBuffer } = await import('./supabase');
-      // Supabase-bijlage: stream vanuit storage
+      const { isOnboardingBijlageUrl, downloadOnboardingBijlageBuffer } = await import('./objectStorageBijlagen');
+      // Object Storage-bijlage: stream vanuit storage
       if (isOnboardingBijlageUrl(b.bestandspad)) {
         const buf = await downloadOnboardingBijlageBuffer(b.bestandspad);
         if (!buf) return res.status(404).json({ message: 'Bestand niet meer aanwezig in storage' });
@@ -7866,8 +7866,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!oud) {
         return res.status(404).json({ message: 'Bijlage niet gevonden' });
       }
-      // Upload nieuw bestand naar Supabase
-      const { uploadOnboardingBijlage, isOnboardingBijlageUrl, deleteOnboardingBijlageStorage } = await import('./supabase');
+      // Upload nieuw bestand naar Object Storage
+      const { uploadOnboardingBijlage, isOnboardingBijlageUrl, deleteOnboardingBijlageStorage } = await import('./objectStorageBijlagen');
       const publicUrl = await uploadOnboardingBijlage(file.buffer, file.originalname);
       const updated = await storage.updateOnboardingBijlage(id, {
         bestandsnaam: file.originalname,
@@ -7900,7 +7900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (b) {
         try {
-          const { isOnboardingBijlageUrl, deleteOnboardingBijlageStorage } = await import('./supabase');
+          const { isOnboardingBijlageUrl, deleteOnboardingBijlageStorage } = await import('./objectStorageBijlagen');
           if (isOnboardingBijlageUrl(b.bestandspad)) {
             await deleteOnboardingBijlageStorage(b.bestandspad);
           } else {
