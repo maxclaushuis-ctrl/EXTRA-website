@@ -7761,6 +7761,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Bijlagen ophalen — testmail moet exact dezelfde PDF's bevatten als de echte mail
       const { attachments, ontbrekend } = await haalBijlagenOp(tpl);
       console.log(`[Testmail] Template ${tpl.id} (${tpl.naam}) → ${naar}: ${attachments.length} bijlage(n) gekoppeld${attachments.length ? ' (' + attachments.map(a => a.bestandsnaam).join(', ') + ')' : ''}${ontbrekend.length ? ', ontbrekend: ' + ontbrekend.join(', ') : ''}`);
+      // Fail closed: verstuur geen testmail zonder de gekoppelde bijlage(n), anders
+      // lijkt de test geslaagd terwijl de PDF('s) ontbreken.
+      if (ontbrekend.length > 0) {
+        return res.status(400).json({
+          message: `Testmail niet verstuurd: ${ontbrekend.length} bijlage(n) ontbreken in de opslag (${ontbrekend.join(', ')}). Upload de bijlage(n) opnieuw bij Onboarding › Bijlagen en probeer daarna opnieuw.`,
+          ontbrekendeBijlagen: ontbrekend,
+        });
+      }
       const sizeCheck = controleerBijlagenGrootte(attachments);
       if (!sizeCheck.geldig) {
         return res.status(400).json({ message: `Bijlagen te groot: ${sizeCheck.melding}` });

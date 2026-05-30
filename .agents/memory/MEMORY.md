@@ -1,0 +1,1 @@
+- [Onboarding attachment storage](onboarding-attachments-storage.md) — PDFs live in Replit Object Storage; old Supabase projects deleted; dev/prod use separate DBs; sends fail closed on missing files.
