@@ -47,34 +47,8 @@ import { db } from "./db";
 import { users, candidates as candidatesTable, applications } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
-import { getSupabaseAdmin, extractCvStoragePath, downloadCvBuffer, uploadWaAiAttachment, downloadWaAiAttachmentBuffer, deleteWaAiAttachmentStorage } from './supabase';
+import { uploadCvFile, downloadCvFile, isObjectStoragePath, uploadWaAiAttachment, downloadWaAiAttachmentBuffer, deleteWaAiAttachmentStorage } from './objectStorageFiles';
 
-async function uploadCvToSupabase(buffer: Buffer, mimetype: string, originalName: string): Promise<string> {
-  const ext = path.extname(originalName);
-  const filename = `cv-${Date.now()}${ext}`;
-  const client = getSupabaseAdmin();
-
-  // Zorg dat de bucket bestaat; maak hem aan als dat niet het geval is
-  const { data: buckets } = await client.storage.listBuckets();
-  const bucketExists = buckets?.some((b: { name: string }) => b.name === 'cvs');
-  if (!bucketExists) {
-    const { error: bucketErr } = await client.storage.createBucket('cvs', { public: false });
-    if (bucketErr && !bucketErr.message.includes('already exists')) {
-      throw new Error(`Supabase bucket aanmaken mislukt: ${bucketErr.message}`);
-    }
-  }
-
-  const { error } = await client.storage.from('cvs').upload(filename, buffer, {
-    contentType: mimetype,
-    upsert: false,
-  });
-  if (error) throw new Error(`Supabase upload fout: ${error.message}`);
-
-  // Sla het pad op als interne referentie (niet de publieke URL, die afhankelijk is van bucket-policy)
-  // We genereren signed URLs on-the-fly bij het downloaden
-  const { data } = client.storage.from('cvs').getPublicUrl(filename);
-  return data.publicUrl;
-}
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 import rateLimit from "express-rate-limit";
 
@@ -4759,7 +4733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: validation.error });
       }
 
-      const publicUrl = await uploadCvToSupabase(file.buffer, validation.mime, file.originalname);
+      const publicUrl = await uploadCvFile(file.buffer, validation.mime, file.originalname);
 
       const candidateId = req.body?.candidateId ? parseInt(req.body.candidateId) : null;
       if (candidateId && !isNaN(candidateId)) {
@@ -4808,7 +4782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!candidate) return res.status(404).json({ message: "Ongeldige of verlopen upload-link" });
       if (candidate.hasCv) return res.status(400).json({ message: "CV al ontvangen" });
 
-      const publicUrl = await uploadCvToSupabase(file.buffer, validation.mime, file.originalname);
+      const publicUrl = await uploadCvFile(file.buffer, validation.mime, file.originalname);
 
       // Sla CV op en wis het token (eenmalig gebruik)
       await storage.updateCandidate(candidate.id, {
@@ -6867,43 +6841,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!candidate || !candidate.cvFilename) {
         return res.status(404).json({ message: "Geen CV gevonden" });
       }
-      if (!candidate.cvFilename.startsWith('http')) {
+      if (!isObjectStoragePath(candidate.cvFilename)) {
         return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
 
       // preview=1 → inline weergave (geen download-header); anders forceer download
       const isPreview = req.query.preview === '1';
 
-      const storagePath = extractCvStoragePath(candidate.cvFilename);
-      if (!storagePath) {
-        return res.redirect(candidate.cvFilename);
+      const cvData = await downloadCvFile(candidate.cvFilename);
+      if (!cvData) {
+        return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
 
-      const ext = storagePath.split('.').pop()?.toLowerCase() ?? 'bin';
+      const ext = cvData.ext;
       const mimeType = ext === 'pdf'
         ? 'application/pdf'
         : ext === 'docx'
           ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
           : 'application/octet-stream';
 
-      // Altijd server-side proxy: haal het bestand op en stuur het zelf door.
-      // Dit voorkomt CORS-problemen en geeft ons volledige controle over Content-Disposition.
-      const { data: fileBlob, error: dlErr } = await getSupabaseAdmin()
-        .storage.from('cvs').download(storagePath);
-
-      if (dlErr || !fileBlob) {
-        // Laatste fallback: probeer signed URL
-        const { data, error } = await getSupabaseAdmin()
-          .storage.from('cvs')
-          .createSignedUrl(storagePath, 3600, { download: !isPreview });
-        if (error || !data?.signedUrl) {
-          console.error("Supabase signed URL fout:", error?.message);
-          return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
-        }
-        return res.redirect(data.signedUrl);
-      }
-
-      const safeName = encodeURIComponent(storagePath.split('/').pop() || 'cv');
+      const safeName = encodeURIComponent(candidate.cvFilename.split('/').pop() || 'cv');
       res.setHeader('Content-Type', mimeType);
       if (isPreview) {
         // Inline: laat de browser het bestand tonen i.p.v. downloaden
@@ -6911,7 +6868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
       }
-      return res.send(Buffer.from(await fileBlob.arrayBuffer()));
+      return res.send(cvData.buffer);
     } catch (error) {
       console.error("Error serving CV:", error);
       return res.status(500).json({ message: "Fout bij ophalen CV" });
@@ -6926,7 +6883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!candidate || !candidate.cvFilename) {
         return res.status(404).json({ message: "Geen CV gevonden" });
       }
-      if (!candidate.cvFilename.startsWith('http')) {
+      if (!isObjectStoragePath(candidate.cvFilename)) {
         return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
       const ext = candidate.cvFilename.includes('.') ? '.' + candidate.cvFilename.split('.').pop()!.split('?')[0].toLowerCase() : '';
@@ -6934,25 +6891,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Alleen Word-bestanden kunnen worden omgezet" });
       }
 
-      // Download via Supabase admin client (werkt voor publieke én private buckets)
-      const storagePath = extractCvStoragePath(candidate.cvFilename);
-      let cvBuffer: Buffer;
-
-      if (storagePath) {
-        const { data: fileBlob, error: dlErr } = await getSupabaseAdmin()
-          .storage.from('cvs').download(storagePath);
-        if (dlErr || !fileBlob) {
-          return res.status(404).json({ message: "CV niet beschikbaar in Supabase" });
-        }
-        cvBuffer = Buffer.from(await fileBlob.arrayBuffer());
-      } else {
-        // Fallback: probeer publieke URL
-        const cvResponse = await fetch(candidate.cvFilename);
-        if (!cvResponse.ok) {
-          return res.status(404).json({ message: "CV niet beschikbaar" });
-        }
-        cvBuffer = Buffer.from(await cvResponse.arrayBuffer());
+      // Download uit Replit Object Storage
+      const cvData = await downloadCvFile(candidate.cvFilename);
+      if (!cvData) {
+        return res.status(404).json({ message: "CV niet meer beschikbaar" });
       }
+      const cvBuffer: Buffer = cvData.buffer;
 
       // Extract and convert docx to HTML using adm-zip
       const zip = new AdmZip(cvBuffer);
@@ -7633,8 +7577,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─── Onboarding Module: templates, bijlagen, koppelingen, statistieken ────
 
-  // Onboarding-bijlagen worden opgeslagen in Supabase Storage (persistent over deploys).
-  // Multer gebruikt memory-storage zodat we de buffer direct naar Supabase kunnen pushen.
+  // Onboarding-bijlagen worden opgeslagen in Replit Object Storage (persistent over deploys).
+  // Multer gebruikt memory-storage zodat we de buffer direct naar Object Storage kunnen pushen.
   const onboardingBijlageUpload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -12152,7 +12096,7 @@ OTHER RULES:
         }
       }
 
-      // 1. Upload naar Supabase Storage
+      // 1. Upload naar Replit Object Storage
       const storagePath = await uploadWaAiAttachment(file.buffer, file.originalname, file.mimetype);
 
       // 2. Extract tekst (best-effort; lege string is OK)

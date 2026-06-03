@@ -3,7 +3,7 @@ import { storage } from './storage';
 import { EmailTemplate, User } from '@shared/schema';
 import fs from 'fs';
 import path from 'path';
-import { downloadCvBuffer } from './supabase';
+import { downloadCvFile } from './objectStorageFiles';
 
 // Configuratie voor de mail service
 let mailService: MailService | null = null;
@@ -573,6 +573,32 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
       <div style="color:#111827;font-size:14px;font-weight:600;">${value || '—'}</div>
     </td>`;
 
+  // Laad CV bijlage uit Replit Object Storage (vóór het opbouwen van de HTML,
+  // zodat de "CV bijgevoegd"-melding klopt met wat daadwerkelijk is bijgesloten)
+  const attachments: EmailAttachment[] = [];
+  if (candidate.cvFilename) {
+    try {
+      const cvData = await downloadCvFile(candidate.cvFilename);
+      if (cvData) {
+        const { buffer: cvBuffer, ext } = cvData;
+        const dotExt = `.${ext}`;
+        const mimeType = ext === 'pdf' ? 'application/pdf'
+          : ext === 'doc' ? 'application/msword'
+          : ext === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/octet-stream';
+        attachments.push({
+          content: cvBuffer.toString('base64'),
+          filename: `CV_${candidate.firstName}_${candidate.lastName}${dotExt}`,
+          type: mimeType,
+          disposition: 'attachment',
+        });
+      }
+    } catch (err) {
+      console.warn('Kon CV niet bijvoegen vanuit Object Storage:', err);
+    }
+  }
+  const hasAttachableCv = attachments.length > 0;
+
   const html = `<!DOCTYPE html>
 <html lang="nl">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">${emailMobileCss()}</head>
@@ -609,7 +635,7 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
               </tr>
               ${candidate.sourceChannel ? `<tr><td colspan="2" style="padding:10px 14px;vertical-align:top;"><div style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Binnenkomst via</div><div style="color:#111827;font-size:14px;font-weight:600;">${candidate.sourceChannel}</div></td></tr>` : ''}
             </table>
-            ${candidate.cvFilename ? `<div style="margin:16px 0 8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
+            ${hasAttachableCv ? `<div style="margin:16px 0 8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">📎 CV bijgevoegd als bijlage bij deze mail</div>` : `<div style="margin:16px 0 8px;padding:10px 14px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:13px;color:#854d0e;">⚠️ Nog geen CV geüpload door kandidaat</div>`}
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:8px;">
               <tr>
                 <td style="padding:0 0 8px 0;">
@@ -643,30 +669,6 @@ export async function sendAdminCandidateNotificationEmail(candidate: {
   const text = `Nieuwe aanmelding via doehetextra.nl\n\nVoornaam: ${candidate.firstName} | Achternaam: ${candidate.lastName}\nFunctie: ${functionLabel} | Woonplaats: ${candidate.city || '—'}\nE-mail: ${candidate.email || '—'} | Telefoonnummer: ${candidate.phone || '—'}\nGeboortedatum: ${candidate.birthDate || '—'} | Nationaliteit: ${candidate.nationality || '—'}\nBinnenkomst via: ${candidate.sourceChannel || '—'}\n\n✅ Accepteren: ${acceptUrl}\n❌ Afwijzen: ${rejectUrl}`;
 
   const recipients = getAdminRecipientsForFunction(candidate.functionType);
-
-  // Laad CV bijlage via Supabase admin client (werkt ook voor private buckets)
-  const attachments: EmailAttachment[] = [];
-  if (candidate.cvFilename) {
-    try {
-      const cvData = await downloadCvBuffer(candidate.cvFilename);
-      if (cvData) {
-        const { buffer: cvBuffer, ext } = cvData;
-        const dotExt = `.${ext}`;
-        const mimeType = ext === 'pdf' ? 'application/pdf'
-          : ext === 'doc' ? 'application/msword'
-          : ext === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          : 'application/octet-stream';
-        attachments.push({
-          content: cvBuffer.toString('base64'),
-          filename: `CV_${candidate.firstName}_${candidate.lastName}${dotExt}`,
-          type: mimeType,
-          disposition: 'attachment',
-        });
-      }
-    } catch (err) {
-      console.warn('Kon CV niet bijvoegen vanuit Supabase:', err);
-    }
-  }
 
   // Stuur naar elke ontvanger afzonderlijk (SendGrid vereist dit voor attachments bij meerdere ontvangers)
   const results = await Promise.all(recipients.map(to =>
