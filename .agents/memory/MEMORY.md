@@ -1,1 +1,2 @@
 - [Onboarding attachment storage](onboarding-attachments-storage.md) — PDFs live in Replit Object Storage; old Supabase projects deleted; dev/prod use separate DBs; sends fail closed on missing files.
+- [Object Storage uploads](object-storage-uploads.md) — server-side file.save() MUST use resumable:false + timeout, or uploads hang forever in deployment (works in dev).

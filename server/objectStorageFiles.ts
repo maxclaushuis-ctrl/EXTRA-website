@@ -6,9 +6,19 @@
 import { objectStorageClient } from './replit_integrations/object_storage';
 
 const PRIVATE_DIR = (process.env.PRIVATE_OBJECT_DIR || '').replace(/\/+$/, '');
+const UPLOAD_TIMEOUT_MS = 30_000;
 
 export const CV_PREFIX = 'cvs';
 export const WA_AI_PREFIX = 'wa-ai-attachments';
+
+/** Faalt luid na een time-out i.p.v. oneindig te blijven hangen (bv. trage Object Storage in deploy). */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<T>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} duurde langer dan ${ms / 1000}s (time-out)`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 /** Splitst een volledig object-pad (/<bucket>/<object>) in bucket + objectnaam. */
 function parseObjectPath(fullPath: string): { bucketName: string; objectName: string } {
@@ -38,10 +48,18 @@ export async function uploadFileToObjectStorage(
   const safe = (originalFilename || 'bestand').replace(/[^a-zA-Z0-9._-]/g, '_');
   const fullPath = `${PRIVATE_DIR}/${prefix}/${Date.now()}-${safe}`;
   const { bucketName, objectName } = parseObjectPath(fullPath);
-  await objectStorageClient.bucket(bucketName).file(objectName).save(buffer, {
-    contentType,
-    metadata: { contentType },
-  });
+  // resumable: false → één enkele upload-request i.p.v. een resumable sessie met
+  // meerdere round-trips. Resumable uploads kunnen in de deploy-omgeving blijven
+  // hangen; voor deze bestanden is een single-shot upload sneller en betrouwbaarder.
+  await withTimeout(
+    objectStorageClient.bucket(bucketName).file(objectName).save(buffer, {
+      contentType,
+      metadata: { contentType },
+      resumable: false,
+    }),
+    UPLOAD_TIMEOUT_MS,
+    'Uploaden naar Object Storage',
+  );
   return fullPath;
 }
 

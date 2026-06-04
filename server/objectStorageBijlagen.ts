@@ -7,6 +7,16 @@ import { objectStorageClient } from './replit_integrations/object_storage';
 
 const PRIVATE_DIR = (process.env.PRIVATE_OBJECT_DIR || '').replace(/\/+$/, '');
 const ONBOARDING_PREFIX = 'onboarding-bijlagen';
+const UPLOAD_TIMEOUT_MS = 30_000;
+
+/** Faalt luid na een time-out i.p.v. oneindig te blijven hangen (bv. trage Object Storage in deploy). */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<T>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} duurde langer dan ${ms / 1000}s (time-out)`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 /** Splitst een volledig object-pad (/<bucket>/<object>) in bucket + objectnaam. */
 function parseObjectPath(fullPath: string): { bucketName: string; objectName: string } {
@@ -36,10 +46,18 @@ export async function uploadOnboardingBijlage(
   const fullPath = `${PRIVATE_DIR}/${ONBOARDING_PREFIX}/${Date.now()}-${safe}`;
   const { bucketName, objectName } = parseObjectPath(fullPath);
   const file = objectStorageClient.bucket(bucketName).file(objectName);
-  await file.save(buffer, {
-    contentType: 'application/pdf',
-    metadata: { contentType: 'application/pdf' },
-  });
+  // resumable: false → één enkele upload-request i.p.v. een resumable sessie met
+  // meerdere round-trips. Resumable uploads kunnen in de deploy-omgeving blijven
+  // hangen; voor deze kleine PDF's is een single-shot upload sneller en betrouwbaarder.
+  await withTimeout(
+    file.save(buffer, {
+      contentType: 'application/pdf',
+      metadata: { contentType: 'application/pdf' },
+      resumable: false,
+    }),
+    UPLOAD_TIMEOUT_MS,
+    'Uploaden naar Object Storage',
+  );
   return fullPath;
 }
 
