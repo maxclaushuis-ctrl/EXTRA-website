@@ -1143,8 +1143,8 @@ function BijlagenTab() {
                   <Button variant="ghost" size="sm" onClick={() => window.open(`/api/onboarding/bijlagen/${b.id}/bekijken`, '_blank')} title="Bekijken">
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setVervangenId(b.id)} title="Vervangen">
-                    <RotateCcw className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" onClick={() => setVervangenId(b.id)} title="Bestand vervangen (koppeling blijft behouden)" data-testid={`button-vervang-bijlage-${b.id}`}>
+                    <RotateCcw className="h-4 w-4 mr-1" /> Vervangen
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(b)} title="Verwijderen" data-testid={`button-delete-bijlage-${b.id}`}>
                     <Trash2 className="h-4 w-4 text-red-500" />
@@ -1171,12 +1171,25 @@ function BijlagenTab() {
           <div className="space-y-3 text-sm">
             <p>
               Weet je zeker dat je <strong>{deleteTarget?.naam}</strong> wilt verwijderen?
-              Dit kan niet ongedaan gemaakt worden. Bijlagen die nog aan een actieve template
-              gekoppeld zijn, kunnen niet worden verwijderd.
+              Dit kan niet ongedaan gemaakt worden.
             </p>
-            <div className="flex gap-2 justify-end pt-1">
+            <p className="text-gray-500">
+              Wil je alleen het PDF-bestand bijwerken? Gebruik dan <strong>Vervangen</strong> in
+              plaats van verwijderen — zo blijft de koppeling met de template behouden. Bijlagen die
+              nog aan een actieve template gekoppeld zijn, kunnen niet worden verwijderd.
+            </p>
+            <div className="flex flex-wrap gap-2 justify-end pt-1">
               <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleteMutation.isPending}>
                 Annuleren
+              </Button>
+              <Button
+                variant="outline"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                onClick={() => { if (deleteTarget) { setVervangenId(deleteTarget.id); setDeleteTarget(null); } }}
+                disabled={deleteMutation.isPending}
+                data-testid="button-vervang-in-plaats"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" /> Vervangen
               </Button>
               <Button
                 variant="destructive"

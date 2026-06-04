@@ -7848,7 +7848,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const b = await storage.getOnboardingBijlage(id);
       const result = await storage.deleteOnboardingBijlage(id);
       if (!result.success) {
-        return res.status(409).json({ message: `Bijlage is gekoppeld aan ${result.gekoppeldAanTemplates} actieve template(s)` });
+        return res.status(409).json({
+          gekoppeldAanTemplates: result.gekoppeldAanTemplates,
+          message: `Deze bijlage is nog gekoppeld aan ${result.gekoppeldAanTemplates} actieve template(s) en kan daarom niet verwijderd worden. Wil je het PDF-bestand bijwerken? Gebruik dan de knop 'Vervangen' (↻) — zo blijft de koppeling met de template behouden.`,
+        });
       }
       if (b) {
         try {
