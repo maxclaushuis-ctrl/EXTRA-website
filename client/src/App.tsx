@@ -49,6 +49,7 @@ const KlantcasesHoreca = lazy(() => import("@/pages/KlantcasesHoreca"));
 const BHGGroupPage = lazy(() => import("@/pages/BHGGroupPage"));
 const XebiaPage = lazy(() => import("@/pages/XebiaPage"));
 const Contact = lazy(() => import("@/pages/Contact"));
+const Privacybeleid = lazy(() => import("@/pages/Privacybeleid"));
 
 const LandingPageEn = lazy(() => import("@/pages/en/LandingPageEn"));
 const HospitalityStaffAmsterdam = lazy(() => import("@/pages/en/HospitalityStaffAmsterdam"));
@@ -153,7 +154,7 @@ const PUBLIC_PATHS = [
   '/horeca-uitzendbureau-amsterdam', '/horeca-uitzendbureau-amsterdam-werkwijze',
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
-  '/klantcases-horeca', '/contact',
+  '/klantcases-horeca', '/contact', '/privacybeleid',
   '/vacatures',
   '/en',
   '/en/hospitality-staff-amsterdam', '/en/hotel-staffing-amsterdam',
@@ -288,6 +289,7 @@ function Router() {
           <Route path="/vacatures" component={Vacatures} />
           <Route path="/vacatures/:slug" component={VacatureDetail} />
           <Route path="/contact" component={Contact} />
+          <Route path="/privacybeleid" component={Privacybeleid} />
           <Route path="/dashboard" component={DashboardMockup} />
 
           {/* Beschermde routes */}

@@ -1,0 +1,109 @@
+PROMPT OM TE PLAKKEN IN HET REPLIT-PROJECT "EXTRA-website"
+(Kopieer alles hieronder, vanaf de regel "Voeg een privacybeleid-pagina toe")
+
+------------------------------------------------------------------------------
+
+Voeg een privacybeleid-pagina toe aan deze website.
+
+Doel: Apple vereist een publiek bereikbare privacy-URL voor onze app. De pagina
+moet straks live staan op: https://www.doehetextra.nl/privacybeleid
+
+Eisen:
+- Maak een nieuwe, publiek toegankelijke pagina op het pad /privacybeleid
+  (geen login nodig).
+- Gebruik exact de tekst die hieronder staat, met dezelfde kopjes en volgorde.
+- Stijl de pagina in dezelfde huisstijl als de rest van de site (lettertype
+  Poppins, accentkleur paars #7C3AED). GEEN emoji's en GEEN em-dash gebruiken.
+- Zet eventueel een link naar /privacybeleid in de footer.
+- Zorg dat de pagina na publiceren echt bereikbaar is op
+  https://www.doehetextra.nl/privacybeleid en HTTP 200 teruggeeft.
+
+Hieronder de exacte inhoud van de pagina:
+
+
+PRIVACYBELEID EXTRA MEDEWERKER-APP
+Laatst bijgewerkt: 6 juni 2026
+
+
+1. Wie zijn wij
+
+De EXTRA Medewerker-app wordt aangeboden door EXTRA B.V. ("EXTRA", "wij"), een
+bemiddelaar in horecapersoneel in Nederland. In dit privacybeleid leggen wij uit
+welke persoonsgegevens wij verwerken wanneer je de app gebruikt, waarom wij dat
+doen en welke rechten je hebt. Voor vragen kun je contact opnemen via
+info@doehetextra.nl.
+
+
+2. Welke gegevens wij verwerken
+
+Afhankelijk van hoe je de app gebruikt, verwerken wij de volgende gegevens:
+
+- Accountgegevens: je naam, e-mailadres en telefoonnummer.
+- Werkgerelateerde gegevens: je functie, beschikbaarheid, de diensten waarvoor je
+  je inschrijft, gewerkte uren en in- en uitkloktijden.
+- Verdiensten: je all-in uurtarief en de vergoeding per dienst.
+- Foto's: foto's die je zelf maakt of uploadt bij het afronden van een dienst
+  (bijvoorbeeld een uitschrijflijst).
+- Locatie (woonplaats): je opgegeven woonplaats, om diensten in jouw omgeving te
+  kunnen tonen. De app volgt je locatie niet op de achtergrond.
+- Apparaatgegevens: een notificatietoken om je pushmeldingen te kunnen sturen over
+  nieuwe en aankomende diensten.
+- Agenda: alleen met jouw toestemming voegen wij je diensten toe aan de agenda op
+  je apparaat. Deze gegevens blijven op je apparaat.
+
+
+3. Waarvoor wij je gegevens gebruiken
+
+- Om je in te laten loggen en je account te beheren.
+- Om beschikbare diensten te tonen die bij jou passen.
+- Om je inschrijvingen, gewerkte uren en verdiensten bij te houden.
+- Om je via pushmeldingen of e-mail op de hoogte te houden van diensten.
+- Om opdrachtgevers de juiste informatie te geven over de ingeplande medewerker
+  voor een dienst.
+
+
+4. Delen met anderen
+
+Wij verkopen je gegevens nooit. Wij delen gegevens alleen wanneer dat nodig is:
+
+- Met de opdrachtgever (het horecabedrijf) waar je een dienst draait, voor zover
+  nodig voor de uitvoering van die dienst.
+- Met dienstverleners die ons helpen de app te laten werken, zoals onze
+  e-mailprovider (voor inlog- en informatiemails) en onze hostingprovider (voor
+  het veilig opslaan van gegevens en geuploade foto's). Deze partijen mogen de
+  gegevens alleen namens ons verwerken.
+- Wanneer wij daartoe wettelijk verplicht zijn.
+
+
+5. Bewaartermijn
+
+Wij bewaren je gegevens niet langer dan nodig is voor de doelen hierboven of
+zolang dit wettelijk verplicht is (bijvoorbeeld voor de administratie van gewerkte
+uren). Daarna verwijderen wij je gegevens of maken wij ze anoniem.
+
+
+6. Beveiliging
+
+Wachtwoorden worden versleuteld opgeslagen en verbindingen verlopen via beveiligde
+(HTTPS) verbindingen. Wij nemen passende technische en organisatorische maatregelen
+om je gegevens te beschermen.
+
+
+7. Je rechten
+
+Je hebt het recht om je gegevens in te zien, te laten corrigeren of te laten
+verwijderen, en om bezwaar te maken tegen bepaalde verwerkingen. Je kunt je account
+laten verwijderen door een e-mail te sturen naar info@doehetextra.nl. Ook kun je
+een klacht indienen bij de Autoriteit Persoonsgegevens.
+
+
+8. Wijzigingen
+
+Wij kunnen dit privacybeleid van tijd tot tijd aanpassen. De meest recente versie
+staat altijd op deze pagina, met bovenaan de datum van de laatste wijziging.
+
+
+9. Contact
+
+EXTRA B.V.
+E-mail: info@doehetextra.nl
