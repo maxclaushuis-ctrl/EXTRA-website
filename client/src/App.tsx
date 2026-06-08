@@ -299,7 +299,7 @@ function Router() {
           <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>
           <Route path="/history">{() => <ProtectedRoute component={History} />}</Route>
           <Route path="/leaderboard">{() => <ProtectedRoute component={LeaderboardPage} />}</Route>
-          <Route path="/extraatje-dashboard">{() => <ProtectedRoute component={ExtraatjeDashboard} />}</Route>
+          <Route path="/extraatje-dashboard" component={ExtraatjeDashboard} />
 
           <Route component={NotFound} />
         </Switch>
