@@ -74,6 +74,7 @@ const Rewards = lazy(() => import("@/pages/user/Rewards"));
 const RewardDetail = lazy(() => import("@/pages/employee/RewardDetail"));
 const History = lazy(() => import("@/pages/user/History"));
 const LeaderboardPage = lazy(() => import("@/pages/LeaderboardPage"));
+const ExtraatjeDashboard = lazy(() => import("@/pages/dashboard"));
 
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MilestoneProvider } from "@/contexts/MilestoneContext";
@@ -298,6 +299,7 @@ function Router() {
           <Route path="/employee/rewards/:id">{() => <ProtectedRoute component={RewardDetail} />}</Route>
           <Route path="/history">{() => <ProtectedRoute component={History} />}</Route>
           <Route path="/leaderboard">{() => <ProtectedRoute component={LeaderboardPage} />}</Route>
+          <Route path="/extraatje-dashboard">{() => <ProtectedRoute component={ExtraatjeDashboard} />}</Route>
 
           <Route component={NotFound} />
         </Switch>
