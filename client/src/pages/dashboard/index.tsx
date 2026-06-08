@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MobileHeader } from '@/components/employee/MobileHeader';
 import { PointsHeader } from '@/components/employee/PointsHeader';
@@ -92,8 +92,13 @@ function LoginScreen() {
 
 export default function Dashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const [bootstrapped, setBootstrapped] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading) setBootstrapped(true);
+  }, [isLoading]);
+
+  if (!bootstrapped) {
     return (
       <div className="flex h-screen items-center justify-center bg-black">
         <div className="animate-pulse text-[#00AAFF]">Laden...</div>
