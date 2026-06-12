@@ -874,6 +874,7 @@ export const candidates = pgTable("candidates", {
   nationality: text("nationality"),
   city: text("city"),
   language: text("language"), // Taal die ze spreken
+  referralCode: text("referral_code"), // Aanbreng-code uit ?ref op /aanmelden — ondoorzichtige string, alleen opslaan/doorgeven
   
   // Functie en status
   functionType: candidateFunctionEnum("function_type").notNull(),
@@ -1160,6 +1161,7 @@ export const applications = pgTable("applications", {
   source: text("source").default("form"),
   importBatchId: text("import_batch_id"),
   adminNotes: text("admin_notes"),
+  referralCode: text("referral_code"), // Aanbreng-code, overgenomen van de kandidaat (fallback naast candidates.referral_code)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -503,6 +503,18 @@ export default function Aanmelden() {
       channel = "Jobster";
     }
 
+    // Referral-code uit ?ref opvangen. Ondoorzichtige string: niet parsen/valideren,
+    // alleen opslaan. Vasthouden via sessionStorage zodat de code blijft staan als de
+    // kandidaat wegnavigeert/terugkomt of het formulier in meerdere stappen invult.
+    let referralCode = (params.get("ref") || "").trim();
+    try {
+      if (referralCode) {
+        sessionStorage.setItem("extra_ref", referralCode);
+      } else {
+        referralCode = sessionStorage.getItem("extra_ref") || "";
+      }
+    } catch { /* sessionStorage niet beschikbaar — code blijft in de formstate */ }
+
     return {
       firstName: "",
       lastName: "",
@@ -523,6 +535,7 @@ export default function Aanmelden() {
       preferredDate: "",
       preferredTime: "",
       channel,
+      referralCode,
       // Horecamedewerker tags
       canIndependentShift: "" as "" | "ja" | "nee",
       canCarry3Plates: "" as "" | "ja" | "nee",
@@ -543,6 +556,13 @@ export default function Aanmelden() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Opgeslagen referral-code opruimen zodra de flow eindigt (afgerond of afgewezen),
+  // zodat een latere directe aanmelding in hetzelfde tabblad weer leeg/null is.
+  // Tijdens een lopende flow (navigeren/herladen) blijft de code juist behouden.
+  function clearStoredReferral() {
+    try { sessionStorage.removeItem("extra_ref"); } catch { /* niet beschikbaar */ }
+  }
 
   const lang = flow === "NL" ? "NL" : "EN";
   const t = COPY[lang];
@@ -633,6 +653,8 @@ export default function Aanmelden() {
   }
 
   async function saveCandidate(status: "in_behandeling" | "afgewezen", partial: boolean, rejReason?: string): Promise<number | null> {
+    // Bij afwijzing eindigt de flow: opgeslagen referral opruimen (code is al meegeslagen in de body).
+    if (status === "afgewezen") clearStoredReferral();
     try {
       const phone = formData.phoneCountryCode !== "+other"
         ? normalizeToE164(formData.phoneCountryCode, formData.phone)
@@ -647,6 +669,7 @@ export default function Aanmelden() {
         nationality: formData.nationality,
         city: formData.city,
         functionType: formData.preferredFunction,
+        referralCode: formData.referralCode || null,
         sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
         status,
         partial,
@@ -657,7 +680,9 @@ export default function Aanmelden() {
       if (savedCandidateId) {
         await apiRequest(`/api/aanmelden/${savedCandidateId}`, {
           method: "PATCH",
-          body: JSON.stringify({ email: formData.email, status, partial, rejectionReason: rejReason }),
+          // referralCode meesturen: vangt het geval op dat de kandidaat al bestond
+          // (backend zet 'm alleen als hij nog leeg is, nooit overschrijven)
+          body: JSON.stringify({ email: formData.email, status, partial, rejectionReason: rejReason, referralCode: formData.referralCode || null }),
         });
         return savedCandidateId;
       } else {
@@ -748,6 +773,7 @@ export default function Aanmelden() {
           firstName: formData.firstName, lastName: formData.lastName, email: formData.email,
           phone, birthDate: formData.birthDate, nationality: formData.nationality, city: formData.city,
           language, functionType: formData.preferredFunction, horecaExperience, needsTwv,
+          referralCode: formData.referralCode || null,
           interviewDate: null, interviewTime: null,
           sourceChannel: formData.channel ? `Website - ${formData.channel}` : "Website aanmeldflow",
           notes, partial: true,
@@ -776,10 +802,12 @@ export default function Aanmelden() {
     if (candidateId) {
       await apiRequest(`/api/aanmelden/${candidateId}`, {
         method: "PATCH",
-        body: JSON.stringify({ email: formData.email, language, horecaExperience, needsTwv, notes, partial: false, ...horecaTags }),
+        body: JSON.stringify({ email: formData.email, language, horecaExperience, needsTwv, notes, partial: false, referralCode: formData.referralCode || null, ...horecaTags }),
       });
     }
 
+    // Aanmelding afgerond en in de database opgeslagen: bewaarde referral opruimen.
+    clearStoredReferral();
     setStep("cv_schedule");
   }
 

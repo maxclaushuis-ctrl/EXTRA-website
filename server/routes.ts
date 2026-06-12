@@ -3981,6 +3981,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nationality: z.string().optional().nullable(),
         city: z.string().optional().nullable(),
         language: z.string().optional().nullable(),
+        referralCode: z.string().optional().nullable(), // Aanbreng-code uit ?ref — ondoorzichtige string
         functionType: z.enum(["housekeeping", "horecamedewerker", "chef", "frontoffice", "logistiek"]),
         horecaExperience: z.string().optional().nullable(),
         needsTwv: z.boolean().optional().default(false),
@@ -4030,6 +4031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nationality: validated.nationality || null,
         city: validated.city || null,
         language: validated.language || null,
+        referralCode: validated.referralCode || null,
         functionType: validated.functionType,
         horecaExperience: validated.horecaExperience || null,
         needsTwv: validated.needsTwv || false,
@@ -4223,6 +4225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: z.string().email(),
         status: z.enum(["in_behandeling", "gepland", "aangenomen", "afgewezen"]).optional(),
         language: z.string().optional().nullable(),
+        referralCode: z.string().optional().nullable(), // Aanbreng-code — additief, alleen bijwerken indien meegegeven
         horecaExperience: z.string().optional().nullable(),
         needsTwv: z.boolean().optional(),
         interviewDate: z.string().optional().nullable(),
@@ -4254,6 +4257,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.rejectionReason = validated.rejectionReason;
       }
       if (validated.language !== undefined) updateData.language = validated.language;
+      // Referral-code alleen zetten als hij is meegegeven én nog niet bestaat (nooit overschrijven/wissen)
+      if (validated.referralCode && !existing.referralCode) updateData.referralCode = validated.referralCode;
       if (validated.horecaExperience !== undefined) updateData.horecaExperience = validated.horecaExperience;
       if (validated.needsTwv !== undefined) updateData.needsTwv = validated.needsTwv;
       if (validated.interviewDate !== undefined) updateData.interviewDate = validated.interviewDate;
@@ -7518,6 +7523,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           contractType: employee.contractType ?? null,
           startDate: (employee.startDate as any) ?? null,
           language: employee.language ?? 'Nederlands',
+          // Aanbreng-code meesturen: eerst van de sollicitatie, anders van de gekoppelde kandidaat
+          referralCode: application.referralCode ?? candidate?.referralCode ?? null,
         });
       } catch (err: any) {
         console.error('[planbord-webhook] sync mislukt:', err?.message ?? err);
@@ -7534,6 +7541,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sollicitant aannemen → maakt medewerker aan
+  // LET OP: dit endpoint stuurt bewust GEEN Planbord-webhook en draagt dus ook geen
+  // referral-code over. Referral-kandidaten lopen altijd via het aanmeldformulier en de
+  // sollicitatie-route (applications/:id/aannemen), die de webhook + referralCode wél stuurt.
+  // Niet omleiden naar deze route voor referral-kandidaten.
   app.post("/api/admin/candidates/:id/aannemen", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const candidateId = parseInt(req.params.id);

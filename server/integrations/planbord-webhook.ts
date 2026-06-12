@@ -50,6 +50,7 @@ export interface PlanbordPayloadData {
   contractType?: string | null;
   startDate?: string | null;
   language?: string | null;
+  referralCode?: string | null; // Aanbreng-code van de kandidaat — optioneel & additief
 }
 
 export async function sendPlanbordWebhook(data: PlanbordPayloadData): Promise<void> {

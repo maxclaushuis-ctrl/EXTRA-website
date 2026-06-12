@@ -1,0 +1,78 @@
+Pas in dit project (EXTRA-website: aparte React + Vite + Express + 
+Drizzle/PostgreSQL-app, domein doehetextra.nl) het aanmeld- en 
+sollicitatieproces aan zodat een referral-code wordt opgevangen, 
+vastgehouden en bij aanname meegestuurd naar het Planbord. Dit is stap 
+2 van 3. Sluit aan op de bestaande Planbord-webhook; bouw geen nieuwe 
+verbinding.
+
+== CONTEXT UIT STAP 1 (exacte aansluiting) ==
+- De referral-link is in het Planbord vastgezet in de vorm:
+  https://www.doehetextra.nl/aanmelden?ref=<code>
+- De parameter heet exact "ref".
+- De code is een random string van hoofdletters en cijfers zonder 
+  verwarrende tekens (geen 0/O/1/I/L), bv. "8EKLVBLA". Behandel hem als 
+  een ondoorzichtige string; niet parsen of valideren op inhoud, alleen 
+  opslaan en doorgeven.
+- Het formulier op het pad /aanmelden moet de ref-parameter opvangen.
+
+== CODE OPVANGEN UIT DE LINK ==
+- De kandidaat opent het aanmeldformulier via /aanmelden?ref=<code>.
+- Lees de ref-parameter uit bij het openen van het formulier op dat pad.
+- Sla de code op als een VAST, VERBORGEN veld op het sollicitatieformulier 
+  (niet zichtbaar/invulbaar voor de kandidaat), zodat hij meegaat door 
+  het hele formulier heen.
+- Komt iemand binnen zonder ?ref (directe aanmelding), dan blijft het 
+  veld leeg/null. Dat is een geldige situatie, geen fout.
+- Let op edge-cases: als de kandidaat tussendoor wegnavigeert en 
+  terugkomt, of het formulier in meerdere stappen invult, moet de code 
+  behouden blijven (bewaar 'm niet alleen in de URL maar ook in de 
+  formulierstate/sessie tot opslag in de database).
+
+== CODE VASTHOUDEN DOOR HET HELE SOLLICITATIEPROCES ==
+- Bewaar de referral-code bij de sollicitatie/kandidaat in de database 
+  van dit project (een kolom referral_code op de applications- en/of 
+  candidates-tabel), zodat de code bewaard blijft tussen aanmelding en 
+  het latere moment van aanname (dat kan dagen/weken later zijn).
+- De code moet persistent zijn in de database, niet alleen in de sessie 
+  of de URL.
+- Zorg dat de code bij de juiste sollicitatie/kandidaat hoort, ook als 
+  het sollicitatieproces uit meerdere stappen of schermen bestaat.
+
+== CODE MEESTUREN IN DE BESTAANDE WEBHOOK ==
+- De bestaande "Aannemen als medewerker"-handler stuurt via 
+  sendPlanbordWebhook() een payload { event, timestamp, source, data } 
+  naar het Planbord (event applicant.ready).
+- Voeg in server/integrations/planbord-webhook.ts aan het type 
+  PlanbordPayloadData een optioneel veld toe: 
+  referralCode?: string | null;
+- Voeg in de aanname-handler (server/routes.ts, het 
+  applications/:id/aannemen-endpoint) in het data-object één regel toe:
+  referralCode: <de opgeslagen referral_code van deze sollicitatie/
+  kandidaat> ?? null
+- Puur additief: verander niets aan bestaande velden, validatie of 
+  werking. Bestaande payloads zonder referralCode blijven exact werken.
+
+== BORGING: ALTIJD VIA DE SOLLICITATIE-ROUTE ==
+- Referral-kandidaten lopen altijd via het normale aanmeldformulier en 
+  de sollicitatie-route (applications/:id/aannemen), die de webhook al 
+  stuurt.
+- Het losse-kandidaat-endpoint (candidates/:id/aannemen) hoeft NIET 
+  aangepast te worden. Pas het niet aan, maar zet er een comment bij dat 
+  referral bewust via de sollicitatie-route loopt, zodat een latere 
+  ontwikkelaar het niet per ongeluk omleidt.
+
+== AVG ==
+- De kandidaat vult zijn eigen gegevens in; de referral-code is enkel 
+  herkomst van de aanbrenger, geen persoonsgegeven van een derde.
+- Verander niets aan welke persoonsgegevens worden gevraagd; voeg alleen 
+  de verborgen code toe.
+
+== OPLEVERING (bevestig expliciet) ==
+1. Hoe de ref-parameter op /aanmelden wordt gelezen en in welk verborgen 
+   veld hij belandt
+2. In welke databasekolom de code wordt bewaard, en dat hij de hele 
+   sollicitatieperiode overleeft
+3. BEWIJS dat de code daadwerkelijk in de webhook-payload zit als 
+   data.referralCode op het moment van aanname (toon de payload of een 
+   log)
+4. Dat aanmeldingen zonder code gewoon blijven werken (leeg/null veld)
