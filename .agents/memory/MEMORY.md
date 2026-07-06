@@ -1,3 +1,4 @@
 - [Onboarding attachment storage](onboarding-attachments-storage.md) — PDFs live in Replit Object Storage; old Supabase projects deleted; dev/prod use separate DBs; sends fail closed on missing files.
 - [db:push is interactive](db-push-interactive.md) — drizzle-kit push needs a TTY; piped stdin won't answer prompts. For additive nullable columns, ALTER TABLE directly + keep schema.ts in sync.
+- [Planbord webhook resend](planbord-webhook-resend.md) — applicant.ready is idempotent (re-send updates, no duplicates); Planbord reads only data.referralCode; dev env secrets reach real Planbord.
 - [Object Storage uploads](object-storage-uploads.md) — server-side file.save() MUST use resumable:false + timeout, or uploads hang forever in deployment (works in dev).

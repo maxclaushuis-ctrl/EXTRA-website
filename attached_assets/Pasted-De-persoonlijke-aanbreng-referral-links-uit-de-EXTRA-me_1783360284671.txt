@@ -1,0 +1,48 @@
+De persoonlijke aanbreng-/referral-links uit de EXTRA medewerker-app werken niet,
+en de oorzaak ligt in deze website. Onderzoek en repareer het volgende:
+
+CONTEXT
+- Medewerkers delen een persoonlijke uitnodigingslink in de vorm:
+  https://www.doehetextra.nl/aanmelden?ref=<CODE>  (voorbeeld: ?ref=F26F66GU)
+- Als iemand zich via zo'n link aanmeldt, hoort die code uiteindelijk mee te
+  gaan in de "applicant.ready"-webhook die deze website naar het
+  planbord/API-systeem stuurt, als veld `data.referralCode` (string, top-level
+  in het data-object). Het ontvangende systeem leest uitsluitend
+  `data.referralCode`; ontbreekt dat veld, dan wordt de aanbreng stilzwijgend
+  niet geregistreerd.
+
+BEWIJS DAT HET NU MISGAAT
+- Op 6 juli 2026 rond 15:34 is de applicant.ready-webhook verstuurd voor
+  sollicitant "Okke Ploegsma (test)" (id/employeeId 130, applicationId 606,
+  candidateId 677). De payload bevatte deze velden:
+  firstName, lastName, city, nationality, id, applicationId, tags, sterren,
+  function, email, phone, birthDate, language, contractType, startDate,
+  candidateId, employeeId, scores, opmerking, branche, opdrachtgever
+  → GEEN referralCode, terwijl deze persoon zich via een ?ref=-link had
+  aangemeld (code F26F66GU).
+
+ONDERZOEK
+1. Leest de pagina /aanmelden de query-parameter ?ref= überhaupt uit?
+2. Wordt die code bewaard bij de sollicitatie zelf (in de database bij de
+   sollicitant), of alleen tijdelijk in de browser? Let op: de
+   applicant.ready-webhook wordt pas later verstuurd (na beoordeling in het
+   dashboard), dus de code moet bij het sollicitant-record worden opgeslagen
+   op het moment van aanmelden — een cookie/sessie alleen is niet genoeg.
+3. Overleeft de code een meerstaps-formulier, paginaherladen en het later
+   afronden van de aanmelding?
+
+REPARATIE
+1. Vang ?ref= op bij binnenkomst op /aanmelden (en bewaar hem ook als de
+   bezoeker eerst nog andere pagina's bekijkt voordat hij het formulier invult).
+2. Sla de code op bij het sollicitant-record in de database.
+3. Stuur hem mee in ELKE applicant.ready-webhook als `data.referralCode`.
+4. Test end-to-end: meld een testsollicitant aan via /aanmelden?ref=TESTCODE
+   en controleer dat de verstuurde webhook-payload `referralCode: "TESTCODE"`
+   bevat.
+
+NAZORG (voor het gemiste geval)
+- Verstuur daarna de applicant.ready-webhook voor applicationId 606 /
+  employeeId 130 (Okke Ploegsma (test)) OPNIEUW, nu mét
+  `referralCode: "F26F66GU"`. Het ontvangende systeem is idempotent en werkt
+  bestaande sollicitanten bij, dus deze her-verzending registreert de gemiste
+  aanbreng alsnog.
