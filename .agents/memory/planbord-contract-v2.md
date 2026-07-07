@@ -19,3 +19,8 @@ De webhook is uitgebreid van v1 naar v2 **zonder** bestaande v1-velden te wijzig
 
 ## Hergebruik
 `buildIntakePayloadBlock(fd, functionType)` en `normalizeErvaringsduur(...)` zijn de gedeelde helpers; de backfill-export (stap 3) moet exact dezelfde structuur/normalisatie hergebruiken.
+
+## Productie-data lezen in deze repl
+- De app draait op een externe Neon-DB via `DATABASE_URL`; `checkDatabase()` (Replit-ingebouwde DB) meldt daarom "not provisioned" — dat is geen fout.
+- Productie-data is tóch read-only te lezen via `executeSql({ environment: "production" })` (alleen SELECT). Dev-workspace en productie hebben aparte databases/data.
+- Voor de backfill-samenvatting: haal ruwe `function_type` + `form_data` op via de prod-replica, en draai die lokaal door `buildIntakePayloadBlock` (TS-normalisatie kan niet in SQL). Verwijder tijdelijke exportbestanden daarna — `form_data` bevat PII (naam/e-mail/telefoon).
