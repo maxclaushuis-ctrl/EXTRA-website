@@ -1,0 +1,24 @@
+Vervolg op je verkenningsrapport. We breiden de applicant.ready-payload uit naar contractversie 2 en maken een eenmalige backfill-export. Werk in drie stappen, rapporteer na elke stap en wacht op mijn akkoord. Wijzig niets destructiefs, verzin niets.
+Stap 1: Verificatie webhook-levering (alleen onderzoeken)
+Stel vast of de webhook op dit moment daadwerkelijk verstuurd wordt: bestaat WEBHOOK_SECRET in de deployment-secrets, en zijn er logregels die bewijzen dat recente aannemen-acties de call verstuurd dan wel overgeslagen hebben ("url of secret ontbreekt")? Rapporteer de feitelijke situatie. Ontbreekt het secret, stel dan alleen voor hoe het gezet moet worden; ik zet secrets zelf.
+Stap 2: Contract v2 in de payload
+Breid de payload uit zonder één bestaand veld te wijzigen of te verwijderen. Nieuw:
+
+Top-level veld payloadVersion: 2.
+Binnen data een nieuw blok intake met:
+
+functionType: de ruwe waarde (horecamedewerker / chef / housekeeping / logistiek)
+interviewer
+ervaringsduur als object { raw, code }: raw is de letterlijke opgeslagen waarde, code een canonieke code. Normalisatie: schaal Horeca/Logistiek → geen, m0_6, m6_12, j1_2, j2_3, j3_5, j5_plus (beide streepjesvarianten en spatievarianten moeten naar dezelfde code mappen); schaal Chef/Housekeeping → j1_3, j3_5, j5_10, j10_plus. Een waarde die niet mapt krijgt code "onbekend" plus een error-log; nooit gokken.
+experienceLevel: veel / beperkt / geen / null.
+Matchingvelden per functie, letterlijk zoals opgeslagen: horeca: experienceTypes, canWorkIndependently, canCarry3Plates, isBarista, canShakeCocktails, isAssistantChef, canWashDishes, isPromoWorker, serviceSkills, barSkills, dinerSkills (ruwe 1-5); chef: chefKitchenTypes, chefDiplomas, chefLeadershipExp; housekeeping: hkTasks, hkLocationTypes, hkHotelStars; logistiek: logLicenseB, logLicenseCCE, logHeftruckCert, logVCA, logOtherCertificates, logWorkEnvironments, logScanEquipment, logPhysicalLoad, logWorkStyle, logNightShifts, logTransport, logMaxTravelTime.
+Beschikbaarheid: availableHours, preferredDays, preferredTimes en de logistiek-varianten logAvailableHours, logAvailableFrom, logPreferredDays, logPreferredTimes.
+
+
+Stuur NIET mee als losse waarden: appearance, attitude, assessmentRating. Die blijven alleen lokaal opgeslagen.
+Velden die leeg zijn: als null of weglaten, maar consistent en gedocumenteerd.
+Lever als bewijs: één volledige voorbeeld-payload v2 per functie met dummygegevens, plus de normalisatietabel raw → code voor alle bekende waardevarianten uit je verkenningsrapport (inclusief beide streepjesconventies).
+
+Stap 3: Eenmalige backfill-export (read-only)
+Maak een read-only exportscript of admin-endpoint dat voor alle historische aangenomen sollicitaties een JSON-array oplevert met per record: applicationId, candidateId, employeeId, functionType, ervaringsduur { raw, code } (zelfde normalisatie als stap 2), experienceLevel, en dezelfde matching- en beschikbaarheidsvelden als in het intake-blok. Records waar de duurvraag ontbreekt in formData markeer je expliciet met ervaringsduur: null, niet weglaten. Het script wijzigt niets aan de data. Toon als bewijs de eerste paar records geanonimiseerd en het totaalaantal.
+Rapporteer na stap 1 en wacht op mijn akkoord voordat je stap 2 bouwt.
