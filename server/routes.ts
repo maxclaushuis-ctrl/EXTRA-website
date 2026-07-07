@@ -39,7 +39,7 @@ import { awardBirthdayPoints, BIRTHDAY_POINTS, POINTS_TO_EURO_RATIO } from "./bi
 import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNotificationEmail, sendAdminCandidateNoCvEmail, sendCalendlyInviteEmail, sendApplicationRejectionEmail, sendCvUploadFirstEmail, sendCandidateRejectionEmailDiensten, sendCandidateRejectionEmailCv, sendTwvExpiryReminderEmail, sendAdminWelcomeEmail } from "./mail";
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
-import { sendPlanbordWebhook } from "./integrations/planbord-webhook";
+import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
@@ -7525,6 +7525,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           language: employee.language ?? 'Nederlands',
           // Aanbreng-code meesturen: eerst van de sollicitatie, anders van de gekoppelde kandidaat
           referralCode: application.referralCode ?? candidate?.referralCode ?? null,
+          // Contract v2: additief intake-blok (matching, ervaringsduur, beschikbaarheid)
+          intake: buildIntakePayloadBlock(fd, application.functionType),
         });
       } catch (err: any) {
         console.error('[planbord-webhook] sync mislukt:', err?.message ?? err);
