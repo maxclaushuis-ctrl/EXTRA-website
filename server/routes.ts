@@ -40,6 +40,7 @@ import { initMailService, sendCandidateConfirmationEmail, sendAdminCandidateNoti
 import { verstuurOnboardingMail, logOnboardingFout, notificeerOnboardingFout, notificeerBulkVoltooid } from "./onboardingService";
 import { initPlanningAPI, getPlanningAPI } from "./planning-api";
 import { sendPlanbordWebhook, buildIntakePayloadBlock } from "./integrations/planbord-webhook";
+import { buildPlanbordBackfill } from "./integrations/planbord-backfill";
 import { initChallengeSyncService, getChallengeSyncService } from "./challenge-sync";
 import { initPushNotificationService, getPushNotificationService, NotificationTemplates } from "./push-notifications";
 import { WebSocketServer, WebSocket } from 'ws';
@@ -7539,6 +7540,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? "Er bestaat al een medewerker met dit e-mailadres"
         : (error?.message || "Er is iets misgegaan bij het aanmaken van de medewerker");
       return res.status(error?.code === '23505' ? 409 : 500).json({ message: msg });
+    }
+  });
+
+  // ─── Planbord backfill-export (READ-ONLY) ───────────────────────────────
+  // Levert voor alle historisch aangenomen sollicitaties een JSON-array + een
+  // datasamenvatting. Wijzigt NIETS aan de data.
+  app.get("/api/admin/planbord/backfill", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const result = await buildPlanbordBackfill();
+      return res.json(result);
+    } catch (err: any) {
+      console.error('[planbord-backfill] mislukt:', err?.message ?? err);
+      return res.status(500).json({ message: 'Backfill-export mislukt' });
     }
   });
 
