@@ -42,3 +42,9 @@ id = "kc3R3oxtZEZZ8soaIqcNp"
 uri = "file://.local/email-template-prompt.md"
 type = "text"
 title = "Prompt voor ander Replit-project — EXTRA email-template"
+
+[[outputs]]
+id = "5Hshy195eiwFfkLbNkWZm"
+uri = "file://webhook-verkenning-rapport.md"
+type = "text"
+title = "Verkenningsrapport applicant.ready webhook & intake-formulier"

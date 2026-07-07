@@ -1,0 +1,18 @@
+Verkenningsopdracht, alleen onderzoeken en rapporteren. Wijzig niets, verzin niets. Dit rapport wordt gebruikt om de intake-data foutloos te koppelen aan een ander project dat deze data via de webhook ontvangt.
+Dit project bevat de sollicitatie-/intakewizard met vier functies (Horecamedewerker, Chef, Housekeeping, Logistiek), acht stappen, en een startstap met "Gesprek afgenomen door". Bij afronding wordt een webhook applicant.ready verstuurd met een formData-payload. Ik wil exact weten hoe die data is opgebouwd.
+1. Veldinventarisatie per functie
+Maak per functie een mappingtabel met vier kolommen: vraaglabel zoals de gebruiker het ziet | exacte JSON-key in de data | alle mogelijke opgeslagen waarden letterlijk (dus bijvoorbeeld "1-2 jaar" of "1_2_jaar" of een index, precies zoals het in de data staat) | verplicht ja/nee.
+Besteed daarbij bijzondere aandacht aan deze vier duurvragen, want daar draait de koppeling om:
+
+Horecamedewerker: "Horeca ervaring" (Geen ervaring t/m 5+ jaar)
+Chef: "Jaren ervaring als kok" (1-3 t/m 10> jaar)
+Housekeeping: "Jaren ervaring in housekeeping" (1-3 t/m 10> jaar)
+Logistiek: "Logistieke werkervaring" (Geen ervaring t/m 5+ jaar)
+
+En aan de interviewer-stap: de exacte key en waarden van "Ervaring" (Veel ervaring / Beperkte ervaring / Geen ervaring), "Beoordeling", en de sterrenvelden.
+2. De webhook-payload
+Toon hoe de applicant.ready-payload wordt opgebouwd: welke code stelt hem samen, worden álle formuliervelden 1-op-1 meegestuurd of wordt er gefilterd, hernoemd of getransformeerd? Geef één volledige voorbeeld-payload per functie met dummygegevens, exact in de structuur zoals hij verstuurd wordt. Markeer expliciet elk veld uit stap 1 dat NIET in de payload terechtkomt, met de reden.
+3. Versiegeschiedenis
+Zijn er veldnamen of antwoordwaarden in de loop van de tijd gewijzigd (bijvoorbeeld via git-historie van de formulierdefinities)? Zo ja, welke oude varianten kunnen nog in eerder verstuurde payloads zitten? Dat bepaalt of het ontvangende project met meerdere naamvarianten rekening moet houden.
+4. Oplevering
+Eén overzichtelijk rapport: de vier mappingtabellen, de voorbeeld-payloads, de lijst met velden die niet meegestuurd worden, en de versiegeschiedenis. Geen aannames: wat je niet in de code kunt aantonen, meld je als onbekend.
