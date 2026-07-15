@@ -1264,6 +1264,10 @@ export type VacancyPost = typeof vacancyPosts.$inferSelect;
 // CRM Tables
 // ==========================================
 
+// Salesdashboard enumeraties (nieuw, naast bestaande vrije-tekst velden)
+export const crmCategorieEnum = pgEnum('crm_categorie', ['Hotel', 'Logistiek', 'Events']);
+export const crmPotentieEnum = pgEnum('crm_potentie', ['Laag', 'Medio', 'Hoog']);
+
 export const crmCompanies = pgTable("crm_companies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -1288,9 +1292,18 @@ export const crmCompanies = pgTable("crm_companies", {
   tags: text("tags").array().default([]), // hot_lead | warm_lead | cold_lead | vip | urgent | follow_up | etc.
   functions: text("functions").array().default([]), // horecamedewerker | chef | housekeeping | logistiek
   staffingRequestId: integer("staffing_request_id"), // link to original staffing request if created from form
+  // ─── Salesdashboard-velden (nieuw, naast de bestaande CRM-velden — NIET verwarren met type/owner/potential/notes) ───
+  categorie: crmCategorieEnum("categorie"), // Hotel | Logistiek | Events (kanban-bord per categorie)
+  eigenaarUserId: integer("eigenaar_user_id").references(() => users.id, { onDelete: 'set null' }), // sales-eigenaar (Max/Tommy)
+  potentie: crmPotentieEnum("potentie"), // Laag | Medio | Hoog (genormaliseerde variant van `potential`)
+  volgendeActieDatum: date("volgende_actie_datum"), // zonder datum = achterstallig in de pipeline
+  notities: text("notities"), // snelle aantekeningen op de sales-kaart (bewust apart van `notes`)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  salesPipelineIdx: index("crm_companies_categorie_eigenaar_phase_idx").on(table.categorie, table.eigenaarUserId, table.phase),
+  salesActieIdx: index("crm_companies_eigenaar_volgende_actie_idx").on(table.eigenaarUserId, table.volgendeActieDatum),
+}));
 
 export const crmContacts = pgTable("crm_contacts", {
   id: serial("id").primaryKey(),
@@ -1324,7 +1337,25 @@ export const crmReminders = pgTable("crm_reminders", {
   note: text("note"),
   status: text("status").default("open").notNull(), // open | completed | overdue
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  companyDueIdx: index("crm_reminders_company_due_idx").on(table.companyId, table.dueDate),
+}));
+
+// Salesdashboard: activiteitenlog per bedrijf (nieuw — los van crm_notes)
+export const activities = pgTable("activities", {
+  id: serial("id").primaryKey(),
+  crmCompanyId: integer("crm_company_id").references(() => crmCompanies.id, { onDelete: 'cascade' }).notNull(),
+  type: text("type").notNull(), // call | email | meeting | note (CHECK-constraint in DB)
+  description: text("description"),
+  createdByUserId: integer("created_by_user_id").references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  companyCreatedIdx: index("activities_company_created_idx").on(table.crmCompanyId, table.createdAt),
+}));
+
+export const insertActivitySchema = createInsertSchema(activities).omit({ id: true, createdAt: true });
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Activity = typeof activities.$inferSelect;
 
 export const insertCrmCompanySchema = createInsertSchema(crmCompanies).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCrmCompany = z.infer<typeof insertCrmCompanySchema>;

@@ -1,0 +1,94 @@
+PROMPT 1 — Salesdashboard: Datafundament (enums, indexen, eigenaren) [GECORRIGEERD]
+
+Dit is de eerste van vijf incrementele bouwsprints. Dit deel maakt de pipeline functioneel door het datamodel te normaliseren. Geen UI-veranderingen, geen nieuwe pagina's; alleen database en API-logica.
+
+BELANGRIJK — lees dit voor je begint:
+Een eerdere analyse van de codebase (buiten Replit, op een git-clone) liet zien dat een aantal aannames in de oorspronkelijke versie van deze prompt niet klopten met het echte schema. Onderstaande instructies zijn al gecorrigeerd. Wijk hier niet vanaf zonder dit terug te koppelen:
+- Er bestaat geen kolom `categoria`, `eigenaar`, `fase` of `potentie` op crm_companies. De echte kolommen heten `type`, `owner`/`account_owner`, `phase`, `potential` en worden nu al gebruikt door de bestaande CRM-module (client/src/components/crm/CrmModule.tsx) met eigenaren max/eveline/charlotte/lea. NIET hernoemen of overschrijven — voeg NIEUWE kolommen toe zodat de bestaande CRM-schermen ongewijzigd blijven werken.
+- users.id is een serial INTEGER, geen UUID. Elke foreign key naar users moet dus integer zijn.
+- users.role is een gedeeld enum (`admin`/`employee`) dat overal voor auth wordt gebruikt. Voeg hier GEEN nieuwe waarde aan toe — te risicovol voor de rest van de app. Gebruik in plaats daarvan een hardcoded e-mail-allowlist voor de sales-specifieke endpoints (zie hieronder).
+- Alle bestaande CRM-endpoints zitten onder /api/admin/crm/* en zijn afgeschermd met adminMiddleware (vereist session.userRole === 'admin'). Tommy is geen admin en moet dat ook niet worden (te veel toegang tot ongerelateerde admin-schermen). Bouw daarom een aparte, lichte middleware voor de nieuwe sales-endpoints.
+- crm_reminders bestaat al met company_id als verplichte (NOT NULL) foreign key — die stap uit de originele prompt is dus al gedaan, alleen de index ontbreekt nog.
+- Er bestaat nog geen activities-tabel. Dat is een nieuwe tabel, geen migratie van een bestaande.
+- fase/phase heeft in de praktijk al precies 8 waardes (nieuw, eerste_contact, afspraak_gepland, voorstel_verstuurd, follow_up, gewonnen, verloren, on_hold) — dat klopt wél met de aanname in de prompt, maar controleer met een DISTINCT-query of er ook legacy-waardes als "toegewezen" of "in_gesprek" in de data staan (die stonden ooit in een codecomment) en rapporteer dat.
+- type heeft nu geen "Logistiek"-waarde (huidige waardes: hotel, eventlocatie, restaurant, cateraar). Er komen dus nu geen Logistiek-deals in de nieuwe categorie-kolom te staan totdat die apart worden aangemaakt — dat is verwacht gedrag, geen bug.
+
+Context
+- Het salesdashboard wordt een kanban-bord per categorie (Hotel, Logistiek, Events), met acht fasekolommen uit crm_companies.phase.
+- Eigenaarschap: alleen Max (max@doehetextra.nl) en Tommy (tommy@doehetextra.nl) kunnen sales-deals bezitten.
+- Volgende actie: elke deal in de pipeline moet een volgende_actie_datum hebben; zonder datum is hij achterstallig.
+
+Werk te doen
+
+1. crm_companies — nieuwe kolommen toevoegen (bestaande kolommen blijven ongewijzigd staan)
+- Nieuw enum-type `crm_categorie` met waardes 'Hotel', 'Logistiek', 'Events'. Nieuwe kolom `categorie` (crm_categorie, null toegestaan).
+- Nieuwe kolom `eigenaar_user_id` (integer, foreign key naar users.id, null toegestaan — GEEN uuid).
+- Nieuw enum-type `crm_potentie` met waardes 'Laag', 'Medio', 'Hoog'. Nieuwe kolom `potentie` (crm_potentie, null toegestaan).
+- Nieuwe kolom `volgende_actie_datum` (date, null toegestaan).
+- Nieuwe kolom `notities` (text, null toegestaan) — dit is bewust apart van de bestaande `notes`-kolom (die blijft voor de algemene CRM-notities); `notities` is specifiek voor snelle aantekeningen op de sales-kaart.
+- Werk shared/schema.ts (Drizzle) bij met deze nieuwe kolommen/enums, naast de bestaande.
+
+2. Nieuwe tabel `activities`
+- id serial primary key
+- crm_company_id integer NOT NULL, foreign key naar crm_companies.id, ON DELETE CASCADE
+- type text NOT NULL, check constraint IN ('call','email','meeting','note')
+- description text (inhoud van de activiteit)
+- created_by_user_id integer, foreign key naar users.id, null toegestaan
+- created_at timestamp default now() NOT NULL
+Voeg dit ook toe aan shared/schema.ts.
+
+3. crm_reminders
+- Geen schemawijziging nodig (company_id is al NOT NULL). Alleen de index hieronder toevoegen.
+
+4. Indexen
+- crm_companies(categorie, eigenaar_user_id, phase)
+- crm_companies(eigenaar_user_id, volgende_actie_datum)
+- activities(crm_company_id, created_at)
+- (optioneel maar aan te raden) crm_reminders(company_id, due_date)
+
+5. Users
+- Zorg dat Max (max@doehetextra.nl) als user bestaat — waarschijnlijk al zo, alleen controleren.
+- Maak een user-account voor Tommy: email tommy@doehetextra.nl, firstName "Tommy", lastName als placeholder (bijv. de lokale achternaam die je al ergens in de data tegenkomt, anders "TBD" — meld dit expliciet in het rapport zodat Max dit kan corrigeren), role 'employee' (niet 'admin'), wachtwoord: genereer een tijdelijk random wachtwoord en hash met bcrypt (12 rounds, zoals elders in server/routes.ts gebeurt). Zet het tijdelijke wachtwoord NIET in de git-historie of het rapport in platte tekst — geef het apart terug aan Max buiten de commit om.
+- Geen wijziging aan het `user_role`-enum.
+- Bouw een kleine helper/middleware (bijv. `salesMiddleware` in server/routes.ts) die toegang geeft als: (session.userRole === 'admin') OF (het e-mailadres van de ingelogde user in de hardcoded lijst [max@doehetextra.nl, tommy@doehetextra.nl] staat). Gebruik dit alleen voor de nieuwe /api/sales/* routes hieronder — raak adminMiddleware en de bestaande /api/admin/crm/* routes niet aan.
+
+6. Nieuwe API-endpoints (allemaal onder salesMiddleware, NIET onder adminMiddleware)
+
+GET /api/sales/pipeline
+- Query: ?categorie=Hotel&eigenaar=max (eigenaar = e-mail-prefix of user id, kies wat consistent is met de rest van de app en licht toe in het rapport)
+- Geeft: array van crm_companies (gefilterd op categorie/eigenaar indien opgegeven) met phase, eigenaar_user_id, volgende_actie_datum, notities, en een count van gekoppelde activities.
+- Sortering: per phase, dan op volgende_actie_datum (null/achterstallig eerst).
+
+GET /api/sales/mijn-acties
+- Query: ?eigenaar=max (auth zou dit moeten bepalen; voor nu hardcoded via query param, zoals gespecificeerd)
+- Geeft: crm_companies waar eigenaar_user_id = opgegeven user EN phase NOT IN ('gewonnen','verloren') EN volgende_actie_datum <= vandaag, UNION reminders (crm_reminders) voor vandaag/achterstallig van diezelfde eigenaar.
+- Format: array met id, naam, volgende_actie_datum, volgende_actie_text, phase, daysOverdue.
+
+PATCH /api/sales/companies/:id
+- Body: eigenaar_user_id, phase, volgende_actie_datum, notities, categorie, potentie (alleen deze velden — niet de bestaande CRM-velden zoals owner/type/potential aanraken).
+- Permission: alleen toegestaan als de ingelogde user == eigenaar_user_id van de company, of role === 'admin'. Anders 403.
+- Dit is een NIEUW, apart endpoint naast het bestaande PATCH /api/admin/crm/companies/:id — dat bestaande endpoint blijft ongewijzigd voor de volledige admin-CRM-flow.
+
+7. Migratiescript (bestaande vrije-tekst data omzetten, met logging van onbekende waardes)
+- categorie ← type: hotel → 'Hotel', eventlocatie → 'Events', overig (restaurant, cateraar, null, onbekend) → null (en loggen/rapporteren met aantallen per bronwaarde).
+- potentie ← potential: laag → 'Laag', midden → 'Medio', hoog → 'Hoog', overig/null → null (loggen).
+- eigenaar_user_id: laat null voor alle bestaande records (geen automatische mapping van owner/account_owner naar Max/Tommy — dat zijn nu 4 verschillende mensen en dat is een bewuste keuze van Max, geen migratiefout). Rapporteer wel hoeveel companies momenteel owner=max hebben, als referentie.
+- volgende_actie_datum: waar leeg, bereken uit activities/crm_reminders — als de eerstvolgende meeting-activiteit of reminder een datum heeft, zet die; anders null.
+- Schrijf dit als een apart, herhaalbaar script (bijv. in scripts/), niet als handmatige UPDATE-statements.
+
+8. Migratiebestanden
+- Zet de SQL-migraties in migrations/manual/0006_salesdashboard_datafundament/up.sql en down.sql, volgens dezelfde structuur als de bestaande migraties in migrations/manual/000[1-5]_*/.
+
+Deliverables
+- De migratie-SQL-bestanden (up.sql + down.sql), gecommit.
+- shared/schema.ts bijgewerkt met de nieuwe kolommen/enums/tabel.
+- De drie nieuwe API-endpoints, écht getest met curl tegen de lokale DATABASE_URL (plak de curl-commando's én de output in het rapport).
+- Een rapport (bijv. SALESDASHBOARD_PROMPT1_RAPPORT.md) met: aantal records per categorie-waarde (incl. hoeveel op null bleven, uitgesplitst naar bronwaarde van `type`), aantal records per potentie-waarde, aantal aangemaakte indexen, percentage records met een ingevulde volgende_actie_datum na migratie, en of er legacy phase-waardes (bijv. "toegewezen"/"in_gesprek") in de data zaten.
+- Tommy's tijdelijke wachtwoord, apart teruggegeven aan Max (niet in git, niet in het rapport-bestand).
+
+Waarschuwingen
+- Breek geen bestaande code: test na de migratie dat de bestaande CRM-module (CrmModule.tsx + /api/admin/crm/* routes) en de Personeelsaanvragen/Bestaande klanten-schermen nog normaal werken.
+- Geen dataverlies bij enum-mapping; onbekende waardes moeten gelogd en gerapporteerd worden, nooit stilzwijgend weggegooid.
+- Commit en push daarna naar GitHub (via het Git-paneel), zodat het bij Claude/Cowork ook binnenkomt voor de volgende stap.
+
+Volgende prompt: als dit klaar en gepusht is, bouwen we fase 2: het kanban-UI en dnd-kit-integratie.

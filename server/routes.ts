@@ -205,6 +205,24 @@ async function adminMiddleware(req: Request, res: Response, next: NextFunction) 
   return res.status(403).json({ message: "Geen toegang" });
 }
 
+// Sales middleware — alleen voor /api/sales/* routes.
+// Toegang: admins, of gebruikers uit de hardcoded sales-allowlist (Max & Tommy).
+// Bewust GEEN nieuwe role in het user_role-enum; Tommy blijft 'employee'.
+const SALES_ALLOWED_EMAILS = ['max@doehetextra.nl', 'tommy@doehetextra.nl'];
+async function salesMiddleware(req: Request, res: Response, next: NextFunction) {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ message: "Niet ingelogd" });
+  }
+  if (req.session.userRole === 'admin') return next();
+  try {
+    const user = await storage.getUser(req.session.userId);
+    if (user && SALES_ALLOWED_EMAILS.includes(user.email.toLowerCase())) {
+      return next();
+    }
+  } catch { /* val door naar 403 */ }
+  return res.status(403).json({ message: "Geen toegang tot sales" });
+}
+
 // Plan de dagelijkse verjaardagscontrole (standaard elke dag om 00:05)
 let birthdayCheckTimer: NodeJS.Timeout | null = null;
 
@@ -9860,6 +9878,137 @@ ${posts.map(p => `  <url>
   });
 
   // Reminders
+  // ==========================================
+  // Salesdashboard routes (/api/sales/*) — onder salesMiddleware, NIET adminMiddleware.
+  // Bestaande /api/admin/crm/* routes blijven ongewijzigd.
+  // ==========================================
+
+  // Helper: eigenaar-queryparam omzetten naar users.id.
+  // Keuze: numeriek = user-id, anders e-mail-prefix (bv. "max" -> max@doehetextra.nl).
+  async function resolveEigenaarUserId(eigenaar: string): Promise<number | null> {
+    if (/^\d+$/.test(eigenaar)) return parseInt(eigenaar, 10);
+    const r = await db.execute(sql`SELECT id FROM users WHERE lower(email) = ${eigenaar.toLowerCase() + '@doehetextra.nl'} LIMIT 1`);
+    const row = (r.rows ?? r)[0] as any;
+    return row ? Number(row.id) : null;
+  }
+
+  // GET /api/sales/pipeline?categorie=Hotel&eigenaar=max
+  app.get("/api/sales/pipeline", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { categorie, eigenaar } = req.query as { categorie?: string; eigenaar?: string };
+      if (categorie && !['Hotel', 'Logistiek', 'Events'].includes(categorie)) {
+        return res.status(400).json({ message: "Ongeldige categorie (Hotel | Logistiek | Events)" });
+      }
+      let eigenaarId: number | null = null;
+      if (eigenaar) {
+        eigenaarId = await resolveEigenaarUserId(eigenaar);
+        if (eigenaarId === null) return res.status(400).json({ message: `Onbekende eigenaar: ${eigenaar}` });
+      }
+      const result = await db.execute(sql`
+        SELECT c.id, c.name, c.categorie, c.phase, c.eigenaar_user_id AS "eigenaarUserId",
+               c.volgende_actie_datum AS "volgendeActieDatum", c.notities, c.potentie,
+               c.city, c.is_client AS "isClient",
+               COALESCE(a.cnt, 0)::int AS "activitiesCount"
+        FROM crm_companies c
+        LEFT JOIN (SELECT crm_company_id, count(*) AS cnt FROM activities GROUP BY crm_company_id) a
+          ON a.crm_company_id = c.id
+        WHERE (${categorie ?? null}::crm_categorie IS NULL OR c.categorie = ${categorie ?? null}::crm_categorie)
+          AND (${eigenaarId}::int IS NULL OR c.eigenaar_user_id = ${eigenaarId}::int)
+        ORDER BY c.phase, c.volgende_actie_datum ASC NULLS FIRST, c.id
+      `);
+      return res.json(result.rows ?? result);
+    } catch (error) {
+      console.error("[sales] pipeline fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen pipeline" });
+    }
+  });
+
+  // GET /api/sales/mijn-acties?eigenaar=max
+  app.get("/api/sales/mijn-acties", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { eigenaar } = req.query as { eigenaar?: string };
+      if (!eigenaar) return res.status(400).json({ message: "eigenaar-parameter is verplicht" });
+      const eigenaarId = await resolveEigenaarUserId(eigenaar);
+      if (eigenaarId === null) return res.status(400).json({ message: `Onbekende eigenaar: ${eigenaar}` });
+      // Reminders hangen aan vrije-tekst owner (bv. 'max') — afleiden uit e-mail-prefix van de user
+      const ownerRow = await db.execute(sql`SELECT split_part(email, '@', 1) AS prefix FROM users WHERE id = ${eigenaarId}`);
+      const ownerPrefix = ((ownerRow.rows ?? ownerRow)[0] as any)?.prefix ?? '';
+      const result = await db.execute(sql`
+        SELECT * FROM (
+          SELECT c.id, c.name AS naam, c.volgende_actie_datum AS "volgendeActieDatum",
+                 COALESCE(c.notities, '') AS "volgendeActieText", c.phase,
+                 GREATEST(0, (CURRENT_DATE - c.volgende_actie_datum))::int AS "daysOverdue",
+                 'company' AS bron
+          FROM crm_companies c
+          WHERE c.eigenaar_user_id = ${eigenaarId}
+            AND (c.phase IS NULL OR c.phase NOT IN ('gewonnen', 'verloren'))
+            AND c.volgende_actie_datum <= CURRENT_DATE
+          UNION ALL
+          SELECT r.id, r.title AS naam, r.due_date AS "volgendeActieDatum",
+                 COALESCE(r.note, r.title) AS "volgendeActieText", NULL AS phase,
+                 GREATEST(0, (CURRENT_DATE - r.due_date))::int AS "daysOverdue",
+                 'reminder' AS bron
+          FROM crm_reminders r
+          WHERE r.owner = ${ownerPrefix} AND r.status <> 'completed' AND r.due_date <= CURRENT_DATE
+        ) acties
+        ORDER BY "volgendeActieDatum" ASC NULLS FIRST, "daysOverdue" DESC
+      `);
+      return res.json(result.rows ?? result);
+    } catch (error) {
+      console.error("[sales] mijn-acties fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen acties" });
+    }
+  });
+
+  // PATCH /api/sales/companies/:id — alléén de nieuwe sales-velden
+  app.patch("/api/sales/companies/:id", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+
+      const salesPatchSchema = z.object({
+        eigenaar_user_id: z.number().int().nullable().optional(),
+        phase: z.enum(['nieuw', 'eerste_contact', 'afspraak_gepland', 'voorstel_verstuurd', 'follow_up', 'gewonnen', 'verloren', 'on_hold']).optional(),
+        volgende_actie_datum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+        notities: z.string().nullable().optional(),
+        categorie: z.enum(['Hotel', 'Logistiek', 'Events']).nullable().optional(),
+        potentie: z.enum(['Laag', 'Medio', 'Hoog']).nullable().optional(),
+      }).strict();
+      const parsed = salesPatchSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const body = parsed.data;
+      if (Object.keys(body).length === 0) return res.status(400).json({ message: "Geen velden opgegeven" });
+
+      const existing = await db.execute(sql`SELECT id, eigenaar_user_id FROM crm_companies WHERE id = ${id}`);
+      const company = (existing.rows ?? existing)[0] as any;
+      if (!company) return res.status(404).json({ message: "Bedrijf niet gevonden" });
+
+      // Permissie: eigenaar van de deal, of admin
+      const isAdmin = req.session.userRole === 'admin';
+      if (!isAdmin && company.eigenaar_user_id !== req.session.userId) {
+        return res.status(403).json({ message: "Alleen de eigenaar of een admin mag deze deal wijzigen" });
+      }
+
+      const result = await db.execute(sql`
+        UPDATE crm_companies SET
+          eigenaar_user_id = CASE WHEN ${'eigenaar_user_id' in body} THEN ${body.eigenaar_user_id ?? null}::int ELSE eigenaar_user_id END,
+          phase = CASE WHEN ${'phase' in body} THEN ${body.phase ?? null} ELSE phase END,
+          volgende_actie_datum = CASE WHEN ${'volgende_actie_datum' in body} THEN ${body.volgende_actie_datum ?? null}::date ELSE volgende_actie_datum END,
+          notities = CASE WHEN ${'notities' in body} THEN ${body.notities ?? null} ELSE notities END,
+          categorie = CASE WHEN ${'categorie' in body} THEN ${body.categorie ?? null}::crm_categorie ELSE categorie END,
+          potentie = CASE WHEN ${'potentie' in body} THEN ${body.potentie ?? null}::crm_potentie ELSE potentie END,
+          updated_at = now()
+        WHERE id = ${id}
+        RETURNING id, name, categorie, phase, eigenaar_user_id AS "eigenaarUserId",
+                  volgende_actie_datum AS "volgendeActieDatum", notities, potentie
+      `);
+      return res.json((result.rows ?? result)[0]);
+    } catch (error) {
+      console.error("[sales] patch fout:", error);
+      return res.status(500).json({ message: "Fout bij bijwerken deal" });
+    }
+  });
+
   app.get("/api/admin/crm/reminders", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const { companyId, owner, status } = req.query;

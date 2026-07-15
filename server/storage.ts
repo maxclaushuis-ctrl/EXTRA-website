@@ -860,7 +860,44 @@ export class MemStorage implements IStorage {
       },
       tags: ["loyaal"],
     });
-    
+
+    // Sales-gebruikers (Salesdashboard): vaste id's die overeenkomen met de
+    // database-tabel `users` (Max = 19, Tommy = 21), zodat sessie-userId klopt
+    // met crm_companies.eigenaar_user_id. Wachtwoorden komen uit env-variabelen
+    // (NIET in code/git). Zonder env-var wordt het account niet geseed (fail closed).
+    const salesSeedUsers: Array<[number, string, string | undefined, string, string, "admin" | "employee"]> = [
+      [19, "max@doehetextra.nl", process.env.SALES_MAX_PASSWORD, "Max", "", "admin"],
+      [21, "tommy@doehetextra.nl", process.env.SALES_TOMMY_PASSWORD, "Tommy", "TBD", "employee"],
+    ];
+    for (const [id, email, pw, firstName, lastName, role] of salesSeedUsers) {
+      if (!pw) {
+        console.warn(`[sales-seed] Geen wachtwoord-env-var voor ${email}; account niet geseed.`);
+        continue;
+      }
+      this.users.set(id, {
+        id,
+        email,
+        password: this.hashPassword(pw),
+        firstName,
+        lastName,
+        phone: null,
+        birthDate: null,
+        role,
+        status: "active",
+        points: 0,
+        monthlyPoints: 0,
+        profileImage: null,
+        apiId: null,
+        tags: [],
+        settings: null,
+        lastActivityDate: null,
+        inactivityResetOverride: false,
+        employeeType: 'general',
+        dateJoined: new Date(),
+      });
+    }
+    this.currentIds.users = 22;
+
     // Initialiseer enkele beloningen
     this.createReward({
       name: "Apple AirPods Pro",
