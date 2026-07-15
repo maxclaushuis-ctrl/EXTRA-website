@@ -1,0 +1,39 @@
+PROMPT — Verkenning salesfunctionaliteit (alleen lezen, niks wijzigen)
+Dit is een pure verkenningsopdracht. Verander niets aan code, database of configuratie. Geen refactors, geen fixes onderweg, ook niet als je iets kapots tegenkomt. Het doel is een compleet beeld van de bestaande salesfunctionaliteit in het Planbord, als voorbereiding op de bouw van een nieuw salesdashboard (pipeline-kanban, Vandaag-scherm, activiteitenlog). Lever aan het eind één rapport op.
+Onderzoek de volgende onderdelen en beantwoord per onderdeel deze vragen:
+1. Leads & Prospects
+
+Welke tabellen zitten hierachter? Geef per tabel het volledige schema (kolommen, types, defaults, relaties).
+Welke waardes bestaan er voor Type, Functies, Fase, Eigenaar, Potentie en Tags, en zijn dat enums, vrije tekst of aparte tabellen?
+Hoeveel van de 896 records hebben daadwerkelijk een fase anders dan "Nieuw", een eigenaar, of een potentie ingevuld? Geef de aantallen per veld.
+Is er een activiteiten- of notitiehistorie per bedrijf? Zo ja, welke tabel en hoeveel records?
+Welke API-endpoints bedienen dit scherm, en welke frontend-componenten/pagina's horen erbij (bestandspaden)?
+
+2. Personeelsaanvragen
+
+Welke tabel(len), en is er een koppeling met Leads & Prospects (bijvoorbeeld een foreign key of matching op naam/e-mail)? Bar Bouche, The Greenery en Piqniq staan in beide schermen, dus check of dat twee losse records zijn of één gekoppeld record.
+Wat gebeurt er nu met de Status "Nieuw" op een aanvraag? Bestaat er een flow of statusovergang?
+
+3. Bestaande klanten
+
+Eigen tabel of dezelfde als Leads & Prospects met een status/vlag? Geef het schema en de relatie.
+Wat betekent het veld Klasse (A/B) technisch?
+
+4. Reminders en Verjaardagen
+
+Schema, endpoints en componenten. Aan welke entiteit hangt een reminder (bedrijf, contact, los)?
+De telling Verlopen/Vandaag/Gepland/Afgerond: waar wordt die berekend, frontend of backend?
+
+5. Contacten (onder Campagnes) en E-mail campagnes
+
+Schema en relaties: hangt een contact aan een bedrijf uit Leads & Prospects?
+Hoe worden e-mailcampagnes nu verstuurd en gelogd? Is er al iets van SendGrid-events (delivered/open/click) dat wordt opgeslagen, en zo ja waar?
+
+6. Dwarsverbanden en techniek
+
+Is er al een eigenaar/gebruikersmodel (Max, Tommy, admin-accounts) waar records aan gekoppeld worden, en hoe heet die tabel?
+Zijn er bestaande drag-and-drop componenten of kanban-achtige views ergens in het Planbord die we kunnen hergebruiken?
+Welke UI-componentenbibliotheek en patronen gebruikt dit deel van de app (tabellen, filters, badges), met bestandspaden van de belangrijkste herbruikbare componenten?
+Zijn er endpoints of tabellen die sales-gerelateerd lijken maar nergens in de UI gebruikt worden (dode code)?
+
+Rapportvorm: per onderdeel een korte samenvatting plus de gevraagde details, en sluit af met een lijst "Herbruikbaar voor het salesdashboard" en een lijst "Ontbreekt volledig". Benoem ook risico's die je tegenkomt (bijvoorbeeld dubbele data tussen Personeelsaanvragen en Leads & Prospects, of ontbrekende indexen op grote tabellen). Nogmaals: alleen lezen, niets aanpassen, en wacht na dit rapport op de volgende opdracht.
