@@ -28,15 +28,16 @@ Herhaalbaar en idempotent; mapt bestaande `type`-waarden naar `categorie` en vul
 
 ## 2. Datatellingen na backfill (dev, 287 bedrijven)
 
-| Categorie | Aantal |
-|---|---|
-| Hotel | 7 |
-| Events | 3 |
-| (leeg/NULL) | 277 |
+| Categorie | Aantal (na 0006) | Aantal (na 0007, 15 juli 2026) |
+|---|---|---|
+| Logistiek | 0 | **274** |
+| Hotel | 7 | 7 |
+| Events | 3 | 3 |
+| (leeg/NULL) | 277 | 3 |
 
-Bronwaarden die tot NULL leidden: `logistiek` **274×**, `restaurant` 2×, `cateraar` 1×.
+Bronwaarden die na 0006 tot NULL leidden: `logistiek` **274×**, `restaurant` 2×, `cateraar` 1×.
 
-> **Spec-afwijking, expliciet gemeld:** de prompt gaf geen mapping voor de bronwaarde `logistiek` (kleine letters) naar de categorie `Logistiek`. Conform de prompt is deze dus NIET gemapt en op NULL gelaten — dit betreft wel 274 van de 287 records. Eén regel toevoegen aan het script lost dit op als dat gewenst is.
+> **Update (vervolgprompt, 15 juli 2026):** de bronwaarde `logistiek` is alsnog gemapt naar categorie `Logistiek` via migratie `migrations/manual/0007_logistiek_categorie_mapping/` (up.sql + down.sql). De UPDATE raakt alleen rijen waar `categorie` nog NULL was — handmatig gezette categorieën blijven onaangetast. Resultaat: **exact 274 rijen bijgewerkt** (geen verschil met de verwachting; er waren tussentijds geen handmatige categorie-wijzigingen op deze rijen). Resterende NULL: 3 (`restaurant` 2×, `cateraar` 1×).
 
 | Potentie | Aantal |
 |---|---|
