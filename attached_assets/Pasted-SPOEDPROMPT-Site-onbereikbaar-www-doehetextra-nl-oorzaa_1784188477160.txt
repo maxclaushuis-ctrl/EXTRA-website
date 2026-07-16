@@ -1,0 +1,27 @@
+SPOEDPROMPT — Site onbereikbaar (www.doehetextra.nl), oorzaak vinden en herstellen
+
+De live site is op dit moment onbereikbaar (browser geeft "Deze site is niet bereikbaar" / ERR_CONNECTION_CLOSED; onafhankelijk bevestigd vanuit een externe fetch — geen HTTP-foutpagina, geen enkele respons). Dit gebeurde vlak na de laatste publish/deploy (voor het Ahrefs-verificatiebestand). Prioriteit: site zo snel mogelijk weer online, dan pas de nette oorzaakanalyse.
+
+STAP 1 — Direct herstel (doe dit eerst, voor je iets anders onderzoekt)
+- Ga naar Deployments → deployment-geschiedenis. Als er een vorige, werkende deployment is: rol daarnaar terug. Dat moet de site vrijwel meteen weer online brengen.
+- Bevestig daarna dat www.doehetextra.nl weer normaal laadt voordat je verdergaat naar stap 2.
+
+STAP 2 — Oorzaak vaststellen (nadat de site weer online is, of parallel als rollback niet meteen lukt)
+Bekijk de Deployment-logs (niet de gewone dev-console, specifiek het logbestand van de deployment die crashte) en zoek naar de opstart-fout. Op basis van de code zijn dit de meest waarschijnlijke oorzaken, in volgorde van waarschijnlijkheid:
+
+1. Een ontbrekende of foute environment variable in de DEPLOYMENT-omgeving (let op: dit kan apart staan van de dev-Secrets). De server crasht direct bij het opstarten (harde `throw new Error`) als een van deze ontbreekt:
+   - `DATABASE_URL` (server/db.ts) — "DATABASE_URL must be set. Did you forget to provision a database?"
+   - `SESSION_SECRET` (server/index.ts) — "SESSION_SECRET environment variable is niet ingesteld."
+   - `UNSUBSCRIBE_SECRET` (server/index.ts) — "UNSUBSCRIBE_SECRET environment variable is not set"
+   Controleer of deze drie (en `BASE_URL`) exact en correct in de Deployment Secrets staan, niet alleen in de dev-Secrets.
+
+2. Een database-connectieprobleem: als `DATABASE_URL` wel gezet is maar naar een niet-bereikbare of verkeerde Neon-instantie wijst (bijvoorbeeld een dev-database-URL die per ongeluk in productie terechtkwam, of een provisioning-issue bij Neon zelf).
+
+3. Een boot-time query die faalt buiten de bestaande try/catch-blokken. Bij het opstarten draait de server een paar automatische stappen (zie `server/index.ts`, IIFE onderaan): `ensureAdminAccounts()`, een TWV-kandidaten-fix-query, en `ALTER TYPE candidate_status ADD VALUE IF NOT EXISTS 'gepland' ...`. Deze laatste twee zijn in try/catch gewrapped en zouden dus niet moeten crashen — maar check de logs of een van deze toch een ongevangen fout gaf.
+
+4. Check ook of de recente sales-dashboard-migratie (0006/0007, `migrations/manual/`) op enige manier is meegenomen in deze deploy en daar een conflict gaf — dat is losstaand van de applicatiecode maar goed om uit te sluiten.
+
+STAP 3 — Rapporteer terug
+Meld kort: (a) is de site weer online, via rollback of via een fix, (b) wat was de daadwerkelijke oorzaak volgens de deployment-logs (plak de relevante logregel), en (c) als het een ontbrekende Deployment Secret was: welke, en is die nu correct gezet zodat een volgende publish niet opnieuw crasht.
+
+Verander geen andere functionaliteit — dit is puur een herstel-en-diagnose-taak.
