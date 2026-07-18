@@ -74,18 +74,31 @@ export default function Vacatures() {
     }
     const scripts: HTMLScriptElement[] = [];
     VACATURES.forEach((vacature) => {
-      const script = document.createElement("script");
-      script.type = "application/ld+json";
-      script.textContent = JSON.stringify({
+      const validThroughDate = new Date(vacature.datePosted);
+      validThroughDate.setDate(validThroughDate.getDate() + 90);
+
+      const jobPostingSchema: Record<string, any> = {
         "@context": "https://schema.org",
         "@type": "JobPosting",
         "title": vacature.title,
         "description": vacature.shortDescription,
         "employmentType": vacature.serviceType.toUpperCase(),
         "datePosted": vacature.datePosted,
+        "validThrough": validThroughDate.toISOString(),
         "hiringOrganization": { "@type": "Organization", "name": "EXTRA Uitzendbureau", "sameAs": "https://www.doehetextra.nl" },
-        "jobLocation": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": vacature.location, "addressCountry": "NL" } }
-      });
+        "jobLocation": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": vacature.location, "addressRegion": vacature.region, "addressCountry": "NL" } },
+      };
+      if (vacature.salaryMin) {
+        jobPostingSchema.baseSalary = {
+          "@type": "MonetaryAmount",
+          "currency": "EUR",
+          "value": { "@type": "QuantitativeValue", "value": vacature.salaryMin, "unitText": "HOUR" }
+        };
+      }
+
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.textContent = JSON.stringify(jobPostingSchema);
       document.head.appendChild(script);
       scripts.push(script);
     });

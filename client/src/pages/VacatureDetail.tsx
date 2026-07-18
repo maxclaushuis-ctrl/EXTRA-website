@@ -44,7 +44,7 @@ export default function VacatureDetail() {
         serviceType: dbVacancy.serviceType,
         workplace: dbVacancy.workplace,
         client: dbVacancy.client || 'EXTRA',
-        salaryMin: parseFloat(dbVacancy.salaryMin) || 0,
+        salaryMin: dbVacancy.salaryMin ? parseFloat(dbVacancy.salaryMin) : null,
         fullDescription: [dbVacancy.introductionText, dbVacancy.aboutRole, dbVacancy.workEnvironment].filter(Boolean).join('\n\n'),
         responsibilities: dbVacancy.responsibilities || [],
         requirements: dbVacancy.requirements || [],
@@ -77,13 +77,20 @@ export default function VacatureDetail() {
   if (isLoading && !staticVacature) return null;
   if (!vacature) return null;
 
-  const jobPostingSchema = {
+  // Vacatures op deze site hebben geen vaste einddatum (doorlopende werving) — we geven
+  // Search Console een rollende validThrough van 90 dagen na plaatsing mee i.p.v. het veld
+  // helemaal weg te laten, zoals Google voor doorlopende vacatures aanraadt.
+  const validThroughDate = new Date(vacature.datePosted);
+  validThroughDate.setDate(validThroughDate.getDate() + 90);
+
+  const jobPostingSchema: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     "title": vacature.title,
     "description": vacature.fullDescription,
     "employmentType": vacature.serviceType === "Fulltime" ? "FULL_TIME" : vacature.serviceType === "Parttime" ? "PART_TIME" : "OTHER",
     "datePosted": vacature.datePosted,
+    "validThrough": validThroughDate.toISOString(),
     "hiringOrganization": {
       "@type": "Organization",
       "name": "EXTRA Uitzendbureau",
@@ -99,7 +106,13 @@ export default function VacatureDetail() {
         "addressCountry": "NL"
       }
     },
-    "baseSalary": {
+  };
+
+  // Alleen een baseSalary meesturen als er een echt bedrag is — een gefabriceerd "€0,00"
+  // (de oude fallback) is misleidende structured data en waarschijnlijk precies waarom
+  // Search Console baseSalary als "ontbrekend" markeert.
+  if (vacature.salaryMin) {
+    jobPostingSchema.baseSalary = {
       "@type": "MonetaryAmount",
       "currency": "EUR",
       "value": {
@@ -107,8 +120,8 @@ export default function VacatureDetail() {
         "value": vacature.salaryMin,
         "unitText": "HOUR"
       }
-    }
-  };
+    };
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0310] text-white font-sans selection:bg-purple-500/30">
@@ -270,7 +283,9 @@ export default function VacatureDetail() {
                           </div>
                           <div>
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Salaris vanaf</p>
-                            <p className="font-bold text-gray-800">€{vacature.salaryMin.toFixed(2)} per uur</p>
+                            <p className="font-bold text-gray-800">
+                              {vacature.salaryMin ? `€${vacature.salaryMin.toFixed(2)} per uur` : "Op aanvraag"}
+                            </p>
                           </div>
                         </div>
 
