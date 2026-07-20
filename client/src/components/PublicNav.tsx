@@ -12,7 +12,7 @@ interface PublicNavProps {
 }
 
 const LANG_MAP: Record<string, string> = {
-  "/landing": "/en",
+  "/": "/en",
   "/horeca-personeel-gezocht": "/en/hospitality-staff-amsterdam",
   "/hotelpersoneel-inhuren": "/en/hotel-staffing-amsterdam",
   "/eventpersoneel-inhuren": "/en/event-staff-amsterdam",
@@ -29,7 +29,7 @@ const LANG_MAP: Record<string, string> = {
   "/housekeeping-vacatures-amsterdam": "/en/housekeeping-jobs",
   "/chef-vacatures-amsterdam": "/en/chef-jobs",
   "/front-office-vacatures-amsterdam": "/en/front-office-jobs",
-  "/en": "/landing",
+  "/en": "/",
   "/en/hospitality-staff-amsterdam": "/horeca-personeel-gezocht",
   "/en/hotel-staffing-amsterdam": "/hotelpersoneel-inhuren",
   "/en/event-staff-amsterdam": "/eventpersoneel-inhuren",
@@ -216,7 +216,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <Link href={isEnglish ? "/en" : "/landing"}>
+          <Link href={isEnglish ? "/en" : "/"}>
             <img
               src={extraLogoWit}
               alt="EXTRA"

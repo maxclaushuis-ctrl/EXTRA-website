@@ -921,10 +921,10 @@ export default function Aanmelden() {
       <div className="relative z-10">
         <header className="py-5 sm:py-6 px-5 sm:px-8">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <a href="/landing">
+            <a href="/">
               <img src={extraLogoWit} alt="EXTRA" className="h-8 sm:h-9 w-auto" />
             </a>
-            <a href="/landing" className="text-sm text-white/60 hover:text-white transition-colors font-medium">
+            <a href="/" className="text-sm text-white/60 hover:text-white transition-colors font-medium">
               {t.backToHome}
             </a>
           </div>
@@ -1328,7 +1328,7 @@ export default function Aanmelden() {
               </div>
 
               <div className="mt-8 flex justify-center">
-                <a href="/landing" className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 font-semibold text-sm transition-colors">
+                <a href="/" className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 font-semibold text-sm transition-colors">
                   {t.backToHome} <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
@@ -1342,7 +1342,7 @@ export default function Aanmelden() {
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>{t.successTitle}</h2>
               <p className="text-gray-600 leading-relaxed text-base sm:text-lg mb-8">{t.successDesc}</p>
-              <a href="/landing" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-xl text-base shadow-lg shadow-purple-500/20 transition-all">
+              <a href="/" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-xl text-base shadow-lg shadow-purple-500/20 transition-all">
                 {t.backToHome} <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -1357,7 +1357,7 @@ export default function Aanmelden() {
                 {rejectionReason === t.stoppedDesc ? t.stoppedTitle : (lang === "NL" ? "Helaas..." : "Unfortunately...")}
               </h2>
               <p className="text-gray-600 leading-relaxed text-base sm:text-lg mb-8">{rejectionReason}</p>
-              <a href="/landing" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-xl text-base shadow-lg shadow-purple-500/20 transition-all">
+              <a href="/" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-xl text-base shadow-lg shadow-purple-500/20 transition-all">
                 {t.backToHome} <ArrowRight className="w-5 h-5" />
               </a>
             </div>

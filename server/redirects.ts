@@ -92,6 +92,7 @@ const REDIRECT_MAP: Record<string, string> = {
   "/personeel-gezocht":                 "/horeca-personeel-gezocht",
   // "/horeca-personeel-inhuren" is sinds SEO-blok 3 (P10) een eigen pagina — geen redirect meer.
   "/hoe-werkt-dagbetaling":             "/dagbetaling", // P10: nieuwe kortere URL wint
+  "/landing":                           "/",            // homepage rendert landingscontent nu direct (keuze Max)
   "/hotel-personeel-gezocht":           "/hotelpersoneel-inhuren",
   "/hotel-personeel-amsterdam":         "/hotelpersoneel-inhuren",
   "/event-personeel-gezocht":           "/eventpersoneel-inhuren",

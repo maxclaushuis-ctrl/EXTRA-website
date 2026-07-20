@@ -233,7 +233,7 @@ function Router() {
           <Route path="/brochures" component={BrochureEN} />
           <Route path="/events" component={BrochureEvents} />
           <Route path="/lofi" component={BrochureLofi} />
-          <Route path="/landing" component={LandingPage} />
+          <Route path="/landing">{() => { window.location.replace('/'); return null; }}</Route>
 
           {/* Werkgever routes */}
           <Route path="/horecapersoneel-restaurants" component={RestaurantPersoneelGezocht} />

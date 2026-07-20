@@ -45,19 +45,8 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "1.0",
     changefreq: "weekly",
   },
-  {
-    // "/" is client-side een redirect naar /landing (zelfde content op twee
-    // URL's). Canonical wijst daarom naar "/" zodat de homepage de rankings
-    // consolideert; /landing valt automatisch uit de sitemap.
-    path: "/landing",
-    title: "Flexibel horecapersoneel in Amsterdam | EXTRA",
-    description:
-      "Representatief horecapersoneel voor hotels, restaurants en events in Amsterdam. Snel geregeld, iedereen in loondienst. Vraag vandaag nog personeel aan.",
-    canonical: "/",
-    prerender: true,
-    priority: "0.9",
-    changefreq: "weekly",
-  },
+  // /landing bestaat niet meer als eigen pagina: "/" rendert de landings-
+  // content nu direct en /landing 301't naar "/" (server/redirects.ts).
   {
     path: "/horeca-uitzendbureau-amsterdam",
     title: "Horeca uitzendbureau Amsterdam | Persoonlijk | EXTRA",

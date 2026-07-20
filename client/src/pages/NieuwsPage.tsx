@@ -187,7 +187,7 @@ export default function NieuwsPage() {
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            <Link href="/landing">
+            <Link href="/">
               <img
                 src={extraLogoWit}
                 alt="EXTRA"
@@ -195,7 +195,7 @@ export default function NieuwsPage() {
               />
             </Link>
             <Link
-              href="/landing"
+              href="/"
               className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-all ${
                 scrolled
                   ? "text-purple-700 hover:bg-purple-50"

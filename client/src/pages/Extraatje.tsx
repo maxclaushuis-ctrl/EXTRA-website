@@ -491,7 +491,7 @@ export default function Extraatje() {
                 Meld je nu aan <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <Link
-                href="/landing"
+                href="/"
                 className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
               >
                 Meer over EXTRA <ChevronRight className="w-5 h-5" />

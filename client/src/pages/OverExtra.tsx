@@ -139,7 +139,7 @@ export default function OverExtra() {
         <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 pb-24 sm:pb-32">
           {/* Breadcrumb */}
           <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-xs text-white/60 mb-8">
-            <Link href="/landing" className="hover:text-white transition-colors">Home</Link>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="h-3 w-3" />
             <span className="text-white font-semibold">Over EXTRA</span>
           </nav>

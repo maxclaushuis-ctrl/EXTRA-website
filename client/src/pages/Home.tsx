@@ -2,41 +2,33 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAnalytics } from "@/hooks/use-analytics";
+import LandingPage from "@/pages/LandingPage";
 
+/**
+ * Homepage: rendert de landingscontent DIRECT op "/" (geen redirect meer naar
+ * /landing — dat was een SEO-probleem: twee URL's met dezelfde content en een
+ * homepage zonder eigen content). /landing 301't server-side naar "/".
+ *
+ * Enige uitzondering: ingelogde admins worden nog steeds automatisch naar
+ * /dashboard gestuurd, zodat de bestaande admin-flow blijft werken.
+ */
 export default function Home() {
   const [_, navigate] = useLocation();
   const { isAuthenticated, isLoading, user } = useAuth();
   const { trackPageView } = useAnalytics();
-  
-  // Track page view
+
   useEffect(() => {
     trackPageView({
       path: "/",
       variant: "a"
     });
   }, [trackPageView]);
-  
-  // Iedereen die naar / gaat, sturen naar de landingspagina
+
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        navigate('/landing');
-      } else if (user?.role === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/landing');
-      }
+    if (!isLoading && isAuthenticated && user?.role === 'admin') {
+      navigate('/dashboard');
     }
   }, [isAuthenticated, isLoading, user, navigate]);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Laden...</div>
-      </div>
-    );
-  }
-
-  // This component only serves as a redirect, so we don't render anything
-  return null;
+  return <LandingPage />;
 }
