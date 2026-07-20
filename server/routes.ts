@@ -10091,9 +10091,12 @@ ${vacancies.map(v => `  <url>
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
       const { name, categorie, description } = parsed.data;
+      // created_by via subselect: de ingelogde admin bestaat mogelijk niet als
+      // rij in users (in-memory login) — dan wordt het NULL i.p.v. een FK-fout.
       const r = await db.execute(sql`
         INSERT INTO salesflow_batches (name, categorie, description, created_by_user_id)
-        VALUES (${name}, ${categorie ?? null}::crm_categorie, ${description ?? null}, ${req.session.userId ?? null})
+        VALUES (${name}, ${categorie ?? null}::crm_categorie, ${description ?? null},
+                (SELECT id FROM users WHERE id = ${req.session.userId ?? null}))
         RETURNING id, name, categorie, description, created_at AS "createdAt"`);
       return res.status(201).json((r.rows ?? r)[0]);
     } catch (error) {
@@ -10108,11 +10111,11 @@ ${vacancies.map(v => `  <url>
       const schema = z.object({
         contactId: z.number().int(),
         batchId: z.number().int().nullable().optional(),
-        eigenaarUserId: z.number().int().nullable().optional(),
+        eigenaar: z.string().optional(), // 'max' | 'tommy' | user-id
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
-      const { contactId, batchId, eigenaarUserId } = parsed.data;
+      const { contactId, batchId, eigenaar } = parsed.data;
 
       const contact = ((await db.execute(sql`SELECT id, company_id FROM crm_contacts WHERE id = ${contactId}`)).rows ?? [])[0] as any;
       if (!contact) return res.status(404).json({ message: "Contact niet gevonden" });
@@ -10121,9 +10124,13 @@ ${vacancies.map(v => `  <url>
       const bestaand = ((await db.execute(sql`SELECT id FROM salesflow_cards WHERE contact_id = ${contactId}`)).rows ?? [])[0] as any;
       if (bestaand) return res.status(409).json({ message: "Deze persoon staat al op het bord", cardId: bestaand.id });
 
+      // Eigenaar → geldig user-id (Max/Tommy). Ongeldig/leeg → NULL (geen FK-fout).
+      const eigenaarId = eigenaar ? await resolveEigenaarUserId(eigenaar) : null;
+
       const r = await db.execute(sql`
         INSERT INTO salesflow_cards (contact_id, company_id, batch_id, eigenaar_user_id, phase)
-        VALUES (${contactId}, ${contact.company_id}, ${batchId ?? null}, ${eigenaarUserId ?? req.session.userId ?? null}, 'selectie')
+        VALUES (${contactId}, ${contact.company_id}, ${batchId ?? null},
+                (SELECT id FROM users WHERE id = ${eigenaarId}), 'selectie')
         RETURNING id`);
       return res.status(201).json((r.rows ?? r)[0]);
     } catch (error) {

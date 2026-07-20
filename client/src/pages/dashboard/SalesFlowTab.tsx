@@ -292,13 +292,14 @@ function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: 
   const { toast } = useToast();
   const [q, setQ] = useState('');
   const [batchId, setBatchId] = useState<string>('geen');
+  const [owner, setOwner] = useState<string>('max');
   const { data: resultaten, isLoading } = useQuery<ZoekContact[]>({
     queryKey: ['/api/sales/flow/contacts', q],
     queryFn: () => apiRequest(`/api/sales/flow/contacts?search=${encodeURIComponent(q)}`) as Promise<any>,
     enabled: open,
   });
   const add = useMutation({
-    mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null }),
+    mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null, eigenaar: owner }),
     onSuccess: (_r, contactId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/contacts'] });
@@ -312,15 +313,27 @@ function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: 
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>Persoon toevoegen aan het bord</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div>
-            <label className="text-[12px] text-gray-500 mb-1 block">Batch (optioneel)</label>
-            <Select value={batchId} onValueChange={setBatchId}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="geen">Geen batch</SelectItem>
-                {batches.map(b => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[12px] text-gray-500 mb-1 block">Batch (optioneel)</label>
+              <Select value={batchId} onValueChange={setBatchId}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geen">Geen batch</SelectItem>
+                  {batches.map(b => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[12px] text-gray-500 mb-1 block">Eigenaar</label>
+              <Select value={owner} onValueChange={setOwner}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="max">Max</SelectItem>
+                  <SelectItem value="tommy">Tommy</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />

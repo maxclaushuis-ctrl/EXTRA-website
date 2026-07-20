@@ -106,7 +106,8 @@ export async function moveCardToPhase(opts: {
   const persoon = one(await db.execute(sql`SELECT name FROM crm_contacts WHERE id = ${card.contact_id}`))?.name ?? "contact";
   await db.execute(sql`
     INSERT INTO activities (crm_company_id, type, description, created_by_user_id)
-    VALUES (${card.company_id}, 'note', ${`Salesflow: ${persoon} → ${rule.label}`}, ${opts.actorUserId ?? null})
+    VALUES (${card.company_id}, 'note', ${`Salesflow: ${persoon} → ${rule.label}`},
+            (SELECT id FROM users WHERE id = ${opts.actorUserId ?? null}))
   `);
 
   // 3. Bepaal de nieuwe trigger.
@@ -176,7 +177,8 @@ export async function markNotReached(cardId: number, actorUserId?: number | null
   `));
   await db.execute(sql`
     INSERT INTO activities (crm_company_id, type, description, created_by_user_id)
-    VALUES (${card.company_id}, 'call', ${`Salesflow: ${persoon} niet bereikt (poging ${card.not_reached_count + 1})`}, ${actorUserId ?? null})
+    VALUES (${card.company_id}, 'call', ${`Salesflow: ${persoon} niet bereikt (poging ${card.not_reached_count + 1})`},
+            (SELECT id FROM users WHERE id = ${actorUserId ?? null}))
   `);
   return one(await db.execute(sql`
     UPDATE salesflow_cards SET
