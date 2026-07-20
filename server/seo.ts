@@ -88,6 +88,32 @@ function truncate(s: string, max: number): string {
   return cut.slice(0, cut.lastIndexOf(" ")) + "…";
 }
 
+/** BreadcrumbList JSON-LD (P3.4): op elke pagina behalve de homepage. */
+function breadcrumbJsonLd(routePath: string, pageTitle: string, lang?: "nl" | "en"): string | undefined {
+  if (routePath === "/") return undefined;
+  const items: { name: string; url: string }[] = [{ name: lang === "en" ? "Home" : "Home", url: lang === "en" ? `${SITE_ORIGIN}/en` : `${SITE_ORIGIN}/` }];
+  // Tussenniveau alleen als het zelf een bekende route is (bijv. /over-extra of /blog)
+  const segments = routePath.split("/").filter(Boolean);
+  if (segments.length > 1) {
+    const parentPath = "/" + segments.slice(0, -1).join("/");
+    const parent = ROUTE_META_BY_PATH[normalizeMetaPath(parentPath)];
+    if (parent && !parent.noindex && normalizeMetaPath(parentPath) !== "/en") {
+      items.push({ name: parent.title.split("|")[0].trim(), url: `${SITE_ORIGIN}${parent.canonical ?? parent.path}` });
+    }
+  }
+  items.push({ name: pageTitle.split("|")[0].trim(), url: `${SITE_ORIGIN}${routePath}` });
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  });
+}
+
 function metaFromRoute(m: RouteMeta): PageMeta {
   return {
     title: m.title,
@@ -95,6 +121,7 @@ function metaFromRoute(m: RouteMeta): PageMeta {
     canonicalUrl: `${SITE_ORIGIN}${m.canonical ?? m.path}`,
     noindex: m.noindex,
     lang: m.lang,
+    jsonLd: m.noindex ? undefined : breadcrumbJsonLd(m.canonical ?? m.path, m.title, m.lang),
   };
 }
 
@@ -156,6 +183,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
                 155
               ),
               canonicalUrl: `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`,
+              jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title),
             });
           }
         } else if (dyn.type === "vacature") {
@@ -168,6 +196,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
                 155
               ),
               canonicalUrl: vacancy.canonicalUrl || `${SITE_ORIGIN}${dyn.canonicalBase}/${vacancy.slug}`,
+              jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${vacancy.slug}`, vacancy.title),
             });
           }
         }

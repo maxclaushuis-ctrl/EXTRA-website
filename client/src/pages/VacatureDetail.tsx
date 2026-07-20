@@ -95,7 +95,7 @@ export default function VacatureDetail() {
       "@type": "Organization",
       "name": "EXTRA Uitzendbureau",
       "sameAs": "https://www.doehetextra.nl",
-      "logo": "https://www.doehetextra.nl/assets/EXTRA_LOGO_BLAUW.png"
+      "logo": "https://www.doehetextra.nl/logo.png"
     },
     "jobLocation": {
       "@type": "Place",

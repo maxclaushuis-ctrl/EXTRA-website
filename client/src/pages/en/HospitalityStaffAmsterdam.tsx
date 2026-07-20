@@ -212,7 +212,7 @@ export default function HospitalityStaffAmsterdam() {
       "@context": "https://schema.org", "@type": "LocalBusiness", "name": "EXTRA",
       "description": "Flexible hospitality staff via EXTRA, NEN-4400-1 certified staffing agency in Amsterdam.",
       "telephone": "+31851305915", "url": "https://www.doehetextra.nl",
-      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "address": { "@type": "PostalAddress", "streetAddress": "Herengracht 372", "postalCode": "1016 CH", "addressLocality": "Amsterdam", "addressCountry": "NL" },
     });
 
     addSchema("faq-schema-hsa", {

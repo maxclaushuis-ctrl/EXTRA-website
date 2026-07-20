@@ -82,7 +82,9 @@ export default function Vacatures() {
         "@type": "JobPosting",
         "title": vacature.title,
         "description": vacature.shortDescription,
-        "employmentType": vacature.serviceType.toUpperCase(),
+        // Alleen geldige schema.org-enumwaarden; "Oproep".toUpperCase() ("OPROEP")
+        // was een validatiefout in de Ahrefs-audit.
+        "employmentType": vacature.serviceType === "Fulltime" ? "FULL_TIME" : vacature.serviceType === "Parttime" ? "PART_TIME" : "OTHER",
         "datePosted": vacature.datePosted,
         "validThrough": validThroughDate.toISOString(),
         "hiringOrganization": { "@type": "Organization", "name": "EXTRA Uitzendbureau", "sameAs": "https://www.doehetextra.nl" },
@@ -97,6 +99,7 @@ export default function Vacatures() {
       }
 
       const script = document.createElement("script");
+      script.id = `jobposting-${vacature.slug}`;
       script.type = "application/ld+json";
       script.textContent = JSON.stringify(jobPostingSchema);
       document.head.appendChild(script);

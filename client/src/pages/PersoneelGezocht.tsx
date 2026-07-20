@@ -244,7 +244,7 @@ export default function PersoneelGezocht() {
       "description": "Flexibel horecapersoneel via EXTRA, NEN-4400-1 gecertificeerd uitzendbureau in Amsterdam.",
       "telephone": "+31851305915",
       "url": "https://www.doehetextra.nl",
-      "address": { "@type": "PostalAddress", "addressLocality": "Amsterdam", "addressCountry": "NL" },
+      "address": { "@type": "PostalAddress", "streetAddress": "Herengracht 372", "postalCode": "1016 CH", "addressLocality": "Amsterdam", "addressCountry": "NL" },
     });
 
     addSchema('faq-schema', {

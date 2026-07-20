@@ -86,7 +86,15 @@ async function main() {
         const clone = root.cloneNode(true) as HTMLElement;
         clone.querySelectorAll("script:not([type='application/ld+json'])").forEach((s) => s.remove());
         clone.querySelectorAll("iframe").forEach((s) => s.remove());
-        return clone.innerHTML;
+        // Pagina-specifieke JSON-LD die componenten in de <head> injecteren
+        // (FAQPage/LocalBusiness/JobPosting via addSchema, herkenbaar aan een id)
+        // hoort ook bij de prerendered content — anders zien crawlers zonder JS hem niet.
+        const headSchemas = Array.from(
+          document.head.querySelectorAll("script[type='application/ld+json'][id]")
+        )
+          .map((s) => `<script type="application/ld+json">${s.textContent}</script>`)
+          .join("\n");
+        return clone.innerHTML + (headSchemas ? `\n${headSchemas}` : "");
       });
       const h1Count = (fragment.match(/<h1[\s>]/g) || []).length;
       if (!fragment || fragment.length < 500 || h1Count === 0) {
