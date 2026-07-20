@@ -10222,6 +10222,7 @@ ${vacancies.map(v => `  <url>
       const phase = req.params.phase;
       if (!SF_PHASES.includes(phase as any)) return res.status(400).json({ message: "Onbekende fase" });
       const schema = z.object({
+        label: z.string().min(1).max(40).optional(),
         triggerDays: z.number().int().min(0).max(90).nullable().optional(),
         triggerAction: z.string().nullable().optional(),
         useBusinessDays: z.boolean().optional(),
@@ -10231,6 +10232,7 @@ ${vacancies.map(v => `  <url>
       const b = parsed.data;
       const r = await db.execute(sql`
         UPDATE salesflow_phase_rules SET
+          label = CASE WHEN ${'label' in b} THEN ${b.label ?? null} ELSE label END,
           trigger_days = CASE WHEN ${'triggerDays' in b} THEN ${b.triggerDays ?? null}::int ELSE trigger_days END,
           trigger_action = CASE WHEN ${'triggerAction' in b} THEN ${b.triggerAction ?? null} ELSE trigger_action END,
           use_business_days = CASE WHEN ${'useBusinessDays' in b} THEN ${b.useBusinessDays}::bool ELSE use_business_days END,
