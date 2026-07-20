@@ -667,7 +667,7 @@ export default function IkZoekExtraWerk() {
                     </div>
                   ))}
                 </div>
-                <a href="/hoe-werkt-dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                <a href="/dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
                   Hoe werkt dagbetaling? <ChevronRight className="w-4 h-4" />
                 </a>
               </div>

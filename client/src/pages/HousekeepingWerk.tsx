@@ -678,7 +678,7 @@ export default function HousekeepingWerk() {
                     </div>
                   ))}
                 </div>
-                <a href="/hoe-werkt-dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
+                <a href="/dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">
                   Hoe werkt dagbetaling? <ChevronRight className="w-4 h-4" />
                 </a>
               </div>
@@ -777,7 +777,7 @@ export default function HousekeepingWerk() {
               { label: "Horeca werk", href: "/horeca-werk" },
               { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
               { label: "Front Office vacatures", href: "/front-office-vacatures-amsterdam" },
-              { label: "Hoe werkt dagbetaling?", href: "/hoe-werkt-dagbetaling" },
+              { label: "Hoe werkt dagbetaling?", href: "/dagbetaling" },
               { label: "EXTRAATJE beloningen", href: "/extraatje" },
               { label: "Aanmelden bij EXTRA", href: "/aanmelden" },
             ].map((link, i) => (

@@ -9,6 +9,8 @@ import { storage } from "./storage";
 import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
+import { registerLlmsTxt } from "./llms";
+import path from "path";
 
 const PgStore = connectPg(session);
 
@@ -226,6 +228,14 @@ async function ensureAdminAccounts() {
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);
+
+  // /llms.txt en /llms-full.txt voor AI-crawlers (llmstxt.org-conventie).
+  // Vóór de static/catch-all-middleware zodat ze als text/plain geserveerd worden.
+  registerLlmsTxt(app, () =>
+    app.get("env") === "development"
+      ? path.resolve(import.meta.dirname, "..", "dist", "public")
+      : path.resolve(import.meta.dirname, "public")
+  );
 
   // Interne admin/mockup-pagina's uitsluiten van zoekmachines
   const NOINDEX_PATHS = new Set([

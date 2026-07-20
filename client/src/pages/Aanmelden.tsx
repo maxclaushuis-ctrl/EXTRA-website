@@ -931,6 +931,9 @@ export default function Aanmelden() {
         </header>
 
         <main className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-24" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
+          {/* Visueel verborgen H1 (SEO/toegankelijkheid): dit was een van de
+              Ahrefs-pagina's zonder H1; het formulier heeft geen zichtbare paginakop. */}
+          <h1 className="sr-only">{lang === "NL" ? "Aanmelden als horecamedewerker bij EXTRA" : "Sign up as hospitality staff at EXTRA"}</h1>
           {step !== "success" && step !== "rejected" && <ProgressBarComponent stepNumber={stepNumber} t={t} />}
 
           {step === "basics" && (

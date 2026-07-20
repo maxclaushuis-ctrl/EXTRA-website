@@ -118,9 +118,11 @@ export default function PublicFooter() {
                   { label: "Hoe het werkt", href: "/horeca-uitzendbureau-amsterdam-werkwijze" },
                   { label: "Waarom EXTRA", href: "/horeca-uitzendbureau-amsterdam" },
                   { label: "Horeca personeel", href: "/horeca-personeel-amsterdam" },
-                  { label: "Hotel personeel", href: "/hotel-personeel-amsterdam" },
-                  { label: "Evenementen personeel", href: "/evenementen-personeel-amsterdam" },
-                  { label: "Catering personeel", href: "/catering-personeel-amsterdam" },
+                  { label: "Hotelpersoneel inhuren", href: "/hotelpersoneel-inhuren" },
+                  { label: "Eventpersoneel inhuren", href: "/eventpersoneel-inhuren" },
+                  { label: "Cateringpersoneel inhuren", href: "/cateringpersoneel-inhuren" },
+                  { label: "Restaurantpersoneel", href: "/horecapersoneel-restaurants" },
+                  { label: "Flexibel horecapersoneel", href: "/flexibel-horeca-personeel" },
                 ].map((l) => (
                   <li key={l.href}>
                     <Link
@@ -143,9 +145,12 @@ export default function PublicFooter() {
                   { label: "Vacatures", href: "/vacatures" },
                   { label: "Horeca vacatures Amsterdam", href: "/horeca-vacatures-amsterdam" },
                   { label: "Horeca werk Amsterdam", href: "/horeca-werk-amsterdam" },
+                  { label: "Horeca werk", href: "/horeca-werk" },
                   { label: "Housekeeping vacatures", href: "/housekeeping-vacatures-amsterdam" },
+                  { label: "Housekeeping werk", href: "/housekeeping-werk" },
                   { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
                   { label: "Front office vacatures", href: "/front-office-vacatures-amsterdam" },
+                  { label: "Hoe werkt dagbetaling", href: "/dagbetaling" },
                   { label: "EXTRAATje beloningen", href: "/beloningssysteem" },
                 ].map((l) => (
                   <li key={l.href}>
@@ -167,6 +172,7 @@ export default function PublicFooter() {
                 {[
                   { label: "Over EXTRA", href: "/over-extra" },
                   { label: "Ons team", href: "/ons-team" },
+                  { label: "Onze werkwijze", href: "/onze-werkwijze" },
                   { label: "Klantcases", href: "/klantcases-horeca" },
                   { label: "Nieuws & blog", href: "/blog" },
                   { label: "Contact", href: "/contact" },
@@ -212,12 +218,9 @@ export default function PublicFooter() {
               <Link href="/privacybeleid" className="hover:text-white transition-colors">
                 Privacybeleid
               </Link>
-              <Link href="/voorwaarden" className="hover:text-white transition-colors">
-                Algemene voorwaarden
-              </Link>
-              <Link href="/cookiebeleid" className="hover:text-white transition-colors">
-                Cookiebeleid
-              </Link>
+              {/* /voorwaarden en /cookiebeleid verwijderd: die pagina's bestaan niet
+                  (waren kapotte interne links die met echte 404's zichtbaar zouden worden).
+                  Terugzetten zodra de pagina's er zijn. */}
               <Link href="/contact" className="hover:text-white transition-colors">
                 Contact
               </Link>

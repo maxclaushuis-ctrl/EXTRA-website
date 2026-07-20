@@ -46,10 +46,14 @@ export const ROUTE_META: RouteMeta[] = [
     changefreq: "weekly",
   },
   {
+    // "/" is client-side een redirect naar /landing (zelfde content op twee
+    // URL's). Canonical wijst daarom naar "/" zodat de homepage de rankings
+    // consolideert; /landing valt automatisch uit de sitemap.
     path: "/landing",
     title: "Flexibel horecapersoneel in Amsterdam | EXTRA",
     description:
       "Representatief horecapersoneel voor hotels, restaurants en events in Amsterdam. Snel geregeld, iedereen in loondienst. Vraag vandaag nog personeel aan.",
+    canonical: "/",
     prerender: true,
     priority: "0.9",
     changefreq: "weekly",
@@ -280,11 +284,69 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.6",
     changefreq: "monthly",
   },
+  // /hoe-werkt-dagbetaling is per SEO-audit (P10) vervangen door /dagbetaling
+  // en 301't daarnaartoe (server/redirects.ts).
+
+  // ── SEO-LANDINGSPAGINA'S (P10, juli 2026) ──────────────────────────
   {
-    path: "/hoe-werkt-dagbetaling",
-    title: "Dagbetaling | Direct grip op je inkomsten | EXTRA",
+    path: "/horeca-personeel-inhuren",
+    title: "Horeca personeel inhuren | Snel geregeld | EXTRA",
     description:
-      "Zo werkt dagbetaling bij EXTRA: na elke shift staat je salaris de volgende ochtend klaar. Transparant, veilig en inzichtelijk via de app. Meld je aan.",
+      "Horeca personeel inhuren in Amsterdam? EXTRA levert gescreende medewerkers in loondienst — vaak binnen 48 uur. Eén tarief, één factuur. Vraag direct aan.",
+    prerender: true,
+    priority: "0.95",
+    changefreq: "weekly",
+  },
+  {
+    path: "/bediening-inhuren",
+    title: "Bediening inhuren | Representatief & ingewerkt",
+    description:
+      "Bediening inhuren voor je restaurant, hotel of event? EXTRA levert gastgerichte bediening, runners en bartenders in Amsterdam. Vraag vandaag aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "weekly",
+  },
+  {
+    path: "/evenementen-personeel-inhuren",
+    title: "Evenementen personeel inhuren | 5 tot 100+ | EXTRA",
+    description:
+      "Evenementen personeel inhuren? EXTRA levert complete eventteams in Amsterdam: bediening, bar, catering en hosts. Schaalbaar en snel. Vraag direct aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "weekly",
+  },
+  {
+    path: "/tijdelijk-horeca-personeel",
+    title: "Tijdelijk horeca personeel | Betaal per uur | EXTRA",
+    description:
+      "Tijdelijk personeel inhuren voor seizoen, piek of vervanging? Via EXTRA schaal je per week op en af en betaal je alleen gewerkte uren. Vraag direct aan.",
+    prerender: true,
+    priority: "0.85",
+    changefreq: "weekly",
+  },
+  {
+    path: "/bijbaan-amsterdam",
+    title: "Bijbaan Amsterdam | Kies je eigen shifts | EXTRA",
+    description:
+      "Op zoek naar een bijbaan in Amsterdam? Werk in tophotels, restaurants en events, kies zelf je shifts en krijg dagbetaling via EXTRA. Meld je gratis aan.",
+    prerender: true,
+    priority: "0.95",
+    changefreq: "weekly",
+  },
+  {
+    path: "/dagbetaling",
+    title: "Dagbetaling | Vandaag werken, morgen betaald",
+    description:
+      "Dagelijks uitbetaald werk via EXTRA: na je shift staat je salaris de volgende ochtend op je rekening. Gewoon in loondienst, zonder extra kosten. Meld je aan.",
+    prerender: true,
+    priority: "0.9",
+    changefreq: "monthly",
+  },
+  {
+    path: "/werken-in-de-horeca",
+    title: "Werken in de horeca | Leeftijd, loon & starten",
+    description:
+      "Alles over werken in de horeca: vanaf welke leeftijd het mag, wat je verdient en hoe je zonder ervaring start. Begin via EXTRA in Amsterdam. Meld je aan.",
     prerender: true,
     priority: "0.85",
     changefreq: "monthly",

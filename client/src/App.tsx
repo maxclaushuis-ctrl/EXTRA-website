@@ -1,6 +1,7 @@
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { useState, useEffect, lazy, Suspense, Component, ReactNode } from "react";
+import { ROUTE_META_BY_PATH, SITE_ORIGIN } from "@shared/routeMeta";
 
 const Home = lazy(() => import("@/pages/Home"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -28,7 +29,7 @@ const OverExtra = lazy(() => import("@/pages/OverExtra"));
 const OnsTeam = lazy(() => import("@/pages/OnsTeam"));
 const HoeExtraWerkt = lazy(() => import("@/pages/HoeExtraWerkt"));
 const IkZoekExtraWerk = lazy(() => import("@/pages/IkZoekExtraWerk"));
-const HoeWerktDagbetaling = lazy(() => import("@/pages/HoeWerktDagbetaling"));
+const SeoLandingPagina = lazy(() => import("@/pages/SeoLandingPaginas"));
 const Vacatures = lazy(() => import("@/pages/Vacatures"));
 const VacatureDetail = lazy(() => import("@/pages/VacatureDetail"));
 const HorecaPersoneelGezocht = lazy(() => import("@/pages/HorecaPersoneelGezocht"));
@@ -148,6 +149,13 @@ const PUBLIC_PATHS = [
   '/brochure', '/brochures', '/events', '/lofi', '/nieuws', '/extraatje',
   '/over-extra', '/hoe-extra-werkt', '/ik-zoek-extra-werk',
   '/hoe-werkt-dagbetaling',
+  '/dagbetaling',
+  '/bijbaan-amsterdam',
+  '/werken-in-de-horeca',
+  '/horeca-personeel-inhuren',
+  '/bediening-inhuren',
+  '/evenementen-personeel-inhuren',
+  '/tijdelijk-horeca-personeel',
   '/horeca-vacatures-amsterdam', '/horeca-werk-amsterdam',
   '/housekeeping-vacatures-amsterdam', '/chef-vacatures-amsterdam',
   '/front-office-vacatures-amsterdam', '/horecapersoneel-gezocht',
@@ -178,9 +186,34 @@ function PageLoader() {
   );
 }
 
+/**
+ * Houdt title/description/canonical na hydratatie in sync met shared/routeMeta.ts
+ * (dezelfde bron als de server-side injectie). Draait als parent-effect NA de
+ * mount-effecten van pagina's, dus dit wint van verouderde per-pagina
+ * document.title-overrides — zonder 44 pagina-bestanden aan te passen.
+ * Dynamische routes (blog-/vacature-slugs) staan niet in het manifest en
+ * behouden hun eigen titellogica.
+ */
+function useRouteMetaSync(location: string) {
+  useEffect(() => {
+    const normalized = location === "/" ? "/" : location.toLowerCase().replace(/\/$/, "");
+    const meta = ROUTE_META_BY_PATH[normalized];
+    if (!meta) return;
+    document.title = meta.title;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", meta.description);
+    const canonicalPath = meta.canonical ?? meta.path;
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `${SITE_ORIGIN}${canonicalPath}`);
+    document.querySelector('meta[property="og:title"]')?.setAttribute("content", meta.title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute("content", meta.description);
+    document.querySelector('meta[property="og:url"]')?.setAttribute("content", `${SITE_ORIGIN}${canonicalPath}`);
+    document.querySelector('meta[name="robots"]')?.setAttribute("content", meta.noindex ? "noindex, nofollow" : "index, follow");
+  }, [location]);
+}
+
 function Router() {
   const { isAuthenticated, user } = useAuth();
   const [location] = useLocation();
+  useRouteMetaSync(location);
 
   const isPlanningPage = location.startsWith('/planning');
   const isDashboardMockup = location.startsWith('/dashboard');
@@ -207,7 +240,14 @@ function Router() {
           <Route path="/horecapersoneel-gezocht">{() => { window.location.replace('/horecapersoneel-restaurants'); return null; }}</Route>
           <Route path="/horeca-personeel-gezocht" component={PersoneelGezocht} />
           <Route path="/personeel-gezocht">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
-          <Route path="/horeca-personeel-inhuren">{() => { window.location.replace('/horeca-personeel-gezocht'); return null; }}</Route>
+          {/* SEO-landingspagina's (P10, juli 2026) */}
+          <Route path="/horeca-personeel-inhuren">{() => <SeoLandingPagina page="horeca-personeel-inhuren" />}</Route>
+          <Route path="/bediening-inhuren">{() => <SeoLandingPagina page="bediening-inhuren" />}</Route>
+          <Route path="/evenementen-personeel-inhuren">{() => <SeoLandingPagina page="evenementen-personeel-inhuren" />}</Route>
+          <Route path="/tijdelijk-horeca-personeel">{() => <SeoLandingPagina page="tijdelijk-horeca-personeel" />}</Route>
+          <Route path="/bijbaan-amsterdam">{() => <SeoLandingPagina page="bijbaan-amsterdam" />}</Route>
+          <Route path="/dagbetaling">{() => <SeoLandingPagina page="dagbetaling" />}</Route>
+          <Route path="/werken-in-de-horeca">{() => <SeoLandingPagina page="werken-in-de-horeca" />}</Route>
           <Route path="/hotelpersoneel-inhuren" component={HotelPersoneelGezocht} />
           <Route path="/hotel-personeel-gezocht">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
           <Route path="/hotel-personeel-amsterdam">{() => { window.location.replace('/hotelpersoneel-inhuren'); return null; }}</Route>
@@ -287,7 +327,7 @@ function Router() {
           <Route path="/extraatje" component={Extraatje} />
           <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
           <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
-          <Route path="/hoe-werkt-dagbetaling" component={HoeWerktDagbetaling} />
+          <Route path="/dagbetaling">{() => { window.location.replace('/dagbetaling'); return null; }}</Route>
           <Route path="/vacatures" component={Vacatures} />
           <Route path="/vacatures/:slug" component={VacatureDetail} />
           <Route path="/contact" component={Contact} />

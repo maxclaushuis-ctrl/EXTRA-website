@@ -532,7 +532,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
                     </div>
                   ))}
                 </div>
-                <a href="/hoe-werkt-dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">Hoe werkt dagbetaling? <ChevronRight className="w-4 h-4" /></a>
+                <a href="/dagbetaling" className="inline-flex items-center gap-2 text-sm font-bold text-purple-700 hover:text-purple-900 transition-colors">Hoe werkt dagbetaling? <ChevronRight className="w-4 h-4" /></a>
               </div>
               <div className="flex justify-center">
                 <div className="relative flex gap-5 items-end h-[320px] sm:h-[380px]">
@@ -610,7 +610,7 @@ export default function FrontOfficeVacaturesAmsterdam() {
               { label: "Horeca werk", href: "/horeca-werk" },
               { label: "Housekeeping werk", href: "/housekeeping-werk" },
               { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
-              { label: "Hoe werkt dagbetaling?", href: "/hoe-werkt-dagbetaling" },
+              { label: "Hoe werkt dagbetaling?", href: "/dagbetaling" },
               { label: "Aanmelden bij EXTRA", href: "/aanmelden" },
             ].map((link, i) => (
               <Link key={i} href={link.href} className="bg-purple-50 px-5 py-2.5 rounded-full border border-purple-100 text-sm font-medium text-gray-600 hover:border-purple-400/50 hover:text-purple-700 transition-all">
