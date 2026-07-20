@@ -384,7 +384,7 @@ export default function OverExtra() {
                 Aanmelden als medewerker <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <a
-                href="/personeel-gezocht"
+                href="/horeca-personeel-gezocht"
                 className="inline-flex items-center gap-2 border-2 border-purple-200 text-purple-700 font-bold px-8 py-4 rounded-full hover:border-purple-400 hover:bg-purple-50 transition-all"
               >
                 Opdrachtgever? <ChevronRight className="w-5 h-5" />

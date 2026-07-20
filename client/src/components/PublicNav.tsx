@@ -167,7 +167,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           key: "personeel",
           label: "Ik zoek extra personeel",
           icon: Briefcase,
-          href: "/personeel-gezocht",
+          href: "/horeca-personeel-gezocht",
           items: [
             { label: "Hotels", href: "/hotelpersoneel-inhuren", icon: Hotel },
             { label: "Eventlocaties", href: "/eventpersoneel-inhuren", icon: PartyPopper },

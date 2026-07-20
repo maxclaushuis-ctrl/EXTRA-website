@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
 import { storage } from "./storage";
+import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
 import { createHash, randomUUID } from "crypto";
 import { 
   insertApplicantSchema, 
@@ -9360,52 +9361,23 @@ Geef ook mee (als JSON commentaar aan het begin van je response, voor het HTML, 
     }
   });
 
-  // Public: sitemap.xml
+  // Public: sitemap.xml — gegenereerd uit shared/routeMeta.ts (één bron van
+  // waarheid met de meta-injectie in server/seo.ts) + blogposts + vacatures.
+  // Routes met noindex of een afwijkende canonical (duplicaten) staan er niet in.
   app.get('/sitemap.xml', async (_req: Request, res: Response) => {
     try {
       const { posts } = await storage.getBlogPosts({ status: 'published', limit: 500 });
-      const baseUrl = process.env.BASE_URL || 'https://brochure.doehetextra.nl';
-      const staticPages = [
-        // Hoofdpagina's
-        { url: '/', priority: '1.0', changefreq: 'weekly' },
-        { url: '/landing', priority: '0.9', changefreq: 'weekly' },
-        // SEO pillar pagina's
-        { url: '/horeca-uitzendbureau-amsterdam', priority: '1.0', changefreq: 'weekly' },
-        { url: '/horeca-uitzendbureau-amsterdam-werkwijze', priority: '0.9', changefreq: 'monthly' },
-        { url: '/horeca-personeel-amsterdam', priority: '0.95', changefreq: 'weekly' },
-        { url: '/horeca-personeel', priority: '0.9', changefreq: 'weekly' },
-        { url: '/flexibel-horeca-personeel', priority: '0.9', changefreq: 'weekly' },
-        // Werkgever routes
-        { url: '/personeel-gezocht', priority: '0.95', changefreq: 'weekly' },
-        { url: '/hotel-personeel-gezocht', priority: '0.95', changefreq: 'weekly' },
-        { url: '/event-personeel-gezocht', priority: '0.9', changefreq: 'weekly' },
-        { url: '/cateringpersoneel-gezocht', priority: '0.9', changefreq: 'weekly' },
-        { url: '/horecapersoneel-gezocht', priority: '0.95', changefreq: 'weekly' },
-        { url: '/personeelsaanvraag', priority: '0.9', changefreq: 'monthly' },
-        // Kandidaat routes
-        { url: '/horeca-vacatures-amsterdam', priority: '0.95', changefreq: 'weekly' },
-        { url: '/horeca-werk-amsterdam', priority: '0.9', changefreq: 'weekly' },
-        { url: '/horeca-werk', priority: '0.95', changefreq: 'weekly' },
-        { url: '/housekeeping-vacatures-amsterdam', priority: '0.9', changefreq: 'weekly' },
-        { url: '/housekeeping-werk', priority: '0.95', changefreq: 'weekly' },
-        { url: '/chef-vacatures-amsterdam', priority: '0.85', changefreq: 'weekly' },
-        { url: '/front-office-vacatures-amsterdam', priority: '0.85', changefreq: 'weekly' },
-        { url: '/aanmelden', priority: '0.9', changefreq: 'monthly' },
-        // Over EXTRA
-        { url: '/over-extra', priority: '0.8', changefreq: 'monthly' },
-        { url: '/ons-team', priority: '0.7', changefreq: 'monthly' },
-        { url: '/onze-werkwijze', priority: '0.8', changefreq: 'monthly' },
-        { url: '/beloningssysteem', priority: '0.8', changefreq: 'monthly' },
-        { url: '/klantcases-horeca', priority: '0.75', changefreq: 'monthly' },
-        { url: '/contact', priority: '0.8', changefreq: 'monthly' },
-        // Blog
-        { url: '/blog', priority: '0.9', changefreq: 'daily' },
-      ];
+      const { posts: vacancies } = await storage.getVacancyPosts({ status: 'published', limit: 500 });
+      // Bewust géén BASE_URL-fallback naar een ander (sub)domein: het canonical
+      // domein staat vast. BASE_URL kan het alleen expliciet overschrijven.
+      const baseUrl = process.env.BASE_URL || SITE_ORIGIN;
+      const staticPages = ROUTE_META.filter(m => !m.noindex && !m.canonical)
+        .map(m => ({ url: m.path, priority: m.priority || '0.5', changefreq: m.changefreq || 'monthly' }));
       const today = new Date().toISOString().split('T')[0];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticPages.map(p => `  <url>
-    <loc>${baseUrl}${p.url}</loc>
+    <loc>${baseUrl}${p.url === '/' ? '' : p.url}${p.url === '/' ? '/' : ''}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
@@ -9415,6 +9387,12 @@ ${posts.map(p => `  <url>
     <lastmod>${(p.publishedAt || p.createdAt)?.toISOString().split('T')[0] || today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>`).join('\n')}
+${vacancies.map(v => `  <url>
+    <loc>${baseUrl}/vacatures/${v.slug}</loc>
+    <lastmod>${(v.updatedAt || v.publishedAt || v.createdAt)?.toISOString().split('T')[0] || today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
   </url>`).join('\n')}
 </urlset>`;
       res.set('Content-Type', 'application/xml');

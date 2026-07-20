@@ -83,6 +83,35 @@ const REDIRECT_MAP: Record<string, string> = {
   // ── PDF-BESTANDEN → HOMEPAGE ─────────────────────────────
   "/files/ugd/b0f6ba_187c60847d1f43b0a91d37620bbb413a.pdf": "/",
   "/files/ugd/b0f6ba_0f1721a0a66c46d6b2189339eb90142b.pdf": "/",
+
+  // ── VOORHEEN CLIENT-SIDE REDIRECTS (App.tsx-stubs) ───────
+  // Deze bestonden alleen als window.location.replace() in de SPA; crawlers
+  // zonder JavaScript zagen daardoor een soft-404. Nu echte HTTP 301's.
+  // De App.tsx-stubs blijven staan als fallback voor client-side navigatie.
+  "/horecapersoneel-gezocht":           "/horecapersoneel-restaurants",
+  "/personeel-gezocht":                 "/horeca-personeel-gezocht",
+  "/horeca-personeel-inhuren":          "/horeca-personeel-gezocht", // wordt eigen pagina in SEO-blok 3 (P10)
+  "/hotel-personeel-gezocht":           "/hotelpersoneel-inhuren",
+  "/hotel-personeel-amsterdam":         "/hotelpersoneel-inhuren",
+  "/event-personeel-gezocht":           "/eventpersoneel-inhuren",
+  "/evenementen-personeel-amsterdam":   "/eventpersoneel-inhuren",
+  "/cateringpersoneel-gezocht":         "/cateringpersoneel-inhuren",
+  "/catering-personeel-amsterdam":      "/cateringpersoneel-inhuren",
+  "/restaurant-personeel-gezocht":      "/horecapersoneel-restaurants",
+  "/restaurant-personeel-amsterdam":    "/horecapersoneel-restaurants",
+  "/ik-zoek-extra-werk":                "/horeca-vacatures-amsterdam",
+  "/ik-zoek-extra-werk/horeca":         "/horeca-werk",
+  "/ik-zoek-extra-werk/chef":           "/chef-vacatures-amsterdam",
+  "/ik-zoek-extra-werk/front-office":   "/front-office-vacatures-amsterdam",
+
+  // ── OUDE (WIX-)URL'S DIE GOOGLE NOG KENT, ZONDER ROUTE ───
+  // Stonden geïndexeerd maar gaven een soft-404 (200 + lege shell).
+  "/werken-bij-extra":                  "/horeca-werk",
+  "/krijg-direct-uitbetaald":           "/hoe-werkt-dagbetaling",
+  "/bijbaan-utrecht":                   "/horeca-werk",
+  "/en/werk-zoeken":                    "/en/hospitality-jobs",
+  "/en/uitzendbureau-hilversum":        "/",
+  "/en/uitzendbureau-utrecht":          "/",
 };
 
 /**
