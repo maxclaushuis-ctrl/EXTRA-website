@@ -931,8 +931,10 @@ export default function DashboardMockup() {
         </div>
 
         <nav className="flex-1 px-2 overflow-y-auto pt-3">
-          {/* Group: Communicatie — uitklapbaar, klikken op header toggelt alleen,
-              navigatie gebeurt via de sub-items (Gesprekken / Contacten / AI-instellingen). */}
+          {/* Group: Communicatie — TIJDELIJK VERBORGEN (module nog niet af).
+              Terugzetten: verander `false &&` hieronder weer in de originele render.
+              WhatsApp/Contacten/AI-instellingen-tabs en logica blijven intact. */}
+          {false && (<>
           <button
             onClick={() => {
               const next = !communicatieExpanded;
@@ -987,6 +989,7 @@ export default function DashboardMockup() {
               </button>
             </>
           )}
+          </>)}
 
           {/* Group: Medewerkers */}
           <button
