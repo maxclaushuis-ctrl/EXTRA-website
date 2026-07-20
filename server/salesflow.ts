@@ -30,6 +30,85 @@ export const PHASE_KEYS: SalesflowPhase[] = [
 const rows = (r: any): any[] => r.rows ?? r ?? [];
 const one = (r: any): any | undefined => rows(r)[0];
 
+/**
+ * Zelfherstellend schema: maakt de salesflow-tabellen en -kolommen aan als ze
+ * ontbreken en seedt de standaardfases. Volledig idempotent — veilig bij elke
+ * start. Hierdoor is de app nooit meer afhankelijk van handmatige migraties.
+ */
+export async function ensureSalesflowSchema(): Promise<void> {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS salesflow_batches (
+      id                  serial PRIMARY KEY,
+      name                text NOT NULL,
+      categorie           crm_categorie,
+      description         text,
+      created_by_user_id  integer REFERENCES users(id) ON DELETE SET NULL,
+      created_at          timestamp NOT NULL DEFAULT now()
+    )`);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS salesflow_phase_rules (
+      id                  serial PRIMARY KEY,
+      phase               text NOT NULL UNIQUE,
+      label               text NOT NULL,
+      position            integer NOT NULL,
+      trigger_days        integer,
+      trigger_action      text,
+      use_business_days   boolean NOT NULL DEFAULT true,
+      is_end_state        boolean NOT NULL DEFAULT false,
+      updated_at          timestamp NOT NULL DEFAULT now()
+    )`);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS salesflow_cards (
+      id                  serial PRIMARY KEY,
+      contact_id          integer NOT NULL REFERENCES crm_contacts(id) ON DELETE CASCADE,
+      company_id          integer NOT NULL REFERENCES crm_companies(id) ON DELETE CASCADE,
+      batch_id            integer REFERENCES salesflow_batches(id) ON DELETE SET NULL,
+      phase               text NOT NULL DEFAULT 'selectie',
+      eigenaar_user_id    integer REFERENCES users(id) ON DELETE SET NULL,
+      position            real NOT NULL DEFAULT 0,
+      next_action_at      date,
+      next_action_type    text,
+      reminder_id         integer REFERENCES crm_reminders(id) ON DELETE SET NULL,
+      channel             text,
+      not_reached_count   integer NOT NULL DEFAULT 0,
+      snooze_until        date,
+      notes               text,
+      entered_phase_at    timestamp NOT NULL DEFAULT now(),
+      created_at          timestamp NOT NULL DEFAULT now(),
+      updated_at          timestamp NOT NULL DEFAULT now()
+    )`);
+  // Latere kolommen (migraties 0009/0010) — idempotent bijwerken.
+  await db.execute(sql`ALTER TABLE salesflow_phase_rules ADD COLUMN IF NOT EXISTS behavior text NOT NULL DEFAULT 'normal'`);
+  await db.execute(sql`ALTER TABLE salesflow_phase_rules ADD COLUMN IF NOT EXISTS asks_channel boolean NOT NULL DEFAULT false`);
+  await db.execute(sql`ALTER TABLE salesflow_cards ADD COLUMN IF NOT EXISTS created_by_name text`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS salesflow_cards_phase_idx ON salesflow_cards (phase, position)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS salesflow_cards_batch_idx ON salesflow_cards (batch_id)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS salesflow_cards_eigenaar_idx ON salesflow_cards (eigenaar_user_id)`);
+  await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS salesflow_cards_contact_uniq ON salesflow_cards (contact_id)`);
+  // Seed de standaardfases als het bord nog leeg is.
+  const aantal = Number(one(await db.execute(sql`SELECT count(*)::int AS n FROM salesflow_phase_rules`))?.n ?? 0);
+  if (aantal === 0) {
+    await db.execute(sql`
+      INSERT INTO salesflow_phase_rules (phase, label, position, trigger_days, trigger_action, is_end_state, behavior, asks_channel) VALUES
+        ('selectie',          'Selectie',               1, NULL, NULL,             false, 'normal', false),
+        ('mailing_verstuurd', 'Mailing verstuurd',      2, 3,    'bellen',         false, 'normal', false),
+        ('nagebeld',          'Nagebeld',               3, 2,    'opnieuw_bellen', false, 'normal', false),
+        ('bericht_gestuurd',  'Bericht gestuurd',       4, 4,    'opvolgen',       false, 'normal', true),
+        ('info_verstuurd',    'Info verstuurd',         5, 5,    'opvolgen',       false, 'normal', false),
+        ('opvolgen',          'Opvolgen',               6, 7,    'opvolgen',       false, 'normal', false),
+        ('deal',              'Deal',                   7, NULL, NULL,             true,  'deal',   false),
+        ('geen_interesse',    'Geen interesse / Later', 8, NULL, NULL,             true,  'snooze', false)
+      ON CONFLICT (phase) DO NOTHING`);
+  } else {
+    // Bestaande installatie: gedrag-vlaggen zetten als die nog op 'normal' staan
+    // (situatie waarin 0008 wél maar 0009 níet is gedraaid).
+    await db.execute(sql`UPDATE salesflow_phase_rules SET behavior = 'deal'   WHERE phase = 'deal'           AND behavior = 'normal'`);
+    await db.execute(sql`UPDATE salesflow_phase_rules SET behavior = 'snooze' WHERE phase = 'geen_interesse' AND behavior = 'normal'`);
+    await db.execute(sql`UPDATE salesflow_phase_rules SET asks_channel = true WHERE phase = 'bericht_gestuurd' AND asks_channel = false`);
+  }
+  log("[salesflow] schema gecontroleerd en up-to-date");
+}
+
 /** Voegt N werkdagen (ma–vr) toe aan een datum en geeft 'YYYY-MM-DD'. */
 export function addBusinessDays(from: Date, n: number): string {
   const d = new Date(from);

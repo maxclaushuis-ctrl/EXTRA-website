@@ -10016,7 +10016,7 @@ ${vacancies.map(v => `  <url>
       const batchId = batch && batch !== 'alle' ? parseInt(batch, 10) : null;
       const cat = categorie && categorie !== 'alle' ? categorie : null;
 
-      const rules = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", is_end_state AS "isEndState", use_business_days AS "useBusinessDays" FROM salesflow_phase_rules ORDER BY position`);
+      const rules = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", is_end_state AS "isEndState", use_business_days AS "useBusinessDays", behavior, asks_channel AS "asksChannel" FROM salesflow_phase_rules ORDER BY position`);
       const cards = await db.execute(sql`
         SELECT k.id, k.phase, k.eigenaar_user_id AS "eigenaarUserId", k.position,
                k.next_action_at AS "nextActionAt", k.next_action_type AS "nextActionType",

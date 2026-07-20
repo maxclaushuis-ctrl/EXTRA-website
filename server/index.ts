@@ -10,8 +10,9 @@ import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
 import { registerLlmsTxt } from "./llms";
-import { scheduleSalesflowDailyJob } from "./salesflow";
+import { scheduleSalesflowDailyJob, ensureSalesflowSchema } from "./salesflow";
 import path from "path";
+import fs from "fs";
 
 const PgStore = connectPg(session);
 
@@ -275,6 +276,57 @@ async function ensureAdminAccounts() {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
+
+  // ── Zelfherstellend opstarten ─────────────────────────────────────────────
+  // Probleem in de praktijk: een oud (zombie-)serverproces blijft poort 5000
+  // vasthouden → EADDRINUSE → de nieuwe code draait nooit. Oplossing: bij het
+  // opstarten ruimen we andere serverprocessen op (via /proc, geen externe
+  // tools nodig) en bij EADDRINUSE proberen we het na een korte pauze opnieuw.
+  function ruimOudeServerprocessenOp(): number {
+    let opgeruimd = 0;
+    try {
+      // Eigen proces-keten (onszelf, tsx, npm, sh) nooit killen.
+      const eigenKeten = new Set<number>();
+      let p: number = process.pid;
+      for (let i = 0; i < 10 && p > 1; i++) {
+        eigenKeten.add(p);
+        try {
+          const stat = fs.readFileSync(`/proc/${p}/stat`, "utf8");
+          p = parseInt(stat.slice(stat.lastIndexOf(")") + 2).split(" ")[1], 10);
+        } catch { break; }
+      }
+      for (const dir of fs.readdirSync("/proc")) {
+        const pid = Number(dir);
+        if (!pid || eigenKeten.has(pid)) continue;
+        try {
+          const cmd = fs.readFileSync(`/proc/${pid}/cmdline`, "utf8");
+          if (cmd.includes("server/index.ts") || cmd.includes("dist/index.js")) {
+            process.kill(pid, "SIGKILL");
+            opgeruimd++;
+          }
+        } catch { /* proces al weg of geen rechten */ }
+      }
+    } catch { /* /proc niet beschikbaar — dan gewoon doorstarten */ }
+    if (opgeruimd > 0) log(`[start] ${opgeruimd} oud(e) serverproces(sen) opgeruimd (poort ${port} vrijgemaakt)`);
+    return opgeruimd;
+  }
+
+  ruimOudeServerprocessenOp();
+  // Salesflow-schema garanderen (idempotent) — geen handmatige migraties nodig.
+  await ensureSalesflowSchema().catch(err => console.error("[salesflow] schema-check mislukt (niet-kritiek):", err?.message || err));
+
+  let listenPogingen = 0;
+  server.on("error", (err: any) => {
+    if (err?.code === "EADDRINUSE" && listenPogingen < 5) {
+      listenPogingen++;
+      log(`[start] poort ${port} nog bezet — oude processen opruimen en opnieuw proberen (poging ${listenPogingen}/5)…`);
+      ruimOudeServerprocessenOp();
+      setTimeout(() => server.listen({ port, host: "0.0.0.0", reusePort: true }), 1500);
+      return;
+    }
+    throw err;
+  });
+
   server.listen({
     port,
     host: "0.0.0.0",

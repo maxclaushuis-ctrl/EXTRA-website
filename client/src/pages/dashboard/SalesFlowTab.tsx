@@ -1,8 +1,13 @@
 /**
  * SALESFLOW — persoonsgericht kanban-bord (direct-mailing opvolging).
  * Pipedrive-stijl: wit bord, dunne scheidingslijnen, kleur alleen als status-stip.
- * Fases (kolommen) zijn volledig beheerbaar: naam, actie, termijn, toevoegen,
- * verwijderen en herordenen via "Fases instellen".
+ *
+ * Robuustheid:
+ * - GEEN window.prompt/confirm (die worden in de Replit-preview geblokkeerd
+ *   waardoor "er niks gebeurt") — alles via echte dialogen.
+ * - Fouten van het bord of de batches-lijst zijn ALTIJD zichtbaar als rode
+ *   banner op de pagina, met een knop om het opnieuw te proberen.
+ * - Een nieuwe batch wordt direct geselecteerd in het batch-filter.
  */
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -17,7 +22,7 @@ import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDraggable, useDroppable, type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
-import { Plus, X, Search, Settings2, Check, ArrowUp, ArrowDown, Trash2, FolderPlus } from 'lucide-react';
+import { Plus, Search, Settings2, Check, ArrowUp, ArrowDown, Trash2, FolderPlus, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Rule { phase: string; label: string; position: number; triggerDays: number | null; triggerAction: string | null; isEndState: boolean; behavior?: string; asksChannel?: boolean; useBusinessDays?: boolean; }
 interface Card {
@@ -36,6 +41,8 @@ const ACTIE_OPTIES: [string, string][] = [
 ];
 const actieLabel = (a: string | null | undefined) =>
   ACTIE_OPTIES.find(([v]) => v === a)?.[1] ?? (a ? a.charAt(0).toUpperCase() + a.slice(1) : 'reminder');
+
+const foutTekst = (e: any) => e?.data?.message || e?.message || 'Onbekende fout';
 
 function initialen(naam: string) { return naam.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase(); }
 
@@ -90,7 +97,7 @@ function DraggableKaart({ card, rule }: { card: Card; rule?: Rule }) {
 function Kolom({ rule, cards, batchId, onBatchAdvance }: { rule: Rule; cards: Card[]; batchId: number | null; onBatchAdvance: (from: string) => void; }) {
   const { setNodeRef, isOver } = useDroppable({ id: rule.phase });
   const triggerRegel = rule.isEndState
-    ? (rule.behavior === 'deal' ? 'Bedrijf → Bestaande klanten' : rule.behavior === 'snooze' ? 'Sluimert → terug in Selectie' : 'Eindfase')
+    ? (rule.behavior === 'deal' ? 'Bedrijf → Bestaande klanten' : rule.behavior === 'snooze' ? 'Sluimert → terug in eerste kolom' : 'Eindfase')
     : rule.triggerDays != null ? `Na ${rule.triggerDays} dagen → ${actieLabel(rule.triggerAction)}` : 'Voorbereiden';
   return (
     <div ref={setNodeRef} className={`flex-1 min-w-[200px] border-r border-gray-100 last:border-r-0 flex flex-col ${isOver ? 'bg-purple-50/40' : ''}`}>
@@ -113,6 +120,18 @@ function Kolom({ rule, cards, batchId, onBatchAdvance }: { rule: Rule; cards: Ca
   );
 }
 
+function FoutBanner({ titel, fout, onRetry }: { titel: string; fout: any; onRetry: () => void }) {
+  return (
+    <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-[13px]">
+      <AlertTriangle className="w-4 h-4 shrink-0" />
+      <span className="flex-1"><b>{titel}:</b> {foutTekst(fout)}</span>
+      <Button variant="outline" size="sm" onClick={onRetry} className="gap-1.5 border-red-300 text-red-700 hover:bg-red-100 shrink-0">
+        <RefreshCw className="w-3.5 h-3.5" /> Opnieuw proberen
+      </Button>
+    </div>
+  );
+}
+
 export default function SalesFlowTab() {
   const { toast } = useToast();
   const [batch, setBatch] = useState<string>('alle');
@@ -122,25 +141,31 @@ export default function SalesFlowTab() {
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
+  // Uitgestelde drag-acties die eerst input nodig hebben (kanaal / sluimerduur)
+  const [kanaalVoor, setKanaalVoor] = useState<{ cardId: number; phase: string } | null>(null);
+  const [sluimerVoor, setSluimerVoor] = useState<{ cardId: number; phase: string } | null>(null);
+  const [advanceVraag, setAdvanceVraag] = useState<{ batchId: number; fromPhase: string; fromLabel: string; toPhase: string; toLabel: string; aantal: number } | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const { data: batches } = useQuery<Batch[]>({ queryKey: ['/api/sales/flow/batches'], queryFn: () => apiRequest('/api/sales/flow/batches') as Promise<any> });
-  const { data, isLoading } = useQuery<{ rules: Rule[]; cards: Card[] }>({
+  const batchesQuery = useQuery<Batch[]>({ queryKey: ['/api/sales/flow/batches'], queryFn: () => apiRequest('/api/sales/flow/batches') as Promise<any> });
+  const batches = batchesQuery.data;
+  const flowQuery = useQuery<{ rules: Rule[]; cards: Card[] }>({
     queryKey: ['/api/sales/flow', batch, eigenaar, categorie],
     queryFn: () => apiRequest(`/api/sales/flow?batch=${batch}&eigenaar=${eigenaar}&categorie=${categorie}`) as Promise<any>,
   });
+  const { data, isLoading } = flowQuery;
 
   const move = useMutation({
-    mutationFn: (v: { id: number; phase: string; channel?: string; snoozeUntil?: string }) =>
+    mutationFn: (v: { id: number; phase: string; channel?: string; snoozeUntil?: string | null }) =>
       apiRequest('PATCH', `/api/sales/flow/cards/${v.id}/move`, { phase: v.phase, channel: v.channel ?? null, snoozeUntil: v.snoozeUntil ?? null }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] }); },
-    onError: (e: any) => toast({ title: 'Verplaatsen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Verplaatsen mislukt', description: foutTekst(e), variant: 'destructive' }),
   });
   const batchAdvance = useMutation({
     mutationFn: (v: { batchId: number; fromPhase: string; toPhase: string }) => apiRequest('POST', '/api/sales/flow/batch-advance', v),
     onSuccess: (r: any) => { queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] }); toast({ title: `${r.moved} kaart(en) doorgezet` }); },
-    onError: (e: any) => toast({ title: 'Batch-actie mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Batch-actie mislukt', description: foutTekst(e), variant: 'destructive' }),
   });
 
   const rules = data?.rules ?? [];
@@ -167,17 +192,8 @@ export default function SalesFlowTab() {
     const card = cards.find(c => c.id === cardId);
     if (!card || !naarFase || card.phase === naarFase) return;
     const rule = ruleByPhase[naarFase];
-    if (rule?.asksChannel) {
-      const kanaal = window.prompt('Kanaal? Typ "email" of "linkedin"', 'email');
-      if (kanaal !== 'email' && kanaal !== 'linkedin') { toast({ title: 'Verplaatsing geannuleerd', description: 'Kies email of linkedin' }); return; }
-      move.mutate({ id: cardId, phase: naarFase, channel: kanaal }); return;
-    }
-    if (rule?.behavior === 'snooze') {
-      const maanden = window.prompt('Over hoeveel maanden opnieuw benaderen? (leeg = niet)', '3');
-      let snooze: string | undefined;
-      if (maanden && /^\d+$/.test(maanden)) { const d = new Date(); d.setMonth(d.getMonth() + parseInt(maanden, 10)); snooze = d.toISOString().slice(0, 10); }
-      move.mutate({ id: cardId, phase: naarFase, snoozeUntil: snooze }); return;
-    }
+    if (rule?.asksChannel) { setKanaalVoor({ cardId, phase: naarFase }); return; }
+    if (rule?.behavior === 'snooze') { setSluimerVoor({ cardId, phase: naarFase }); return; }
     move.mutate({ id: cardId, phase: naarFase });
   }
 
@@ -186,8 +202,10 @@ export default function SalesFlowTab() {
     const idx = rules.findIndex(r => r.phase === fromPhase);
     const next = rules[idx + 1];
     if (!next) return;
-    if (window.confirm(`Alle kaarten in "${rules[idx].label}" doorzetten naar "${next.label}"?`))
-      batchAdvance.mutate({ batchId: parseInt(batch, 10), fromPhase, toPhase: next.phase });
+    setAdvanceVraag({
+      batchId: parseInt(batch, 10), fromPhase, fromLabel: rules[idx].label,
+      toPhase: next.phase, toLabel: next.label, aantal: (perFase[fromPhase] ?? []).length,
+    });
   }
 
   return (
@@ -204,6 +222,9 @@ export default function SalesFlowTab() {
           <SfSelect label="Categorie" value={categorie} onChange={setCategorie} width="w-[130px]" opts={[['alle', 'Alle'], ['Hotel', 'Hotel'], ['Logistiek', 'Logistiek'], ['Events', 'Events']]} />
         </div>
       </div>
+
+      {flowQuery.isError && <FoutBanner titel="Bord laden mislukt" fout={flowQuery.error} onRetry={() => flowQuery.refetch()} />}
+      {batchesQuery.isError && <FoutBanner titel="Batches laden mislukt" fout={batchesQuery.error} onRetry={() => batchesQuery.refetch()} />}
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="text-[13px] text-gray-600"><b className="text-gray-900">{acties.vandaag} acties vandaag</b>{acties.laat > 0 && <> · <span className="text-red-600 font-semibold">{acties.laat} te laat</span></>}</span>
@@ -232,10 +253,71 @@ export default function SalesFlowTab() {
         <Legenda kleur="#c9ccd8" tekst="Wacht / sluimert" />
       </div>
 
-      <PersoonToevoegen open={addOpen} batches={batches ?? []} onClose={() => setAddOpen(false)} />
+      <PersoonToevoegen open={addOpen} batches={batches ?? []} huidigeBatch={batch} onClose={() => setAddOpen(false)} />
       <FasesInstellen open={settingsOpen} rules={rules} counts={countByPhase} onClose={() => setSettingsOpen(false)} />
-      <NieuweBatch open={batchOpen} onClose={() => setBatchOpen(false)} />
+      <NieuweBatch open={batchOpen} onClose={() => setBatchOpen(false)} onCreated={(b) => setBatch(String(b.id))} />
+
+      {/* Kanaal kiezen bij verplaatsen naar een 'vraagt kanaal'-kolom */}
+      <Dialog open={!!kanaalVoor} onOpenChange={(o) => !o && setKanaalVoor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Via welk kanaal?</DialogTitle></DialogHeader>
+          <p className="text-[13px] text-gray-500 -mt-1">Hoe is het bericht verstuurd?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => { if (kanaalVoor) move.mutate({ id: kanaalVoor.cardId, phase: kanaalVoor.phase, channel: 'email' }); setKanaalVoor(null); }}>E-mail</Button>
+            <Button variant="outline" onClick={() => { if (kanaalVoor) move.mutate({ id: kanaalVoor.cardId, phase: kanaalVoor.phase, channel: 'linkedin' }); setKanaalVoor(null); }}>LinkedIn</Button>
+          </div>
+          <DialogFooter><Button variant="ghost" onClick={() => setKanaalVoor(null)}>Annuleren</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sluimerduur kiezen bij 'geen interesse' */}
+      <SluimerDialog
+        open={!!sluimerVoor}
+        onClose={() => setSluimerVoor(null)}
+        onKies={(snoozeUntil) => { if (sluimerVoor) move.mutate({ id: sluimerVoor.cardId, phase: sluimerVoor.phase, snoozeUntil }); setSluimerVoor(null); }}
+      />
+
+      {/* Bevestiging voor hele kolom doorzetten */}
+      <Dialog open={!!advanceVraag} onOpenChange={(o) => !o && setAdvanceVraag(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Hele kolom doorzetten</DialogTitle></DialogHeader>
+          <p className="text-[13px] text-gray-600">
+            {advanceVraag?.aantal} kaart(en) in <b>"{advanceVraag?.fromLabel}"</b> doorzetten naar <b>"{advanceVraag?.toLabel}"</b>?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdvanceVraag(null)}>Annuleren</Button>
+            <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => { if (advanceVraag) batchAdvance.mutate({ batchId: advanceVraag.batchId, fromPhase: advanceVraag.fromPhase, toPhase: advanceVraag.toPhase }); setAdvanceVraag(null); }}>Doorzetten</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function SluimerDialog({ open, onClose, onKies }: { open: boolean; onClose: () => void; onKies: (snoozeUntil: string | null) => void }) {
+  const [maanden, setMaanden] = useState('3');
+  const kies = () => {
+    const n = parseInt(maanden, 10);
+    if (!isNaN(n) && n > 0) {
+      const d = new Date(); d.setMonth(d.getMonth() + n);
+      onKies(d.toISOString().slice(0, 10));
+    } else onKies(null);
+  };
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Geen interesse — later opnieuw?</DialogTitle></DialogHeader>
+        <p className="text-[13px] text-gray-500 -mt-1">Na deze periode komt de kaart automatisch terug in de eerste kolom.</p>
+        <div className="flex items-center gap-2">
+          <Input type="number" min={1} max={24} value={maanden} onChange={e => setMaanden(e.target.value)} className="h-9 w-24 text-sm" />
+          <span className="text-[13px] text-gray-600">maanden</span>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onKies(null)}>Niet opnieuw benaderen</Button>
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={kies}>Opslaan</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -254,16 +336,20 @@ function Legenda({ kleur, tekst }: { kleur: string; tekst: string }) {
   return <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: kleur }} />{tekst}</span>;
 }
 
-function NieuweBatch({ open, onClose }: { open: boolean; onClose: () => void }) {
+function NieuweBatch({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (b: { id: number; name: string }) => void }) {
   const { toast } = useToast();
   const [naam, setNaam] = useState('');
   const [categorie, setCategorie] = useState('geen');
   const maak = useMutation({
     mutationFn: () => apiRequest('POST', '/api/sales/flow/batches', { name: naam.trim(), categorie: categorie !== 'geen' ? categorie : null }),
-    onSuccess: (b: any) => { queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] }); toast({ title: `Batch "${b.name}" aangemaakt` }); setNaam(''); setCategorie('geen'); onClose(); },
-    onError: (e: any) => { console.error('[salesflow] batch aanmaken fout:', e); toast({ title: 'Aanmaken mislukt', description: e?.data?.message || e.message, variant: 'destructive' }); },
+    onSuccess: async (b: any) => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] });
+      toast({ title: `Batch "${b.name}" aangemaakt`, description: 'De batch is nu geselecteerd in het filter.' });
+      setNaam(''); setCategorie('geen'); onClose();
+      if (b?.id) onCreated({ id: b.id, name: b.name });
+    },
+    onError: (e: any) => { console.error('[salesflow] batch aanmaken fout:', e); },
   });
-  const foutTekst = (e: any) => (e?.data?.message || e?.message || 'Onbekende fout');
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
@@ -271,7 +357,8 @@ function NieuweBatch({ open, onClose }: { open: boolean; onClose: () => void }) 
         <div className="space-y-3">
           <div>
             <label className="text-[12px] text-gray-500 mb-1 block">Naam</label>
-            <Input autoFocus value={naam} onChange={e => setNaam(e.target.value)} placeholder="Bijv. Mailing Hotels — juli" className="h-9 text-sm" />
+            <Input autoFocus value={naam} onChange={e => setNaam(e.target.value)} placeholder="Bijv. Mailing Hotels — juli" className="h-9 text-sm"
+              onKeyDown={e => { if (e.key === 'Enter' && naam.trim() && !maak.isPending) maak.mutate(); }} />
           </div>
           <div>
             <label className="text-[12px] text-gray-500 mb-1 block">Categorie (optioneel)</label>
@@ -297,33 +384,36 @@ function NieuweBatch({ open, onClose }: { open: boolean; onClose: () => void }) 
 }
 
 interface ZoekContact { id: number; name: string; function: string | null; bedrijfNaam: string; categorie: string | null; opBord: boolean; }
-function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: Batch[]; onClose: () => void }) {
+function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: boolean; batches: Batch[]; huidigeBatch: string; onClose: () => void }) {
   const { toast } = useToast();
   const { user } = useAuth();
   const ingelogdeNaam = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Onbekend';
   const [q, setQ] = useState('');
-  const [batchId, setBatchId] = useState<string>('geen');
+  // Standaard de batch die op het bord als filter actief is.
+  const [batchId, setBatchId] = useState<string>(huidigeBatch !== 'alle' ? huidigeBatch : 'geen');
   const [owner, setOwner] = useState<string>('max');
-  const { data: resultaten, isLoading } = useQuery<ZoekContact[]>({
+  const zoek = useQuery<ZoekContact[]>({
     queryKey: ['/api/sales/flow/contacts', q],
     queryFn: () => apiRequest(`/api/sales/flow/contacts?search=${encodeURIComponent(q)}`) as Promise<any>,
     enabled: open,
   });
+  const resultaten = zoek.data;
   const add = useMutation({
     mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null, eigenaar: owner, createdByName: ingelogdeNaam }),
     onSuccess: (_r, contactId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/contacts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] });
-      toast({ title: 'Toegevoegd aan Selectie', description: resultaten?.find(c => c.id === contactId)?.name });
+      toast({ title: 'Toegevoegd aan het bord', description: resultaten?.find(c => c.id === contactId)?.name });
     },
-    onError: (e: any) => { console.error('[salesflow] toevoegen fout:', e); toast({ title: 'Toevoegen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }); },
+    onError: (e: any) => { console.error('[salesflow] toevoegen fout:', e); },
   });
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>Persoon toevoegen aan het bord</DialogTitle></DialogHeader>
-        {add.isError && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">Fout: {(add.error as any)?.data?.message || (add.error as any)?.message || 'Onbekende fout'}</div>}
+        {add.isError && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">Fout: {foutTekst(add.error)}</div>}
+        {zoek.isError && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">Zoeken mislukt: {foutTekst(zoek.error)}</div>}
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -349,22 +439,22 @@ function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: 
           </div>
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-            <Input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Zoek op naam of bedrijf…" className="pl-9 h-9 text-sm" />
+            <Input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Zoek in de hele leadlijst op naam of bedrijf…" className="pl-9 h-9 text-sm" />
           </div>
           <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 -mx-1 px-1">
-            {isLoading && <div className="text-[13px] text-gray-400 py-6 text-center">Zoeken…</div>}
+            {zoek.isLoading && <div className="text-[13px] text-gray-400 py-6 text-center">Zoeken…</div>}
             {(resultaten ?? []).map(c => (
               <div key={c.id} className="flex items-center gap-3 py-2.5">
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-medium text-gray-900 truncate">{c.name}</div>
-                  <div className="text-[11.5px] text-gray-500 truncate">{c.bedrijfNaam}{c.function ? ` · ${c.function}` : ''}</div>
+                  <div className="text-[11.5px] text-gray-500 truncate">{c.bedrijfNaam}{c.function ? ` · ${c.function}` : ''}{c.categorie ? ` · ${c.categorie}` : ''}</div>
                 </div>
                 {c.opBord
                   ? <span className="text-[11px] text-green-600 flex items-center gap-1 shrink-0"><Check className="w-3.5 h-3.5" /> Op bord</span>
                   : <Button variant="ghost" size="sm" className="h-7 text-purple-600 hover:text-purple-800 shrink-0" disabled={add.isPending} onClick={() => add.mutate(c.id)}>Toevoegen</Button>}
               </div>
             ))}
-            {resultaten && resultaten.length === 0 && !isLoading && <div className="text-[13px] text-gray-400 py-6 text-center">Geen contacten gevonden</div>}
+            {resultaten && resultaten.length === 0 && !zoek.isLoading && <div className="text-[13px] text-gray-400 py-6 text-center">Geen contacten gevonden</div>}
           </div>
         </div>
         <DialogFooter><Button variant="outline" onClick={onClose}>Klaar</Button></DialogFooter>
@@ -376,22 +466,24 @@ function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: 
 function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules: Rule[]; counts: Record<string, number>; onClose: () => void }) {
   const { toast } = useToast();
   const inval = () => queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
+  const [bevestigVerwijder, setBevestigVerwijder] = useState<string | null>(null);
 
   const patch = useMutation({
     mutationFn: (v: { phase: string; body: any }) => apiRequest('PATCH', `/api/sales/flow/rules/${v.phase}`, v.body),
-    onSuccess: inval, onError: (e: any) => toast({ title: 'Opslaan mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onSuccess: inval, onError: (e: any) => toast({ title: 'Opslaan mislukt', description: foutTekst(e), variant: 'destructive' }),
   });
   const reorder = useMutation({
     mutationFn: (order: string[]) => apiRequest('POST', '/api/sales/flow/rules/reorder', { order }),
-    onSuccess: inval, onError: (e: any) => toast({ title: 'Herordenen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onSuccess: inval, onError: (e: any) => toast({ title: 'Herordenen mislukt', description: foutTekst(e), variant: 'destructive' }),
   });
   const voegToe = useMutation({
     mutationFn: (label: string) => apiRequest('POST', '/api/sales/flow/rules', { label, triggerDays: 3, triggerAction: 'opvolgen' }),
-    onSuccess: () => { inval(); toast({ title: 'Kolom toegevoegd' }); }, onError: (e: any) => toast({ title: 'Toevoegen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onSuccess: () => { inval(); toast({ title: 'Kolom toegevoegd' }); }, onError: (e: any) => toast({ title: 'Toevoegen mislukt', description: foutTekst(e), variant: 'destructive' }),
   });
   const verwijder = useMutation({
     mutationFn: (phase: string) => apiRequest('DELETE', `/api/sales/flow/rules/${phase}`),
-    onSuccess: () => { inval(); toast({ title: 'Kolom verwijderd' }); }, onError: (e: any) => toast({ title: 'Verwijderen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onSuccess: () => { inval(); toast({ title: 'Kolom verwijderd' }); setBevestigVerwijder(null); },
+    onError: (e: any) => { toast({ title: 'Verwijderen mislukt', description: foutTekst(e), variant: 'destructive' }); setBevestigVerwijder(null); },
   });
 
   const [nieuw, setNieuw] = useState('');
@@ -431,14 +523,19 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
                 <Input type="number" min={0} max={90} defaultValue={r.triggerDays ?? ''} placeholder="geen"
                   onBlur={e => { const raw = e.target.value.trim(); const td = raw === '' ? null : parseInt(raw, 10); if (td !== r.triggerDays) patch.mutate({ phase: r.phase, body: { triggerDays: td } }); }} className="h-9 text-sm" />
               )}
-              <button title={counts[r.phase] > 0 ? 'Kolom bevat kaarten' : 'Kolom verwijderen'}
-                onClick={() => { if (counts[r.phase] > 0) { toast({ title: 'Kolom niet leeg', description: 'Verplaats eerst de kaarten' }); return; } if (window.confirm(`Kolom "${r.label}" verwijderen?`)) verwijder.mutate(r.phase); }}
-                className={`${counts[r.phase] > 0 ? 'text-gray-200' : 'text-gray-400 hover:text-red-600'}`}><Trash2 className="w-4 h-4" /></button>
+              {bevestigVerwijder === r.phase ? (
+                <button onClick={() => verwijder.mutate(r.phase)} className="text-[11px] font-semibold text-red-600 hover:text-red-800 whitespace-nowrap">Zeker?</button>
+              ) : (
+                <button title={counts[r.phase] > 0 ? 'Kolom bevat kaarten' : 'Kolom verwijderen'}
+                  onClick={() => { if (counts[r.phase] > 0) { toast({ title: 'Kolom niet leeg', description: 'Verplaats eerst de kaarten' }); return; } setBevestigVerwijder(r.phase); setTimeout(() => setBevestigVerwijder(v => v === r.phase ? null : v), 3000); }}
+                  className={`${counts[r.phase] > 0 ? 'text-gray-200' : 'text-gray-400 hover:text-red-600'}`}><Trash2 className="w-4 h-4" /></button>
+              )}
             </div>
           ))}
         </div>
         <div className="flex gap-2 pt-1 border-t border-gray-100 mt-1">
-          <Input value={nieuw} onChange={e => setNieuw(e.target.value)} placeholder="Naam van nieuwe kolom…" className="h-9 text-sm" />
+          <Input value={nieuw} onChange={e => setNieuw(e.target.value)} placeholder="Naam van nieuwe kolom…" className="h-9 text-sm"
+            onKeyDown={e => { if (e.key === 'Enter' && nieuw.trim() && !voegToe.isPending) { voegToe.mutate(nieuw.trim()); setNieuw(''); } }} />
           <Button variant="outline" size="sm" disabled={!nieuw.trim() || voegToe.isPending} onClick={() => { voegToe.mutate(nieuw.trim()); setNieuw(''); }} className="gap-1.5 shrink-0"><Plus className="w-4 h-4" /> Kolom</Button>
         </div>
         <DialogFooter><Button variant="outline" onClick={onClose}>Sluiten</Button></DialogFooter>
