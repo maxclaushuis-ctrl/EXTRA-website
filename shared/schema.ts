@@ -1357,6 +1357,80 @@ export const insertActivitySchema = createInsertSchema(activities).omit({ id: tr
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Activity = typeof activities.$inferSelect;
 
+// ==========================================
+// Salesflow — persoonsgerichte pipeline (direct-mailing opvolging)
+// ==========================================
+// Los van crm_companies.phase (bedrijfsniveau): dit is een werkbord op
+// PERSOONSNIVEAU. Elke kaart is een contactpersoon die door de fases beweegt.
+// De 8 fases + termijnen staan instelbaar in salesflow_phase_rules.
+
+// Vaste fase-sleutels (kolommen op het bord). Volgorde/labels/termijnen in phase_rules.
+export const SALESFLOW_PHASES = [
+  'selectie', 'mailing_verstuurd', 'nagebeld', 'bericht_gestuurd',
+  'info_verstuurd', 'opvolgen', 'deal', 'geen_interesse',
+] as const;
+export type SalesflowPhase = typeof SALESFLOW_PHASES[number];
+
+// Batch = een mailing-ronde waaraan personen hangen.
+export const salesflowBatches = pgTable("salesflow_batches", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  categorie: crmCategorieEnum("categorie"), // Hotel | Logistiek | Events | null
+  description: text("description"),
+  createdByUserId: integer("created_by_user_id").references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Instelbare trigger-regel per fase (termijnen die Max/Tommy zelf kunnen bijstellen).
+export const salesflowPhaseRules = pgTable("salesflow_phase_rules", {
+  id: serial("id").primaryKey(),
+  phase: text("phase").notNull().unique(), // één van SALESFLOW_PHASES
+  label: text("label").notNull(),
+  position: integer("position").notNull(), // kolomvolgorde op het bord
+  triggerDays: integer("trigger_days"), // dagen na binnenkomst → reminder (null = geen auto-trigger)
+  triggerAction: text("trigger_action"), // 'bellen' | 'opvolgen' | 'opnieuw_bellen' | ...
+  useBusinessDays: boolean("use_business_days").default(true).notNull(),
+  isEndState: boolean("is_end_state").default(false).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Een kaart = één persoon in de pipeline (binnen een batch).
+export const salesflowCards = pgTable("salesflow_cards", {
+  id: serial("id").primaryKey(),
+  contactId: integer("contact_id").references(() => crmContacts.id, { onDelete: 'cascade' }).notNull(),
+  companyId: integer("company_id").references(() => crmCompanies.id, { onDelete: 'cascade' }).notNull(), // gedenormaliseerd voor snel filteren
+  batchId: integer("batch_id").references(() => salesflowBatches.id, { onDelete: 'set null' }),
+  phase: text("phase").notNull().default('selectie'),
+  eigenaarUserId: integer("eigenaar_user_id").references(() => users.id, { onDelete: 'set null' }), // Max/Tommy
+  position: real("position").default(0).notNull(), // handmatige volgorde binnen kolom
+  nextActionAt: date("next_action_at"), // wanneer de trigger vuurt (= reminder due date); null = geen actie gepland
+  nextActionType: text("next_action_type"), // 'bellen' | 'opvolgen' | ...
+  reminderId: integer("reminder_id").references(() => crmReminders.id, { onDelete: 'set null' }), // huidige open reminder (om te annuleren bij fase-wissel)
+  channel: text("channel"), // voor 'bericht_gestuurd': 'email' | 'linkedin'
+  notReachedCount: integer("not_reached_count").default(0).notNull(),
+  snoozeUntil: date("snooze_until"), // geen_interesse/later → automatisch terug naar selectie
+  notes: text("notes"),
+  enteredPhaseAt: timestamp("entered_phase_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  phaseIdx: index("salesflow_cards_phase_idx").on(table.phase, table.position),
+  batchIdx: index("salesflow_cards_batch_idx").on(table.batchId),
+  eigenaarIdx: index("salesflow_cards_eigenaar_idx").on(table.eigenaarUserId),
+  // Eén actieve kaart per contact (voorkomt dubbele kaarten voor dezelfde persoon).
+  contactUniq: uniqueIndex("salesflow_cards_contact_uniq").on(table.contactId),
+}));
+
+export const insertSalesflowBatchSchema = createInsertSchema(salesflowBatches).omit({ id: true, createdAt: true });
+export type InsertSalesflowBatch = z.infer<typeof insertSalesflowBatchSchema>;
+export type SalesflowBatch = typeof salesflowBatches.$inferSelect;
+
+export const insertSalesflowCardSchema = createInsertSchema(salesflowCards).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertSalesflowCard = z.infer<typeof insertSalesflowCardSchema>;
+export type SalesflowCard = typeof salesflowCards.$inferSelect;
+
+export type SalesflowPhaseRule = typeof salesflowPhaseRules.$inferSelect;
+
 export const insertCrmCompanySchema = createInsertSchema(crmCompanies).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCrmCompany = z.infer<typeof insertCrmCompanySchema>;
 export type CrmCompany = typeof crmCompanies.$inferSelect;

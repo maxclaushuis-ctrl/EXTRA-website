@@ -8,6 +8,7 @@ import fs from "fs";
 import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
+import { moveCardToPhase, markNotReached } from "./salesflow";
 import { createHash, randomUUID } from "crypto";
 import { 
   insertApplicantSchema, 
@@ -9984,6 +9985,261 @@ ${vacancies.map(v => `  <url>
     } catch (error) {
       console.error("[sales] patch fout:", error);
       return res.status(500).json({ message: "Fout bij bijwerken deal" });
+    }
+  });
+
+  // ==========================================
+  // Salesflow — persoonsgerichte pipeline (kanban) onder salesMiddleware
+  // ==========================================
+
+  const SF_PHASES = ['selectie','mailing_verstuurd','nagebeld','bericht_gestuurd','info_verstuurd','opvolgen','deal','geen_interesse'] as const;
+
+  // GET /api/sales/flow?batch=&eigenaar=&categorie=  → bord: fases + kaarten
+  app.get("/api/sales/flow", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { batch, eigenaar, categorie } = req.query as { batch?: string; eigenaar?: string; categorie?: string };
+      let eigenaarId: number | null = null;
+      if (eigenaar && eigenaar !== 'alle') {
+        eigenaarId = await resolveEigenaarUserId(eigenaar);
+        if (eigenaarId === null) return res.status(400).json({ message: `Onbekende eigenaar: ${eigenaar}` });
+      }
+      const batchId = batch && batch !== 'alle' ? parseInt(batch, 10) : null;
+      const cat = categorie && categorie !== 'alle' ? categorie : null;
+
+      const rules = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", is_end_state AS "isEndState", use_business_days AS "useBusinessDays" FROM salesflow_phase_rules ORDER BY position`);
+      const cards = await db.execute(sql`
+        SELECT k.id, k.phase, k.eigenaar_user_id AS "eigenaarUserId", k.position,
+               k.next_action_at AS "nextActionAt", k.next_action_type AS "nextActionType",
+               k.channel, k.not_reached_count AS "notReachedCount", k.snooze_until AS "snoozeUntil",
+               k.notes, k.batch_id AS "batchId",
+               ct.name AS "contactNaam", ct.function AS "contactFunctie", ct.email AS "contactEmail",
+               co.id AS "companyId", co.name AS "bedrijfNaam", co.categorie, co.city,
+               u.first_name AS "eigenaarNaam",
+               GREATEST(0, (CURRENT_DATE - k.next_action_at))::int AS "daysOverdue"
+        FROM salesflow_cards k
+        JOIN crm_contacts ct ON ct.id = k.contact_id
+        JOIN crm_companies co ON co.id = k.company_id
+        LEFT JOIN users u ON u.id = k.eigenaar_user_id
+        WHERE (${batchId}::int IS NULL OR k.batch_id = ${batchId}::int)
+          AND (${eigenaarId}::int IS NULL OR k.eigenaar_user_id = ${eigenaarId}::int)
+          AND (${cat}::crm_categorie IS NULL OR co.categorie = ${cat}::crm_categorie)
+        ORDER BY k.phase, k.next_action_at ASC NULLS LAST, k.position, k.id
+      `);
+      return res.json({ rules: rules.rows ?? rules, cards: cards.rows ?? cards });
+    } catch (error) {
+      console.error("[salesflow] flow fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen salesflow" });
+    }
+  });
+
+  // GET /api/sales/flow/contacts?search=  → personen zoeken om aan het bord toe te voegen
+  app.get("/api/sales/flow/contacts", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const search = (req.query.search as string || '').trim();
+      const like = `%${search}%`;
+      const r = await db.execute(sql`
+        SELECT ct.id, ct.name, ct.function, ct.email,
+               co.id AS "companyId", co.name AS "bedrijfNaam", co.categorie,
+               (sc.id IS NOT NULL) AS "opBord"
+        FROM crm_contacts ct
+        JOIN crm_companies co ON co.id = ct.company_id
+        LEFT JOIN salesflow_cards sc ON sc.contact_id = ct.id
+        WHERE (${search} = '' OR ct.name ILIKE ${like} OR co.name ILIKE ${like})
+        ORDER BY (sc.id IS NOT NULL), co.name, ct.name
+        LIMIT 40`);
+      return res.json(r.rows ?? r);
+    } catch (error) {
+      console.error("[salesflow] contacts fout:", error);
+      return res.status(500).json({ message: "Fout bij zoeken contacten" });
+    }
+  });
+
+  // GET /api/sales/flow/batches
+  app.get("/api/sales/flow/batches", salesMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const r = await db.execute(sql`
+        SELECT b.id, b.name, b.categorie, b.description, b.created_at AS "createdAt",
+               COALESCE(c.cnt, 0)::int AS "cardCount"
+        FROM salesflow_batches b
+        LEFT JOIN (SELECT batch_id, count(*) cnt FROM salesflow_cards GROUP BY batch_id) c ON c.batch_id = b.id
+        ORDER BY b.created_at DESC`);
+      return res.json(r.rows ?? r);
+    } catch (error) {
+      console.error("[salesflow] batches fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen batches" });
+    }
+  });
+
+  // POST /api/sales/flow/batches  { name, categorie?, description? }
+  app.post("/api/sales/flow/batches", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        name: z.string().min(1),
+        categorie: z.enum(['Hotel','Logistiek','Events']).nullable().optional(),
+        description: z.string().nullable().optional(),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const { name, categorie, description } = parsed.data;
+      const r = await db.execute(sql`
+        INSERT INTO salesflow_batches (name, categorie, description, created_by_user_id)
+        VALUES (${name}, ${categorie ?? null}::crm_categorie, ${description ?? null}, ${req.session.userId ?? null})
+        RETURNING id, name, categorie, description, created_at AS "createdAt"`);
+      return res.status(201).json((r.rows ?? r)[0]);
+    } catch (error) {
+      console.error("[salesflow] batch aanmaken fout:", error);
+      return res.status(500).json({ message: "Fout bij aanmaken batch" });
+    }
+  });
+
+  // POST /api/sales/flow/cards  { contactId, batchId?, eigenaarUserId? }  → kaart in 'selectie'
+  app.post("/api/sales/flow/cards", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        contactId: z.number().int(),
+        batchId: z.number().int().nullable().optional(),
+        eigenaarUserId: z.number().int().nullable().optional(),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const { contactId, batchId, eigenaarUserId } = parsed.data;
+
+      const contact = ((await db.execute(sql`SELECT id, company_id FROM crm_contacts WHERE id = ${contactId}`)).rows ?? [])[0] as any;
+      if (!contact) return res.status(404).json({ message: "Contact niet gevonden" });
+
+      // Eén actieve kaart per contact — bestaande kaart teruggeven i.p.v. dubbel.
+      const bestaand = ((await db.execute(sql`SELECT id FROM salesflow_cards WHERE contact_id = ${contactId}`)).rows ?? [])[0] as any;
+      if (bestaand) return res.status(409).json({ message: "Deze persoon staat al op het bord", cardId: bestaand.id });
+
+      const r = await db.execute(sql`
+        INSERT INTO salesflow_cards (contact_id, company_id, batch_id, eigenaar_user_id, phase)
+        VALUES (${contactId}, ${contact.company_id}, ${batchId ?? null}, ${eigenaarUserId ?? req.session.userId ?? null}, 'selectie')
+        RETURNING id`);
+      return res.status(201).json((r.rows ?? r)[0]);
+    } catch (error) {
+      console.error("[salesflow] kaart aanmaken fout:", error);
+      return res.status(500).json({ message: "Fout bij aanmaken kaart" });
+    }
+  });
+
+  // PATCH /api/sales/flow/cards/:id/move  { phase, channel?, snoozeUntil? }  → drag & drop
+  app.patch("/api/sales/flow/cards/:id/move", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+      const schema = z.object({
+        phase: z.enum(SF_PHASES),
+        channel: z.enum(['email','linkedin']).nullable().optional(),
+        snoozeUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const updated = await moveCardToPhase({
+        cardId: id, phase: parsed.data.phase, actorUserId: req.session.userId ?? null,
+        channel: parsed.data.channel, snoozeUntil: parsed.data.snoozeUntil, resetNotReached: parsed.data.phase !== 'nagebeld',
+      });
+      return res.json(updated);
+    } catch (error: any) {
+      console.error("[salesflow] move fout:", error);
+      return res.status(500).json({ message: error?.message || "Fout bij verplaatsen kaart" });
+    }
+  });
+
+  // POST /api/sales/flow/cards/:id/not-reached  → nabellen mislukt, +2 werkdagen
+  app.post("/api/sales/flow/cards/:id/not-reached", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+      const updated = await markNotReached(id, req.session.userId ?? null);
+      return res.json(updated);
+    } catch (error: any) {
+      console.error("[salesflow] not-reached fout:", error);
+      return res.status(500).json({ message: error?.message || "Fout" });
+    }
+  });
+
+  // PATCH /api/sales/flow/cards/:id  { notes?, eigenaarUserId?, batchId? }  → losse velden
+  app.patch("/api/sales/flow/cards/:id", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+      const schema = z.object({
+        notes: z.string().nullable().optional(),
+        eigenaarUserId: z.number().int().nullable().optional(),
+        batchId: z.number().int().nullable().optional(),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const b = parsed.data;
+      const r = await db.execute(sql`
+        UPDATE salesflow_cards SET
+          notes = CASE WHEN ${'notes' in b} THEN ${b.notes ?? null} ELSE notes END,
+          eigenaar_user_id = CASE WHEN ${'eigenaarUserId' in b} THEN ${b.eigenaarUserId ?? null}::int ELSE eigenaar_user_id END,
+          batch_id = CASE WHEN ${'batchId' in b} THEN ${b.batchId ?? null}::int ELSE batch_id END,
+          updated_at = now()
+        WHERE id = ${id} RETURNING *`);
+      const row = (r.rows ?? r)[0];
+      if (!row) return res.status(404).json({ message: "Kaart niet gevonden" });
+      return res.json(row);
+    } catch (error) {
+      console.error("[salesflow] card patch fout:", error);
+      return res.status(500).json({ message: "Fout bij bijwerken kaart" });
+    }
+  });
+
+  // POST /api/sales/flow/batch-advance  { batchId, fromPhase, toPhase }  → hele kolom doorzetten
+  app.post("/api/sales/flow/batch-advance", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        batchId: z.number().int(),
+        fromPhase: z.enum(SF_PHASES),
+        toPhase: z.enum(SF_PHASES),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const { batchId, fromPhase, toPhase } = parsed.data;
+      const ids = ((await db.execute(sql`SELECT id FROM salesflow_cards WHERE batch_id = ${batchId} AND phase = ${fromPhase}`)).rows ?? []) as any[];
+      let moved = 0;
+      for (const row of ids) {
+        await moveCardToPhase({ cardId: row.id, phase: toPhase as any, actorUserId: req.session.userId ?? null, resetNotReached: toPhase !== 'nagebeld' });
+        moved++;
+      }
+      return res.json({ moved });
+    } catch (error: any) {
+      console.error("[salesflow] batch-advance fout:", error);
+      return res.status(500).json({ message: error?.message || "Fout bij batch-actie" });
+    }
+  });
+
+  // GET /api/sales/flow/rules  &  PATCH /api/sales/flow/rules/:phase  → instelbare termijnen
+  app.get("/api/sales/flow/rules", salesMiddleware, async (_req: Request, res: Response) => {
+    const r = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", use_business_days AS "useBusinessDays", is_end_state AS "isEndState" FROM salesflow_phase_rules ORDER BY position`);
+    return res.json(r.rows ?? r);
+  });
+
+  app.patch("/api/sales/flow/rules/:phase", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const phase = req.params.phase;
+      if (!SF_PHASES.includes(phase as any)) return res.status(400).json({ message: "Onbekende fase" });
+      const schema = z.object({
+        triggerDays: z.number().int().min(0).max(90).nullable().optional(),
+        triggerAction: z.string().nullable().optional(),
+        useBusinessDays: z.boolean().optional(),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const b = parsed.data;
+      const r = await db.execute(sql`
+        UPDATE salesflow_phase_rules SET
+          trigger_days = CASE WHEN ${'triggerDays' in b} THEN ${b.triggerDays ?? null}::int ELSE trigger_days END,
+          trigger_action = CASE WHEN ${'triggerAction' in b} THEN ${b.triggerAction ?? null} ELSE trigger_action END,
+          use_business_days = CASE WHEN ${'useBusinessDays' in b} THEN ${b.useBusinessDays}::bool ELSE use_business_days END,
+          updated_at = now()
+        WHERE phase = ${phase} RETURNING *`);
+      return res.json((r.rows ?? r)[0]);
+    } catch (error) {
+      console.error("[salesflow] rule patch fout:", error);
+      return res.status(500).json({ message: "Fout bij bijwerken regel" });
     }
   });
 

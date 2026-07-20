@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salesflow — visueel voorstel v2 (mockup, niet gebouwd)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#fff; color:#26273b; font-size:14px; }
+  .banner { background:#f8f8fb; color:#8a8da0; text-align:center; font-size:11.5px; font-weight:500; padding:6px; border-bottom:1px solid #ececf2; }
+  .layout { display:flex; min-height:100vh; }
+
+  /* Sidebar — zoals bestaand: wit, grijs, subtiel */
+  .sidebar { width:220px; border-right:1px solid #ececf2; padding:22px 12px; flex-shrink:0; }
+  .side-h { font-size:10.5px; font-weight:600; letter-spacing:.09em; color:#a3a6b8; margin:14px 10px 8px; }
+  .side-item { padding:7px 10px; border-radius:8px; font-size:13.5px; color:#42455c; margin-bottom:1px; display:flex; align-items:center; }
+  .side-item.actief { background:#f4f1fd; color:#6d28d9; font-weight:600; }
+  .side-item .tag { margin-left:auto; font-size:9px; font-weight:700; color:#7c3aed; border:1px solid #ddd3f8; border-radius:4px; padding:1px 5px; }
+
+  .main { flex:1; padding:22px 28px; overflow-x:auto; }
+
+  /* Kop + filters */
+  .kop { display:flex; align-items:center; gap:14px; }
+  h1 { font-size:19px; font-weight:700; }
+  .filters { display:flex; gap:8px; margin-left:18px; }
+  .filter { font-size:12.5px; color:#5a5d73; border:1px solid #e3e3ec; border-radius:7px; padding:6px 11px; background:#fff; }
+  .filter b { color:#26273b; font-weight:600; }
+  .filter .caret { color:#b0b3c4; margin-left:4px; }
+  .acties { margin-left:auto; font-size:12.5px; color:#5a5d73; }
+  .acties b { color:#26273b; }
+  .acties .rood { color:#d6453d; font-weight:600; }
+
+  /* Bord — Pipedrive-stijl: witte kolommen, dunne scheidingslijnen */
+  .board { display:flex; margin-top:20px; border:1px solid #ececf2; border-radius:10px; min-width:1720px; background:#fff; }
+  .col { flex:1 1 0; min-width:200px; border-right:1px solid #ececf2; display:flex; flex-direction:column; }
+  .col:last-child { border-right:none; }
+  .col-h { padding:12px 14px 10px; border-bottom:2px solid #e6e2f5; }
+  .col.eind .col-h { border-bottom-color:#d9ece0; }
+  .col.uit .col-h { border-bottom-color:#ececf2; }
+  .col-h .rij1 { display:flex; align-items:baseline; }
+  .col-h .naam { font-size:13px; font-weight:600; }
+  .col-h .aantal { margin-left:auto; font-size:12px; color:#a3a6b8; }
+  .col-h .regel { font-size:11px; color:#a3a6b8; margin-top:3px; }
+  .kaarten { padding:10px; background:#fafafc; flex:1; min-height:430px; }
+
+  /* Kaarten — clean: naam, bedrijf, actieregel met status-stip */
+  .kaart { background:#fff; border:1px solid #e6e6ee; border-radius:8px; padding:10px 12px; margin-bottom:8px; cursor:grab; }
+  .kaart:hover { border-color:#c9c3e8; box-shadow:0 2px 8px rgba(40,40,80,.06); }
+  .persoon { font-size:13px; font-weight:600; }
+  .bedrijf { font-size:12px; color:#8a8da0; margin-top:1px; }
+  .actie { display:flex; align-items:center; gap:7px; margin-top:9px; font-size:11.5px; color:#5a5d73; }
+  .stip { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .stip.groen  { background:#3aa76d; }
+  .stip.oranje { background:#e8a13c; }
+  .stip.rood   { background:#d6453d; }
+  .stip.grijs  { background:#c9ccd8; }
+  .actie.laat { color:#d6453d; font-weight:600; }
+  .avatar { margin-left:auto; width:20px; height:20px; border-radius:50%; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; background:#f0edfa; color:#6d28d9; flex-shrink:0; }
+  .meta { font-size:10.5px; color:#b0b3c4; margin-top:6px; }
+
+  /* Uitleg onderaan — één rustige strook */
+  .voetnoot { margin:22px 0 36px; max-width:1150px; display:flex; gap:32px; font-size:12px; color:#8a8da0; line-height:1.7; }
+  .voetnoot b { color:#42455c; font-weight:600; }
+  .legenda { display:flex; gap:16px; align-items:center; margin-top:14px; font-size:11.5px; color:#8a8da0; }
+  .legenda span { display:flex; align-items:center; gap:6px; }
+</style>
+</head>
+<body>
+<div class="banner">Visueel voorstel v2 — nog niets gebouwd</div>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="side-h">BEDRIJVEN</div>
+    <div class="side-item">Personeelsaanvragen</div>
+    <div class="side-item">Leads &amp; Prospects</div>
+    <div class="side-item actief">Salesflow <span class="tag">NIEUW</span></div>
+    <div class="side-item">Bestaande klanten</div>
+    <div class="side-item">Reminders</div>
+    <div class="side-item">Verjaardagen</div>
+    <div class="side-h">CAMPAGNES</div>
+    <div class="side-item" style="opacity:.45">…</div>
+  </aside>
+
+  <main class="main">
+    <div class="kop">
+      <h1>Salesflow</h1>
+      <div class="filters">
+        <span class="filter">Batch: <b>Mailing Hotels — juli</b><span class="caret">▾</span></span>
+        <span class="filter">Eigenaar: <b>iedereen</b><span class="caret">▾</span></span>
+        <span class="filter">Categorie: <b>alle</b><span class="caret">▾</span></span>
+      </div>
+      <span class="acties"><b>5 acties vandaag</b> · <span class="rood">2 te laat</span></span>
+    </div>
+
+    <div class="board">
+
+      <div class="col">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Selectie</span><span class="aantal">12</span></div>
+          <div class="regel">Attentie voorbereiden</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Sanne de Vries</div>
+            <div class="bedrijf">Hotel V Nesplein</div>
+            <div class="actie"><span class="stip groen"></span>Attentie klaar<span class="avatar">M</span></div>
+          </div>
+          <div class="kaart">
+            <div class="persoon">Jeroen Bakker</div>
+            <div class="bedrijf">Kimpton De Witt</div>
+            <div class="actie"><span class="stip grijs"></span>Attentie bestellen<span class="avatar">T</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Mailing verstuurd</span><span class="aantal">8</span></div>
+          <div class="regel">Na 3 dagen → belreminder</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Mark van Dijk</div>
+            <div class="bedrijf">Zoku Amsterdam</div>
+            <div class="actie laat"><span class="stip rood"></span>Bellen — 2 dagen te laat<span class="avatar">T</span></div>
+          </div>
+          <div class="kaart">
+            <div class="persoon">Lisa Jansen</div>
+            <div class="bedrijf">The Hoxton</div>
+            <div class="actie"><span class="stip oranje"></span>Bellen — morgen<span class="avatar">M</span></div>
+            <div class="meta">Verstuurd 18 jul</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Nagebeld</span><span class="aantal">5</span></div>
+          <div class="regel">Niet bereikt → na 2 dagen opnieuw</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Fatima el Idrissi</div>
+            <div class="bedrijf">Conservatorium Hotel</div>
+            <div class="actie"><span class="stip groen"></span>Opnieuw bellen — do<span class="avatar">M</span></div>
+            <div class="meta">1× niet bereikt</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Bericht gestuurd</span><span class="aantal">4</span></div>
+          <div class="regel">Na 4 dagen → opvolgreminder</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Tom Hendriks</div>
+            <div class="bedrijf">Pulitzer Amsterdam</div>
+            <div class="actie"><span class="stip groen"></span>Opvolgen — vr<span class="avatar">T</span></div>
+            <div class="meta">Via LinkedIn · 19 jul</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Info verstuurd</span><span class="aantal">3</span></div>
+          <div class="regel">Na 5 dagen → opvolgreminder</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Nienke Smit</div>
+            <div class="bedrijf">De L'Europe</div>
+            <div class="actie"><span class="stip oranje"></span>Opvolgen — vandaag<span class="avatar">M</span></div>
+            <div class="meta">Brochure per mail · 15 jul</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Opvolgen</span><span class="aantal">6</span></div>
+          <div class="regel">Elke 7 dagen zonder actie → reminder</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Ruben Visser</div>
+            <div class="bedrijf">Amstel Hotel</div>
+            <div class="actie"><span class="stip groen"></span>Check-in — di<span class="avatar">M</span></div>
+            <div class="meta">Voorstel besproken</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col eind">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Deal</span><span class="aantal">2</span></div>
+          <div class="regel">Bedrijf → Bestaande klanten</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Emma de Boer</div>
+            <div class="bedrijf">Hotel Jakarta</div>
+            <div class="actie"><span class="stip groen"></span>Klant sinds 14 jul<span class="avatar">T</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col uit">
+        <div class="col-h">
+          <div class="rij1"><span class="naam">Geen interesse / Later</span><span class="aantal">7</span></div>
+          <div class="regel">Sluimert → automatisch terug in Selectie</div>
+        </div>
+        <div class="kaarten">
+          <div class="kaart">
+            <div class="persoon">Daan Mulder</div>
+            <div class="bedrijf">Sir Adam Hotel</div>
+            <div class="actie"><span class="stip grijs"></span>Terug op 20 okt<span class="avatar">M</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legenda">
+      <span><span class="stip groen"></span>Actie gepland</span>
+      <span><span class="stip oranje"></span>Actie vandaag/morgen</span>
+      <span><span class="stip rood"></span>Te laat</span>
+      <span><span class="stip grijs"></span>Wacht / sluimert</span>
+    </div>
+
+    <div class="voetnoot">
+      <p><b>Slepen doet drie dingen:</b> activiteit loggen, lopende trigger annuleren, nieuwe trigger starten. Reminders komen bij de eigenaar terecht in het bestaande Reminders-scherm. Termijnen per fase zijn instelbaar (werkdagen).</p>
+      <p><b>Geen kaart zonder vervolgactie:</b> elke kaart heeft een geplande actie of een eindstatus — niemand blijft stil hangen. Batch-acties: een hele mailing-ronde in één keer doorzetten naar "Mailing verstuurd".</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

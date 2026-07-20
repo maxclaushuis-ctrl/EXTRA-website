@@ -22,9 +22,10 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, BellRing, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare, CalendarClock, MailCheck
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare, CalendarClock, MailCheck, Target
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
+import SalesFlowTab from '@/pages/dashboard/SalesFlowTab';
 import VerjaardagenTab from '@/components/VerjaardagenTab';
 import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
 import ProspectContactenTab from '@/components/ProspectContactenTab';
@@ -1031,6 +1032,7 @@ export default function DashboardMockup() {
               {[
                 { icon: Building2, label: 'Personeelsaanvragen', tab: 'bedrijven-aanvragen' },
                 { icon: TrendingUp, label: 'Leads & Prospects', tab: 'crm-leads' },
+                { icon: Target, label: 'Salesflow', tab: 'sales-flow' },
                 { icon: Users, label: 'Bestaande klanten', tab: 'crm-klanten' },
                 { icon: Bell, label: 'Reminders', tab: 'crm-reminders' },
                 { icon: Gift, label: 'Verjaardagen', tab: 'bedrijven-verjaardagen' },
@@ -4690,6 +4692,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'crm-leads' ? (
             <CrmLeadsTab />
+
+          ) : activeTab === 'sales-flow' ? (
+            <SalesFlowTab />
 
           ) : activeTab === 'crm-klanten' ? (
             <CrmKlantenTab />

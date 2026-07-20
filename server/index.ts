@@ -10,6 +10,7 @@ import { pool } from "./db";
 import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
 import { registerLlmsTxt } from "./llms";
+import { scheduleSalesflowDailyJob } from "./salesflow";
 import path from "path";
 
 const PgStore = connectPg(session);
@@ -284,6 +285,7 @@ async function ensureAdminAccounts() {
     scheduleDailyCvReminders();
     scheduleBlogAutoPublish();
     scheduleFlowEngine();
+    scheduleSalesflowDailyJob();
     // Eenmalige backfill van rejection_reason voor bestaande afgewezen kandidaten (idempotent)
     backfillRejectionReasons().catch(err => console.warn('Backfill rejection_reason mislukt (niet-kritiek):', err?.message || err));
     // WhatsApp Fase 1: 360dialog Cloud API met DB-persistentie. Zie server/whatsapp/README.md.
