@@ -1412,6 +1412,7 @@ export const salesflowCards = pgTable("salesflow_cards", {
   notReachedCount: integer("not_reached_count").default(0).notNull(),
   snoozeUntil: date("snooze_until"), // geen_interesse/later → automatisch terug naar selectie
   notes: text("notes"),
+  createdByName: text("created_by_name"), // naam van de gebruiker die de kaart toevoegde (vrije tekst)
   enteredPhaseAt: timestamp("entered_phase_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

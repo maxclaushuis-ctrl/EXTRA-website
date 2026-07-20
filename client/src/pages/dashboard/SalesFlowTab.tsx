@@ -8,6 +8,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +26,7 @@ interface Card {
   notReachedCount: number; snoozeUntil: string | null; notes: string | null; batchId: number | null;
   contactNaam: string; contactFunctie: string | null; contactEmail: string | null;
   companyId: number; bedrijfNaam: string; categorie: string | null; city: string | null;
-  daysOverdue: number;
+  daysOverdue: number; createdByName: string | null;
 }
 interface Batch { id: number; name: string; categorie: string | null; cardCount: number; }
 
@@ -66,7 +67,13 @@ function KaartView({ card, rule }: { card: Card; rule?: Rule }) {
           </span>
         )}
       </div>
-      {card.channel && <div className="text-[10.5px] text-gray-400 mt-1.5">Via {card.channel === 'linkedin' ? 'LinkedIn' : 'e-mail'}</div>}
+      {(card.channel || card.createdByName) && (
+        <div className="text-[10.5px] text-gray-400 mt-1.5">
+          {card.channel && <>Via {card.channel === 'linkedin' ? 'LinkedIn' : 'e-mail'}</>}
+          {card.channel && card.createdByName && ' · '}
+          {card.createdByName && <>Toegevoegd door {card.createdByName}</>}
+        </div>
+      )}
     </div>
   );
 }
@@ -290,6 +297,8 @@ function NieuweBatch({ open, onClose }: { open: boolean; onClose: () => void }) 
 interface ZoekContact { id: number; name: string; function: string | null; bedrijfNaam: string; categorie: string | null; opBord: boolean; }
 function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: Batch[]; onClose: () => void }) {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const ingelogdeNaam = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Onbekend';
   const [q, setQ] = useState('');
   const [batchId, setBatchId] = useState<string>('geen');
   const [owner, setOwner] = useState<string>('max');
@@ -299,7 +308,7 @@ function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: 
     enabled: open,
   });
   const add = useMutation({
-    mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null, eigenaar: owner }),
+    mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null, eigenaar: owner, createdByName: ingelogdeNaam }),
     onSuccess: (_r, contactId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/contacts'] });

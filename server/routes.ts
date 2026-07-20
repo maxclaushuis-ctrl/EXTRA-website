@@ -10021,7 +10021,7 @@ ${vacancies.map(v => `  <url>
         SELECT k.id, k.phase, k.eigenaar_user_id AS "eigenaarUserId", k.position,
                k.next_action_at AS "nextActionAt", k.next_action_type AS "nextActionType",
                k.channel, k.not_reached_count AS "notReachedCount", k.snooze_until AS "snoozeUntil",
-               k.notes, k.batch_id AS "batchId",
+               k.notes, k.batch_id AS "batchId", k.created_by_name AS "createdByName",
                ct.name AS "contactNaam", ct.function AS "contactFunctie", ct.email AS "contactEmail",
                co.id AS "companyId", co.name AS "bedrijfNaam", co.categorie, co.city,
                u.first_name AS "eigenaarNaam",
@@ -10112,10 +10112,11 @@ ${vacancies.map(v => `  <url>
         contactId: z.number().int(),
         batchId: z.number().int().nullable().optional(),
         eigenaar: z.string().optional(), // 'max' | 'tommy' | user-id
+        createdByName: z.string().max(60).nullable().optional(), // naam van de ingelogde gebruiker
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
-      const { contactId, batchId, eigenaar } = parsed.data;
+      const { contactId, batchId, eigenaar, createdByName } = parsed.data;
 
       const contact = ((await db.execute(sql`SELECT id, company_id FROM crm_contacts WHERE id = ${contactId}`)).rows ?? [])[0] as any;
       if (!contact) return res.status(404).json({ message: "Contact niet gevonden" });
@@ -10128,9 +10129,9 @@ ${vacancies.map(v => `  <url>
       const eigenaarId = eigenaar ? await resolveEigenaarUserId(eigenaar) : null;
 
       const r = await db.execute(sql`
-        INSERT INTO salesflow_cards (contact_id, company_id, batch_id, eigenaar_user_id, phase)
+        INSERT INTO salesflow_cards (contact_id, company_id, batch_id, eigenaar_user_id, phase, created_by_name)
         VALUES (${contactId}, ${contact.company_id}, ${batchId ?? null},
-                (SELECT id FROM users WHERE id = ${eigenaarId}), 'selectie')
+                (SELECT id FROM users WHERE id = ${eigenaarId}), 'selectie', ${createdByName ?? null})
         RETURNING id`);
       return res.status(201).json((r.rows ?? r)[0]);
     } catch (error) {
