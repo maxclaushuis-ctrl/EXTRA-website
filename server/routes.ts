@@ -10128,10 +10128,13 @@ ${vacancies.map(v => `  <url>
       // Eigenaar → geldig user-id (Max/Tommy). Ongeldig/leeg → NULL (geen FK-fout).
       const eigenaarId = eigenaar ? await resolveEigenaarUserId(eigenaar) : null;
 
+      // Kaart komt in de EERSTE kolom (laagste position), ongeacht hoe die heet.
+      const firstPhase = ((await db.execute(sql`SELECT phase FROM salesflow_phase_rules ORDER BY position LIMIT 1`)).rows ?? [])[0]?.phase ?? 'selectie';
+
       const r = await db.execute(sql`
         INSERT INTO salesflow_cards (contact_id, company_id, batch_id, eigenaar_user_id, phase, created_by_name)
         VALUES (${contactId}, ${contact.company_id}, ${batchId ?? null},
-                (SELECT id FROM users WHERE id = ${eigenaarId}), 'selectie', ${createdByName ?? null})
+                (SELECT id FROM users WHERE id = ${eigenaarId}), ${firstPhase}, ${createdByName ?? null})
         RETURNING id`);
       return res.status(201).json((r.rows ?? r)[0]);
     } catch (error) {

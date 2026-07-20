@@ -261,8 +261,9 @@ function NieuweBatch({ open, onClose }: { open: boolean; onClose: () => void }) 
   const maak = useMutation({
     mutationFn: () => apiRequest('POST', '/api/sales/flow/batches', { name: naam.trim(), categorie: categorie !== 'geen' ? categorie : null }),
     onSuccess: (b: any) => { queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] }); toast({ title: `Batch "${b.name}" aangemaakt` }); setNaam(''); setCategorie('geen'); onClose(); },
-    onError: (e: any) => toast({ title: 'Aanmaken mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onError: (e: any) => { console.error('[salesflow] batch aanmaken fout:', e); toast({ title: 'Aanmaken mislukt', description: e?.data?.message || e.message, variant: 'destructive' }); },
   });
+  const foutTekst = (e: any) => (e?.data?.message || e?.message || 'Onbekende fout');
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
@@ -285,9 +286,10 @@ function NieuweBatch({ open, onClose }: { open: boolean; onClose: () => void }) 
             </Select>
           </div>
         </div>
+        {maak.isError && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">Fout: {foutTekst(maak.error)}</div>}
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuleren</Button>
-          <Button onClick={() => maak.mutate()} disabled={!naam.trim() || maak.isPending} className="bg-purple-600 hover:bg-purple-700">Aanmaken</Button>
+          <Button onClick={() => maak.mutate()} disabled={!naam.trim() || maak.isPending} className="bg-purple-600 hover:bg-purple-700">{maak.isPending ? 'Bezig…' : 'Aanmaken'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -315,12 +317,13 @@ function PersoonToevoegen({ open, batches, onClose }: { open: boolean; batches: 
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] });
       toast({ title: 'Toegevoegd aan Selectie', description: resultaten?.find(c => c.id === contactId)?.name });
     },
-    onError: (e: any) => toast({ title: 'Toevoegen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }),
+    onError: (e: any) => { console.error('[salesflow] toevoegen fout:', e); toast({ title: 'Toevoegen mislukt', description: e?.data?.message || e.message, variant: 'destructive' }); },
   });
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>Persoon toevoegen aan het bord</DialogTitle></DialogHeader>
+        {add.isError && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">Fout: {(add.error as any)?.data?.message || (add.error as any)?.message || 'Onbekende fout'}</div>}
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
