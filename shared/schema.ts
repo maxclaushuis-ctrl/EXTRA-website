@@ -1388,9 +1388,11 @@ export const salesflowPhaseRules = pgTable("salesflow_phase_rules", {
   label: text("label").notNull(),
   position: integer("position").notNull(), // kolomvolgorde op het bord
   triggerDays: integer("trigger_days"), // dagen na binnenkomst → reminder (null = geen auto-trigger)
-  triggerAction: text("trigger_action"), // 'bellen' | 'opvolgen' | 'opnieuw_bellen' | ...
+  triggerAction: text("trigger_action"), // 'bellen' | 'opvolgen' | 'opnieuw_bellen' | 'mailen' | 'appen' | ...
   useBusinessDays: boolean("use_business_days").default(true).notNull(),
   isEndState: boolean("is_end_state").default(false).notNull(),
+  behavior: text("behavior").default('normal').notNull(), // 'normal' | 'deal' (→ klant) | 'snooze' (→ sluimer)
+  asksChannel: boolean("asks_channel").default(false).notNull(), // vraagt e-mail/LinkedIn bij binnenkomst
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

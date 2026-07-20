@@ -9992,7 +9992,17 @@ ${vacancies.map(v => `  <url>
   // Salesflow — persoonsgerichte pipeline (kanban) onder salesMiddleware
   // ==========================================
 
-  const SF_PHASES = ['selectie','mailing_verstuurd','nagebeld','bericht_gestuurd','info_verstuurd','opvolgen','deal','geen_interesse'] as const;
+  // Fases zijn data-gedreven (salesflow_phase_rules) — kolommen kunnen worden
+  // toegevoegd/verwijderd. Validatie gebeurt dus tegen de tabel, niet tegen een
+  // vaste lijst.
+  async function phaseBestaat(phase: string): Promise<boolean> {
+    const r = await db.execute(sql`SELECT 1 FROM salesflow_phase_rules WHERE phase = ${phase} LIMIT 1`);
+    return (r.rows ?? r).length > 0;
+  }
+  function slugify(s: string): string {
+    return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'fase';
+  }
 
   // GET /api/sales/flow?batch=&eigenaar=&categorie=  → bord: fases + kaarten
   app.get("/api/sales/flow", salesMiddleware, async (req: Request, res: Response) => {
@@ -10128,12 +10138,13 @@ ${vacancies.map(v => `  <url>
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
       const schema = z.object({
-        phase: z.enum(SF_PHASES),
+        phase: z.string().min(1),
         channel: z.enum(['email','linkedin']).nullable().optional(),
         snoozeUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      if (!(await phaseBestaat(parsed.data.phase))) return res.status(400).json({ message: "Onbekende fase" });
       const updated = await moveCardToPhase({
         cardId: id, phase: parsed.data.phase, actorUserId: req.session.userId ?? null,
         channel: parsed.data.channel, snoozeUntil: parsed.data.snoozeUntil, resetNotReached: parsed.data.phase !== 'nagebeld',
@@ -10192,12 +10203,13 @@ ${vacancies.map(v => `  <url>
     try {
       const schema = z.object({
         batchId: z.number().int(),
-        fromPhase: z.enum(SF_PHASES),
-        toPhase: z.enum(SF_PHASES),
+        fromPhase: z.string().min(1),
+        toPhase: z.string().min(1),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
       const { batchId, fromPhase, toPhase } = parsed.data;
+      if (!(await phaseBestaat(toPhase))) return res.status(400).json({ message: "Onbekende doelfase" });
       const ids = ((await db.execute(sql`SELECT id FROM salesflow_cards WHERE batch_id = ${batchId} AND phase = ${fromPhase}`)).rows ?? []) as any[];
       let moved = 0;
       for (const row of ids) {
@@ -10211,21 +10223,88 @@ ${vacancies.map(v => `  <url>
     }
   });
 
-  // GET /api/sales/flow/rules  &  PATCH /api/sales/flow/rules/:phase  → instelbare termijnen
+  // GET /api/sales/flow/rules  → alle kolommen (fases)
   app.get("/api/sales/flow/rules", salesMiddleware, async (_req: Request, res: Response) => {
-    const r = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", use_business_days AS "useBusinessDays", is_end_state AS "isEndState" FROM salesflow_phase_rules ORDER BY position`);
+    const r = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", use_business_days AS "useBusinessDays", is_end_state AS "isEndState", behavior, asks_channel AS "asksChannel" FROM salesflow_phase_rules ORDER BY position`);
     return res.json(r.rows ?? r);
   });
 
+  // POST /api/sales/flow/rules  { label, triggerDays?, triggerAction?, asksChannel? }  → kolom toevoegen
+  app.post("/api/sales/flow/rules", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        label: z.string().min(1).max(40),
+        triggerDays: z.number().int().min(0).max(90).nullable().optional(),
+        triggerAction: z.string().max(30).nullable().optional(),
+        asksChannel: z.boolean().optional(),
+      }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      const { label, triggerDays, triggerAction, asksChannel } = parsed.data;
+      // Uniek fase-sleutel afleiden uit het label.
+      let base = slugify(label); let phase = base; let i = 2;
+      while (await phaseBestaat(phase)) { phase = `${base}_${i++}`; }
+      // Nieuwe (normale) kolom vlak vóór de eerste eindfase plaatsen.
+      const posRow = ((await db.execute(sql`SELECT COALESCE(MIN(position), (SELECT COALESCE(MAX(position),0)+1 FROM salesflow_phase_rules)) AS pos FROM salesflow_phase_rules WHERE is_end_state = true`)).rows ?? [])[0] as any;
+      const insertPos = Number(posRow?.pos ?? 1);
+      await db.execute(sql`UPDATE salesflow_phase_rules SET position = position + 1 WHERE position >= ${insertPos}`);
+      const r = await db.execute(sql`
+        INSERT INTO salesflow_phase_rules (phase, label, position, trigger_days, trigger_action, asks_channel, behavior, is_end_state)
+        VALUES (${phase}, ${label}, ${insertPos}, ${triggerDays ?? null}::int, ${triggerAction ?? null}, ${asksChannel ?? false}::bool, 'normal', false)
+        RETURNING phase, label, position`);
+      return res.status(201).json((r.rows ?? r)[0]);
+    } catch (error) {
+      console.error("[salesflow] rule toevoegen fout:", error);
+      return res.status(500).json({ message: "Fout bij toevoegen kolom" });
+    }
+  });
+
+  // DELETE /api/sales/flow/rules/:phase  → kolom verwijderen (alleen als leeg)
+  app.delete("/api/sales/flow/rules/:phase", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const phase = req.params.phase;
+      if (!(await phaseBestaat(phase))) return res.status(404).json({ message: "Kolom niet gevonden" });
+      const cnt = Number(((await db.execute(sql`SELECT count(*)::int AS n FROM salesflow_cards WHERE phase = ${phase}`)).rows ?? [])[0]?.n ?? 0);
+      if (cnt > 0) return res.status(409).json({ message: `Kolom bevat nog ${cnt} kaart(en) — verplaats die eerst` });
+      const total = Number(((await db.execute(sql`SELECT count(*)::int AS n FROM salesflow_phase_rules`)).rows ?? [])[0]?.n ?? 0);
+      if (total <= 2) return res.status(409).json({ message: "Er moeten minimaal twee kolommen overblijven" });
+      await db.execute(sql`DELETE FROM salesflow_phase_rules WHERE phase = ${phase}`);
+      return res.json({ deleted: phase });
+    } catch (error) {
+      console.error("[salesflow] rule verwijderen fout:", error);
+      return res.status(500).json({ message: "Fout bij verwijderen kolom" });
+    }
+  });
+
+  // POST /api/sales/flow/rules/reorder  { order: [phase, ...] }  → kolomvolgorde
+  app.post("/api/sales/flow/rules/reorder", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({ order: z.array(z.string()).min(1) }).strict();
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
+      let pos = 1;
+      for (const phase of parsed.data.order) {
+        await db.execute(sql`UPDATE salesflow_phase_rules SET position = ${pos}, updated_at = now() WHERE phase = ${phase}`);
+        pos++;
+      }
+      return res.json({ ok: true });
+    } catch (error) {
+      console.error("[salesflow] reorder fout:", error);
+      return res.status(500).json({ message: "Fout bij herordenen" });
+    }
+  });
+
+  // PATCH /api/sales/flow/rules/:phase  → naam/actie/termijn van een kolom
   app.patch("/api/sales/flow/rules/:phase", salesMiddleware, async (req: Request, res: Response) => {
     try {
       const phase = req.params.phase;
-      if (!SF_PHASES.includes(phase as any)) return res.status(400).json({ message: "Onbekende fase" });
+      if (!(await phaseBestaat(phase))) return res.status(404).json({ message: "Onbekende fase" });
       const schema = z.object({
         label: z.string().min(1).max(40).optional(),
         triggerDays: z.number().int().min(0).max(90).nullable().optional(),
-        triggerAction: z.string().nullable().optional(),
+        triggerAction: z.string().max(30).nullable().optional(),
         useBusinessDays: z.boolean().optional(),
+        asksChannel: z.boolean().optional(),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
@@ -10236,6 +10315,7 @@ ${vacancies.map(v => `  <url>
           trigger_days = CASE WHEN ${'triggerDays' in b} THEN ${b.triggerDays ?? null}::int ELSE trigger_days END,
           trigger_action = CASE WHEN ${'triggerAction' in b} THEN ${b.triggerAction ?? null} ELSE trigger_action END,
           use_business_days = CASE WHEN ${'useBusinessDays' in b} THEN ${b.useBusinessDays}::bool ELSE use_business_days END,
+          asks_channel = CASE WHEN ${'asksChannel' in b} THEN ${b.asksChannel}::bool ELSE asks_channel END,
           updated_at = now()
         WHERE phase = ${phase} RETURNING *`);
       return res.json((r.rows ?? r)[0]);

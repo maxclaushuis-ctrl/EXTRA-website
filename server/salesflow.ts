@@ -65,7 +65,10 @@ function actionLabel(action: string | null | undefined): string {
     case "bellen": return "Bellen";
     case "opnieuw_bellen": return "Opnieuw bellen (niet bereikt)";
     case "opvolgen": return "Opvolgen";
-    default: return "Actie";
+    case "mailen": return "Mailen";
+    case "appen": return "Appen";
+    case "langsgaan": return "Langsgaan";
+    default: return action ? action.charAt(0).toUpperCase() + action.slice(1) : "Actie";
   }
 }
 
@@ -82,7 +85,7 @@ async function cancelReminder(reminderId: number | null | undefined): Promise<vo
  */
 export async function moveCardToPhase(opts: {
   cardId: number;
-  phase: SalesflowPhase;
+  phase: string; // fase-sleutel (dynamisch: kolommen zijn beheerbaar)
   actorUserId?: number | null;
   channel?: string | null;      // bij 'bericht_gestuurd'
   snoozeUntil?: string | null;  // bij 'geen_interesse'
@@ -129,12 +132,13 @@ export async function moveCardToPhase(opts: {
     newReminderId = rem?.id ?? null;
   }
 
-  // 4. Eindfase-effecten.
-  if (opts.phase === "deal") {
+  // 4. Eindfase-effecten (gedrag-gedreven, niet op fase-sleutel — zodat kolommen
+  //    vrij toegevoegd/verwijderd kunnen worden zonder deze logica te breken).
+  if (rule.behavior === "deal") {
     await db.execute(sql`UPDATE crm_companies SET is_client = true, updated_at = now() WHERE id = ${card.company_id}`);
   }
 
-  const snooze = opts.phase === "geen_interesse" ? (opts.snoozeUntil ?? null) : null;
+  const snooze = rule.behavior === "snooze" ? (opts.snoozeUntil ?? null) : null;
   const notReached = opts.resetNotReached ? 0 : card.not_reached_count;
 
   // 5. Werk de kaart bij.
