@@ -17,6 +17,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { log } from "./vite";
+import { sendEmail } from "./mail";
 
 export type SalesflowPhase =
   | "selectie" | "mailing_verstuurd" | "nagebeld" | "bericht_gestuurd"
@@ -106,7 +107,7 @@ export async function ensureSalesflowSchema(): Promise<void> {
     await db.execute(sql`UPDATE salesflow_phase_rules SET behavior = 'snooze' WHERE phase = 'geen_interesse' AND behavior = 'normal'`);
     await db.execute(sql`UPDATE salesflow_phase_rules SET asks_channel = true WHERE phase = 'bericht_gestuurd' AND asks_channel = false`);
   }
-  log("[salesflow] schema gecontroleerd en up-to-date (code-versie v6)");
+  log("[salesflow] schema gecontroleerd en up-to-date (code-versie v7)");
 }
 
 /** Voegt N werkdagen (ma–vr) toe aan een datum en geeft 'YYYY-MM-DD'. */
@@ -272,9 +273,76 @@ export async function markNotReached(cardId: number, actorUserId?: number | null
   `));
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function fmtDatum(d: any): string {
+  try { return new Date(d).toLocaleDateString("nl-NL", { day: "numeric", month: "short" }); } catch { return String(d); }
+}
+
+/**
+ * Ochtendmail per eigenaar: één overzichtsmail met alle open salesacties die
+ * vandaag gepland staan of al te laat zijn. Alleen de eigenaar van de reminder
+ * ontvangt de mail (koppeling: reminder.owner = e-mailprefix van het
+ * admin-account, bv. 'max' → max@doehetextra.nl). Geen acties = geen mail.
+ * Te late acties worden dagelijks herhaald totdat ze zijn afgerond.
+ */
+export async function sendSalesflowDailyDigest(): Promise<void> {
+  try {
+    const due = rows(await db.execute(sql`
+      SELECT r.id, r.title, r.due_date, lower(r.owner) AS owner, r.note,
+             co.name AS company_name,
+             (r.due_date < CURRENT_DATE) AS te_laat
+      FROM crm_reminders r
+      LEFT JOIN crm_companies co ON co.id = r.company_id
+      WHERE r.status = 'open' AND r.due_date <= CURRENT_DATE AND COALESCE(r.owner, '') <> ''
+      ORDER BY lower(r.owner), r.due_date, r.id`));
+    if (due.length === 0) return;
+
+    const perOwner = new Map<string, any[]>();
+    for (const r of due) {
+      if (!perOwner.has(r.owner)) perOwner.set(r.owner, []);
+      perOwner.get(r.owner)!.push(r);
+    }
+
+    for (const [owner, items] of Array.from(perOwner.entries())) {
+      const u = one(await db.execute(sql`
+        SELECT email, first_name AS "firstName" FROM users
+        WHERE lower(split_part(email, '@', 1)) = ${owner} AND role = 'admin'
+        LIMIT 1`));
+      if (!u?.email) {
+        log(`[salesflow] ochtendmail: geen admin-account gevonden voor eigenaar '${owner}' — overgeslagen`);
+        continue;
+      }
+      const teLaat = items.filter((i: any) => i.te_laat);
+      const vandaag = items.filter((i: any) => !i.te_laat);
+      const regel = (i: any) =>
+        `<li style="margin:4px 0">${i.te_laat ? '<strong style="color:#d6453d">[Te laat — ' + fmtDatum(i.due_date) + ']</strong> ' : ''}` +
+        `${escapeHtml(i.title)}${i.company_name ? ` — ${escapeHtml(i.company_name)}` : ""}</li>`;
+      const tekstregel = (i: any) => `- ${i.te_laat ? `[TE LAAT ${fmtDatum(i.due_date)}] ` : ""}${i.title}${i.company_name ? ` — ${i.company_name}` : ""}`;
+      const onderwerp = teLaat.length > 0
+        ? `${vandaag.length} salesactie(s) vandaag · ${teLaat.length} te laat`
+        : `${vandaag.length} salesactie(s) voor vandaag`;
+      const html = `
+        <p>Hoi ${escapeHtml(u.firstName ?? "")},</p>
+        <p>Dit staat er vandaag voor je klaar in de salesflow:</p>
+        ${vandaag.length ? `<p><strong>Vandaag</strong></p><ul>${vandaag.map(regel).join("")}</ul>` : ""}
+        ${teLaat.length ? `<p><strong>Nog open (te laat)</strong></p><ul>${teLaat.map(regel).join("")}</ul>` : ""}
+        <p>Afvinken kan in het dashboard bij <em>Reminders</em> of op het Salesflow-bord.</p>
+        <p>— EXTRA dashboard</p>`;
+      const text = `Hoi ${u.firstName ?? ""},\n\nDit staat er vandaag voor je klaar:\n${[...vandaag, ...teLaat].map(tekstregel).join("\n")}\n\nAfvinken kan in het dashboard bij Reminders of op het Salesflow-bord.`;
+      const ok = await sendEmail({ to: u.email, from: "EXTRA <max@doehetextra.nl>", subject: onderwerp, html, text });
+      log(`[salesflow] ochtendmail naar ${u.email}: ${items.length} actie(s) — ${ok ? "verzonden" : "MISLUKT"}`);
+    }
+  } catch (err) {
+    console.error("[salesflow] ochtendmail fout:", err);
+  }
+}
+
 /**
  * Dagelijkse job: laat gesluimerde kaarten (geen_interesse met snooze_until <=
  * vandaag) automatisch terugkeren naar 'selectie'. Draait om 08:00.
+ * Verstuurt daarna de ochtendmail per eigenaar.
  */
 export async function runSalesflowDailyJob(): Promise<void> {
   try {
@@ -290,6 +358,7 @@ export async function runSalesflowDailyJob(): Promise<void> {
   } catch (err) {
     console.error("[salesflow] dagelijkse job fout:", err);
   }
+  await sendSalesflowDailyDigest();
 }
 
 export function scheduleSalesflowDailyJob(): void {

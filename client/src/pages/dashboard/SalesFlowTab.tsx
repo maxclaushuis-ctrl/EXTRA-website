@@ -34,6 +34,7 @@ interface Card {
   daysOverdue: number; createdByName: string | null;
 }
 interface Batch { id: number; name: string; categorie: string | null; cardCount: number; }
+interface Owner { id: number; naam: string; email: string; }
 
 const ACTIE_OPTIES: [string, string][] = [
   ['none', 'Geen actie'], ['bellen', 'Bellen'], ['opnieuw_bellen', 'Opnieuw bellen'],
@@ -153,6 +154,9 @@ export default function SalesFlowTab() {
 
   const batchesQuery = useQuery<Batch[]>({ queryKey: ['/api/sales/flow/batches'], queryFn: () => apiRequest('/api/sales/flow/batches') as Promise<any> });
   const batches = batchesQuery.data;
+  // Eigenaren = alle admin-accounts (volgt automatisch de Admin-accounts-pagina).
+  const ownersQuery = useQuery<Owner[]>({ queryKey: ['/api/sales/flow/owners'], queryFn: () => apiRequest('/api/sales/flow/owners') as Promise<any> });
+  const owners = ownersQuery.data ?? [];
   const flowQuery = useQuery<{ rules: Rule[]; cards: Card[] }>({
     queryKey: ['/api/sales/flow', batch, eigenaar, categorie],
     queryFn: () => apiRequest(`/api/sales/flow?batch=${batch}&eigenaar=${eigenaar}&categorie=${categorie}`) as Promise<any>,
@@ -236,12 +240,13 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v6</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v7</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
             opts={[['alle', 'Alle batches'], ...(batches ?? []).map(b => [String(b.id), `${b.name} (${b.cardCount})`] as [string, string])]} />
-          <SfSelect label="Eigenaar" value={eigenaar} onChange={setEigenaar} width="w-[140px]" opts={[['alle', 'Iedereen'], ['max', 'Max'], ['tommy', 'Tommy']]} />
+          <SfSelect label="Eigenaar" value={eigenaar} onChange={setEigenaar} width="w-[140px]"
+            opts={[['alle', 'Iedereen'], ...owners.map(o => [String(o.id), o.naam] as [string, string])]} />
           <SfSelect label="Categorie" value={categorie} onChange={setCategorie} width="w-[130px]" opts={[['alle', 'Alle'], ['Hotel', 'Hotel'], ['Logistiek', 'Logistiek'], ['Events', 'Events']]} />
         </div>
       </div>
@@ -280,7 +285,7 @@ export default function SalesFlowTab() {
       </div>
 
       <KaartDetail card={detailKaart} rule={detailKaart ? ruleByPhase[detailKaart.phase] : undefined} batches={batches ?? []} onClose={() => setDetailKaart(null)} />
-      <PersoonToevoegen open={addOpen} batches={batches ?? []} huidigeBatch={batch} onClose={() => setAddOpen(false)} />
+      <PersoonToevoegen open={addOpen} batches={batches ?? []} owners={owners} huidigeBatch={batch} onClose={() => setAddOpen(false)} />
       <FasesInstellen open={settingsOpen} rules={rules} counts={countByPhase} onClose={() => setSettingsOpen(false)} />
       <NieuweBatch open={batchOpen} onClose={() => setBatchOpen(false)} onCreated={(b) => setBatch(String(b.id))} />
 
@@ -475,18 +480,21 @@ function NieuweBatch({ open, onClose, onCreated }: { open: boolean; onClose: () 
 }
 
 interface ZoekContact { id: number; name: string; function: string | null; bedrijfNaam: string; categorie: string | null; opBord: boolean; }
-function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: boolean; batches: Batch[]; huidigeBatch: string; onClose: () => void }) {
+function PersoonToevoegen({ open, batches, owners, huidigeBatch, onClose }: { open: boolean; batches: Batch[]; owners: Owner[]; huidigeBatch: string; onClose: () => void }) {
   const { toast } = useToast();
   const { user } = useAuth();
   const ingelogdeNaam = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Onbekend';
   const [q, setQ] = useState('');
   const [batchId, setBatchId] = useState<string>('geen');
-  const [owner, setOwner] = useState<string>('max');
-  // Bij elk openen: standaard de batch kiezen die op het bord als filter actief
-  // is, zodat de persoon in het overzicht verschijnt waar je naar kijkt.
+  const [owner, setOwner] = useState<string>('');
+  // Bij elk openen: standaard de batch van het actieve filter, en als eigenaar
+  // de ingelogde gebruiker (als die in de eigenarenlijst staat).
   useEffect(() => {
-    if (open) setBatchId(huidigeBatch !== 'alle' ? huidigeBatch : 'geen');
-  }, [open, huidigeBatch]);
+    if (!open) return;
+    setBatchId(huidigeBatch !== 'alle' ? huidigeBatch : 'geen');
+    const zelf = owners.find(o => o.email?.toLowerCase() === user?.email?.toLowerCase());
+    setOwner(zelf ? String(zelf.id) : (owners[0] ? String(owners[0].id) : ''));
+  }, [open, huidigeBatch, owners, user?.email]);
   const zoek = useQuery<ZoekContact[]>({
     queryKey: ['/api/sales/flow/contacts', q],
     queryFn: () => apiRequest(`/api/sales/flow/contacts?search=${encodeURIComponent(q)}`) as Promise<any>,
@@ -494,7 +502,7 @@ function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: bool
   });
   const resultaten = zoek.data;
   const add = useMutation({
-    mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null, eigenaar: owner, createdByName: ingelogdeNaam }),
+    mutationFn: (contactId: number) => apiRequest('POST', '/api/sales/flow/cards', { contactId, batchId: batchId !== 'geen' ? parseInt(batchId, 10) : null, eigenaar: owner || undefined, createdByName: ingelogdeNaam }),
     onSuccess: (_r, contactId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/contacts'] });
@@ -526,10 +534,9 @@ function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: bool
             <div>
               <label className="text-[12px] text-gray-500 mb-1 block">Eigenaar</label>
               <Select value={owner} onValueChange={setOwner}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Kies eigenaar" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="max">Max</SelectItem>
-                  <SelectItem value="tommy">Tommy</SelectItem>
+                  {owners.map(o => <SelectItem key={o.id} value={String(o.id)}>{o.naam}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

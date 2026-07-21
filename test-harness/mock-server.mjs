@@ -37,6 +37,13 @@ app.get('/api/sales/flow', async (req, res) => {
   } catch (e) { console.error('FLOW FOUT:', e.message); res.status(500).json({ message: e.message }); }
 });
 
+app.get('/api/sales/flow/owners', async (_req, res) => {
+  try {
+    const r = await q(`SELECT id, first_name AS "naam", email FROM users WHERE role='admin' AND status='active' ORDER BY first_name`);
+    res.json(r.rows);
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 app.get('/api/sales/flow/batches', async (_req, res) => {
   try {
     const r = await q(`SELECT b.id, b.name, b.categorie, b.description, b.created_at AS "createdAt", COALESCE(c.cnt,0)::int AS "cardCount"

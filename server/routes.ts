@@ -10064,6 +10064,22 @@ ${vacancies.map(v => `  <url>
     }
   });
 
+  // GET /api/sales/flow/owners  → alle admin-accounts die eigenaar kunnen zijn.
+  // De Eigenaar-dropdown volgt hiermee automatisch de lijst uit Admin-accounts.
+  app.get("/api/sales/flow/owners", salesMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const r = await db.execute(sql`
+        SELECT id, first_name AS "naam", email
+        FROM users
+        WHERE role = 'admin' AND status = 'active'
+        ORDER BY first_name`);
+      return res.json(r.rows ?? r);
+    } catch (error) {
+      console.error("[salesflow] owners fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen eigenaren" });
+    }
+  });
+
   // GET /api/sales/flow/batches
   app.get("/api/sales/flow/batches", salesMiddleware, async (_req: Request, res: Response) => {
     try {
