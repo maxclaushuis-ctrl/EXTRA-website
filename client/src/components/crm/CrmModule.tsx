@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -1424,6 +1424,11 @@ export function CrmLeadsTab() {
   const [tagFilter, setTagFilter] = useState('alle');
   const [functionFilter, setFunctionFilter] = useState('alle');
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  // Doorklik vanuit Reminders: open direct het meegegeven bedrijf.
+  useEffect(() => {
+    const id = sessionStorage.getItem('crmOpenCompanyId');
+    if (id) { sessionStorage.removeItem('crmOpenCompanyId'); setSelectedId(Number(id)); }
+  }, []);
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -1674,27 +1679,35 @@ export function CrmKlantenTab() {
 
 // ── CRM Reminders Tab ──────────────────────────────────────────────────────
 
-export function CrmRemindersTab() {
+export function CrmRemindersTab({ onOpenCompany }: { onOpenCompany?: (companyId: number) => void } = {}) {
   const [ownerFilter, setOwnerFilter] = useState('alle');
-  const [statusFilter, setStatusFilter] = useState('open');
+  const [statusFilter, setStatusFilter] = useState('open'); // open | overdue | today | completed
   const [addOpen, setAddOpen] = useState(false);
   const [editReminder, setEditReminder] = useState<any>(null);
+  const [bevestigVerwijder, setBevestigVerwijder] = useState<number | null>(null);
 
-  const { data: reminders = [], isLoading, refetch } = useQuery<any[]>({
+  const { data: reminders = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/reminders'],
     queryFn: () => fetch('/api/admin/crm/reminders', { credentials: 'include' }).then(r => r.json()),
     refetchInterval: 60000,
   });
+  // Eigenaren volgen automatisch de admin-accounts (zelfde bron als Salesflow).
+  const { data: owners = [] } = useQuery<{ id: number; naam: string; email: string }[]>({
+    queryKey: ['/api/sales/flow/owners'],
+    queryFn: () => fetch('/api/sales/flow/owners', { credentials: 'include' }).then(r => r.ok ? r.json() : []),
+    staleTime: 300000,
+  });
+  const ownerOpties: [string, string][] = owners.length > 0
+    ? owners.map(o => [o.email.split('@')[0].toLowerCase(), o.naam] as [string, string])
+    : CRM_OWNERS.map(o => [o, o.charAt(0).toUpperCase() + o.slice(1)] as [string, string]);
 
   const filtered = useMemo(() => reminders.filter((r: any) => {
     if (ownerFilter !== 'alle' && r.owner !== ownerFilter) return false;
-    if (statusFilter !== 'alle') {
-      const today = new Date().toISOString().slice(0, 10);
-      if (statusFilter === 'open' && r.status !== 'open' && r.status !== 'overdue') return false;
-      if (statusFilter === 'overdue' && (r.status !== 'overdue' && r.dueDate >= today)) return false;
-      if (statusFilter === 'today' && r.dueDate !== today) return false;
-      if (statusFilter === 'completed' && r.status !== 'completed') return false;
-    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (statusFilter === 'open' && r.status === 'completed') return false;
+    if (statusFilter === 'overdue' && (r.status === 'completed' || r.dueDate >= today)) return false;
+    if (statusFilter === 'today' && (r.status === 'completed' || r.dueDate !== today)) return false;
+    if (statusFilter === 'completed' && r.status !== 'completed') return false;
     return true;
   }), [reminders, ownerFilter, statusFilter]);
 
@@ -1704,6 +1717,14 @@ export function CrmRemindersTab() {
   });
   const deleteReminderMutation = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/crm/reminders/${id}`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/reminders'] }); setBevestigVerwijder(null); },
+  });
+  // Uitstellen: nieuwe datum = vandaag + N dagen; status terug naar open.
+  const snoozeMutation = useMutation({
+    mutationFn: ({ id, days }: { id: number; days: number }) => {
+      const d = new Date(); d.setDate(d.getDate() + days);
+      return apiRequest('PATCH', `/api/admin/crm/reminders/${id}`, { dueDate: d.toISOString().slice(0, 10), status: 'open' });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/admin/crm/reminders'] }),
   });
 
@@ -1713,98 +1734,135 @@ export function CrmRemindersTab() {
   const upcoming = reminders.filter((r: any) => r.status !== 'completed' && r.dueDate > today).length;
   const completed = reminders.filter((r: any) => r.status === 'completed').length;
 
+  // Tijdsgroepen: Verlopen · Vandaag · Morgen · Deze week · Later (afgerond = platte lijst)
+  const groepen = useMemo(() => {
+    if (statusFilter === 'completed') return [{ titel: null as string | null, items: filtered }];
+    const morgenD = new Date(); morgenD.setDate(morgenD.getDate() + 1);
+    const morgen = morgenD.toISOString().slice(0, 10);
+    // Einde van de week = aankomende zondag.
+    const zondagD = new Date(); zondagD.setDate(zondagD.getDate() + ((7 - zondagD.getDay()) % 7));
+    const zondag = zondagD.toISOString().slice(0, 10);
+    const m: Record<string, any[]> = { Verlopen: [], Vandaag: [], Morgen: [], 'Deze week': [], Later: [] };
+    for (const r of filtered) {
+      if (r.dueDate < today) m['Verlopen'].push(r);
+      else if (r.dueDate === today) m['Vandaag'].push(r);
+      else if (r.dueDate === morgen) m['Morgen'].push(r);
+      else if (r.dueDate <= zondag) m['Deze week'].push(r);
+      else m['Later'].push(r);
+    }
+    return Object.entries(m).filter(([, items]) => items.length > 0).map(([titel, items]) => ({ titel: titel as string | null, items }));
+  }, [filtered, statusFilter, today]);
+
+  const tegels = [
+    { label: 'Verlopen', count: overdue, actiefKleur: 'bg-red-50 border-red-200', cijferKleur: 'text-red-700', filter: 'overdue' },
+    { label: 'Vandaag', count: dueToday, actiefKleur: 'bg-orange-50 border-orange-200', cijferKleur: 'text-orange-700', filter: 'today' },
+    { label: 'Gepland', count: upcoming, actiefKleur: 'bg-blue-50 border-blue-200', cijferKleur: 'text-blue-700', filter: 'open' },
+    { label: 'Afgerond', count: completed, actiefKleur: 'bg-green-50 border-green-200', cijferKleur: 'text-green-700', filter: 'completed' },
+  ];
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Reminders</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{filtered.length} reminders</p>
+          <p className="text-sm text-gray-500 mt-0.5">{filtered.length} {filtered.length === 1 ? 'reminder' : 'reminders'}</p>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8" onClick={() => refetch()}><RefreshCw className="h-3.5 w-3.5" />Vernieuwen</Button>
-          <Button size="sm" className="gap-1.5 text-xs h-8 bg-purple-600 hover:bg-purple-700" onClick={() => setAddOpen(true)}>
-            <Plus className="h-3.5 w-3.5" />Nieuwe reminder
-          </Button>
-        </div>
+        <Button size="sm" className="gap-1.5 text-xs h-8 bg-purple-600 hover:bg-purple-700" onClick={() => setAddOpen(true)}>
+          <Plus className="h-3.5 w-3.5" />Nieuwe reminder
+        </Button>
       </div>
 
-      {/* Summary cards */}
+      {/* Statustegels = filter. Kleur alleen als er iets te melden is (teller > 0). */}
       <div className="grid grid-cols-4 gap-3 mb-5">
-        {[
-          { label: 'Verlopen', count: overdue, color: 'text-red-700', bg: 'bg-red-50 border-red-200', filter: 'overdue' },
-          { label: 'Vandaag', count: dueToday, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200', filter: 'today' },
-          { label: 'Gepland', count: upcoming, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', filter: 'open' },
-          { label: 'Afgerond', count: completed, color: 'text-green-700', bg: 'bg-green-50 border-green-200', filter: 'completed' },
-        ].map((card, i) => (
-          <button key={i} onClick={() => setStatusFilter(card.filter)} className={`border rounded-xl p-3 text-left transition-all hover:shadow-sm ${card.bg} ${statusFilter === card.filter ? 'ring-2 ring-purple-400' : ''}`}>
-            <p className={`text-2xl font-bold ${card.color}`}>{card.count}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{card.label}</p>
+        {tegels.map((t) => (
+          <button key={t.filter} onClick={() => setStatusFilter(statusFilter === t.filter && t.filter !== 'open' ? 'open' : t.filter)}
+            className={`border rounded-xl p-3 text-left transition-all hover:shadow-sm ${t.count > 0 ? t.actiefKleur : 'bg-white border-gray-200'} ${statusFilter === t.filter ? 'ring-2 ring-purple-400' : ''}`}>
+            <p className={`text-2xl font-bold ${t.count > 0 ? t.cijferKleur : 'text-gray-300'}`}>{t.count}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t.label}</p>
           </button>
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Eigenaar-filter (status gaat via de tegels) */}
       <div className="flex gap-2 mb-4">
         <Select value={ownerFilter} onValueChange={setOwnerFilter}>
           <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="alle">Alle eigenaren</SelectItem>
-            {CRM_OWNERS.map(o => <SelectItem key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alle">Alle statussen</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="overdue">Verlopen</SelectItem>
-            <SelectItem value="today">Vandaag</SelectItem>
-            <SelectItem value="completed">Afgerond</SelectItem>
+            {ownerOpties.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Reminders list */}
+      {/* Lijst, gegroepeerd op tijd */}
       <div className="space-y-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-gray-400 text-sm"><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Laden...</div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <Bell className="h-10 w-10 mb-3 text-gray-200" />
-            <p className="text-sm font-medium">Geen reminders gevonden</p>
+            <p className="text-sm font-medium">Geen reminders in deze weergave</p>
+            <p className="text-xs mt-1">Reminders ontstaan automatisch vanuit de Salesflow, of maak er zelf één aan.</p>
           </div>
         ) : (
-          filtered.map((r: any) => {
-            const style = getReminderStyle(r.status, r.dueDate);
-            const label = getReminderLabel(r.status, r.dueDate);
-            return (
-              <div key={r.id} className={`border rounded-xl p-3.5 bg-white ${style.row} ${r.status === 'completed' ? 'opacity-60' : ''}`}>
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>{label}</span>
-                      <span className="text-xs text-gray-500 flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(r.dueDate)}</span>
-                      {r.companyName && <span className="text-xs text-gray-500 flex items-center gap-1"><Building2 className="h-3 w-3" />{r.companyName}</span>}
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ml-auto ${OWNER_COLORS[r.owner] || 'bg-gray-100'}`}>
-                        {r.owner?.charAt(0).toUpperCase() + (r.owner?.slice(1) || '')}
-                      </span>
+          groepen.map(groep => (
+            <div key={groep.titel ?? 'alles'}>
+              {groep.titel && (
+                <p className={`text-[11px] font-semibold uppercase tracking-wide mt-4 mb-1.5 ${groep.titel === 'Verlopen' ? 'text-red-500' : 'text-gray-400'}`}>
+                  {groep.titel} <span className="font-normal">({groep.items.length})</span>
+                </p>
+              )}
+              <div className="space-y-2">
+                {groep.items.map((r: any) => {
+                  const style = getReminderStyle(r.status, r.dueDate);
+                  const label = getReminderLabel(r.status, r.dueDate);
+                  return (
+                    <div key={r.id} className={`border rounded-xl p-3.5 bg-white ${style.row} ${r.status === 'completed' ? 'opacity-60' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>{label}</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(r.dueDate)}</span>
+                            {r.viaSalesflow && <span className="text-[10.5px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 font-medium">Salesflow</span>}
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full ml-auto ${OWNER_COLORS[r.owner] || 'bg-gray-100'}`}>
+                              {r.owner?.charAt(0).toUpperCase() + (r.owner?.slice(1) || '')}
+                            </span>
+                          </div>
+                          <p className={`text-sm font-medium ${r.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-800'}`}>{r.title}</p>
+                          {r.companyName && (
+                            <button onClick={() => onOpenCompany?.(r.companyId)} title="Open bedrijf"
+                              className="text-xs text-gray-500 mt-0.5 flex items-center gap-1 hover:text-purple-700 hover:underline">
+                              <Building2 className="h-3 w-3" />{r.companyName}
+                            </button>
+                          )}
+                          {r.note && r.note !== r.companyName && <p className="text-xs text-gray-500 mt-0.5">{r.note}</p>}
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {r.status !== 'completed' && (
+                            <>
+                              <Button size="sm" variant="ghost" className="h-7 px-1.5 text-[11px] text-gray-400 hover:text-gray-700" title="Uitstellen naar morgen" onClick={() => snoozeMutation.mutate({ id: r.id, days: 1 })}>+1d</Button>
+                              <Button size="sm" variant="ghost" className="h-7 px-1.5 text-[11px] text-gray-400 hover:text-gray-700" title="Uitstellen met een week" onClick={() => snoozeMutation.mutate({ id: r.id, days: 7 })}>+1w</Button>
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-500 hover:text-green-700" title="Afronden" onClick={() => completeReminderMutation.mutate(r.id)}>
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Bewerken" onClick={() => setEditReminder(r)}><Pencil className="h-3 w-3" /></Button>
+                          {bevestigVerwijder === r.id ? (
+                            <Button size="sm" variant="ghost" className="h-7 px-1.5 text-[11px] font-semibold text-red-600 hover:text-red-700" title="Klik om definitief te verwijderen"
+                              onClick={() => deleteReminderMutation.mutate(r.id)}>Zeker?</Button>
+                          ) : (
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 ml-1 text-red-400 hover:text-red-600" title="Verwijderen"
+                              onClick={() => { setBevestigVerwijder(r.id); setTimeout(() => setBevestigVerwijder(v => v === r.id ? null : v), 3000); }}><Trash2 className="h-3 w-3" /></Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <p className={`text-sm font-medium ${r.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-800'}`}>{r.title}</p>
-                    {r.note && <p className="text-xs text-gray-500 mt-0.5">{r.note}</p>}
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    {r.status !== 'completed' && (
-                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-500 hover:text-green-700" title="Afronden" onClick={() => completeReminderMutation.mutate(r.id)}>
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditReminder(r)}><Pencil className="h-3 w-3" /></Button>
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-400 hover:text-red-600" onClick={() => deleteReminderMutation.mutate(r.id)}><Trash2 className="h-3 w-3" /></Button>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            );
-          })
+            </div>
+          ))
         )}
       </div>
 

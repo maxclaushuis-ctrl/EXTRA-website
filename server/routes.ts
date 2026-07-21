@@ -10404,10 +10404,15 @@ ${vacancies.map(v => `  <url>
         owner: owner as string,
         status: status as string,
       });
-      // Enrich with company names
+      // Enrich with company names + herkomst (komt de reminder uit de salesflow?)
       const companies = await storage.getCrmCompanies({});
       const companyMap = Object.fromEntries(companies.map(c => [c.id, c.name]));
-      const enriched = reminders.map(r => ({ ...r, companyName: companyMap[r.companyId] || '' }));
+      let viaSalesflow = new Set<number>();
+      try {
+        const sf = ((await db.execute(sql`SELECT reminder_id FROM salesflow_cards WHERE reminder_id IS NOT NULL`)).rows ?? []) as any[];
+        viaSalesflow = new Set(sf.map(x => Number(x.reminder_id)));
+      } catch { /* salesflow-tabel ontbreekt? dan geen labels */ }
+      const enriched = reminders.map(r => ({ ...r, companyName: companyMap[r.companyId] || '', viaSalesflow: viaSalesflow.has(r.id) }));
       return res.json(enriched);
     } catch (error) {
       console.error("Error fetching CRM reminders:", error);

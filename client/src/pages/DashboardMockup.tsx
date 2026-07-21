@@ -4703,7 +4703,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             <CrmKlantenTab />
 
           ) : activeTab === 'crm-reminders' ? (
-            <CrmRemindersTab />
+            <CrmRemindersTab onOpenCompany={(companyId) => { sessionStorage.setItem('crmOpenCompanyId', String(companyId)); setActiveTab('crm-leads'); }} />
 
           ) : activeTab === 'bedrijven-verjaardagen' ? (
             <VerjaardagenTab />

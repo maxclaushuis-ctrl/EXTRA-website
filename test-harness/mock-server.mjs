@@ -158,4 +158,30 @@ app.post('/api/sales/flow/rules/reorder', async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// CRM-reminders — zelfde vorm als /api/admin/crm/reminders in routes.ts
+app.get('/api/admin/crm/reminders', async (_req, res) => {
+  try {
+    const r = await q(`
+      SELECT r.id, r.title, r.due_date::text AS "dueDate", r.owner, r.status, r.note,
+             r.company_id AS "companyId", COALESCE(co.name,'') AS "companyName",
+             EXISTS(SELECT 1 FROM salesflow_cards sc WHERE sc.reminder_id = r.id) AS "viaSalesflow"
+      FROM crm_reminders r LEFT JOIN crm_companies co ON co.id = r.company_id
+      ORDER BY r.due_date, r.id`);
+    res.json(r.rows);
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+app.patch('/api/admin/crm/reminders/:id', async (req, res) => {
+  try {
+    const { dueDate, status } = req.body;
+    const r = await q(`UPDATE crm_reminders SET due_date = COALESCE($1::date, due_date), status = COALESCE($2, status) WHERE id = $3 RETURNING *`,
+      [dueDate ?? null, status ?? null, parseInt(req.params.id, 10)]);
+    console.log('[reminders-patch]', req.params.id, JSON.stringify(req.body));
+    res.json(r.rows[0]);
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+app.delete('/api/admin/crm/reminders/:id', async (req, res) => {
+  try { await q(`DELETE FROM crm_reminders WHERE id=$1`, [parseInt(req.params.id, 10)]); res.json({ message: 'Reminder verwijderd' }); }
+  catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 app.listen(5099, () => console.log('mock-backend op :5099'));
