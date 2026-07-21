@@ -106,7 +106,7 @@ export async function ensureSalesflowSchema(): Promise<void> {
     await db.execute(sql`UPDATE salesflow_phase_rules SET behavior = 'snooze' WHERE phase = 'geen_interesse' AND behavior = 'normal'`);
     await db.execute(sql`UPDATE salesflow_phase_rules SET asks_channel = true WHERE phase = 'bericht_gestuurd' AND asks_channel = false`);
   }
-  log("[salesflow] schema gecontroleerd en up-to-date (code-versie v3)");
+  log("[salesflow] schema gecontroleerd en up-to-date (code-versie v4)");
 }
 
 /** Voegt N werkdagen (ma–vr) toe aan een datum en geeft 'YYYY-MM-DD'. */

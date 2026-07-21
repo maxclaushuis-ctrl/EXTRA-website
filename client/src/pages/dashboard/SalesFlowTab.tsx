@@ -146,7 +146,8 @@ export default function SalesFlowTab() {
   const [sluimerVoor, setSluimerVoor] = useState<{ cardId: number; phase: string } | null>(null);
   const [advanceVraag, setAdvanceVraag] = useState<{ batchId: number; fromPhase: string; fromLabel: string; toPhase: string; toLabel: string; aantal: number } | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  // distance 3: slepen start vrijwel direct; kaarten hebben geen klik-actie dus dit is veilig.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 3 } }));
 
   const batchesQuery = useQuery<Batch[]>({ queryKey: ['/api/sales/flow/batches'], queryFn: () => apiRequest('/api/sales/flow/batches') as Promise<any> });
   const batches = batchesQuery.data;
@@ -228,7 +229,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v3</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v4</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
@@ -258,7 +259,9 @@ export default function SalesFlowTab() {
           <div className="flex border border-gray-200 rounded-xl bg-white overflow-x-auto">
             {rules.map(r => <Kolom key={r.phase} rule={r} cards={perFase[r.phase] ?? []} batchId={batch !== 'alle' ? parseInt(batch, 10) : null} onBatchAdvance={onBatchAdvance} />)}
           </div>
-          <DragOverlay>{activeCard ? <div className="w-[210px]"><KaartView card={activeCard} rule={ruleByPhase[activeCard.phase]} /></div> : null}</DragOverlay>
+          {/* dropAnimation uit: geen 'terugvlieg'-animatie bij loslaten — de kaart
+              staat door de optimistische update al direct in de nieuwe kolom. */}
+          <DragOverlay dropAnimation={null}>{activeCard ? <div className="w-[210px]"><KaartView card={activeCard} rule={ruleByPhase[activeCard.phase]} /></div> : null}</DragOverlay>
         </DndContext>
       )}
 
