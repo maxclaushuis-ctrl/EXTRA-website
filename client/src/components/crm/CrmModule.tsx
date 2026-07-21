@@ -1686,17 +1686,21 @@ export function CrmRemindersTab({ onOpenCompany }: { onOpenCompany?: (companyId:
   const [editReminder, setEditReminder] = useState<any>(null);
   const [bevestigVerwijder, setBevestigVerwijder] = useState<number | null>(null);
 
-  const { data: reminders = [], isLoading } = useQuery<any[]>({
+  // Defensief: geeft de server iets anders terug dan een lijst (bv. oude
+  // servercode of een foutobject), dan vallen we terug op een lege lijst.
+  const { data: remindersData, isLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/reminders'],
-    queryFn: () => fetch('/api/admin/crm/reminders', { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetch('/api/admin/crm/reminders', { credentials: 'include' }).then(r => r.json()).catch(() => []),
     refetchInterval: 60000,
   });
+  const reminders = Array.isArray(remindersData) ? remindersData : [];
   // Eigenaren volgen automatisch de admin-accounts (zelfde bron als Salesflow).
-  const { data: owners = [] } = useQuery<{ id: number; naam: string; email: string }[]>({
+  const { data: ownersData } = useQuery<{ id: number; naam: string; email: string }[]>({
     queryKey: ['/api/sales/flow/owners'],
-    queryFn: () => fetch('/api/sales/flow/owners', { credentials: 'include' }).then(r => r.ok ? r.json() : []),
+    queryFn: () => fetch('/api/sales/flow/owners', { credentials: 'include' }).then(r => r.ok ? r.json() : []).catch(() => []),
     staleTime: 300000,
   });
+  const owners = Array.isArray(ownersData) ? ownersData : [];
   const ownerOpties: [string, string][] = owners.length > 0
     ? owners.map(o => [o.email.split('@')[0].toLowerCase(), o.naam] as [string, string])
     : CRM_OWNERS.map(o => [o, o.charAt(0).toUpperCase() + o.slice(1)] as [string, string]);

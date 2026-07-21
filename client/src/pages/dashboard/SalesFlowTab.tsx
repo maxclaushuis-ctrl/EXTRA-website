@@ -152,11 +152,13 @@ export default function SalesFlowTab() {
   // distance 3: slepen start vrijwel direct; kaarten hebben geen klik-actie dus dit is veilig.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 3 } }));
 
+  // Defensief: als de server (bv. met oude code) géén nette lijst teruggeeft,
+  // tonen we een lege lijst in plaats van een wit foutscherm.
   const batchesQuery = useQuery<Batch[]>({ queryKey: ['/api/sales/flow/batches'], queryFn: () => apiRequest('/api/sales/flow/batches') as Promise<any> });
-  const batches = batchesQuery.data;
+  const batches = Array.isArray(batchesQuery.data) ? batchesQuery.data : [];
   // Eigenaren = alle admin-accounts (volgt automatisch de Admin-accounts-pagina).
   const ownersQuery = useQuery<Owner[]>({ queryKey: ['/api/sales/flow/owners'], queryFn: () => apiRequest('/api/sales/flow/owners') as Promise<any> });
-  const owners = ownersQuery.data ?? [];
+  const owners = Array.isArray(ownersQuery.data) ? ownersQuery.data : [];
   const flowQuery = useQuery<{ rules: Rule[]; cards: Card[] }>({
     queryKey: ['/api/sales/flow', batch, eigenaar, categorie],
     queryFn: () => apiRequest(`/api/sales/flow?batch=${batch}&eigenaar=${eigenaar}&categorie=${categorie}`) as Promise<any>,
@@ -190,8 +192,8 @@ export default function SalesFlowTab() {
     onError: (e: any) => toast({ title: 'Batch-actie mislukt', description: foutTekst(e), variant: 'destructive' }),
   });
 
-  const rules = data?.rules ?? [];
-  const cards = data?.cards ?? [];
+  const rules = Array.isArray(data?.rules) ? data!.rules : [];
+  const cards = Array.isArray(data?.cards) ? data!.cards : [];
   const ruleByPhase = useMemo(() => Object.fromEntries(rules.map(r => [r.phase, r])), [rules]);
   const perFase = useMemo(() => {
     const m: Record<string, Card[]> = {};
@@ -240,7 +242,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v7</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v8</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
