@@ -109,6 +109,20 @@ app.patch('/api/sales/flow/cards/:id/move', async (req, res) => {
   } catch (e) { console.error('MOVE FOUT:', e.message); res.status(500).json({ message: e.message }); }
 });
 
+// Kaart van het bord verwijderen — zelfde semantiek als routes.ts
+app.delete('/api/sales/flow/cards/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const card = (await q(`SELECT * FROM salesflow_cards WHERE id=$1`, [id])).rows[0];
+    if (!card) return res.status(404).json({ message: 'Kaart niet gevonden' });
+    if (card.reminder_id) await q(`UPDATE crm_reminders SET status='completed' WHERE id=$1 AND status<>'completed'`, [card.reminder_id]);
+    await q(`INSERT INTO activities (crm_company_id, type, description) VALUES ($1,'note','Salesflow: kaart verwijderd')`, [card.company_id]);
+    await q(`DELETE FROM salesflow_cards WHERE id=$1`, [id]);
+    console.log(`[delete] kaart ${id} verwijderd`);
+    res.json({ deleted: id });
+  } catch (e) { console.error('DELETE FOUT:', e.message); res.status(500).json({ message: e.message }); }
+});
+
 // Fase-instellingen — zelfde semantiek als routes.ts
 app.patch('/api/sales/flow/rules/:phase', async (req, res) => {
   try {

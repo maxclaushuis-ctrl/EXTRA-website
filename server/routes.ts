@@ -10209,6 +10209,32 @@ ${vacancies.map(v => `  <url>
     }
   });
 
+  // DELETE /api/sales/flow/cards/:id  → kaart van het bord halen (correctie).
+  // De persoon blijft gewoon bestaan in Leads & Prospects; alleen de
+  // salesflow-kaart verdwijnt. De open reminder wordt afgesloten en de
+  // verwijdering wordt gelogd in de activiteiten van het bedrijf.
+  app.delete("/api/sales/flow/cards/:id", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+      const card = ((await db.execute(sql`SELECT * FROM salesflow_cards WHERE id = ${id}`)).rows ?? [])[0] as any;
+      if (!card) return res.status(404).json({ message: "Kaart niet gevonden" });
+      if (card.reminder_id) {
+        await db.execute(sql`UPDATE crm_reminders SET status = 'completed' WHERE id = ${card.reminder_id} AND status <> 'completed'`);
+      }
+      const persoon = ((await db.execute(sql`SELECT name FROM crm_contacts WHERE id = ${card.contact_id}`)).rows ?? [])[0]?.name ?? "contact";
+      await db.execute(sql`
+        INSERT INTO activities (crm_company_id, type, description, created_by_user_id)
+        VALUES (${card.company_id}, 'note', ${`Salesflow: ${persoon} van het bord verwijderd`},
+                (SELECT id FROM users WHERE id = ${req.session.userId ?? null}))`);
+      await db.execute(sql`DELETE FROM salesflow_cards WHERE id = ${id}`);
+      return res.json({ deleted: id });
+    } catch (error) {
+      console.error("[salesflow] card verwijderen fout:", error);
+      return res.status(500).json({ message: "Fout bij verwijderen kaart" });
+    }
+  });
+
   // POST /api/sales/flow/batch-advance  { batchId, fromPhase, toPhase }  → hele kolom doorzetten
   app.post("/api/sales/flow/batch-advance", salesMiddleware, async (req: Request, res: Response) => {
     try {

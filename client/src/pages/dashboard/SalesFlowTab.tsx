@@ -9,7 +9,7 @@
  *   banner op de pagina, met een knop om het opnieuw te proberen.
  * - Een nieuwe batch wordt direct geselecteerd in het batch-filter.
  */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -85,16 +85,17 @@ function KaartView({ card, rule }: { card: Card; rule?: Rule }) {
   );
 }
 
-function DraggableKaart({ card, rule }: { card: Card; rule?: Rule }) {
+function DraggableKaart({ card, rule, onOpen }: { card: Card; rule?: Rule; onOpen: (c: Card) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id });
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className={`mb-2 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-30' : ''}`}>
+    <div ref={setNodeRef} {...listeners} {...attributes} onClick={() => onOpen(card)}
+      className={`mb-2 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-30' : ''}`}>
       <KaartView card={card} rule={rule} />
     </div>
   );
 }
 
-function Kolom({ rule, cards, batchId, onBatchAdvance }: { rule: Rule; cards: Card[]; batchId: number | null; onBatchAdvance: (from: string) => void; }) {
+function Kolom({ rule, cards, batchId, onBatchAdvance, onKaartOpen }: { rule: Rule; cards: Card[]; batchId: number | null; onBatchAdvance: (from: string) => void; onKaartOpen: (c: Card) => void; }) {
   const { setNodeRef, isOver } = useDroppable({ id: rule.phase });
   const triggerRegel = rule.isEndState
     ? (rule.behavior === 'deal' ? 'Bedrijf → Bestaande klanten' : rule.behavior === 'snooze' ? 'Sluimert → terug in eerste kolom' : 'Eindfase')
@@ -114,7 +115,7 @@ function Kolom({ rule, cards, batchId, onBatchAdvance }: { rule: Rule; cards: Ca
         </div>
       </div>
       <div className="p-2.5 bg-gray-50/60 flex-1 min-h-[420px]">
-        {cards.map(c => <DraggableKaart key={c.id} card={c} rule={rule} />)}
+        {cards.map(c => <DraggableKaart key={c.id} card={c} rule={rule} onOpen={onKaartOpen} />)}
       </div>
     </div>
   );
@@ -142,6 +143,7 @@ export default function SalesFlowTab() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   // Uitgestelde drag-acties die eerst input nodig hebben (kanaal / sluimerduur)
+  const [detailKaart, setDetailKaart] = useState<Card | null>(null);
   const [kanaalVoor, setKanaalVoor] = useState<{ cardId: number; phase: string } | null>(null);
   const [sluimerVoor, setSluimerVoor] = useState<{ cardId: number; phase: string } | null>(null);
   const [advanceVraag, setAdvanceVraag] = useState<{ batchId: number; fromPhase: string; fromLabel: string; toPhase: string; toLabel: string; aantal: number } | null>(null);
@@ -200,8 +202,13 @@ export default function SalesFlowTab() {
     return { vandaag: open.filter(c => c.daysOverdue === 0 && daysUntil(c.nextActionAt!) <= 0).length, laat: open.filter(c => c.daysOverdue > 0).length };
   }, [cards, ruleByPhase]);
 
-  function onDragStart(e: DragStartEvent) { setActiveCard(cards.find(c => c.id === e.active.id) ?? null); }
+  // Een klik direct ná een sleep mag het detailvenster niet openen.
+  const netGesleept = useRef(false);
+  const openKaart = (c: Card) => { if (!netGesleept.current) setDetailKaart(c); };
+
+  function onDragStart(e: DragStartEvent) { netGesleept.current = true; setActiveCard(cards.find(c => c.id === e.active.id) ?? null); }
   function onDragEnd(e: DragEndEvent) {
+    setTimeout(() => { netGesleept.current = false; }, 150);
     setActiveCard(null);
     const cardId = Number(e.active.id);
     const naarFase = e.over?.id as string | undefined;
@@ -229,7 +236,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v5</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v6</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
@@ -257,7 +264,7 @@ export default function SalesFlowTab() {
       ) : (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
           <div className="flex border border-gray-200 rounded-xl bg-white overflow-x-auto">
-            {rules.map(r => <Kolom key={r.phase} rule={r} cards={perFase[r.phase] ?? []} batchId={batch !== 'alle' ? parseInt(batch, 10) : null} onBatchAdvance={onBatchAdvance} />)}
+            {rules.map(r => <Kolom key={r.phase} rule={r} cards={perFase[r.phase] ?? []} batchId={batch !== 'alle' ? parseInt(batch, 10) : null} onBatchAdvance={onBatchAdvance} onKaartOpen={openKaart} />)}
           </div>
           {/* dropAnimation uit: geen 'terugvlieg'-animatie bij loslaten — de kaart
               staat door de optimistische update al direct in de nieuwe kolom. */}
@@ -272,6 +279,7 @@ export default function SalesFlowTab() {
         <Legenda kleur="#c9ccd8" tekst="Wacht / sluimert" />
       </div>
 
+      <KaartDetail card={detailKaart} rule={detailKaart ? ruleByPhase[detailKaart.phase] : undefined} batches={batches ?? []} onClose={() => setDetailKaart(null)} />
       <PersoonToevoegen open={addOpen} batches={batches ?? []} huidigeBatch={batch} onClose={() => setAddOpen(false)} />
       <FasesInstellen open={settingsOpen} rules={rules} counts={countByPhase} onClose={() => setSettingsOpen(false)} />
       <NieuweBatch open={batchOpen} onClose={() => setBatchOpen(false)} onCreated={(b) => setBatch(String(b.id))} />
@@ -310,6 +318,70 @@ export default function SalesFlowTab() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/**
+ * Detailvenster van een kaart (klik op een kaart op het bord).
+ * Zoals in Pipedrive: gegevens + acties, waaronder "Van bord verwijderen"
+ * (correctie — de persoon blijft gewoon in Leads & Prospects staan).
+ */
+function KaartDetail({ card, rule, batches, onClose }: { card: Card | null; rule?: Rule; batches: Batch[]; onClose: () => void }) {
+  const { toast } = useToast();
+  const [bevestig, setBevestig] = useState(false);
+  useEffect(() => { setBevestig(false); }, [card?.id]);
+  const verwijder = useMutation({
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/sales/flow/cards/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/contacts'] });
+      toast({ title: 'Van het bord verwijderd', description: `${card?.contactNaam} staat nog gewoon in Leads & Prospects.` });
+      onClose();
+    },
+    onError: (e: any) => toast({ title: 'Verwijderen mislukt', description: foutTekst(e), variant: 'destructive' }),
+  });
+  if (!card) return null;
+  const st = statusVan(card, rule);
+  const batchNaam = card.batchId ? batches.find(b => b.id === card.batchId)?.name : null;
+  const rij = (label: string, waarde: string | null | undefined) => waarde ? (
+    <div className="flex text-[13px] py-1"><span className="w-32 text-gray-400 shrink-0">{label}</span><span className="text-gray-800">{waarde}</span></div>
+  ) : null;
+  return (
+    <Dialog open={!!card} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{card.contactNaam}</DialogTitle></DialogHeader>
+        <div className="-mt-1">
+          <div className="text-[13px] text-gray-500 mb-2">{card.bedrijfNaam}{card.contactFunctie ? ` · ${card.contactFunctie}` : ''}</div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: st.kleur }} />
+            <span className={`text-[12.5px] ${st.laat ? 'text-red-600 font-semibold' : 'text-gray-600'}`}>{rule?.label} — {st.tekst}</span>
+          </div>
+          <div className="border-t border-gray-100 pt-2">
+            {rij('E-mail', card.contactEmail)}
+            {rij('Categorie', card.categorie)}
+            {rij('Plaats', card.city)}
+            {rij('Eigenaar', card.eigenaarNaam)}
+            {rij('Batch', batchNaam)}
+            {rij('Kanaal', card.channel === 'linkedin' ? 'LinkedIn' : card.channel === 'email' ? 'E-mail' : null)}
+            {rij('Toegevoegd door', card.createdByName)}
+            {card.notReachedCount > 0 ? rij('Niet bereikt', `${card.notReachedCount}×`) : null}
+          </div>
+        </div>
+        <DialogFooter className="flex-row justify-between sm:justify-between">
+          {bevestig ? (
+            <Button variant="destructive" size="sm" disabled={verwijder.isPending} onClick={() => verwijder.mutate(card.id)} className="gap-1.5">
+              <Trash2 className="w-4 h-4" /> {verwijder.isPending ? 'Bezig…' : 'Definitief van bord halen'}
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setBevestig(true)} className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+              <Trash2 className="w-4 h-4" /> Van bord verwijderen
+            </Button>
+          )}
+          <Button variant="outline" onClick={onClose}>Sluiten</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
