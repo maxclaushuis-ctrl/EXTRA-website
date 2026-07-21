@@ -9,7 +9,7 @@
  *   banner op de pagina, met een knop om het opnieuw te proberen.
  * - Een nieuwe batch wordt direct geselecteerd in het batch-filter.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -120,13 +120,13 @@ function Kolom({ rule, cards, batchId, onBatchAdvance }: { rule: Rule; cards: Ca
   );
 }
 
-function FoutBanner({ titel, fout, onRetry }: { titel: string; fout: any; onRetry: () => void }) {
+function FoutBanner({ titel, fout, onRetry, retryLabel }: { titel: string; fout: any; onRetry: () => void; retryLabel?: string }) {
   return (
     <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-[13px]">
       <AlertTriangle className="w-4 h-4 shrink-0" />
       <span className="flex-1"><b>{titel}:</b> {foutTekst(fout)}</span>
       <Button variant="outline" size="sm" onClick={onRetry} className="gap-1.5 border-red-300 text-red-700 hover:bg-red-100 shrink-0">
-        <RefreshCw className="w-3.5 h-3.5" /> Opnieuw proberen
+        <RefreshCw className="w-3.5 h-3.5" /> {retryLabel ?? 'Opnieuw proberen'}
       </Button>
     </div>
   );
@@ -156,11 +156,26 @@ export default function SalesFlowTab() {
   });
   const { data, isLoading } = flowQuery;
 
+  const [moveFout, setMoveFout] = useState<string | null>(null);
   const move = useMutation({
     mutationFn: (v: { id: number; phase: string; channel?: string; snoozeUntil?: string | null }) =>
       apiRequest('PATCH', `/api/sales/flow/cards/${v.id}/move`, { phase: v.phase, channel: v.channel ?? null, snoozeUntil: v.snoozeUntil ?? null }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] }); },
-    onError: (e: any) => toast({ title: 'Verplaatsen mislukt', description: foutTekst(e), variant: 'destructive' }),
+    // Optimistisch: de kaart blijft direct in de nieuwe kolom staan; alleen als
+    // de server weigert, springt hij terug mét een zichtbare foutmelding.
+    onMutate: async (v) => {
+      setMoveFout(null);
+      await queryClient.cancelQueries({ queryKey: ['/api/sales/flow'] });
+      const prev = queryClient.getQueriesData<{ rules: Rule[]; cards: Card[] }>({ queryKey: ['/api/sales/flow'] });
+      queryClient.setQueriesData<{ rules: Rule[]; cards: Card[] }>({ queryKey: ['/api/sales/flow'] }, (old) =>
+        old ? { ...old, cards: old.cards.map(c => c.id === v.id ? { ...c, phase: v.phase } : c) } : old);
+      return { prev };
+    },
+    onError: (e: any, _v, ctx: any) => {
+      ctx?.prev?.forEach(([key, data]: [any, any]) => queryClient.setQueryData(key, data));
+      setMoveFout(foutTekst(e));
+      toast({ title: 'Verplaatsen mislukt', description: foutTekst(e), variant: 'destructive' });
+    },
+    onSettled: () => { queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] }); },
   });
   const batchAdvance = useMutation({
     mutationFn: (v: { batchId: number; fromPhase: string; toPhase: string }) => apiRequest('POST', '/api/sales/flow/batch-advance', v),
@@ -225,6 +240,7 @@ export default function SalesFlowTab() {
 
       {flowQuery.isError && <FoutBanner titel="Bord laden mislukt" fout={flowQuery.error} onRetry={() => flowQuery.refetch()} />}
       {batchesQuery.isError && <FoutBanner titel="Batches laden mislukt" fout={batchesQuery.error} onRetry={() => batchesQuery.refetch()} />}
+      {moveFout && <FoutBanner titel="Verplaatsen mislukt — kaart is teruggezet" fout={{ message: moveFout }} onRetry={() => setMoveFout(null)} retryLabel="Sluiten" />}
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="text-[13px] text-gray-600"><b className="text-gray-900">{acties.vandaag} acties vandaag</b>{acties.laat > 0 && <> · <span className="text-red-600 font-semibold">{acties.laat} te laat</span></>}</span>
@@ -389,9 +405,13 @@ function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: bool
   const { user } = useAuth();
   const ingelogdeNaam = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Onbekend';
   const [q, setQ] = useState('');
-  // Standaard de batch die op het bord als filter actief is.
-  const [batchId, setBatchId] = useState<string>(huidigeBatch !== 'alle' ? huidigeBatch : 'geen');
+  const [batchId, setBatchId] = useState<string>('geen');
   const [owner, setOwner] = useState<string>('max');
+  // Bij elk openen: standaard de batch kiezen die op het bord als filter actief
+  // is, zodat de persoon in het overzicht verschijnt waar je naar kijkt.
+  useEffect(() => {
+    if (open) setBatchId(huidigeBatch !== 'alle' ? huidigeBatch : 'geen');
+  }, [open, huidigeBatch]);
   const zoek = useQuery<ZoekContact[]>({
     queryKey: ['/api/sales/flow/contacts', q],
     queryFn: () => apiRequest(`/api/sales/flow/contacts?search=${encodeURIComponent(q)}`) as Promise<any>,
@@ -404,7 +424,9 @@ function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: bool
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/contacts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales/flow/batches'] });
-      toast({ title: 'Toegevoegd aan het bord', description: resultaten?.find(c => c.id === contactId)?.name });
+      const naam = resultaten?.find(c => c.id === contactId)?.name;
+      const batchNaam = batchId !== 'geen' ? batches.find(b => String(b.id) === batchId)?.name : null;
+      toast({ title: 'Toegevoegd aan het bord', description: batchNaam ? `${naam} — in batch "${batchNaam}"` : naam });
     },
     onError: (e: any) => { console.error('[salesflow] toevoegen fout:', e); },
   });
