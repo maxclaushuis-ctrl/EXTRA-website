@@ -228,7 +228,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects.</p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v3</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
