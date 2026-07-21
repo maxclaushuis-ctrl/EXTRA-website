@@ -10320,13 +10320,23 @@ ${vacancies.map(v => `  <url>
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
       const b = parsed.data;
+      // Ophalen → samenvoegen in JS → simpele UPDATE. Geen CASE WHEN met
+      // boolean-parameters: driver-onafhankelijk en glashelder.
+      const huidig = ((await db.execute(sql`SELECT * FROM salesflow_phase_rules WHERE phase = ${phase} LIMIT 1`)).rows ?? [])[0] as any;
+      const nieuw = {
+        label: 'label' in b ? b.label : huidig.label,
+        triggerDays: 'triggerDays' in b ? (b.triggerDays ?? null) : huidig.trigger_days,
+        triggerAction: 'triggerAction' in b ? (b.triggerAction ?? null) : huidig.trigger_action,
+        useBusinessDays: 'useBusinessDays' in b ? b.useBusinessDays : huidig.use_business_days,
+        asksChannel: 'asksChannel' in b ? b.asksChannel : huidig.asks_channel,
+      };
       const r = await db.execute(sql`
         UPDATE salesflow_phase_rules SET
-          label = CASE WHEN ${'label' in b} THEN ${b.label ?? null} ELSE label END,
-          trigger_days = CASE WHEN ${'triggerDays' in b} THEN ${b.triggerDays ?? null}::int ELSE trigger_days END,
-          trigger_action = CASE WHEN ${'triggerAction' in b} THEN ${b.triggerAction ?? null} ELSE trigger_action END,
-          use_business_days = CASE WHEN ${'useBusinessDays' in b} THEN ${b.useBusinessDays}::bool ELSE use_business_days END,
-          asks_channel = CASE WHEN ${'asksChannel' in b} THEN ${b.asksChannel}::bool ELSE asks_channel END,
+          label = ${nieuw.label},
+          trigger_days = ${nieuw.triggerDays}::int,
+          trigger_action = ${nieuw.triggerAction},
+          use_business_days = ${nieuw.useBusinessDays}::bool,
+          asks_channel = ${nieuw.asksChannel}::bool,
           updated_at = now()
         WHERE phase = ${phase} RETURNING *`);
       return res.json((r.rows ?? r)[0]);

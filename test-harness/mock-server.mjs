@@ -109,4 +109,32 @@ app.patch('/api/sales/flow/cards/:id/move', async (req, res) => {
   } catch (e) { console.error('MOVE FOUT:', e.message); res.status(500).json({ message: e.message }); }
 });
 
+// Fase-instellingen — zelfde semantiek als routes.ts
+app.patch('/api/sales/flow/rules/:phase', async (req, res) => {
+  try {
+    const phase = req.params.phase;
+    const b = req.body;
+    console.log('[rules-patch]', phase, JSON.stringify(b));
+    const bestaat = (await q(`SELECT 1 FROM salesflow_phase_rules WHERE phase=$1`, [phase])).rows.length > 0;
+    if (!bestaat) return res.status(404).json({ message: 'Onbekende fase' });
+    const r = await q(`
+      UPDATE salesflow_phase_rules SET
+        label = CASE WHEN $1 THEN $2 ELSE label END,
+        trigger_days = CASE WHEN $3 THEN $4::int ELSE trigger_days END,
+        trigger_action = CASE WHEN $5 THEN $6 ELSE trigger_action END,
+        updated_at = now()
+      WHERE phase = $7 RETURNING *`,
+      ['label' in b, b.label ?? null, 'triggerDays' in b, b.triggerDays ?? null, 'triggerAction' in b, b.triggerAction ?? null, phase]);
+    res.json(r.rows[0]);
+  } catch (e) { console.error('RULES-PATCH FOUT:', e.message); res.status(500).json({ message: e.message }); }
+});
+
+app.post('/api/sales/flow/rules/reorder', async (req, res) => {
+  try {
+    let pos = 1;
+    for (const phase of req.body.order) { await q(`UPDATE salesflow_phase_rules SET position=$1 WHERE phase=$2`, [pos++, phase]); }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 app.listen(5099, () => console.log('mock-backend op :5099'));

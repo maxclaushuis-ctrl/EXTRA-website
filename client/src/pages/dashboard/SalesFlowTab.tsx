@@ -229,7 +229,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v4</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v5</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
@@ -488,28 +488,71 @@ function PersoonToevoegen({ open, batches, huidigeBatch, onClose }: { open: bool
   );
 }
 
+interface FaseBewerking { label: string; triggerDays: string; triggerAction: string }
 function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules: Rule[]; counts: Record<string, number>; onClose: () => void }) {
   const { toast } = useToast();
   const inval = () => queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
   const [bevestigVerwijder, setBevestigVerwijder] = useState<string | null>(null);
+  const [foutmelding, setFoutmelding] = useState<string | null>(null);
+  const [bezig, setBezig] = useState(false);
 
-  const patch = useMutation({
-    mutationFn: (v: { phase: string; body: any }) => apiRequest('PATCH', `/api/sales/flow/rules/${v.phase}`, v.body),
-    onSuccess: inval, onError: (e: any) => toast({ title: 'Opslaan mislukt', description: foutTekst(e), variant: 'destructive' }),
-  });
+  // Lokale bewerkstaat: wijzigingen worden pas doorgevoerd bij "Opslaan".
+  const [edits, setEdits] = useState<Record<string, FaseBewerking>>({});
+  const vanRule = (r: Rule): FaseBewerking => ({ label: r.label, triggerDays: r.triggerDays == null ? '' : String(r.triggerDays), triggerAction: r.triggerAction ?? 'none' });
+  useEffect(() => {
+    if (open) { setEdits(Object.fromEntries(rules.map(r => [r.phase, vanRule(r)]))); setFoutmelding(null); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+  const val = (r: Rule): FaseBewerking => edits[r.phase] ?? vanRule(r);
+  const zet = (phase: string, r: Rule, patch: Partial<FaseBewerking>) =>
+    setEdits(prev => ({ ...prev, [phase]: { ...(prev[phase] ?? vanRule(r)), ...patch } }));
+
   const reorder = useMutation({
     mutationFn: (order: string[]) => apiRequest('POST', '/api/sales/flow/rules/reorder', { order }),
-    onSuccess: inval, onError: (e: any) => toast({ title: 'Herordenen mislukt', description: foutTekst(e), variant: 'destructive' }),
+    onSuccess: inval, onError: (e: any) => setFoutmelding(`Herordenen mislukt: ${foutTekst(e)}`),
   });
   const voegToe = useMutation({
     mutationFn: (label: string) => apiRequest('POST', '/api/sales/flow/rules', { label, triggerDays: 3, triggerAction: 'opvolgen' }),
-    onSuccess: () => { inval(); toast({ title: 'Kolom toegevoegd' }); }, onError: (e: any) => toast({ title: 'Toevoegen mislukt', description: foutTekst(e), variant: 'destructive' }),
+    onSuccess: () => { inval(); toast({ title: 'Kolom toegevoegd' }); }, onError: (e: any) => setFoutmelding(`Kolom toevoegen mislukt: ${foutTekst(e)}`),
   });
   const verwijder = useMutation({
     mutationFn: (phase: string) => apiRequest('DELETE', `/api/sales/flow/rules/${phase}`),
     onSuccess: () => { inval(); toast({ title: 'Kolom verwijderd' }); setBevestigVerwijder(null); },
-    onError: (e: any) => { toast({ title: 'Verwijderen mislukt', description: foutTekst(e), variant: 'destructive' }); setBevestigVerwijder(null); },
+    onError: (e: any) => { setFoutmelding(`Verwijderen mislukt: ${foutTekst(e)}`); setBevestigVerwijder(null); },
   });
+
+  // Alle gewijzigde rijen in één keer opslaan.
+  async function opslaan() {
+    setFoutmelding(null);
+    setBezig(true);
+    try {
+      let aantal = 0;
+      for (const r of rules) {
+        const e = edits[r.phase];
+        if (!e) continue;
+        const body: any = {};
+        const label = e.label.trim();
+        if (label && label !== r.label) body.label = label;
+        if (!r.isEndState) {
+          const td = e.triggerDays.trim() === '' ? null : parseInt(e.triggerDays, 10);
+          if (!Number.isNaN(td as any) && td !== r.triggerDays) body.triggerDays = td;
+          const ta = e.triggerAction === 'none' ? null : e.triggerAction;
+          if (ta !== (r.triggerAction ?? null)) body.triggerAction = ta;
+        }
+        if (Object.keys(body).length > 0) {
+          await apiRequest('PATCH', `/api/sales/flow/rules/${r.phase}`, body);
+          aantal++;
+        }
+      }
+      inval();
+      toast({ title: aantal > 0 ? `${aantal} kolom(men) opgeslagen` : 'Geen wijzigingen' });
+      onClose();
+    } catch (e: any) {
+      setFoutmelding(`Opslaan mislukt: ${foutTekst(e)}`);
+    } finally {
+      setBezig(false);
+    }
+  }
 
   const [nieuw, setNieuw] = useState('');
   const move = (i: number, dir: -1 | 1) => {
@@ -524,7 +567,8 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader><DialogTitle>Fases instellen</DialogTitle></DialogHeader>
-        <p className="text-[12.5px] text-gray-500 -mt-1">Pas kolomnaam, actie en het aantal werkdagen voor de reminder aan. Voeg kolommen toe, verplaats ze of verwijder lege kolommen.</p>
+        <p className="text-[12.5px] text-gray-500 -mt-1">Pas kolomnaam, actie en het aantal werkdagen aan en klik op <b>Opslaan</b>. Kolommen toevoegen, verplaatsen of verwijderen gebeurt direct.</p>
+        {foutmelding && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{foutmelding}</div>}
         <div className="space-y-1.5 max-h-[55vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-[auto,1fr,130px,90px,auto] gap-2 px-1 text-[10.5px] font-semibold text-gray-400 uppercase tracking-wide items-center">
             <span></span><span>Kolomnaam</span><span>Actie</span><span>Werkdagen</span><span></span>
@@ -535,18 +579,18 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
                 <button onClick={() => move(i, -1)} disabled={i === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20"><ArrowUp className="w-3.5 h-3.5" /></button>
                 <button onClick={() => move(i, 1)} disabled={i === rules.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20"><ArrowDown className="w-3.5 h-3.5" /></button>
               </div>
-              <Input defaultValue={r.label} onBlur={e => { const v = e.target.value.trim(); if (v && v !== r.label) patch.mutate({ phase: r.phase, body: { label: v } }); }} className="h-9 text-sm" />
+              <Input value={val(r).label} onChange={e => zet(r.phase, r, { label: e.target.value })} className="h-9 text-sm" />
               {r.isEndState ? (
                 <span className="text-[12px] text-gray-400 pl-1">{r.behavior === 'deal' ? 'Deal' : 'Eindfase'}</span>
               ) : (
-                <Select value={r.triggerAction ?? 'none'} onValueChange={v => patch.mutate({ phase: r.phase, body: { triggerAction: v === 'none' ? null : v } })}>
+                <Select value={val(r).triggerAction} onValueChange={v => zet(r.phase, r, { triggerAction: v })}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{ACTIE_OPTIES.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
                 </Select>
               )}
               {r.isEndState ? <span className="text-[12px] text-gray-300 pl-2">—</span> : (
-                <Input type="number" min={0} max={90} defaultValue={r.triggerDays ?? ''} placeholder="geen"
-                  onBlur={e => { const raw = e.target.value.trim(); const td = raw === '' ? null : parseInt(raw, 10); if (td !== r.triggerDays) patch.mutate({ phase: r.phase, body: { triggerDays: td } }); }} className="h-9 text-sm" />
+                <Input type="number" min={0} max={90} value={val(r).triggerDays} placeholder="geen"
+                  onChange={e => zet(r.phase, r, { triggerDays: e.target.value })} className="h-9 text-sm" />
               )}
               {bevestigVerwijder === r.phase ? (
                 <button onClick={() => verwijder.mutate(r.phase)} className="text-[11px] font-semibold text-red-600 hover:text-red-800 whitespace-nowrap">Zeker?</button>
@@ -563,7 +607,10 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
             onKeyDown={e => { if (e.key === 'Enter' && nieuw.trim() && !voegToe.isPending) { voegToe.mutate(nieuw.trim()); setNieuw(''); } }} />
           <Button variant="outline" size="sm" disabled={!nieuw.trim() || voegToe.isPending} onClick={() => { voegToe.mutate(nieuw.trim()); setNieuw(''); }} className="gap-1.5 shrink-0"><Plus className="w-4 h-4" /> Kolom</Button>
         </div>
-        <DialogFooter><Button variant="outline" onClick={onClose}>Sluiten</Button></DialogFooter>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={bezig}>Annuleren</Button>
+          <Button onClick={opslaan} disabled={bezig} className="bg-purple-600 hover:bg-purple-700">{bezig ? 'Bezig…' : 'Opslaan'}</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
