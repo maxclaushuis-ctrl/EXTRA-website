@@ -11,6 +11,7 @@ import { sendCvReminderEmail } from "./mail";
 import { registerRedirects } from "./redirects";
 import { registerLlmsTxt } from "./llms";
 import { scheduleSalesflowDailyJob, ensureSalesflowSchema } from "./salesflow";
+import { ensureAuthResetSchema } from "./authReset";
 import path from "path";
 import fs from "fs";
 
@@ -188,12 +189,22 @@ app.use((req, res, next) => {
 // Admin-accounts worden volledig in de database beheerd (geen hardcoded lijst).
 async function ensureAdminAccounts() {
   try {
-    const users = await storage.getUsers();
-    const activeAdmins = users.filter(u => u.role === 'admin' && u.status === 'active');
+    const { db } = await import('./db');
+    const { sql } = await import('drizzle-orm');
+    const r: any = await db.execute(sql`SELECT email FROM users WHERE role = 'admin' AND status = 'active'`);
+    const activeAdmins: any[] = r.rows ?? r ?? [];
     if (activeAdmins.length === 0) {
       console.warn('[admin-guard] WAARSCHUWING: geen actieve admin-accounts in de database. Maak er minstens één aan.');
-    } else {
-      log(`[admin-guard] ${activeAdmins.length} actieve admin-account(s) gevonden in database`);
+      return;
+    }
+    log(`[admin-guard] ${activeAdmins.length} actieve admin-account(s) gevonden in database`);
+    // Gedeelde admin uitfaseren: automatisch deactiveren zodra er minstens één
+    // ander actief admin-account bestaat (lockout-bescherming). De rij blijft
+    // bestaan voor de historie; verwijderen kan daarna via Admin-accounts.
+    const anderen = activeAdmins.filter(a => String(a.email).toLowerCase() !== 'admin@extra.nl');
+    if (anderen.length > 0) {
+      const upd: any = await db.execute(sql`UPDATE users SET status = 'inactive' WHERE lower(email) = 'admin@extra.nl' AND status = 'active' RETURNING id`);
+      if ((upd.rows ?? upd ?? []).length > 0) log(`[admin-guard] gedeeld account admin@extra.nl gedeactiveerd (${anderen.length} persoonlijke admin-accounts actief)`);
     }
   } catch (err) {
     console.error('[admin-guard] Fout bij controleren admin-accounts:', err);
@@ -314,6 +325,8 @@ async function ensureAdminAccounts() {
   ruimOudeServerprocessenOp();
   // Salesflow-schema garanderen (idempotent) — geen handmatige migraties nodig.
   await ensureSalesflowSchema().catch(err => console.error("[salesflow] schema-check mislukt (niet-kritiek):", err?.message || err));
+  // Tabel voor eenmalige wachtwoord-instel-tokens (idempotent).
+  await ensureAuthResetSchema().catch(err => console.error("[auth] schema-check mislukt (niet-kritiek):", err?.message || err));
 
   let listenPogingen = 0;
   server.on("error", (err: any) => {

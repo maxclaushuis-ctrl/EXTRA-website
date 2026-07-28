@@ -9,6 +9,7 @@ import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
 import { moveCardToPhase, markNotReached } from "./salesflow";
+import { verstuurWachtwoordInstelLink, stelWachtwoordIn } from "./authReset";
 import { createHash, randomUUID } from "crypto";
 import { 
   insertApplicantSchema, 
@@ -570,11 +571,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email en wachtwoord zijn vereist" });
       }
 
-      // Voor reguliere users
-      const user = await storage.getUserByEmail(email);
-      
+      // Het oude gedeelde admin-account is uitgeschakeld: iedere admin logt in
+      // met een persoonlijk account (beheerd via Admin-accounts).
+      if (String(email).toLowerCase() === 'admin@extra.nl') {
+        return res.status(401).json({ message: "Het gedeelde admin-account is uitgeschakeld. Log in met je persoonlijke account, of gebruik 'Wachtwoord vergeten?' om er één in te stellen." });
+      }
+
+      // Database is leidend (persoonlijke admin-accounts); MemStorage alleen
+      // nog als fallback voor de interne test-accounts van de medewerker-app.
+      const [dbUser] = await db.select().from(users).where(eq(users.email, email));
+      const user = dbUser ?? await storage.getUserByEmail(email);
+
       if (!user) {
         return res.status(401).json({ message: "Ongeldige inloggegevens" });
+      }
+      if (user.status && user.status !== 'active') {
+        return res.status(401).json({ message: "Dit account is gedeactiveerd" });
       }
       
       // Wachtwoordcheck: alle gebruikers (inclusief admins) worden via bcrypt geverifieerd.
@@ -591,7 +603,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isValidPassword = sha256Hash === user.password;
         if (isValidPassword) {
           const newHash = await bcrypt.hash(password, 12);
-          await storage.updateUser(user.id, { password: newHash });
+          if (dbUser) {
+            await db.update(users).set({ password: newHash }).where(eq(users.id, user.id));
+          } else {
+            await storage.updateUser(user.id, { password: newHash });
+          }
         }
       }
       
@@ -633,6 +649,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Wachtwoord-instel-flow (veilig: eenmalige 24-uurs link per mail, geen
+  // wachtwoorden in e-mail). Zie server/authReset.ts.
+  app.post("/api/auth/wachtwoord-vergeten", loginLimiter, async (req: Request, res: Response) => {
+    try {
+      const email = String(req.body?.email ?? "").trim();
+      if (!email || !email.includes("@")) return res.status(400).json({ message: "Vul een geldig e-mailadres in" });
+      await verstuurWachtwoordInstelLink(email);
+      // Altijd hetzelfde antwoord — verklapt niet welke adressen bestaan.
+      return res.json({ message: "Als dit adres bij een admin-account hoort, is er zojuist een instel-link gemaild (24 uur geldig)." });
+    } catch (error) {
+      console.error("[auth] wachtwoord-vergeten fout:", error);
+      return res.status(500).json({ message: "Er ging iets mis — probeer het later opnieuw" });
+    }
+  });
+
+  app.post("/api/auth/wachtwoord-instellen", loginLimiter, async (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body ?? {};
+      const resultaat = await stelWachtwoordIn(String(token ?? ""), String(password ?? ""));
+      return res.status(resultaat.ok ? 200 : 400).json({ message: resultaat.message });
+    } catch (error) {
+      console.error("[auth] wachtwoord-instellen fout:", error);
+      return res.status(500).json({ message: "Er ging iets mis — probeer het later opnieuw" });
+    }
+  });
+
   app.post("/api/auth/logout", (req: Request, res: Response) => {
     console.log("Logout request ontvangen");
     
@@ -898,9 +940,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Gebruiker niet gevonden" });
       }
 
-      // Blokkeer verwijdering van vaste admin-accounts
+      // Blokkeer verwijdering van vaste admin-accounts.
+      // (admin@extra.nl staat hier bewust NIET meer in: het gedeelde account is
+      // uitgeschakeld en mag door een admin verwijderd worden.)
       const PROTECTED_ADMIN_EMAILS = [
-        'admin@extra.nl',
         'charlotte@doehetextra.nl',
         'eveline@doehetextra.nl',
         'lea@doehetextra.nl',

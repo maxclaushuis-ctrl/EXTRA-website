@@ -437,10 +437,26 @@ export default function DashboardMockup() {
   const [vacancyDeleteId, setVacancyDeleteId] = useState<number | null>(null);
   const [vacancyFormTab, setVacancyFormTab] = useState<'basic' | 'content' | 'seo' | 'publish'>('basic');
 
-  const [loginEmail, setLoginEmail] = useState('admin@extra.nl');
-  const [loginPassword, setLoginPassword] = useState('admin123');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [resetBericht, setResetBericht] = useState('');
+
+  const vraagWachtwoordLink = async () => {
+    setLoginError('');
+    setResetBericht('');
+    if (!loginEmail || !loginEmail.includes('@')) {
+      setLoginError('Vul eerst je e-mailadres in en klik dan op "Wachtwoord vergeten?"');
+      return;
+    }
+    try {
+      const r = await apiRequest('POST', '/api/auth/wachtwoord-vergeten', { email: loginEmail }) as any;
+      setResetBericht(r?.message || 'Instel-link verstuurd — check je inbox.');
+    } catch (e: any) {
+      setLoginError(e?.data?.message || e?.message || 'Aanvragen mislukt');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -853,7 +869,7 @@ export default function DashboardMockup() {
                 type="email"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@extra.nl"
+                placeholder="jouw-naam@doehetextra.nl"
                 required
               />
             </div>
@@ -870,6 +886,9 @@ export default function DashboardMockup() {
             {loginError && (
               <p className="text-red-500 text-sm">{loginError}</p>
             )}
+            {resetBericht && (
+              <p className="text-green-600 text-sm">{resetBericht}</p>
+            )}
             <Button
               type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700"
@@ -877,6 +896,9 @@ export default function DashboardMockup() {
             >
               {isLoggingIn ? 'Bezig met inloggen...' : 'Inloggen'}
             </Button>
+            <button type="button" onClick={vraagWachtwoordLink} className="w-full text-center text-sm text-gray-500 hover:text-purple-700 underline-offset-2 hover:underline">
+              Wachtwoord vergeten?
+            </button>
           </form>
         </div>
       </div>

@@ -7,6 +7,7 @@ const Home = lazy(() => import("@/pages/Home"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const SollicitatieFormulier = lazy(() => import("@/pages/SollicitatieFormulier"));
 const DashboardMockup = lazy(() => import("@/pages/DashboardMockup"));
+const WachtwoordInstellen = lazy(() => import("@/pages/WachtwoordInstellen"));
 const Brochure = lazy(() => import("@/pages/Brochure"));
 const BrochureEN = lazy(() => import("@/pages/BrochureEN"));
 const BrochureEvents = lazy(() => import("@/pages/BrochureEvents"));
@@ -333,6 +334,7 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/privacybeleid" component={Privacybeleid} />
           <Route path="/dashboard" component={DashboardMockup} />
+          <Route path="/wachtwoord-instellen" component={WachtwoordInstellen} />
 
           {/* Beschermde routes */}
           <Route path="/profile">{() => <ProtectedRoute component={UserProfile} />}</Route>
