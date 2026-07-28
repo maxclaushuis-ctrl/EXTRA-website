@@ -13095,8 +13095,24 @@ ${contactInfo}`;
   });
 
   // ── GA4 Analytics ──────────────────────────────────────────────────────────
-  app.get("/api/admin/ga4/status", adminMiddleware, (_req, res) => {
-    res.json({ configured: isGa4Configured() });
+  // GA4-status met échte testmeting: 'configured' zegt alleen dat de
+  // instellingen zijn ingevuld; 'werkt' bewijst dat Google daadwerkelijk
+  // data teruggeeft. Bij een fout sturen we de exacte melding mee zodat het
+  // Koppelingen-tabblad kan tonen wat er mis is. Resultaat 5 min gecachet.
+  let ga4StatusCache: { t: number; body: any } | null = null;
+  app.get("/api/admin/ga4/status", adminMiddleware, async (_req, res) => {
+    if (!isGa4Configured()) return res.json({ configured: false, werkt: false });
+    if (ga4StatusCache && Date.now() - ga4StatusCache.t < 5 * 60_000) return res.json(ga4StatusCache.body);
+    let body: any;
+    try {
+      const data: any = await fetchGa4Overview(7);
+      const heeftData = Number(data?.sessions?.value ?? 0) > 0;
+      body = { configured: true, werkt: true, heeftData };
+    } catch (e: any) {
+      body = { configured: true, werkt: false, fout: e?.message || "Onbekende fout" };
+    }
+    ga4StatusCache = { t: Date.now(), body };
+    res.json(body);
   });
 
   app.get("/api/admin/ga4/overview", adminMiddleware, async (req, res) => {

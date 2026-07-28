@@ -128,7 +128,7 @@ function Ga4KpiCard({ label, value, prev, color, isLoading, invertGoed }: {
  * GA4 kent drie toestanden: niet gekoppeld · gekoppeld maar wacht op eerste
  * data · actief. Alle uitleg en setup-stappen staan op het tabblad Koppelingen.
  */
-export type Ga4Toestand = 'niet_gekoppeld' | 'wacht_op_data' | 'actief';
+export type Ga4Toestand = 'niet_gekoppeld' | 'fout' | 'wacht_op_data' | 'actief';
 
 function StatusChip({ label, toestand }: { label: string; toestand: 'actief' | 'wachten' | 'uit' }) {
   const stijl = toestand === 'actief' ? 'bg-green-50 text-green-700 border-green-200'
@@ -145,8 +145,9 @@ function StatusChip({ label, toestand }: { label: string; toestand: 'actief' | '
 function StatusStrip({ ga4, onNaarKoppelingen }: { ga4: Ga4Toestand; onNaarKoppelingen: () => void }) {
   const ga4Label = ga4 === 'actief' ? 'Google Analytics actief'
     : ga4 === 'wacht_op_data' ? 'GA4 gekoppeld — wacht op eerste data'
+    : ga4 === 'fout' ? 'GA4-koppeling werkt niet — zie Koppelingen'
     : 'GA4 niet gekoppeld';
-  const ga4Toestand = ga4 === 'actief' ? 'actief' as const : ga4 === 'wacht_op_data' ? 'wachten' as const : 'uit' as const;
+  const ga4Toestand = ga4 === 'actief' ? 'actief' as const : (ga4 === 'wacht_op_data' || ga4 === 'fout') ? 'wachten' as const : 'uit' as const;
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <StatusChip label="Database actief" toestand="actief" />
@@ -458,12 +459,12 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
 // Dé ene plek voor koppelingstatus en setup — alle andere tabbladen tonen
 // alleen data. Eén regel per tool; geen herhaalde uitlegblokken.
 
-function TabKoppelingen({ ga4 }: { ga4: Ga4Toestand }) {
+function TabKoppelingen({ ga4, ga4Fout }: { ga4: Ga4Toestand; ga4Fout?: string }) {
   const tools = [
     { naam: 'Interne database', info: 'Aanmeldingen, CV-uploads, statussen, blogs, personeelsaanvragen', status: 'actief' as const, detail: 'Actief' },
     { naam: 'Google Analytics 4', info: 'Bezoekers, paginaprestaties, verkeersbronnen, apparaten',
-      status: ga4 === 'actief' ? 'actief' as const : ga4 === 'wacht_op_data' ? 'wachten' as const : 'uit' as const,
-      detail: ga4 === 'actief' ? 'Actief' : ga4 === 'wacht_op_data' ? 'Gekoppeld — wacht op eerste data' : 'Niet gekoppeld' },
+      status: ga4 === 'actief' ? 'actief' as const : (ga4 === 'wacht_op_data' || ga4 === 'fout') ? 'wachten' as const : 'uit' as const,
+      detail: ga4 === 'actief' ? 'Actief' : ga4 === 'wacht_op_data' ? 'Gekoppeld — wacht op eerste data' : ga4 === 'fout' ? 'Koppeling geeft een fout' : 'Niet gekoppeld' },
     { naam: 'Google Search Console', info: 'Zoekwoordposities, impressies en klikken vanuit Google', status: 'uit' as const, detail: 'Niet gekoppeld' },
     { naam: 'Hotjar / MS Clarity', info: 'Heatmaps en sessie-opnames', status: 'uit' as const, detail: 'Niet gekoppeld' },
     { naam: 'Meta Pixel', info: 'Social campagne-attributie en retargeting', status: 'uit' as const, detail: 'Niet gekoppeld' },
@@ -492,12 +493,19 @@ function TabKoppelingen({ ga4 }: { ga4: Ga4Toestand }) {
         </Card>
       </section>
 
+      {ga4 === 'fout' && ga4Fout && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-red-700 mb-0.5">Foutmelding van Google</p>
+          <p className="text-xs text-red-600 font-mono break-all">{ga4Fout}</p>
+        </div>
+      )}
+
       {ga4 !== 'actief' && (
         <section>
-          <SectionTitle>{ga4 === 'wacht_op_data' ? 'GA4 gekoppeld — nog geen data?' : 'Google Analytics 4 koppelen'}</SectionTitle>
+          <SectionTitle>{ga4 === 'wacht_op_data' ? 'GA4 gekoppeld — nog geen data?' : ga4 === 'fout' ? 'GA4-koppeling herstellen' : 'Google Analytics 4 koppelen'}</SectionTitle>
           <Card className="border-0 shadow-sm">
             <CardContent className="p-5 space-y-4">
-              {(ga4 === 'wacht_op_data' ? [
+              {(ga4 === 'wacht_op_data' || ga4 === 'fout' ? [
                 { step: '1', title: 'Controleer de GA_PROPERTY_ID', text: 'Het property-nummer in de omgevingsvariabelen moet exact overeenkomen met de GA4-property van doehetextra.nl' },
                 { step: '2', title: 'Controleer het service-account', text: 'Het service-account moet als Viewer zijn toegevoegd in Google Analytics → Beheer → Propertytoegang' },
                 { step: '3', title: 'Wacht op de eerste meting', text: 'Na een correcte koppeling verschijnt het tabblad "Google Analytics" hier automatisch zodra de eerste data binnen is (kan tot 24 uur duren)' },
@@ -807,7 +815,7 @@ export default function WebsiteStatsTab() {
     queryKey: ['/api/admin/staffing-requests'],
   });
 
-  const { data: ga4Status } = useQuery<{ configured: boolean; error?: string }>({
+  const { data: ga4Status } = useQuery<{ configured: boolean; werkt?: boolean; heeftData?: boolean; fout?: string }>({
     queryKey: ['/api/admin/ga4/status'],
     retry: false,
   });
@@ -848,8 +856,11 @@ export default function WebsiteStatsTab() {
   // Eén waarheid over GA4: gekoppeld én data → actief; gekoppeld zonder data →
   // wachten; anders niet gekoppeld. Het GA4-tabblad bestaat alleen mét data —
   // placeholders krijgen geen eigen tabblad.
-  const heeftGa4Data = !!(ga4Overview && ga4Overview.sessions);
-  const ga4: Ga4Toestand = heeftGa4Data ? 'actief' : ga4Configured ? 'wacht_op_data' : 'niet_gekoppeld';
+  const heeftGa4Data = !!(ga4Overview && ga4Overview.sessions) || !!ga4Status?.heeftData;
+  const ga4: Ga4Toestand = heeftGa4Data ? 'actief'
+    : !ga4Configured ? 'niet_gekoppeld'
+    : ga4Status?.werkt === false ? 'fout'
+    : 'wacht_op_data';
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'overzicht',  label: 'Overzicht' },
@@ -896,7 +907,7 @@ export default function WebsiteStatsTab() {
         {zichtbareTab === 'conversies'       && <TabConversies candidates={candidates} isLoading={isLoading} />}
         {zichtbareTab === 'google-analytics' && <TabGa4 overview={ga4Overview} trend={ga4Trend ?? []} sources={ga4Sources ?? []} pages={ga4Pages ?? []} devices={ga4Devices ?? []} isLoading={ga4Loading} />}
         {zichtbareTab === 'seo'              && <TabSeo blogs={blogs} isLoading={isLoading} />}
-        {zichtbareTab === 'koppelingen'      && <TabKoppelingen ga4={ga4} />}
+        {zichtbareTab === 'koppelingen'      && <TabKoppelingen ga4={ga4} ga4Fout={ga4Status?.fout} />}
       </div>
     </div>
   );
