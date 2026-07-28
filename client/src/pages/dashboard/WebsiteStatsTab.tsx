@@ -123,25 +123,38 @@ function Ga4KpiCard({ label, value, prev, color, isLoading, invertGoed }: {
   );
 }
 
-function Ga4Banner({ configured = false }: { configured?: boolean }) {
-  if (configured) {
-    return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
-        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-sm font-semibold text-green-800">Google Analytics 4 is gekoppeld</p>
-          <p className="text-xs text-green-700 mt-0.5">Live websitedata wordt rechtstreeks uit GA4 uitgelezen. Bekijk het tabblad "Google Analytics" voor volledig bezoekersoverzicht.</p>
-        </div>
-      </div>
-    );
-  }
+/**
+ * Eén waarheid over de koppelingen, in één compacte regel.
+ * GA4 kent drie toestanden: niet gekoppeld · gekoppeld maar wacht op eerste
+ * data · actief. Alle uitleg en setup-stappen staan op het tabblad Koppelingen.
+ */
+export type Ga4Toestand = 'niet_gekoppeld' | 'wacht_op_data' | 'actief';
+
+function StatusChip({ label, toestand }: { label: string; toestand: 'actief' | 'wachten' | 'uit' }) {
+  const stijl = toestand === 'actief' ? 'bg-green-50 text-green-700 border-green-200'
+    : toestand === 'wachten' ? 'bg-amber-50 text-amber-700 border-amber-200'
+    : 'bg-gray-50 text-gray-500 border-gray-200';
+  const stip = toestand === 'actief' ? 'bg-green-500' : toestand === 'wachten' ? 'bg-amber-400' : 'bg-gray-300';
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-      <Info className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-      <div>
-        <p className="text-sm font-semibold text-amber-800">Websiteverkeer vereist Google Analytics 4</p>
-        <p className="text-xs text-amber-700 mt-0.5">Paginabezoekers, bounce rates, verkeersbronnen en apparaatdata zijn alleen beschikbaar na koppeling met GA4. De cijfers hieronder komen rechtstreeks uit de EXTRA-database.</p>
-      </div>
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${stijl}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${stip}`} />{label}
+    </span>
+  );
+}
+
+function StatusStrip({ ga4, onNaarKoppelingen }: { ga4: Ga4Toestand; onNaarKoppelingen: () => void }) {
+  const ga4Label = ga4 === 'actief' ? 'Google Analytics actief'
+    : ga4 === 'wacht_op_data' ? 'GA4 gekoppeld — wacht op eerste data'
+    : 'GA4 niet gekoppeld';
+  const ga4Toestand = ga4 === 'actief' ? 'actief' as const : ga4 === 'wacht_op_data' ? 'wachten' as const : 'uit' as const;
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <StatusChip label="Database actief" toestand="actief" />
+      <StatusChip label={ga4Label} toestand={ga4Toestand} />
+      <StatusChip label="Search Console niet gekoppeld" toestand="uit" />
+      <button onClick={onNaarKoppelingen} className="text-xs text-purple-600 hover:text-purple-800 hover:underline ml-1">
+        Koppelingen beheren →
+      </button>
     </div>
   );
 }
@@ -182,8 +195,8 @@ function groupByMonth(candidates: Candidate[]) {
 
 // ─── Tab 1: Overzicht ──────────────────────────────────────────────────────────
 
-function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4Configured }: {
-  candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean; ga4Configured: boolean;
+function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, onNaarKoppelingen }: {
+  candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean; ga4: Ga4Toestand; onNaarKoppelingen: () => void;
 }) {
   const now = new Date();
   const last7 = candidates.filter(c => (now.getTime() - new Date(c.createdAt).getTime()) < 7 * 86400000).length;
@@ -208,7 +221,7 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4Confi
 
   return (
     <div className="space-y-8">
-      <Ga4Banner configured={ga4Configured} />
+      <StatusStrip ga4={ga4} onNaarKoppelingen={onNaarKoppelingen} />
 
       {/* KPIs */}
       <section>
@@ -351,20 +364,9 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
 
   return (
     <div className="space-y-8">
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-        <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-sm font-semibold text-blue-800">Deels beschikbare data</p>
-          <p className="text-xs text-blue-700 mt-0.5">
-            Hoeveel mensen de pagina bezochten en het formulier startten is alleen meetbaar via Google Analytics 4.
-            Hieronder zien we de stappen die wel in de database staan: aanmeldingen in het systeem, CV uploads en aannames.
-          </p>
-        </div>
-      </div>
-
       {/* Funnel */}
       <section>
-        <SectionTitle>Aanmeldfunnel werkzoekenden — database data</SectionTitle>
+        <SectionTitle>Aanmeldfunnel werkzoekenden</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2 pt-5 px-5">
@@ -431,7 +433,7 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
       <section>
         <SectionTitle>Inzichten</SectionTitle>
         {isLoading ? <Skeleton className="h-24 w-full" /> : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <InsightCard
               type={cvPct < 30 ? 'warning' : 'success'}
               title={`${cvPct}% van aanmeldingen heeft een CV geüpload`}
@@ -445,11 +447,6 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
               title={`${aangenomenPct}% conversieratio aanmelding → aangenomen`}
               text={`Van de ${total} aanmeldingen zijn er ${aangenomen} aangenomen. ${aangenomen === 0 ? 'Begin met het beoordelen van kandidaten via de Kandidaten tab.' : 'De selectie loopt.'}`}
             />
-            <InsightCard
-              type="info"
-              title="Paginabezoek en formulierstart niet meetbaar"
-              text="Om te zien hoeveel mensen de aanmeldpagina bezoeken maar afhaken, is Google Analytics 4 nodig. Koppel GA4 om de volledige funnel te zien."
-            />
           </div>
         )}
       </section>
@@ -457,111 +454,77 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
   );
 }
 
-// ─── Tab 3: Pagina prestaties ─────────────────────────────────────────────────
+// ─── Tab: Koppelingen ─────────────────────────────────────────────────────────
+// Dé ene plek voor koppelingstatus en setup — alle andere tabbladen tonen
+// alleen data. Eén regel per tool; geen herhaalde uitlegblokken.
 
-function TabPaginas() {
-  const pages = [
-    { pagina: 'Homepage', url: '/' },
-    { pagina: 'Ik zoek extra werk', url: '/ik-zoek-extra-werk' },
-    { pagina: 'Aanmelden', url: '/aanmelden' },
-    { pagina: 'Personeel gezocht', url: '/personeel-gezocht' },
-    { pagina: 'Horeca personeel gezocht', url: '/horeca-personeel-gezocht' },
-    { pagina: 'Hotelpersoneel inhuren', url: '/hotelpersoneel-inhuren' },
-    { pagina: 'Eventpersoneel inhuren', url: '/eventpersoneel-inhuren' },
-    { pagina: 'Cateringpersoneel inhuren', url: '/cateringpersoneel-inhuren' },
-    { pagina: 'Horecapersoneel restaurants', url: '/horecapersoneel-restaurants' },
-    { pagina: 'Horeca uitzendbureau Amsterdam', url: '/horeca-uitzendbureau-amsterdam' },
-    { pagina: 'Horeca personeel Amsterdam', url: '/horeca-personeel-amsterdam' },
-    { pagina: 'Horeca vacatures Amsterdam', url: '/horeca-vacatures-amsterdam' },
-    { pagina: 'Housekeeping vacatures', url: '/housekeeping-vacatures-amsterdam' },
-    { pagina: 'Chef vacatures Amsterdam', url: '/chef-vacatures-amsterdam' },
-    { pagina: 'Blog overzicht', url: '/nieuws' },
-    { pagina: 'Contact', url: '/contact' },
-    { pagina: 'Vacatures overzicht', url: '/vacatures' },
+function TabKoppelingen({ ga4 }: { ga4: Ga4Toestand }) {
+  const tools = [
+    { naam: 'Interne database', info: 'Aanmeldingen, CV-uploads, statussen, blogs, personeelsaanvragen', status: 'actief' as const, detail: 'Actief' },
+    { naam: 'Google Analytics 4', info: 'Bezoekers, paginaprestaties, verkeersbronnen, apparaten',
+      status: ga4 === 'actief' ? 'actief' as const : ga4 === 'wacht_op_data' ? 'wachten' as const : 'uit' as const,
+      detail: ga4 === 'actief' ? 'Actief' : ga4 === 'wacht_op_data' ? 'Gekoppeld — wacht op eerste data' : 'Niet gekoppeld' },
+    { naam: 'Google Search Console', info: 'Zoekwoordposities, impressies en klikken vanuit Google', status: 'uit' as const, detail: 'Niet gekoppeld' },
+    { naam: 'Hotjar / MS Clarity', info: 'Heatmaps en sessie-opnames', status: 'uit' as const, detail: 'Niet gekoppeld' },
+    { naam: 'Meta Pixel', info: 'Social campagne-attributie en retargeting', status: 'uit' as const, detail: 'Niet gekoppeld' },
   ];
-
+  const stijl = { actief: 'bg-green-50 text-green-700 border-green-200', wachten: 'bg-amber-50 text-amber-700 border-amber-200', uit: 'bg-gray-50 text-gray-500 border-gray-200' };
   return (
-    <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-base font-semibold text-amber-800 mb-1">Google Analytics 4 vereist voor paginadata</p>
-            <p className="text-sm text-amber-700 mb-3">
-              Paginabezoekers, bounce rates, gemiddelde tijd op pagina en verkeersbronnen per pagina zijn niet beschikbaar zonder GA4.
-              Hieronder staan alle pagina-URLs die getrackt moeten worden na koppeling.
-            </p>
-            <div className="text-sm text-amber-800 font-medium mb-2">Wat GA4 je geeft per pagina:</div>
-            <ul className="text-sm text-amber-700 space-y-1 list-disc pl-4">
-              <li>Aantal bezoekers en pageviews per URL</li>
-              <li>Gemiddelde tijd op pagina</li>
-              <li>Bounce rate (verlaten zonder actie)</li>
-              <li>Verkeersbron (Google, direct, social)</li>
-              <li>Apparaat (mobiel vs desktop)</li>
-              <li>Conversies per pagina (bijv. formulier ingevuld)</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-8 max-w-3xl">
       <section>
-        <SectionTitle>Pagina-URLs om te tracken in GA4</SectionTitle>
+        <SectionTitle>Koppelingen</SectionTitle>
         <Card className="border-0 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Pagina</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">URL</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Views</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Bounce</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Gem. tijd</th>
+          <table className="w-full">
+            <tbody className="divide-y divide-gray-50">
+              {tools.map((t, i) => (
+                <tr key={i} className="hover:bg-gray-50/50">
+                  <td className="px-5 py-3.5">
+                    <div className="text-sm font-semibold text-gray-800">{t.naam}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">{t.info}</div>
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-full border font-medium whitespace-nowrap ${stijl[t.status]}`}>{t.detail}</span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {pages.map((p, i) => (
-                  <tr key={i} className="hover:bg-gray-50/50">
-                    <td className="px-5 py-3 text-sm font-medium text-gray-700">{p.pagina}</td>
-                    <td className="px-4 py-3 text-sm text-gray-400 font-mono">{p.url}</td>
-                    <td className="px-4 py-3 text-center"><span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded">GA4 vereist</span></td>
-                    <td className="px-4 py-3 text-center"><span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded">GA4 vereist</span></td>
-                    <td className="px-4 py-3 text-center"><span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded">GA4 vereist</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </Card>
       </section>
 
-      <section>
-        <SectionTitle>Koppeling instellen</SectionTitle>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5 space-y-4">
-            {[
-              { step: '1', title: 'Maak een GA4 property aan', text: 'Ga naar analytics.google.com → maak een nieuwe property aan voor doehetextra.nl' },
-              { step: '2', title: 'Voeg de GA4 tracking code toe', text: 'Plaats de gtag.js snippet in de <head> van alle paginas, of gebruik Google Tag Manager' },
-              { step: '3', title: 'Stel doelen in', text: 'Maak conversiedoelen aan voor: formulier ingevuld, CV geüpload, WhatsApp klik, telefoon klik' },
-              { step: '4', title: 'Koppel aan dit dashboard', text: 'Na koppeling via de GA4 API verschijnen hier automatisch live bezoekerscijfers per pagina' },
-            ].map((s, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center shrink-0">{s.step}</div>
-                <div>
-                  <div className="text-sm font-semibold text-gray-800">{s.title}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{s.text}</div>
+      {ga4 !== 'actief' && (
+        <section>
+          <SectionTitle>{ga4 === 'wacht_op_data' ? 'GA4 gekoppeld — nog geen data?' : 'Google Analytics 4 koppelen'}</SectionTitle>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5 space-y-4">
+              {(ga4 === 'wacht_op_data' ? [
+                { step: '1', title: 'Controleer de GA_PROPERTY_ID', text: 'Het property-nummer in de omgevingsvariabelen moet exact overeenkomen met de GA4-property van doehetextra.nl' },
+                { step: '2', title: 'Controleer het service-account', text: 'Het service-account moet als Viewer zijn toegevoegd in Google Analytics → Beheer → Propertytoegang' },
+                { step: '3', title: 'Wacht op de eerste meting', text: 'Na een correcte koppeling verschijnt het tabblad "Google Analytics" hier automatisch zodra de eerste data binnen is (kan tot 24 uur duren)' },
+              ] : [
+                { step: '1', title: 'Maak een GA4-property aan', text: 'Via analytics.google.com, voor doehetextra.nl' },
+                { step: '2', title: 'Plaats de meetcode', text: 'De gtag.js-snippet in de <head> van de site, of via Google Tag Manager' },
+                { step: '3', title: 'Koppel aan dit dashboard', text: 'Service-account als Viewer toevoegen en de GA_PROPERTY_ID instellen — daarna verschijnen bezoekerscijfers hier vanzelf' },
+              ]).map((s, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center shrink-0">{s.step}</div>
+                  <div>
+                    <div className="text-sm font-semibold text-gray-800">{s.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.text}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+      )}
     </div>
   );
 }
 
 // ─── Tab 4: SEO & Content ─────────────────────────────────────────────────────
 
-function TabSeo({ blogs, isLoading, ga4Configured }: { blogs: BlogPost[]; isLoading: boolean; ga4Configured: boolean }) {
+function TabSeo({ blogs, isLoading }: { blogs: BlogPost[]; isLoading: boolean }) {
   const published = blogs.filter(b => b.status === 'published');
   const drafts = blogs.filter(b => b.status === 'draft');
   const scheduled = blogs.filter(b => b.status === 'scheduled');
@@ -571,7 +534,7 @@ function TabSeo({ blogs, isLoading, ga4Configured }: { blogs: BlogPost[]; isLoad
 
       {/* Blog statistieken */}
       <section>
-        <SectionTitle>Blog overzicht — live data</SectionTitle>
+        <SectionTitle>Blog overzicht</SectionTitle>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           <KpiCard icon={FileText}    label="Totaal artikelen" value={blogs.length}     color="purple" isLoading={isLoading} />
           <KpiCard icon={CheckCircle2} label="Gepubliceerd"    value={published.length} color="green"  isLoading={isLoading} />
@@ -592,8 +555,6 @@ function TabSeo({ blogs, isLoading, ga4Configured }: { blogs: BlogPost[]; isLoad
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Categorie</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Focus keyword</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Leestijd</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Views</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">CTR</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Gepubliceerd</th>
                   </tr>
                 </thead>
@@ -614,15 +575,13 @@ function TabSeo({ blogs, isLoading, ga4Configured }: { blogs: BlogPost[]; isLoad
                         {b.focusKeyword || <span className="text-gray-300">—</span>}
                       </td>
                       <td className="px-4 py-3.5 text-right text-sm text-gray-500 hidden sm:table-cell">{b.readTime}</td>
-                      <td className="px-4 py-3.5 text-center"><span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded">GA4 vereist</span></td>
-                      <td className="px-4 py-3.5 text-center"><span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded">GSC vereist</span></td>
                       <td className="px-4 py-3.5 text-xs text-gray-400 hidden lg:table-cell">
                         {b.publishedAt ? new Date(b.publishedAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                       </td>
                     </tr>
                   ))}
                   {published.length === 0 && (
-                    <tr><td colSpan={8} className="px-5 py-8 text-center text-gray-400 text-sm">Geen gepubliceerde artikelen</td></tr>
+                    <tr><td colSpan={6} className="px-5 py-8 text-center text-gray-400 text-sm">Geen gepubliceerde artikelen</td></tr>
                   )}
                 </tbody>
               </table>
@@ -631,70 +590,9 @@ function TabSeo({ blogs, isLoading, ga4Configured }: { blogs: BlogPost[]; isLoad
         )}
       </section>
 
-      {/* SEO sectie */}
-      <section>
-        <SectionTitle>SEO data — zoekwoorden en posities</SectionTitle>
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-base font-semibold text-amber-800 mb-1">Google Search Console vereist</p>
-              <p className="text-sm text-amber-700 mb-3">
-                Zoekwoordposities, impressies, klikken en CTR in Google zijn alleen beschikbaar via de Search Console API.
-              </p>
-              <div className="text-sm text-amber-800 font-medium mb-2">Na koppeling Search Console zie je:</div>
-              <ul className="text-sm text-amber-700 space-y-1 list-disc pl-4">
-                <li>Gemiddelde positie per zoekwoord in Google</li>
-                <li>Aantal keer dat doehetextra.nl getoond wordt (impressies)</li>
-                <li>Klikken vanuit Google per pagina en keyword</li>
-                <li>Click-through rate (CTR) per zoekwoord</li>
-                <li>Welke blogs organisch verkeer aantrekken</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Integraties */}
-      <section>
-        <SectionTitle>Benodigde koppelingen</SectionTitle>
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tool</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Wat het biedt</th>
-                <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {[
-                { naam: 'Interne database', info: 'Aanmeldingen, CV uploads, statussen, blogs, personeelsaanvragen', actief: true },
-                { naam: 'Google Analytics 4', info: 'Websitebezoekers, paginaweergaven, bounce rate, apparaten, verkeersbronnen', actief: ga4Configured },
-                { naam: 'Google Search Console', info: 'Zoekwoorden, posities in Google, impressies, klikken, CTR', actief: false },
-                { naam: 'Hotjar / MS Clarity', info: 'Heatmaps, sessie-opnames, scroll depth, afhakpunten in formulieren', actief: false },
-                { naam: 'Meta Pixel', info: 'Social media campagne-attributie en retargeting', actief: false },
-              ].map((s, i) => (
-                <tr key={i} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3.5 text-sm font-semibold text-gray-800">{s.naam}</td>
-                  <td className="px-5 py-3.5 text-sm text-gray-500 hidden sm:table-cell">{s.info}</td>
-                  <td className="px-5 py-3.5 text-center">
-                    {s.actief ? (
-                      <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full border border-green-200 font-medium">
-                        <CheckCircle2 className="h-3 w-3" /> Actief
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-500 px-2.5 py-1 rounded-full border border-gray-200 font-medium">
-                        <ExternalLink className="h-3 w-3" /> Koppelen
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      </section>
+      <p className="text-xs text-gray-400">
+        Zoekwoordposities en organisch verkeer per artikel verschijnen hier zodra Google Search Console is gekoppeld — zie het tabblad Koppelingen.
+      </p>
     </div>
   );
 }
@@ -894,15 +792,7 @@ function TabGa4({ overview, trend, sources, pages, devices, isLoading }: {
 
 // ─── Main component ─────────────────────────────────────────────────────────────
 
-const TABS = [
-  { id: 'overzicht',          label: 'Overzicht'          },
-  { id: 'conversies',         label: 'Aanmeldingen'        },
-  { id: 'google-analytics',   label: 'Google Analytics'   },
-  { id: 'paginas',            label: 'Pagina prestaties'  },
-  { id: 'seo',                label: 'SEO & Content'      },
-] as const;
-
-type TabId = typeof TABS[number]['id'];
+type TabId = 'overzicht' | 'conversies' | 'google-analytics' | 'seo' | 'koppelingen';
 
 export default function WebsiteStatsTab() {
   const [activeTab, setActiveTab] = useState<TabId>('overzicht');
@@ -955,6 +845,22 @@ export default function WebsiteStatsTab() {
   const staffingRequests = staffingData ?? [];
   const isLoading = candidatesLoading || blogLoading || staffingLoading;
 
+  // Eén waarheid over GA4: gekoppeld én data → actief; gekoppeld zonder data →
+  // wachten; anders niet gekoppeld. Het GA4-tabblad bestaat alleen mét data —
+  // placeholders krijgen geen eigen tabblad.
+  const heeftGa4Data = !!(ga4Overview && ga4Overview.sessions);
+  const ga4: Ga4Toestand = heeftGa4Data ? 'actief' : ga4Configured ? 'wacht_op_data' : 'niet_gekoppeld';
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'overzicht',  label: 'Overzicht' },
+    { id: 'conversies', label: 'Aanmeldingen' },
+    ...(heeftGa4Data ? [{ id: 'google-analytics' as TabId, label: 'Google Analytics' }] : []),
+    { id: 'seo',         label: 'SEO & Content' },
+    { id: 'koppelingen', label: 'Koppelingen' },
+  ];
+  // Als het GA4-tabblad verdwijnt terwijl het openstond: terug naar Overzicht.
+  const zichtbareTab: TabId = tabs.some(t => t.id === activeTab) ? activeTab : 'overzicht';
+
   return (
     <div className="flex flex-col min-h-full">
       {/* Header */}
@@ -968,20 +874,17 @@ export default function WebsiteStatsTab() {
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
-          {TABS.map(t => (
+          {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === t.id
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                zichtbareTab === t.id
                   ? 'border-purple-600 text-purple-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               {t.label}
-              {t.id === 'google-analytics' && (
-                <span className={`w-1.5 h-1.5 rounded-full ${ga4Configured ? 'bg-green-400' : 'bg-gray-300'}`} />
-              )}
             </button>
           ))}
         </div>
@@ -989,11 +892,11 @@ export default function WebsiteStatsTab() {
 
       {/* Tab content */}
       <div className="p-6 flex-1">
-        {activeTab === 'overzicht'        && <TabOverzicht  candidates={candidates} staffingRequests={staffingRequests} blogs={blogs} isLoading={isLoading} ga4Configured={ga4Configured} />}
-        {activeTab === 'conversies'       && <TabConversies candidates={candidates} isLoading={isLoading} />}
-        {activeTab === 'google-analytics' && <TabGa4 overview={ga4Overview} trend={ga4Trend ?? []} sources={ga4Sources ?? []} pages={ga4Pages ?? []} devices={ga4Devices ?? []} isLoading={ga4Loading} />}
-        {activeTab === 'paginas'          && <TabPaginas />}
-        {activeTab === 'seo'              && <TabSeo blogs={blogs} isLoading={isLoading} ga4Configured={ga4Configured} />}
+        {zichtbareTab === 'overzicht'        && <TabOverzicht  candidates={candidates} staffingRequests={staffingRequests} blogs={blogs} isLoading={isLoading} ga4={ga4} onNaarKoppelingen={() => setActiveTab('koppelingen')} />}
+        {zichtbareTab === 'conversies'       && <TabConversies candidates={candidates} isLoading={isLoading} />}
+        {zichtbareTab === 'google-analytics' && <TabGa4 overview={ga4Overview} trend={ga4Trend ?? []} sources={ga4Sources ?? []} pages={ga4Pages ?? []} devices={ga4Devices ?? []} isLoading={ga4Loading} />}
+        {zichtbareTab === 'seo'              && <TabSeo blogs={blogs} isLoading={isLoading} />}
+        {zichtbareTab === 'koppelingen'      && <TabKoppelingen ga4={ga4} />}
       </div>
     </div>
   );
