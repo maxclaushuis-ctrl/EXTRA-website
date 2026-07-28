@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { formatDatum } from '@/lib/datum';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -923,7 +924,7 @@ function EmployeeDetail({
               <DetailSection title="Persoonlijk">
                 <Row icon={Mail} label="E-mail">{employee.email}</Row>
                 <Row icon={Phone} label="Telefoon">{employee.phone || '—'}</Row>
-                <Row icon={Calendar} label="Geboortedatum">{employee.birthDate || '—'}</Row>
+                <Row icon={Calendar} label="Geboortedatum">{formatDatum(employee.birthDate)}</Row>
                 <Row icon={MapPin} label="Stad">{employee.city || '—'}</Row>
                 <Row icon={FileText} label="Taal">{employee.language || '—'}</Row>
               </DetailSection>
@@ -932,7 +933,7 @@ function EmployeeDetail({
                 <Row icon={Briefcase} label="Branche">{employee.branche || '—'}</Row>
                 <Row icon={Briefcase} label="Opdrachtgever">{employee.opdrachtgever || '—'}</Row>
                 <Row icon={Briefcase} label="Contract">{employee.contractType || '—'}</Row>
-                <Row icon={Calendar} label="Startdatum">{employee.startDate || '—'}</Row>
+                <Row icon={Calendar} label="Startdatum">{formatDatum(employee.startDate)}</Row>
               </DetailSection>
               <DetailSection title="Classificatie">
                 <Row icon={Tag} label="Status">{st.label}</Row>

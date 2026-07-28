@@ -331,12 +331,12 @@ const AutomationPage = () => {
                     <div className="text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Aangemaakt op:</span>
-                        <span>{new Date(automation.createdAt).toLocaleDateString()}</span>
+                        <span>{new Date(automation.createdAt).toLocaleDateString('nl-NL')}</span>
                       </div>
                       {automation.lastRun && (
                         <div className="flex justify-between">
                           <span className="text-gray-500">Laatst uitgevoerd:</span>
-                          <span>{new Date(automation.lastRun).toLocaleString()}</span>
+                          <span>{new Date(automation.lastRun).toLocaleString('nl-NL')}</span>
                         </div>
                       )}
                     </div>

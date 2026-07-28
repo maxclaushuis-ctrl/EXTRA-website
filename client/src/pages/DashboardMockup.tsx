@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { formatDatum, formatDatumTijd } from '@/lib/datum';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -1359,12 +1360,12 @@ export default function DashboardMockup() {
                           ['E-mail', selectedKandidate.email],
                           ['Telefoon', selectedKandidate.phone],
                           ['Woonplaats', selectedKandidate.city],
-                          ['Geboortedatum', selectedKandidate.birthDate],
+                          ['Geboortedatum', selectedKandidate.birthDate ? formatDatum(selectedKandidate.birthDate) : null],
                           ['Nationaliteit', selectedKandidate.nationality],
                           ['Taal', selectedKandidate.language],
                           ['Aangemeld', new Date(selectedKandidate.createdAt).toLocaleDateString('nl-NL')],
                           ['Status', selectedKandidate.status],
-                          ['Datum gesprek', selectedKandidate.interviewDate || null],
+                          ['Datum gesprek', selectedKandidate.interviewDate ? formatDatumTijd(selectedKandidate.interviewDate) : null],
                         ].map(([label, value]) => value ? (
                           <div key={label as string} className="flex justify-between py-2 border-b border-gray-50">
                             <span className="text-gray-500">{label}</span>

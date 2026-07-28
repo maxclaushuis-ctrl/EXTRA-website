@@ -672,7 +672,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                           <div>
                             <div className="font-medium">{redemption.rewardName}</div>
                             <div className="text-xs text-muted-foreground">
-                              {new Date(redemption.createdAt).toLocaleDateString()} - {redemption.pointsCost} punten
+                              {new Date(redemption.createdAt).toLocaleDateString('nl-NL')} - {redemption.pointsCost} punten
                             </div>
                           </div>
                           <Badge
@@ -841,7 +841,7 @@ export default function ContactDetailDialog({ userId, isOpen, onClose }: Contact
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {new Date(transaction.createdAt).toLocaleDateString()}
+                            {new Date(transaction.createdAt).toLocaleDateString('nl-NL')}
                           </div>
                         </div>
                         <div className={`font-semibold ${
