@@ -184,4 +184,33 @@ app.delete('/api/admin/crm/reminders/:id', async (req, res) => {
   catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// Website Statistieken — mockdata voor de stijl-harness
+app.get('/api/admin/candidates', (_req, res) => {
+  const cands = [];
+  const maanden = [['2026-04', 204], ['2026-05', 79], ['2026-06', 56], ['2026-07', 58]];
+  let id = 1;
+  for (const [maand, n] of maanden) {
+    for (let i = 0; i < n; i++) {
+      const functies = ['horecamedewerker', 'horecamedewerker', 'housekeeping', 'chef', 'overig'];
+      const statussen = ['afgewezen', 'afgewezen', 'afgewezen', 'in_behandeling', 'aangenomen', 'nieuw'];
+      cands.push({
+        id: id++, firstName: 'Test', lastName: `#${id}`, status: statussen[i % statussen.length],
+        functionType: functies[i % functies.length], hasCv: i % 2 === 0,
+        createdAt: `${maand}-${String((i % 27) + 1).padStart(2, '0')}T10:00:00Z`,
+      });
+    }
+  }
+  res.json({ candidates: cands });
+});
+app.get('/api/admin/blog', (_req, res) => {
+  res.json({ posts: [1,2,3,4,5,6,7].map(i => ({ id: i, title: `Artikel ${i}`, slug: `artikel-${i}`, status: 'published', category: 'Horeca', author: 'Max', readTime: '4 min', createdAt: '2026-02-01', publishedAt: '2026-02-0' + i, focusKeyword: 'horeca' })), total: 7 });
+});
+app.get('/api/admin/staffing-requests', (_req, res) => res.json([1,2,3,4,5].map(i => ({ id: i, companyName: `Bedrijf ${i}`, status: 'open', createdAt: '2026-07-01' }))));
+app.get('/api/admin/ga4/status', (_req, res) => res.json({ configured: true, werkt: true, heeftData: false }));
+app.get('/api/admin/ga4/overview', (_req, res) => res.json({}));
+app.get('/api/admin/ga4/trend', (_req, res) => res.json([]));
+app.get('/api/admin/ga4/sources', (_req, res) => res.json([]));
+app.get('/api/admin/ga4/pages', (_req, res) => res.json([]));
+app.get('/api/admin/ga4/devices', (_req, res) => res.json([]));
+
 app.listen(5099, () => console.log('mock-backend op :5099'));

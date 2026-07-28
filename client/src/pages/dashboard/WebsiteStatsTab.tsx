@@ -45,81 +45,66 @@ type StaffingRequest = {
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────────
 
+// Planbord-stijl: zwarte cijfers, grijze labels, dunne lijnen — kleur alleen
+// als status. KpiColor blijft in de signatuur voor bestaande callers, maar
+// stuurt niets gekleurds meer aan.
 type KpiColor = 'purple' | 'green' | 'blue' | 'amber' | 'rose' | 'gray';
-const colorMap: Record<KpiColor, { bg: string; text: string; icon: string }> = {
-  purple: { bg: 'bg-purple-50', text: 'text-purple-700', icon: 'text-purple-500' },
-  green:  { bg: 'bg-green-50',  text: 'text-green-700',  icon: 'text-green-500'  },
-  blue:   { bg: 'bg-blue-50',   text: 'text-blue-700',   icon: 'text-blue-500'   },
-  amber:  { bg: 'bg-amber-50',  text: 'text-amber-700',  icon: 'text-amber-500'  },
-  rose:   { bg: 'bg-rose-50',   text: 'text-rose-700',   icon: 'text-rose-500'   },
-  gray:   { bg: 'bg-gray-50',   text: 'text-gray-600',   icon: 'text-gray-400'   },
-};
 
-function KpiCard({ icon: Icon, label, value, sub, color, isLoading }: {
-  icon: any; label: string; value: string | number; sub?: string; color: KpiColor; isLoading?: boolean;
+const LIJN = 'border-[#ececef]';
+
+function KpiCard({ label, value, sub, isLoading }: {
+  icon?: any; label: string; value: string | number; sub?: string; color?: KpiColor; isLoading?: boolean;
 }) {
-  const c = colorMap[color];
   return (
-    <Card className="border-0 shadow-sm">
-      <CardContent className="p-5">
-        <div className={`p-2 rounded-lg ${c.bg} w-fit mb-3`}>
-          <Icon className={`h-4 w-4 ${c.icon}`} />
-        </div>
-        {isLoading ? (
-          <Skeleton className="h-8 w-16 mb-1" />
-        ) : (
-          <div className={`text-3xl font-bold ${c.text} mb-1 leading-none`}>{value}</div>
-        )}
-        <div className="text-sm font-medium text-gray-600">{label}</div>
-        {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wider mb-4">{children}</h2>;
-}
-
-function InsightCard({ type, title, text }: { type: 'warning' | 'success' | 'info'; title: string; text: string }) {
-  const styles = {
-    warning: { bg: 'bg-amber-50 border-amber-100', title: 'text-amber-800', text: 'text-amber-700', icon: <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" /> },
-    success: { bg: 'bg-green-50 border-green-100', title: 'text-green-800', text: 'text-green-700', icon: <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" /> },
-    info:    { bg: 'bg-blue-50 border-blue-100',   title: 'text-blue-800',  text: 'text-blue-700',  icon: <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" /> },
-  };
-  const s = styles[type];
-  return (
-    <div className={`rounded-xl border p-4 ${s.bg}`}>
-      <div className={`flex items-start gap-2 mb-1.5 text-sm font-semibold ${s.title}`}>{s.icon}{title}</div>
-      <p className={`text-xs leading-relaxed ${s.text}`}>{text}</p>
+    <div className={`bg-white border ${LIJN} rounded-xl p-5`}>
+      {isLoading ? (
+        <Skeleton className="h-8 w-16 mb-1" />
+      ) : (
+        <div className="text-3xl font-extrabold text-gray-900 mb-1 leading-none tracking-tight">{value}</div>
+      )}
+      <div className="text-sm text-gray-500">{label}</div>
+      {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
     </div>
   );
 }
 
-function Ga4KpiCard({ label, value, prev, color, isLoading, invertGoed }: {
-  label: string; value: string | number; prev?: number; color: KpiColor; isLoading?: boolean; invertGoed?: boolean;
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-3">{children}</h2>;
+}
+
+function InsightCard({ type, title, text }: { type: 'warning' | 'success' | 'info'; title: string; text: string }) {
+  const stip = type === 'warning' ? 'bg-amber-400' : type === 'success' ? 'bg-green-500' : 'bg-gray-300';
+  return (
+    <div className={`rounded-xl border ${LIJN} bg-white p-4`}>
+      <div className="flex items-center gap-2 mb-1.5 text-sm font-semibold text-gray-900">
+        <span className={`w-2 h-2 rounded-full shrink-0 ${stip}`} />{title}
+      </div>
+      <p className="text-xs leading-relaxed text-gray-500">{text}</p>
+    </div>
+  );
+}
+
+function Ga4KpiCard({ label, value, prev, isLoading, invertGoed }: {
+  label: string; value: string | number; prev?: number; color?: KpiColor; isLoading?: boolean; invertGoed?: boolean;
 }) {
-  const c = colorMap[color];
   const isNum = typeof value === 'number' && typeof prev === 'number' && prev > 0;
   const trend = isNum ? ((value as number) - (prev as number)) / (prev as number) * 100 : null;
   const isUp = trend !== null && trend > 0;
   const isGood = invertGoed ? !isUp : isUp;
   return (
-    <Card className="border-0 shadow-sm">
-      <CardContent className="p-4">
-        {isLoading ? <Skeleton className="h-7 w-16 mb-1" /> : (
-          <div className={`text-2xl font-bold ${c.text} mb-0.5 leading-none`}>
-            {typeof value === 'number' ? value.toLocaleString('nl-NL') : value}
-          </div>
-        )}
-        <div className="text-xs font-medium text-gray-600">{label}</div>
-        {trend !== null && !isLoading && (
-          <div className={`text-xs mt-1 font-medium ${isGood ? 'text-green-600' : 'text-red-500'}`}>
-            {isUp ? '↑' : '↓'} {Math.abs(Math.round(trend))}% vs vorige periode
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className={`bg-white border ${LIJN} rounded-xl p-4`}>
+      {isLoading ? <Skeleton className="h-7 w-16 mb-1" /> : (
+        <div className="text-2xl font-extrabold text-gray-900 mb-0.5 leading-none tracking-tight">
+          {typeof value === 'number' ? value.toLocaleString('nl-NL') : value}
+        </div>
+      )}
+      <div className="text-xs text-gray-500">{label}</div>
+      {trend !== null && !isLoading && (
+        <div className={`text-xs mt-1 font-medium ${isGood ? 'text-green-600' : 'text-red-500'}`}>
+          {isUp ? '↑' : '↓'} {Math.abs(Math.round(trend))}% vs vorige periode
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -131,12 +116,12 @@ function Ga4KpiCard({ label, value, prev, color, isLoading, invertGoed }: {
 export type Ga4Toestand = 'niet_gekoppeld' | 'fout' | 'wacht_op_data' | 'actief';
 
 function StatusChip({ label, toestand }: { label: string; toestand: 'actief' | 'wachten' | 'uit' }) {
-  const stijl = toestand === 'actief' ? 'bg-green-50 text-green-700 border-green-200'
-    : toestand === 'wachten' ? 'bg-amber-50 text-amber-700 border-amber-200'
-    : 'bg-gray-50 text-gray-500 border-gray-200';
+  const stijl = toestand === 'wachten'
+    ? 'bg-[#fdf8ec] text-[#9a6b15] border-[#f3e3bd]'
+    : `bg-white text-gray-500 border ${LIJN}`;
   const stip = toestand === 'actief' ? 'bg-green-500' : toestand === 'wachten' ? 'bg-amber-400' : 'bg-gray-300';
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${stijl}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${stijl}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${stip}`} />{label}
     </span>
   );
@@ -160,21 +145,18 @@ function StatusStrip({ ga4, onNaarKoppelingen }: { ga4: Ga4Toestand; onNaarKoppe
   );
 }
 
-function FunnelBar({ label, count, total, color, note }: { label: string; count: number; total: number; color: string; note?: string }) {
+function FunnelBar({ label, count, total, eerste }: { label: string; count: number; total: number; eerste?: boolean }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-40 text-sm text-gray-600 text-right shrink-0">
-        {label}
-        {note && <span className="block text-xs text-gray-400">{note}</span>}
-      </div>
-      <div className="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(pct, 3)}%` }} />
-        <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-700">
-          {count.toLocaleString()}
+    <div className="flex items-center gap-3.5 py-2 text-[13px]">
+      <div className="w-44 text-gray-500 text-right shrink-0">{label}</div>
+      <div className="flex-1 bg-[#fafafa] rounded-full h-7 relative overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 3)}%`, background: eerste ? '#7c3aed' : '#d5cdeb' }} />
+        <span className={`absolute inset-0 flex items-center justify-center text-[12.5px] font-bold ${eerste ? 'text-white' : 'text-gray-800'}`}>
+          {count.toLocaleString('nl-NL')}
         </span>
       </div>
-      <div className="w-12 text-sm font-semibold text-gray-500 shrink-0">{pct}%</div>
+      <div className="w-11 font-bold text-gray-500 shrink-0">{pct}%</div>
     </div>
   );
 }
@@ -200,148 +182,129 @@ function TabOverzicht({ candidates, staffingRequests, blogs, isLoading, ga4, onN
   candidates: Candidate[]; staffingRequests: StaffingRequest[]; blogs: BlogPost[]; isLoading: boolean; ga4: Ga4Toestand; onNaarKoppelingen: () => void;
 }) {
   const now = new Date();
-  const last7 = candidates.filter(c => (now.getTime() - new Date(c.createdAt).getTime()) < 7 * 86400000).length;
-  const last30 = candidates.filter(c => (now.getTime() - new Date(c.createdAt).getTime()) < 30 * 86400000).length;
+  const dagen = (n: number) => n * 86400000;
+  const last7 = candidates.filter(c => (now.getTime() - new Date(c.createdAt).getTime()) < dagen(7)).length;
+  const vorige7 = candidates.filter(c => { const t = now.getTime() - new Date(c.createdAt).getTime(); return t >= dagen(7) && t < dagen(14); }).length;
+  const last30 = candidates.filter(c => (now.getTime() - new Date(c.createdAt).getTime()) < dagen(30)).length;
+  const vorige30 = candidates.filter(c => { const t = now.getTime() - new Date(c.createdAt).getTime(); return t >= dagen(30) && t < dagen(60); }).length;
   const aangenomen = candidates.filter(c => c.status === 'aangenomen').length;
   const afgewezen = candidates.filter(c => c.status === 'afgewezen').length;
   const inBehandeling = candidates.filter(c => c.status === 'in_behandeling').length;
   const metCv = candidates.filter(c => c?.hasCv).length;
   const published = blogs.filter(b => b.status === 'published').length;
-  const horeca = candidates.filter(c => c.functionType === 'horecamedewerker').length;
-  const chef = candidates.filter(c => c.functionType === 'chef').length;
-  const housekeeping = candidates.filter(c => c.functionType === 'housekeeping').length;
+  const totaal = candidates.length;
+  const conversiePct = totaal > 0 ? Math.round((aangenomen / totaal) * 100) : 0;
+  const cvPct = totaal > 0 ? Math.round((metCv / totaal) * 100) : 0;
+  const weekDelta = vorige7 > 0 ? Math.round(((last7 - vorige7) / vorige7) * 100) : null;
 
   const monthlyData = useMemo(() => groupByMonth(candidates), [candidates]);
 
-  const functionData = [
-    { name: 'Horecamedewerker', value: horeca, color: '#7c3aed' },
-    { name: 'Chef', value: chef, color: '#a78bfa' },
-    { name: 'Housekeeping', value: housekeeping, color: '#c4b5fd' },
-    { name: 'Overig', value: candidates.length - horeca - chef - housekeeping, color: '#ede9fe' },
-  ].filter(d => d.value > 0);
+  const functieTelling: Record<string, number> = {};
+  for (const c of candidates) {
+    const f = c.functionType === 'horecamedewerker' ? 'Horecamedewerker'
+      : c.functionType === 'chef' ? 'Chef'
+      : c.functionType === 'housekeeping' ? 'Housekeeping' : 'Overig';
+    functieTelling[f] = (functieTelling[f] ?? 0) + 1;
+  }
+  const functieData = Object.entries(functieTelling).sort(([, a], [, b]) => b - a);
+  const functieMax = Math.max(...functieData.map(([, n]) => n), 1);
+
+  const statusRegels = [
+    { naam: 'In behandeling', aantal: inBehandeling, pill: 'bg-[#fdf6e3] text-[#9a6b15]', balk: '#e8c76a' },
+    { naam: 'Aangenomen',     aantal: aangenomen,    pill: 'bg-[#e9f7ef] text-[#1a7f4b]', balk: '#7fd3a4' },
+    { naam: 'Afgewezen',      aantal: afgewezen,     pill: 'bg-[#fdeeee] text-[#b3403a]', balk: '#f1a6a2' },
+  ];
 
   return (
     <div className="space-y-8">
       <StatusStrip ga4={ga4} onNaarKoppelingen={onNaarKoppelingen} />
 
-      {/* KPIs */}
+      {/* Vier kerncijfers in één band */}
       <section>
-        <SectionTitle>Aanmeldingen — live data</SectionTitle>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          <KpiCard icon={Users}       label="Totaal aanmeldingen"    value={candidates.length} sub="alle tijden"            color="purple" isLoading={isLoading} />
-          <KpiCard icon={Calendar}    label="Afgelopen 7 dagen"      value={last7}             sub="nieuwe aanmeldingen"    color="blue"   isLoading={isLoading} />
-          <KpiCard icon={Calendar}    label="Afgelopen 30 dagen"     value={last30}            sub="nieuwe aanmeldingen"    color="blue"   isLoading={isLoading} />
-          <KpiCard icon={Clock}       label="In behandeling"         value={inBehandeling}     sub="wachten op review"      color="amber"  isLoading={isLoading} />
-          <KpiCard icon={CheckCircle2} label="Aangenomen"            value={aangenomen}        sub="kandidaten"             color="green"  isLoading={isLoading} />
-          <KpiCard icon={XCircle}     label="Afgewezen"              value={afgewezen}         sub="kandidaten"             color="rose"   isLoading={isLoading} />
-          <KpiCard icon={Upload}      label="CV geüpload"            value={metCv}             sub="aanmeldingen compleet"  color="purple" isLoading={isLoading} />
-          <KpiCard icon={Building2}   label="Personeelsaanvragen"    value={staffingRequests.length} sub="van werkgevers"   color="blue"   isLoading={isLoading} />
-          <KpiCard icon={FileText}    label="Gepubliceerde blogs"    value={published}         sub="actieve artikelen"      color="green"  isLoading={isLoading} />
-          <KpiCard icon={ChefHat}     label="Horecamedewerkers"      value={horeca}            sub="van alle aanmeldingen"  color="purple" isLoading={isLoading} />
-          <KpiCard icon={ChefHat}     label="Chefs"                  value={chef}              sub="van alle aanmeldingen"  color="purple" isLoading={isLoading} />
-          <KpiCard icon={Sparkles}    label="Housekeeping"           value={housekeeping}      sub="van alle aanmeldingen"  color="amber"  isLoading={isLoading} />
+        <div className={`grid grid-cols-2 lg:grid-cols-4 bg-white border ${LIJN} rounded-xl overflow-hidden`}>
+          {[
+            { cijfer: last7, lbl: 'Aanmeldingen deze week', sub: weekDelta === null ? 'vorige week: 0' : <><b className={weekDelta >= 0 ? 'text-green-700 font-semibold' : 'text-red-600 font-semibold'}>{weekDelta >= 0 ? '+' : ''}{weekDelta}%</b> t.o.v. vorige week</> },
+            { cijfer: last30, lbl: 'Afgelopen 30 dagen', sub: `vorige periode: ${vorige30}` },
+            { cijfer: inBehandeling, lbl: 'In behandeling', sub: 'wachten op review' },
+            { cijfer: `${conversiePct}%`, lbl: 'Conversie naar aangenomen', sub: `${aangenomen} van ${totaal} totaal` },
+          ].map((k, i) => (
+            <div key={i} className={`p-5 border-[#ececef] ${i > 0 ? 'border-l' : ''} ${i >= 2 ? 'max-lg:border-t' : ''}`}>
+              {isLoading ? <Skeleton className="h-8 w-14 mb-1" /> : (
+                <div className="text-3xl font-extrabold text-gray-900 leading-none tracking-tight">{k.cijfer}</div>
+              )}
+              <div className="text-[13px] text-gray-500 mt-1.5">{k.lbl}</div>
+              <div className="text-xs text-gray-400 mt-1">{k.sub}</div>
+            </div>
+          ))}
         </div>
+        <p className="text-[13px] text-gray-500 mt-3">
+          Totaal <b className="text-gray-900 font-semibold">{totaal}</b> aanmeldingen
+          &nbsp;·&nbsp; CV geüpload <b className="text-gray-900 font-semibold">{metCv}</b> ({cvPct}%)
+          &nbsp;·&nbsp; Personeelsaanvragen <b className="text-gray-900 font-semibold">{staffingRequests.length}</b>
+          &nbsp;·&nbsp; Gepubliceerde blogs <b className="text-gray-900 font-semibold">{published}</b>
+        </p>
       </section>
 
-      {/* Grafieken */}
+      {/* Maandgrafiek (monochroom, huidige maand paars) + functieverdeling als regels */}
       <section>
         <SectionTitle>Aanmeldingen per maand</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="lg:col-span-2 border-0 shadow-sm">
-            <CardHeader className="pb-0 pt-4 px-4">
-              <CardTitle className="text-sm font-semibold text-gray-700">Aanmeldingen over tijd</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2 px-2 pb-4">
-              {isLoading ? <Skeleton className="h-48 w-full" /> : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={monthlyData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="aanmeldingen" fill="#7c3aed" name="Aanmeldingen" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="metCv" fill="#a78bfa" name="Met CV" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="aangenomen" fill="#22c55e" name="Aangenomen" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-0 pt-4 px-4">
-              <CardTitle className="text-sm font-semibold text-gray-700">Verdeling per functie</CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {isLoading ? <Skeleton className="h-48 w-full" /> : (
-                <>
-                  <ResponsiveContainer width="100%" height={150}>
-                    <PieChart>
-                      <Pie data={functionData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value">
-                        {functionData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="space-y-1.5 mt-1">
-                    {functionData.map((d, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
-                          <span className="text-gray-600">{d.name}</span>
-                        </div>
-                        <span className="font-semibold text-gray-700">{d.value}</span>
-                      </div>
+          <div className={`lg:col-span-2 bg-white border ${LIJN} rounded-xl p-5`}>
+            <h3 className="text-sm font-bold text-gray-900 mb-2">Aanmeldingen over tijd</h3>
+            {isLoading ? <Skeleton className="h-48 w-full" /> : (
+              <ResponsiveContainer width="100%" height={210}>
+                <BarChart data={monthlyData} margin={{ top: 22, right: 8, left: 8, bottom: 0 }}>
+                  <XAxis dataKey="label" tick={{ fontSize: 11.5, fill: '#9ca3af' }} axisLine={{ stroke: '#ececef' }} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip cursor={{ fill: '#fafafa' }} />
+                  <Bar dataKey="aanmeldingen" name="Aanmeldingen" radius={[5, 5, 0, 0]} maxBarSize={44}
+                    label={{ position: 'top', fontSize: 11.5, fill: '#374151', fontWeight: 600 }}>
+                    {monthlyData.map((_, i) => (
+                      <Cell key={i} fill={i === monthlyData.length - 1 ? '#7c3aed' : '#e5e2ee'} />
                     ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+            <p className="text-[11.5px] text-gray-400 mt-2">Paars = huidige maand · aantallen per kalendermaand</p>
+          </div>
+
+          <div className={`bg-white border ${LIJN} rounded-xl p-5`}>
+            <h3 className="text-sm font-bold text-gray-900 mb-2">Per functie</h3>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+              <div>
+                {functieData.map(([naam, n], i) => (
+                  <div key={naam} className={`flex items-center gap-2.5 py-2.5 text-[13px] ${i < functieData.length - 1 ? 'border-b border-[#ececef]' : ''}`}>
+                    <span className="w-32 text-gray-800 truncate">{naam}</span>
+                    <span className="flex-1 h-1.5 bg-[#fafafa] rounded-full overflow-hidden">
+                      <i className="block h-full rounded-full" style={{ width: `${Math.max((n / functieMax) * 100, 3)}%`, background: i === 0 ? '#7c3aed' : '#d5cdeb' }} />
+                    </span>
+                    <span className="w-9 text-right font-bold text-gray-900">{n}</span>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* Status verdeling */}
+      {/* Status als tabelregels met pill */}
       <section>
-        <SectionTitle>Status verdeling</SectionTitle>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">In behandeling</span>
-                <span className="text-sm font-bold text-amber-700">{candidates.length > 0 ? Math.round((inBehandeling / candidates.length) * 100) : 0}%</span>
+        <SectionTitle>Status</SectionTitle>
+        <div className={`bg-white border ${LIJN} rounded-xl overflow-hidden`}>
+          {statusRegels.map((s, i) => {
+            const pct = totaal > 0 ? Math.round((s.aantal / totaal) * 100) : 0;
+            return (
+              <div key={s.naam} className={`flex items-center px-5 py-3.5 text-[13.5px] ${i < statusRegels.length - 1 ? 'border-b border-[#ececef]' : ''}`}>
+                <span className="w-40 font-semibold text-gray-900">{s.naam}</span>
+                <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${s.pill}`}>{pct}%</span>
+                <span className="flex-1 h-1.5 bg-[#fafafa] rounded-full overflow-hidden mx-4">
+                  <i className="block h-full rounded-full" style={{ width: `${Math.max(pct, 1)}%`, background: s.balk }} />
+                </span>
+                <span className="w-14 text-right font-extrabold text-[15px] text-gray-900">{s.aantal}</span>
               </div>
-              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-400 rounded-full" style={{ width: `${candidates.length > 0 ? (inBehandeling / candidates.length) * 100 : 0}%` }} />
-              </div>
-              <div className="text-2xl font-bold text-amber-700 mt-3">{inBehandeling}</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Aangenomen</span>
-                <span className="text-sm font-bold text-green-700">{candidates.length > 0 ? Math.round((aangenomen / candidates.length) * 100) : 0}%</span>
-              </div>
-              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-green-400 rounded-full" style={{ width: `${candidates.length > 0 ? (aangenomen / candidates.length) * 100 : 0}%` }} />
-              </div>
-              <div className="text-2xl font-bold text-green-700 mt-3">{aangenomen}</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Afgewezen</span>
-                <span className="text-sm font-bold text-rose-700">{candidates.length > 0 ? Math.round((afgewezen / candidates.length) * 100) : 0}%</span>
-              </div>
-              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-rose-400 rounded-full" style={{ width: `${candidates.length > 0 ? (afgewezen / candidates.length) * 100 : 0}%` }} />
-              </div>
-              <div className="text-2xl font-bold text-rose-700 mt-3">{afgewezen}</div>
-            </CardContent>
-          </Card>
+            );
+          })}
         </div>
       </section>
     </div>
@@ -357,77 +320,22 @@ function TabConversies({ candidates, isLoading }: { candidates: Candidate[]; isL
   const cvPct = total > 0 ? Math.round((metCv / total) * 100) : 0;
   const aangenomenPct = total > 0 ? Math.round((aangenomen / total) * 100) : 0;
 
-  const funnelData = [
-    { stap: 'In DB', count: total },
-    { stap: 'CV geüpload', count: metCv },
-    { stap: 'Aangenomen', count: aangenomen },
-  ];
-
   return (
     <div className="space-y-8">
       {/* Funnel */}
       <section>
         <SectionTitle>Aanmeldfunnel werkzoekenden</SectionTitle>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <CardTitle className="text-base font-semibold text-gray-800">Funnel overzicht</CardTitle>
-              <p className="text-sm text-gray-500">Op basis van kandidaatdata in de database</p>
-            </CardHeader>
-            <CardContent className="px-5 pb-5">
-              {isLoading ? <Skeleton className="h-32 w-full" /> : (
-                <>
-                  <div className="mb-2 text-xs text-gray-400 flex items-center gap-1"><Info className="h-3 w-3" /> Paginabezoek en formulierstart: GA4 vereist</div>
-                  <FunnelBar label="Aangemeld in systeem"  count={total}     total={total} color="bg-purple-500" />
-                  <FunnelBar label="CV geüpload"           count={metCv}     total={total} color="bg-purple-300" note={`${cvPct}% van aanmeldingen`} />
-                  <FunnelBar label="Aangenomen"            count={aangenomen} total={total} color="bg-green-400" note={`${aangenomenPct}% van aanmeldingen`} />
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <CardTitle className="text-base font-semibold text-gray-800">Conversie grafiek</CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 pb-4">
-              {isLoading ? <Skeleton className="h-48 w-full" /> : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={funnelData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="stap" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#7c3aed" name="Aantal" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
+        <div className={`bg-white border ${LIJN} rounded-xl p-5`}>
+          <h3 className="text-sm font-bold text-gray-900 mb-3">Van aanmelding naar aanname</h3>
+          {isLoading ? <Skeleton className="h-32 w-full" /> : (
+            <>
+              <FunnelBar label="Aangemeld in systeem" count={total}      total={total} eerste />
+              <FunnelBar label="CV geüpload"          count={metCv}      total={total} />
+              <FunnelBar label="Aangenomen"           count={aangenomen} total={total} />
+              <p className="text-[11.5px] text-gray-400 mt-2">Paginabezoek en formulierstart verschijnen hier zodra GA4 data levert.</p>
+            </>
+          )}
         </div>
-      </section>
-
-      {/* CV upload trend per maand */}
-      <section>
-        <SectionTitle>CV uploads per maand</SectionTitle>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="pt-4 px-2 pb-4">
-            {isLoading ? <Skeleton className="h-48 w-full" /> : (
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={groupByMonth(candidates)} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="aanmeldingen" stroke="#7c3aed" strokeWidth={2} name="Aanmeldingen" dot={false} />
-                  <Line type="monotone" dataKey="metCv" stroke="#22c55e" strokeWidth={2} name="CV geüpload" dot={false} />
-                  <Line type="monotone" dataKey="aangenomen" stroke="#f59e0b" strokeWidth={2} name="Aangenomen" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
       </section>
 
       {/* Inzichten */}
