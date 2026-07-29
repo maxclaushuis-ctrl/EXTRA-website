@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { VACATURES } from "@/data/vacatures";
 import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import { RevealSection, XPatternBg } from "@/pages/LandingPage";
@@ -57,8 +56,6 @@ export default function VacatureDetail() {
     retry: false,
   });
 
-  const staticVacature = VACATURES.find((v) => v.slug === slug);
-
   // FAQ uit het CMS: JSON-string [{"q":"...","a":"..."}]
   let faqs: FaqItem[] = [];
   if (dbVacancy?.faqItems) {
@@ -94,20 +91,7 @@ export default function VacatureDetail() {
         ogDescription: dbVacancy.ogDescription || "",
         ctaText: dbVacancy.ctaText || "",
       }
-    : staticVacature
-      ? {
-          ...staticVacature,
-          introductionText: "",
-          aboutRole: "",
-          workEnvironment: "",
-          metaTitle: "",
-          canonicalUrl: "",
-          ogTitle: "",
-          ogDescription: "",
-          ctaText: "",
-          functionType: staticVacature.functionType,
-        }
-      : null;
+    : null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -133,7 +117,7 @@ export default function VacatureDetail() {
     setMeta("property", "og:url", pageUrl);
   }, [vacature]);
 
-  if (isLoading && !staticVacature) return null;
+  if (isLoading) return null;
   if (!vacature) return null;
 
   // Doorlopende werving: rollende validThrough van 90 dagen (advies van Google).
