@@ -3,6 +3,7 @@ import extraLogo from '@assets/extra-logo-zwart.svg';
 import { formatDatum, formatDatumTijd } from '@/lib/datum';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { useAuth } from '@/contexts/AuthContext';
+import { HUISSTIJL } from '@/lib/huisstijl';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { Button } from '@/components/ui/button';
@@ -924,36 +925,53 @@ export default function DashboardMockup() {
       )}
 
       {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-200 flex flex-col fixed h-full z-30 transition-[width,transform] duration-200
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-        ${sidebarCollapsed ? 'dh-sidebar-collapsed' : ''}`}>
+      <aside
+        className={`flex flex-col fixed h-full z-30 transition-[width,transform] duration-200 bg-white border-r transition-colors
+          ${sidebarCollapsed ? 'w-16' : 'w-60'} ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${sidebarCollapsed ? 'dh-sidebar-collapsed' : ''}`}
+        style={{
+          borderRightColor: HUISSTIJL.KLEUR.rand,
+        }}
+      >
         {/* Desktop collapse-knop: kleine ronde knop op de rechterrand, half over de border (VS Code stijl). */}
         <button
           onClick={toggleSidebarCollapsed}
           title={sidebarCollapsed ? 'Menu uitklappen' : 'Menu inklappen'}
           aria-label={sidebarCollapsed ? 'Menu uitklappen' : 'Menu inklappen'}
-          className="hidden md:flex absolute -right-3 top-6 z-40 w-6 h-6 rounded-full bg-white border border-gray-200 shadow-sm items-center justify-center text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-colors"
+          className="hidden md:flex absolute -right-3 top-6 z-40 w-6 h-6 rounded-full bg-white shadow-sm items-center justify-center transition-colors"
+          style={{
+            borderColor: HUISSTIJL.KLEUR.rand,
+            color: HUISSTIJL.KLEUR.muted,
+          }}
         >
           {sidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </button>
-        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+
+        {/* Logo & Title */}
+        <div
+          className="flex items-center justify-between"
+          style={{
+            padding: HUISSTIJL.MAAT.sidebarLogoPadding,
+            minHeight: HUISSTIJL.MAAT.sidebarLogoMinHoogte,
+          }}
+        >
           <div className="flex items-center gap-2 min-w-0">
-            {/* EXTRA-woordmerk (zwart), zoals in het Planbord; mini-variant bij ingeklapt menu */}
-            <img src={extraLogo} alt="EXTRA" className="dh-logo-mini h-2.5 w-auto" />
+            <img src={extraLogo} alt="EXTRA" className="dh-logo-mini w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay * 0.85}px` }} />
             <div className="dh-logo-text min-w-0">
-              <img src={extraLogo} alt="EXTRA" className="h-[26px] w-auto" />
-              <div className="text-sm text-gray-400 mt-1">Dashboard</div>
+              <img src={extraLogo} alt="EXTRA" className="w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay}px` }} />
+              <div className="mt-1" style={{ ...HUISSTIJL.TYPOGRAFIE.topbarSubtitel, fontSize: '11px', color: HUISSTIJL.KLEUR.muted }}>Dashboard</div>
             </div>
           </div>
           <button
-            className="md:hidden p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+            className="md:hidden p-1 rounded-lg transition-colors"
+            style={{ color: HUISSTIJL.KLEUR.muted }}
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="flex-1 px-3 overflow-y-auto pt-1 pb-3">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto" style={{ padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px` }}>
           {/* Group: Communicatie — TIJDELIJK VERBORGEN (module nog niet af).
               Terugzetten: verander `false &&` hieronder weer in de originele render.
               WhatsApp/Contacten/AI-instellingen-tabs en logica blijven intact. */}
@@ -964,7 +982,17 @@ export default function DashboardMockup() {
               setCommunicatieExpanded(next);
               try { localStorage.setItem('nav_communicatie_ingeklapt', next ? '0' : '1'); } catch {}
             }}
-            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-1 mb-1.5"
+            className="w-full flex items-center justify-between transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+              color: HUISSTIJL.KLEUR.muted,
+              padding: `4px 12px`,
+              marginTop: '24px',
+              marginBottom: '12px',
+            }}
           >
             <span>Communicatie</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${communicatieExpanded ? '' : '-rotate-90'}`} />
@@ -974,11 +1002,17 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
                 title="WhatsApp"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'whatsapp' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'whatsapp' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'whatsapp' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'whatsapp' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <MessageSquare className="h-5 w-5" strokeWidth={1.7} />
+                <MessageSquare className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>WhatsApp</span>
                 {waUnreadTotal > 0 && (
                   <span
@@ -993,21 +1027,33 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}
                 title="Contacten"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'whatsapp-contacten' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'whatsapp-contacten' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'whatsapp-contacten' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'whatsapp-contacten' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <Users className="h-5 w-5" strokeWidth={1.7} />
+                <Users className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>Contacten</span>
               </button>
               <button
                 onClick={() => { setActiveTab('whatsapp-ai'); setSidebarOpen(false); }}
                 title="AI-instellingen"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'whatsapp-ai' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'whatsapp-ai' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'whatsapp-ai' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'whatsapp-ai' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <Sparkles className="h-5 w-5" strokeWidth={1.7} />
+                <Sparkles className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>AI-instellingen</span>
               </button>
             </>
@@ -1017,10 +1063,20 @@ export default function DashboardMockup() {
           {/* Group: Medewerkers */}
           <button
             onClick={() => setMedewerkerExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-1 mb-1.5"
+            className="w-full flex items-center justify-between transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+              color: HUISSTIJL.KLEUR.muted,
+              padding: `4px 12px`,
+              marginTop: '24px',
+              marginBottom: '12px',
+            }}
           >
             <span>Medewerkers</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${medewerkerExpanded ? '' : '-rotate-90'}`} />
+            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: medewerkerExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
           </button>
           {medewerkerExpanded && (
             <>
@@ -1034,11 +1090,17 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                    activeTab === item.tab ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                  style={{
+                    fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                    fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                    padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                    gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  }}
                 >
-                  <item.icon className="h-5 w-5" strokeWidth={1.7} />
+                  <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -1048,10 +1110,20 @@ export default function DashboardMockup() {
           {/* Group: Bedrijven */}
           <button
             onClick={() => setBedrijvenExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-6 mb-1.5"
+            className="w-full flex items-center justify-between transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+              color: HUISSTIJL.KLEUR.muted,
+              padding: `4px 12px`,
+              marginTop: '24px',
+              marginBottom: '12px',
+            }}
           >
             <span>Bedrijven</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${bedrijvenExpanded ? '' : '-rotate-90'}`} />
+            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: bedrijvenExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
           </button>
           {bedrijvenExpanded && (
             <>
@@ -1067,11 +1139,17 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                    activeTab === item.tab ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                  style={{
+                    fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                    fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                    padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                    gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  }}
                 >
-                  <item.icon className="h-5 w-5" strokeWidth={1.7} />
+                  <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -1085,10 +1163,20 @@ export default function DashboardMockup() {
               setCampagnesExpanded(next);
               try { localStorage.setItem('nav_campagnes_ingeklapt', next ? '0' : '1'); } catch {}
             }}
-            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-6 mb-1.5"
+            className="w-full flex items-center justify-between transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+              color: HUISSTIJL.KLEUR.muted,
+              padding: `4px 12px`,
+              marginTop: '24px',
+              marginBottom: '12px',
+            }}
           >
             <span>Campagnes</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${campagnesExpanded ? '' : '-rotate-90'}`} />
+            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: campagnesExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
           </button>
           {campagnesExpanded && (
             <>
@@ -1103,11 +1191,17 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                    activeTab === item.tab ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                  style={{
+                    fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                    fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                    padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                    gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                    color: activeTab === item.tab ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                    backgroundColor: activeTab === item.tab ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                  }}
                 >
-                  <item.icon className="h-5 w-5" strokeWidth={1.7} />
+                  <item.icon className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -1117,21 +1211,37 @@ export default function DashboardMockup() {
           {/* Group: Marketing & SEO */}
           <button
             onClick={() => setBlogExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-6 mb-1.5"
+            className="w-full flex items-center justify-between transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+              color: HUISSTIJL.KLEUR.muted,
+              padding: `4px 12px`,
+              marginTop: '24px',
+              marginBottom: '12px',
+            }}
           >
             <span>Marketing & SEO</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${blogExpanded ? '' : '-rotate-90'}`} />
+            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: blogExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
           </button>
           {blogExpanded && (
             <>
               <button
                 onClick={() => { setActiveTab('blog'); setSidebarOpen(false); }}
                 title="Blog & SEO"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'blog' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'blog' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'blog' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'blog' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <BookOpen className="h-5 w-5" strokeWidth={1.7} />
+                <BookOpen className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>Blog & SEO</span>
                 {blogPosts.filter((p: any) => p.status === 'scheduled').length > 0 && (
                   <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">
@@ -1142,11 +1252,17 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('vacatures-cms'); setSidebarOpen(false); }}
                 title="Vacatures & SEO"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'vacatures-cms' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'vacatures-cms' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'vacatures-cms' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'vacatures-cms' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <Briefcase className="h-5 w-5" strokeWidth={1.7} />
+                <Briefcase className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>Vacatures & SEO</span>
                 {vacancyPosts.filter((p: any) => p.status === 'published').length > 0 && (
                   <span className="ml-auto text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">
@@ -1157,21 +1273,33 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('stats'); setSidebarOpen(false); }}
                 title="Website Statistieken"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'stats' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'stats' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'stats' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'stats' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <BarChart3 className="h-5 w-5" strokeWidth={1.7} />
+                <BarChart3 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>Website Statistieken</span>
               </button>
               <button
                 onClick={() => { setActiveTab('kpi'); setSidebarOpen(false); }}
                 title="KPI & Rapportage"
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
-                  activeTab === 'kpi' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                style={{
+                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+                  fontWeight: activeTab === 'kpi' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+                  color: activeTab === 'kpi' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+                  backgroundColor: activeTab === 'kpi' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+                }}
               >
-                <TrendingUp className="h-5 w-5" strokeWidth={1.7} />
+                <TrendingUp className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
                 <span>KPI & Rapportage</span>
               </button>
             </>
@@ -1179,17 +1307,31 @@ export default function DashboardMockup() {
         </nav>
 
         {/* Systeem */}
-        <div className="px-3 mt-3 mb-1 dh-systeem-row">
-          <span className="text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em]">Systeem</span>
+        <div className="dh-systeem-row" style={{ padding: '4px 12px', marginTop: '24px', marginBottom: '8px' }}>
+          <span style={{
+            fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+            fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+            textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+            letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+            color: HUISSTIJL.KLEUR.muted,
+          }}>Systeem</span>
         </div>
         <button
           onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
           title="Admin-accounts"
-          className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 mx-2 transition-colors text-[15px] ${
-            activeTab === 'admin-beheer' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-          }`}
+          className="w-full flex items-center rounded-xl mb-1 transition-colors"
+          style={{
+            fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+            fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+            padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+            marginLeft: '8px',
+            marginRight: '8px',
+            gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+            color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+            backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+          }}
         >
-          <Settings2 className="h-5 w-5" strokeWidth={1.7} />
+          <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
           <span>Admin-accounts</span>
         </button>
 
