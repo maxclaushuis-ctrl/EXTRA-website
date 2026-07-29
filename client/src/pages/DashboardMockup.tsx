@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import extraLogo from '@assets/extra-logo-zwart.svg';
 import { formatDatum, formatDatumTijd } from '@/lib/datum';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { useAuth } from '@/contexts/AuthContext';
@@ -937,12 +938,11 @@ export default function DashboardMockup() {
         </button>
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <LayoutDashboard className="h-4 w-4 text-white" />
-            </div>
+            {/* EXTRA-woordmerk (zwart), zoals in het Planbord; mini-variant bij ingeklapt menu */}
+            <img src={extraLogo} alt="EXTRA" className="dh-logo-mini h-2.5 w-auto" />
             <div className="dh-logo-text min-w-0">
-              <div className="font-bold text-purple-600 text-sm">EXTRAATJE</div>
-              <div className="text-xs text-gray-400">Beheerdersdashboard</div>
+              <img src={extraLogo} alt="EXTRA" className="h-[19px] w-auto" />
+              <div className="text-xs text-gray-400 mt-1">Dashboard</div>
             </div>
           </div>
           <button

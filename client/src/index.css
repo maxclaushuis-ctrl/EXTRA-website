@@ -399,3 +399,6 @@ aside.dh-sidebar-collapsed .dh-userinfo button.gap-3 {
 }
 aside.dh-sidebar-collapsed .dh-userinfo > div:first-child { display: none !important; }
 aside.dh-sidebar-collapsed .dh-logo-text { display: none !important; }
+/* EXTRA-woordmerk: mini-variant alleen tonen wanneer het menu is ingeklapt */
+.dh-logo-mini { display: none; }
+aside.dh-sidebar-collapsed .dh-logo-mini { display: block !important; }
