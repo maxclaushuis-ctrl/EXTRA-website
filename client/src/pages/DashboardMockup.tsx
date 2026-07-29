@@ -924,7 +924,7 @@ export default function DashboardMockup() {
       )}
 
       {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-56'} bg-white border-r border-gray-200 flex flex-col fixed h-full z-30 transition-[width,transform] duration-200
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-200 flex flex-col fixed h-full z-30 transition-[width,transform] duration-200
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         ${sidebarCollapsed ? 'dh-sidebar-collapsed' : ''}`}>
         {/* Desktop collapse-knop: kleine ronde knop op de rechterrand, half over de border (VS Code stijl). */}
@@ -936,13 +936,13 @@ export default function DashboardMockup() {
         >
           {sidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </button>
-        <div className="p-4 border-b flex items-center justify-between">
+        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             {/* EXTRA-woordmerk (zwart), zoals in het Planbord; mini-variant bij ingeklapt menu */}
             <img src={extraLogo} alt="EXTRA" className="dh-logo-mini h-2.5 w-auto" />
             <div className="dh-logo-text min-w-0">
-              <img src={extraLogo} alt="EXTRA" className="h-[19px] w-auto" />
-              <div className="text-xs text-gray-400 mt-1">Dashboard</div>
+              <img src={extraLogo} alt="EXTRA" className="h-[26px] w-auto" />
+              <div className="text-sm text-gray-400 mt-1">Dashboard</div>
             </div>
           </div>
           <button
@@ -953,7 +953,7 @@ export default function DashboardMockup() {
           </button>
         </div>
 
-        <nav className="flex-1 px-2 overflow-y-auto pt-3">
+        <nav className="flex-1 px-3 overflow-y-auto pt-1 pb-3">
           {/* Group: Communicatie — TIJDELIJK VERBORGEN (module nog niet af).
               Terugzetten: verander `false &&` hieronder weer in de originele render.
               WhatsApp/Contacten/AI-instellingen-tabs en logica blijven intact. */}
@@ -964,7 +964,7 @@ export default function DashboardMockup() {
               setCommunicatieExpanded(next);
               try { localStorage.setItem('nav_communicatie_ingeklapt', next ? '0' : '1'); } catch {}
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mb-0.5"
+            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-1 mb-1.5"
           >
             <span>Communicatie</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${communicatieExpanded ? '' : '-rotate-90'}`} />
@@ -974,11 +974,11 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
                 title="WhatsApp"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'whatsapp' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'whatsapp' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-5 w-5" strokeWidth={1.7} />
                 <span>WhatsApp</span>
                 {waUnreadTotal > 0 && (
                   <span
@@ -993,21 +993,21 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}
                 title="Contacten"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'whatsapp-contacten' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'whatsapp-contacten' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Users className="h-4 w-4" />
+                <Users className="h-5 w-5" strokeWidth={1.7} />
                 <span>Contacten</span>
               </button>
               <button
                 onClick={() => { setActiveTab('whatsapp-ai'); setSidebarOpen(false); }}
                 title="AI-instellingen"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'whatsapp-ai' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'whatsapp-ai' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Sparkles className="h-4 w-4" />
+                <Sparkles className="h-5 w-5" strokeWidth={1.7} />
                 <span>AI-instellingen</span>
               </button>
             </>
@@ -1017,7 +1017,7 @@ export default function DashboardMockup() {
           {/* Group: Medewerkers */}
           <button
             onClick={() => setMedewerkerExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mb-0.5"
+            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-1 mb-1.5"
           >
             <span>Medewerkers</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${medewerkerExpanded ? '' : '-rotate-90'}`} />
@@ -1034,11 +1034,11 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                    activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                    activeTab === item.tab ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-5 w-5" strokeWidth={1.7} />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -1048,7 +1048,7 @@ export default function DashboardMockup() {
           {/* Group: Bedrijven */}
           <button
             onClick={() => setBedrijvenExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-6 mb-1.5"
           >
             <span>Bedrijven</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${bedrijvenExpanded ? '' : '-rotate-90'}`} />
@@ -1067,11 +1067,11 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                    activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                    activeTab === item.tab ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-5 w-5" strokeWidth={1.7} />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -1085,7 +1085,7 @@ export default function DashboardMockup() {
               setCampagnesExpanded(next);
               try { localStorage.setItem('nav_campagnes_ingeklapt', next ? '0' : '1'); } catch {}
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-6 mb-1.5"
           >
             <span>Campagnes</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${campagnesExpanded ? '' : '-rotate-90'}`} />
@@ -1103,11 +1103,11 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                    activeTab === item.tab ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                    activeTab === item.tab ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-5 w-5" strokeWidth={1.7} />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -1117,7 +1117,7 @@ export default function DashboardMockup() {
           {/* Group: Marketing & SEO */}
           <button
             onClick={() => setBlogExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors mt-3 mb-0.5"
+            className="w-full flex items-center justify-between px-3 py-1 text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em] hover:text-gray-500 transition-colors mt-6 mb-1.5"
           >
             <span>Marketing & SEO</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${blogExpanded ? '' : '-rotate-90'}`} />
@@ -1127,11 +1127,11 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('blog'); setSidebarOpen(false); }}
                 title="Blog & SEO"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'blog' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'blog' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <BookOpen className="h-4 w-4" />
+                <BookOpen className="h-5 w-5" strokeWidth={1.7} />
                 <span>Blog & SEO</span>
                 {blogPosts.filter((p: any) => p.status === 'scheduled').length > 0 && (
                   <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">
@@ -1142,11 +1142,11 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('vacatures-cms'); setSidebarOpen(false); }}
                 title="Vacatures & SEO"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'vacatures-cms' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'vacatures-cms' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Briefcase className="h-4 w-4" />
+                <Briefcase className="h-5 w-5" strokeWidth={1.7} />
                 <span>Vacatures & SEO</span>
                 {vacancyPosts.filter((p: any) => p.status === 'published').length > 0 && (
                   <span className="ml-auto text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">
@@ -1157,21 +1157,21 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('stats'); setSidebarOpen(false); }}
                 title="Website Statistieken"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'stats' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'stats' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <BarChart3 className="h-4 w-4" />
+                <BarChart3 className="h-5 w-5" strokeWidth={1.7} />
                 <span>Website Statistieken</span>
               </button>
               <button
                 onClick={() => { setActiveTab('kpi'); setSidebarOpen(false); }}
                 title="KPI & Rapportage"
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-colors text-sm ${
-                  activeTab === 'kpi' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 transition-colors text-[15px] ${
+                  activeTab === 'kpi' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <TrendingUp className="h-4 w-4" />
+                <TrendingUp className="h-5 w-5" strokeWidth={1.7} />
                 <span>KPI & Rapportage</span>
               </button>
             </>
@@ -1180,16 +1180,16 @@ export default function DashboardMockup() {
 
         {/* Systeem */}
         <div className="px-3 mt-3 mb-1 dh-systeem-row">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Systeem</span>
+          <span className="text-[13px] font-semibold text-gray-300 uppercase tracking-[0.06em]">Systeem</span>
         </div>
         <button
           onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
           title="Admin-accounts"
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 mx-2 transition-colors text-sm ${
-            activeTab === 'admin-beheer' ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+          className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl mb-1 mx-2 transition-colors text-[15px] ${
+            activeTab === 'admin-beheer' ? 'bg-[#ece9fb] text-purple-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <Settings2 className="h-4 w-4" />
+          <Settings2 className="h-5 w-5" strokeWidth={1.7} />
           <span>Admin-accounts</span>
         </button>
 
@@ -1198,17 +1198,17 @@ export default function DashboardMockup() {
           <button
             onClick={() => { setChangePwData({ current: '', next: '', confirm: '' }); setChangePwError(''); setChangePasswordOpen(true); }}
             title="Wachtwoord wijzigen"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            <Settings2 className="h-4 w-4" />
+            <Settings2 className="h-5 w-5" strokeWidth={1.7} />
             <span>Wachtwoord wijzigen</span>
           </button>
           <button
             onClick={() => logout()}
             title="Uitloggen"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-5 w-5" strokeWidth={1.7} />
             <span>Uitloggen</span>
           </button>
         </div>
@@ -1292,7 +1292,7 @@ export default function DashboardMockup() {
       </aside>
 
       {/* Main Content — offset volgt sidebar-breedte (collapsed = 4rem, anders 14rem) */}
-      <main className={`flex-1 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-56'} overflow-auto transition-[margin] duration-200`}>
+      <main className={`flex-1 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'} overflow-auto transition-[margin] duration-200`}>
         {/* Header */}
         <header className="bg-white border-b px-6 py-3 sticky top-0 z-10">
           <div className="flex items-center justify-between">
