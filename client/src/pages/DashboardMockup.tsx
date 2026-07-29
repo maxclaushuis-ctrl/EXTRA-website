@@ -1060,7 +1060,7 @@ export default function DashboardMockup() {
           )}
           </>)}
 
-          {/* Group: Medewerkers */}
+          {/* Group: Medewerkers — eerste groep: geen extra top-margin (Planbord) */}
           <button
             onClick={() => setMedewerkerExpanded(e => !e)}
             className="w-full flex items-center justify-between transition-colors"
@@ -1071,7 +1071,7 @@ export default function DashboardMockup() {
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
               color: HUISSTIJL.KLEUR.muted,
               padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
-              marginTop: '24px',
+              marginTop: '4px',
               marginBottom: '12px',
             }}
           >
@@ -1306,51 +1306,73 @@ export default function DashboardMockup() {
           )}
         </nav>
 
-        {/* Systeem */}
-        <div className="dh-systeem-row" style={{ padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, marginTop: '24px', marginBottom: '8px' }}>
-          <span style={{
+        {/* Systeem — zelfde container-padding als nav zodat alles gelijk uitlijnt */}
+        <div style={{ padding: `0 ${HUISSTIJL.MAAT.sidebarNavPaddingX}px` }}>
+          <div className="dh-systeem-row" style={{ padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, marginTop: '16px', marginBottom: '12px' }}>
+            <span style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
+              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
+              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
+              color: HUISSTIJL.KLEUR.muted,
+            }}>Systeem</span>
+          </div>
+          <button
+            onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
+            title="Admin-accounts"
+            className="w-full flex items-center rounded-xl mb-1 transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+              fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+              padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+              gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+              color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
+              backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
+            }}
+          >
+            <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
+            <span>Admin-accounts</span>
+          </button>
+        </div>
+
+        <div className="dh-userinfo" style={{ padding: `8px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, borderTop: `1px solid ${HUISSTIJL.KLEUR.rand}`, marginTop: '8px' }}>
+          <div className="truncate" style={{
             fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
             fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
             textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
             letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
             color: HUISSTIJL.KLEUR.muted,
-          }}>Systeem</span>
-        </div>
-        <button
-          onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
-          title="Admin-accounts"
-          className="w-full flex items-center rounded-xl mb-1 transition-colors"
-          style={{
-            fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
-            fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
-            padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
-            marginLeft: '0',
-            marginRight: '0',
-            gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-            color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-            backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
-          }}
-        >
-          <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
-          <span>Admin-accounts</span>
-        </button>
-
-        <div className="p-2 border-t mt-2 dh-userinfo">
-          <div className="px-3 py-1.5 text-xs text-gray-400 truncate">{user?.firstName} {user?.lastName}</div>
+            padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
+            marginBottom: '4px',
+          }}>{user?.firstName} {user?.lastName}</div>
           <button
             onClick={() => { setChangePwData({ current: '', next: '', confirm: '' }); setChangePwError(''); setChangePasswordOpen(true); }}
             title="Wachtwoord wijzigen"
-            className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center rounded-xl mb-1 transition-colors"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+              padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+              gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+              color: HUISSTIJL.KLEUR.inkt,
+            }}
           >
-            <Settings2 className="h-5 w-5" strokeWidth={1.7} />
+            <Settings2 className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
             <span>Wachtwoord wijzigen</span>
           </button>
           <button
             onClick={() => logout()}
             title="Uitloggen"
-            className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="w-full flex items-center rounded-xl transition-colors hover:text-red-600"
+            style={{
+              fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
+              fontWeight: HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
+              padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
+              gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
+              color: HUISSTIJL.KLEUR.inkt,
+            }}
           >
-            <LogOut className="h-5 w-5" strokeWidth={1.7} />
+            <LogOut className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
             <span>Uitloggen</span>
           </button>
         </div>
