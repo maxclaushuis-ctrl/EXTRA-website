@@ -165,11 +165,12 @@ export const MAAT = {
   sidebarBreedte: 220,
   sidebarBreedteIngeklapt: 56,
   sidebarMenuItemPaddingY: 7,
-  sidebarMenuItemPaddingX: 20,
+  sidebarMenuItemPaddingX: 12,  // Strakker links uitgelijnd (Planboard-style)
   sidebarMenuItemGap: 12,
   sidebarIconMaat: 16,
-  sidebarLogoPadding: '20px 20px 16px 20px',
+  sidebarLogoPadding: '20px 16px 16px 16px',  // Minder links padding
   sidebarLogoMinHoogte: 64,
+  sidebarNavPaddingX: 8,  // Minimale padding linkerkant nav container
 
   // Topbar
   topbarHoogte: 56,

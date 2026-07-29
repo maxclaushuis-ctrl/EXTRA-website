@@ -971,7 +971,7 @@ export default function DashboardMockup() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto" style={{ padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px` }}>
+        <nav className="flex-1 overflow-y-auto" style={{ padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px` }}>
           {/* Group: Communicatie — TIJDELIJK VERBORGEN (module nog niet af).
               Terugzetten: verander `false &&` hieronder weer in de originele render.
               WhatsApp/Contacten/AI-instellingen-tabs en logica blijven intact. */}
@@ -989,7 +989,7 @@ export default function DashboardMockup() {
               textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
               color: HUISSTIJL.KLEUR.muted,
-              padding: `4px 12px`,
+              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
               marginTop: '24px',
               marginBottom: '12px',
             }}
@@ -1070,7 +1070,7 @@ export default function DashboardMockup() {
               textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
               color: HUISSTIJL.KLEUR.muted,
-              padding: `4px 12px`,
+              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
               marginTop: '24px',
               marginBottom: '12px',
             }}
@@ -1117,7 +1117,7 @@ export default function DashboardMockup() {
               textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
               color: HUISSTIJL.KLEUR.muted,
-              padding: `4px 12px`,
+              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
               marginTop: '24px',
               marginBottom: '12px',
             }}
@@ -1170,7 +1170,7 @@ export default function DashboardMockup() {
               textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
               color: HUISSTIJL.KLEUR.muted,
-              padding: `4px 12px`,
+              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
               marginTop: '24px',
               marginBottom: '12px',
             }}
@@ -1218,7 +1218,7 @@ export default function DashboardMockup() {
               textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
               letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
               color: HUISSTIJL.KLEUR.muted,
-              padding: `4px 12px`,
+              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
               marginTop: '24px',
               marginBottom: '12px',
             }}
@@ -1307,7 +1307,7 @@ export default function DashboardMockup() {
         </nav>
 
         {/* Systeem */}
-        <div className="dh-systeem-row" style={{ padding: '4px 12px', marginTop: '24px', marginBottom: '8px' }}>
+        <div className="dh-systeem-row" style={{ padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, marginTop: '24px', marginBottom: '8px' }}>
           <span style={{
             fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
             fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
@@ -1324,8 +1324,8 @@ export default function DashboardMockup() {
             fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
             fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
             padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
-            marginLeft: '8px',
-            marginRight: '8px',
+            marginLeft: '0',
+            marginRight: '0',
             gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
             color: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
             backgroundColor: activeTab === 'admin-beheer' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
