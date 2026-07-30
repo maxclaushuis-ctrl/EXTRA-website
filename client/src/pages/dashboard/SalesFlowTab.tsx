@@ -20,8 +20,17 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
-  useDraggable, useDroppable, type DragStartEvent, type DragEndEvent,
+  useDraggable, useDroppable, pointerWithin, rectIntersection,
+  type CollisionDetection, type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
+
+// Drop-doel bepalen op basis van de MUISPOSITIE, niet de kaart-rechthoek.
+// Met rectIntersection (de default) 'wint' de bronkolom vaak omdat de brede
+// kaart daar nog het meest mee overlapt — de kaart springt dan terug.
+const dropOpMuispositie: CollisionDetection = (args) => {
+  const raak = pointerWithin(args);
+  return raak.length > 0 ? raak : rectIntersection(args);
+};
 import { Plus, Search, Settings2, Check, ArrowUp, ArrowDown, Trash2, FolderPlus, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Rule { phase: string; label: string; position: number; triggerDays: number | null; triggerAction: string | null; isEndState: boolean; behavior?: string; asksChannel?: boolean; useBusinessDays?: boolean; }
@@ -242,7 +251,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v8</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v9</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
@@ -269,7 +278,7 @@ export default function SalesFlowTab() {
       {isLoading ? (
         <div className="text-gray-400 text-sm py-20 text-center">Laden…</div>
       ) : (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={dropOpMuispositie} onDragStart={onDragStart} onDragEnd={onDragEnd}>
           <div className="flex border border-gray-200 rounded-xl bg-white overflow-x-auto">
             {rules.map(r => <Kolom key={r.phase} rule={r} cards={perFase[r.phase] ?? []} batchId={batch !== 'alle' ? parseInt(batch, 10) : null} onBatchAdvance={onBatchAdvance} onKaartOpen={openKaart} />)}
           </div>

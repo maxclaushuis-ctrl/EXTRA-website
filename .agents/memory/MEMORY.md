@@ -3,4 +3,5 @@
 - [db:push is interactive](db-push-interactive.md) — drizzle-kit push needs a TTY; piped stdin won't answer prompts. For additive nullable columns, ALTER TABLE directly + keep schema.ts in sync.
 - [Planbord webhook resend](planbord-webhook-resend.md) — applicant.ready is idempotent (re-send updates, no duplicates); Planbord reads only data.referralCode; dev env secrets reach real Planbord.
 - [Object Storage uploads](object-storage-uploads.md) — server-side file.save() MUST use resumable:false + timeout, or uploads hang forever in deployment (works in dev).
+- [dnd-kit drop detection](dnd-kit-collision.md) — kanban-drag "springt terug"? Default rectIntersection kiest bronkolom; gebruik pointerWithin + fallback als collisionDetection.
 - [Login gebruikt in-memory users](auth-memstorage-users.md) — DB users-tabel is alleen FK-doel; inlogbare users moeten in MemStorage geseed, wachtwoorden via env-vars.

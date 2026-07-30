@@ -1,0 +1,23 @@
+FIX: Verslepen van kaarten in de Salesflow werkt niet meer
+
+Symptoom: Op het Salesflow-kanbanbord kunnen kaarten niet meer naar een andere fase-kolom worden gesleept. De kaart beweegt niet mee, of springt terug zonder dat de fase wijzigt. Dit werkte eerder wél en is gebroken bij een recente verbouwing.
+
+Verwacht gedrag (herstellen, beide richtingen):
+
+Een kaart oppakken en naar een andere kolom slepen verplaatst de kaart visueel én persistent.
+Bij het loslaten wordt het bestaande move-endpoint aangeroepen (/api/sales/flow/cards/:id/move → moveCardToPhase in server/salesflow.ts) zodat: fase wijzigt, activiteit gelogd wordt, reminder/trigger verspringt en crm_companies.phase meeloopt.
+Terugslepen naar een eerdere kolom werkt ook.
+Een gewone klik op de kaart (zonder slepen) blijft de detailweergave openen — klik en sleep mogen elkaar niet blokkeren.
+
+Waar te zoeken — controleer in deze volgorde in client/src/pages/dashboard/SalesFlowTab.tsx:
+
+DndContext intact? Er hoort een <DndContext sensors={sensors} onDragStart={...} onDragEnd={...}> om het bord te staan (@dnd-kit/core). Controleer dat onDragEnd nog bestaat, de nieuwe fase bepaalt uit over.id en de move-API aanroept.
+Sensors + activation constraint. Gebruik PointerSensor met activationConstraint: { distance: 5 } (of vergelijkbaar). Als die constraint is verdwenen, "wint" de onClick van de kaart en start de drag nooit; als hij te hoog staat, voelt slepen dood.
+Draggable/droppable id's. De kolom-droppables moeten id's hebben die exact overeenkomen met de fase-sleutels (selectie, mailing_verstuurd, nagebeld, bericht_gestuurd, info_verstuurd, opvolgen, deal, geen_interesse) en de kaarten met useDraggable/useSortable aan card.id. Check of een refactor deze id's heeft hernoemd.
+Click-handler conflict. Als er recent een onClick (bijv. "open lead-detail") op de kaart of een parent is toegevoegd: zorg dat die niet preventDefault/stopPropagation doet op pointer-events, en dat de drag-listeners ({...listeners} {...attributes}) nog op het kaart-element gespread worden.
+Overlay/z-index. Controleer of er geen nieuw element (drawer, tooltip-laag, sticky header) met hogere z-index óver de kolommen ligt dat pointer-events afvangt (pointer-events: none waar nodig).
+Console/netwerk. Reproduceer, kijk in de browserconsole naar errors bij mousedown/drop, en of de move-request überhaupt vuurt (en wat de server antwoordt).
+
+Wat NIET mag: geen nieuwe drag-library introduceren, de trigger-/reminderlogica in server/salesflow.ts niet wijzigen, en de fase-koppeling met Leads & Prospects (één bron van waarheid) intact laten.
+
+Acceptatietest na de fix: sleep een kaart van Selectie → Mailing verstuurd (fase + "volgende actie" veranderen, activiteit gelogd), sleep hem terug (zelfde, andersom), klik op een kaart zonder slepen (detail opent), en herlaad de pagina (kaart staat nog in de juiste kolom).
