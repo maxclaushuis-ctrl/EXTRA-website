@@ -1,0 +1,39 @@
+# Prompt voor de Replit Agent — 6 ontbrekende kledingfoto's
+
+De kledingbibliotheek staat nu op 12 items. Zes daarvan hebben nog geen foto.
+Plak onderstaande prompt (alles onder de streep) in de Replit Agent.
+
+---
+
+Genereer 6 productfoto's voor de kledingbibliotheek van het Planbord. Ze moeten
+naadloos passen bij de 6 bestaande foto's in `artifacts/api-server/public/dresscode/`
+(bekijk `wit-overhemd.png` en `zwarte-pantalon.png` als referentie vóór je begint).
+
+**Stijl — exact aanhouden:**
+
+- 1024 × 1024 px, PNG
+- Fotorealistische productfoto, één kledingstuk per beeld, geen model, geen mens
+- Egale zeer lichte achtergrond (bijna wit, licht grijzige gradatie)
+- Zachte, natuurlijke slagschaduw onder het kledingstuk
+- Licht schuin van boven gefotografeerd, kledingstuk netjes opgevouwen of
+  neergelegd (schoenen als paar, licht schuin naast elkaar)
+- Geen logo's, geen merknamen, geen tekst, geen props, geen rand of kader
+
+**De 6 bestanden — sla ze op met exact deze namen in
+`artifacts/api-server/public/dresscode/` én kopieer ze naar
+`artifacts/planbord/public/dresscode/`:**
+
+| Bestandsnaam | Onderwerp |
+|---|---|
+| `zwart-overhemd.png` | Effen zwart overhemd met kraag, netjes opgevouwen, lange mouwen, zwarte knopen |
+| `wit-tshirt.png` | Effen wit t-shirt, ronde hals, korte mouwen, opgevouwen |
+| `zwart-tshirt.png` | Effen zwart t-shirt, ronde hals, korte mouwen, opgevouwen |
+| `zwarte-spijkerbroek.png` | Effen zwarte jeans, opgevouwen, geen wassing/vervaging, klassieke denim-stiksels |
+| `zwarte-loafers.png` | Paar zwarte leren loafers (instappers zonder veters), gepoetst |
+| `zwarte-koksbuis.png` | Zwarte koksbuis met dubbele knopenrij, lange mouwen, opgevouwen |
+
+De database verwijst al naar deze paden (`/api/static/dresscode/<naam>.png`), dus
+zodra de bestanden er staan verschijnen de foto's vanzelf in het Admin paneel →
+Kleding. Wijzig niets aan de seed in `artifacts/api-server/src/routes/index.ts`.
+
+Publiceer daarna (Republish), anders komen de bestanden niet in de live-omgeving.
