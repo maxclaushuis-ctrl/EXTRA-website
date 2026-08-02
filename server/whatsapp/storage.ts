@@ -3,10 +3,12 @@
  * Bouwt op `whatsapp_messages` + `whatsapp_conversations` tabellen.
  */
 import { db } from '../db';
-import { whatsappMessages, whatsappConversations, type InsertWhatsappMessage } from '@shared/schema';
+import { whatsappMessages, whatsappConversations, whatsappTasks, type InsertWhatsappMessage } from '@shared/schema';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { matchPhoneToContact, type MatchCategory } from './matcher';
 import { normalizePhone } from './phone';
+import type { AiTaskSuggestion } from './aiClassifier';
+import { buildTaskDraft, isDuplicateOfOpenTask } from './taskRules';
 
 const PREVIEW_LEN = 100;
 
@@ -62,6 +64,9 @@ export async function upsertConversation(args: {
         lastInboundAt: inbound
           ? sql`GREATEST(${whatsappConversations.lastInboundAt}, ${at})`
           : sql`${whatsappConversations.lastInboundAt}`,
+        // Fase 2: nieuw INKOMEND bericht heft de snooze op zodat het gesprek
+        // weer in de actieve lijst verschijnt.
+        snoozedUntil: inbound ? null : sql`${whatsappConversations.snoozedUntil}`,
         updatedAt: sql`GREATEST(${whatsappConversations.updatedAt}, ${at})`,
       },
     });
@@ -140,23 +145,294 @@ export async function markConversationRead(phoneNumber: string): Promise<void> {
 }
 
 /**
+ * Fase 3: afgeleide weergavestatus van een gesprek. Bewust AFGELEID en niet
+ * opgeslagen — er is dus geen tweede statusveld dat uit de pas kan gaan lopen.
+ */
+export type ConversationDisplayStatus =
+  | 'wacht_op_planner'
+  | 'afgehandeld_ai'
+  | 'gesnoozed'
+  | 'opgelost'
+  | 'spam'
+  | 'open';
+
+/**
  * Lijst gesprekken, eventueel gefilterd op categorie.
+ *
+ * Fase 3 voegt twee dingen toe:
+ *  - sortering: wacht-op-planner bovenaan (nieuwste escalatie eerst)
+ *  - afgeleide velden `aiHandledLast` en `displayStatus` per rij
  */
 export async function listConversations(args: {
   category?: 'candidate' | 'prospect' | 'unmatched';
   limit?: number;
   offset?: number;
+  /**
+   * Fase 2 snooze-filter:
+   *  - 'exclude' (default): verberg gesprekken met snoozed_until in de toekomst
+   *  - 'only':    toon alléén gesnoozede gesprekken
+   *  - 'all':     geen snooze-filter
+   */
+  snoozed?: 'exclude' | 'only' | 'all';
 }) {
-  const { category, limit = 50, offset = 0 } = args;
-  const whereCond = category ? eq(whatsappConversations.matchCategory, category) : undefined;
+  const { category, limit = 50, offset = 0, snoozed = 'exclude' } = args;
+  const conds = [];
+  if (category) conds.push(eq(whatsappConversations.matchCategory, category));
+  if (snoozed === 'exclude') {
+    conds.push(sql`(${whatsappConversations.snoozedUntil} IS NULL OR ${whatsappConversations.snoozedUntil} <= NOW())`);
+  } else if (snoozed === 'only') {
+    conds.push(sql`${whatsappConversations.snoozedUntil} > NOW()`);
+  }
+  const whereCond = conds.length === 0 ? undefined : conds.length === 1 ? conds[0] : and(...conds);
+
+  // "Afgehandeld door AI" = het laatste bericht in het gesprek is uitgaand én
+  // heeft geen menselijke afzender (sent_by_user_id IS NULL). Live afgeleid uit
+  // whatsapp_messages, zodat het niet kan verouderen.
+  const aiHandledLast = sql<boolean>`(
+    SELECT m.direction = 'outbound' AND m.sent_by_user_id IS NULL
+    FROM whatsapp_messages m
+    WHERE m.from_number = ${whatsappConversations.phoneNumber}
+       OR m.to_number   = ${whatsappConversations.phoneNumber}
+    ORDER BY m.created_at DESC, m.id DESC
+    LIMIT 1
+  )`;
+
   const rows = await db
-    .select()
+    .select({
+      conv: whatsappConversations,
+      aiHandledLast,
+    })
     .from(whatsappConversations)
     .where(whereCond as any)
-    .orderBy(desc(whatsappConversations.lastMessageAt))
+    .orderBy(
+      sql`CASE WHEN ${whatsappConversations.escalatedAt} IS NOT NULL
+                AND ${whatsappConversations.inboxStatus} = 'open'
+               THEN 0 ELSE 1 END`,
+      sql`${whatsappConversations.escalatedAt} DESC NULLS LAST`,
+      desc(whatsappConversations.lastMessageAt),
+    )
     .limit(limit)
     .offset(offset);
-  return rows;
+
+  return rows.map(r => {
+    const c = r.conv;
+    const aiLast = r.aiHandledLast === true;
+    const gesnoozed = !!c.snoozedUntil && new Date(c.snoozedUntil).getTime() > Date.now();
+    let displayStatus: ConversationDisplayStatus;
+    if (c.inboxStatus === 'spam') displayStatus = 'spam';
+    else if (c.inboxStatus === 'resolved') displayStatus = 'opgelost';
+    else if (c.escalatedAt) displayStatus = 'wacht_op_planner';
+    else if (gesnoozed) displayStatus = 'gesnoozed';
+    else if (aiLast) displayStatus = 'afgehandeld_ai';
+    else displayStatus = 'open';
+    return { ...c, aiHandledLast: aiLast, displayStatus };
+  });
+}
+
+/**
+ * Fase 3: schrijf het AI-label weg. Respecteert een handmatige keuze — als een
+ * planner de categorie zelf heeft gezet, laat de AI die staan.
+ */
+export async function setAiCategory(
+  phoneNumber: string,
+  category: string,
+  source: 'ai' | 'handmatig',
+): Promise<void> {
+  if (source === 'handmatig') {
+    await db.update(whatsappConversations)
+      .set({ aiCategory: category, aiCategorySource: 'handmatig', updatedAt: new Date() })
+      .where(eq(whatsappConversations.phoneNumber, phoneNumber));
+    return;
+  }
+  await db.update(whatsappConversations)
+    .set({ aiCategory: category, aiCategorySource: 'ai', updatedAt: new Date() })
+    .where(and(
+      eq(whatsappConversations.phoneNumber, phoneNumber),
+      sql`${whatsappConversations.aiCategorySource} IS DISTINCT FROM 'handmatig'`,
+    ));
+}
+
+/**
+ * Fase 3: markeer een gesprek als geëscaleerd naar een mens.
+ *
+ * escalated_at wordt NIET ververst wanneer het gesprek al als escalatie
+ * openstaat: anders springt het bij elk volgend bericht weer bovenaan en
+ * verlies je de "langst wachtende onderaan"-volgorde van de wachtrij.
+ */
+export async function markEscalated(phoneNumber: string, reason: string): Promise<void> {
+  await db.update(whatsappConversations)
+    .set({
+      escalationReason: reason,
+      escalatedAt: sql`COALESCE(${whatsappConversations.escalatedAt}, NOW())`,
+      updatedAt: new Date(),
+    })
+    .where(eq(whatsappConversations.phoneNumber, phoneNumber));
+}
+
+/**
+ * Fase 3: escalatie opheffen. Wordt aangeroepen zodra een MENS antwoordt of het
+ * gesprek op opgelost/spam wordt gezet — dan wacht er niets meer op de planner.
+ */
+export async function clearEscalation(phoneNumber: string): Promise<void> {
+  await db.update(whatsappConversations)
+    .set({ escalationReason: null, escalatedAt: null, updatedAt: new Date() })
+    .where(and(
+      eq(whatsappConversations.phoneNumber, phoneNumber),
+      sql`${whatsappConversations.escalatedAt} IS NOT NULL`,
+    ));
+}
+
+// ─── Fase 3B: taken ─────────────────────────────────────────────────────────
+
+/**
+ * Maak een taak aan uit een AI-suggestie. Geeft de nieuwe taak-id terug, of
+ * null als er (bewust) geen taak is aangemaakt.
+ *
+ * Drie beveiligingen tegen dubbele of lege taken:
+ *  1. buildTaskDraft weigert lege/onzinnige samenvattingen
+ *  2. isDuplicateOfOpenTask vangt hetzelfde verzoek in een tweede bericht
+ *  3. de unieke index op source_message_id vangt een dubbel bezorgde webhook
+ *     (onConflictDoNothing, dus dat is geen fout maar een no-op)
+ */
+export async function createTaskFromAi(args: {
+  phoneNumber: string;
+  suggestion: AiTaskSuggestion | null | undefined;
+  sourceMessageId: number | null;
+}): Promise<number | null> {
+  const draft = buildTaskDraft(args.suggestion);
+  if (!draft) return null;
+
+  const convRows = await db
+    .select({
+      id: whatsappConversations.id,
+      assignedToId: whatsappConversations.assignedToId,
+      assignedToName: whatsappConversations.assignedToName,
+    })
+    .from(whatsappConversations)
+    .where(eq(whatsappConversations.phoneNumber, args.phoneNumber))
+    .limit(1);
+  const conv = convRows[0];
+  // Geen gesprek = geen taak. Kan alleen bij een race; het volgende bericht
+  // levert dan gewoon opnieuw een suggestie op.
+  if (!conv) return null;
+
+  const openTasks = await db
+    .select({ summary: whatsappTasks.summary })
+    .from(whatsappTasks)
+    .where(and(eq(whatsappTasks.conversationId, conv.id), eq(whatsappTasks.status, 'open')));
+  if (isDuplicateOfOpenTask(draft.summary, openTasks.map(t => t.summary))) {
+    return null;
+  }
+
+  const inserted = await db
+    .insert(whatsappTasks)
+    .values({
+      conversationId: conv.id,
+      phoneNumber: args.phoneNumber,
+      summary: draft.summary,
+      category: draft.category,
+      // Erft de toegewezene van het gesprek; is die leeg, dan komt de taak in
+      // de algemene bak en kan iemand hem naar zichzelf trekken.
+      assignedToId: conv.assignedToId ?? null,
+      assignedToName: conv.assignedToName ?? null,
+      status: 'open',
+      sourceMessageId: args.sourceMessageId,
+    })
+    .onConflictDoNothing({ target: whatsappTasks.sourceMessageId })
+    .returning({ id: whatsappTasks.id });
+
+  return inserted[0]?.id ?? null;
+}
+
+export interface TaskListFilter {
+  /** 'open' (default) | 'klaar' | 'alle' */
+  status?: 'open' | 'klaar' | 'alle';
+  /** Alleen taken van deze gebruiker; 'niemand' = taken zonder toegewezene. */
+  assignedToId?: number | 'niemand';
+  limit?: number;
+}
+
+/**
+ * Takenlijst voor de sidebar. Open taken eerst en daarbinnen oudste bovenaan:
+ * een taak die er al twee dagen staat is dringender dan die van vijf minuten
+ * geleden — precies andersom dan bij een berichtenlijst.
+ */
+export async function listTasks(filter: TaskListFilter = {}) {
+  const { status = 'open', assignedToId, limit = 100 } = filter;
+  const conds = [];
+  if (status !== 'alle') conds.push(eq(whatsappTasks.status, status));
+  if (assignedToId === 'niemand') conds.push(sql`${whatsappTasks.assignedToId} IS NULL`);
+  else if (typeof assignedToId === 'number') conds.push(eq(whatsappTasks.assignedToId, assignedToId));
+  const whereCond = conds.length === 0 ? undefined : conds.length === 1 ? conds[0] : and(...conds);
+
+  const rows = await db
+    .select({
+      task: whatsappTasks,
+      displayName: whatsappConversations.displayName,
+      // Nodig voor de doorklik: de UI moet weten in welke tab (Medewerkers /
+      // Kandidaten / Klanten) het gesprek staat, anders opent hij een leeg
+      // scherm als de taak bij een andere tab hoort dan de actieve.
+      matchCategory: whatsappConversations.matchCategory,
+    })
+    .from(whatsappTasks)
+    .leftJoin(whatsappConversations, eq(whatsappTasks.conversationId, whatsappConversations.id))
+    .where(whereCond as any)
+    .orderBy(
+      sql`CASE WHEN ${whatsappTasks.status} = 'open' THEN 0 ELSE 1 END`,
+      sql`${whatsappTasks.createdAt} ASC`,
+    )
+    .limit(limit);
+
+  return rows.map(r => ({
+    ...r.task,
+    contactName: r.displayName ?? null,
+    matchCategory: r.matchCategory ?? null,
+  }));
+}
+
+/** Aantal open taken, eventueel voor één persoon. Voor de teller in de sidebar. */
+export async function countOpenTasks(assignedToId?: number): Promise<number> {
+  const conds = [eq(whatsappTasks.status, 'open')];
+  if (typeof assignedToId === 'number') conds.push(eq(whatsappTasks.assignedToId, assignedToId));
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)::int` })
+    .from(whatsappTasks)
+    .where(and(...conds));
+  return rows[0]?.n ?? 0;
+}
+
+/**
+ * Taak afvinken of weer openzetten. Raakt het GESPREK niet aan — dat is de
+ * hele reden dat taken een eigen tabel hebben.
+ */
+export async function setTaskStatus(
+  taskId: number,
+  status: 'open' | 'klaar',
+  door: { id: number | null; naam: string | null },
+): Promise<boolean> {
+  const rows = await db
+    .update(whatsappTasks)
+    .set(
+      status === 'klaar'
+        ? { status, completedAt: new Date(), completedById: door.id ?? null, completedByName: door.naam ?? null }
+        : { status, completedAt: null, completedById: null, completedByName: null },
+    )
+    .where(eq(whatsappTasks.id, taskId))
+    .returning({ id: whatsappTasks.id });
+  return rows.length > 0;
+}
+
+/** Taak aan iemand anders toewijzen (of vrijgeven met null). */
+export async function setTaskAssignee(
+  taskId: number,
+  assignee: { id: number | null; naam: string | null },
+): Promise<boolean> {
+  const rows = await db
+    .update(whatsappTasks)
+    .set({ assignedToId: assignee.id, assignedToName: assignee.naam })
+    .where(eq(whatsappTasks.id, taskId))
+    .returning({ id: whatsappTasks.id });
+  return rows.length > 0;
 }
 
 /**

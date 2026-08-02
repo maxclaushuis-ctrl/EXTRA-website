@@ -1279,6 +1279,10 @@ export const crmCompanies = pgTable("crm_companies", {
   accountOwner: text("account_owner"), // same options
   city: text("city"),
   region: text("region"),
+  address: text("address"), // straat + huisnummer, bijv. "Herengracht 100"
+  postalCode: text("postal_code"), // bijv. "1015 BS"
+  latitude: real("latitude"), // WGS84 — gevuld via PDOK-geocoding, t.b.v. later afstand-filter
+  longitude: real("longitude"),
   website: text("website"),
   linkedin: text("linkedin"),
   potential: text("potential"), // laag | midden | hoog
@@ -1289,7 +1293,8 @@ export const crmCompanies = pgTable("crm_companies", {
   busyPeriods: text("busy_periods"),
   planningNotes: text("planning_notes"),
   notes: text("notes"), // general notes field
-  tags: text("tags").array().default([]), // hot_lead | warm_lead | cold_lead | vip | urgent | follow_up | etc.
+  tags: text("tags").array().default([]), // vrije labels ('VIP klant', 'Urgent', ...) — processtatus hoort in phase, warmte in temperature
+  temperature: text("temperature"), // 'hot' | 'warm' | 'cold' | NULL — leadwarmte, los van de fase
   functions: text("functions").array().default([]), // horecamedewerker | chef | housekeeping | logistiek
   staffingRequestId: integer("staffing_request_id"), // link to original staffing request if created from form
   // ─── Salesdashboard-velden (nieuw, naast de bestaande CRM-velden — NIET verwarren met type/owner/potential/notes) ───
@@ -1515,10 +1520,28 @@ export const whatsappConversations = pgTable("whatsapp_conversations", {
   lastInboundAt: timestamp("last_inbound_at"),
   // Inbox-status voor Open/Opgelost/Spam-filter in de UI.
   inboxStatus: whatsappInboxStatusEnum("inbox_status").notNull().default('open'),
+  // Fase 2: snooze — gesprek verborgen in de actieve lijst tot dit tijdstip.
+  // Wordt op NULL gezet zodra er een nieuw INKOMEND bericht binnenkomt.
+  snoozedUntil: timestamp("snoozed_until"),
+  // ─── Fase 3: automatische labels + escalatiereden ──────────────────────────
+  // Onderwerp-label van het gesprek, door de AI bepaald bij elk inkomend
+  // tekstbericht: sollicitatie | afmelding | klacht | algemene_vraag | overig.
+  // Bewust `text` en geen enum, zodat uitbreiden later geen enum-migratie kost.
+  aiCategory: text("ai_category"),
+  // 'ai' = door het model gezet, 'handmatig' = door een planner overschreven.
+  // De AI overschrijft NOOIT een handmatige keuze.
+  aiCategorySource: text("ai_category_source"),
+  // Waarom de AI het gesprek aan een mens overdroeg:
+  // boos | buiten_kennisbank | wil_telefonisch | mens_gevraagd | overig.
+  escalationReason: text("escalation_reason"),
+  // Tijdstip van de escalatie. Gevuld = "wacht op planner"; wordt geleegd zodra
+  // een mens antwoordt of het gesprek op opgelost/spam wordt gezet.
+  escalatedAt: timestamp("escalated_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   phoneIdx: uniqueIndex("wa_conv_phone_unique").on(table.phoneNumber),
+  escalatedIdx: index("wa_conv_escalated_idx").on(table.escalatedAt),
   lastMsgIdx: index("wa_conv_last_msg_idx").on(table.lastMessageAt),
   categoryIdx: index("wa_conv_category_idx").on(table.matchCategory),
   inboxStatusIdx: index("wa_conv_inbox_status_idx").on(table.inboxStatus),
@@ -1544,6 +1567,49 @@ export const whatsappInternalNotes = pgTable("whatsapp_internal_notes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   convIdx: index("wa_note_conv_idx").on(table.conversationId),
+}));
+
+/**
+ * Fase 3B: taken die de AI uit een inkomend bericht afleidt.
+ *
+ * ONTWERPKEUZE — een taak is NIET hetzelfde als een gesprek. Een gesprek kan
+ * afgehandeld en gesloten zijn terwijl de taak eruit nog open staat ("uren van
+ * Eduardo nog in Jixbee zetten"). Daarom een eigen tabel met een eigen status,
+ * en niet nog een vlag op whatsapp_conversations.
+ *
+ * De taak bewaart bewust een eigen `summary` in plaats van alleen naar het
+ * bronbericht te wijzen: de planner moet in één regel zien wat er moet gebeuren,
+ * ook als het bronbericht Engels/Pools is of drie alinea's lang.
+ */
+export const whatsappTasks = pgTable("whatsapp_tasks", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => whatsappConversations.id, { onDelete: 'cascade' }).notNull(),
+  // Gedenormaliseerd meegekopieerd zodat de takenlijst zonder join kan
+  // doorlinken naar het juiste gesprek in de inbox.
+  phoneNumber: text("phone_number").notNull(),
+  // Korte, feitelijke omschrijving in het NEDERLANDS (ook bij anderstalige
+  // berichten) — zie de prompt in server/whatsapp/aiClassifier.ts.
+  summary: text("summary").notNull(),
+  // uren_jixbee | contract | overig. Text en geen enum: uitbreiden mag later
+  // geen enum-migratie kosten.
+  category: text("category").notNull().default('overig'),
+  // Erft bij aanmaken de toegewezene van het gesprek; daarna los aanpasbaar.
+  assignedToId: integer("assigned_to_id").references(() => users.id, { onDelete: 'set null' }),
+  assignedToName: text("assigned_to_name"),
+  // open | klaar. Afvinken is een andere handeling dan het gesprek sluiten.
+  status: text("status").notNull().default('open'),
+  // Het inkomende bericht waaruit de taak volgde. Uniek geïndexeerd: hetzelfde
+  // bericht mag nooit twee taken opleveren als een webhook dubbel binnenkomt.
+  sourceMessageId: integer("source_message_id").references(() => whatsappMessages.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  completedById: integer("completed_by_id").references(() => users.id, { onDelete: 'set null' }),
+  completedByName: text("completed_by_name"),
+}, (table) => ({
+  convIdx: index("wa_task_conv_idx").on(table.conversationId),
+  statusIdx: index("wa_task_status_idx").on(table.status),
+  assignedIdx: index("wa_task_assigned_idx").on(table.assignedToId),
+  sourceMsgIdx: uniqueIndex("wa_task_source_msg_unique").on(table.sourceMessageId),
 }));
 
 export const whatsappGroups = pgTable("whatsapp_groups", {
@@ -1595,6 +1661,8 @@ export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
 export type InsertWhatsappConversation = typeof whatsappConversations.$inferInsert;
 export type WhatsappInternalNote = typeof whatsappInternalNotes.$inferSelect;
 export type InsertWhatsappInternalNote = typeof whatsappInternalNotes.$inferInsert;
+export type WhatsappTask = typeof whatsappTasks.$inferSelect;
+export type InsertWhatsappTask = typeof whatsappTasks.$inferInsert;
 export const whatsappAiSettings = pgTable("whatsapp_ai_settings", {
   id: serial("id").primaryKey(),
   toneOfVoice: text("tone_of_voice").default('').notNull(),

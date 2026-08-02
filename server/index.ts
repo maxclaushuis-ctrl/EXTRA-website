@@ -238,6 +238,65 @@ async function ensureAdminAccounts() {
     }
   }
 
+  // Schema-migratie (WhatsApp Fase 2): snooze-kolom op whatsapp_conversations (veilig, idempotent)
+  try {
+    await pool.query(`ALTER TABLE whatsapp_conversations ADD COLUMN IF NOT EXISTS snoozed_until timestamp`);
+  } catch (err: any) {
+    console.error('[migration] Fout bij toevoegen snoozed_until-kolom:', err.message);
+  }
+
+  // Schema-migratie (WhatsApp Fase 3): AI-label + escalatiereden op
+  // whatsapp_conversations. Puur additief — bestaande rijen houden NULL en
+  // vallen daarmee in de status "open", precies zoals vóór deze migratie.
+  try {
+    await pool.query(`
+      ALTER TABLE whatsapp_conversations
+        ADD COLUMN IF NOT EXISTS ai_category text,
+        ADD COLUMN IF NOT EXISTS ai_category_source text,
+        ADD COLUMN IF NOT EXISTS escalation_reason text,
+        ADD COLUMN IF NOT EXISTS escalated_at timestamp
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS wa_conv_escalated_idx
+        ON whatsapp_conversations (escalated_at)
+    `);
+  } catch (err: any) {
+    console.error('[migration] Fout bij toevoegen AI-label/escalatie-kolommen:', err.message);
+  }
+
+  // Schema-migratie (WhatsApp Fase 3B): takentabel. Nieuwe tabel, dus puur
+  // additief — geen enkele bestaande rij wordt aangeraakt. De unieke index op
+  // source_message_id is de dubbelslag-beveiliging: komt een webhook twee keer
+  // binnen, dan blijft het bij één taak.
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS whatsapp_tasks (
+        id serial PRIMARY KEY,
+        conversation_id integer NOT NULL REFERENCES whatsapp_conversations(id) ON DELETE CASCADE,
+        phone_number text NOT NULL,
+        summary text NOT NULL,
+        category text NOT NULL DEFAULT 'overig',
+        assigned_to_id integer REFERENCES users(id) ON DELETE SET NULL,
+        assigned_to_name text,
+        status text NOT NULL DEFAULT 'open',
+        source_message_id integer REFERENCES whatsapp_messages(id) ON DELETE SET NULL,
+        created_at timestamp NOT NULL DEFAULT NOW(),
+        completed_at timestamp,
+        completed_by_id integer REFERENCES users(id) ON DELETE SET NULL,
+        completed_by_name text
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS wa_task_conv_idx ON whatsapp_tasks (conversation_id)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS wa_task_status_idx ON whatsapp_tasks (status)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS wa_task_assigned_idx ON whatsapp_tasks (assigned_to_id)`);
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS wa_task_source_msg_unique
+        ON whatsapp_tasks (source_message_id)
+    `);
+  } catch (err: any) {
+    console.error('[migration] Fout bij aanmaken whatsapp_tasks:', err.message);
+  }
+
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);

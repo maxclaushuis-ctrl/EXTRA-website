@@ -9,7 +9,8 @@ import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
 import { moveCardToPhase, markNotReached } from "./salesflow";
-import { verstuurWachtwoordInstelLink, stelWachtwoordIn } from "./authReset";
+import { geocodeNlAddress } from "./geocode";
+import { verstuurWachtwoordInstelLink, stelWachtwoordIn, wachtwoordSterkGenoeg } from "./authReset";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { 
   insertApplicantSchema, 
@@ -970,38 +971,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.post("/api/admin/create-admin-user", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const { firstName, lastName, email, password } = req.body;
+      const firstName = String(req.body?.firstName ?? '').trim();
+      const lastName = String(req.body?.lastName ?? '').trim();
+      const email = String(req.body?.email ?? '').trim().toLowerCase();
+      const password = String(req.body?.password ?? '');
       if (!firstName || !lastName || !email || !password) {
         return res.status(400).json({ message: "Voornaam, achternaam, e-mailadres en wachtwoord zijn verplicht" });
       }
-      const existing = await storage.getUserByEmail(email);
-      if (existing) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ message: "Vul een geldig e-mailadres in" });
+      }
+      // Zelfde wachtwoordbeleid als de wachtwoord-instellen-flow (authReset.ts).
+      const zwak = wachtwoordSterkGenoeg(password);
+      if (zwak) {
+        return res.status(400).json({ message: zwak });
+      }
+
+      // Duplicaatcheck tegen de DATABASE (die is leidend voor login én de
+      // gebruikerslijst), niet alleen tegen de in-memory storage.
+      const [existingDb] = await db.select().from(users).where(eq(users.email, email));
+      if (existingDb) {
         return res.status(409).json({ message: "Er bestaat al een account met dit e-mailadres" });
       }
+
       const hashedPassword = await bcrypt.hash(password, 12);
-      const user = await storage.createUser({
+
+      // Maak het account aan in de DATABASE. Voorheen werd alleen
+      // storage.createUser (MemStorage) gebruikt, waardoor het account niet
+      // in /api/users verscheen en er niet mee kon worden ingelogd.
+      const [dbUser] = await db.insert(users).values({
         firstName,
         lastName,
         email,
         password: hashedPassword,
         role: 'admin',
-      } as any);
+        status: 'active',
+      }).returning();
 
-      // Stuur welkomstmail
+      // Spiegel ook naar MemStorage (best effort) zodat features die daar
+      // nog uit lezen het account meteen kennen.
+      try {
+        const memExisting = await storage.getUserByEmail(email);
+        if (!memExisting) {
+          await storage.createUser({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            role: 'admin',
+          } as any);
+        }
+      } catch (memErr) {
+        console.error('Waarschuwing: admin-account niet gespiegeld naar MemStorage:', memErr);
+      }
+
+      // Stuur welkomstmail. Als dit faalt is het account WEL aangemaakt;
+      // we melden dat expliciet aan de client (mailSent: false) zodat het
+      // wachtwoord handmatig gedeeld kan worden.
       const baseUrl = (process.env.BASE_URL || 'https://www.doehetextra.nl').replace(/\/$/, '');
       const loginUrl = `${baseUrl}/dashboard`;
-      sendAdminWelcomeEmail({
-        to: email,
-        firstName,
-        lastName,
-        email,
-        password,
-        loginUrl,
-      }).catch(err => console.error('Fout bij verzenden welkomstmail admin:', err));
+      let mailSent = true;
+      try {
+        // sendAdminWelcomeEmail geeft false terug bij een verzendfout
+        // (en kan in randgevallen ook throwen) — beide tellen als mislukt.
+        mailSent = await sendAdminWelcomeEmail({
+          to: email,
+          firstName,
+          lastName,
+          email,
+          password,
+          loginUrl,
+        });
+      } catch (err) {
+        mailSent = false;
+        console.error('Fout bij verzenden welkomstmail admin:', err);
+      }
 
       return res.status(201).json({
-        message: `Admin-account aangemaakt en welkomstmail verstuurd naar ${email}`,
-        user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: 'admin' },
+        message: mailSent
+          ? `Admin-account aangemaakt en welkomstmail verstuurd naar ${email}`
+          : `Admin-account aangemaakt, maar de welkomstmail naar ${email} kon niet worden verstuurd. Deel de inloggegevens handmatig.`,
+        mailSent,
+        user: { id: dbUser.id, email: dbUser.email, firstName: dbUser.firstName, lastName: dbUser.lastName, role: 'admin' },
       });
     } catch (error) {
       console.error("Error creating admin user:", error);
@@ -8497,10 +8548,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (c: any) => c.name.toLowerCase().trim() === data.companyName.toLowerCase().trim()
         );
         if (existingMatch) {
-          // Update existing company: ensure "Hot lead" tag is added
-          const currentTags: string[] = existingMatch.tags || [];
-          if (!currentTags.includes('Hot lead')) {
-            await storage.updateCrmCompany(existingMatch.id, { tags: [...currentTags, 'Hot lead'] });
+          // Update existing company: markeer als hot (temperatuur-veld,
+          // voorheen de tag 'Hot lead' — die tags zijn gesaneerd).
+          if ((existingMatch as any).temperature !== 'hot') {
+            await storage.updateCrmCompany(existingMatch.id, { temperature: 'hot' } as any);
           }
         } else {
           // Create new CRM prospect from this staffing request
@@ -8524,7 +8575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             owner: 'max',
             potential: data.urgency === 'zo_snel_mogelijk' ? 'hoog' : 'midden',
             source: 'website',
-            tags: ['Hot lead'],
+            temperature: 'hot',
             notes: notesText,
             staffingRequestId: result.id,
           } as any);
@@ -9581,21 +9632,87 @@ ${vacancies.map(v => `  <url>
         contactMap.get(ct.companyId)!.push(ct);
       }
 
+      // Laatste contactmoment = meest recente regel in het activiteitenlog
+      // (afgeleid, geen los veld — historie en waarde kloppen daardoor altijd).
+      const lastActivityRows = ((await db.execute(sql`
+        SELECT crm_company_id AS "companyId", max(created_at) AS "lastAt"
+        FROM activities GROUP BY crm_company_id
+      `)).rows ?? []) as any[];
+      const lastContactMap = new Map<number, string>(lastActivityRows.map((r: any) => [Number(r.companyId), r.lastAt]));
+
+      // Volgende actie = trigger van de actieve salesflow-kaart van het bedrijf.
+      const nextActionRows = ((await db.execute(sql`
+        SELECT DISTINCT ON (company_id) company_id AS "companyId",
+               next_action_at AS "nextActionAt", next_action_type AS "nextActionType"
+        FROM salesflow_cards
+        ORDER BY company_id, updated_at DESC
+      `)).rows ?? []) as any[];
+      const nextActionMap = new Map<number, any>(nextActionRows.map((r: any) => [Number(r.companyId), r]));
+
       const enriched = companies.map((c) => {
         const list = contactMap.get(c.id) || [];
         const primary = list.find((ct: any) => ct.isPrimary) || list[0] || null;
+        const na = nextActionMap.get(c.id) || null;
         return {
           ...c,
           primaryContactName: primary?.name || null,
           primaryContactPhone: primary?.phone || null,
           primaryContactEmail: primary?.email || null,
           contactCount: list.length,
+          lastContactAt: lastContactMap.get(c.id) || null,
+          nextActionAt: na?.nextActionAt || null,
+          nextActionType: na?.nextActionType || null,
+          inSalesflow: nextActionMap.has(c.id),
         };
       });
       return res.json(enriched);
     } catch (error) {
       console.error("Error fetching CRM companies:", error);
       return res.status(500).json({ message: "Fout bij ophalen bedrijven" });
+    }
+  });
+
+  // ─── Activiteitenlog per bedrijf (tijdlijn in het lead-detail) ─────────────
+  app.get("/api/admin/crm/companies/:id/activities", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+      const items = ((await db.execute(sql`
+        SELECT a.id, a.type, a.description, a.created_at AS "createdAt",
+               COALESCE(u.first_name, '—') AS "createdBy"
+        FROM activities a
+        LEFT JOIN users u ON u.id = a.created_by_user_id
+        WHERE a.crm_company_id = ${id}
+        ORDER BY a.created_at DESC
+        LIMIT 200
+      `)).rows ?? []) as any[];
+      return res.json(items);
+    } catch (error) {
+      console.error("[crm] activities ophalen fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen activiteiten" });
+    }
+  });
+
+  // Handmatig een contactmoment loggen ("Gebeld — geen gehoor").
+  // Wijzigt bewust NIET de fase — alleen een logregel in de tijdlijn.
+  app.post("/api/admin/crm/companies/:id/activities", adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Ongeldig id" });
+      const { type, description } = req.body || {};
+      const allowed = ["call", "email", "meeting", "note"];
+      if (!allowed.includes(type)) return res.status(400).json({ message: `Type moet één van ${allowed.join(", ")} zijn` });
+      if (!description || !String(description).trim()) return res.status(400).json({ message: "Omschrijving is verplicht" });
+      const created = ((await db.execute(sql`
+        INSERT INTO activities (crm_company_id, type, description, created_by_user_id)
+        VALUES (${id}, ${type}, ${String(description).trim()},
+                (SELECT id FROM users WHERE id = ${req.session.userId ?? null}))
+        RETURNING id, type, description, created_at AS "createdAt"
+      `)).rows ?? [])[0];
+      return res.json(created);
+    } catch (error) {
+      console.error("[crm] activiteit loggen fout:", error);
+      return res.status(500).json({ message: "Fout bij loggen activiteit" });
     }
   });
 
@@ -9610,7 +9727,18 @@ ${vacancies.map(v => `  <url>
         storage.getCrmReminders({ companyId: id }),
         storage.getCrmSubLocations(id),
       ]);
-      return res.json({ ...company, contacts, noteEntries, reminders, subLocations });
+      // Salesflow-status voor de drawer-header: heeft dit bedrijf een actieve
+      // kaart op het bord? Plus het primaire contact (voor "Toevoegen aan Salesflow").
+      const activeCard = ((await db.execute(sql`
+        SELECT id FROM salesflow_cards WHERE company_id = ${id} ORDER BY updated_at DESC LIMIT 1
+      `)).rows ?? [])[0] as any;
+      const primaryContact = contacts.find((c: any) => c.isPrimary) || contacts[0] || null;
+      return res.json({
+        ...company, contacts, noteEntries, reminders, subLocations,
+        inSalesflow: !!activeCard,
+        salesflowCardId: activeCard?.id ?? null,
+        primaryContactId: primaryContact?.id ?? null,
+      });
     } catch (error) {
       console.error("Error fetching CRM company:", error);
       return res.status(500).json({ message: "Fout bij ophalen bedrijf" });
@@ -9619,7 +9747,15 @@ ${vacancies.map(v => `  <url>
 
   app.post("/api/admin/crm/companies", adminMiddleware, async (req: Request, res: Response) => {
     try {
-      const company = await storage.createCrmCompany(req.body);
+      const body = { ...req.body };
+      // Best-effort geocoding (PDOK): mislukken mag het opslaan nooit blokkeren.
+      try {
+        if ((body.address || body.postalCode || body.city) && body.latitude == null) {
+          const geo = await geocodeNlAddress({ address: body.address, postalCode: body.postalCode, city: body.city });
+          if (geo) { body.latitude = geo.lat; body.longitude = geo.lon; }
+        }
+      } catch { /* geocode-falen negeren */ }
+      const company = await storage.createCrmCompany(body);
       return res.status(201).json(company);
     } catch (error) {
       console.error("Error creating CRM company:", error);
@@ -9754,7 +9890,30 @@ ${vacancies.map(v => `  <url>
   app.patch("/api/admin/crm/companies/:id", adminMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const company = await storage.updateCrmCompany(id, req.body);
+      const body = { ...req.body };
+      // Best-effort her-geocoding als adresvelden meekomen én (nog geen coördinaten
+      // óf een adresveld daadwerkelijk gewijzigd is). Falen blokkeert nooit.
+      try {
+        const touchesAddress = ['address', 'postalCode', 'city'].some((k) => k in body);
+        if (touchesAddress && body.latitude == null) {
+          const existing = await storage.getCrmCompanyById(id);
+          if (existing) {
+            const changed =
+              (body.address !== undefined && (body.address || null) !== (existing.address || null)) ||
+              (body.postalCode !== undefined && (body.postalCode || null) !== (existing.postalCode || null)) ||
+              (body.city !== undefined && (body.city || null) !== (existing.city || null));
+            if (existing.latitude == null || changed) {
+              const geo = await geocodeNlAddress({
+                address: body.address !== undefined ? body.address : existing.address,
+                postalCode: body.postalCode !== undefined ? body.postalCode : existing.postalCode,
+                city: body.city !== undefined ? body.city : existing.city,
+              });
+              if (geo) { body.latitude = geo.lat; body.longitude = geo.lon; }
+            }
+          }
+        }
+      } catch { /* geocode-falen negeren */ }
+      const company = await storage.updateCrmCompany(id, body);
       if (!company) return res.status(404).json({ message: "Bedrijf niet gevonden" });
       return res.json(company);
     } catch (error) {
@@ -9828,6 +9987,45 @@ ${vacancies.map(v => `  <url>
     } catch (error: any) {
       console.error("Error deduping CRM companies:", error);
       return res.status(500).json({ message: "Fout bij opschonen dubbele bedrijven", error: error?.message });
+    }
+  });
+
+  // Geocode-backfill: geocodeert per aanroep max 50 bedrijven zonder coördinaten
+  // maar mét adres of stad (PDOK, best-effort). Bewust géén bulk-run bij opstart —
+  // herhaald aanroepen tot remaining 0 is.
+  app.post("/api/admin/crm/geocode-backfill", adminMiddleware, async (_req: Request, res: Response) => {
+    try {
+      const batch = ((await db.execute(sql`
+        SELECT id, address, postal_code AS "postalCode", city
+        FROM crm_companies
+        WHERE latitude IS NULL
+          AND (COALESCE(btrim(address), '') <> '' OR COALESCE(btrim(city), '') <> '')
+        ORDER BY id
+        LIMIT 50
+      `)).rows ?? []) as any[];
+
+      let geocoded = 0;
+      for (const row of batch) {
+        const geo = await geocodeNlAddress({ address: row.address, postalCode: row.postalCode, city: row.city });
+        if (geo) {
+          await db.execute(sql`
+            UPDATE crm_companies SET latitude = ${geo.lat}, longitude = ${geo.lon}, updated_at = now()
+            WHERE id = ${row.id}
+          `);
+          geocoded++;
+        }
+      }
+
+      const remaining = Number((((await db.execute(sql`
+        SELECT count(*)::int AS n FROM crm_companies
+        WHERE latitude IS NULL
+          AND (COALESCE(btrim(address), '') <> '' OR COALESCE(btrim(city), '') <> '')
+      `)).rows ?? [])[0] as any)?.n ?? 0);
+
+      return res.json({ processed: batch.length, geocoded, remaining });
+    } catch (error: any) {
+      console.error("Error in geocode backfill:", error);
+      return res.status(500).json({ message: "Fout bij geocode-backfill", error: error?.message });
     }
   });
 
@@ -10065,7 +10263,7 @@ ${vacancies.map(v => `  <url>
                k.next_action_at AS "nextActionAt", k.next_action_type AS "nextActionType",
                k.channel, k.not_reached_count AS "notReachedCount", k.snooze_until AS "snoozeUntil",
                k.notes, k.batch_id AS "batchId", k.created_by_name AS "createdByName",
-               ct.name AS "contactNaam", ct.function AS "contactFunctie", ct.email AS "contactEmail",
+               ct.name AS "contactNaam", ct.function AS "contactFunctie", ct.email AS "contactEmail", ct.phone AS "contactPhone",
                co.id AS "companyId", co.name AS "bedrijfNaam", co.categorie, co.city,
                u.first_name AS "eigenaarNaam",
                GREATEST(0, (CURRENT_DATE - k.next_action_at))::int AS "daysOverdue"
@@ -10223,6 +10421,60 @@ ${vacancies.map(v => `  <url>
     } catch (error: any) {
       console.error("[salesflow] move fout:", error);
       return res.status(500).json({ message: error?.message || "Fout bij verplaatsen kaart" });
+    }
+  });
+
+  // ─── Tijdlijn vanuit de Salesflow-popup ────────────────────────────────────
+  // Zelfde activiteitenlog als in het CRM (activities per crm_company_id), maar
+  // dan bereikbaar onder salesMiddleware via de kaart-id. De company_id wordt
+  // van de kaart opgezocht; de logica is bewust een kopie van de admin-routes.
+
+  // GET /api/sales/flow/cards/:cardId/activities  → tijdlijn van het bedrijf van de kaart
+  app.get("/api/sales/flow/cards/:cardId/activities", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const cardId = parseInt(req.params.cardId, 10);
+      if (isNaN(cardId)) return res.status(400).json({ message: "Ongeldig id" });
+      const card = ((await db.execute(sql`SELECT company_id AS "companyId" FROM salesflow_cards WHERE id = ${cardId}`)).rows ?? [])[0] as any;
+      if (!card) return res.status(404).json({ message: "Kaart niet gevonden" });
+      const items = ((await db.execute(sql`
+        SELECT a.id, a.type, a.description, a.created_at AS "createdAt",
+               COALESCE(u.first_name, '—') AS "createdBy"
+        FROM activities a
+        LEFT JOIN users u ON u.id = a.created_by_user_id
+        WHERE a.crm_company_id = ${card.companyId}
+        ORDER BY a.created_at DESC
+        LIMIT 50
+      `)).rows ?? []) as any[];
+      return res.json(items);
+    } catch (error) {
+      console.error("[salesflow] activities ophalen fout:", error);
+      return res.status(500).json({ message: "Fout bij ophalen activiteiten" });
+    }
+  });
+
+  // POST /api/sales/flow/cards/:cardId/activities  { type, description }
+  // Logt een contactmoment op de tijdlijn van het bedrijf. Wijzigt bewust
+  // NIET de fase van de kaart — alleen een logregel.
+  app.post("/api/sales/flow/cards/:cardId/activities", salesMiddleware, async (req: Request, res: Response) => {
+    try {
+      const cardId = parseInt(req.params.cardId, 10);
+      if (isNaN(cardId)) return res.status(400).json({ message: "Ongeldig id" });
+      const card = ((await db.execute(sql`SELECT company_id AS "companyId" FROM salesflow_cards WHERE id = ${cardId}`)).rows ?? [])[0] as any;
+      if (!card) return res.status(404).json({ message: "Kaart niet gevonden" });
+      const { type, description } = req.body || {};
+      const allowed = ["call", "email", "meeting", "note"];
+      if (!allowed.includes(type)) return res.status(400).json({ message: `Type moet één van ${allowed.join(", ")} zijn` });
+      if (!description || !String(description).trim()) return res.status(400).json({ message: "Omschrijving is verplicht" });
+      const created = ((await db.execute(sql`
+        INSERT INTO activities (crm_company_id, type, description, created_by_user_id)
+        VALUES (${card.companyId}, ${type}, ${String(description).trim()},
+                (SELECT id FROM users WHERE id = ${req.session.userId ?? null}))
+        RETURNING id, type, description, created_at AS "createdAt"
+      `)).rows ?? [])[0];
+      return res.json(created);
+    } catch (error) {
+      console.error("[salesflow] activiteit loggen fout:", error);
+      return res.status(500).json({ message: "Fout bij loggen activiteit" });
     }
   });
 
@@ -10660,14 +10912,19 @@ ${vacancies.map(v => `  <url>
 
   console.log('WebSocket server geïnitialiseerd op pad: /ws');
 
-  // ─── WHATSAPP BEHEER (360dialog Cloud API — Fase 1) ────────────────────────
+  // ─── WHATSAPP BEHEER (Fase 1 — provider-switch 360dialog / Meta Cloud API) ──
   // Architectuur:
-  //   - Inkomende berichten via /api/whatsapp/webhook/:secret (URL-secret)
+  //   - Inkomende berichten via /api/whatsapp/webhook/:secret (360dialog, URL-secret)
+  //     én /api/whatsapp/meta-webhook (Meta Cloud API, signature-verificatie)
+  //   - Uitgaand verkeer via server/whatsapp/provider.ts (env WHATSAPP_PROVIDER)
   //   - Persistentie in whatsapp_messages + whatsapp_conversations
   //   - Auto-koppeling aan candidates / prospect_contacts via matcher.ts
   //   - Idempotentie op wa_message_id
-  // Env-vars: WHATSAPP_360_API_KEY, WHATSAPP_WEBHOOK_SECRET
-  // Zie server/whatsapp/README.md voor configuratie.
+  // Env-vars: WHATSAPP_360_API_KEY, WHATSAPP_WEBHOOK_SECRET, WHATSAPP_PROVIDER,
+  //           META_WA_BOT_* (zie server/whatsapp/README.md).
+  // Alleen nog voor de 360dialog BEHEER-endpoints (/configs/webhook). Al het
+  // uitgaande berichtenverkeer loopt via server/whatsapp/provider.ts; deze drie
+  // verdwijnen in fase 4 samen met de rest van 360dialog.
   const WA_BASE_URL = process.env.WHATSAPP_360_BASE_URL || 'https://waba-v2.360dialog.io';
   const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
   const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
@@ -10675,44 +10932,22 @@ ${vacancies.map(v => `  <url>
   // ─── Provider-switch: 360dialog (default) of Meta Cloud API ──────────────
   // Zet WHATSAPP_PROVIDER=meta om uitgaand verkeer via de Meta Graph API te
   // sturen (vereist META_WA_BOT_ACCESS_TOKEN + META_WA_BOT_PHONE_NUMBER_ID).
-  // De payloads zijn identiek (Cloud API-formaat); alleen base-URL en
-  // authenticatie-header verschillen.
-  const META_WA_TOKEN = process.env.META_WA_BOT_ACCESS_TOKEN || '';
-  const META_WA_PHONE_ID = process.env.META_WA_BOT_PHONE_NUMBER_ID || '';
-  const WA_PROVIDER: 'meta' | '360dialog' =
-    (process.env.WHATSAPP_PROVIDER || '').trim().toLowerCase() === 'meta' && META_WA_TOKEN && META_WA_PHONE_ID
-      ? 'meta' : '360dialog';
-  const WA_SEND_BASE = WA_PROVIDER === 'meta'
-    ? `https://graph.facebook.com/v21.0/${META_WA_PHONE_ID}`
-    : WA_BASE_URL;
-  const waSendHeaders = WA_PROVIDER === 'meta'
-    ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${META_WA_TOKEN}` }
-    : wa360Headers;
-  const waMediaAuthHeaders: Record<string, string> = WA_PROVIDER === 'meta'
-    ? { 'Authorization': `Bearer ${META_WA_TOKEN}` }
-    : { 'D360-API-KEY': WA_360_KEY };
-  // "Kunnen we überhaupt versturen?" — vervangt de kale WA_360_KEY-checks.
-  const WA_SEND_READY = WA_PROVIDER === 'meta' ? true : !!WA_360_KEY;
-  console.log(`[WA] provider: ${WA_PROVIDER}${WA_PROVIDER === 'meta' ? ` (phone_number_id ${META_WA_PHONE_ID})` : ''}`);
-
+  // De switch zelf, de base-URLs, de auth-headers en de "kunnen we versturen?"-
+  // check staan in server/whatsapp/provider.ts (waProvider.activeProvider(),
+  // isSendConfigured(), configErrorMessage()) en zijn daar los getest. Hier
+  // staat bewust geen tweede kopie meer van die logica.
   const { normalizePhone } = await import('./whatsapp/phone');
   const waStorage = await import('./whatsapp/storage');
-  const cryptoModule = await import('crypto');
+  const waProvider = await import('./whatsapp/provider');
+  const { processIncomingPayload } = await import('./whatsapp/inboundProcessor');
+  // safeEqualSecret wordt hier gebruikt voor het URL-secret van de 360dialog-
+  // webhook; het is dezelfde timing-safe vergelijking als de Meta-handshake.
+  const { verifyMetaSignature, handleVerifyHandshake, safeEqualSecret } = await import('./whatsapp/webhookVerify');
   const { whatsappMessages, whatsappConversations } = await import('@shared/schema');
   const { eq: drizzleEq, sql: drizzleSql, desc: drizzleDesc } = await import('drizzle-orm');
   const optInService = await import('./whatsapp/optInService');
-
-  function safeEqualSecret(provided: string, expected: string): boolean {
-    if (!expected) return false;
-    const a = Buffer.from(provided);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) {
-      // Constant-time compare vereist gelijke lengte; doe een dummy compare om timing-leak te vermijden
-      try { cryptoModule.timingSafeEqual(a, Buffer.alloc(a.length)); } catch { /* ignore */ }
-      return false;
-    }
-    return cryptoModule.timingSafeEqual(a, b);
-  }
+  // Fase 3: taalonafhankelijke classificatie + gestructureerde escalatiereden
+  const waClassifier = await import('./whatsapp/aiClassifier');
 
   // ─── Hulp: bepaal taal uit gesprek-labels (snelle override vóór AI-detectie) ──
   // Planner kan een gesprek labelen met "nl" of "en" zodat de AI gegarandeerd in
@@ -10814,7 +11049,7 @@ ${vacancies.map(v => `  <url>
 
   /** Stuur een opgeslagen PDF-bijlage als WhatsApp document naar het opgegeven nummer. */
   async function sendPdfAttachmentToWa(phoneNumber: string, attachmentId: number): Promise<void> {
-    if (!WA_SEND_READY) return;
+    if (!waProvider.isSendConfigured()) return;
     try {
       const { whatsappAiAttachments } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -10829,22 +11064,13 @@ ${vacancies.map(v => `  <url>
         console.warn(`[WA AI bijlage] download mislukt voor id=${attachmentId}`);
         return;
       }
-      // Stap 1: upload naar 360dialog media
-      const fd = new FormData();
-      fd.append('messaging_product', 'whatsapp');
-      fd.append('type', att.mimeType);
-      fd.append('file', new Blob([buffer], { type: att.mimeType }), att.filename);
-      const uploadResp = await fetch(`${WA_SEND_BASE}/media`, {
-        method: 'POST',
-        headers: waMediaAuthHeaders,
-        body: fd,
-      });
-      const uploadData: any = await uploadResp.json().catch(() => ({}));
-      if (!uploadResp.ok || !uploadData?.id) {
-        console.warn(`[WA AI bijlage] 360dialog media-upload mislukt:`, uploadData?.error?.message || uploadData);
+      // Stap 1: upload naar de media-storage van de actieve provider
+      const upload = await waProvider.uploadMedia({ buffer, mimeType: att.mimeType, filename: att.filename });
+      if (!upload.ok || !upload.mediaId) {
+        console.warn(`[WA AI bijlage] ${upload.provider} media-upload mislukt:`, upload.errorMessage);
         return;
       }
-      const mediaId = uploadData.id as string;
+      const mediaId = upload.mediaId;
 
       // Stap 2: stuur document
       const now = new Date();
@@ -10867,16 +11093,13 @@ ${vacancies.map(v => `  <url>
         sentByUserId: null,
         rawPayload: { type: 'document', to: phoneNumber, filename: att.filename, mediaId, autoReply: true, aiAttachmentId: attachmentId },
       });
-      const sendPayload = { messaging_product: 'whatsapp', to: phoneNumber, type: 'document', document: { id: mediaId, filename: att.filename } };
-      const r = await fetch(`${WA_SEND_BASE}/messages`, { method: 'POST', headers: waSendHeaders, body: JSON.stringify(sendPayload) });
-      const data: any = await r.json().catch(() => ({}));
-      if (!r.ok || data?.error) {
-        const errMsg = data?.error?.message || data?.message || `HTTP ${r.status}`;
-        await waStorage.updateOutboundResult(dbId, { status: 'failed', errorCode: String(r.status), errorMessage: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg) });
-        console.warn(`[WA AI bijlage] verzending mislukt:`, errMsg);
+      const sendResult = await waProvider.sendMedia(phoneNumber, { type: 'document', id: mediaId, filename: att.filename });
+      if (!sendResult.ok) {
+        await waStorage.updateOutboundResult(dbId, { status: 'failed', errorCode: sendResult.errorCode ?? null, errorMessage: sendResult.errorMessage ?? null });
+        console.warn(`[WA AI bijlage] verzending mislukt:`, sendResult.errorMessage);
         return;
       }
-      const waMessageId = data?.messages?.[0]?.id ?? null;
+      const waMessageId = sendResult.waMessageId ?? null;
       await waStorage.updateOutboundResult(dbId, { waMessageId, status: 'sent' });
       console.log(`[WA AI bijlage] PDF ${att.filename} verzonden naar ${phoneNumber}`);
     } catch (err: any) {
@@ -10884,44 +11107,58 @@ ${vacancies.map(v => `  <url>
     }
   }
 
-  // ─── Auto-reply helper: genereer + verstuur AI-antwoord op inkomend bericht ──
+  // ─── Auto-reply + classificatie: één AI-call per inkomend bericht ────────────
+  //
+  // FASE 3-ONTWERPKEUZE: de gates hieronder bepalen of we MOGEN ANTWOORDEN,
+  // niet of we mogen CLASSIFICEREN. Vroeger stapte deze functie er bij elke
+  // gate uit; dan blijven de labels leeg zodra auto-reply uitstaat en ziet de
+  // planner nooit waar een gesprek over gaat. Nu draait er altijd precies één
+  // AI-call: de volledige prompt als antwoorden mag, de compacte
+  // classificatie-only-prompt als dat niet mag. Nooit twee calls.
   async function tryAutoReply(opts: {
     phoneNumber: string;
     matchCategory: 'candidate' | 'prospect' | 'unmatched';
     candidateId: number | null;
     prospectContactId: number | null;
     contactName: string | null;
+    /** Fase 3B: rij-id van het inkomende bericht, als bron voor een taak. */
+    inboundMessageId?: number | null;
   }): Promise<void> {
     try {
-      if (!WA_SEND_READY) return; // Kan niet versturen zonder API key
-
       const { whatsappAiSettings, whatsappAiKnowledge, whatsappAiAttachments, whatsappMessages: wm } = await import('@shared/schema');
       const { eq, asc, desc, and } = await import('drizzle-orm');
 
-      // 1. Settings ophalen
+      // 1. Settings ophalen (mag ontbreken — dan classificeren we alleen)
       const settingsRows = await db.select().from(whatsappAiSettings).limit(1);
       const settings = settingsRows[0];
-      if (!settings || !settings.autoReplyEnabled) return;
 
-      // 2. Veiligheid: alleen voor bekende contacten?
-      if (settings.autoReplyOnlyForKnown && opts.matchCategory === 'unmatched') {
-        console.log(`[WA auto-reply] skip ${opts.phoneNumber}: onbekend contact`);
-        return;
-      }
-
-      // 3. Rate-limit: niet binnen N seconden van vorig uitgaand bericht
-      const minIntervalMs = (settings.autoReplyMinIntervalSec ?? 60) * 1000;
-      const recent = await db.select({ createdAt: wm.createdAt })
-        .from(wm)
-        .where(and(eq(wm.toNumber, opts.phoneNumber), eq(wm.direction, 'outbound')))
-        .orderBy(desc(wm.createdAt))
-        .limit(1);
-      if (recent.length > 0) {
-        const ageMs = Date.now() - new Date(recent[0].createdAt).getTime();
-        if (ageMs < minIntervalMs) {
-          console.log(`[WA auto-reply] skip ${opts.phoneNumber}: rate-limit (${Math.round(ageMs/1000)}s < ${settings.autoReplyMinIntervalSec}s)`);
-          return;
+      // 2. Mag er geantwoord worden? Elke "nee" onderdrukt alleen het VERSTUREN.
+      let mayReply = true;
+      let noReplyReason = '';
+      if (!waProvider.isSendConfigured()) {
+        mayReply = false; noReplyReason = 'provider niet geconfigureerd';
+      } else if (!settings || !settings.autoReplyEnabled) {
+        mayReply = false; noReplyReason = 'auto-reply staat uit';
+      } else if (settings.autoReplyOnlyForKnown && opts.matchCategory === 'unmatched') {
+        mayReply = false; noReplyReason = 'onbekend contact';
+      } else {
+        // Rate-limit: niet binnen N seconden van vorig uitgaand bericht
+        const minIntervalMs = (settings.autoReplyMinIntervalSec ?? 60) * 1000;
+        const recent = await db.select({ createdAt: wm.createdAt })
+          .from(wm)
+          .where(and(eq(wm.toNumber, opts.phoneNumber), eq(wm.direction, 'outbound')))
+          .orderBy(desc(wm.createdAt))
+          .limit(1);
+        if (recent.length > 0) {
+          const ageMs = Date.now() - new Date(recent[0].createdAt).getTime();
+          if (ageMs < minIntervalMs) {
+            mayReply = false;
+            noReplyReason = `rate-limit (${Math.round(ageMs / 1000)}s < ${settings.autoReplyMinIntervalSec}s)`;
+          }
         }
+      }
+      if (!mayReply) {
+        console.log(`[WA auto-reply] ${opts.phoneNumber}: niet antwoorden (${noReplyReason}) — wel classificeren`);
       }
 
       // 4. Recente berichten ophalen (laatste 10) als context
@@ -10970,11 +11207,11 @@ ${vacancies.map(v => `  <url>
       });
 
       let guidelinesBlock = '';
-      if (settings.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}${appendAttachmentTextForField(attachmentRows, 'tone_of_voice')}`;
-      if (settings.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}${appendAttachmentTextForField(attachmentRows, 'voice_examples')}`;
-      if (settings.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}${appendAttachmentTextForField(attachmentRows, 'guidelines')}`;
-      if (settings.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}${appendAttachmentTextForField(attachmentRows, 'cancellation_protocol')}`;
-      if (settings.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}${appendAttachmentTextForField(attachmentRows, 'extra_context')}`;
+      if (settings?.toneOfVoice) guidelinesBlock += `\n\nTone of voice: ${settings.toneOfVoice}${appendAttachmentTextForField(attachmentRows, 'tone_of_voice')}`;
+      if (settings?.voiceExamples) guidelinesBlock += `\n\n=== VOORBEELDBERICHTEN (alleen voor STIJL — toon, lengte, emoji's; vertaal naar de juiste taal) ===\n${settings.voiceExamples}${appendAttachmentTextForField(attachmentRows, 'voice_examples')}`;
+      if (settings?.guidelines) guidelinesBlock += `\n\nAlgemene richtlijnen: ${settings.guidelines}${appendAttachmentTextForField(attachmentRows, 'guidelines')}`;
+      if (settings?.cancellationProtocol) guidelinesBlock += `\n\nAfmeldprotocol: ${settings.cancellationProtocol}${appendAttachmentTextForField(attachmentRows, 'cancellation_protocol')}`;
+      if (settings?.extraContext) guidelinesBlock += `\n\nExtra context: ${settings.extraContext}${appendAttachmentTextForField(attachmentRows, 'extra_context')}`;
       if (knowledgeRows.length > 0) {
         guidelinesBlock += `\n\n=== KENNISBANK / PROTOCOLLEN ===`;
         for (const k of knowledgeRows) {
@@ -10989,45 +11226,103 @@ ${vacancies.map(v => `  <url>
       guidelinesBlock += buildAvailableAttachmentsBlock(attachmentRows, knowledgeRows);
 
       const contactInfo = opts.contactName ? `\nNaam contact: ${opts.contactName}` : '';
-      const systemPrompt = `You are the official WhatsApp assistant for EXTRA, a hospitality staffing agency in Amsterdam. You answer messages AUTONOMOUSLY without human intervention.
+
+      // De volledige prompt (antwoorden mag) of de compacte triage-prompt
+      // (antwoorden mag niet). In beide gevallen levert het model hetzelfde
+      // JSON-contract, zodat de parsing hieronder maar één vorm hoeft te kennen.
+      const systemPrompt = mayReply
+        ? `You are the official WhatsApp assistant for EXTRA, a hospitality staffing agency in Amsterdam. You answer messages AUTONOMOUSLY without human intervention.
 
 🌍 LANGUAGE — ABSOLUTE HARD RULE (overrides everything else):
 The user's last incoming message has been detected as: ${lang.name} (ISO: ${lang.code}).
 You MUST write your ENTIRE reply in ${lang.name} ONLY. Do not switch languages mid-message. Do not respond in Dutch unless ${lang.name} IS Dutch.
 Voice/style examples below are in another language — copy only their TONE, LENGTH and emoji usage, but TRANSLATE everything into ${lang.name}.
+(This rule applies to the "reply" field only. The "category", "escalation_reason" and "task.category" fields are fixed identifiers and "task.summary" is always Dutch.)
 
 OTHER RULES:
-- Write ONLY the reply message itself, no explanation or commentary
+- Put ONLY the message itself in "reply", no explanation or commentary
 - Keep it short (max 2-3 sentences unless more is truly needed)
 - Do NOT wrap the message in quotes
-- If you're NOT sure about the answer, or if the topic is sensitive (complaints, payments, legal), respond EXACTLY with: "ESCALATE" (no other text). A human planner will then take over.
-- Never make promises you cannot keep${guidelinesBlock}${contactInfo}`;
+- If you're NOT sure about the answer, or if the topic is sensitive (complaints, payments, legal), use action "escalate" with an empty reply. A human planner will then take over.
+- Never make promises you cannot keep${guidelinesBlock}${contactInfo}
+${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
+        : `${waClassifier.buildClassifyOnlySystemPrompt()}${contactInfo}`;
 
       const formatted = allMessages.map((m: any) => ({
         role: (m.direction === 'inbound' ? 'user' : 'assistant') as 'user' | 'assistant',
         content: m.body || '',
       }));
 
-      const completion = await client.chat.completions.create({
+      const chatArgs: any = {
         model: 'gpt-4o-mini',
         messages: [{ role: 'system', content: systemPrompt }, ...formatted],
-        max_tokens: 300,
+        // Ruimer dan de oude 300: het antwoord zit nu in JSON met label,
+        // escalatiereden en taak-suggestie eromheen.
+        max_tokens: 600,
         temperature: 0.5,
-      });
+      };
+      // JSON-modus maakt het contract betrouwbaarder, maar niet elke
+      // proxy/gateway ondersteunt response_format. Faalt hij, dan draaien we
+      // dezelfde call nog één keer zonder — de parser kan ook losse tekst aan.
+      let completion: any;
+      try {
+        completion = await client.chat.completions.create({ ...chatArgs, response_format: { type: 'json_object' } });
+      } catch (jsonModeErr: any) {
+        console.warn('[WA auto-reply] response_format niet ondersteund, opnieuw zonder JSON-modus:', jsonModeErr?.message);
+        completion = await client.chat.completions.create(chatArgs);
+      }
       const rawReply = completion.choices?.[0]?.message?.content?.trim() || '';
-      if (!rawReply || rawReply === 'ESCALATE' || rawReply.startsWith('ESCALATE')) {
-        console.log(`[WA auto-reply] AI escaleert ${opts.phoneNumber} → planner moet overnemen`);
+      const turn = waClassifier.parseAiTurnResponse(rawReply);
+      if (turn.usedFallback) {
+        console.warn(`[WA auto-reply] ${opts.phoneNumber}: geen bruikbare JSON van het model → teruggevallen op platte tekst`);
+      }
+
+      // 6a. Label wegschrijven. Doen we ALTIJD, ook bij escalatie en ook als er
+      // niet geantwoord mag worden — dit is de kern van fase 3. Een handmatige
+      // keuze van een planner wordt in storage.setAiCategory beschermd.
+      await waStorage.setAiCategory(opts.phoneNumber, turn.category, 'ai');
+      console.log(`[WA classificatie] ${opts.phoneNumber} → ${turn.category}${turn.action === 'escalate' ? ` / escalatie: ${turn.escalationReason}` : ''}`);
+
+      // 6b. Fase 3B: taak wegschrijven. Komt uit dezelfde AI-call als het
+      // antwoord, dus dit kost geen extra request. Gebeurt ALTIJD — ook bij
+      // escalatie en ook als er niet geantwoord mag worden: het werk moet
+      // gebeuren, onafhankelijk van of de bot iets terugstuurt.
+      // Faalt de insert, dan mag dat het antwoorden nooit tegenhouden.
+      if (turn.task) {
+        try {
+          const taakId = await waStorage.createTaskFromAi({
+            phoneNumber: opts.phoneNumber,
+            suggestion: turn.task,
+            sourceMessageId: opts.inboundMessageId ?? null,
+          });
+          if (taakId) {
+            console.log(`[WA taak] #${taakId} aangemaakt voor ${opts.phoneNumber} → ${turn.task.category}: ${turn.task.summary}`);
+          } else {
+            console.log(`[WA taak] ${opts.phoneNumber}: suggestie overgeslagen (duplicaat of onbruikbaar) → ${turn.task.summary}`);
+          }
+        } catch (taakErr: any) {
+          console.error('[WA taak] aanmaken mislukt:', taakErr?.message);
+        }
+      }
+
+      // 6c. Escalatie: gesprek in de wachtrij voor een mens zetten en niets sturen.
+      if (turn.action === 'escalate') {
+        await waStorage.markEscalated(opts.phoneNumber, turn.escalationReason ?? 'overig');
+        console.log(`[WA auto-reply] AI escaleert ${opts.phoneNumber} (${turn.escalationReason}) → planner moet overnemen`);
         return;
       }
 
-      // 6a. Bijlage-marker uit antwoord extraheren
-      const { cleanText: reply, attachmentId } = parseAttachmentMarker(rawReply);
+      // 6d. Wel een antwoord, maar versturen mag nu niet → alleen geclassificeerd.
+      if (!mayReply) return;
+
+      // 6e. Bijlage-marker uit antwoord extraheren
+      const { cleanText: reply, attachmentId } = parseAttachmentMarker(turn.reply);
       if (!reply) {
         console.log(`[WA auto-reply] AI gaf alleen marker, geen tekst → skip`);
         return;
       }
 
-      // 7. Insert outbound + verstuur via 360dialog
+      // 7. Insert outbound + verstuur via de actieve provider
       const now = new Date();
       const match = await waStorage.resolveAndUpsertConversation({
         phoneNumber: opts.phoneNumber,
@@ -11048,23 +11343,17 @@ OTHER RULES:
         rawPayload: { type: 'text', text: { body: reply }, to: opts.phoneNumber, autoReply: true, aiAttachmentId: attachmentId },
       });
 
-      const payload = { messaging_product: 'whatsapp', to: opts.phoneNumber, type: 'text', text: { body: reply } };
-      const r = await fetch(`${WA_SEND_BASE}/messages`, { method: 'POST', headers: waSendHeaders, body: JSON.stringify(payload) });
-      const responseText = await r.text();
-      let data: any = {};
-      try { data = JSON.parse(responseText); } catch { /* niet-JSON */ }
-
-      if (!r.ok || data?.error || data?.meta?.success === false) {
-        const errMsg = data?.meta?.developer_message || data?.error?.message || responseText.slice(0, 300);
+      const sendResult = await waProvider.sendText(opts.phoneNumber, reply);
+      if (!sendResult.ok) {
         await waStorage.updateOutboundResult(dbId, {
           status: 'failed',
-          errorCode: String(r.status),
-          errorMessage: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg),
+          errorCode: sendResult.errorCode ?? null,
+          errorMessage: sendResult.errorMessage ?? null,
         });
-        console.error(`[WA auto-reply] verzending mislukt naar ${opts.phoneNumber}: ${errMsg}`);
+        console.error(`[WA auto-reply] verzending mislukt naar ${opts.phoneNumber}: ${sendResult.errorMessage}`);
         return;
       }
-      const waMessageId = data?.messages?.[0]?.id ?? null;
+      const waMessageId = sendResult.waMessageId ?? null;
       await waStorage.updateOutboundResult(dbId, { waMessageId, status: 'sent' });
       console.log(`[WA auto-reply] verzonden naar ${opts.phoneNumber} (${reply.slice(0, 60)}...)`);
 
@@ -11083,18 +11372,19 @@ OTHER RULES:
       id: 'whatsapp',
       label: 'WhatsApp Business',
       categorie: 'business',
-      status: WA_SEND_READY ? 'connected' : 'disconnected',
-      telefoon: WA_SEND_READY ? 'Actief' : null,
+      status: waProvider.isSendConfigured() ? 'connected' : 'disconnected',
+      telefoon: waProvider.isSendConfigured() ? 'Actief' : null,
       qr: null,
       ongelezen: 0,
     }]);
   });
 
-  // POST /api/whatsapp/stuur — bericht sturen via 360dialog (met DB-persistentie)
+  // POST /api/whatsapp/stuur — bericht sturen via de actieve provider (met DB-persistentie)
   app.post('/api/whatsapp/stuur', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
-    if (!WA_SEND_READY) return res.status(503).json({ error: "WhatsApp-verzendprovider niet geconfigureerd" });
+    const configError = waProvider.configErrorMessage();
+    if (configError) return res.status(503).json({ error: configError });
 
     const normalized = normalizePhone(nummer);
     if (!normalized) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
@@ -11123,46 +11413,32 @@ OTHER RULES:
       rawPayload: { type: 'text', text: { body: tekst }, to: normalized },
     });
 
-    // 2. API-call naar 360dialog
-    try {
-      const payload = { messaging_product: 'whatsapp', to: normalized, type: 'text', text: { body: tekst } };
-      const r = await fetch(`${WA_SEND_BASE}/messages`, {
-        method: 'POST',
-        headers: waSendHeaders,
-        body: JSON.stringify(payload),
-      });
-      const responseText = await r.text();
-      let data: any = {};
-      try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+    // 2. API-call via de actieve provider (360dialog of Meta)
+    const result = await waProvider.sendText(normalized, tekst);
+    console.log(`${result.provider} stuur → ${normalized}: ${result.httpStatus != null ? `HTTP ${result.httpStatus}` : result.errorCode || 'ok'}`);
 
-      console.log(`360dialog stuur → ${normalized}: HTTP ${r.status}`);
-
-      if (!r.ok || data?.error || data?.meta?.success === false) {
-        const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || data?.message || responseText.slice(0, 500);
-        const errorCode = data?.error?.code ? String(data.error.code) : String(r.status);
-        await waStorage.updateOutboundResult(messageRowId, {
-          status: 'failed',
-          errorCode,
-          errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
-        });
-        return res.status(r.ok ? 400 : r.status).json({ error: `360dialog: ${errorMsg}` });
-      }
-
-      const waMessageId = data?.messages?.[0]?.id ?? null;
-      await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
-      return res.json({ success: true, messageId: waMessageId, dbId: messageRowId });
-    } catch (err: any) {
-      console.error('Fout bij versturen WhatsApp bericht:', err.message);
+    if (!result.ok) {
       await waStorage.updateOutboundResult(messageRowId, {
         status: 'failed',
-        errorCode: 'network_error',
-        errorMessage: err.message,
+        errorCode: result.errorCode ?? null,
+        errorMessage: result.errorMessage ?? null,
       });
-      return res.status(500).json({ error: err.message });
+      if (result.errorCode === 'network_error' || result.errorCode === 'timeout') {
+        console.error('Fout bij versturen WhatsApp bericht:', result.errorMessage);
+        return res.status(500).json({ error: result.errorMessage });
+      }
+      return res.status(waProvider.httpStatusForFailure(result)).json({ error: `${result.provider}: ${result.errorMessage}` });
     }
+
+    const waMessageId = result.waMessageId ?? null;
+    await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
+    // Fase 3: een MENS heeft geantwoord → het gesprek wacht niet langer op de
+    // planner. De escalatievlag is de wachtrij; die moet hier leeg.
+    await waStorage.clearEscalation(normalized);
+    return res.json({ success: true, messageId: waMessageId, dbId: messageRowId });
   });
 
-  // POST /api/whatsapp/stuur-media — bestand uploaden + verzenden via 360dialog
+  // POST /api/whatsapp/stuur-media — bestand uploaden + verzenden via de actieve provider
   // Multipart upload: file (binary) + nummer + optionele caption
   const whatsappMediaUpload = multer({
     storage: multer.memoryStorage(),
@@ -11174,7 +11450,8 @@ OTHER RULES:
     const caption = (req.body?.caption || '').toString().trim();
     const file = req.file;
     if (!nummer || !file) return res.status(400).json({ error: 'nummer en file zijn verplicht' });
-    if (!WA_SEND_READY) return res.status(503).json({ error: "WhatsApp-verzendprovider niet geconfigureerd" });
+    const mediaConfigError = waProvider.configErrorMessage();
+    if (mediaConfigError) return res.status(503).json({ error: mediaConfigError });
 
     const normalized = normalizePhone(nummer);
     if (!normalized) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
@@ -11212,63 +11489,56 @@ OTHER RULES:
     });
 
     try {
-      // Stap 1: upload media naar 360dialog (gebruik Node's native FormData/Blob — Node 18+)
-      const fd = new FormData();
-      fd.append('messaging_product', 'whatsapp');
-      fd.append('type', mime);
-      fd.append('file', new Blob([file.buffer], { type: mime }), file.originalname || 'upload');
+      // Stap 1: upload media naar de actieve provider (Node's native FormData/Blob — Node 18+)
+      const upload = await waProvider.uploadMedia({ buffer: file.buffer, mimeType: mime, filename: file.originalname || 'upload' });
 
-      const uploadResp = await fetch(`${WA_SEND_BASE}/media`, {
-        method: 'POST',
-        headers: waMediaAuthHeaders, // Geen Content-Type — fetch zet die met multipart-boundary zelf
-        body: fd,
-      });
-      const uploadText = await uploadResp.text();
-      let uploadData: any = {};
-      try { uploadData = JSON.parse(uploadText); } catch { /* niet-JSON */ }
-
-      if (!uploadResp.ok || !uploadData?.id) {
-        const errMsg = uploadData?.error?.message || uploadData?.message || uploadText.slice(0, 500);
+      if (!upload.ok || !upload.mediaId) {
+        if (upload.errorCode === 'network_error' || upload.errorCode === 'timeout') {
+          await waStorage.updateOutboundResult(messageRowId, {
+            status: 'failed',
+            errorCode: 'network_error',
+            errorMessage: upload.errorMessage ?? null,
+          });
+          console.error('Fout bij versturen WhatsApp media:', upload.errorMessage);
+          return res.status(500).json({ error: upload.errorMessage });
+        }
         await waStorage.updateOutboundResult(messageRowId, {
           status: 'failed',
-          errorCode: String(uploadResp.status),
-          errorMessage: `media-upload: ${errMsg}`,
+          errorCode: upload.errorCode ?? null,
+          errorMessage: `media-upload: ${upload.errorMessage}`,
         });
-        return res.status(uploadResp.status >= 400 ? uploadResp.status : 400).json({ error: `media-upload mislukt: ${errMsg}` });
+        return res.status(waProvider.httpStatusForFailure(upload)).json({ error: `media-upload mislukt: ${upload.errorMessage}` });
       }
 
-      const mediaId = uploadData.id as string;
+      const mediaId = upload.mediaId;
 
-      // Stap 2: verstuur bericht met media-id
-      const mediaPayload: any = { id: mediaId };
-      if (caption && (waType === 'image' || waType === 'video' || waType === 'document')) mediaPayload.caption = caption;
-      if (waType === 'document' && file.originalname) mediaPayload.filename = file.originalname;
-
-      const sendPayload = { messaging_product: 'whatsapp', to: normalized, type: waType, [waType]: mediaPayload };
-      const r = await fetch(`${WA_SEND_BASE}/messages`, {
-        method: 'POST',
-        headers: waSendHeaders,
-        body: JSON.stringify(sendPayload),
+      // Stap 2: verstuur bericht met media-id via de actieve provider
+      const result = await waProvider.sendMedia(normalized, {
+        type: waType,
+        id: mediaId,
+        caption: caption || undefined,
+        filename: waType === 'document' ? (file.originalname || undefined) : undefined,
       });
-      const responseText = await r.text();
-      let data: any = {};
-      try { data = JSON.parse(responseText); } catch { /* niet-JSON */ }
 
-      console.log(`360dialog stuur-media (${waType}) → ${normalized}: HTTP ${r.status}`);
+      console.log(`${result.provider} stuur-media (${waType}) → ${normalized}: ${result.httpStatus != null ? `HTTP ${result.httpStatus}` : result.errorCode || 'ok'}`);
 
-      if (!r.ok || data?.error || data?.meta?.success === false) {
-        const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || data?.message || responseText.slice(0, 500);
-        const errorCode = data?.error?.code ? String(data.error.code) : String(r.status);
+      if (!result.ok) {
         await waStorage.updateOutboundResult(messageRowId, {
           status: 'failed',
-          errorCode,
-          errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+          errorCode: result.errorCode ?? null,
+          errorMessage: result.errorMessage ?? null,
         });
-        return res.status(r.ok ? 400 : r.status).json({ error: `360dialog: ${errorMsg}` });
+        if (result.errorCode === 'network_error' || result.errorCode === 'timeout') {
+          console.error('Fout bij versturen WhatsApp media:', result.errorMessage);
+          return res.status(500).json({ error: result.errorMessage });
+        }
+        return res.status(waProvider.httpStatusForFailure(result)).json({ error: `${result.provider}: ${result.errorMessage}` });
       }
 
-      const waMessageId = data?.messages?.[0]?.id ?? null;
+      const waMessageId = result.waMessageId ?? null;
       await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
+      // Fase 3: mens heeft gereageerd (met media) → escalatie opheffen.
+      await waStorage.clearEscalation(normalized);
       return res.json({ success: true, messageId: waMessageId, dbId: messageRowId, mediaType: waType, mediaId });
     } catch (err: any) {
       console.error('Fout bij versturen WhatsApp media:', err.message);
@@ -11302,150 +11572,16 @@ OTHER RULES:
   }
 
   // Gedeelde verwerking (Cloud API-formaat) voor 360dialog- én Meta-webhook.
-  async function verwerkInkomendeWebhookBody(req: Request, res: Response) {
-    try {
-      let body = req.body || {};
-
-      if (Array.isArray(body.entry)) {
-        const value = body.entry?.[0]?.changes?.[0]?.value;
-        if (value) {
-          console.log('[WA webhook] Cloud API entry-format gedetecteerd, unwrapping…');
-          body = value;
-        }
-      }
-
-      // 1. Status-events (delivered/read/failed)
-      if (Array.isArray(body.statuses)) {
-        for (const s of body.statuses) {
-          try {
-            const id = s?.id;
-            const status = s?.status; // sent | delivered | read | failed
-            if (!id || !status) continue;
-            const errCode = s?.errors?.[0]?.code ? String(s.errors[0].code) : undefined;
-            const errMsg  = s?.errors?.[0]?.title || s?.errors?.[0]?.message;
-            const updated = await waStorage.applyStatusEvent(id, status, errCode, errMsg);
-            if (!updated) {
-              console.log(`[WA webhook] status-event voor onbekend wa_message_id=${id} (${status})`);
-              continue;
-            }
-            // Fase 1: Meta error → opt-out detectie. Bij failed delivery met
-            // "user blocked"-signaal zetten we de bijbehorende contacten op opt_out.
-            if (status === 'failed' && optInService.isBlockedByUserError(errCode, errMsg)) {
-              try {
-                const recipient = String(s?.recipient_id || '');
-                const normalized = recipient ? (normalizePhone(recipient) || recipient) : '';
-                if (normalized) {
-                  const ids = await optInService.findConversationContact(normalized);
-                  await optInService.handleBlockedByUser({
-                    phoneNumber: normalized,
-                    candidateId: ids.candidateId,
-                    prospectContactId: ids.prospectContactId,
-                    errorCode: errCode,
-                    errorMessage: errMsg,
-                  });
-                }
-              } catch (e: any) {
-                console.error('[WA webhook] blocked-by-user-handler error:', e?.message);
-              }
-            }
-          } catch (e: any) {
-            console.error('[WA webhook] fout bij status-event:', e?.message);
-          }
-        }
-      }
-
-      // 2. Inkomende berichten
-      if (Array.isArray(body.messages)) {
-        const contactProfile = body?.contacts?.[0]?.profile?.name as string | undefined;
-
-        for (const msg of body.messages) {
-          try {
-            const fromRaw = String(msg.from || '');
-            const normalizedFrom = normalizePhone(fromRaw);
-            if (!normalizedFrom) {
-              console.warn(`[WA webhook] ongeldig from-nummer: "${fromRaw}"`);
-              continue;
-            }
-
-            const at = msg.timestamp ? new Date(Number(msg.timestamp) * 1000) : new Date();
-            const type: string = msg.type || 'unknown';
-
-            let body_: string;
-            let mediaUrl: string | null = null;
-            let mediaMime: string | null = null;
-
-            if (type === 'text') {
-              body_ = msg.text?.body || '';
-            } else if (['image', 'audio', 'document', 'video', 'sticker'].includes(type)) {
-              body_ = waStorage.describeNonTextMessage(type, msg);
-              mediaUrl = msg[type]?.id || null; // 360dialog geeft een media-id; download-URL haal je later op met /media/{id}
-              mediaMime = msg[type]?.mime_type || null;
-            } else {
-              body_ = waStorage.describeNonTextMessage(type, msg);
-            }
-
-            const match = await waStorage.resolveAndUpsertConversation({
-              phoneNumber: normalizedFrom,
-              inbound: true,
-              bodyPreview: body_,
-              at,
-            });
-
-            const inserted = await waStorage.insertInboundMessage({
-              direction: 'inbound',
-              waMessageId: msg.id || null,
-              fromNumber: normalizedFrom,
-              toNumber: 'extra',
-              messageType: ['text', 'image', 'audio', 'document', 'video', 'location', 'sticker', 'contacts', 'interactive'].includes(type) ? type : 'unknown',
-              body: body_,
-              mediaUrl,
-              mediaMimeType: mediaMime,
-              rawPayload: msg,
-              status: 'received',
-              candidateId: match.candidateId,
-              prospectContactId: match.prospectContactId,
-              matchCategory: match.category,
-            });
-
-            if (inserted === null) {
-              console.log(`[WA webhook] duplicate wa_message_id=${msg.id} → skip`);
-            } else {
-              console.log(`[WA webhook] inbound ${type} van ${normalizedFrom} → match=${match.category} (${contactProfile || '?'})`);
-
-              // Fase 1: STOP-detectie. Bij een opt-out keyword:
-              //   - opt-in op 'opt_out' zetten voor candidate/employee/prospect
-              //   - interne notitie aanmaken voor de planner
-              //   - GEEN auto-reply sturen
-              const isStop = type === 'text' && body_ && optInService.isStopMessage(body_);
-              if (isStop) {
-                optInService.handleIncomingStop({
-                  phoneNumber: normalizedFrom,
-                  candidateId: match.candidateId,
-                  prospectContactId: match.prospectContactId,
-                  matchCategory: match.category,
-                  contactName: contactProfile || null,
-                  rawBody: body_,
-                }).catch((e: any) => console.error('[WA webhook] STOP-handler error:', e?.message));
-              } else if (type === 'text' && body_) {
-                // Auto-reply alleen voor tekstberichten (geen audio/image/etc.) en
-                // alleen als het géén STOP-bericht is.
-                tryAutoReply({
-                  phoneNumber: normalizedFrom,
-                  matchCategory: match.category,
-                  candidateId: match.candidateId,
-                  prospectContactId: match.prospectContactId,
-                  contactName: contactProfile || null,
-                }).catch((e: any) => console.error('[WA webhook] auto-reply error:', e?.message));
-              }
-            }
-          } catch (e: any) {
-            console.error('[WA webhook] fout bij verwerken message:', e?.message, e?.stack);
-          }
-        }
-      }
-    } catch (e: any) {
-      console.error('[WA webhook] top-level fout:', e?.message, e?.stack);
-    }
+  // De verwerking zelf staat in server/whatsapp/inboundProcessor.ts en is daar
+  // los te testen: statuses → applyStatusEvent (incl. failed+blocked → opt-out),
+  // messages → normalisatie, matching, idempotente insert, STOP-detectie en
+  // auto-reply. Die module unwrapt álle entry[]/changes[]-elementen, niet
+  // alleen het eerste.
+  async function verwerkInkomendeWebhookBody(req: Request, res: Response, logPrefix = '[WA webhook]') {
+    await processIncomingPayload(req.body || {}, {
+      tryAutoReply,
+      logPrefix,
+    });
 
     // Altijd 200 — 360dialog mag niet retryen op interne fouten
     return res.sendStatus(200);
@@ -11454,37 +11590,45 @@ OTHER RULES:
   app.get('/api/whatsapp/webhook/:secret', handleWebhookGet);
   app.post('/api/whatsapp/webhook/:secret', handleWebhookPost);
 
-  // ─── META CLOUD API WEBHOOK ──────────────────────────────────────────────
-  // Meta verifieert de callback-URL met een GET (hub.mode/hub.verify_token/
-  // hub.challenge) en verwacht ALLEEN de challenge als platte tekst terug.
-  // POST-events worden geauthenticeerd via de X-Hub-Signature-256 header
-  // (HMAC-SHA256 over de rauwe body met het app-secret).
+  // ─── META CLOUD API WEBHOOK (coexistence — Fase 1 migratie) ───────────────
+  // Te registreren in Meta Business Manager (App → WhatsApp → Configuration):
+  //   Callback URL: https://doehetextra.nl/api/whatsapp/meta-webhook
+  //   Verify token: waarde van META_WA_BOT_VERIFY_TOKEN
+  // GET  = verify-handshake; POST = events, geverifieerd via X-Hub-Signature-256
+  // (HMAC-SHA256 over de RAW body met META_WA_BOT_APP_SECRET; de raw body wordt
+  // door express.json() in server/index.ts al op req.rawBody gezet).
+  //
+  // De vergelijkingen zelf staan in server/whatsapp/webhookVerify.ts en zijn
+  // allebei timing-safe; daar liggen ook de unit-tests op.
   app.get('/api/whatsapp/meta-webhook', (req: Request, res: Response) => {
-    const verifyToken = (process.env.META_WA_BOT_VERIFY_TOKEN || '').trim();
-    const mode = String(req.query['hub.mode'] || '');
-    const token = String(req.query['hub.verify_token'] || '');
-    const challenge = String(req.query['hub.challenge'] || '');
-    if (mode === 'subscribe' && verifyToken && safeEqualSecret(token, verifyToken)) {
+    const challenge = handleVerifyHandshake(req.query as Record<string, unknown>);
+    if (challenge !== null) {
+      console.log('[WA meta-webhook] verify-handshake geslaagd');
+      // text/plain: Meta verwacht de challenge kaal terug, zonder JSON-quotes.
       return res.status(200).type('text/plain').send(challenge);
     }
-    console.warn('[Meta webhook] verificatie geweigerd (mode of token onjuist)');
+    console.warn('[WA meta-webhook] verify-handshake geweigerd (verkeerde hub.verify_token of META_WA_BOT_VERIFY_TOKEN niet gezet)');
     return res.sendStatus(403);
   });
 
-  app.post('/api/whatsapp/meta-webhook', (req: Request, res: Response) => {
+  app.post('/api/whatsapp/meta-webhook', async (req: Request, res: Response) => {
     const appSecret = process.env.META_WA_BOT_APP_SECRET || '';
-    const signature = String(req.headers['x-hub-signature-256'] || '');
-    const raw: Buffer | undefined = (req as any).rawBody;
-    if (!appSecret || !signature.startsWith('sha256=') || !raw) {
-      console.warn('[Meta webhook] POST zonder geldige signature-header geweigerd');
-      return res.sendStatus(401);
+    if (!appSecret) {
+      // Expliciete, herkenbare log: zonder dit secret worden ALLE inkomende
+      // berichten geweigerd terwijl de GET-verificatie er gezond uitziet.
+      console.error('[WA meta-webhook] META_WA_BOT_APP_SECRET niet ingesteld — kan signature niet verifiëren, event geweigerd');
+      return res.status(503).json({ error: 'META_WA_BOT_APP_SECRET niet ingesteld' });
     }
-    const expected = 'sha256=' + createHmac('sha256', appSecret).update(raw).digest('hex');
-    if (!safeEqualSecret(signature, expected)) {
-      console.warn('[Meta webhook] signature-mismatch — POST geweigerd');
-      return res.sendStatus(401);
+
+    const rawBody: Buffer | undefined = (req as any).rawBody;
+    const signature = req.headers['x-hub-signature-256'] as string | undefined;
+    if (!rawBody || !verifyMetaSignature(rawBody, signature, appSecret)) {
+      console.warn(`[WA meta-webhook] ongeldige of ontbrekende X-Hub-Signature-256 (signature ${signature ? 'aanwezig' : 'ontbreekt'}, rawBody ${rawBody ? 'aanwezig' : 'ontbreekt'}) — 403`);
+      return res.sendStatus(403);
     }
-    return verwerkInkomendeWebhookBody(req, res);
+
+    // Zelfde gedeelde verwerking als de 360dialog-webhook, eigen log-prefix.
+    return verwerkInkomendeWebhookBody(req, res, '[WA meta-webhook]');
   });
 
   // POST /api/whatsapp/registreer-webhook — stel webhook-URL in via 360dialog API
@@ -11552,8 +11696,34 @@ OTHER RULES:
     if (category && !['candidate', 'prospect', 'unmatched'].includes(category)) {
       return res.status(400).json({ error: 'category moet candidate, prospect of unmatched zijn' });
     }
-    const rows = await waStorage.listConversations({ category, limit, offset });
+    // Fase 2 snooze-filter: default verbergt de actieve lijst gesnoozede gesprekken;
+    // ?snoozed=only toont alléén gesnoozede, ?snoozed=all toont alles.
+    const snoozedRaw = String(req.query.snoozed || 'exclude');
+    const snoozed = (['exclude', 'only', 'all'] as const).includes(snoozedRaw as any)
+      ? (snoozedRaw as 'exclude' | 'only' | 'all')
+      : 'exclude';
+    const rows = await waStorage.listConversations({ category, limit, offset, snoozed });
     res.json(rows);
+  });
+
+  // Fase 2: snooze — verberg een gesprek tot een tijdstip (of hef op met until=null).
+  // Nieuw inkomend bericht heft de snooze automatisch op (zie storage.upsertConversation).
+  app.patch('/api/whatsapp/conversations/:id/snooze', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(String(req.params.id), 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Ongeldig gesprek-id' });
+    const { until } = req.body ?? {};
+    let snoozedUntil: Date | null = null;
+    if (until !== null && until !== undefined && until !== '') {
+      const d = new Date(until);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: 'until moet een geldige datum of null zijn' });
+      snoozedUntil = d;
+    }
+    const updated = await db.update(whatsappConversations).set({
+      snoozedUntil,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.id, id)).returning({ id: whatsappConversations.id });
+    if (!updated.length) return res.status(404).json({ error: 'Gesprek niet gevonden' });
+    res.json({ success: true, snoozedUntil: snoozedUntil ? snoozedUntil.toISOString() : null });
   });
 
   app.get('/api/whatsapp/conversations/:phoneNumber/messages', adminMiddleware, async (req: Request, res: Response) => {
@@ -11653,7 +11823,114 @@ OTHER RULES:
       inboxStatus: status,
       updatedAt: new Date(),
     }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    // Fase 3: opgelost of spam betekent dat er niets meer op een planner wacht.
+    // Terugzetten naar 'open' herstelt de escalatie NIET — die is inhoudelijk
+    // afgehandeld; een volgend inkomend bericht bepaalt opnieuw of het nodig is.
+    if (status === 'resolved' || status === 'spam') {
+      await waStorage.clearEscalation(phone);
+    }
     res.json({ success: true });
+  });
+
+  // Fase 3: handmatige override van het AI-label. Zet de bron op 'handmatig',
+  // waarna de AI het label niet meer overschrijft (zie storage.setAiCategory).
+  // category = null zet de override terug naar 'ai' zodat de AI het weer mag doen.
+  app.put('/api/whatsapp/conversations/:phoneNumber/ai-category', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { category } = req.body ?? {};
+    if (category === null || category === '') {
+      await db.update(whatsappConversations).set({
+        aiCategorySource: 'ai',
+        updatedAt: new Date(),
+      }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+      return res.json({ success: true, category: null, source: 'ai' });
+    }
+    if (!waClassifier.isAiCategory(category)) {
+      return res.status(400).json({ error: `category moet ${waClassifier.AI_CATEGORIES.join('/')} of null zijn` });
+    }
+    await waStorage.setAiCategory(phone, category, 'handmatig');
+    res.json({ success: true, category, source: 'handmatig' });
+  });
+
+  // ─── Fase 3B: taken ───────────────────────────────────────────────────────
+  //
+  // Taken staan LOS van gesprekken: een gesprek mag gesloten zijn terwijl de
+  // taak eruit nog open staat. Daarom een eigen endpoint-set en geen velden
+  // op het gesprek.
+
+  /** Naam van de ingelogde gebruiker, voor "afgevinkt door". */
+  async function huidigeGebruiker(req: Request): Promise<{ id: number | null; naam: string | null }> {
+    const userId = (req.session as any)?.userId ?? null;
+    if (!userId) return { id: null, naam: null };
+    try {
+      const { users: usersTable } = await import('@shared/schema');
+      const rows = await db.select({ firstName: usersTable.firstName, lastName: usersTable.lastName })
+        .from(usersTable).where(drizzleEq(usersTable.id, userId)).limit(1);
+      const naam = rows.length ? `${rows[0].firstName ?? ''} ${rows[0].lastName ?? ''}`.trim() : null;
+      return { id: userId, naam: naam || null };
+    } catch {
+      return { id: userId, naam: null };
+    }
+  }
+
+  // GET /api/whatsapp/tasks?status=open|klaar|alle&assignedToId=<id|niemand>
+  app.get('/api/whatsapp/tasks', adminMiddleware, async (req: Request, res: Response) => {
+    const statusRaw = String(req.query.status ?? 'open');
+    const status = (['open', 'klaar', 'alle'] as const).includes(statusRaw as any)
+      ? (statusRaw as 'open' | 'klaar' | 'alle')
+      : 'open';
+
+    const assignedRaw = req.query.assignedToId;
+    let assignedToId: number | 'niemand' | undefined;
+    if (assignedRaw === 'niemand') assignedToId = 'niemand';
+    else if (assignedRaw != null && assignedRaw !== '') {
+      const n = parseInt(String(assignedRaw), 10);
+      if (!Number.isNaN(n)) assignedToId = n;
+    }
+
+    const [taken, openTotaal] = await Promise.all([
+      waStorage.listTasks({ status, assignedToId }),
+      waStorage.countOpenTasks(),
+    ]);
+    res.json({ tasks: taken, openTotaal });
+  });
+
+  // PUT /api/whatsapp/tasks/:id/status — afvinken of weer openzetten.
+  // Raakt het gesprek NIET aan; dat is precies het punt van een aparte taak.
+  app.put('/api/whatsapp/tasks/:id/status', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Ongeldig taak-id' });
+    const { status } = req.body ?? {};
+    if (status !== 'open' && status !== 'klaar') {
+      return res.status(400).json({ error: "status moet 'open' of 'klaar' zijn" });
+    }
+    const door = await huidigeGebruiker(req);
+    const ok = await waStorage.setTaskStatus(id, status, door);
+    if (!ok) return res.status(404).json({ error: 'Taak niet gevonden' });
+    res.json({ success: true, status });
+  });
+
+  // PUT /api/whatsapp/tasks/:id/assignee — toewijzen of vrijgeven (null).
+  app.put('/api/whatsapp/tasks/:id/assignee', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Ongeldig taak-id' });
+    const { assignedToId } = req.body ?? {};
+    if (assignedToId === null || assignedToId === '' || assignedToId === undefined) {
+      const ok = await waStorage.setTaskAssignee(id, { id: null, naam: null });
+      if (!ok) return res.status(404).json({ error: 'Taak niet gevonden' });
+      return res.json({ success: true, assignedToId: null, assignedToName: null });
+    }
+    const n = parseInt(String(assignedToId), 10);
+    if (Number.isNaN(n)) return res.status(400).json({ error: 'Ongeldige assignedToId' });
+    const { users: usersTable } = await import('@shared/schema');
+    const rows = await db.select({ firstName: usersTable.firstName, lastName: usersTable.lastName })
+      .from(usersTable).where(drizzleEq(usersTable.id, n)).limit(1);
+    if (rows.length === 0) return res.status(400).json({ error: 'Gebruiker bestaat niet' });
+    const naam = `${rows[0].firstName ?? ''} ${rows[0].lastName ?? ''}`.trim() || null;
+    const ok = await waStorage.setTaskAssignee(id, { id: n, naam });
+    if (!ok) return res.status(404).json({ error: 'Taak niet gevonden' });
+    res.json({ success: true, assignedToId: n, assignedToName: naam });
   });
 
   // Markeer een gesprek opnieuw als ongelezen (zet unreadCount op 1).
@@ -12244,7 +12521,8 @@ OTHER RULES:
     if (!tekst || typeof tekst !== 'string' || !tekst.trim()) {
       return res.status(400).json({ error: 'tekst is verplicht' });
     }
-    if (!WA_SEND_READY) return res.status(503).json({ error: "WhatsApp-verzendprovider niet geconfigureerd" });
+    const bulkConfigError = waProvider.configErrorMessage();
+    if (bulkConfigError) return res.status(503).json({ error: bulkConfigError });
 
     const group = await db.select().from(whatsappGroups).where(drizzleEq(whatsappGroups.id, id)).limit(1);
     if (!group.length) return res.status(404).json({ error: 'Groep niet gevonden' });
@@ -12310,27 +12588,18 @@ OTHER RULES:
           rawPayload: { type: 'text', text: { body: personalizedBody }, to: member.phoneNumber },
         });
 
-        const payload = { messaging_product: 'whatsapp', to: member.phoneNumber, type: 'text', text: { body: personalizedBody } };
-        const r = await fetch(`${WA_SEND_BASE}/messages`, {
-          method: 'POST',
-          headers: waSendHeaders,
-          body: JSON.stringify(payload),
-        });
-        const responseText = await r.text();
-        let data: any = {};
-        try { data = JSON.parse(responseText); } catch { /* */ }
+        const result = await waProvider.sendText(member.phoneNumber, personalizedBody);
 
-        if (!r.ok || data?.error || data?.meta?.success === false) {
-          const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || responseText.slice(0, 200);
+        if (!result.ok) {
           await waStorage.updateOutboundResult(messageRowId, {
             status: 'failed',
-            errorCode: String(data?.error?.code || r.status),
-            errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+            errorCode: result.errorCode ?? null,
+            errorMessage: result.errorMessage ?? null,
           });
           failedCount++;
-          results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'failed', error: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg) });
+          results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'failed', error: result.errorMessage || 'Onbekende fout' });
         } else {
-          const waId = data?.messages?.[0]?.id || null;
+          const waId = result.waMessageId || null;
           await waStorage.updateOutboundResult(messageRowId, { waMessageId: waId, status: 'sent' });
           sentCount++;
           results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'sent' });
@@ -12934,8 +13203,13 @@ ${contactInfo}`;
   });
 
   // Voer een eenmalige startup-warning uit als secrets ontbreken
-  if (!WA_SEND_READY) console.warn(`[WA] geen verzendconfiguratie (provider ${WA_PROVIDER}) — uitgaande berichten zullen falen`);
+  console.log(`[WA] actieve provider: ${waProvider.activeProvider()}`);
+  const waConfigWarning = waProvider.configErrorMessage();
+  if (waConfigWarning) console.warn(`[WA] ${waConfigWarning} — uitgaande berichten zullen falen`);
   if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');
+  if (waProvider.activeProvider() === 'meta' && !process.env.META_WA_BOT_APP_SECRET) {
+    console.warn('[WA] META_WA_BOT_APP_SECRET niet ingesteld — meta-webhook accepteert GEEN inkomende events');
+  }
   // ─────────────────────────────────────────────────────────────────────────
 
   // ─── Indeed Apply webhook ────────────────────────────────────────────────
