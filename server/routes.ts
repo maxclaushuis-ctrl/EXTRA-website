@@ -10,7 +10,7 @@ import { storage } from "./storage";
 import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
 import { moveCardToPhase, markNotReached } from "./salesflow";
 import { verstuurWachtwoordInstelLink, stelWachtwoordIn } from "./authReset";
-import { createHash, randomUUID } from "crypto";
+import { createHash, createHmac, randomUUID } from "crypto";
 import { 
   insertApplicantSchema, 
   insertUserSchema, 
@@ -11275,7 +11275,11 @@ OTHER RULES:
     if (!safeEqualSecret(req.params.secret || '', WEBHOOK_SECRET)) {
       return res.sendStatus(401);
     }
+    return verwerkInkomendeWebhookBody(req, res);
+  }
 
+  // Gedeelde verwerking (Cloud API-formaat) voor 360dialog- én Meta-webhook.
+  async function verwerkInkomendeWebhookBody(req: Request, res: Response) {
     try {
       let body = req.body || {};
 
@@ -11426,6 +11430,39 @@ OTHER RULES:
 
   app.get('/api/whatsapp/webhook/:secret', handleWebhookGet);
   app.post('/api/whatsapp/webhook/:secret', handleWebhookPost);
+
+  // ─── META CLOUD API WEBHOOK ──────────────────────────────────────────────
+  // Meta verifieert de callback-URL met een GET (hub.mode/hub.verify_token/
+  // hub.challenge) en verwacht ALLEEN de challenge als platte tekst terug.
+  // POST-events worden geauthenticeerd via de X-Hub-Signature-256 header
+  // (HMAC-SHA256 over de rauwe body met het app-secret).
+  app.get('/api/whatsapp/meta-webhook', (req: Request, res: Response) => {
+    const verifyToken = (process.env.META_WA_BOT_VERIFY_TOKEN || '').trim();
+    const mode = String(req.query['hub.mode'] || '');
+    const token = String(req.query['hub.verify_token'] || '');
+    const challenge = String(req.query['hub.challenge'] || '');
+    if (mode === 'subscribe' && verifyToken && safeEqualSecret(token, verifyToken)) {
+      return res.status(200).type('text/plain').send(challenge);
+    }
+    console.warn('[Meta webhook] verificatie geweigerd (mode of token onjuist)');
+    return res.sendStatus(403);
+  });
+
+  app.post('/api/whatsapp/meta-webhook', (req: Request, res: Response) => {
+    const appSecret = process.env.META_WA_BOT_APP_SECRET || '';
+    const signature = String(req.headers['x-hub-signature-256'] || '');
+    const raw: Buffer | undefined = (req as any).rawBody;
+    if (!appSecret || !signature.startsWith('sha256=') || !raw) {
+      console.warn('[Meta webhook] POST zonder geldige signature-header geweigerd');
+      return res.sendStatus(401);
+    }
+    const expected = 'sha256=' + createHmac('sha256', appSecret).update(raw).digest('hex');
+    if (!safeEqualSecret(signature, expected)) {
+      console.warn('[Meta webhook] signature-mismatch — POST geweigerd');
+      return res.sendStatus(401);
+    }
+    return verwerkInkomendeWebhookBody(req, res);
+  });
 
   // POST /api/whatsapp/registreer-webhook — stel webhook-URL in via 360dialog API
   app.post('/api/whatsapp/registreer-webhook', adminMiddleware, async (req: Request, res: Response) => {
