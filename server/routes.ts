@@ -10672,6 +10672,29 @@ ${vacancies.map(v => `  <url>
   const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
   const wa360Headers = { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
 
+  // ─── Provider-switch: 360dialog (default) of Meta Cloud API ──────────────
+  // Zet WHATSAPP_PROVIDER=meta om uitgaand verkeer via de Meta Graph API te
+  // sturen (vereist META_WA_BOT_ACCESS_TOKEN + META_WA_BOT_PHONE_NUMBER_ID).
+  // De payloads zijn identiek (Cloud API-formaat); alleen base-URL en
+  // authenticatie-header verschillen.
+  const META_WA_TOKEN = process.env.META_WA_BOT_ACCESS_TOKEN || '';
+  const META_WA_PHONE_ID = process.env.META_WA_BOT_PHONE_NUMBER_ID || '';
+  const WA_PROVIDER: 'meta' | '360dialog' =
+    (process.env.WHATSAPP_PROVIDER || '').trim().toLowerCase() === 'meta' && META_WA_TOKEN && META_WA_PHONE_ID
+      ? 'meta' : '360dialog';
+  const WA_SEND_BASE = WA_PROVIDER === 'meta'
+    ? `https://graph.facebook.com/v21.0/${META_WA_PHONE_ID}`
+    : WA_BASE_URL;
+  const waSendHeaders = WA_PROVIDER === 'meta'
+    ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${META_WA_TOKEN}` }
+    : wa360Headers;
+  const waMediaAuthHeaders: Record<string, string> = WA_PROVIDER === 'meta'
+    ? { 'Authorization': `Bearer ${META_WA_TOKEN}` }
+    : { 'D360-API-KEY': WA_360_KEY };
+  // "Kunnen we überhaupt versturen?" — vervangt de kale WA_360_KEY-checks.
+  const WA_SEND_READY = WA_PROVIDER === 'meta' ? true : !!WA_360_KEY;
+  console.log(`[WA] provider: ${WA_PROVIDER}${WA_PROVIDER === 'meta' ? ` (phone_number_id ${META_WA_PHONE_ID})` : ''}`);
+
   const { normalizePhone } = await import('./whatsapp/phone');
   const waStorage = await import('./whatsapp/storage');
   const cryptoModule = await import('crypto');
@@ -10791,7 +10814,7 @@ ${vacancies.map(v => `  <url>
 
   /** Stuur een opgeslagen PDF-bijlage als WhatsApp document naar het opgegeven nummer. */
   async function sendPdfAttachmentToWa(phoneNumber: string, attachmentId: number): Promise<void> {
-    if (!WA_360_KEY) return;
+    if (!WA_SEND_READY) return;
     try {
       const { whatsappAiAttachments } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -10811,9 +10834,9 @@ ${vacancies.map(v => `  <url>
       fd.append('messaging_product', 'whatsapp');
       fd.append('type', att.mimeType);
       fd.append('file', new Blob([buffer], { type: att.mimeType }), att.filename);
-      const uploadResp = await fetch(`${WA_BASE_URL}/media`, {
+      const uploadResp = await fetch(`${WA_SEND_BASE}/media`, {
         method: 'POST',
-        headers: { 'D360-API-KEY': WA_360_KEY },
+        headers: waMediaAuthHeaders,
         body: fd,
       });
       const uploadData: any = await uploadResp.json().catch(() => ({}));
@@ -10845,7 +10868,7 @@ ${vacancies.map(v => `  <url>
         rawPayload: { type: 'document', to: phoneNumber, filename: att.filename, mediaId, autoReply: true, aiAttachmentId: attachmentId },
       });
       const sendPayload = { messaging_product: 'whatsapp', to: phoneNumber, type: 'document', document: { id: mediaId, filename: att.filename } };
-      const r = await fetch(`${WA_BASE_URL}/messages`, { method: 'POST', headers: wa360Headers, body: JSON.stringify(sendPayload) });
+      const r = await fetch(`${WA_SEND_BASE}/messages`, { method: 'POST', headers: waSendHeaders, body: JSON.stringify(sendPayload) });
       const data: any = await r.json().catch(() => ({}));
       if (!r.ok || data?.error) {
         const errMsg = data?.error?.message || data?.message || `HTTP ${r.status}`;
@@ -10870,7 +10893,7 @@ ${vacancies.map(v => `  <url>
     contactName: string | null;
   }): Promise<void> {
     try {
-      if (!WA_360_KEY) return; // Kan niet versturen zonder API key
+      if (!WA_SEND_READY) return; // Kan niet versturen zonder API key
 
       const { whatsappAiSettings, whatsappAiKnowledge, whatsappAiAttachments, whatsappMessages: wm } = await import('@shared/schema');
       const { eq, asc, desc, and } = await import('drizzle-orm');
@@ -11026,7 +11049,7 @@ OTHER RULES:
       });
 
       const payload = { messaging_product: 'whatsapp', to: opts.phoneNumber, type: 'text', text: { body: reply } };
-      const r = await fetch(`${WA_BASE_URL}/messages`, { method: 'POST', headers: wa360Headers, body: JSON.stringify(payload) });
+      const r = await fetch(`${WA_SEND_BASE}/messages`, { method: 'POST', headers: waSendHeaders, body: JSON.stringify(payload) });
       const responseText = await r.text();
       let data: any = {};
       try { data = JSON.parse(responseText); } catch { /* niet-JSON */ }
@@ -11060,8 +11083,8 @@ OTHER RULES:
       id: 'whatsapp',
       label: 'WhatsApp Business',
       categorie: 'business',
-      status: WA_360_KEY ? 'connected' : 'disconnected',
-      telefoon: WA_360_KEY ? 'Actief' : null,
+      status: WA_SEND_READY ? 'connected' : 'disconnected',
+      telefoon: WA_SEND_READY ? 'Actief' : null,
       qr: null,
       ongelezen: 0,
     }]);
@@ -11071,7 +11094,7 @@ OTHER RULES:
   app.post('/api/whatsapp/stuur', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
     const { nummer, tekst } = req.body;
     if (!nummer || !tekst) return res.status(400).json({ error: 'nummer en tekst zijn verplicht' });
-    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+    if (!WA_SEND_READY) return res.status(503).json({ error: "WhatsApp-verzendprovider niet geconfigureerd" });
 
     const normalized = normalizePhone(nummer);
     if (!normalized) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
@@ -11103,9 +11126,9 @@ OTHER RULES:
     // 2. API-call naar 360dialog
     try {
       const payload = { messaging_product: 'whatsapp', to: normalized, type: 'text', text: { body: tekst } };
-      const r = await fetch(`${WA_BASE_URL}/messages`, {
+      const r = await fetch(`${WA_SEND_BASE}/messages`, {
         method: 'POST',
-        headers: wa360Headers,
+        headers: waSendHeaders,
         body: JSON.stringify(payload),
       });
       const responseText = await r.text();
@@ -11151,7 +11174,7 @@ OTHER RULES:
     const caption = (req.body?.caption || '').toString().trim();
     const file = req.file;
     if (!nummer || !file) return res.status(400).json({ error: 'nummer en file zijn verplicht' });
-    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+    if (!WA_SEND_READY) return res.status(503).json({ error: "WhatsApp-verzendprovider niet geconfigureerd" });
 
     const normalized = normalizePhone(nummer);
     if (!normalized) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
@@ -11195,9 +11218,9 @@ OTHER RULES:
       fd.append('type', mime);
       fd.append('file', new Blob([file.buffer], { type: mime }), file.originalname || 'upload');
 
-      const uploadResp = await fetch(`${WA_BASE_URL}/media`, {
+      const uploadResp = await fetch(`${WA_SEND_BASE}/media`, {
         method: 'POST',
-        headers: { 'D360-API-KEY': WA_360_KEY }, // Geen Content-Type — fetch zet die met multipart-boundary zelf
+        headers: waMediaAuthHeaders, // Geen Content-Type — fetch zet die met multipart-boundary zelf
         body: fd,
       });
       const uploadText = await uploadResp.text();
@@ -11222,9 +11245,9 @@ OTHER RULES:
       if (waType === 'document' && file.originalname) mediaPayload.filename = file.originalname;
 
       const sendPayload = { messaging_product: 'whatsapp', to: normalized, type: waType, [waType]: mediaPayload };
-      const r = await fetch(`${WA_BASE_URL}/messages`, {
+      const r = await fetch(`${WA_SEND_BASE}/messages`, {
         method: 'POST',
-        headers: wa360Headers,
+        headers: waSendHeaders,
         body: JSON.stringify(sendPayload),
       });
       const responseText = await r.text();
@@ -12221,7 +12244,7 @@ OTHER RULES:
     if (!tekst || typeof tekst !== 'string' || !tekst.trim()) {
       return res.status(400).json({ error: 'tekst is verplicht' });
     }
-    if (!WA_360_KEY) return res.status(503).json({ error: 'WHATSAPP_360_API_KEY niet ingesteld' });
+    if (!WA_SEND_READY) return res.status(503).json({ error: "WhatsApp-verzendprovider niet geconfigureerd" });
 
     const group = await db.select().from(whatsappGroups).where(drizzleEq(whatsappGroups.id, id)).limit(1);
     if (!group.length) return res.status(404).json({ error: 'Groep niet gevonden' });
@@ -12288,9 +12311,9 @@ OTHER RULES:
         });
 
         const payload = { messaging_product: 'whatsapp', to: member.phoneNumber, type: 'text', text: { body: personalizedBody } };
-        const r = await fetch(`${WA_BASE_URL}/messages`, {
+        const r = await fetch(`${WA_SEND_BASE}/messages`, {
           method: 'POST',
-          headers: wa360Headers,
+          headers: waSendHeaders,
           body: JSON.stringify(payload),
         });
         const responseText = await r.text();
@@ -12911,7 +12934,7 @@ ${contactInfo}`;
   });
 
   // Voer een eenmalige startup-warning uit als secrets ontbreken
-  if (!WA_360_KEY) console.warn('[WA] WHATSAPP_360_API_KEY niet ingesteld — uitgaande berichten zullen falen');
+  if (!WA_SEND_READY) console.warn(`[WA] geen verzendconfiguratie (provider ${WA_PROVIDER}) — uitgaande berichten zullen falen`);
   if (!WEBHOOK_SECRET) console.warn('[WA] WHATSAPP_WEBHOOK_SECRET niet ingesteld — webhook accepteert GEEN inkomende berichten');
   // ─────────────────────────────────────────────────────────────────────────
 

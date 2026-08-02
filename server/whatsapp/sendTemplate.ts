@@ -13,6 +13,19 @@ import { normalizePhone } from './phone';
 const WA_BASE_URL = process.env.WHATSAPP_360_BASE_URL || 'https://waba-v2.360dialog.io';
 const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
 
+// Provider-switch (zelfde logica als server/routes.ts): WHATSAPP_PROVIDER=meta
+// stuurt via de Meta Graph API met META_WA_BOT_ACCESS_TOKEN + PHONE_NUMBER_ID.
+const META_WA_TOKEN = process.env.META_WA_BOT_ACCESS_TOKEN || '';
+const META_WA_PHONE_ID = process.env.META_WA_BOT_PHONE_NUMBER_ID || '';
+const WA_PROVIDER: 'meta' | '360dialog' =
+  (process.env.WHATSAPP_PROVIDER || '').trim().toLowerCase() === 'meta' && META_WA_TOKEN && META_WA_PHONE_ID
+    ? 'meta' : '360dialog';
+const WA_SEND_BASE = WA_PROVIDER === 'meta' ? `https://graph.facebook.com/v21.0/${META_WA_PHONE_ID}` : WA_BASE_URL;
+const waSendHeaders = WA_PROVIDER === 'meta'
+  ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${META_WA_TOKEN}` }
+  : { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
+const WA_SEND_READY = WA_PROVIDER === 'meta' ? true : !!WA_360_KEY;
+
 // ─── Template-register ────────────────────────────────────────────────────────
 // Vul hier de exacte (door META goedgekeurde) template-namen + taalcodes in.
 // Zodra de NL-variant approved is, vul je 'nl' in (nu null = niet beschikbaar).
@@ -101,7 +114,7 @@ export async function stuurCalendlyReminderTemplate(args: {
   language?: string | null;
   triggeredByUserId?: number | null;
 }): Promise<CalendlyReminderResultaat> {
-  if (!WA_360_KEY) return { success: false, error: 'WHATSAPP_360_API_KEY niet ingesteld' };
+  if (!WA_SEND_READY) return { success: false, error: 'WhatsApp-verzendprovider niet geconfigureerd' };
 
   const normalized = normalizePhone(args.phone);
   if (!normalized) return { success: false, error: 'Ongeldig telefoonnummer' };
@@ -170,9 +183,9 @@ export async function stuurCalendlyReminderTemplate(args: {
 
   // 2. API-call.
   try {
-    const r = await fetch(`${WA_BASE_URL}/messages`, {
+    const r = await fetch(`${WA_SEND_BASE}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY },
+      headers: waSendHeaders,
       body: JSON.stringify(payload),
     });
     const responseText = await r.text();
