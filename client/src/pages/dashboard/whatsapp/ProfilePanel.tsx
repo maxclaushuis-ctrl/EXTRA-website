@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
 import {
   haalContacten,
   updateContactOptIn,
+  updateContactProfiel,
   haalNotities,
   maakNotitie,
   updateLabels,
@@ -15,11 +16,15 @@ import {
   AI_CATEGORIES,
   AI_CATEGORY_LABELS,
   ESCALATION_REASON_LABELS,
+  WA_FUNCTIES,
+  WA_FUNCTIE_LABELS,
+  WA_STATUSSEN,
   type AiCategory,
   type Conversation,
   type TeamMember,
   type InternalNote,
   type WaContact,
+  type WaProfielPatch,
 } from '../../../api/whatsappClient';
 import { WA, WA_TEKST, WA_GEWICHT, formatDate, formatPhone, voornaamVan } from './theme';
 
@@ -60,6 +65,40 @@ function InfoRow({ k, v, last }: { k: string; v: string; last?: boolean }) {
     </div>
   );
 }
+
+/**
+ * Fase 3E — regel met een bewerkbaar veld. Zelfde ritme als InfoRow (label
+ * links, waarde rechts) zodat de sectie niet ineens een formulier lijkt; het
+ * verschil is dat de rechterkant een control is in plaats van tekst.
+ */
+function EditRow({ k, children, last, melding }: {
+  k: string;
+  children: ReactNode;
+  last?: boolean;
+  /** Korte terugkoppeling onder het veld: opgeslagen, bezig of een fout. */
+  melding?: { tekst: string; kleur: string } | null;
+}) {
+  return (
+    <div style={{ padding: '6px 0', borderBottom: last ? 'none' : '1px dashed #ececec' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, gap: 8 }}>
+        <span style={{ color: WA.textSub, flexShrink: 0 }}>{k}</span>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>{children}</div>
+      </div>
+      {melding && (
+        <div style={{ fontSize: 10.5, color: melding.kleur, textAlign: 'right', marginTop: 3 }}>{melding.tekst}</div>
+      )}
+    </div>
+  );
+}
+
+// Gedeelde stijl voor de drie bewerkbare velden, zodat select en input niet
+// twee verschillende hoogtes krijgen naast elkaar in dezelfde sectie.
+const VELD_STIJL = {
+  width: '100%', maxWidth: 165, fontSize: 12.5, padding: '4px 6px',
+  borderRadius: 6, border: `1px solid ${WA.border}`,
+  background: '#fff', color: WA.text, fontFamily: 'inherit',
+  textAlign: 'right' as const,
+};
 
 const FUNCTIE_WEERGAVE: Record<string, string> = {
   horeca: 'Horeca', horecamedewerker: 'Horeca', bediening: 'Horeca',
@@ -111,6 +150,22 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   const [optInBusy, setOptInBusy] = useState(false);
   const [catBusy, setCatBusy] = useState(false);
 
+  // Fase 3E — bewerkbare profielvelden.
+  type Veld = 'functie' | 'status' | 'phone';
+  /** Welk veld nu een verzoek heeft lopen (control staat zolang uit). */
+  const [veldBezig, setVeldBezig] = useState<Veld | null>(null);
+  /** Korte terugkoppeling per veld; verdwijnt vanzelf. Geen opslaan-knop. */
+  const [veldMelding, setVeldMelding] = useState<{ veld: Veld; tekst: string; kleur: string } | null>(null);
+  /** Losse tekst-state voor het telefoonveld: opslaan gebeurt op blur/Enter. */
+  const [telInput, setTelInput] = useState('');
+  /**
+   * Waarschuwing die BLIJFT staan, in tegenstelling tot veldMelding. Twee
+   * gevallen waarin de planner iets moet weten dat hij anders pas veel later
+   * merkt: een status die het contact uit de contactenlijst haalt, en een
+   * gewijzigd nummer (het gesprek is op nummer gekoppeld).
+   */
+  const [profielWaarschuwing, setProfielWaarschuwing] = useState<string | null>(null);
+
   /** Fase 3: handmatige override van het onderwerp-label (null = terug naar AI). */
   async function handleCategorie(category: AiCategory | null) {
     setCatBusy(true);
@@ -149,6 +204,23 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     haalNotities(conv.phoneNumber).then(setNotes).catch(() => {});
   }, [conv.phoneNumber]);
 
+  // Ander gesprek = schone lei voor de bewerkbare velden. Zonder dit blijft een
+  // melding of waarschuwing van het vorige contact hangen boven een ander mens.
+  useEffect(() => {
+    setVeldBezig(null);
+    setVeldMelding(null);
+    setProfielWaarschuwing(null);
+  }, [conv.phoneNumber]);
+
+  // Het telefoonveld volgt het geladen contact, maar valt terug op het nummer
+  // van het gesprek: dat is het nummer waarop we deze persoon kennen.
+  useEffect(() => {
+    setTelInput(formatPhone(contact?.phone || conv.phoneNumber || ''));
+  }, [contact?.contactId, contact?.phone, conv.phoneNumber]);
+
+  /** Alleen cijfers, om "+31 6 12 34 56 78" met "31612345678" te kunnen vergelijken. */
+  const cijfers = (v: string | null | undefined) => (v || '').replace(/\D/g, '');
+
   const functie =
     (contact?.functie && (FUNCTIE_WEERGAVE[contact.functie.toLowerCase()] || contact.functie)) ||
     (conv.labels || []).map(l => FUNCTIE_WEERGAVE[l]).find(Boolean) ||
@@ -156,6 +228,61 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   const status =
     (contact?.sourceStatus && (STATUS_WEERGAVE[contact.sourceStatus] || contact.sourceStatus)) ||
     (conv.inboxStatus === 'resolved' ? 'Opgelost' : conv.inboxStatus === 'spam' ? 'Spam' : 'Open');
+
+  /**
+   * Fase 3E — één veld opslaan. Direct bij wijzigen, geen opslaan-knop: de
+   * planner zit hier met een gesprek open, niet met een formulier.
+   *
+   * De lokale state wordt meteen bijgewerkt (zoals toggleOptIn dat ook doet) en
+   * bij een fout teruggedraaid, zodat het veld nooit een waarde toont die niet
+   * in de database staat.
+   */
+  async function bewaarProfiel(veld: Veld, patch: WaProfielPatch) {
+    if (!contact || veldBezig) return;
+    const vorige = contact;
+    setVeldBezig(veld);
+    setVeldMelding(null);
+    try {
+      const r = await updateContactProfiel(contact.contactType, contact.contactId, patch);
+      setContact({
+        ...contact,
+        functie: r.functie ?? contact.functie,
+        sourceStatus: r.status ?? contact.sourceStatus,
+        phone: r.phone ?? contact.phone,
+      });
+      if (r.phone) setTelInput(formatPhone(r.phone));
+      setVeldMelding({ veld, tekst: 'Opgeslagen', kleur: '#059669' });
+
+      if (veld === 'status' && r.uitContactenlijst) {
+        setProfielWaarschuwing(
+          'Met deze status staat dit contact niet meer in de WhatsApp-contactenlijst. ' +
+          'Zolang je dit gesprek open houdt kun je het hier terugzetten; na verversen ' +
+          'toont dit paneel geen gekoppeld contact meer.',
+        );
+      } else if (veld === 'phone' && r.phone && vorige.phone && r.phone !== vorige.phone) {
+        setProfielWaarschuwing(
+          `Nummer opgeslagen als ${formatPhone(r.phone)}. Let op: gesprekken worden op nummer ` +
+          'gekoppeld, dus dit gesprek hoort vanaf nu bij het oude nummer.',
+        );
+      } else if (veld === 'status') {
+        setProfielWaarschuwing(null);
+      }
+    } catch (e: any) {
+      setContact(vorige);
+      setTelInput(formatPhone(vorige.phone || conv.phoneNumber || ''));
+      setVeldMelding({ veld, tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
+    } finally {
+      setVeldBezig(null);
+    }
+  }
+
+  // "Opgeslagen" hoort te verdwijnen; een foutmelding blijft staan tot je het
+  // opnieuw probeert, anders mist de planner precies het bericht dat telt.
+  useEffect(() => {
+    if (!veldMelding || veldMelding.kleur !== '#059669') return;
+    const t = setTimeout(() => setVeldMelding(null), 2500);
+    return () => clearTimeout(t);
+  }, [veldMelding]);
 
   async function handleAssign(value: string) {
     if (value === '') {
@@ -230,11 +357,109 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
         </div>
       </div>
 
-      {/* Profiel */}
+      {/* Profiel — Fase 3E bewerkbaar, mits er een gekoppeld contact is.
+          Klantgesprekken (prospect) hebben geen record in candidates/employees;
+          daar blijft dit een leesweergave. Een dropdown die nergens naartoe
+          schrijft is erger dan geen dropdown. */}
       <Section title="Profiel">
-        <InfoRow k="Functie" v={functie} />
-        <InfoRow k="Telefoon" v={formatPhone(conv.phoneNumber)} />
-        <InfoRow k="Status" v={status} last />
+        {contact ? (
+          <>
+            <EditRow
+              k="Functie"
+              melding={veldMelding?.veld === 'functie' ? veldMelding : null}
+            >
+              <select
+                value={(contact.functie || '').toLowerCase()}
+                disabled={veldBezig !== null}
+                onChange={e => bewaarProfiel('functie', { functie: e.target.value })}
+                style={{ ...VELD_STIJL, cursor: veldBezig ? 'wait' : 'pointer' }}
+              >
+                {/* Bestaande vrije-tekstwaarde die niet in de lijst staat blijft
+                    zichtbaar tot je hem vervangt — anders lijkt het veld leeg
+                    terwijl er wel degelijk iets in de database staat. */}
+                {!WA_FUNCTIES.includes((contact.functie || '').toLowerCase() as any) && (
+                  <option value={(contact.functie || '').toLowerCase()}>
+                    {contact.functie ? (FUNCTIE_WEERGAVE[contact.functie.toLowerCase()] || contact.functie) : '— niet ingevuld —'}
+                  </option>
+                )}
+                {WA_FUNCTIES.map(f => (
+                  <option key={f} value={f}>{WA_FUNCTIE_LABELS[f]}</option>
+                ))}
+              </select>
+            </EditRow>
+
+            <EditRow
+              k="Telefoon"
+              melding={veldMelding?.veld === 'phone' ? veldMelding : null}
+            >
+              <input
+                value={telInput}
+                disabled={veldBezig !== null}
+                onChange={e => setTelInput(e.target.value)}
+                // Opslaan op blur én Enter, niet op elke toetsaanslag: anders
+                // gaat er een verzoek uit voor elk half nummer.
+                onBlur={() => {
+                  const ingevoerd = telInput.trim();
+                  if (!ingevoerd) { setTelInput(formatPhone(contact.phone || conv.phoneNumber)); return; }
+                  if (cijfers(ingevoerd) === cijfers(contact.phone)) return;
+                  bewaarProfiel('phone', { phone: ingevoerd });
+                }}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                placeholder="+31 6 …"
+                style={{ ...VELD_STIJL, outline: 'none' }}
+              />
+            </EditRow>
+
+            <EditRow
+              k="Status"
+              last
+              melding={veldMelding?.veld === 'status' ? veldMelding : null}
+            >
+              <select
+                value={contact.sourceStatus || ''}
+                disabled={veldBezig !== null}
+                onChange={e => bewaarProfiel('status', { status: e.target.value })}
+                style={{ ...VELD_STIJL, cursor: veldBezig ? 'wait' : 'pointer' }}
+              >
+                {(() => {
+                  const set = WA_STATUSSEN[contact.contactType === 'medewerker' ? 'medewerker' : 'kandidaat'];
+                  const huidig = contact.sourceStatus || '';
+                  return (
+                    <>
+                      {/* Zelfde reden als bij Functie: een status die niet in
+                          deze set hoort (bv. een medewerker die ooit als
+                          kandidaat is aangemaakt) blijft leesbaar staan. */}
+                      {huidig && !set.some(s => s.waarde === huidig) && (
+                        <option value={huidig}>{STATUS_WEERGAVE[huidig] || huidig}</option>
+                      )}
+                      {set.map(s => (
+                        <option key={s.waarde} value={s.waarde}>
+                          {s.label}{s.uitLijst ? ' ⚠' : ''}
+                        </option>
+                      ))}
+                    </>
+                  );
+                })()}
+              </select>
+            </EditRow>
+
+            {profielWaarschuwing && (
+              <div style={{
+                marginTop: 9, fontSize: 11, lineHeight: 1.45, padding: '7px 9px',
+                borderRadius: 8, background: '#fffbeb', color: '#92400e',
+                border: '1px solid #fde68a',
+              }}>
+                {profielWaarschuwing}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <InfoRow k="Functie" v={functie} />
+            <InfoRow k="Telefoon" v={formatPhone(conv.phoneNumber)} />
+            <InfoRow k="Status" v={status} last />
+          </>
+        )}
       </Section>
 
       {/* Fase 3 — onderwerp: door de AI bepaald, door de planner te overrulen.

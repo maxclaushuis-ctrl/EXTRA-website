@@ -603,3 +603,68 @@ export const updateContactOptIn = (
   `/contacten/${type}/${contactId}/opt-in`,
   { status, reden },
 );
+
+// ─── Fase 3E — bewerkbare profielvelden ──────────────────────────────────────
+
+/**
+ * De vijf functies uit candidateFunctionEnum. Ook de dropdown voor medewerkers
+ * gebruikt deze lijst: employees.functie is vrije tekst, maar een vrij tekstveld
+ * levert in de praktijk zes schrijfwijzen van hetzelfde woord op.
+ */
+export const WA_FUNCTIES = [
+  'housekeeping', 'horecamedewerker', 'chef', 'frontoffice', 'logistiek',
+] as const;
+export type WaFunctie = typeof WA_FUNCTIES[number];
+
+export const WA_FUNCTIE_LABELS: Record<WaFunctie, string> = {
+  housekeeping: 'Housekeeping',
+  horecamedewerker: 'Horeca',
+  chef: 'Chef',
+  frontoffice: 'Front office',
+  logistiek: 'Logistiek',
+};
+
+/**
+ * Statussen per brontabel. Gescheiden gehouden omdat het twee verschillende
+ * enums zijn: een medewerker kan niet 'afgewezen' worden en een kandidaat niet
+ * 'uitgestroomd'. `uitLijst` markeert de statussen waarbij het contact uit
+ * /api/whatsapp/contacten valt — de UI waarschuwt daarvoor.
+ */
+export const WA_STATUSSEN: Record<'kandidaat' | 'medewerker', Array<{ waarde: string; label: string; uitLijst: boolean }>> = {
+  kandidaat: [
+    { waarde: 'in_behandeling', label: 'Sollicitant', uitLijst: false },
+    { waarde: 'gepland', label: 'In kennismaking', uitLijst: false },
+    { waarde: 'aangenomen', label: 'Aangenomen', uitLijst: true },
+    { waarde: 'afgewezen', label: 'Afgewezen', uitLijst: true },
+  ],
+  medewerker: [
+    { waarde: 'nieuw', label: 'Nieuw', uitLijst: false },
+    { waarde: 'actief', label: 'Actief', uitLijst: false },
+    { waarde: 'inactief', label: 'Inactief', uitLijst: true },
+    { waarde: 'uitgestroomd', label: 'Uitgestroomd', uitLijst: true },
+  ],
+};
+
+export interface WaProfielPatch {
+  functie?: string;
+  status?: string;
+  phone?: string;
+}
+
+export interface WaProfielResultaat {
+  success: boolean;
+  contactId: number;
+  name: string | null;
+  phone: string | null;
+  status: string | null;
+  functie: string | null;
+  /** true = deze status haalt het contact uit de WhatsApp-contactenlijst. */
+  uitContactenlijst: boolean;
+}
+
+/** Schrijft functie/status/telefoon door naar het candidates- of employees-record. */
+export const updateContactProfiel = (
+  type: WaContactType,
+  contactId: number,
+  patch: WaProfielPatch,
+) => put<WaProfielResultaat>(`/contacten/${type}/${contactId}/profiel`, patch);
