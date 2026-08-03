@@ -20,6 +20,7 @@ import {
   parseAiTurnResponse,
   buildStructuredOutputInstruction,
   type AiCategory,
+  type EscalationReason,
   type TaskCategory,
 } from '../server/whatsapp/aiClassifier';
 
@@ -32,13 +33,18 @@ interface LiveCase {
   /**
    * true = we verwachten dat de AI escaleert in plaats van antwoordt.
    *
-   * Fase 3C: dit veld wordt nu BEIDE KANTEN OP gecontroleerd. Weglaten betekent
+   * Fase 3C: dit veld wordt BEIDE KANTEN OP gecontroleerd. Weglaten betekent
    * "hier hoort géén escalatie uit te komen", en dat wordt ook getoetst. Zonder
-   * die tweede helft zag de vorige run een onterechte escalatie op case 1 en 2
-   * ("Max pls ...", "Hi there Eveline!" werden als mens_gevraagd gelezen) niet
-   * eens staan — precies de fout die de aangescherpte prompt moet wegnemen.
+   * die tweede helft werd een overbodige escalatie stilzwijgend als geslaagd
+   * gerapporteerd.
    */
   verwachtEscalatie?: boolean;
+  /**
+   * Optioneel: welke reden erbij hoort. Alleen invullen waar de reden zelf het
+   * punt van de case is — dan meet je of de escalatieregel klopt en niet alleen
+   * dát er geëscaleerd werd. Leeglaten = reden niet getoetst.
+   */
+  verwachtEscalatieReden?: EscalationReason;
 }
 
 // De eerste twee zijn de door Max aangeleverde testcases. Ze komen in het
@@ -50,16 +56,35 @@ interface LiveCase {
 // afwijkingen kwamen niet van modelruis maar van een te krappe taxonomie.
 // Waar de verwachting zelf niet klopte, is de verwachting aangepast; waar de
 // prompt te vaag was, is de prompt aangescherpt. Beide staan hieronder benoemd.
+//
+// TWEEDE RONDE (na de aangescherpte prompt): case 1 en 8 weken nog af, opnieuw
+// twee keer identiek. Bij consistent modelgedrag dat verdedigbaar is, verschuift
+// de verwachting en niet de prompt — anders scherp je aiClassifier.ts aan op één
+// synthetisch geval, en dat is overfitten op de testset. De prompt is in deze
+// ronde dan ook niet aangeraakt; alleen de twee verwachtingen hieronder.
 const CASES: LiveCase[] = [
   {
     // Was 'algemene_vraag'. Dit is geen vraag over hoe iets werkt maar een
     // verzoek om een handeling ("zet mijn uren erin") → nieuwe categorie.
+    //
+    // De escalatie hier was eerst onze fout, niet die van het model. We lazen
+    // "Max pls ..." als het naamprobleem uit de mens_gevraagd-regel, maar er
+    // staat meer: "Eveline didnt answer thats why i ask you directly" is een
+    // expliciet verzoek om mens-contact — hij zegt letterlijk dat hij een
+    // persoon probeerde te bereiken en daarom nu een ander aanspreekt. Het
+    // model past de aangescherpte regel dus correct toe. De reden wordt hier
+    // wél getoetst, want juist die regel is in fase 3C herschreven.
+    //
+    // De taak blijft daarnaast staan: escalatie en taak zijn onafhankelijk, er
+    // moet nog steeds iemand uren invoeren.
     naam: 'EN — uren toevoegen in Jixbee voor twee mensen (urgent)',
     bericht:
       'Max pls add the hours on jixbee for me and Florin cuz i have some urgent payments to do. ' +
       'Eveline didnt answer thats why i ask you directly. Thx',
     verwachtCategorie: 'verzoek',
     verwachtTaak: 'uren_jixbee',
+    verwachtEscalatie: true,
+    verwachtEscalatieReden: 'mens_gevraagd',
   },
   {
     // Idem: uren achteraf melden is geen informatievraag, iemand moet ze invoeren.
@@ -108,20 +133,26 @@ const CASES: LiveCase[] = [
     verwachtEscalatie: true,
   },
   {
-    // Twee correcties in één case. (1) verwachtTaak was 'contract': er valt op
-    // dit moment niets te DOEN aan een contract — er moet iemand terugbellen,
-    // en dat is precies wat de escalatie al regelt. Een taak erbij is dubbel
-    // werk in de takenlijst. (2) De categorie is geen informatievraag: hij
-    // vraagt om een handeling (zet er een mens op) → 'verzoek', volgens
-    // dezelfde beslisregel als case 1 en 2.
+    // verwachtTaak was 'contract': er valt op dit moment niets te DOEN aan een
+    // contract — er moet iemand terugbellen, en dat is precies wat de escalatie
+    // al regelt. Een taak erbij is dubbel werk in de takenlijst.
     //
-    // Dit is de minst zekere van de acht: 'algemene_vraag' is óók te
-    // verdedigen, want het onderwerp is zijn contract. De live-run beslist.
+    // De categorie is na twee gelijke runs 'overig' geworden en niet 'verzoek'.
+    // Het bericht heeft binnen deze taxonomie geen inhoudelijk onderwerp buiten
+    // de vraag om een mens zelf; het contract wordt genoemd, maar er wordt niets
+    // over gevraagd. De vraag om een mens is al vastgelegd in action=escalate +
+    // reden mens_gevraagd, dus de categorie hoeft dat niet te herhalen.
+    //
+    // Dit is de minst zekere van de acht: 'verzoek' en 'algemene_vraag' zijn
+    // allebei te verdedigen. Reden om dit later te herzien: als planners dit
+    // label structureel met de hand corrigeren (zichtbaar aan
+    // aiCategorySource='handmatig'), dan klopt de grens niet.
     naam: 'EN — vraagt expliciet om een mens',
     bericht: 'Can I please speak to a real person about my contract? A bot is not helping me here.',
-    verwachtCategorie: 'verzoek',
+    verwachtCategorie: 'overig',
     verwachtTaak: null,
     verwachtEscalatie: true,
+    verwachtEscalatieReden: 'mens_gevraagd',
   },
 ];
 
@@ -186,6 +217,11 @@ async function draaiCase(c: LiveCase) {
     }
     if (c.verwachtEscalatie && turn.action !== 'escalate') {
       afwijkingen.push('verwachtte escalatie, kreeg een antwoord');
+    }
+    if (c.verwachtEscalatieReden && turn.escalationReason !== c.verwachtEscalatieReden) {
+      afwijkingen.push(
+        `escalatiereden ${turn.escalationReason ?? 'geen'} ≠ verwacht ${c.verwachtEscalatieReden}`,
+      );
     }
     if (!c.verwachtEscalatie && turn.action === 'escalate') {
       afwijkingen.push(
