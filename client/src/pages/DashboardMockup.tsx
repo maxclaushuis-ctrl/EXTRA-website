@@ -33,7 +33,8 @@ import VerjaardagenTab from '@/components/VerjaardagenTab';
 import ProspectCampagnesTab from '@/components/ProspectCampagnesTab';
 import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
-import WhatsAppBeheer from './dashboard/WhatsAppBeheer';
+// Fase 2: nieuwe WhatsApp-inbox (mockup-herbouw). WhatsAppBeheer blijft bestaan tot fase 4.
+import WhatsAppInbox from './dashboard/whatsapp';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import WhatsAppContacten from './dashboard/WhatsAppContacten';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -972,10 +973,8 @@ export default function DashboardMockup() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto" style={{ padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px` }}>
-          {/* Group: Communicatie — TIJDELIJK VERBORGEN (module nog niet af).
-              Terugzetten: verander `false &&` hieronder weer in de originele render.
-              WhatsApp/Contacten/AI-instellingen-tabs en logica blijven intact. */}
-          {false && (<>
+          {/* Group: Communicatie — weer zichtbaar sinds fase 3B.
+              WhatsApp / Contacten / AI-instellingen. */}
           <button
             onClick={() => {
               const next = !communicatieExpanded;
@@ -1058,7 +1057,6 @@ export default function DashboardMockup() {
               </button>
             </>
           )}
-          </>)}
 
           {/* Group: Medewerkers — eerste groep: geen extra top-margin (Planbord) */}
           <button
@@ -4868,9 +4866,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
               })()}
             </div>
           ) : activeTab === 'whatsapp' ? (
-            <div className="p-6">
-              <WhatsAppBeheer />
-            </div>
+            <WhatsAppInbox />
 
           ) : activeTab === 'whatsapp-contacten' ? (
             <div className="p-6">
@@ -7036,8 +7032,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={adminCreateData.password}
                         onChange={e => setAdminCreateData(d => ({ ...d, password: e.target.value }))}
-                        placeholder="Minimaal 8 tekens"
+                        placeholder="Minimaal 12 tekens"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Minimaal 12 tekens, met minstens één letter en één cijfer.</p>
                       <p className="text-xs text-gray-400 mt-1">Dit wachtwoord wordt per e-mail verstuurd aan de nieuwe gebruiker.</p>
                     </div>
                   </div>
@@ -7046,18 +7043,48 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                     <Button
                       size="sm"
                       className="bg-purple-600 hover:bg-purple-700 text-white"
-                      disabled={adminCreateLoading || !adminCreateData.firstName || !adminCreateData.lastName || !adminCreateData.email || adminCreateData.password.length < 8}
+                      disabled={adminCreateLoading}
                       onClick={async () => {
+                        // Client-side validatie mét zichtbare melding — de knop
+                        // is bewust niet "stil" disabled, zodat er nooit
+                        // "niets" gebeurt bij een klik.
+                        const { firstName, lastName, email, password } = adminCreateData;
+                        if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
+                          toast({ title: 'Vul alle velden in', description: 'Voornaam, achternaam, e-mailadres en tijdelijk wachtwoord zijn verplicht.', variant: 'destructive' });
+                          return;
+                        }
+                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                          toast({ title: 'Ongeldig e-mailadres', description: 'Controleer het e-mailadres en probeer het opnieuw.', variant: 'destructive' });
+                          return;
+                        }
+                        // Zelfde eisen als server (authReset.wachtwoordSterkGenoeg)
+                        if (password.length < 12) {
+                          toast({ title: 'Wachtwoord te kort', description: 'Het wachtwoord moet minimaal 12 tekens lang zijn.', variant: 'destructive' });
+                          return;
+                        }
+                        if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+                          toast({ title: 'Wachtwoord te zwak', description: 'Gebruik minimaal één letter en één cijfer.', variant: 'destructive' });
+                          return;
+                        }
                         setAdminCreateLoading(true);
                         try {
                           const json = await apiRequest('POST', '/api/admin/create-admin-user', adminCreateData) as any;
-                          toast({ title: 'Account aangemaakt', description: json.message });
+                          if (json?.mailSent === false) {
+                            toast({
+                              title: 'Account aangemaakt — mail NIET verzonden',
+                              description: `${json.message} Wachtwoord om handmatig te delen: ${password}`,
+                              variant: 'destructive',
+                              duration: 30000,
+                            });
+                          } else {
+                            toast({ title: 'Account aangemaakt', description: json?.message || `Admin-account aangemaakt voor ${email}.` });
+                          }
                           setAdminCreateOpen(false);
                           setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' });
                           queryClient.invalidateQueries({ queryKey: ['/api/users'] });
                         } catch (err: any) {
                           const msg = err?.data?.message || err?.message || 'Er is iets misgegaan.';
-                          toast({ title: 'Fout', description: msg, variant: 'destructive' });
+                          toast({ title: 'Account aanmaken mislukt', description: msg, variant: 'destructive', duration: 10000 });
                         } finally {
                           setAdminCreateLoading(false);
                         }

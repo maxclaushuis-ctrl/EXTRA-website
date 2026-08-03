@@ -18,7 +18,57 @@ export interface Conversation {
   unreadCount: number;
   lastInboundAt: string | null;
   inboxStatus: 'open' | 'resolved' | 'spam';
+  /** Fase 2: gesprek gesnoozed tot dit tijdstip (null = niet gesnoozed). */
+  snoozedUntil?: string | null;
+  /** Fase 3: onderwerp-label, door de AI bepaald of handmatig gezet. */
+  aiCategory?: AiCategory | null;
+  /** 'handmatig' = door een planner gezet; de AI overschrijft dat niet meer. */
+  aiCategorySource?: 'ai' | 'handmatig' | null;
+  /** Fase 3: waarom de AI overdroeg aan een mens (null = geen escalatie). */
+  escalationReason?: EscalationReason | null;
+  /** Gevuld = wacht op planner. Bepaalt ook de volgorde in de lijst. */
+  escalatedAt?: string | null;
+  /** Afgeleid: was het laatste bericht een AI-antwoord? Nooit opgeslagen. */
+  aiHandledLast?: boolean;
+  /** Afgeleide status — de enige waarheid over "wat is de stand van dit gesprek". */
+  displayStatus?: ConversationDisplayStatus;
+  createdAt?: string;
 }
+
+/**
+ * Fase 3: labels en escalatieredenen.
+ * Let op: dit zijn vaste identifiers, géén weergavetekst. De Nederlandse
+ * weergave staat in AI_CATEGORY_LABELS / ESCALATION_REASON_LABELS hieronder.
+ * De server kiest ze op BETEKENIS, taalonafhankelijk.
+ */
+export const AI_CATEGORIES = ['sollicitatie', 'afmelding', 'klacht', 'algemene_vraag', 'overig'] as const;
+export type AiCategory = (typeof AI_CATEGORIES)[number];
+
+export const AI_CATEGORY_LABELS: Record<AiCategory, string> = {
+  sollicitatie: 'Sollicitatie',
+  afmelding: 'Afmelding',
+  klacht: 'Klacht',
+  algemene_vraag: 'Algemene vraag',
+  overig: 'Overig',
+};
+
+export type EscalationReason = 'boos' | 'buiten_kennisbank' | 'wil_telefonisch' | 'mens_gevraagd' | 'overig';
+
+export const ESCALATION_REASON_LABELS: Record<EscalationReason, string> = {
+  boos: 'Boos',
+  buiten_kennisbank: 'Buiten kennisbank',
+  wil_telefonisch: 'Wil telefonisch',
+  mens_gevraagd: 'Mens gevraagd',
+  overig: 'Escalatie',
+};
+
+export type ConversationDisplayStatus =
+  | 'wacht_op_planner'
+  | 'afgehandeld_ai'
+  | 'gesnoozed'
+  | 'opgelost'
+  | 'spam'
+  | 'open';
 
 export interface Message {
   id: number;
@@ -34,6 +84,8 @@ export interface Message {
   errorCode: string | null;
   errorMessage: string | null;
   matchCategory: 'candidate' | 'prospect' | 'unmatched';
+  /** Bij outbound: user-id van de verzender; null = automatisch verstuurd (AI-agent). */
+  sentByUserId?: number | null;
   createdAt: string;
 }
 
@@ -106,8 +158,31 @@ async function put<T>(path: string, body?: any): Promise<T> {
 }
 
 export const haalAccounts = () => get<AccountInfo[]>('/accounts');
-export const haalGesprekken = (category?: 'candidate' | 'prospect' | 'unmatched') =>
-  get<Conversation[]>(`/conversations${category ? `?category=${category}` : ''}`);
+export const haalGesprekken = (
+  category?: 'candidate' | 'prospect' | 'unmatched',
+  opts?: { snoozed?: 'exclude' | 'only' | 'all' },
+) => {
+  const qs = new URLSearchParams();
+  if (category) qs.set('category', category);
+  if (opts?.snoozed) qs.set('snoozed', opts.snoozed);
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return get<Conversation[]>(`/conversations${suffix}`);
+};
+
+/** Fase 2: snooze een gesprek tot `until` (ISO-string), of hef op met null. */
+export const snoozeGesprek = async (conversationId: number, until: string | null) => {
+  const r = await fetch(`${BASE_URL}/conversations/${conversationId}/snooze`, {
+    method: 'PATCH',
+    headers,
+    credentials: 'include',
+    body: JSON.stringify({ until }),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || (data as any)?.error) {
+    throw new Error((data as any)?.error || `snooze: ${r.status}`);
+  }
+  return data as { success: boolean; snoozedUntil: string | null };
+};
 export const haalBerichten = (phoneNumber: string) =>
   get<Message[]>(`/conversations/${encodeURIComponent(phoneNumber)}/messages`);
 export const markeerGelezen = (phoneNumber: string) =>
@@ -116,8 +191,85 @@ export const markeerOngelezen = (phoneNumber: string) =>
   post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-unread`);
 export const updateInboxStatus = (phoneNumber: string, status: 'open' | 'resolved' | 'spam') =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/inbox-status`, { status });
+
+/** Fase 3: handmatige override van het AI-label. null = weer aan de AI overlaten. */
+export const zetAiCategorie = (phoneNumber: string, category: AiCategory | null) =>
+  put<{ success: boolean; category: AiCategory | null; source: 'ai' | 'handmatig' }>(
+    `/conversations/${encodeURIComponent(phoneNumber)}/ai-category`,
+    { category },
+  );
 export const stuurBericht = (nummer: string, tekst: string) =>
   post<{ success: boolean; messageId: string | null; dbId: number }>('/stuur', { nummer, tekst });
+
+/* ------------------------------------------------------------------ *
+ * Fase 3B — taken
+ *
+ * Een taak staat LOS van het gesprek: je kunt een gesprek sluiten terwijl
+ * de taak nog open staat, en andersom. Daarom een eigen tabel, eigen
+ * status en eigen endpoints.
+ * ------------------------------------------------------------------ */
+
+export const TASK_CATEGORIES = ['uren_jixbee', 'contract', 'overig'] as const;
+export type TaskCategory = (typeof TASK_CATEGORIES)[number];
+
+/** Moet gelijk blijven aan TASK_CATEGORY_LABELS in server/whatsapp/taskRules.ts. */
+export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
+  uren_jixbee: 'Uren / Jixbee',
+  contract: 'Contract',
+  overig: 'Overig',
+};
+
+export type TaskStatus = 'open' | 'klaar';
+
+export interface Task {
+  id: number;
+  conversationId: number;
+  phoneNumber: string;
+  summary: string;
+  category: TaskCategory;
+  assignedToId: number | null;
+  assignedToName: string | null;
+  status: TaskStatus;
+  /** Bericht waar de taak uit volgde; null bij handmatig aangemaakte taken. */
+  sourceMessageId: number | null;
+  createdAt: string;
+  completedAt: string | null;
+  completedById: number | null;
+  completedByName: string | null;
+  /** Uit het gesprek gejoined, puur voor weergave. */
+  contactName: string | null;
+  /** Uit het gesprek gejoined: in welke tab het gesprek staat (voor de doorklik). */
+  matchCategory: 'candidate' | 'prospect' | 'unmatched' | null;
+}
+
+export interface TakenResultaat {
+  tasks: Task[];
+  /** Totaal open taken, ongeacht het actieve filter — voor de teller. */
+  openTotaal: number;
+}
+
+/**
+ * Haal taken op. `assignedToId: 'niemand'` geeft de taken die nog van
+ * niemand zijn.
+ */
+export const haalTaken = (opts?: { status?: TaskStatus | 'alle'; assignedToId?: number | 'niemand' }) => {
+  const qs = new URLSearchParams();
+  if (opts?.status) qs.set('status', opts.status);
+  if (opts?.assignedToId != null) qs.set('assignedToId', String(opts.assignedToId));
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return get<TakenResultaat>(`/tasks${suffix}`);
+};
+
+/** Afvinken of weer openzetten. Raakt de status van het gesprek niet aan. */
+export const zetTaakStatus = (taskId: number, status: TaskStatus) =>
+  put<{ success: boolean; status: TaskStatus }>(`/tasks/${taskId}/status`, { status });
+
+/** Toewijzen aan een collega, of vrijgeven met null. */
+export const zetTaakToegewezene = (taskId: number, assignedToId: number | null) =>
+  put<{ success: boolean; assignedToId: number | null; assignedToName: string | null }>(
+    `/tasks/${taskId}/assignee`,
+    { assignedToId },
+  );
 
 export const stuurMedia = async (nummer: string, file: File, caption?: string) => {
   const fd = new FormData();

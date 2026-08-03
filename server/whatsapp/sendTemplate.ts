@@ -1,30 +1,19 @@
 /**
- * Helper voor het versturen van WhatsApp template-berichten via 360dialog
- * (Cloud API). Templates zijn verplicht buiten het 24-uurs customer-care
- * window — we gebruiken ze hier voor automatische follow-ups (bv. de
- * Calendly-reminder na 3 dagen) én eventueel handmatige test-verstuur.
+ * Helper voor het versturen van WhatsApp template-berichten via de actieve
+ * provider (360dialog of Meta Cloud API — zie provider.ts). Templates zijn
+ * verplicht buiten het 24-uurs customer-care window — we gebruiken ze hier
+ * voor automatische follow-ups (bv. de Calendly-reminder na 3 dagen) én
+ * eventueel handmatige test-verstuur.
+ *
+ * Het template-register hieronder is gedeelde data — alleen het transport
+ * wisselt per provider.
  *
  * Persistentie loopt via dezelfde whatsapp_messages-tabel als gewone outbound,
  * zodat de berichten in de inbox / het audit-spoor opduiken.
  */
 import * as waStorage from './storage';
+import * as waProvider from './provider';
 import { normalizePhone } from './phone';
-
-const WA_BASE_URL = process.env.WHATSAPP_360_BASE_URL || 'https://waba-v2.360dialog.io';
-const WA_360_KEY = process.env.WHATSAPP_360_API_KEY || '';
-
-// Provider-switch (zelfde logica als server/routes.ts): WHATSAPP_PROVIDER=meta
-// stuurt via de Meta Graph API met META_WA_BOT_ACCESS_TOKEN + PHONE_NUMBER_ID.
-const META_WA_TOKEN = process.env.META_WA_BOT_ACCESS_TOKEN || '';
-const META_WA_PHONE_ID = process.env.META_WA_BOT_PHONE_NUMBER_ID || '';
-const WA_PROVIDER: 'meta' | '360dialog' =
-  (process.env.WHATSAPP_PROVIDER || '').trim().toLowerCase() === 'meta' && META_WA_TOKEN && META_WA_PHONE_ID
-    ? 'meta' : '360dialog';
-const WA_SEND_BASE = WA_PROVIDER === 'meta' ? `https://graph.facebook.com/v21.0/${META_WA_PHONE_ID}` : WA_BASE_URL;
-const waSendHeaders = WA_PROVIDER === 'meta'
-  ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${META_WA_TOKEN}` }
-  : { 'Content-Type': 'application/json', 'D360-API-KEY': WA_360_KEY };
-const WA_SEND_READY = WA_PROVIDER === 'meta' ? true : !!WA_360_KEY;
 
 // ─── Template-register ────────────────────────────────────────────────────────
 // Vul hier de exacte (door META goedgekeurde) template-namen + taalcodes in.
@@ -114,7 +103,8 @@ export async function stuurCalendlyReminderTemplate(args: {
   language?: string | null;
   triggeredByUserId?: number | null;
 }): Promise<CalendlyReminderResultaat> {
-  if (!WA_SEND_READY) return { success: false, error: 'WhatsApp-verzendprovider niet geconfigureerd' };
+  const configError = waProvider.configErrorMessage();
+  if (configError) return { success: false, error: configError };
 
   const normalized = normalizePhone(args.phone);
   if (!normalized) return { success: false, error: 'Ongeldig telefoonnummer' };
@@ -181,38 +171,21 @@ export async function stuurCalendlyReminderTemplate(args: {
     rawPayload: payload as any,
   });
 
-  // 2. API-call.
-  try {
-    const r = await fetch(`${WA_SEND_BASE}/messages`, {
-      method: 'POST',
-      headers: waSendHeaders,
-      body: JSON.stringify(payload),
-    });
-    const responseText = await r.text();
-    let data: any = {};
-    try { data = JSON.parse(responseText); } catch { /* niet-JSON */ }
-
-    if (!r.ok || data?.error || data?.meta?.success === false) {
-      const errorMsg = data?.meta?.developer_message || data?.error?.message || data?.error || data?.message || responseText.slice(0, 500);
-      const errorCode = data?.error?.code ? String(data.error.code) : String(r.status);
-      const errorString = typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg);
-      await waStorage.updateOutboundResult(messageRowId, {
-        status: 'failed',
-        errorCode,
-        errorMessage: errorString,
-      });
-      return { success: false, error: `360dialog: ${errorString}`, dbId: messageRowId, gebruikteTaal };
-    }
-
-    const waMessageId = data?.messages?.[0]?.id ?? null;
-    await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
-    return { success: true, waMessageId, dbId: messageRowId, gebruikteTaal };
-  } catch (err: any) {
+  // 2. API-call via de actieve provider (360dialog of Meta).
+  const result = await waProvider.sendTemplate(normalized, config.name, config.language, payload.template.components);
+  if (!result.ok) {
     await waStorage.updateOutboundResult(messageRowId, {
       status: 'failed',
-      errorCode: 'network_error',
-      errorMessage: err?.message || String(err),
+      errorCode: result.errorCode ?? null,
+      errorMessage: result.errorMessage ?? null,
     });
-    return { success: false, error: err?.message || String(err), dbId: messageRowId, gebruikteTaal };
+    const error = result.errorCode === 'network_error'
+      ? (result.errorMessage || 'Onbekende netwerkfout')
+      : `${result.provider}: ${result.errorMessage}`;
+    return { success: false, error, dbId: messageRowId, gebruikteTaal };
   }
+
+  const waMessageId = result.waMessageId ?? null;
+  await waStorage.updateOutboundResult(messageRowId, { waMessageId, status: 'sent' });
+  return { success: true, waMessageId, dbId: messageRowId, gebruikteTaal };
 }
