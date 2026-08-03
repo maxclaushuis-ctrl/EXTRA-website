@@ -12,6 +12,14 @@
  */
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+/**
+ * DEZELFDE CSS ALS DE ECHTE APP. Deze regel ontbrak, en dat is precies waarom
+ * screenshots uit de harness een vertekend beeld gaven: main.tsx importeert
+ * './index.css' (Tailwind + de @fontsource-import van Inter Variable + de
+ * body-regel `@apply font-sans`), de harness deed dat niet. De harness liet
+ * dus de systeemletter zien waar productie Inter rendert. Niet weghalen.
+ */
+import './index.css';
 import Sidebar from './pages/dashboard/whatsapp/Sidebar';
 import ChatView from './pages/dashboard/whatsapp/ChatView';
 import ProfilePanel from './pages/dashboard/whatsapp/ProfilePanel';
