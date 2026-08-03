@@ -25,7 +25,7 @@ import {
   Calendar, Search, Plus, MoreHorizontal, Phone, ChevronDown, LogOut, FileText, ChefHat, Building2, X, Menu,
   Bell, BellOff, BellRing, ArrowUpDown, ShieldAlert, Download, AlertTriangle, CheckCircle2, GripVertical,
   Upload, FileSpreadsheet, ChevronLeft, ChevronRight, Info, BookOpen, Sparkles, Pencil, Globe, Rss, Send, Link, Copy, Loader2,
-  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, MessageSquare, CalendarClock, MailCheck, Target
+  Briefcase, MapPin, Pause, Archive, ExternalLink, SlidersHorizontal, CalendarClock, MailCheck, Target
 } from 'lucide-react';
 import { CrmLeadsTab, CrmKlantenTab, CrmRemindersTab, CrmDashboardWidgets } from '@/components/crm/CrmModule';
 import SalesFlowTab from '@/pages/dashboard/SalesFlowTab';
@@ -35,6 +35,9 @@ import ProspectContactenTab from '@/components/ProspectContactenTab';
 import WebsiteStatsTab from './dashboard/WebsiteStatsTab';
 // Fase 2: nieuwe WhatsApp-inbox (mockup-herbouw). WhatsAppBeheer blijft bestaan tot fase 4.
 import WhatsAppInbox from './dashboard/whatsapp';
+import CommunicatieNav from './dashboard/CommunicatieNav';
+import NavGroepKop from './dashboard/NavGroepKop';
+import TakenPagina from './dashboard/TakenPagina';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import WhatsAppContacten from './dashboard/WhatsAppContacten';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -513,6 +516,19 @@ export default function DashboardMockup() {
     + (waStats?.prospect.unread ?? 0)
     + (waStats?.unmatched.unread ?? 0);
 
+  // Openstaande taken voor de badge naast "Taken". Deze teller stond eerst op
+  // de ingeklapte kop van het Taken-paneel binnen de WhatsApp-inbox, en was
+  // dus alleen te zien als je de inbox al open had. Zelfde ritme als de
+  // ongelezen-badge hierboven; hetzelfde endpoint als de Takenpagina zelf, dus
+  // geen nieuwe route nodig. openTotaal telt ALLE open taken, ongeacht filter.
+  const { data: takenStats } = useQuery<{ openTotaal: number }>({
+    queryKey: ['/api/whatsapp/tasks?status=open'],
+    enabled: isAuthenticated && user?.role === 'admin',
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+  });
+  const takenOpenTotaal = takenStats?.openTotaal ?? 0;
+
   const { data: candidatesData, isLoading: candidatesLoading, refetch: refetchCandidates } = useQuery<{ candidates: Candidate[]; total: number }>({
     queryKey: ['/api/admin/candidates'],
     enabled: isAuthenticated && user?.role === 'admin',
@@ -973,109 +989,29 @@ export default function DashboardMockup() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto" style={{ padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px` }}>
-          {/* Group: Communicatie — weer zichtbaar sinds fase 3B.
-              WhatsApp / Contacten / AI-instellingen. */}
-          <button
-            onClick={() => {
+          {/* De groep COMMUNICATIE stond hier als losse JSX: vier knoppen van
+              elk ~20 regels, met de badge-opmaak alleen bij WhatsApp. Sinds
+              Taken een eigen item met een eigen teller heeft, zijn dat er twee
+              die identiek moeten blijven — en de navigatie moest bovendien in
+              de layout-harness te fotograferen zijn zonder server, database en
+              inlog. Beide redenen wijzen dezelfde kant op: één component.
+              Zie CommunicatieNav.tsx. */}
+          <CommunicatieNav
+            eerste
+            activeTab={activeTab}
+            onSelect={(t) => { setActiveTab(t); setSidebarOpen(false); }}
+            expanded={communicatieExpanded}
+            onToggleExpanded={() => {
               const next = !communicatieExpanded;
               setCommunicatieExpanded(next);
               try { localStorage.setItem('nav_communicatie_ingeklapt', next ? '0' : '1'); } catch {}
             }}
-            className="w-full flex items-center justify-between transition-colors"
-            style={{
-              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
-              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
-              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
-              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-              color: HUISSTIJL.KLEUR.muted,
-              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
-              marginTop: '24px',
-              marginBottom: '12px',
-            }}
-          >
-            <span>Communicatie</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${communicatieExpanded ? '' : '-rotate-90'}`} />
-          </button>
-          {communicatieExpanded && (
-            <>
-              <button
-                onClick={() => { setActiveTab('whatsapp'); setSidebarOpen(false); }}
-                title="WhatsApp"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
-                style={{
-                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
-                  fontWeight: activeTab === 'whatsapp' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
-                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
-                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'whatsapp' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'whatsapp' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
-                }}
-              >
-                <MessageSquare className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
-                <span>WhatsApp</span>
-                {waUnreadTotal > 0 && (
-                  <span
-                    className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold shadow-sm"
-                    title={`${waUnreadTotal} ongelezen bericht${waUnreadTotal === 1 ? '' : 'en'}`}
-                    data-testid="badge-whatsapp-unread"
-                  >
-                    {waUnreadTotal > 99 ? '99+' : waUnreadTotal}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => { setActiveTab('whatsapp-contacten'); setSidebarOpen(false); }}
-                title="Contacten"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
-                style={{
-                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
-                  fontWeight: activeTab === 'whatsapp-contacten' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
-                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
-                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'whatsapp-contacten' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'whatsapp-contacten' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
-                }}
-              >
-                <Users className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
-                <span>Contacten</span>
-              </button>
-              <button
-                onClick={() => { setActiveTab('whatsapp-ai'); setSidebarOpen(false); }}
-                title="AI-instellingen"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
-                style={{
-                  fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
-                  fontWeight: activeTab === 'whatsapp-ai' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
-                  padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarMenuItemPaddingX}px`,
-                  gap: `${HUISSTIJL.MAAT.sidebarMenuItemGap}px`,
-                  color: activeTab === 'whatsapp-ai' ? HUISSTIJL.KLEUR.primair : HUISSTIJL.KLEUR.inkt,
-                  backgroundColor: activeTab === 'whatsapp-ai' ? HUISSTIJL.KLEUR.primairVlakActief : 'transparent',
-                }}
-              >
-                <Sparkles className="flex-shrink-0" style={{ height: HUISSTIJL.MAAT.sidebarIconMaat, width: HUISSTIJL.MAAT.sidebarIconMaat, strokeWidth: HUISSTIJL.MAAT.iconStrokeWidth }} />
-                <span>AI-instellingen</span>
-              </button>
-            </>
-          )}
+            ongelezen={waUnreadTotal}
+            takenOpen={takenOpenTotaal}
+          />
 
-          {/* Group: Medewerkers — eerste groep: geen extra top-margin (Planbord) */}
-          <button
-            onClick={() => setMedewerkerExpanded(e => !e)}
-            className="w-full flex items-center justify-between transition-colors"
-            style={{
-              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
-              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
-              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
-              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-              color: HUISSTIJL.KLEUR.muted,
-              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
-              marginTop: '4px',
-              marginBottom: '12px',
-            }}
-          >
-            <span>Medewerkers</span>
-            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: medewerkerExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
-          </button>
+          {/* Group: Medewerkers */}
+          <NavGroepKop label="Medewerkers" expanded={medewerkerExpanded} onToggle={() => setMedewerkerExpanded(e => !e)} />
           {medewerkerExpanded && (
             <>
               {[
@@ -1106,23 +1042,7 @@ export default function DashboardMockup() {
           )}
 
           {/* Group: Bedrijven */}
-          <button
-            onClick={() => setBedrijvenExpanded(e => !e)}
-            className="w-full flex items-center justify-between transition-colors"
-            style={{
-              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
-              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
-              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
-              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-              color: HUISSTIJL.KLEUR.muted,
-              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
-              marginTop: '24px',
-              marginBottom: '12px',
-            }}
-          >
-            <span>Bedrijven</span>
-            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: bedrijvenExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
-          </button>
+          <NavGroepKop label="Bedrijven" expanded={bedrijvenExpanded} onToggle={() => setBedrijvenExpanded(e => !e)} />
           {bedrijvenExpanded && (
             <>
               {[
@@ -1155,27 +1075,15 @@ export default function DashboardMockup() {
           )}
 
           {/* Group: Campagnes */}
-          <button
-            onClick={() => {
+          <NavGroepKop
+            label="Campagnes"
+            expanded={campagnesExpanded}
+            onToggle={() => {
               const next = !campagnesExpanded;
               setCampagnesExpanded(next);
               try { localStorage.setItem('nav_campagnes_ingeklapt', next ? '0' : '1'); } catch {}
             }}
-            className="w-full flex items-center justify-between transition-colors"
-            style={{
-              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
-              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
-              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
-              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-              color: HUISSTIJL.KLEUR.muted,
-              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
-              marginTop: '24px',
-              marginBottom: '12px',
-            }}
-          >
-            <span>Campagnes</span>
-            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: campagnesExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
-          </button>
+          />
           {campagnesExpanded && (
             <>
               {[
@@ -1207,23 +1115,7 @@ export default function DashboardMockup() {
           )}
 
           {/* Group: Marketing & SEO */}
-          <button
-            onClick={() => setBlogExpanded(e => !e)}
-            className="w-full flex items-center justify-between transition-colors"
-            style={{
-              fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
-              fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
-              textTransform: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.textTransform,
-              letterSpacing: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.letterSpacing,
-              color: HUISSTIJL.KLEUR.muted,
-              padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`,
-              marginTop: '24px',
-              marginBottom: '12px',
-            }}
-          >
-            <span>Marketing & SEO</span>
-            <ChevronDown className="transition-transform" style={{ height: 12, width: 12, transform: blogExpanded ? 'rotate(0)' : 'rotate(-90deg)' }} />
-          </button>
+          <NavGroepKop label="Marketing & SEO" expanded={blogExpanded} onToggle={() => setBlogExpanded(e => !e)} />
           {blogExpanded && (
             <>
               <button
@@ -1306,7 +1198,7 @@ export default function DashboardMockup() {
 
         {/* Systeem — zelfde container-padding als nav zodat alles gelijk uitlijnt */}
         <div style={{ padding: `0 ${HUISSTIJL.MAAT.sidebarNavPaddingX}px` }}>
-          <div className="dh-systeem-row" style={{ padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, marginTop: '16px', marginBottom: '12px' }}>
+          <div className="dh-systeem-row" style={{ padding: `4px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px`, marginTop: `${HUISSTIJL.MAAT.sidebarGroepMarginTop}px`, marginBottom: `${HUISSTIJL.MAAT.sidebarGroepMarginBottom}px` }}>
             <span style={{
               fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
               fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,
@@ -4867,6 +4759,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             </div>
           ) : activeTab === 'whatsapp' ? (
             <WhatsAppInbox />
+
+          ) : activeTab === 'whatsapp-taken' ? (
+            <TakenPagina />
 
           ) : activeTab === 'whatsapp-contacten' ? (
             <div className="p-6">

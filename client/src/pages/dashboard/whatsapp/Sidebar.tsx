@@ -3,10 +3,9 @@
  * ("Toegewezen aan mij" + "Gesnoozed" + "AI-afgehandeld verbergen").
  */
 import type { ReactNode } from 'react';
-import type { Conversation, Stats, Task, TaskStatus, TeamMember } from '../../../api/whatsappClient';
+import type { Conversation, Stats } from '../../../api/whatsappClient';
 import { WA, WA_TEKST, WA_GEWICHT } from './theme';
 import ConversationList from './ConversationList';
-import TakenPanel, { type TakenAssigneeFilter } from './TakenPanel';
 
 export type InboxTab = 'candidate' | 'unmatched' | 'prospect';
 
@@ -37,23 +36,9 @@ interface Props {
   conversations: Conversation[];
   selectedPhone: string | null;
   onSelect: (phone: string) => void;
-  /** Fase 3B: alles voor het Taken-paneel. */
-  taken: {
-    open: boolean;
-    onToggleOpen: () => void;
-    tasks: Task[];
-    openTotaal: number;
-    statusFilter: TaskStatus | 'alle';
-    onStatusFilter: (s: TaskStatus | 'alle') => void;
-    assigneeFilter: TakenAssigneeFilter;
-    onAssigneeFilter: (f: TakenAssigneeFilter) => void;
-    teamMembers: TeamMember[];
-    onToggleTask: (t: Task) => void;
-    onAssign: (t: Task, assignedToId: number | null) => void;
-    onSelectConversation: (t: Task) => void;
-    bezig: number[];
-    fout: string | null;
-  };
+  // Hier zat een `taken`-prop met de hele Taken-state. Taken is een eigen
+  // pagina geworden in de hoofdnavigatie (TakenPagina.tsx), dus de sidebar
+  // heeft er niets meer van nodig: terug naar drie tabbladen.
 }
 
 function FilterChip({ active, onClick, title, children }: {
@@ -88,7 +73,7 @@ export default function Sidebar(props: Props) {
     tab, onTab, stats, search, onSearch,
     assignedToMe, onToggleAssignedToMe, snoozedView, onToggleSnoozedView,
     hideAiHandled, onToggleHideAiHandled, hiddenAiCount,
-    conversations, selectedPhone, onSelect, taken,
+    conversations, selectedPhone, onSelect,
   } = props;
 
   return (
@@ -180,25 +165,9 @@ export default function Sidebar(props: Props) {
         </FilterChip>
       </div>
 
-      {/* Fase 3B: taken staan boven de gesprekkenlijst, ingeklapt tenzij je ze
-          opent. De teller op de kop blijft altijd zichtbaar. */}
-      <TakenPanel
-        open={taken.open}
-        onToggleOpen={taken.onToggleOpen}
-        tasks={taken.tasks}
-        openTotaal={taken.openTotaal}
-        statusFilter={taken.statusFilter}
-        onStatusFilter={taken.onStatusFilter}
-        assigneeFilter={taken.assigneeFilter}
-        onAssigneeFilter={taken.onAssigneeFilter}
-        teamMembers={taken.teamMembers}
-        onToggleTask={taken.onToggleTask}
-        onAssign={taken.onAssign}
-        onSelectConversation={taken.onSelectConversation}
-        bezig={taken.bezig}
-        fout={taken.fout}
-      />
-
+      {/* Tussen de filterrij en de gesprekken stond het ingeklapte Taken-paneel.
+          Dat is verhuisd naar een eigen pagina; de gesprekken beginnen nu
+          direct onder de filters. */}
       <ConversationList
         conversations={conversations}
         selectedPhone={selectedPhone}

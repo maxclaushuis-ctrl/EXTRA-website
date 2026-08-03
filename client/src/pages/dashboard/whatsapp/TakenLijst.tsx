@@ -1,14 +1,18 @@
 /**
- * Fase 3B — Taken-paneel in de sidebar.
+ * De takenlijst: filterrij plus de taken zelf.
  *
  * Een taak komt uit dezelfde AI-call als het antwoord ("deze persoon vraagt
  * om zijn uren in Jixbee") en staat BEWUST los van het gesprek: je vinkt de
  * taak af zonder het gesprek te sluiten, en je sluit een gesprek zonder dat
  * de taak verdwijnt. Vandaar een eigen lijst met een eigen status.
  *
- * Het paneel staat ingeklapt tenzij je het opent, zodat de gesprekkenlijst
- * de hoofdrol houdt. De teller op de kop blijft altijd zichtbaar — anders
- * zie je nooit dat er iets ligt.
+ * Heette TakenPanel en zat ingeklapt boven de gesprekkenlijst in de
+ * WhatsApp-sidebar. Sinds Taken een eigen navigatie-item heeft is er niets
+ * meer om in of uit te klappen en is dit gewoon de inhoud van die pagina —
+ * vandaar dat `open`, `onToggleOpen` en `openTotaal` weg zijn. De teller die
+ * op de ingeklapte kop stond zit nu in de rode badge naast Taken in de
+ * hoofdnavigatie. De data komt van TakenPagina.tsx, dit component doet zelf
+ * geen fetch.
  */
 import { useState } from 'react';
 import type { Task, TaskCategory, TaskStatus, TeamMember } from '../../../api/whatsappClient';
@@ -18,11 +22,7 @@ import { WA, WA_TEKST, WA_GEWICHT, relativeTime } from './theme';
 export type TakenAssigneeFilter = 'alle' | 'mij' | 'niemand';
 
 interface Props {
-  open: boolean;
-  onToggleOpen: () => void;
   tasks: Task[];
-  /** Open taken in totaal, ongeacht het filter. Voor de teller op de kop. */
-  openTotaal: number;
   statusFilter: TaskStatus | 'alle';
   onStatusFilter: (s: TaskStatus | 'alle') => void;
   assigneeFilter: TakenAssigneeFilter;
@@ -155,75 +155,49 @@ function TaakRegel({
   );
 }
 
-export default function TakenPanel(props: Props) {
+export default function TakenLijst(props: Props) {
   const {
-    open, onToggleOpen, tasks, openTotaal,
-    statusFilter, onStatusFilter, assigneeFilter, onAssigneeFilter,
+    tasks, statusFilter, onStatusFilter, assigneeFilter, onAssigneeFilter,
     teamMembers, onToggleTask, onAssign, onSelectConversation, bezig, fout,
   } = props;
 
   return (
-    <div style={{ borderBottom: `1px solid ${WA.border}`, background: '#fff', flexShrink: 0 }}>
-      {/* Kop: altijd zichtbaar, met de teller van openstaande taken. */}
-      <div
-        onClick={onToggleOpen}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-          padding: '9px 12px', fontSize: WA_TEKST.secundair, fontWeight: WA_GEWICHT.bold, color: WA.text,
-          background: open ? '#faf7ff' : '#fff',
-        }}
-      >
-        <span style={{ fontSize: WA_TEKST.badge, color: WA.textSub, width: 10 }}>{open ? '▾' : '▸'}</span>
-        <span>✅ Taken</span>
-        {openTotaal > 0 && (
-          <span style={{
-            background: WA.purple, color: '#fff', fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold,
-            borderRadius: 10, padding: '1px 7px',
-          }}>{openTotaal}</span>
-        )}
-        {openTotaal === 0 && (
-          <span style={{ fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.medium, color: WA.textSub }}>niets open</span>
-        )}
+    <div style={{ background: '#fff', border: `1px solid ${WA.border}`, borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', gap: 5, padding: '10px 12px', overflowX: 'auto' }}>
+        <MiniChip active={assigneeFilter === 'alle'} onClick={() => onAssigneeFilter('alle')}>Iedereen</MiniChip>
+        <MiniChip active={assigneeFilter === 'mij'} onClick={() => onAssigneeFilter('mij')}>Van mij</MiniChip>
+        <MiniChip active={assigneeFilter === 'niemand'} onClick={() => onAssigneeFilter('niemand')}>Vrij</MiniChip>
+        <span style={{ width: 1, background: WA.border, margin: '2px 3px', flexShrink: 0 }} />
+        <MiniChip active={statusFilter === 'open'} onClick={() => onStatusFilter('open')}>Open</MiniChip>
+        <MiniChip active={statusFilter === 'klaar'} onClick={() => onStatusFilter('klaar')}>Klaar</MiniChip>
       </div>
 
-      {open && (
-        <>
-          <div style={{
-            display: 'flex', gap: 5, padding: '0 12px 8px', overflowX: 'auto',
-          }}>
-            <MiniChip active={assigneeFilter === 'alle'} onClick={() => onAssigneeFilter('alle')}>Iedereen</MiniChip>
-            <MiniChip active={assigneeFilter === 'mij'} onClick={() => onAssigneeFilter('mij')}>Van mij</MiniChip>
-            <MiniChip active={assigneeFilter === 'niemand'} onClick={() => onAssigneeFilter('niemand')}>Vrij</MiniChip>
-            <span style={{ width: 1, background: WA.border, margin: '2px 3px', flexShrink: 0 }} />
-            <MiniChip active={statusFilter === 'open'} onClick={() => onStatusFilter('open')}>Open</MiniChip>
-            <MiniChip active={statusFilter === 'klaar'} onClick={() => onStatusFilter('klaar')}>Klaar</MiniChip>
-          </div>
-
-          {fout && (
-            <div style={{ padding: '6px 12px', fontSize: WA_TEKST.badge, color: '#b91c1c', background: '#fef2f2' }}>{fout}</div>
-          )}
-
-          <div style={{ maxHeight: 260, overflowY: 'auto', borderTop: `1px solid ${WA.border}` }}>
-            {tasks.length === 0 ? (
-              <div style={{ padding: '14px 12px', fontSize: WA_TEKST.badge, color: WA.textSub, textAlign: 'center' }}>
-                {statusFilter === 'klaar' ? 'Nog niets afgevinkt.' : 'Geen openstaande taken.'}
-              </div>
-            ) : (
-              tasks.map(t => (
-                <TaakRegel
-                  key={t.id}
-                  task={t}
-                  teamMembers={teamMembers}
-                  bezig={bezig.includes(t.id)}
-                  onToggleTask={onToggleTask}
-                  onAssign={onAssign}
-                  onSelectConversation={onSelectConversation}
-                />
-              ))
-            )}
-          </div>
-        </>
+      {fout && (
+        <div style={{ padding: '6px 12px', fontSize: WA_TEKST.badge, color: '#b91c1c', background: '#fef2f2' }}>{fout}</div>
       )}
+
+      {/* Geen maxHeight meer met een eigen scrollbalk: in de sidebar moest de
+          lijst binnen 260px blijven omdat de gesprekken eronder stonden. Op
+          een eigen pagina scrollt de pagina zelf. */}
+      <div style={{ borderTop: `1px solid ${WA.border}` }}>
+        {tasks.length === 0 ? (
+          <div style={{ padding: '24px 12px', fontSize: WA_TEKST.secundair, color: WA.textSub, textAlign: 'center' }}>
+            {statusFilter === 'klaar' ? 'Nog niets afgevinkt.' : 'Geen openstaande taken.'}
+          </div>
+        ) : (
+          tasks.map(t => (
+            <TaakRegel
+              key={t.id}
+              task={t}
+              teamMembers={teamMembers}
+              bezig={bezig.includes(t.id)}
+              onToggleTask={onToggleTask}
+              onAssign={onAssign}
+              onSelectConversation={onSelectConversation}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }

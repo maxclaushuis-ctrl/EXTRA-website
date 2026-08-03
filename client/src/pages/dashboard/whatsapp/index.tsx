@@ -19,19 +19,13 @@ import {
   stuurMedia,
   snoozeGesprek,
   vraagAiSuggestie,
-  haalTaken,
-  zetTaakStatus,
-  zetTaakToegewezene,
   type Conversation,
   type Message,
   type Stats,
   type TeamMember,
-  type Task,
-  type TaskStatus,
 } from '../../../api/whatsappClient';
 import { WA_FONT, WA } from './theme';
 import Sidebar, { type InboxTab } from './Sidebar';
-import type { TakenAssigneeFilter } from './TakenPanel';
 import ChatView from './ChatView';
 import ProfilePanel from './ProfilePanel';
 
@@ -59,24 +53,34 @@ export default function WhatsAppInbox() {
    */
   const [profielOpen, setProfielOpen] = useState(true);
 
-  // Fase 3B: taken. Bewust aparte state van `conversations` — een taak
-  // overleeft het sluiten van een gesprek en verdwijnt dus niet mee.
-  const [takenOpen, setTakenOpen] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [takenOpenTotaal, setTakenOpenTotaal] = useState(0);
-  const [taakStatusFilter, setTaakStatusFilter] = useState<TaskStatus | 'alle'>('open');
-  const [taakAssigneeFilter, setTaakAssigneeFilter] = useState<TakenAssigneeFilter>('alle');
-  const [taakBezig, setTaakBezig] = useState<number[]>([]);
-  const [taakFout, setTaakFout] = useState<string | null>(null);
+  // De hele Taken-state stond hier: tasks, openTotaal, de twee filters, bezig
+  // en fout, plus het ophalen en de handlers. Alles is verhuisd naar
+  // TakenPagina.tsx, want Taken is geen onderdeel meer van de inbox.
 
-  // Deeplink vanuit de Contacten-pagina (zelfde mechanisme als WhatsAppBeheer).
+  /**
+   * Deeplink vanuit de Contacten- of de Takenpagina. Nieuw is
+   * extra_open_wa_tab: de categorie waarin het gesprek staat. Zonder die
+   * sleutel opent de inbox op zijn eigen (laatst gekozen) tabblad en staat het
+   * gesprek in een categorie die niet in beeld is — dan klik je op een taak en
+   * lijkt er niets te gebeuren.
+   *
+   * De tab moet vóór het nummer worden gezet: onTab wist bij een handmatige
+   * klik het geselecteerde gesprek, dus andersom zou de deeplink zichzelf
+   * ongedaan maken. Hier gebeurt dat niet omdat we setTab rechtstreeks
+   * aanroepen, maar de volgorde blijft de veilige.
+   */
   useEffect(() => {
     try {
       const phone = sessionStorage.getItem('extra_open_wa_phone');
       if (phone) {
+        const gewensteTab = sessionStorage.getItem('extra_open_wa_tab');
+        if (gewensteTab === 'candidate' || gewensteTab === 'unmatched' || gewensteTab === 'prospect') {
+          setTab(gewensteTab);
+        }
         setSelectedPhone(phone);
         sessionStorage.removeItem('extra_open_wa_phone');
         sessionStorage.removeItem('extra_open_wa_name');
+        sessionStorage.removeItem('extra_open_wa_tab');
       }
     } catch { /* ignore */ }
   }, []);
@@ -104,81 +108,6 @@ export default function WhatsAppInbox() {
   useEffect(() => {
     haalTeamMembers().then(setTeamMembers).catch(() => {});
   }, []);
-
-  // Fase 3B: taken ophalen. Loopt ALTIJD, ook met het paneel dichtgeklapt —
-  // anders klopt de teller op de kop niet en zie je nooit dat er iets ligt.
-  // Rustiger ritme dan de gesprekken: een taak is geen chatbericht.
-  const refreshTaken = useCallback(async () => {
-    try {
-      const assignedToId =
-        taakAssigneeFilter === 'niemand' ? 'niemand' as const
-        // -1 en niet undefined: als we de ingelogde gebruiker (nog) niet
-        // kennen, hoort "Van mij" een lege lijst te geven — niet stilletjes
-        // alle taken van iedereen.
-        : taakAssigneeFilter === 'mij' ? (user?.id ?? -1)
-        : undefined;
-      const r = await haalTaken({ status: taakStatusFilter, assignedToId });
-      setTasks(r.tasks);
-      setTakenOpenTotaal(r.openTotaal);
-    } catch { /* stil: de takenlijst mag de inbox nooit blokkeren */ }
-  }, [taakStatusFilter, taakAssigneeFilter, user?.id]);
-
-  useEffect(() => {
-    let stop = false;
-    const tick = async () => { if (!stop) await refreshTaken(); };
-    tick();
-    const id = setInterval(tick, 15000);
-    return () => { stop = true; clearInterval(id); };
-  }, [refreshTaken]);
-
-  /**
-   * Afvinken of weer openzetten. Raakt het gesprek NIET aan: dat is precies
-   * waarom taken een eigen tabel hebben. Optimistisch bijwerken zodat het
-   * vinkje meteen reageert; de poll corrigeert als er iets misging.
-   */
-  async function handleTaakToggle(task: Task) {
-    const nieuw: TaskStatus = task.status === 'klaar' ? 'open' : 'klaar';
-    setTaakBezig(v => [...v, task.id]);
-    setTaakFout(null);
-    setTasks(list => list.map(t => (t.id === task.id ? { ...t, status: nieuw } : t)));
-    setTakenOpenTotaal(n => Math.max(0, n + (nieuw === 'klaar' ? -1 : 1)));
-    try {
-      await zetTaakStatus(task.id, nieuw);
-      await refreshTaken();
-    } catch (e: any) {
-      setTaakFout(e.message || 'Taak bijwerken mislukt');
-      await refreshTaken();
-    } finally {
-      setTaakBezig(v => v.filter(id => id !== task.id));
-    }
-  }
-
-  async function handleTaakToewijzen(task: Task, assignedToId: number | null) {
-    setTaakBezig(v => [...v, task.id]);
-    setTaakFout(null);
-    try {
-      const r = await zetTaakToegewezene(task.id, assignedToId);
-      setTasks(list => list.map(t => (
-        t.id === task.id ? { ...t, assignedToId: r.assignedToId, assignedToName: r.assignedToName } : t
-      )));
-      await refreshTaken();
-    } catch (e: any) {
-      setTaakFout(e.message || 'Toewijzen mislukt');
-      await refreshTaken();
-    } finally {
-      setTaakBezig(v => v.filter(id => id !== task.id));
-    }
-  }
-
-  /**
-   * Doorklik vanuit een taak naar het gesprek. Een taak kan bij een gesprek
-   * horen dat in een ANDERE tab staat; dan schakelen we eerst van tab, anders
-   * klik je op een taak en opent er een leeg scherm.
-   */
-  function handleTaakNaarGesprek(task: Task) {
-    if (task.matchCategory && task.matchCategory !== tab) setTab(task.matchCategory);
-    setSelectedPhone(task.phoneNumber);
-  }
 
   // Poll berichten van het geselecteerde gesprek.
   useEffect(() => {
@@ -298,22 +227,6 @@ export default function WhatsAppInbox() {
         conversations={zichtbareConversations}
         selectedPhone={selectedPhone}
         onSelect={setSelectedPhone}
-        taken={{
-          open: takenOpen,
-          onToggleOpen: () => setTakenOpen(v => !v),
-          tasks,
-          openTotaal: takenOpenTotaal,
-          statusFilter: taakStatusFilter,
-          onStatusFilter: setTaakStatusFilter,
-          assigneeFilter: taakAssigneeFilter,
-          onAssigneeFilter: setTaakAssigneeFilter,
-          teamMembers,
-          onToggleTask: handleTaakToggle,
-          onAssign: handleTaakToewijzen,
-          onSelectConversation: handleTaakNaarGesprek,
-          bezig: taakBezig,
-          fout: taakFout,
-        }}
       />
       <ChatView
         conv={selectedConv}

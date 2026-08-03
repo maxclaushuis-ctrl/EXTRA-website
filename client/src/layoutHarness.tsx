@@ -9,6 +9,11 @@
  * Draaien:  npx vite --config vite.harness.config.ts
  * Openen:   /layout-harness.html            (profielpaneel open)
  *           /layout-harness.html?profiel=dicht
+ *           /layout-harness.html?weergave=nav  (de linker hoofdnavigatie)
+ *
+ * De nav-weergave gebruikt de ECHTE CommunicatieNav en NavGroepKop uit het
+ * dashboard, niet een namaakje: die twee zijn er juist voor losgeknipt. Wat
+ * hier staat is dus wat DashboardMockup rendert, met verzonnen tellers.
  */
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -21,10 +26,14 @@ import { createRoot } from 'react-dom/client';
  */
 import './index.css';
 import Sidebar from './pages/dashboard/whatsapp/Sidebar';
+import CommunicatieNav from './pages/dashboard/CommunicatieNav';
+import NavGroepKop from './pages/dashboard/NavGroepKop';
+import { HUISSTIJL } from './lib/huisstijl';
+import extraLogo from '@assets/extra-logo-zwart.svg';
 import ChatView from './pages/dashboard/whatsapp/ChatView';
 import ProfilePanel from './pages/dashboard/whatsapp/ProfilePanel';
 import { WA_FONT } from './pages/dashboard/whatsapp/theme';
-import type { Conversation, Message, Stats, Task, TeamMember } from './api/whatsappClient';
+import type { Conversation, Message, Stats, TeamMember } from './api/whatsappClient';
 
 // ── Gesmoorde fetch: ProfilePanel haalt contact + notities op. ───────────────
 const nep: Record<string, unknown> = {
@@ -141,22 +150,53 @@ const BERICHTEN: Message[] = [
   },
 ];
 
-const TAKEN: Task[] = [
-  {
-    id: 1, conversationId: 1, phoneNumber: '31612345678',
-    summary: 'Uren van Eduardo en Florin invoeren in Jixbee', category: 'uren_jixbee',
-    assignedToId: 1, assignedToName: 'Eveline de Wit', status: 'open',
-    sourceMessageId: 1, createdAt: min(9), completedAt: null, completedById: null, completedByName: null,
-    contactName: 'Eduardo Silva', matchCategory: 'candidate',
-  },
-  {
-    id: 2, conversationId: 2, phoneNumber: '31687654321',
-    summary: 'Vervanging zoeken voor de dienst van morgen', category: 'vervanging',
-    assignedToId: null, assignedToName: null, status: 'open',
-    sourceMessageId: 2, createdAt: min(19), completedAt: null, completedById: null, completedByName: null,
-    contactName: 'Marta Kowalska', matchCategory: 'candidate',
-  },
-];
+/**
+ * De linker hoofdnavigatie zoals DashboardMockup hem neerzet: het logoblok,
+ * daaronder de groepen. COMMUNICATIE komt uit CommunicatieNav, de overige
+ * koppen uit NavGroepKop — dezelfde componenten, dus dezelfde marges.
+ */
+function NavHarness() {
+  const [communicatie, setCommunicatie] = useState(true);
+  const [medewerkers, setMedewerkers] = useState(false);
+  const [bedrijven, setBedrijven] = useState(false);
+  const [tab, setTab] = useState<string>('whatsapp-taken');
+
+  return (
+    <div
+      className="flex flex-col bg-white"
+      style={{ width: HUISSTIJL.MAAT.sidebarBreedte, borderRight: `1px solid ${HUISSTIJL.KLEUR.rand}`, height: '100vh' }}
+    >
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: HUISSTIJL.MAAT.sidebarLogoPadding, minHeight: HUISSTIJL.MAAT.sidebarLogoMinHoogte }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="min-w-0">
+            <img src={extraLogo} alt="EXTRA" className="w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay}px` }} />
+            <div className="mt-1" style={{ ...HUISSTIJL.TYPOGRAFIE.topbarSubtitel, fontSize: '11px', color: HUISSTIJL.KLEUR.muted }}>Dashboard</div>
+          </div>
+        </div>
+      </div>
+
+      <nav
+        className="flex-1 overflow-y-auto"
+        style={{ padding: `${HUISSTIJL.MAAT.sidebarMenuItemPaddingY}px ${HUISSTIJL.MAAT.sidebarNavPaddingX}px` }}
+      >
+        <CommunicatieNav
+          eerste
+          activeTab={tab}
+          onSelect={setTab}
+          expanded={communicatie}
+          onToggleExpanded={() => setCommunicatie(v => !v)}
+          ongelezen={4}
+          takenOpen={7}
+        />
+        <NavGroepKop label="Medewerkers" expanded={medewerkers} onToggle={() => setMedewerkers(v => !v)} />
+        <NavGroepKop label="Bedrijven" expanded={bedrijven} onToggle={() => setBedrijven(v => !v)} />
+      </nav>
+    </div>
+  );
+}
 
 function Harness() {
   const params = new URLSearchParams(window.location.search);
@@ -166,7 +206,6 @@ function Harness() {
   const [assignedToMe, setAssignedToMe] = useState(false);
   const [snoozedView, setSnoozedView] = useState(false);
   const [hideAiHandled, setHideAiHandled] = useState(true);
-  const [takenOpen, setTakenOpen] = useState(params.get('taken') === 'open');
   const [selectedPhone, setSelectedPhone] = useState('31612345678');
   const [composerText, setComposerText] = useState('');
   const conv = GESPREKKEN.find(c => c.phoneNumber === selectedPhone) ?? null;
@@ -186,14 +225,6 @@ function Harness() {
         conversations={GESPREKKEN}
         selectedPhone={selectedPhone}
         onSelect={setSelectedPhone}
-        taken={{
-          open: takenOpen, onToggleOpen: () => setTakenOpen(v => !v),
-          tasks: TAKEN, openTotaal: TAKEN.length,
-          statusFilter: 'open', onStatusFilter: () => {},
-          assigneeFilter: 'alle', onAssigneeFilter: () => {},
-          teamMembers: TEAM, onToggleTask: () => {}, onAssign: () => {},
-          onSelectConversation: () => {}, bezig: [], fout: null,
-        }}
       />
       <ChatView
         conv={conv}
@@ -222,4 +253,9 @@ function Harness() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Harness />);
+// Welke weergave: buiten de componenten beslist, niet met een vroege return
+// binnenin — dat zou de hooks eronder overslaan.
+const weergave = new URLSearchParams(window.location.search).get('weergave');
+createRoot(document.getElementById('root')!).render(
+  weergave === 'nav' ? <NavHarness /> : <Harness />,
+);
