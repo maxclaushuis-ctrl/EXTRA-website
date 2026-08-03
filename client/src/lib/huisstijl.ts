@@ -175,6 +175,25 @@ export const MAAT = {
   sidebarLogoMinHoogte: 64,
   sidebarNavPaddingX: 8,  // Minimale padding linkerkant nav container
 
+  /**
+   * Sectiekoppen in de navigatie (COMMUNICATIE, MEDEWERKERS, BEDRIJVEN, …).
+   *
+   * Eén paar waarden voor ALLE koppen. Ze stonden eerst los in de JSX en waren
+   * daar uit elkaar gelopen: 24px boven de meeste koppen, 4px boven
+   * MEDEWERKERS (restant van toen dat de eerste groep was) en 16px boven
+   * SYSTEEM. Gevolg: hoeveel lucht er boven een kop stond hing af van welke
+   * groep er toevallig boven hem lag. Vandaar hier, en niet daar.
+   */
+  sidebarGroepMarginTop: 24,
+  sidebarGroepMarginBottom: 12,
+  /**
+   * Alleen de bovenste kop in de navigatie. Die staat direct onder het
+   * logoblok, dat via sidebarLogoPadding zelf al 16px onderruimte meebrengt;
+   * daar telt de volle 24px dubbel en valt er een gat onder "Dashboard".
+   * 16 + 8 komt optisch uit op dezelfde afstand als tussen twee groepen.
+   */
+  sidebarGroepMarginTopEerste: 8,
+
   // Topbar
   topbarHoogte: 56,
   topbarPaddingX: 28,
