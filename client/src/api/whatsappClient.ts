@@ -88,8 +88,21 @@ export interface Message {
   toNumber: string;
   messageType: string;
   body: string | null;
+  /**
+   * Ruwe media-referentie van de provider — bij Meta een media-id, geen URL.
+   * Alleen bruikbaar voor diagnose; om te weten of er écht een bestand te
+   * tonen is kijk je naar heeftBijlage.
+   */
   mediaUrl: string | null;
   mediaMimeType: string | null;
+  /** Oorspronkelijke bestandsnaam, voor de downloadlink bij documenten. */
+  mediaFilename?: string | null;
+  /**
+   * Staat het bestand daadwerkelijk in Object Storage? Zo ja, dan is het op te
+   * halen via GET /api/whatsapp/messages/:id/media. Het opslagpad zelf blijft
+   * bewust server-side.
+   */
+  heeftBijlage?: boolean;
   status: string;
   errorCode: string | null;
   errorMessage: string | null;
