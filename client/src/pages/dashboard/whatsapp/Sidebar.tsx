@@ -1,6 +1,6 @@
 /**
- * Sidebar (400px) — paarse EXTRA-header, tabs Medewerkers/Kandidaten/Klanten,
- * zoekbalk en filterrij ("Toegewezen aan mij" + "Gesnoozed"), conform de mockup.
+ * Sidebar (400px) — tabs Medewerkers/Kandidaten/Klanten, zoekbalk en filterrij
+ * ("Toegewezen aan mij" + "Gesnoozed" + "AI-afgehandeld verbergen").
  */
 import type { ReactNode } from 'react';
 import type { Conversation, Stats, Task, TaskStatus, TeamMember } from '../../../api/whatsappClient';
@@ -56,11 +56,18 @@ interface Props {
   };
 }
 
-function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+function FilterChip({ active, onClick, title, children }: {
+  active: boolean;
+  onClick: () => void;
+  /** Volledige omschrijving; de chip zelf houdt een korte tekst. */
+  title?: string;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
+      title={title}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 5,
         padding: '4px 11px', borderRadius: 999, flexShrink: 0,
@@ -90,20 +97,11 @@ export default function Sidebar(props: Props) {
       display: 'flex', flexDirection: 'column',
       borderRight: `1px solid ${WA.border}`,
     }}>
-      {/* Paarse header met EXTRA-brand */}
-      <div style={{
-        background: WA.purple, color: '#fff', padding: '14px 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 15 }}>
-          <span style={{
-            width: 28, height: 28, background: '#fff', color: WA.purple, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14,
-          }}>X</span>
-          EXTRA WhatsApp
-        </div>
-        <div style={{ display: 'flex', gap: 16, fontSize: 16, opacity: 0.9 }}>⋮</div>
-      </div>
+      {/* De paarse "EXTRA WhatsApp"-banner stond hier. Weg: het dashboard
+          eromheen draagt de EXTRA-branding al via zijn eigen navigatie, dus
+          binnen de module was het een tweede merkbalk die alleen verticale
+          ruimte kostte. Het driepuntsmenu erin had geen onClick en geen menu
+          erachter — puur decoratief — dus er hoefde niets te verhuizen. */}
 
       {/* Tabs met paarse onderstreping */}
       <div style={{ display: 'flex', background: '#fff', borderBottom: `1px solid ${WA.border}` }}>
@@ -155,14 +153,29 @@ export default function Sidebar(props: Props) {
       {/* Filterrij: Toegewezen aan mij + Gesnoozed + AI-afgehandeld verbergen.
           De laatste staat standaard AAN: de planner ziet zo alleen wat nog
           menselijke aandacht vraagt. De teller maakt zichtbaar hoeveel er
-          verborgen is, zodat de filter nooit stilletjes gesprekken opslokt. */}
+          verborgen is, zodat de filter nooit stilletjes gesprekken opslokt.
+
+          WRAPPEN, NIET SCROLLEN: hiervoor stond hier overflowX:'auto', waardoor
+          de derde chip half buiten beeld viel — een filter die je niet ziet
+          bestaat niet. Wrappen is ook de enige van de twee opties die blijft
+          werken als er filters bijkomen (bv. per categorie); iconen-met-tooltip
+          zouden bij zes of zeven chips onleesbaar worden én tooltips doen het
+          niet op touch. De rij groeit gewoon een regel mee. */}
       <div style={{
-        display: 'flex', gap: 6, padding: '2px 12px 8px', background: '#fff',
-        borderBottom: `1px solid ${WA.border}`, overflowX: 'auto',
+        display: 'flex', flexWrap: 'wrap', gap: 6, padding: '2px 12px 8px', background: '#fff',
+        borderBottom: `1px solid ${WA.border}`,
       }}>
-        <FilterChip active={assignedToMe} onClick={onToggleAssignedToMe}>👤 Toegewezen aan mij</FilterChip>
+        <FilterChip
+          active={assignedToMe}
+          onClick={onToggleAssignedToMe}
+          title="Alleen gesprekken die aan mij zijn toegewezen"
+        >👤 Aan mij</FilterChip>
         <FilterChip active={snoozedView} onClick={onToggleSnoozedView}>⏰ Gesnoozed</FilterChip>
-        <FilterChip active={hideAiHandled} onClick={onToggleHideAiHandled}>
+        <FilterChip
+          active={hideAiHandled}
+          onClick={onToggleHideAiHandled}
+          title="Verberg gesprekken waarin de AI-agent het laatste woord had"
+        >
           🤖 AI-afgehandeld verbergen{hideAiHandled && hiddenAiCount > 0 ? ` (${hiddenAiCount})` : ''}
         </FilterChip>
       </div>

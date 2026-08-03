@@ -1,6 +1,8 @@
 /**
  * WhatsApp-inbox (Fase 2) — herbouw naar mockups/extra-whatsapp-mockup.html.
- * Compositie + state: Sidebar (400px) · ChatView (flex) · ProfilePanel (300px).
+ * Compositie + state: Sidebar (400px) · ChatView (flex) · ProfilePanel (300px,
+ * inklapbaar via de knop in de chatheader — ChatView heeft flex:1 en vult de
+ * vrijgekomen ruimte vanzelf).
  *
  * Vervangt WhatsAppBeheer in de dashboard-routing; WhatsAppBeheer.tsx blijft
  * bestaan tot fase 4.
@@ -50,6 +52,12 @@ export default function WhatsAppInbox() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  /**
+   * Rechterpaneel in-/uitklappen (knop in de chatheader). Bewust gewone state
+   * en géén localStorage: het is een keuze voor even ("ik wil dit gesprek
+   * groter lezen"), geen instelling. Per bezoek is genoeg.
+   */
+  const [profielOpen, setProfielOpen] = useState(true);
 
   // Fase 3B: taken. Bewust aparte state van `conversations` — een taak
   // overleeft het sluiten van een gesprek en verdwijnt dus niet mee.
@@ -319,8 +327,10 @@ export default function WhatsAppInbox() {
         aiLoading={aiLoading}
         onAiSuggest={handleAiSuggest}
         onSnooze={handleSnooze}
+        profielOpen={profielOpen}
+        onToggleProfiel={() => setProfielOpen(v => !v)}
       />
-      {selectedConv && (
+      {selectedConv && profielOpen && (
         <ProfilePanel
           conv={selectedConv}
           teamMembers={teamMembers}
