@@ -1,3 +1,21 @@
+/* Inter komt uit node_modules in plaats van van fonts.googleapis.com.
+   Reden: de Google-Fonts-link in index.html laadt niet-blokkerend
+   (media="print" onload=...), waardoor de eerste render altijd even in de
+   systeemletter staat en het dashboard er per omgeving anders uit kan zien —
+   op een koud replit.dev-domein merkbaar langer dan op een warme
+   doehetextra.nl-cache. Zo gebundeld zit de letter in dezelfde CSS-bundel als
+   de rest en valt er niets meer te wachten.
+   Dit is het variabele bestand (gewicht 100–900 in één woff2); de familienaam
+   is daarom "Inter Variable" en niet "Inter". Alleen de subsets die de pagina
+   nodig heeft worden opgehaald (unicode-range).
+   Poppins blijft wél via Google Fonts lopen: die staat op de publieke
+   marketingpagina's via .font-poppins. LET OP: verderop in dit bestand staat
+   ook `h1,h2,h3,h4,h5,h6 { @apply font-poppins font-bold }`, dus elke kop-tag
+   in het dashboard krijgt Poppins mee, niet Inter. In de WhatsApp-module is dat
+   met fontFamily:'inherit' op de twee <h4>'s teruggezet naar Inter; voor het
+   Planbord (25 kop-tags) staat de vraag open bij Max. */
+@import '@fontsource-variable/inter/wght.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

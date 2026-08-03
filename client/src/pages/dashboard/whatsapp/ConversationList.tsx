@@ -7,7 +7,7 @@
  */
 import type { AiCategory, Conversation, EscalationReason } from '../../../api/whatsappClient';
 import { AI_CATEGORY_LABELS, ESCALATION_REASON_LABELS } from '../../../api/whatsappClient';
-import { WA, relativeTime, snoozeRemaining } from './theme';
+import { WA, WA_TEKST, WA_GEWICHT, relativeTime, snoozeRemaining } from './theme';
 
 // Label → tag-stijl uit de mockup: NIEUW=paars, SPOED=rood, klant=amber.
 function tagStyle(label: string): { text: string; bg: string } | null {
@@ -64,7 +64,7 @@ interface Props {
 export default function ConversationList({ conversations, selectedPhone, onSelect, snoozedView }: Props) {
   if (conversations.length === 0) {
     return (
-      <div style={{ flex: 1, overflowY: 'auto', padding: 24, textAlign: 'center', fontSize: 13, color: WA.textSub }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 24, textAlign: 'center', fontSize: WA_TEKST.body, color: WA.textSub }}>
         {snoozedView ? 'Geen gesnoozede gesprekken' : 'Geen gesprekken gevonden'}
       </div>
     );
@@ -103,14 +103,14 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
                   <span style={{
-                    fontSize: 14.5, fontWeight: 600, color: WA.text,
+                    fontSize: WA_TEKST.body, fontWeight: WA_GEWICHT.semibold, color: WA.text,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>{naam}</span>
                   {escalatie && (
                     <span
                       title={`Wacht op planner — ${ESCALATION_REASON_LABELS[escalatie]}`}
                       style={{
-                        flexShrink: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: 0.2,
+                        flexShrink: 0, fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, letterSpacing: 0.2,
                         padding: '2px 6px', borderRadius: 9, whiteSpace: 'nowrap',
                         color: '#fff', background: ESCALATIE_KLEUR[escalatie],
                       }}
@@ -118,16 +118,16 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                   )}
                   {!escalatie && c.displayStatus === 'afgehandeld_ai' && (
                     <span title="Laatste bericht is door de AI-agent beantwoord"
-                      style={{ flexShrink: 0, fontSize: 11, opacity: 0.65 }}>🤖</span>
+                      style={{ flexShrink: 0, fontSize: WA_TEKST.badge, opacity: 0.65 }}>🤖</span>
                   )}
                 </span>
-                <span style={{ fontSize: 11.5, color: WA.textSub, flexShrink: 0, marginLeft: 6 }}>
+                <span style={{ fontSize: WA_TEKST.badge, color: WA.textSub, flexShrink: 0, marginLeft: 6 }}>
                   {relativeTime(c.lastMessageAt)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
                 <span style={{
-                  fontSize: 13, color: WA.textSub,
+                  fontSize: WA_TEKST.secundair, color: WA.textSub,
                   // 230 → 288: de 46px cirkel plus 12px gap zijn weg, die
                   // ruimte gaat naar de preview in plaats van naar niets.
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 288,
@@ -137,7 +137,7 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   {rest && (
                     <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                      fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, padding: '2px 7px', borderRadius: 10,
                       background: '#e1f2fb', color: '#5c6f7a',
                     }}>⏰ {rest}</span>
                   )}
@@ -148,7 +148,7 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                         (c.aiCategorySource === 'handmatig' ? ' (handmatig gezet)' : '')
                       }
                       style={{
-                        fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                        fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, padding: '2px 7px', borderRadius: 10,
                         whiteSpace: 'nowrap',
                         color: '#fff', background: CATEGORIE_KLEUR[categorie] ?? CATEGORIE_KLEUR.overig,
                       }}
@@ -156,13 +156,13 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                   )}
                   {tags.map(t => (
                     <span key={t.text} style={{
-                      fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                      fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, padding: '2px 7px', borderRadius: 10,
                       color: '#fff', background: t.bg,
                     }}>{t.text}</span>
                   ))}
                   {c.unreadCount > 0 && (
                     <span style={{
-                      background: WA.unread, color: '#fff', fontSize: 11, fontWeight: 700,
+                      background: WA.unread, color: '#fff', fontSize: WA_TEKST.badge, fontWeight: WA_GEWICHT.bold,
                       borderRadius: '50%', width: 19, height: 19,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>{c.unreadCount > 9 ? '9+' : c.unreadCount}</span>

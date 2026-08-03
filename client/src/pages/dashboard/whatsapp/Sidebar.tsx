@@ -4,7 +4,7 @@
  */
 import type { ReactNode } from 'react';
 import type { Conversation, Stats, Task, TaskStatus, TeamMember } from '../../../api/whatsappClient';
-import { WA } from './theme';
+import { WA, WA_TEKST, WA_GEWICHT } from './theme';
 import ConversationList from './ConversationList';
 import TakenPanel, { type TakenAssigneeFilter } from './TakenPanel';
 
@@ -71,7 +71,7 @@ function FilterChip({ active, onClick, title, children }: {
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 5,
         padding: '4px 11px', borderRadius: 999, flexShrink: 0,
-        fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+        fontSize: WA_TEKST.badge, fontWeight: WA_GEWICHT.semibold, cursor: 'pointer',
         background: active ? WA.purple : '#fff',
         color: active ? '#fff' : '#4b5563',
         border: `1px solid ${active ? WA.purple : WA.border}`,
@@ -114,7 +114,7 @@ export default function Sidebar(props: Props) {
               onClick={() => onTab(t.key)}
               style={{
                 flex: 1, textAlign: 'center', padding: '11px 4px',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                fontSize: WA_TEKST.body, fontWeight: WA_GEWICHT.semibold, cursor: 'pointer',
                 color: active ? WA.purple : WA.textSub,
                 borderBottom: `3px solid ${active ? WA.purple : 'transparent'}`,
               }}
@@ -123,7 +123,7 @@ export default function Sidebar(props: Props) {
               {unread > 0 && (
                 <span style={{
                   marginLeft: 5, background: WA.unread, color: '#fff',
-                  fontSize: 10, fontWeight: 700, borderRadius: 10, padding: '1px 6px',
+                  fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, borderRadius: 10, padding: '1px 6px',
                 }}>{unread}</span>
               )}
             </div>
@@ -135,7 +135,7 @@ export default function Sidebar(props: Props) {
       <div style={{ padding: '8px 12px', background: '#fff' }}>
         <div style={{
           background: WA.panel, borderRadius: 8, padding: '7px 12px',
-          fontSize: 13, display: 'flex', alignItems: 'center', gap: 10,
+          fontSize: WA_TEKST.body, display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <span style={{ color: WA.textSub }}>🔍</span>
           <input
@@ -144,7 +144,7 @@ export default function Sidebar(props: Props) {
             placeholder="Zoek of start een gesprek"
             style={{
               flex: 1, border: 'none', outline: 'none', background: 'transparent',
-              fontSize: 13, color: WA.text, fontFamily: 'inherit',
+              fontSize: WA_TEKST.body, color: WA.text, fontFamily: 'inherit',
             }}
           />
         </div>

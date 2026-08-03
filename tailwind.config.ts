@@ -6,7 +6,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        // "Inter Variable" is de familienaam van het zelf-gehoste variabele
+        // bestand (@fontsource-variable/inter, geïmporteerd bovenaan
+        // client/src/index.css). "Inter" blijft als tweede staan voor wie de
+        // letter lokaal geïnstalleerd heeft.
+        sans: ["Inter Variable", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         poppins: ["Poppins", "sans-serif"]
       },
       borderRadius: {
