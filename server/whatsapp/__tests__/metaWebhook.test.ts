@@ -33,6 +33,7 @@ interface CallLog {
   resolveAndUpsertConversation: any[][];
   insertInboundMessage: any[][];
   insertAppEcho: any[][];
+  clearEscalation: any[][];
   findConversationContact: any[][];
   handleBlockedByUser: any[][];
   handleIncomingStop: any[][];
@@ -50,6 +51,7 @@ function makeMockDeps(opts?: {
     resolveAndUpsertConversation: [],
     insertInboundMessage: [],
     insertAppEcho: [],
+    clearEscalation: [],
     findConversationContact: [],
     handleBlockedByUser: [],
     handleIncomingStop: [],
@@ -68,6 +70,7 @@ function makeMockDeps(opts?: {
       },
       async insertInboundMessage(msg: any) { calls.insertInboundMessage.push([msg]); return opts?.insertResult === undefined ? 123 : opts.insertResult; },
       async insertAppEcho(msg: any) { calls.insertAppEcho.push([msg]); return opts?.echoInsertResult === undefined ? 456 : opts.echoInsertResult; },
+      async clearEscalation(phone: string) { calls.clearEscalation.push([phone]); },
       describeNonTextMessage(type: string) { return `[${type}]`; },
     },
     optInService: {
@@ -349,6 +352,10 @@ async function main() {
     assertEq('géén insertInboundMessage', calls.insertInboundMessage.length, 0);
     assertEq('géén auto-reply op eigen bericht', calls.tryAutoReply.length, 0);
     assertEq('géén STOP-handler', calls.handleIncomingStop.length, 0);
+
+    // Antwoorden vanaf de telefoon telt als oppakken: uit de wachtrij.
+    assertEq('clearEscalation aangeroepen', calls.clearEscalation.length, 1);
+    assertEq('  → op het klantnummer', calls.clearEscalation[0]?.[0], '31600000999');
   }
 
   // ─── 12. App-echo: duplicate webhook → geen tweede rij ───────────────────
@@ -365,6 +372,10 @@ async function main() {
     // insert-poging.
     assertEq('precies één insert-poging, geen retry', calls.insertAppEcho.length, 1);
     assertEq('conversation-upsert wel gedraaid (preview blijft kloppen)', calls.resolveAndUpsertConversation.length, 1);
+    // Cruciaal: bij een herhaalde webhook NIET nogmaals de escalatie wissen.
+    // Er kan intussen een nieuwe escalatie zijn ontstaan, en die zou dan
+    // stilletjes uit de wachtrij verdwijnen.
+    assertEq('géén clearEscalation bij duplicate', calls.clearEscalation.length, 0);
   }
 
   // ─── 13. App-echo: media ─────────────────────────────────────────────────
@@ -393,6 +404,7 @@ async function main() {
     ]), deps);
     assertEq('geen insert bij revoke/edit', calls.insertAppEcho.length, 0);
     assertEq('geen conversation-wijziging bij revoke/edit', calls.resolveAndUpsertConversation.length, 0);
+    assertEq('geen clearEscalation bij revoke/edit', calls.clearEscalation.length, 0);
   }
 
   // ─── 15. App-echo met ongeldig to-nummer → overgeslagen ──────────────────

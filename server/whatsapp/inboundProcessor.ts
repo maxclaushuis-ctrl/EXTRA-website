@@ -45,6 +45,8 @@ export interface InboundProcessorDeps {
     insertInboundMessage(msg: any): Promise<number | null>;
     /** Fase 3D: echo van een bericht dat op de telefoon zelf is getypt. */
     insertAppEcho(msg: any): Promise<number | null>;
+    /** Haalt een gesprek uit de "wacht op planner"-wachtrij. */
+    clearEscalation(phoneNumber: string): Promise<void>;
     describeNonTextMessage(type: string, msg: any): string;
   };
   optInService: {
@@ -323,6 +325,23 @@ export async function processIncomingPayload(
               console.log(`${logPrefix} duplicate app-echo wa_message_id=${echo.id} → skip`);
             } else {
               console.log(`${logPrefix} app-echo ${type} naar ${normalizedTo} → match=${match.category} (verstuurd vanaf de telefoon)`);
+
+              // Wie vanaf zijn telefoon antwoordt heeft het gesprek net zo
+              // goed opgepakt als iemand die het vanuit het dashboard doet.
+              // Zonder dit blijft het bovenaan de "wacht op planner"-wachtrij
+              // hangen terwijl er allang gereageerd is. Zelfde aanroep als na
+              // een dashboard-send; clearEscalation raakt alleen rijen die
+              // daadwerkelijk geëscaleerd zijn.
+              //
+              // BEWUST alleen bij een verse insert: bij een herhaalde webhook
+              // (inserted === null) is dit al eerder gebeurd, en zou een
+              // NIEUWE escalatie die intussen is ontstaan onterecht worden
+              // weggegooid.
+              try {
+                await storage.clearEscalation(normalizedTo);
+              } catch (e: any) {
+                console.error(`${logPrefix} clearEscalation na app-echo mislukt:`, e?.message);
+              }
             }
           } catch (e: any) {
             console.error(`${logPrefix} fout bij verwerken app-echo:`, e?.message, e?.stack);
