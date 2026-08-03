@@ -11575,8 +11575,10 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   // De verwerking zelf staat in server/whatsapp/inboundProcessor.ts en is daar
   // los te testen: statuses → applyStatusEvent (incl. failed+blocked → opt-out),
   // messages → normalisatie, matching, idempotente insert, STOP-detectie en
-  // auto-reply. Die module unwrapt álle entry[]/changes[]-elementen, niet
-  // alleen het eerste.
+  // auto-reply, message_echoes → berichten die op de telefoon zelf zijn getypt.
+  // Die module unwrapt álle entry[]/changes[]-elementen, niet alleen het
+  // eerste, en kijkt niet naar `field` — een smb_message_echoes-change loopt er
+  // dus net zo goed doorheen als een messages-change.
   async function verwerkInkomendeWebhookBody(req: Request, res: Response, logPrefix = '[WA webhook]') {
     await processIncomingPayload(req.body || {}, {
       tryAutoReply,

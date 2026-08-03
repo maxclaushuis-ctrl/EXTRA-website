@@ -338,8 +338,21 @@ export default function ChatView(props: Props) {
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
               }}
             >
+              {/* Herkomst van een uitgaand bericht. De echo-tak staat BEWUST
+                  vooraan: een bericht dat op de telefoon is getypt heeft geen
+                  sentByUserId (we weten niet wie het typte) en zou in de oude
+                  volgorde als "AI-agent" worden gelabeld. */}
               {uit && (
-                m.sentByUserId != null ? (
+                m.sentSource === 'app' ? (
+                  <div
+                    title="Verstuurd vanaf de WhatsApp-app op de telefoon, niet vanuit dit dashboard"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      fontSize: 10, fontWeight: 700, color: '#8a5a00', background: '#fdf1d6',
+                      padding: '2px 7px', borderRadius: 8, marginBottom: 5,
+                    }}
+                  >📱 Planner (telefoon)</div>
+                ) : m.sentByUserId != null ? (
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
                     fontSize: 10, fontWeight: 700, color: '#008069', background: '#e3f7ee',

@@ -90,6 +90,36 @@ export async function insertInboundMessage(msg: InsertWhatsappMessage): Promise<
 }
 
 /**
+ * Insert van een APP-ECHO: een bericht dat vanaf de telefoon zelf is
+ * verstuurd, en dat Meta in Coexistence terugstuurt via message_echoes[].
+ *
+ * Bewust een eigen functie en niet insertOutboundQueued():
+ *   - insertOutboundQueued is NIET idempotent (die gaat ervan uit dat wij het
+ *     bericht zelf net hebben aangemaakt), en Meta mag een webhook herhalen.
+ *   - de status is hier al 'sent' — het bericht is al de deur uit, er komt
+ *     geen API-call meer van ons die het op 'sent' zet.
+ *   - sent_by_user_id blijft leeg: we weten wél dat een mens het typte, maar
+ *     niet wélke. Daarom sent_source='app' als apart signaal.
+ *
+ * Geeft `null` terug als wa_message_id al bestaat (duplicate webhook).
+ */
+export async function insertAppEcho(msg: InsertWhatsappMessage): Promise<number | null> {
+  if (msg.waMessageId) {
+    const existing = await db
+      .select({ id: whatsappMessages.id })
+      .from(whatsappMessages)
+      .where(eq(whatsappMessages.waMessageId, msg.waMessageId))
+      .limit(1);
+    if (existing.length > 0) return null;
+  }
+  const [row] = await db
+    .insert(whatsappMessages)
+    .values({ ...msg, direction: 'outbound', sentSource: 'app', sentByUserId: null })
+    .returning({ id: whatsappMessages.id });
+  return row?.id ?? null;
+}
+
+/**
  * Insert van outbound bericht (begint met status='queued').
  */
 export async function insertOutboundQueued(msg: InsertWhatsappMessage): Promise<number> {
@@ -188,8 +218,17 @@ export async function listConversations(args: {
   // "Afgehandeld door AI" = het laatste bericht in het gesprek is uitgaand én
   // heeft geen menselijke afzender (sent_by_user_id IS NULL). Live afgeleid uit
   // whatsapp_messages, zodat het niet kan verouderen.
+  //
+  // Fase 3D: sent_source='app' er expliciet uit. Een bericht dat vanaf de
+  // telefoon is getypt komt via de echo binnen zonder sent_by_user_id (we
+  // weten niet wie het typte), en zou dus als "AI-afgehandeld" tellen. Het
+  // gesprek zou daarmee uit de inbox verdwijnen zodra iemand op de telefoon
+  // antwoordt — precies andersom dan bedoeld. IS DISTINCT FROM, niet <>, want
+  // alle bestaande rijen hebben hier null staan.
   const aiHandledLast = sql<boolean>`(
-    SELECT m.direction = 'outbound' AND m.sent_by_user_id IS NULL
+    SELECT m.direction = 'outbound'
+       AND m.sent_by_user_id IS NULL
+       AND m.sent_source IS DISTINCT FROM 'app'
     FROM whatsapp_messages m
     WHERE m.from_number = ${whatsappConversations.phoneNumber}
        OR m.to_number   = ${whatsappConversations.phoneNumber}
