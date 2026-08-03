@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest, fetchJson, fetchJsonList } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -958,7 +958,7 @@ function ContactDetailSheet({ contactId, onClose, onEdit, tagSuggestions }: {
 
   const { data: contact, isLoading } = useQuery<any>({
     queryKey: ['/api/admin/prospect-contacts', contactId],
-    queryFn: () => fetch(`/api/admin/prospect-contacts/${contactId}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<any>(`/api/admin/prospect-contacts/${contactId}`),
     enabled: !!contactId,
   });
 
@@ -967,7 +967,7 @@ function ContactDetailSheet({ contactId, onClose, onEdit, tagSuggestions }: {
 
   const { data: history = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/prospect-contacts', contactId, 'campaign-history'],
-    queryFn: () => fetch(`/api/admin/prospect-contacts/${contactId}/campaign-history`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJsonList<any>(`/api/admin/prospect-contacts/${contactId}/campaign-history`),
     enabled: tab === 'campagnes' && !!contactId,
   });
 

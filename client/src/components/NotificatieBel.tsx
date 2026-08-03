@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, fetchJson } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FlaskConical, Bell, BellDot, Megaphone, Check, Trophy, AlertCircle, Info } from "lucide-react";
@@ -46,7 +46,7 @@ export default function NotificatieBel({ onNavigate }: { onNavigate?: (tab: stri
 
   const { data } = useQuery<NotificatiesResponse>({
     queryKey: ['/api/admin/notificaties'],
-    queryFn: () => fetch('/api/admin/notificaties', { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<NotificatiesResponse>('/api/admin/notificaties'),
     refetchInterval: 30_000,
   });
 
