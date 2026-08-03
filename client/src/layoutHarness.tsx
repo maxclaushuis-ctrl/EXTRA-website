@@ -6,17 +6,19 @@
  * ChatView · ProfilePanel) met verzonnen data en een gesmoorde fetch, zodat de
  * layout te bekijken is zonder server, database of inlog.
  *
- * Draaien:  npx vite --config vite.harness.config.ts
+ * Draaien:  npx vite --port 5199 --host 127.0.0.1
  * Openen:   /layout-harness.html            (profielpaneel open)
  *           /layout-harness.html?profiel=dicht
+ *           /layout-harness.html?tab=taken   (het Taken-sub-tabblad)
  */
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import Sidebar from './pages/dashboard/whatsapp/Sidebar';
+import Sidebar, { type SidebarTab } from './pages/dashboard/whatsapp/Sidebar';
 import ChatView from './pages/dashboard/whatsapp/ChatView';
 import ProfilePanel from './pages/dashboard/whatsapp/ProfilePanel';
+import type { TakenAssigneeFilter } from './pages/dashboard/whatsapp/TakenPanel';
 import { WA_FONT } from './pages/dashboard/whatsapp/theme';
-import type { Conversation, Message, Stats, Task, TeamMember } from './api/whatsappClient';
+import type { Conversation, Message, Stats, Task, TaskStatus, TeamMember } from './api/whatsappClient';
 
 // ── Gesmoorde fetch: ProfilePanel haalt contact + notities op. ───────────────
 const nep: Record<string, unknown> = {
@@ -139,17 +141,34 @@ const TAKEN: Task[] = [
     sourceMessageId: 2, createdAt: min(19), completedAt: null, completedById: null, completedByName: null,
     contactName: 'Marta Kowalska', matchCategory: 'candidate',
   },
+  {
+    id: 3, conversationId: 3, phoneNumber: '31611223344',
+    summary: 'Loonstrook van juni nakijken en terugkoppelen aan Youssef', category: 'contract',
+    assignedToId: 2, assignedToName: 'Max Verhoeven', status: 'open',
+    sourceMessageId: 3, createdAt: min(52), completedAt: null, completedById: null, completedByName: null,
+    contactName: 'Youssef El Amrani', matchCategory: 'candidate',
+  },
+  {
+    id: 4, conversationId: 4, phoneNumber: '31655667788',
+    summary: 'Sanne uitnodigen voor een kennismaking', category: 'overig',
+    assignedToId: 2, assignedToName: 'Max Verhoeven', status: 'klaar',
+    sourceMessageId: 4, createdAt: min(150), completedAt: min(120), completedById: 2, completedByName: 'Max Verhoeven',
+    contactName: 'Sanne Bakker', matchCategory: 'unmatched',
+  },
 ];
 
 function Harness() {
   const params = new URLSearchParams(window.location.search);
   const [profielOpen, setProfielOpen] = useState(params.get('profiel') !== 'dicht');
-  const [tab, setTab] = useState<'candidate' | 'unmatched' | 'prospect'>('candidate');
+  const [tab, setTab] = useState<SidebarTab>(
+    params.get('tab') === 'taken' ? 'taken' : 'candidate',
+  );
   const [search, setSearch] = useState('');
   const [assignedToMe, setAssignedToMe] = useState(false);
   const [snoozedView, setSnoozedView] = useState(false);
   const [hideAiHandled, setHideAiHandled] = useState(true);
-  const [takenOpen, setTakenOpen] = useState(params.get('taken') === 'open');
+  const [taakStatusFilter, setTaakStatusFilter] = useState<TaskStatus | 'alle'>('open');
+  const [taakAssigneeFilter, setTaakAssigneeFilter] = useState<TakenAssigneeFilter>('alle');
   const [selectedPhone, setSelectedPhone] = useState('31612345678');
   const [composerText, setComposerText] = useState('');
   const conv = GESPREKKEN.find(c => c.phoneNumber === selectedPhone) ?? null;
@@ -170,12 +189,13 @@ function Harness() {
         selectedPhone={selectedPhone}
         onSelect={setSelectedPhone}
         taken={{
-          open: takenOpen, onToggleOpen: () => setTakenOpen(v => !v),
-          tasks: TAKEN, openTotaal: TAKEN.length,
-          statusFilter: 'open', onStatusFilter: () => {},
-          assigneeFilter: 'alle', onAssigneeFilter: () => {},
+          tasks: TAKEN.filter(t => taakStatusFilter === 'alle' || t.status === taakStatusFilter),
+          openTotaal: TAKEN.filter(t => t.status === 'open').length,
+          statusFilter: taakStatusFilter, onStatusFilter: setTaakStatusFilter,
+          assigneeFilter: taakAssigneeFilter, onAssigneeFilter: setTaakAssigneeFilter,
           teamMembers: TEAM, onToggleTask: () => {}, onAssign: () => {},
-          onSelectConversation: () => {}, bezig: [], fout: null,
+          onSelectConversation: t => { if (t.matchCategory) setTab(t.matchCategory); setSelectedPhone(t.phoneNumber); },
+          bezig: [], fout: null,
         }}
       />
       <ChatView

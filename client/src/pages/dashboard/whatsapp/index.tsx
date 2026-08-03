@@ -30,13 +30,25 @@ import {
   type TaskStatus,
 } from '../../../api/whatsappClient';
 import { WA_FONT, WA } from './theme';
-import Sidebar, { type InboxTab } from './Sidebar';
+import Sidebar, { type InboxTab, type SidebarTab } from './Sidebar';
 import type { TakenAssigneeFilter } from './TakenPanel';
 import ChatView from './ChatView';
 import ProfilePanel from './ProfilePanel';
 
 export default function WhatsAppInbox() {
   const { user } = useAuth();
+  /**
+   * Twee tab-states, met opzet.
+   *
+   * `sidebarTab` is wat je ziet; `tab` is de gesprekscategorie die de API
+   * voedt. Ze lopen alleen uiteen zolang je op Taken staat: de gesprekken en
+   * de stats blijven dan gewoon doorpollen voor de categorie waar je vandaan
+   * kwam, zodat het gesprek rechts open blijft en de badges op de andere drie
+   * tabs blijven kloppen terwijl je taken afvinkt. Eén gedeelde state zou
+   * betekenen dat `haalGesprekken('taken')` de deur uit gaat — een categorie
+   * die de server niet kent.
+   */
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>('candidate');
   const [tab, setTab] = useState<InboxTab>('candidate');
   const [search, setSearch] = useState('');
   const [assignedToMe, setAssignedToMe] = useState(false);
@@ -61,7 +73,6 @@ export default function WhatsAppInbox() {
 
   // Fase 3B: taken. Bewust aparte state van `conversations` — een taak
   // overleeft het sluiten van een gesprek en verdwijnt dus niet mee.
-  const [takenOpen, setTakenOpen] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [takenOpenTotaal, setTakenOpenTotaal] = useState(0);
   const [taakStatusFilter, setTaakStatusFilter] = useState<TaskStatus | 'alle'>('open');
@@ -171,12 +182,32 @@ export default function WhatsAppInbox() {
   }
 
   /**
+   * Wisselen van sub-tabblad. Naar Taken springen laat de gesprekscategorie
+   * én het geselecteerde gesprek staan: je vinkt een taak af terwijl het
+   * gesprek waar hij uit komt rechts open blijft. Tussen de drie
+   * gesprekstabs onderling blijft het oude gedrag — daar hoort de selectie
+   * juist wél te vervallen, want dat gesprek staat in de andere lijst niet.
+   */
+  function handleSidebarTab(t: SidebarTab) {
+    setSidebarTab(t);
+    if (t === 'taken') return;
+    setTab(t);
+    setSelectedPhone(null);
+  }
+
+  /**
    * Doorklik vanuit een taak naar het gesprek. Een taak kan bij een gesprek
    * horen dat in een ANDERE tab staat; dan schakelen we eerst van tab, anders
-   * klik je op een taak en opent er een leeg scherm.
+   * klik je op een taak en opent er een leeg scherm. Je verlaat daarbij het
+   * Taken-tabblad, zodat je meteen ziet in welke lijst dit gesprek thuishoort.
+   * Kent de taak geen categorie, dan blijf je staan waar je bent en opent het
+   * gesprek alleen rechts — beter dan naar een lijst springen die er niet is.
    */
   function handleTaakNaarGesprek(task: Task) {
-    if (task.matchCategory && task.matchCategory !== tab) setTab(task.matchCategory);
+    if (task.matchCategory) {
+      if (task.matchCategory !== tab) setTab(task.matchCategory);
+      setSidebarTab(task.matchCategory);
+    }
     setSelectedPhone(task.phoneNumber);
   }
 
@@ -283,8 +314,8 @@ export default function WhatsAppInbox() {
       fontFamily: WA_FONT, color: WA.text, overflow: 'hidden', background: '#fff',
     }}>
       <Sidebar
-        tab={tab}
-        onTab={t => { setTab(t); setSelectedPhone(null); }}
+        tab={sidebarTab}
+        onTab={handleSidebarTab}
         stats={stats}
         search={search}
         onSearch={setSearch}
@@ -299,8 +330,6 @@ export default function WhatsAppInbox() {
         selectedPhone={selectedPhone}
         onSelect={setSelectedPhone}
         taken={{
-          open: takenOpen,
-          onToggleOpen: () => setTakenOpen(v => !v),
           tasks,
           openTotaal: takenOpenTotaal,
           statusFilter: taakStatusFilter,

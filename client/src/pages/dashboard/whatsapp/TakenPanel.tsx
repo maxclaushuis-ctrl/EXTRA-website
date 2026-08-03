@@ -1,14 +1,16 @@
 /**
- * Fase 3B — Taken-paneel in de sidebar.
+ * Fase 3B — Taken, sinds Fase 3E het vierde sub-tabblad van de sidebar.
  *
  * Een taak komt uit dezelfde AI-call als het antwoord ("deze persoon vraagt
  * om zijn uren in Jixbee") en staat BEWUST los van het gesprek: je vinkt de
  * taak af zonder het gesprek te sluiten, en je sluit een gesprek zonder dat
  * de taak verdwijnt. Vandaar een eigen lijst met een eigen status.
  *
- * Het paneel staat ingeklapt tenzij je het opent, zodat de gesprekkenlijst
- * de hoofdrol houdt. De teller op de kop blijft altijd zichtbaar — anders
- * zie je nooit dat er iets ligt.
+ * Was: een inklapbaar paneel bóven de gesprekkenlijst. Dat kostte in elk
+ * tabblad permanent een balk, en gaf de takenlijst maar 260px hoogte. Nu is
+ * het een eigen tabblad dat de volle hoogte krijgt; de teller van openstaande
+ * taken is verhuisd naar de tab-badge in Sidebar.tsx, zodat je nog steeds in
+ * één oogopslag ziet dat er iets ligt zonder er eerst heen te klikken.
  */
 import { useState } from 'react';
 import type { Task, TaskCategory, TaskStatus, TeamMember } from '../../../api/whatsappClient';
@@ -18,11 +20,7 @@ import { WA, relativeTime } from './theme';
 export type TakenAssigneeFilter = 'alle' | 'mij' | 'niemand';
 
 interface Props {
-  open: boolean;
-  onToggleOpen: () => void;
   tasks: Task[];
-  /** Open taken in totaal, ongeacht het filter. Voor de teller op de kop. */
-  openTotaal: number;
   statusFilter: TaskStatus | 'alle';
   onStatusFilter: (s: TaskStatus | 'alle') => void;
   assigneeFilter: TakenAssigneeFilter;
@@ -157,73 +155,53 @@ function TaakRegel({
 
 export default function TakenPanel(props: Props) {
   const {
-    open, onToggleOpen, tasks, openTotaal,
+    tasks,
     statusFilter, onStatusFilter, assigneeFilter, onAssigneeFilter,
     teamMembers, onToggleTask, onAssign, onSelectConversation, bezig, fout,
   } = props;
 
   return (
-    <div style={{ borderBottom: `1px solid ${WA.border}`, background: '#fff', flexShrink: 0 }}>
-      {/* Kop: altijd zichtbaar, met de teller van openstaande taken. */}
-      <div
-        onClick={onToggleOpen}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-          padding: '9px 12px', fontSize: 12.5, fontWeight: 700, color: WA.text,
-          background: open ? '#faf7ff' : '#fff',
-        }}
-      >
-        <span style={{ fontSize: 11, color: WA.textSub, width: 10 }}>{open ? '▾' : '▸'}</span>
-        <span>✅ Taken</span>
-        {openTotaal > 0 && (
-          <span style={{
-            background: WA.purple, color: '#fff', fontSize: 10, fontWeight: 700,
-            borderRadius: 10, padding: '1px 7px',
-          }}>{openTotaal}</span>
-        )}
-        {openTotaal === 0 && (
-          <span style={{ fontSize: 10.5, fontWeight: 500, color: WA.textSub }}>niets open</span>
-        )}
+    // minHeight:0 is hier geen detail maar de voorwaarde: zonder die regel
+    // weigert een flex-kind te krimpen onder zijn inhoud en scrollt de lijst
+    // hieronder niet, maar duwt hij de sidebar uit beeld.
+    <div style={{
+      flex: 1, minHeight: 0, background: '#fff',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{
+        display: 'flex', gap: 5, padding: '9px 12px', overflowX: 'auto', flexShrink: 0,
+      }}>
+        <MiniChip active={assigneeFilter === 'alle'} onClick={() => onAssigneeFilter('alle')}>Iedereen</MiniChip>
+        <MiniChip active={assigneeFilter === 'mij'} onClick={() => onAssigneeFilter('mij')}>Van mij</MiniChip>
+        <MiniChip active={assigneeFilter === 'niemand'} onClick={() => onAssigneeFilter('niemand')}>Vrij</MiniChip>
+        <span style={{ width: 1, background: WA.border, margin: '2px 3px', flexShrink: 0 }} />
+        <MiniChip active={statusFilter === 'open'} onClick={() => onStatusFilter('open')}>Open</MiniChip>
+        <MiniChip active={statusFilter === 'klaar'} onClick={() => onStatusFilter('klaar')}>Klaar</MiniChip>
       </div>
 
-      {open && (
-        <>
-          <div style={{
-            display: 'flex', gap: 5, padding: '0 12px 8px', overflowX: 'auto',
-          }}>
-            <MiniChip active={assigneeFilter === 'alle'} onClick={() => onAssigneeFilter('alle')}>Iedereen</MiniChip>
-            <MiniChip active={assigneeFilter === 'mij'} onClick={() => onAssigneeFilter('mij')}>Van mij</MiniChip>
-            <MiniChip active={assigneeFilter === 'niemand'} onClick={() => onAssigneeFilter('niemand')}>Vrij</MiniChip>
-            <span style={{ width: 1, background: WA.border, margin: '2px 3px', flexShrink: 0 }} />
-            <MiniChip active={statusFilter === 'open'} onClick={() => onStatusFilter('open')}>Open</MiniChip>
-            <MiniChip active={statusFilter === 'klaar'} onClick={() => onStatusFilter('klaar')}>Klaar</MiniChip>
-          </div>
-
-          {fout && (
-            <div style={{ padding: '6px 12px', fontSize: 11, color: '#b91c1c', background: '#fef2f2' }}>{fout}</div>
-          )}
-
-          <div style={{ maxHeight: 260, overflowY: 'auto', borderTop: `1px solid ${WA.border}` }}>
-            {tasks.length === 0 ? (
-              <div style={{ padding: '14px 12px', fontSize: 11.5, color: WA.textSub, textAlign: 'center' }}>
-                {statusFilter === 'klaar' ? 'Nog niets afgevinkt.' : 'Geen openstaande taken.'}
-              </div>
-            ) : (
-              tasks.map(t => (
-                <TaakRegel
-                  key={t.id}
-                  task={t}
-                  teamMembers={teamMembers}
-                  bezig={bezig.includes(t.id)}
-                  onToggleTask={onToggleTask}
-                  onAssign={onAssign}
-                  onSelectConversation={onSelectConversation}
-                />
-              ))
-            )}
-          </div>
-        </>
+      {fout && (
+        <div style={{ padding: '6px 12px', fontSize: 11, color: '#b91c1c', background: '#fef2f2', flexShrink: 0 }}>{fout}</div>
       )}
+
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', borderTop: `1px solid ${WA.border}` }}>
+        {tasks.length === 0 ? (
+          <div style={{ padding: '18px 12px', fontSize: 11.5, color: WA.textSub, textAlign: 'center' }}>
+            {statusFilter === 'klaar' ? 'Nog niets afgevinkt.' : 'Geen openstaande taken.'}
+          </div>
+        ) : (
+          tasks.map(t => (
+            <TaakRegel
+              key={t.id}
+              task={t}
+              teamMembers={teamMembers}
+              bezig={bezig.includes(t.id)}
+              onToggleTask={onToggleTask}
+              onAssign={onAssign}
+              onSelectConversation={onSelectConversation}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }
