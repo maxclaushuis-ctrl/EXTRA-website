@@ -20,7 +20,7 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, fetchJsonList } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -546,15 +546,30 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
   const [saving, setSaving] = useState(false);
   const [activating, setActivating] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [laadFout, setLaadFout] = useState<string | null>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDirty = useRef(false);
 
-  // Laad bestaande stappen
+  // Laad bestaande stappen.
+  //
+  // LET OP — dit was een stille dataverlies-route. Met het oude
+  // `fetch(...).then(r => r.json())` kwam een HTTP 403/500 binnen als een
+  // gewoon object ({ message: '...' }). Dat object heeft geen .length, dus
+  // viel de code in de else-tak, tekende een lege standaardflow, zette
+  // loaded=true, en twee seconden later schreef de auto-save die lege flow
+  // terug naar de server — over de echte stappen heen.
+  //
+  // Daarom: fetchJsonList gooit bij een foutstatus én wanneer het antwoord
+  // geen lijst is, en bij een fout blijft loaded=false staan. Zolang loaded
+  // false is doet scheduleAutoSave niets, dus er kan niets overschreven
+  // worden zolang we niet zeker weten wat er op de server staat.
   useEffect(() => {
-    fetch(`/api/admin/prospect-campaigns/${campaignId}/flow-steps`, { credentials: 'include' })
-      .then(r => r.json())
-      .then((steps: FlowStep[]) => {
-        if (steps && steps.length > 0) {
+    let afgebroken = false;
+    setLaadFout(null);
+    fetchJsonList<FlowStep>(`/api/admin/prospect-campaigns/${campaignId}/flow-steps`)
+      .then(steps => {
+        if (afgebroken) return;
+        if (steps.length > 0) {
           const { nodes: n, edges: e } = stepsToNodesEdges(steps);
           setNodes(n);
           setEdges(e);
@@ -570,7 +585,12 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
         }
         setLoaded(true);
       })
-      .catch(() => setLoaded(true));
+      .catch((e: any) => {
+        if (afgebroken) return;
+        // Bewust GEEN setLoaded(true): dat zou de auto-save vrijgeven.
+        setLaadFout(e?.message || 'De flow kon niet geladen worden.');
+      });
+    return () => { afgebroken = true; };
   }, [campaignId]);
 
   // Auto-save debounce
@@ -905,9 +925,14 @@ export default function FlowBuilderPage({ campaignId, campaignName, onClose, onA
               style={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: 8 }}
             />
             <Panel position="top-center">
-              {!loaded && (
+              {!loaded && !laadFout && (
                 <div style={{ background: 'white', padding: '8px 16px', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: 13, color: '#6B7280' }}>
                   Flow laden...
+                </div>
+              )}
+              {laadFout && (
+                <div style={{ background: 'white', padding: '8px 16px', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: 13, color: '#B45309', border: '1px solid #FDE68A' }}>
+                  Flow kon niet geladen worden — {laadFout} De flow is niet bewerkbaar tot dit lukt, zodat er niets overschreven wordt.
                 </div>
               )}
             </Panel>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { CheckCircle2, Upload, AlertCircle, Loader2, FileText, X } from 'lucide-react';
+import { fetchJson } from '@/lib/queryClient';
 
 type State = 'loading' | 'ready' | 'uploading' | 'success' | 'already_uploaded' | 'invalid' | 'error';
 
@@ -15,14 +16,20 @@ export default function CvUpload() {
   useEffect(() => {
     document.title = 'Upload je cv | EXTRA';
     if (!token) { setState('invalid'); return; }
-    fetch(`/api/cv-upload-token?token=${encodeURIComponent(token)}`)
-      .then(r => r.json())
+    // Een serverfout is iets anders dan een ongeldige link. Met het oude
+    // `.then(r => r.json())` kwam een HTTP 500 binnen als een gewoon object
+    // zonder `valid`, en kreeg de kandidaat "Ongeldige of verlopen link" te
+    // zien terwijl zijn link prima was — die stuurt hem definitief weg.
+    // fetchJson gooit bij een foutstatus, zodat we dat onderscheid kunnen maken.
+    fetchJson<{ valid?: boolean; firstName?: string }>(
+      `/api/cv-upload-token?token=${encodeURIComponent(token)}`,
+    )
       .then(data => {
         if (data.valid === false) { setState('already_uploaded'); }
         else if (data.valid) { setFirstName(data.firstName || ''); setState('ready'); }
         else { setState('invalid'); }
       })
-      .catch(() => setState('invalid'));
+      .catch(() => setState('error'));
   }, [token]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -111,6 +118,31 @@ export default function CvUpload() {
               >
                 App ons op WhatsApp
               </a>
+            </div>
+          )}
+
+          {/* Serverfout bij het controleren van de link — de link zelf kan
+              prima zijn, dus geen "ongeldige link" tonen maar vragen om het
+              opnieuw te proberen. */}
+          {state === 'error' && (
+            <div className="bg-white rounded-3xl p-8 text-center shadow-xl shadow-purple-100">
+              <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-5">
+                <AlertCircle className="w-8 h-8 text-amber-500" />
+              </div>
+              <h1 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Even niet bereikbaar
+              </h1>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                We konden je link nu niet controleren. Probeer het zo nog een
+                keer — je link blijft gewoon geldig.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 font-bold text-white px-6 py-3 rounded-2xl text-sm transition-all active:scale-95"
+                style={{ background: '#7c3aed' }}
+              >
+                Opnieuw proberen
+              </button>
             </div>
           )}
 
