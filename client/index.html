@@ -38,11 +38,17 @@
     <link rel="preload" as="image" href="/hero.webp" fetchpriority="high" />
 
     <!-- Fonts: preconnect + async (non-render-blocking) load -->
+    <!-- Inter staat hier BEWUST niet meer bij: die wordt zelf gehost en zit in
+         de CSS-bundel (zie de @import bovenaan client/src/index.css). Zolang
+         Inter hier stond werd de bodyletter niet-blokkerend geladen en stond de
+         eerste render in de systeemletter — per omgeving verschillend lang.
+         Poppins blijft wél asynchroon: die wordt alleen op de publieke
+         marketingpagina's gebruikt voor koppen, nergens in het dashboard. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" /></noscript>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" /></noscript>
     <!-- JSON-LD: EmploymentAgency -->
     <script type="application/ld+json">
     {

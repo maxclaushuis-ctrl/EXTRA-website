@@ -48,8 +48,11 @@ export const KLEUR = {
 // 2. TYPOGRAFIE
 // ============================================================================
 export const TYPOGRAFIE = {
-  // Font families
-  primair: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  // Font families. "Inter Variable" staat voorop: dat is de familienaam van het
+  // zelf-gehoste variabele bestand (zie de @import bovenaan index.css). Zonder
+  // die naam valt de stack door naar -apple-system en krijg je op een Mac San
+  // Francisco in plaats van Inter — precies het verschil dat we hier wegnemen.
+  primair: '"Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   gewichten: {
     light: 400,
     normal: 400,
