@@ -29,29 +29,46 @@ interface LiveCase {
   verwachtCategorie: AiCategory;
   /** null = er hoort géén taak uit te komen. */
   verwachtTaak: TaskCategory | null;
-  /** true = we verwachten dat de AI escaleert in plaats van antwoordt. */
+  /**
+   * true = we verwachten dat de AI escaleert in plaats van antwoordt.
+   *
+   * Fase 3C: dit veld wordt nu BEIDE KANTEN OP gecontroleerd. Weglaten betekent
+   * "hier hoort géén escalatie uit te komen", en dat wordt ook getoetst. Zonder
+   * die tweede helft zag de vorige run een onterechte escalatie op case 1 en 2
+   * ("Max pls ...", "Hi there Eveline!" werden als mens_gevraagd gelezen) niet
+   * eens staan — precies de fout die de aangescherpte prompt moet wegnemen.
+   */
   verwachtEscalatie?: boolean;
 }
 
 // De eerste twee zijn de door Max aangeleverde testcases. Ze komen in het
 // ENGELS binnen: dat is precies het punt — de classificatie mag niet op
 // Nederlandse trefwoorden gebouwd zijn.
+//
+// FASE 3C — waarom hier verwachtingen zijn VERSCHOVEN en niet alleen de prompt:
+// de eerste live-run gaf acht keer hetzelfde resultaat als de tweede, dus de
+// afwijkingen kwamen niet van modelruis maar van een te krappe taxonomie.
+// Waar de verwachting zelf niet klopte, is de verwachting aangepast; waar de
+// prompt te vaag was, is de prompt aangescherpt. Beide staan hieronder benoemd.
 const CASES: LiveCase[] = [
   {
+    // Was 'algemene_vraag'. Dit is geen vraag over hoe iets werkt maar een
+    // verzoek om een handeling ("zet mijn uren erin") → nieuwe categorie.
     naam: 'EN — uren toevoegen in Jixbee voor twee mensen (urgent)',
     bericht:
       'Max pls add the hours on jixbee for me and Florin cuz i have some urgent payments to do. ' +
       'Eveline didnt answer thats why i ask you directly. Thx',
-    verwachtCategorie: 'algemene_vraag',
+    verwachtCategorie: 'verzoek',
     verwachtTaak: 'uren_jixbee',
   },
   {
+    // Idem: uren achteraf melden is geen informatievraag, iemand moet ze invoeren.
     naam: 'EN — vergeten uren achteraf melden',
     bericht:
       'Hi there Eveline! How are you? Excuse me for texting you on your day off. Yesterday I ' +
       'completely forgot about registering the hours that I worked. I was at Pulitzer from ' +
       '05:00-14:35 (15min brake)',
-    verwachtCategorie: 'algemene_vraag',
+    verwachtCategorie: 'verzoek',
     verwachtTaak: 'uren_jixbee',
   },
   {
@@ -67,16 +84,19 @@ const CASES: LiveCase[] = [
     verwachtTaak: null,
   },
   {
+    // Was verwachtTaak: null. Dat was fout van ons: een ziekmelding LAAT wél
+    // werk achter (dienst opnieuw invullen). Het model maakte er terecht een
+    // taak van, alleen zonder passende categorie — vandaar 'vervanging'.
     naam: 'NL — afmelding voor een dienst',
     bericht: 'Sorry, ik ben ziek geworden. Ik kan morgen niet werken bij het Marriott.',
     verwachtCategorie: 'afmelding',
-    verwachtTaak: null,
+    verwachtTaak: 'vervanging',
   },
   {
     naam: 'PL — afmelding in het Pools',
     bericht: 'Przepraszam, nie mogę jutro przyjść do pracy, jestem chory.',
     verwachtCategorie: 'afmelding',
-    verwachtTaak: null,
+    verwachtTaak: 'vervanging',
   },
   {
     naam: 'NL — boze klacht (verwacht escalatie)',
@@ -88,10 +108,19 @@ const CASES: LiveCase[] = [
     verwachtEscalatie: true,
   },
   {
+    // Twee correcties in één case. (1) verwachtTaak was 'contract': er valt op
+    // dit moment niets te DOEN aan een contract — er moet iemand terugbellen,
+    // en dat is precies wat de escalatie al regelt. Een taak erbij is dubbel
+    // werk in de takenlijst. (2) De categorie is geen informatievraag: hij
+    // vraagt om een handeling (zet er een mens op) → 'verzoek', volgens
+    // dezelfde beslisregel als case 1 en 2.
+    //
+    // Dit is de minst zekere van de acht: 'algemene_vraag' is óók te
+    // verdedigen, want het onderwerp is zijn contract. De live-run beslist.
     naam: 'EN — vraagt expliciet om een mens',
     bericht: 'Can I please speak to a real person about my contract? A bot is not helping me here.',
-    verwachtCategorie: 'algemene_vraag',
-    verwachtTaak: 'contract',
+    verwachtCategorie: 'verzoek',
+    verwachtTaak: null,
     verwachtEscalatie: true,
   },
 ];
@@ -157,6 +186,11 @@ async function draaiCase(c: LiveCase) {
     }
     if (c.verwachtEscalatie && turn.action !== 'escalate') {
       afwijkingen.push('verwachtte escalatie, kreeg een antwoord');
+    }
+    if (!c.verwachtEscalatie && turn.action === 'escalate') {
+      afwijkingen.push(
+        `escaleerde onverwacht${turn.escalationReason ? ` (reden: ${turn.escalationReason})` : ''}`,
+      );
     }
 
     if (afwijkingen.length === 0) {
