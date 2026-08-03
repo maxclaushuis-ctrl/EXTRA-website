@@ -72,6 +72,14 @@ export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "public");
 
   if (!fs.existsSync(distPath)) {
+    // Expliciete fatale regel vóór de throw: in een deploy is dit precies de
+    // situatie die als "built successfully but failed to start" naar boven
+    // komt. Zo staat er in de log dát de clientbuild ontbreekt en niet alleen
+    // een stacktrace waarin dat ondersneeuwt.
+    console.error(
+      `[start] FATAAL: clientbuild niet gevonden op ${distPath}. ` +
+        `De serverbundel bestaat wel, de frontend niet — draai 'npm run build' opnieuw.`,
+    );
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
