@@ -216,3 +216,45 @@ export function httpStatusForFailure(result: { httpStatus?: number }): number {
   if (result.httpStatus == null) return 500; // netwerkfout / timeout
   return result.httpStatus >= 400 ? result.httpStatus : 400;
 }
+
+export interface ProviderMediaDownload {
+  ok: boolean;
+  buffer?: Buffer;
+  mimeType?: string;
+  filename?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  provider: WhatsAppProviderName;
+}
+
+/**
+ * Haal de bytes achter een media-id op bij de actieve provider.
+ *
+ * Alleen geïmplementeerd voor Meta. 360dialog kent een vergelijkbare
+ * twee-staps-flow, maar die tak wordt in fase 4 sowieso verwijderd en de
+ * media-weergave is pas gebouwd nadat de Meta-koppeling live stond — er is
+ * dus geen enkel bericht dat via 360dialog binnenkomt én deze functie nodig
+ * heeft. Bewust een nette fout in plaats van ongeteste code die niemand ooit
+ * aanroept.
+ */
+export async function downloadMedia(mediaId: string): Promise<ProviderMediaDownload> {
+  if (activeProvider() !== 'meta') {
+    return {
+      ok: false,
+      provider: activeProvider(),
+      errorCode: 'not_supported',
+      errorMessage: 'Media downloaden is alleen geïmplementeerd voor de Meta Cloud API',
+    };
+  }
+  const res = await metaClient.downloadMedia(mediaId);
+  if (res.ok) {
+    return { ok: true, provider: 'meta', buffer: res.buffer, mimeType: res.mimeType, filename: res.filename };
+  }
+  const e = res.error!;
+  return {
+    ok: false,
+    provider: 'meta',
+    errorCode: e.code,
+    errorMessage: e.details ? `${e.message} — ${e.details}` : e.message,
+  };
+}
