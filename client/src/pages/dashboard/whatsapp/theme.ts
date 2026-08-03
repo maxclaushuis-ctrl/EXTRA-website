@@ -1,7 +1,12 @@
 /**
  * Gedeelde stijlconstanten + helpers voor de WhatsApp-inbox (Fase 2).
  * Kleuren en verhoudingen komen 1-op-1 uit mockups/extra-whatsapp-mockup.html.
+ *
+ * TYPOGRAFIE NIET: die komt sinds deze wijziging uit client/src/lib/huisstijl.ts,
+ * de Planbord-huisstijl die voor het hele dashboard geldt. Zie WA_FONT en
+ * WA_TEKST hieronder.
  */
+import { TYPOGRAFIE } from '../../../lib/huisstijl';
 
 export const WA = {
   header: '#008069',
@@ -19,7 +24,54 @@ export const WA = {
   check: '#53bdeb',
 } as const;
 
-export const WA_FONT = '"Segoe UI",Helvetica,Arial,sans-serif';
+/**
+ * Het lettertype van de module. Hier stond '"Segoe UI",Helvetica,Arial,sans-serif'
+ * — dat was de bug: Segoe UI bestaat niet op macOS, dus viel de stack door naar
+ * Helvetica terwijl de rest van het dashboard Inter rendert. Twee letters op één
+ * scherm. Nu exact dezelfde stack als het Planbord.
+ */
+export const WA_FONT = TYPOGRAFIE.primair;
+
+/** '13px' → 13. De huisstijl bewaart maten als CSS-string, deze module rekent in getallen. */
+const pt = (v: string) => parseFloat(v);
+
+/**
+ * De tekstschaal van de module — 1-op-1 de niveaus uit de Planbord-huisstijl.
+ * Vóór deze wijziging stonden er ~70 losse fontSize-waarden in de vier
+ * componenten, van 9,5 tot 28. Alles is naar het dichtstbijzijnde niveau
+ * gevouwen; nieuwe UI hoort hier ook uit te komen, nooit uit een los getal.
+ *
+ * Vouwregel die daarbij gebruikt is:
+ *   9,5 / 10 / 10,5  → mini
+ *   11 / 11,5        → badge
+ *   12 / 12,5        → secundair
+ *   13 / 14 / 14,5   → body
+ *   15               → h3
+ *   17 / 18          → h2
+ */
+export const WA_TEKST = {
+  h2:        pt(TYPOGRAFIE.h2.fontSize),                 // 18 — nauwelijks in gebruik, staat er voor volledigheid
+  h3:        pt(TYPOGRAFIE.h3.fontSize),                 // 15 — naam boven het gesprek, naam in het profielpaneel
+  body:      pt(TYPOGRAFIE.body.fontSize),               // 13 — berichtbubbels, invoervelden, gewone regels
+  secundair: pt(TYPOGRAFIE.secundair.fontSize),          // 12 — subregels, meta-informatie
+  badge:     pt(TYPOGRAFIE.badge.fontSize),              // 11 — chips, pills, sectiekoppen
+  mini:      pt(TYPOGRAFIE.sidebarGroupHeader.fontSize), // 10 — tellers, tijdstempels in bubbels
+} as const;
+
+/** Gewichten, ook uit de huisstijl, zodat 700 niet ergens 800 wordt. */
+export const WA_GEWICHT = TYPOGRAFIE.gewichten;
+
+/**
+ * Geen tekst maar tekening: glyphs die als plaatje functioneren (initialen in
+ * een avatar-cirkel, emoji-knoppen in de composer). Die horen niet op een
+ * tekstniveau — een emoji van 13px is onbruikbaar klein — maar de getallen
+ * staan hier zodat ook zij op één plek liggen in plaats van los in de JSX.
+ */
+export const WA_GLYPH = {
+  avatarGroot: 28, // 80px-cirkel in het profielpaneel
+  icoon: 18,       // emoji-knoppen in de composer, snooze-klokje
+  icoonKlein: 16,  // verzendknop, profielpaneel-toggle
+} as const;
 
 // Vaste avatar-kleuren (uit de mockup + aanvullingen in dezelfde toon).
 const AVATAR_COLORS = ['#7c3aed', '#008069', '#e07a5f', '#3d5a80', '#f0a500', '#b5179e', '#0077b6', '#2a9d8f'];

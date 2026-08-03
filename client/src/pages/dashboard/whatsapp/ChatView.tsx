@@ -6,7 +6,10 @@
  */
 import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
 import type { Conversation, Message, TeamMember } from '../../../api/whatsappClient';
-import { WA, avatarColor, initials, formatTime, dayLabel, snoozeRemaining, voornaamVan, formatPhone } from './theme';
+import {
+  WA, WA_TEKST, WA_GEWICHT, WA_GLYPH,
+  avatarColor, initials, formatTime, dayLabel, snoozeRemaining, voornaamVan, formatPhone,
+} from './theme';
 
 interface Props {
   conv: Conversation | null;
@@ -129,7 +132,7 @@ export default function ChatView(props: Props) {
       <div style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: WA.bg, backgroundImage: 'linear-gradient(rgba(255,255,255,.4),rgba(255,255,255,.4))',
-        color: WA.textSub, fontSize: 14,
+        color: WA.textSub, fontSize: WA_TEKST.body,
       }}>
         Selecteer een gesprek om te beginnen
       </div>
@@ -180,11 +183,11 @@ export default function ChatView(props: Props) {
           <div style={{
             width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 700, fontSize: 13, background: avatarColor(naam),
+            color: '#fff', fontWeight: WA_GEWICHT.bold, fontSize: WA_TEKST.body, background: avatarColor(naam),
           }}>{initials(naam)}</div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{naam}</div>
-            <div style={{ fontSize: 12, color: WA.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subline(conv)}</div>
+            <div style={{ fontSize: WA_TEKST.h3, fontWeight: WA_GEWICHT.semibold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{naam}</div>
+            <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subline(conv)}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, color: '#54656f', position: 'relative' }}>
@@ -193,11 +196,11 @@ export default function ChatView(props: Props) {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6, background: '#fff',
               border: `1px solid ${WA.border}`, padding: '4px 10px 4px 4px',
-              borderRadius: 20, fontSize: 12, color: WA.text,
+              borderRadius: 20, fontSize: WA_TEKST.secundair, color: WA.text,
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: '50%', background: WA.purple,
-                color: '#fff', fontSize: 10, fontWeight: 700,
+                color: '#fff', fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>{initials(conv.assignedToName)}</div>
               {voornaamVan(conv.assignedToName)}
@@ -206,7 +209,7 @@ export default function ChatView(props: Props) {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6, background: '#fff',
               border: `1px dashed ${WA.border}`, padding: '4px 10px',
-              borderRadius: 20, fontSize: 12, color: WA.textSub,
+              borderRadius: 20, fontSize: WA_TEKST.secundair, color: WA.textSub,
             }}>
               Niet toegewezen
             </div>
@@ -217,7 +220,7 @@ export default function ChatView(props: Props) {
             title={snoozeRest ? `Gesnoozed (${snoozeRest})` : 'Snooze dit gesprek'}
             onClick={() => setShowSnoozeMenu(v => !v)}
             style={{
-              border: 'none', cursor: 'pointer', fontSize: 17, lineHeight: 1,
+              border: 'none', cursor: 'pointer', fontSize: WA_GLYPH.icoon, lineHeight: 1,
               background: snoozeRest ? '#f1e9ff' : 'transparent',
               color: snoozeRest ? WA.purple : '#54656f',
               borderRadius: 8, padding: '5px 7px',
@@ -228,9 +231,9 @@ export default function ChatView(props: Props) {
               position: 'absolute', top: '110%', right: 0, zIndex: 30,
               background: '#fff', border: `1px solid ${WA.border}`, borderRadius: 10,
               boxShadow: '0 6px 24px rgba(0,0,0,.15)', minWidth: 210, overflow: 'hidden',
-              fontSize: 13, color: WA.text,
+              fontSize: WA_TEKST.body, color: WA.text,
             }}>
-              <div style={{ padding: '9px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: WA.textSub, borderBottom: '1px solid #f2f2f2' }}>
+              <div style={{ padding: '9px 14px', fontSize: WA_TEKST.badge, fontWeight: WA_GEWICHT.bold, letterSpacing: '.05em', textTransform: 'uppercase', color: WA.textSub, borderBottom: '1px solid #f2f2f2' }}>
                 Snooze gesprek
               </div>
               {([
@@ -259,7 +262,7 @@ export default function ChatView(props: Props) {
                     type="datetime-local"
                     value={customSnooze}
                     onChange={e => setCustomSnooze(e.target.value)}
-                    style={{ fontSize: 12, padding: '5px 6px', border: `1px solid ${WA.border}`, borderRadius: 6, fontFamily: 'inherit' }}
+                    style={{ fontSize: WA_TEKST.secundair, padding: '5px 6px', border: `1px solid ${WA.border}`, borderRadius: 6, fontFamily: 'inherit' }}
                   />
                   <button
                     type="button"
@@ -267,7 +270,7 @@ export default function ChatView(props: Props) {
                     onClick={() => { const d = new Date(customSnooze); if (!isNaN(d.getTime())) kiesSnooze(d); }}
                     style={{
                       background: WA.purple, color: '#fff', border: 'none', borderRadius: 6,
-                      padding: '6px 10px', fontSize: 12, fontWeight: 600,
+                      padding: '6px 10px', fontSize: WA_TEKST.secundair, fontWeight: WA_GEWICHT.semibold,
                       cursor: customSnooze ? 'pointer' : 'default', opacity: customSnooze ? 1 : 0.5,
                     }}
                   >Snooze</button>
@@ -276,7 +279,7 @@ export default function ChatView(props: Props) {
               {snoozeRest && (
                 <div
                   onClick={() => kiesSnooze(null)}
-                  style={{ padding: '9px 14px', cursor: 'pointer', color: '#e63946', borderTop: '1px solid #f2f2f2', fontWeight: 600 }}
+                  style={{ padding: '9px 14px', cursor: 'pointer', color: '#e63946', borderTop: '1px solid #f2f2f2', fontWeight: WA_GEWICHT.semibold }}
                   onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = '#fef2f2'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = ''; }}
                 >Snooze opheffen ({snoozeRest})</div>
@@ -296,7 +299,7 @@ export default function ChatView(props: Props) {
             aria-expanded={profielOpen}
             onClick={onToggleProfiel}
             style={{
-              border: 'none', cursor: 'pointer', fontSize: 16, lineHeight: 1,
+              border: 'none', cursor: 'pointer', fontSize: WA_GLYPH.icoonKlein, lineHeight: 1,
               background: profielOpen ? '#f1e9ff' : 'transparent',
               color: profielOpen ? WA.purple : '#54656f',
               borderRadius: 8, padding: '5px 7px',
@@ -315,7 +318,7 @@ export default function ChatView(props: Props) {
             return (
               <div key={`d-${i}`} style={{
                 alignSelf: 'center', background: '#e1f2fb', color: '#5c6f7a',
-                fontSize: 12, padding: '5px 12px', borderRadius: 8, margin: '10px 0 16px',
+                fontSize: WA_TEKST.secundair, padding: '5px 12px', borderRadius: 8, margin: '10px 0 16px',
               }}>{item.divider}</div>
             );
           }
@@ -329,7 +332,7 @@ export default function ChatView(props: Props) {
               key={m.id}
               style={{
                 maxWidth: '62%', padding: '7px 9px 8px 10px', borderRadius: 8,
-                fontSize: 14, lineHeight: 1.35, position: 'relative',
+                fontSize: WA_TEKST.body, lineHeight: 1.35, position: 'relative',
                 boxShadow: '0 1px 1px rgba(0,0,0,.08)', marginBottom: 2,
                 alignSelf: uit ? 'flex-end' : 'flex-start',
                 background: uit ? WA.bubbleOut : WA.bubbleIn,
@@ -342,13 +345,13 @@ export default function ChatView(props: Props) {
                 m.sentByUserId != null ? (
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
-                    fontSize: 10, fontWeight: 700, color: '#008069', background: '#e3f7ee',
+                    fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, color: '#008069', background: '#e3f7ee',
                     padding: '2px 7px', borderRadius: 8, marginBottom: 5,
                   }}>👤 {plannerVoornaam.get(m.sentByUserId) || 'Planner'}</div>
                 ) : (
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
-                    fontSize: 10, fontWeight: 700, color: WA.purple, background: '#f1e9ff',
+                    fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, color: WA.purple, background: '#f1e9ff',
                     padding: '2px 7px', borderRadius: 8, marginBottom: 5,
                   }}>🤖 AI-agent</div>
                 )
@@ -361,7 +364,7 @@ export default function ChatView(props: Props) {
                 {mediaLink && (
                   <>
                     {' '}
-                    <a href={mediaLink} target="_blank" rel="noreferrer" style={{ color: WA.purple, fontSize: 13 }}>
+                    <a href={mediaLink} target="_blank" rel="noreferrer" style={{ color: WA.purple, fontSize: WA_TEKST.body }}>
                       Bijlage openen
                     </a>
                   </>
@@ -369,7 +372,7 @@ export default function ChatView(props: Props) {
               </div>
               <div style={{
                 display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
-                gap: 4, marginTop: 3, fontSize: 10.5, color: WA.textSub,
+                gap: 4, marginTop: 3, fontSize: WA_TEKST.mini, color: WA.textSub,
               }}>
                 {formatTime(m.createdAt)}
                 {checks && <span style={{ color: checks.kleur }}>{checks.symbool}</span>}
@@ -385,34 +388,34 @@ export default function ChatView(props: Props) {
           het verlopen is; de teller loopt elke 30 seconden mee. */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        fontSize: 12, padding: '5px 18px',
+        fontSize: WA_TEKST.secundair, padding: '5px 18px',
         borderTop: `1px solid ${windowInfo.open ? '#f1e2a8' : '#fecaca'}`,
         background: windowInfo.open ? '#fff3cd' : '#fef2f2',
         color: windowInfo.open ? '#7a5b00' : '#b91c1c',
       }}>
         <span>⏱</span>
         {windowInfo.rest && (
-          <strong style={{ fontVariantNumeric: 'tabular-nums', fontSize: 12.5 }}>{windowInfo.rest}</strong>
+          <strong style={{ fontVariantNumeric: 'tabular-nums', fontSize: WA_TEKST.secundair }}>{windowInfo.rest}</strong>
         )}
         <span>{windowInfo.tekst}</span>
       </div>
 
       {/* Composer */}
       {sendError && (
-        <div style={{ background: '#fef2f2', color: '#dc2626', fontSize: 12, padding: '6px 18px', borderTop: '1px solid #fecaca' }}>
+        <div style={{ background: '#fef2f2', color: '#dc2626', fontSize: WA_TEKST.secundair, padding: '6px 18px', borderTop: '1px solid #fecaca' }}>
           {sendError}
         </div>
       )}
       {attachedFile && (
         <div style={{
-          background: WA.panel, fontSize: 12, color: WA.text, padding: '6px 18px',
+          background: WA.panel, fontSize: WA_TEKST.secundair, color: WA.text, padding: '6px 18px',
           borderTop: `1px solid ${WA.border}`, display: 'flex', alignItems: 'center', gap: 8,
         }}>
           📎 {attachedFile.name}
           <button
             type="button"
             onClick={() => { setAttachedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e63946', fontWeight: 700 }}
+            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e63946', fontWeight: WA_GEWICHT.bold }}
           >×</button>
         </div>
       )}
@@ -421,9 +424,9 @@ export default function ChatView(props: Props) {
         display: 'flex', alignItems: 'center', gap: 14,
         borderTop: `1px solid ${WA.border}`,
       }}>
-        <span style={{ color: '#54656f', fontSize: 18, cursor: 'default' }} title="Emoji">😊</span>
+        <span style={{ color: '#54656f', fontSize: WA_GLYPH.icoon, cursor: 'default' }} title="Emoji">😊</span>
         <span
-          style={{ color: '#54656f', fontSize: 18, cursor: 'pointer' }}
+          style={{ color: '#54656f', fontSize: WA_GLYPH.icoon, cursor: 'pointer' }}
           title="Bijlage toevoegen"
           onClick={() => fileInputRef.current?.click()}
         >📎</span>
@@ -439,7 +442,7 @@ export default function ChatView(props: Props) {
           placeholder="Typ een bericht"
           style={{
             flex: 1, background: '#fff', border: 'none', outline: 'none',
-            borderRadius: 20, padding: '9px 16px', fontSize: 14, color: WA.text, fontFamily: 'inherit',
+            borderRadius: 20, padding: '9px 16px', fontSize: WA_TEKST.body, color: WA.text, fontFamily: 'inherit',
           }}
         />
         <button
@@ -449,7 +452,7 @@ export default function ChatView(props: Props) {
           title="AI-suggestie"
           style={{
             border: 'none', background: '#f1e9ff', color: WA.purple, borderRadius: '50%',
-            width: 32, height: 32, cursor: aiLoading ? 'wait' : 'pointer', fontSize: 14,
+            width: 32, height: 32, cursor: aiLoading ? 'wait' : 'pointer', fontSize: WA_TEKST.body,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}
         >{aiLoading ? '…' : '✨'}</button>
@@ -458,7 +461,7 @@ export default function ChatView(props: Props) {
           disabled={sending}
           style={{
             width: 38, height: 38, borderRadius: '50%', background: WA.purple, color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: WA_GLYPH.icoonKlein,
             border: 'none', cursor: sending ? 'wait' : 'pointer', flexShrink: 0,
             opacity: sending ? 0.7 : 1,
           }}

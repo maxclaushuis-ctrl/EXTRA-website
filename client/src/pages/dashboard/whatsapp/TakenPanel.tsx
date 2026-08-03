@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import type { Task, TaskCategory, TaskStatus, TeamMember } from '../../../api/whatsappClient';
 import { TASK_CATEGORY_LABELS } from '../../../api/whatsappClient';
-import { WA, relativeTime } from './theme';
+import { WA, WA_TEKST, WA_GEWICHT, relativeTime } from './theme';
 
 export type TakenAssigneeFilter = 'alle' | 'mij' | 'niemand';
 
@@ -56,7 +56,7 @@ function MiniChip({ active, onClick, children }: { active: boolean; onClick: () 
       onClick={onClick}
       style={{
         padding: '3px 9px', borderRadius: 999, flexShrink: 0,
-        fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: WA_TEKST.badge, fontWeight: WA_GEWICHT.semibold, cursor: 'pointer', fontFamily: 'inherit',
         background: active ? WA.purple : '#fff',
         color: active ? '#fff' : '#4b5563',
         border: `1px solid ${active ? WA.purple : WA.border}`,
@@ -107,7 +107,7 @@ function TaakRegel({
           onClick={() => onSelectConversation(task)}
           title="Open het bijbehorende gesprek"
           style={{
-            fontSize: 12.5, lineHeight: 1.35, color: WA.text, cursor: 'pointer',
+            fontSize: WA_TEKST.secundair, lineHeight: 1.35, color: WA.text, cursor: 'pointer',
             textDecoration: klaar ? 'line-through' : 'none',
           }}
         >
@@ -116,17 +116,17 @@ function TaakRegel({
 
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6, marginTop: 4,
-          fontSize: 10.5, color: WA.textSub, flexWrap: 'wrap',
+          fontSize: WA_TEKST.mini, color: WA.textSub, flexWrap: 'wrap',
         }}>
           <span style={{
             background: kleur, color: '#fff', borderRadius: 4,
-            padding: '1px 5px', fontWeight: 600,
+            padding: '1px 5px', fontWeight: WA_GEWICHT.semibold,
           }}>
             {TASK_CATEGORY_LABELS[task.category] ?? task.category}
           </span>
           <span
             onClick={() => onSelectConversation(task)}
-            style={{ cursor: 'pointer', fontWeight: 600, color: WA.purple }}
+            style={{ cursor: 'pointer', fontWeight: WA_GEWICHT.semibold, color: WA.purple }}
           >
             {task.contactName || `+${task.phoneNumber}`}
           </span>
@@ -139,7 +139,7 @@ function TaakRegel({
           value={task.assignedToId ?? ''}
           onChange={e => onAssign(task, e.target.value === '' ? null : Number(e.target.value))}
           style={{
-            marginTop: 5, fontSize: 10.5, padding: '2px 4px', maxWidth: '100%',
+            marginTop: 5, fontSize: WA_TEKST.mini, padding: '2px 4px', maxWidth: '100%',
             border: `1px solid ${WA.border}`, borderRadius: 5,
             background: '#fff', color: task.assignedToId ? WA.text : WA.textSub,
             fontFamily: 'inherit', cursor: 'pointer',
@@ -169,20 +169,20 @@ export default function TakenPanel(props: Props) {
         onClick={onToggleOpen}
         style={{
           display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-          padding: '9px 12px', fontSize: 12.5, fontWeight: 700, color: WA.text,
+          padding: '9px 12px', fontSize: WA_TEKST.secundair, fontWeight: WA_GEWICHT.bold, color: WA.text,
           background: open ? '#faf7ff' : '#fff',
         }}
       >
-        <span style={{ fontSize: 11, color: WA.textSub, width: 10 }}>{open ? '▾' : '▸'}</span>
+        <span style={{ fontSize: WA_TEKST.badge, color: WA.textSub, width: 10 }}>{open ? '▾' : '▸'}</span>
         <span>✅ Taken</span>
         {openTotaal > 0 && (
           <span style={{
-            background: WA.purple, color: '#fff', fontSize: 10, fontWeight: 700,
+            background: WA.purple, color: '#fff', fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold,
             borderRadius: 10, padding: '1px 7px',
           }}>{openTotaal}</span>
         )}
         {openTotaal === 0 && (
-          <span style={{ fontSize: 10.5, fontWeight: 500, color: WA.textSub }}>niets open</span>
+          <span style={{ fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.medium, color: WA.textSub }}>niets open</span>
         )}
       </div>
 
@@ -200,12 +200,12 @@ export default function TakenPanel(props: Props) {
           </div>
 
           {fout && (
-            <div style={{ padding: '6px 12px', fontSize: 11, color: '#b91c1c', background: '#fef2f2' }}>{fout}</div>
+            <div style={{ padding: '6px 12px', fontSize: WA_TEKST.badge, color: '#b91c1c', background: '#fef2f2' }}>{fout}</div>
           )}
 
           <div style={{ maxHeight: 260, overflowY: 'auto', borderTop: `1px solid ${WA.border}` }}>
             {tasks.length === 0 ? (
-              <div style={{ padding: '14px 12px', fontSize: 11.5, color: WA.textSub, textAlign: 'center' }}>
+              <div style={{ padding: '14px 12px', fontSize: WA_TEKST.badge, color: WA.textSub, textAlign: 'center' }}>
                 {statusFilter === 'klaar' ? 'Nog niets afgevinkt.' : 'Geen openstaande taken.'}
               </div>
             ) : (

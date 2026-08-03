@@ -21,7 +21,7 @@ import {
   type InternalNote,
   type WaContact,
 } from '../../../api/whatsappClient';
-import { WA, initials, formatDate, formatPhone, voornaamVan } from './theme';
+import { WA, WA_TEKST, WA_GEWICHT, WA_GLYPH, initials, formatDate, formatPhone, voornaamVan } from './theme';
 
 interface Props {
   conv: Conversation;
@@ -35,9 +35,14 @@ interface Props {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div style={{ padding: 16, borderBottom: '1px solid #f2f2f2' }}>
+      {/* fontFamily: 'inherit' is hier GEEN overbodige regel. index.css heeft een
+          basisregel `h1,h2,h3,h4,h5,h6 { @apply font-poppins font-bold }`, en die
+          wint van een geërfd lettertype. Zonder deze regel staan "PROFIEL",
+          "LABELS" enzovoort in Poppins terwijl de rest van het paneel Inter is. */}
       <h4 style={{
-        margin: '0 0 10px', fontSize: 11, letterSpacing: '.05em',
-        textTransform: 'uppercase', color: WA.textSub, fontWeight: 700,
+        margin: '0 0 10px', fontSize: WA_TEKST.badge, letterSpacing: '.05em',
+        textTransform: 'uppercase', color: WA.textSub, fontWeight: WA_GEWICHT.bold,
+        fontFamily: 'inherit',
       }}>{title}</h4>
       {children}
     </div>
@@ -47,11 +52,11 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function InfoRow({ k, v, last }: { k: string; v: string; last?: boolean }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between', fontSize: 13,
+      display: 'flex', justifyContent: 'space-between', fontSize: WA_TEKST.body,
       padding: '6px 0', borderBottom: last ? 'none' : '1px dashed #ececec', gap: 8,
     }}>
       <span style={{ color: WA.textSub, flexShrink: 0 }}>{k}</span>
-      <span style={{ fontWeight: 600, textAlign: 'right' }}>{v}</span>
+      <span style={{ fontWeight: WA_GEWICHT.semibold, textAlign: 'right' }}>{v}</span>
     </div>
   );
 }
@@ -219,10 +224,10 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
           width: 80, height: 80, borderRadius: '50%',
           background: `linear-gradient(135deg,${WA.purple},#a780f0)`, color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28, fontWeight: 700, margin: '0 auto 10px',
+          fontSize: WA_GLYPH.avatarGroot, fontWeight: WA_GEWICHT.bold, margin: '0 auto 10px',
         }}>{initials(naam)}</div>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>{naam}</div>
-        <div style={{ fontSize: 12.5, color: WA.textSub, marginTop: 2 }}>
+        <div style={{ fontWeight: WA_GEWICHT.bold, fontSize: WA_TEKST.h3 }}>{naam}</div>
+        <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub, marginTop: 2 }}>
           {rol} sinds {formatDate(conv.createdAt)}
         </div>
       </div>
@@ -242,7 +247,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
           disabled={catBusy}
           onChange={e => handleCategorie(e.target.value === '' ? null : (e.target.value as AiCategory))}
           style={{
-            width: '100%', fontSize: 12.5, padding: '7px 9px', borderRadius: 8,
+            width: '100%', fontSize: WA_TEKST.secundair, padding: '7px 9px', borderRadius: 8,
             border: `1px solid ${WA.border}`, background: '#fff', color: WA.text,
             fontFamily: 'inherit', cursor: catBusy ? 'wait' : 'pointer',
           }}
@@ -252,13 +257,13 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
             <option key={c} value={c}>{AI_CATEGORY_LABELS[c]}</option>
           ))}
         </select>
-        <div style={{ fontSize: 11, color: WA.textSub, marginTop: 6, lineHeight: 1.45 }}>
+        <div style={{ fontSize: WA_TEKST.badge, color: WA.textSub, marginTop: 6, lineHeight: 1.45 }}>
           {conv.aiCategorySource === 'handmatig' ? (
             <>
               Handmatig gezet — de AI past dit niet meer aan.{' '}
               <span
                 onClick={() => !catBusy && handleCategorie(null)}
-                style={{ color: WA.purpleDark, fontWeight: 600, cursor: 'pointer' }}
+                style={{ color: WA.purpleDark, fontWeight: WA_GEWICHT.semibold, cursor: 'pointer' }}
               >Weer door AI laten bepalen</span>
             </>
           ) : (
@@ -267,8 +272,8 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
         </div>
         {conv.displayStatus === 'wacht_op_planner' && conv.escalationReason && (
           <div style={{
-            marginTop: 8, fontSize: 11.5, padding: '6px 9px', borderRadius: 8,
-            background: '#fef2f2', color: '#b91c1c', fontWeight: 600,
+            marginTop: 8, fontSize: WA_TEKST.badge, padding: '6px 9px', borderRadius: 8,
+            background: '#fef2f2', color: '#b91c1c', fontWeight: WA_GEWICHT.semibold,
           }}>
             Wacht op planner — {ESCALATION_REASON_LABELS[conv.escalationReason]}
           </div>
@@ -284,8 +289,8 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
               title="Klik om label te verwijderen"
               onClick={() => handleRemoveLabel(l)}
               style={{
-                fontSize: 11, padding: '4px 10px', borderRadius: 14,
-                background: '#f1e9ff', color: WA.purpleDark, fontWeight: 600, cursor: 'pointer',
+                fontSize: WA_TEKST.badge, padding: '4px 10px', borderRadius: 14,
+                background: '#f1e9ff', color: WA.purpleDark, fontWeight: WA_GEWICHT.semibold, cursor: 'pointer',
               }}
             >{l}</span>
           ))}
@@ -298,7 +303,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
                 onBlur={() => { setShowLabelInput(false); setLabelInput(''); }}
                 placeholder="label…"
                 style={{
-                  fontSize: 11, padding: '3px 8px', borderRadius: 14, width: 90,
+                  fontSize: WA_TEKST.badge, padding: '3px 8px', borderRadius: 14, width: 90,
                   border: `1px solid ${WA.border}`, outline: 'none', fontFamily: 'inherit',
                 }}
               />
@@ -307,8 +312,8 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
             <span
               onClick={() => setShowLabelInput(true)}
               style={{
-                fontSize: 11, padding: '4px 10px', borderRadius: 14, cursor: 'pointer',
-                background: '#fff', color: WA.textSub, fontWeight: 600, border: `1px dashed ${WA.border}`,
+                fontSize: WA_TEKST.badge, padding: '4px 10px', borderRadius: 14, cursor: 'pointer',
+                background: '#fff', color: WA.textSub, fontWeight: WA_GEWICHT.semibold, border: `1px dashed ${WA.border}`,
               }}
             >+ label</span>
           )}
@@ -323,7 +328,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
               key={q.label}
               onClick={() => onQuickReply(q.text)}
               style={{
-                fontSize: 12.5, background: WA.panel, padding: '8px 10px',
+                fontSize: WA_TEKST.secundair, background: WA.panel, padding: '8px 10px',
                 borderRadius: 6, color: WA.text, cursor: 'pointer',
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = '#e9ebee'; }}
@@ -339,7 +344,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
           value={conv.assignedToId ?? ''}
           onChange={e => handleAssign(e.target.value)}
           style={{
-            width: '100%', fontSize: 13, padding: '7px 8px', borderRadius: 8,
+            width: '100%', fontSize: WA_TEKST.body, padding: '7px 8px', borderRadius: 8,
             border: `1px solid ${WA.border}`, background: '#fff', color: WA.text,
             outline: 'none', fontFamily: 'inherit', cursor: 'pointer',
           }}
@@ -356,24 +361,26 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
         <h4
           onClick={() => setNotesOpen(v => !v)}
           style={{
-            margin: 0, fontSize: 11, letterSpacing: '.05em', textTransform: 'uppercase',
-            color: WA.textSub, fontWeight: 700, cursor: 'pointer',
+            margin: 0, fontSize: WA_TEKST.badge, letterSpacing: '.05em', textTransform: 'uppercase',
+            color: WA.textSub, fontWeight: WA_GEWICHT.bold, cursor: 'pointer',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            // Zie de Section-kop hierboven: anders pakt de h4-basisregel Poppins.
+            fontFamily: 'inherit',
           }}
         >
           <span>Interne notities{notes.length > 0 ? ` (${notes.length})` : ''}</span>
-          <span style={{ fontSize: 10 }}>{notesOpen ? '▲' : '▼'}</span>
+          <span style={{ fontSize: WA_TEKST.mini }}>{notesOpen ? '▲' : '▼'}</span>
         </h4>
         {notesOpen && (
           <div style={{ marginTop: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
               {notes.length === 0 && (
-                <div style={{ fontSize: 12, color: WA.textSub }}>Nog geen notities</div>
+                <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub }}>Nog geen notities</div>
               )}
               {notes.map(n => (
                 <div key={n.id} style={{ background: '#fffbea', border: '1px solid #f5e6a8', borderRadius: 6, padding: '6px 8px' }}>
-                  <div style={{ fontSize: 12, color: WA.text, whiteSpace: 'pre-wrap' }}>{n.body}</div>
-                  <div style={{ fontSize: 10, color: WA.textSub, marginTop: 3 }}>
+                  <div style={{ fontSize: WA_TEKST.secundair, color: WA.text, whiteSpace: 'pre-wrap' }}>{n.body}</div>
+                  <div style={{ fontSize: WA_TEKST.mini, color: WA.textSub, marginTop: 3 }}>
                     {n.authorName} · {formatDate(n.createdAt)}
                   </div>
                 </div>
@@ -385,7 +392,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
                 onChange={e => setNewNote(e.target.value)}
                 placeholder="Nieuwe notitie…"
                 style={{
-                  flex: 1, fontSize: 12, padding: '6px 8px', borderRadius: 6,
+                  flex: 1, fontSize: WA_TEKST.secundair, padding: '6px 8px', borderRadius: 6,
                   border: `1px solid ${WA.border}`, outline: 'none', fontFamily: 'inherit',
                 }}
               />
@@ -394,7 +401,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
                 disabled={noteSaving || !newNote.trim()}
                 style={{
                   border: 'none', background: WA.purple, color: '#fff', borderRadius: 6,
-                  padding: '6px 10px', fontSize: 12, fontWeight: 600,
+                  padding: '6px 10px', fontSize: WA_TEKST.secundair, fontWeight: WA_GEWICHT.semibold,
                   cursor: noteSaving ? 'wait' : 'pointer', opacity: newNote.trim() ? 1 : 0.5,
                 }}
               >+</button>
@@ -407,7 +414,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       <Section title="Opt-in-status">
         {contact && optIn ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: WA_TEKST.body, fontWeight: WA_GEWICHT.semibold }}>
               <span style={{ width: 9, height: 9, borderRadius: '50%', background: optIn.kleur, display: 'inline-block' }} />
               {optIn.label}
             </span>
@@ -417,7 +424,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
               disabled={optInBusy}
               style={{
                 border: `1px solid ${WA.border}`, background: '#fff', color: WA.textSub,
-                borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600,
+                borderRadius: 6, padding: '4px 8px', fontSize: WA_TEKST.badge, fontWeight: WA_GEWICHT.semibold,
                 cursor: optInBusy ? 'wait' : 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -425,7 +432,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
             </button>
           </div>
         ) : (
-          <div style={{ fontSize: 12, color: WA.textSub }}>Geen gekoppeld contact gevonden</div>
+          <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub }}>Geen gekoppeld contact gevonden</div>
         )}
       </Section>
     </div>
