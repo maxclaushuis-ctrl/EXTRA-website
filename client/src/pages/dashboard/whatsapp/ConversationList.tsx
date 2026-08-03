@@ -2,8 +2,8 @@
  * Gesprekkenlijst in de sidebar — items met avatar (deterministische kleur),
  * naam, preview, relatieve tijd, unread-badge en label-tags, conform de mockup.
  */
-import type { Conversation, EscalationReason } from '../../../api/whatsappClient';
-import { ESCALATION_REASON_LABELS } from '../../../api/whatsappClient';
+import type { AiCategory, Conversation, EscalationReason } from '../../../api/whatsappClient';
+import { AI_CATEGORY_LABELS, ESCALATION_REASON_LABELS } from '../../../api/whatsappClient';
 import { WA, avatarColor, initials, relativeTime, snoozeRemaining } from './theme';
 
 // Label → tag-stijl uit de mockup: NIEUW=paars, SPOED=rood, klant=amber.
@@ -28,6 +28,28 @@ const ESCALATIE_KLEUR: Record<EscalationReason, string> = {
   overig: '#6b7280',
 };
 
+/**
+ * Fase 3C: het onderwerp-label van de AI als badge in de lijst. Dat was het
+ * doel van automatisch labelen — zien waar een gesprek over gaat zonder het
+ * te openen — maar tot nu toe stond het label alleen in het gesprek zelf.
+ *
+ * Exhaustief getypt op AiCategory, net als CATEGORIE_KLEUR in TakenPanel.tsx:
+ * een nieuwe categorie zonder kleur is dan een compile-fout, geen stille
+ * grijze badge.
+ *
+ * Rood en amber komen hier BEWUST niet voor: die twee kleuren betekenen in
+ * deze lijst "iemand wacht op een mens" (ESCALATIE_KLEUR). Een onderwerp is
+ * nooit dringend uit zichzelf.
+ */
+const CATEGORIE_KLEUR: Record<AiCategory, string> = {
+  sollicitatie: '#2a9d8f',
+  afmelding: '#7048b6',
+  klacht: '#b5179e',
+  algemene_vraag: '#0077b6',
+  verzoek: '#4f772d',
+  overig: '#667781',
+};
+
 interface Props {
   conversations: Conversation[];
   selectedPhone: string | null;
@@ -50,7 +72,11 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
         const naam = c.displayName || `+${c.phoneNumber}`;
         const active = c.phoneNumber === selectedPhone;
         const rest = snoozedView ? snoozeRemaining(c.snoozedUntil) : null;
-        const tags = (c.labels || []).map(tagStyle).filter(Boolean).slice(0, 2) as Array<{ text: string; bg: string }>;
+        // Categorie krijgt voorrang op de vrije labels: die zijn handwerk en
+        // staan lang niet overal, de categorie staat er (bijna) altijd. Samen
+        // met de unread-badge passen er hooguit twee tags op één regel.
+        const categorie = (c.aiCategory || null) as AiCategory | null;
+        const tags = (c.labels || []).map(tagStyle).filter(Boolean).slice(0, categorie ? 1 : 2) as Array<{ text: string; bg: string }>;
         // Alleen tonen zolang het gesprek écht openstaat; opgelost/spam wacht op niemand.
         const escalatie = (c.displayStatus === 'wacht_op_planner' && c.escalationReason)
           ? (c.escalationReason as EscalationReason)
@@ -114,6 +140,19 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
                       background: '#e1f2fb', color: '#5c6f7a',
                     }}>⏰ {rest}</span>
+                  )}
+                  {categorie && (
+                    <span
+                      title={
+                        `Onderwerp: ${AI_CATEGORY_LABELS[categorie] ?? categorie}` +
+                        (c.aiCategorySource === 'handmatig' ? ' (handmatig gezet)' : '')
+                      }
+                      style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                        whiteSpace: 'nowrap',
+                        color: '#fff', background: CATEGORIE_KLEUR[categorie] ?? CATEGORIE_KLEUR.overig,
+                      }}
+                    >{AI_CATEGORY_LABELS[categorie] ?? categorie}</span>
                   )}
                   {tags.map(t => (
                     <span key={t.text} style={{

@@ -91,6 +91,7 @@ export function isDuplicateOfOpenTask(
 /** Nederlandse weergave-labels voor de takenlijst in de UI. */
 export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
   uren_jixbee: 'Uren / Jixbee',
+  vervanging: 'Vervanging',
   contract: 'Contract',
   overig: 'Overig',
 };

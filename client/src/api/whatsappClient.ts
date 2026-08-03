@@ -41,7 +41,8 @@ export interface Conversation {
  * weergave staat in AI_CATEGORY_LABELS / ESCALATION_REASON_LABELS hieronder.
  * De server kiest ze op BETEKENIS, taalonafhankelijk.
  */
-export const AI_CATEGORIES = ['sollicitatie', 'afmelding', 'klacht', 'algemene_vraag', 'overig'] as const;
+/** Moet gelijk blijven aan AI_CATEGORIES in server/whatsapp/aiClassifier.ts. */
+export const AI_CATEGORIES = ['sollicitatie', 'afmelding', 'klacht', 'algemene_vraag', 'verzoek', 'overig'] as const;
 export type AiCategory = (typeof AI_CATEGORIES)[number];
 
 export const AI_CATEGORY_LABELS: Record<AiCategory, string> = {
@@ -49,6 +50,7 @@ export const AI_CATEGORY_LABELS: Record<AiCategory, string> = {
   afmelding: 'Afmelding',
   klacht: 'Klacht',
   algemene_vraag: 'Algemene vraag',
+  verzoek: 'Verzoek',
   overig: 'Overig',
 };
 
@@ -209,12 +211,13 @@ export const stuurBericht = (nummer: string, tekst: string) =>
  * status en eigen endpoints.
  * ------------------------------------------------------------------ */
 
-export const TASK_CATEGORIES = ['uren_jixbee', 'contract', 'overig'] as const;
+export const TASK_CATEGORIES = ['uren_jixbee', 'vervanging', 'contract', 'overig'] as const;
 export type TaskCategory = (typeof TASK_CATEGORIES)[number];
 
 /** Moet gelijk blijven aan TASK_CATEGORY_LABELS in server/whatsapp/taskRules.ts. */
 export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
   uren_jixbee: 'Uren / Jixbee',
+  vervanging: 'Vervanging',
   contract: 'Contract',
   overig: 'Overig',
 };

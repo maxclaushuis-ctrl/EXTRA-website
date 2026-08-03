@@ -22,6 +22,9 @@ export const AI_CATEGORIES = [
   'afmelding',
   'klacht',
   'algemene_vraag',
+  // Fase 3C: toegevoegd omdat een concreet verzoek ("zet mijn uren erin") geen
+  // vraag is over hoe iets werkt, en daardoor in 'overig' wegzakte.
+  'verzoek',
   'overig',
 ] as const;
 export type AiCategory = (typeof AI_CATEGORIES)[number];
@@ -35,8 +38,13 @@ export const ESCALATION_REASONS = [
 ] as const;
 export type EscalationReason = (typeof ESCALATION_REASONS)[number];
 
-/** Fase 3B: taakcategorieën. Nu al meegevraagd, nog niet weggeschreven. */
-export const TASK_CATEGORIES = ['uren_jixbee', 'contract', 'overig'] as const;
+/**
+ * Fase 3B: taakcategorieën.
+ * Fase 3C: 'vervanging' toegevoegd. Een ziekmelding vraagt om een andere
+ * handeling (dienst opnieuw invullen) dan een urencorrectie, en belandde
+ * zonder eigen categorie steevast onder 'uren_jixbee'.
+ */
+export const TASK_CATEGORIES = ['uren_jixbee', 'vervanging', 'contract', 'overig'] as const;
 export type TaskCategory = (typeof TASK_CATEGORIES)[number];
 
 export interface AiTaskSuggestion {
@@ -81,7 +89,7 @@ export function isTaskCategory(v: unknown): v is TaskCategory {
  */
 export function buildStructuredOutputInstruction(opts: { withReply: boolean }): string {
   const replyVeld = opts.withReply
-    ? `  "reply": "<the message to send to the customer, in THEIR language; empty string when action is \\"escalate\\">",`
+    ? `  "reply": "<the message to send to the customer, WRITTEN IN THE SAME LANGUAGE AS THE INCOMING MESSAGE; empty string when action is \\"escalate\\">",`
     : `  "reply": "",`;
 
   return `
@@ -89,11 +97,11 @@ export function buildStructuredOutputInstruction(opts: { withReply: boolean }): 
 Respond with a SINGLE valid JSON object and nothing else. No markdown, no code fences, no commentary.
 
 {
-  "category": "sollicitatie" | "afmelding" | "klacht" | "algemene_vraag" | "overig",
+  "category": "sollicitatie" | "afmelding" | "klacht" | "algemene_vraag" | "verzoek" | "overig",
   "action": "reply" | "escalate",
   "escalation_reason": "boos" | "buiten_kennisbank" | "wil_telefonisch" | "mens_gevraagd" | "overig" | null,
 ${replyVeld}
-  "task": { "needed": true | false, "category": "uren_jixbee" | "contract" | "overig", "summary": "<short factual summary in DUTCH>" }
+  "task": { "needed": true | false, "category": "uren_jixbee" | "vervanging" | "contract" | "overig", "summary": "<short factual summary in DUTCH>" }
 }
 
 === LANGUAGE INDEPENDENCE — HARD REQUIREMENT ===
@@ -112,9 +120,17 @@ The identifiers happen to be Dutch words; that is irrelevant to the decision.
 - "klacht": dissatisfaction — about pay, hours, a location, a colleague, the
   agency itself; also anything that reads as an accusation or frustration.
   ("Ik ben nog steeds niet betaald" / "This is unacceptable")
-- "algemene_vraag": a question about how something works — pay date, app,
-  contract, travel expenses, clothing, registering hours, address of a venue.
+- "algemene_vraag": asks for INFORMATION about how something works — pay date,
+  app, contract, travel expenses, clothing, where to register hours, address of
+  a venue. The sender wants to KNOW something.
   ("Wanneer word ik betaald?" / "Where do I register my hours?")
+- "verzoek": asks someone at EXTRA to DO something concrete for them — register
+  or correct hours, hand in or send a document, change a booking, pass a message
+  on. The sender wants an ACTION, not an explanation. This also covers reporting
+  hours after the fact, because someone has to enter them.
+  ("Kun je mijn uren toevoegen?" / "Please add the hours on jixbee for me" /
+   "I worked at Pulitzer 05:00-14:35 yesterday but forgot to register it")
+  Decision rule: a question about HOW → "algemene_vraag"; a request to DO → "verzoek".
 - "overig": greetings, thanks, small talk, out-of-scope, or truly unclear.
 
 "action" and "escalation_reason":
@@ -126,23 +142,41 @@ The identifiers happen to be Dutch words; that is irrelevant to the decision.
   - "buiten_kennisbank": the answer is not in the knowledge base, or you are
     not sure enough to answer (also: pay disputes, legal, contract specifics).
   - "wil_telefonisch": the sender asks to be called or to call someone.
-  - "mens_gevraagd": the sender explicitly asks for a human/planner/Max/Eveline
-    or says they do not want to talk to a bot.
+  - "mens_gevraagd": the sender explicitly asks to SPEAK TO a human, a planner or
+    a named colleague, or says they do not want to talk to a bot.
+    IMPORTANT: merely addressing someone by name is NOT enough. Almost every
+    WhatsApp message opens with a name ("Hi Eveline!", "Max pls ..."); that is
+    ordinary politeness, not a request for a human. Only use this reason when
+    the sender asks for human contact ITSELF.
   - "overig": escalation is needed but none of the above fits.
 
 "task" — does a colleague have to DO something in another system afterwards?
 Set "needed": true only when the message asks for a concrete administrative
 action, not for information. Judge on meaning, in any language.
-- "uren_jixbee": hours have to be registered/corrected in Jixbee for someone.
+- "uren_jixbee": hours have to be registered or corrected in Jixbee for someone.
   This includes messages that report worked hours after the fact, ask someone
-  to add hours, or report that hours are missing.
+  to add hours, or report that hours are missing. It is ONLY about hours that
+  were worked (or should have been). A cancellation is NOT this.
+- "vervanging": someone drops out of a shift that is already planned, so a
+  colleague has to find a replacement or update the planning. Use this for sick
+  calls and cancellations, in any language. Never label those "uren_jixbee".
 - "contract": a contract, ID document or signature has to be handled.
 - "overig": another concrete action for a colleague.
 "summary" is ALWAYS in Dutch, one line, and contains the facts the colleague
 needs (who, what, which location, which times), even when the incoming message
 was in another language. When "needed" is false, use an empty summary.
 A task can exist together with action "reply" — answering the sender and
-creating an internal task are independent.`;
+creating an internal task are independent.
+
+=== REPLY RULES ===
+1. LANGUAGE: the reply MUST be in the language of the incoming message. English
+   in → English out. Polish in → Polish out. Never answer a non-Dutch message in
+   Dutch. Only "summary" is always Dutch, because only colleagues read it.
+2. NEVER PROMISE YOUR OWN ACTION: you cannot register hours, change a planning,
+   pay anyone or sign anything. Do not write "I will register your hours" or
+   "ik zal het aanpassen". Say that it has been passed on to a colleague who
+   picks it up. Promising an administrative action you cannot perform is worse
+   than saying nothing about it.`;
 }
 
 /** Compacte systeemprompt voor de classificatie-only-call (auto-reply staat uit). */
@@ -275,6 +309,7 @@ export const AI_CATEGORY_LABELS: Record<AiCategory, string> = {
   afmelding: 'Afmelding',
   klacht: 'Klacht',
   algemene_vraag: 'Algemene vraag',
+  verzoek: 'Verzoek',
   overig: 'Overig',
 };
 

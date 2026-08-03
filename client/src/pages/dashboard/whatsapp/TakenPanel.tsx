@@ -11,7 +11,7 @@
  * zie je nooit dat er iets ligt.
  */
 import { useState } from 'react';
-import type { Task, TaskStatus, TeamMember } from '../../../api/whatsappClient';
+import type { Task, TaskCategory, TaskStatus, TeamMember } from '../../../api/whatsappClient';
 import { TASK_CATEGORY_LABELS } from '../../../api/whatsappClient';
 import { WA, relativeTime } from './theme';
 
@@ -37,8 +37,14 @@ interface Props {
   fout: string | null;
 }
 
-const CATEGORIE_KLEUR: Record<string, string> = {
+/**
+ * Exhaustief getypt op TaskCategory (niet Record<string, string>): zo faalt
+ * `tsc` zodra er een categorie bijkomt zonder kleur, in plaats van dat de
+ * badge stilzwijgend grijs wordt.
+ */
+const CATEGORIE_KLEUR: Record<TaskCategory, string> = {
   uren_jixbee: '#0077b6',
+  vervanging: '#e07a00',
   contract: '#b5179e',
   overig: '#667781',
 };

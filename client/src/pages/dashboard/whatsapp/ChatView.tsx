@@ -20,6 +20,9 @@ interface Props {
   aiLoading: boolean;
   onAiSuggest: () => void;
   onSnooze: (untilIso: string | null) => Promise<void>;
+  /** Staat het profielpaneel rechts open? Zie de knop in de header hieronder. */
+  profielOpen: boolean;
+  onToggleProfiel: () => void;
 }
 
 // Subregel onder de naam: "Kandidaat · Housekeeping · +31 6 ..." (mockup-stijl).
@@ -68,6 +71,7 @@ export default function ChatView(props: Props) {
   const {
     conv, messages, teamMembers, composerText, onComposerText,
     onSend, sending, sendError, aiLoading, onAiSuggest, onSnooze,
+    profielOpen, onToggleProfiel,
   } = props;
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [showSnoozeMenu, setShowSnoozeMenu] = useState(false);
@@ -279,6 +283,25 @@ export default function ChatView(props: Props) {
               )}
             </div>
           )}
+
+          {/* Profielpaneel in-/uitklappen. Staat hier en niet in het paneel
+              zelf, want een knop die met zijn eigen paneel verdwijnt kun je
+              niet meer gebruiken om het terug te halen. De staat leeft in
+              index.tsx en dus per bezoek: bij een refresh staat het paneel
+              weer open, dat is bewust — niets om te onthouden. */}
+          <button
+            type="button"
+            title={profielOpen ? 'Verberg profielpaneel (meer ruimte voor het gesprek)' : 'Toon profielpaneel'}
+            aria-label={profielOpen ? 'Verberg profielpaneel' : 'Toon profielpaneel'}
+            aria-expanded={profielOpen}
+            onClick={onToggleProfiel}
+            style={{
+              border: 'none', cursor: 'pointer', fontSize: 16, lineHeight: 1,
+              background: profielOpen ? '#f1e9ff' : 'transparent',
+              color: profielOpen ? WA.purple : '#54656f',
+              borderRadius: 8, padding: '5px 7px',
+            }}
+          >{profielOpen ? '⇥' : '⇤'}</button>
         </div>
       </div>
 
