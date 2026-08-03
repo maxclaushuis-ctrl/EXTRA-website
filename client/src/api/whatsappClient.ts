@@ -88,6 +88,12 @@ export interface Message {
   matchCategory: 'candidate' | 'prospect' | 'unmatched';
   /** Bij outbound: user-id van de verzender; null = automatisch verstuurd (AI-agent). */
   sentByUserId?: number | null;
+  /**
+   * Bij outbound: 'app' = vanaf de telefoon zelf getypt (echo van Meta).
+   * null of afwezig = via het dashboard of de AI-agent, te onderscheiden aan
+   * sentByUserId. Alleen 'app' wordt ooit geschreven.
+   */
+  sentSource?: string | null;
   createdAt: string;
 }
 

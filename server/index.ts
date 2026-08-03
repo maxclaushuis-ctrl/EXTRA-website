@@ -345,6 +345,17 @@ async function opstartDatabasewerk() {
   } catch (err: any) {
     console.error('[migration] Fout bij aanmaken whatsapp_tasks:', err.message);
   }
+
+  // Schema-migratie (WhatsApp Fase 3D): herkomst van uitgaande berichten.
+  // Puur additief: één nullable kolom erbij, geen bestaande rij wordt
+  // aangeraakt en geen default die de tabel herschrijft. Alleen de echo's die
+  // Meta terugstuurt (Coexistence — verstuurd vanaf de telefoon zelf) krijgen
+  // hier 'app' in; alles wat er al staat blijft null.
+  try {
+    await pool.query(`ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS sent_source text`);
+  } catch (err: any) {
+    console.error('[migration] Fout bij toevoegen sent_source-kolom:', err.message);
+  }
 }
 
 /** Hoe lang het opstarten maximaal op de database wacht voordat de poort opengaat. */
