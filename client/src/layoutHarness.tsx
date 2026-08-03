@@ -19,21 +19,45 @@ import { WA_FONT } from './pages/dashboard/whatsapp/theme';
 import type { Conversation, Message, Stats, Task, TeamMember } from './api/whatsappClient';
 
 // ── Gesmoorde fetch: ProfilePanel haalt contact + notities op. ───────────────
+// Eén mutabel nepcontact: de PUT hieronder schrijft erin, de GET leest eruit.
+// Zo gedraagt de harness zich als een echte database voor deze ene persoon en
+// springt een veld niet terug op zijn oude waarde na het opslaan.
+// 'actief' hoort bij employeeStatusEnum; hier stond eerder 'aangenomen', maar
+// dat is een candidates-status en de statusdropdown toont per brontabel de
+// juiste set.
+const nepContact = {
+  contactType: 'medewerker', contactId: 1,
+  firstName: 'Eduardo', lastName: 'Silva',
+  phone: '31612345678', email: 'eduardo@example.com', language: 'en',
+  functie: 'housekeeping', sourceStatus: 'actief',
+  whatsappOptInStatus: 'actief', whatsappOptInChangedAt: null, whatsappOptInReason: null,
+};
+
 const nep: Record<string, unknown> = {
-  '/api/whatsapp/contacten': {
-    total: 1,
-    items: [{
-      contactType: 'medewerker', contactId: 1,
-      firstName: 'Eduardo', lastName: 'Silva',
-      phone: '31612345678', email: 'eduardo@example.com', language: 'en',
-      functie: 'housekeeping', sourceStatus: 'aangenomen',
-      whatsappOptInStatus: 'actief', whatsappOptInChangedAt: null, whatsappOptInReason: null,
-    }],
-  },
+  '/api/whatsapp/contacten': { total: 1, items: [nepContact] },
   '/notes': [],
 };
-window.fetch = (async (input: RequestInfo | URL) => {
+window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(typeof input === 'string' ? input : (input as Request).url ?? input);
+  // Fase 3E: het opslaan van een profielveld echoot de patch terug, zodat de
+  // bevestiging en de waarschuwing in de harness te zien zijn zonder database.
+  if (url.includes('/profiel')) {
+    const patch = JSON.parse(String(init?.body || '{}'));
+    const c = nepContact;
+    if (patch.functie !== undefined) c.functie = patch.functie;
+    if (patch.status !== undefined) c.sourceStatus = patch.status;
+    // Zelfde normalisatie als server/whatsapp/phone.ts, zodat de harness laat
+    // zien wat de planner écht terugkrijgt: 06… wordt 316…
+    if (patch.phone !== undefined) {
+      const d = String(patch.phone).replace(/\D/g, '');
+      c.phone = d.startsWith('00') ? d.slice(2) : d.startsWith('0') ? `31${d.slice(1)}` : d;
+    }
+    return new Response(JSON.stringify({
+      success: true, contactId: c.contactId, name: `${c.firstName} ${c.lastName}`,
+      phone: c.phone, status: c.sourceStatus, functie: c.functie,
+      uitContactenlijst: !['nieuw', 'actief'].includes(c.sourceStatus),
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
   const body = Object.entries(nep).find(([k]) => url.includes(k))?.[1] ?? {};
   return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }) as typeof fetch;

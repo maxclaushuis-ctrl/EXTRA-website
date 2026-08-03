@@ -12514,6 +12514,101 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     res.json({ success: true, name: result.name, status });
   });
 
+  // ─── Fase 3E — profielvelden bewerken vanuit de inbox ────────────────────────
+  // Functie, status en telefoonnummer van het onderliggende candidates- of
+  // employees-record. Reden: de planner ziet die drie velden al in het
+  // rechterpaneel en moest voor een correctie ("die is inmiddels aangenomen",
+  // "verkeerd nummer opgeslagen") naar een andere module.
+  //
+  // PATCH-semantiek: alleen sleutels die in de body staan worden geschreven. De
+  // UI slaat per veld op, dus een verzoek bevat er in de praktijk precies één.
+  //
+  // Bewust NIET aangeraakt: candidates.phoneOriginal. Dat is de backup van de
+  // waarde vóór de E.164-normalisatie; die overschrijven zou de enige kopie van
+  // het oorspronkelijk ingevoerde nummer wissen.
+  app.put('/api/whatsapp/contacten/:type/:id/profiel', adminMiddleware, async (req: Request, res: Response) => {
+    const { candidates: candidatesTable, employees: employeesTable } = await import('@shared/schema');
+    const { normalizePhone } = await import('./whatsapp/phone');
+
+    const type = req.params.type;
+    const id = parseInt(req.params.id);
+    if (!['sollicitant', 'kandidaat', 'medewerker'].includes(type)) {
+      return res.status(400).json({ error: 'Ongeldig contact_type' });
+    }
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+
+    const body = req.body || {};
+    const isMedewerker = type === 'medewerker';
+
+    // Waardenlijsten uit shared/schema.ts, hier expliciet herhaald zodat een
+    // onbekende waarde een nette 400 geeft in plaats van een enum-fout uit
+    // Postgres die als 500 naar buiten komt.
+    const FUNCTIES = ['housekeeping', 'horecamedewerker', 'chef', 'frontoffice', 'logistiek'];
+    const STATUSSEN = isMedewerker
+      ? ['nieuw', 'actief', 'inactief', 'uitgestroomd']            // employeeStatusEnum
+      : ['in_behandeling', 'gepland', 'aangenomen', 'afgewezen'];  // candidateStatusEnum
+
+    const patch: Record<string, unknown> = {};
+
+    if (body.functie !== undefined) {
+      const f = String(body.functie);
+      if (!FUNCTIES.includes(f)) return res.status(400).json({ error: 'Ongeldige functie' });
+      // candidates.functionType is een enum, employees.functie is vrije tekst.
+      // In beide gevallen schrijven we dezelfde sleutel, zodat de weergave in
+      // het paneel voor allebei via één vertaaltabel loopt.
+      patch[isMedewerker ? 'functie' : 'functionType'] = f;
+    }
+
+    if (body.status !== undefined) {
+      const s = String(body.status);
+      if (!STATUSSEN.includes(s)) return res.status(400).json({ error: 'Ongeldige status' });
+      patch.status = s;
+    }
+
+    if (body.phone !== undefined) {
+      const genormaliseerd = normalizePhone(String(body.phone));
+      if (!genormaliseerd) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+      patch.phone = genormaliseerd;
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ error: 'Niets om op te slaan' });
+    }
+
+    const tabel: any = isMedewerker ? employeesTable : candidatesTable;
+    const [rij] = await db.update(tabel)
+      .set(patch as any)
+      .where(drizzleEq(tabel.id, id))
+      .returning({
+        id: tabel.id,
+        firstName: tabel.firstName,
+        lastName: tabel.lastName,
+        phone: tabel.phone,
+        status: tabel.status,
+        functie: isMedewerker ? (employeesTable as any).functie : (candidatesTable as any).functionType,
+      });
+
+    if (!rij) return res.status(404).json({ error: 'Contact niet gevonden' });
+
+    const userId = (req.session as any)?.userId;
+    console.log(`[WA profiel] ${type} #${id} gewijzigd door user #${userId ?? '?'}: ${JSON.stringify(patch)}`);
+
+    // De inbox-contactenlijst toont alleen 'in_behandeling'/'gepland' (kandidaten)
+    // en 'nieuw'/'actief' (medewerkers). Bij een status daarbuiten valt dit
+    // contact uit die lijst. Dat melden we terug, zodat het paneel het kan
+    // zeggen in plaats van bij de volgende lookup stilletjes leeg te zijn.
+    const ZICHTBAAR = isMedewerker ? ['nieuw', 'actief'] : ['in_behandeling', 'gepland'];
+    res.json({
+      success: true,
+      contactId: rij.id,
+      name: [rij.firstName, rij.lastName].filter(Boolean).join(' ') || null,
+      phone: rij.phone,
+      status: rij.status,
+      functie: rij.functie,
+      uitContactenlijst: !ZICHTBAAR.includes(String(rij.status)),
+    });
+  });
+
   app.post('/api/whatsapp/groups/:id/send', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
