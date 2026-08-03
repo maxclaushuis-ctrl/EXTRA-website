@@ -38,6 +38,8 @@ interface CallLog {
   handleBlockedByUser: any[][];
   handleIncomingStop: any[][];
   tryAutoReply: any[][];
+  updateMessageMedia: any[][];
+  haalMediaOpEnBewaar: any[][];
 }
 
 function makeMockDeps(opts?: {
@@ -45,6 +47,8 @@ function makeMockDeps(opts?: {
   insertResult?: number | null;
   echoInsertResult?: number | null;
   matchCategory?: 'candidate' | 'prospect' | 'unmatched';
+  /** Laat de nep-download mislukken, om te testen dat het bericht blijft staan. */
+  mediaFaalt?: boolean;
 }): { deps: InboundProcessorDeps; calls: CallLog } {
   const calls: CallLog = {
     applyStatusEvent: [],
@@ -56,6 +60,8 @@ function makeMockDeps(opts?: {
     handleBlockedByUser: [],
     handleIncomingStop: [],
     tryAutoReply: [],
+    updateMessageMedia: [],
+    haalMediaOpEnBewaar: [],
   };
 
   // Zelfde blocked-codes als optInService.isBlockedByUserError (131026/131047/470).
@@ -72,6 +78,7 @@ function makeMockDeps(opts?: {
       async insertAppEcho(msg: any) { calls.insertAppEcho.push([msg]); return opts?.echoInsertResult === undefined ? 456 : opts.echoInsertResult; },
       async clearEscalation(phone: string) { calls.clearEscalation.push([phone]); },
       describeNonTextMessage(type: string) { return `[${type}]`; },
+      async updateMessageMedia(id: number, media: any) { calls.updateMessageMedia.push([id, media]); },
     },
     optInService: {
       isBlockedByUserError(code?: string | null, msg?: string | null) {
@@ -84,6 +91,12 @@ function makeMockDeps(opts?: {
     },
     normalizePhone,
     tryAutoReply: async (args) => { calls.tryAutoReply.push([args]); },
+    // Nep-versie van de media-pijplijn: geen netwerk, geen Object Storage.
+    haalMediaOpEnBewaar: async (args) => {
+      calls.haalMediaOpEnBewaar.push([args]);
+      if (opts?.mediaFaalt) return { ok: false, fout: 'CDN gaf 401' };
+      return { ok: true, objectPath: `/replit-objstore-test/private/wa-media/${args.mediaId}.jpg`, mimeType: 'image/jpeg', filename: `${args.type}-test.jpg` };
+    },
     logPrefix: '[test]',
   };
   return { deps, calls };
@@ -433,6 +446,93 @@ async function main() {
     assertEq('twee conversation-upserts', calls.resolveAndUpsertConversation.length, 2);
     assertEq('  → eerste inbound', calls.resolveAndUpsertConversation[0]?.[0]?.inbound, true);
     assertEq('  → tweede outbound', calls.resolveAndUpsertConversation[1]?.[0]?.inbound, false);
+  }
+
+  // ─── 17. Inkomende revoke/edit worden alleen gelogd ──────────────────────
+  //
+  // Deze bewaking stond alleen op de echo-tak. Op de inkomende tak viel een
+  // edit door naar de restcategorie en belandde als kaal "[edit]" in het
+  // dashboard: messageType 'unknown', geen tekst, geen context. Precies wat er
+  // in gesprek +40750658459 te zien was.
+  console.log('\n— processIncomingPayload: inkomende revoke/edit —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(metaEntryPayload({
+      contacts: [{ profile: { name: 'Klant' }, wa_id: '31600000999' }],
+      messages: [
+        { id: 'wamid.IN10', from: '31600000999', type: 'revoke', revoke: { original_message_id: 'wamid.IN1' } },
+        { id: 'wamid.IN11', from: '31600000999', type: 'edit', edit: { original_message_id: 'wamid.IN1' }, text: { body: 'aangepast bijschrift' } },
+      ],
+    }), deps);
+    assertEq('geen insert bij inkomende revoke/edit', calls.insertInboundMessage.length, 0);
+    assertEq('geen conversation-wijziging', calls.resolveAndUpsertConversation.length, 0);
+    assertEq('geen clearEscalation', calls.clearEscalation.length, 0);
+  }
+
+  // ─── 18. Inkomende media wordt direct opgehaald en gekoppeld ─────────────
+  console.log('\n— processIncomingPayload: inkomende media —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(metaEntryPayload({
+      contacts: [{ profile: { name: 'Klant' }, wa_id: '31600000999' }],
+      messages: [{
+        id: 'wamid.IN12', from: '31600000999', timestamp: '1722500400', type: 'image',
+        image: { id: 'MEDIA_IN_1', mime_type: 'image/jpeg', caption: 'buskaartje 5,15' },
+      }],
+    }), deps);
+    const ingevoegd = calls.insertInboundMessage[0]?.[0];
+    assertEq('mediaUrl = ruw media-id', ingevoegd?.mediaUrl, 'MEDIA_IN_1');
+    assertEq('download 1x aangeroepen', calls.haalMediaOpEnBewaar.length, 1);
+    assertEq('  → met het media-id', calls.haalMediaOpEnBewaar[0]?.[0]?.mediaId, 'MEDIA_IN_1');
+    assertEq('  → met het type', calls.haalMediaOpEnBewaar[0]?.[0]?.type, 'image');
+    assertEq('  → met het wa_message_id', calls.haalMediaOpEnBewaar[0]?.[0]?.waMessageId, 'wamid.IN12');
+    assertEq('opslagpad gekoppeld aan het bericht', calls.updateMessageMedia.length, 1);
+    assertEq('  → op de rij-id uit de insert', calls.updateMessageMedia[0]?.[0], 123);
+    assertEq('  → objectPath', calls.updateMessageMedia[0]?.[1]?.objectPath, '/replit-objstore-test/private/wa-media/MEDIA_IN_1.jpg');
+    ok('media_url wordt niet overschreven', calls.updateMessageMedia[0]?.[1]?.mediaUrl === undefined);
+  }
+
+  // ─── 19. Mislukte download laat het bericht ongemoeid ────────────────────
+  //
+  // De download hangt aan een externe API; als die faalt mag dat nooit het
+  // bericht zelf kosten. Het staat er dan als tekstbeschrijving, zoals eerst.
+  console.log('\n— processIncomingPayload: media-download mislukt —');
+  {
+    const { deps, calls } = makeMockDeps({ mediaFaalt: true });
+    await processIncomingPayload(metaEntryPayload({
+      contacts: [{ profile: { name: 'Klant' }, wa_id: '31600000999' }],
+      messages: [{ id: 'wamid.IN13', from: '31600000999', type: 'document', document: { id: 'MEDIA_IN_2', mime_type: 'application/pdf', filename: 'rit.pdf' } }],
+    }), deps);
+    assertEq('bericht is gewoon ingevoegd', calls.insertInboundMessage.length, 1);
+    assertEq('download geprobeerd', calls.haalMediaOpEnBewaar.length, 1);
+    assertEq('  → bestandsnaam uit de payload meegegeven', calls.haalMediaOpEnBewaar[0]?.[0]?.filenameUitPayload, 'rit.pdf');
+    assertEq('geen koppeling bij mislukking', calls.updateMessageMedia.length, 0);
+  }
+
+  // ─── 20. Media in een app-echo loopt door dezelfde pijplijn ──────────────
+  console.log('\n— processIncomingPayload: media in app-echo —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(echoPayload([{
+      id: 'wamid.ECHO008', from: '31851305915', to: '31600000999',
+      timestamp: '1722500500', type: 'image', image: { id: 'MEDIA_ECHO_1', mime_type: 'image/jpeg' },
+    }]), deps);
+    assertEq('download ook bij echo', calls.haalMediaOpEnBewaar.length, 1);
+    assertEq('  → media-id', calls.haalMediaOpEnBewaar[0]?.[0]?.mediaId, 'MEDIA_ECHO_1');
+    assertEq('koppeling op de echo-rij', calls.updateMessageMedia.length, 1);
+    assertEq('  → rij-id uit insertAppEcho', calls.updateMessageMedia[0]?.[0], 456);
+  }
+
+  // ─── 21. Tekstberichten raken de media-pijplijn niet ─────────────────────
+  console.log('\n— processIncomingPayload: tekst → geen download —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(metaEntryPayload({
+      contacts: [{ profile: { name: 'Klant' }, wa_id: '31600000999' }],
+      messages: [{ id: 'wamid.IN14', from: '31600000999', type: 'text', text: { body: 'gewoon tekst' } }],
+    }), deps);
+    assertEq('geen downloadpoging', calls.haalMediaOpEnBewaar.length, 0);
+    assertEq('geen media-koppeling', calls.updateMessageMedia.length, 0);
   }
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
