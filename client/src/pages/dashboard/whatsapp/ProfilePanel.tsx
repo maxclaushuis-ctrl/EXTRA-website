@@ -1,5 +1,5 @@
 /**
- * Rechterpaneel (300px) — gradient-avatar, Profiel-rijen, Labels-pills,
+ * Rechterpaneel (300px) — naamkop, Profiel-rijen, Labels-pills,
  * Snelle antwoorden, Toewijzen, Interne notities (inklapbaar) en Opt-in-status.
  * Stijl uit mockups/extra-whatsapp-mockup.html; data via bestaande endpoints.
  */
@@ -21,7 +21,7 @@ import {
   type InternalNote,
   type WaContact,
 } from '../../../api/whatsappClient';
-import { WA, initials, formatDate, formatPhone, voornaamVan } from './theme';
+import { WA, formatDate, formatPhone, voornaamVan } from './theme';
 
 interface Props {
   conv: Conversation;
@@ -210,17 +210,15 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       width: 300, background: '#fff', borderLeft: `1px solid ${WA.border}`,
       display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0,
     }}>
-      {/* Header met gradient-avatar */}
+      {/* Header. De grote gradient-avatar met initialen stond hier; die is weg,
+          en daarmee ook het centreren — dat was er alleen om de cirkel te
+          balanceren. Naam en subregel staan nu links uitgelijnd, gelijk met de
+          Secties eronder, en de padding is verticaal ingekort zodat er geen
+          lege band overblijft waar de cirkel stond. */}
       <div style={{
-        background: WA.panel, padding: 16, textAlign: 'center',
+        background: WA.panel, padding: '13px 16px',
         borderBottom: `1px solid ${WA.border}`,
       }}>
-        <div style={{
-          width: 80, height: 80, borderRadius: '50%',
-          background: `linear-gradient(135deg,${WA.purple},#a780f0)`, color: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28, fontWeight: 700, margin: '0 auto 10px',
-        }}>{initials(naam)}</div>
         <div style={{ fontWeight: 700, fontSize: 15 }}>{naam}</div>
         <div style={{ fontSize: 12.5, color: WA.textSub, marginTop: 2 }}>
           {rol} sinds {formatDate(conv.createdAt)}

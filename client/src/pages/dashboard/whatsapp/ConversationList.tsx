@@ -1,10 +1,13 @@
 /**
- * Gesprekkenlijst in de sidebar — items met avatar (deterministische kleur),
- * naam, preview, relatieve tijd, unread-badge en label-tags, conform de mockup.
+ * Gesprekkenlijst in de sidebar — items met naam, preview, relatieve tijd,
+ * unread-badge en label-tags.
+ *
+ * Zonder avatar-cirkel: die toonde alleen initialen (of een neutraal icoon bij
+ * een onbekende naam) en voegde dus niets toe aan wat de naam er al naast zei.
  */
 import type { AiCategory, Conversation, EscalationReason } from '../../../api/whatsappClient';
 import { AI_CATEGORY_LABELS, ESCALATION_REASON_LABELS } from '../../../api/whatsappClient';
-import { WA, avatarColor, initials, relativeTime, snoozeRemaining } from './theme';
+import { WA, relativeTime, snoozeRemaining } from './theme';
 
 // Label → tag-stijl uit de mockup: NIEUW=paars, SPOED=rood, klant=amber.
 function tagStyle(label: string): { text: string; bg: string } | null {
@@ -86,21 +89,16 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
             key={c.id}
             onClick={() => onSelect(c.phoneNumber)}
             style={{
-              display: 'flex', gap: 12, padding: '11px 14px', cursor: 'pointer',
+              display: 'flex', padding: '11px 14px', cursor: 'pointer',
               borderBottom: '1px solid #f2f2f2',
               background: active ? WA.panel : undefined,
             }}
             onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = '#f9f9f9'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = active ? WA.panel : ''; }}
           >
-            <div style={{
-              width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 700, fontSize: 15,
-              background: avatarColor(naam),
-            }}>
-              {initials(naam)}
-            </div>
+            {/* Geen avatar-cirkel meer: de naam begint links, waar eerst de
+                cirkel stond. Daarom staat er ook geen gap meer op de rij —
+                anders bleef er een lege kolom van 46px staan. */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
@@ -130,7 +128,9 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
                 <span style={{
                   fontSize: 13, color: WA.textSub,
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 230,
+                  // 230 → 288: de 46px cirkel plus 12px gap zijn weg, die
+                  // ruimte gaat naar de preview in plaats van naar niets.
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 288,
                 }}>
                   {c.lastMessagePreview || '—'}
                 </span>
