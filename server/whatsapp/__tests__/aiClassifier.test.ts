@@ -52,9 +52,12 @@ ok('isEscalationReason("boos")', isEscalationReason('boos'));
 ok('isEscalationReason("angry") = false', !isEscalationReason('angry'));
 ok('isTaskCategory("uren_jixbee")', isTaskCategory('uren_jixbee'));
 ok('isTaskCategory("hours") = false', !isTaskCategory('hours'));
-assertEq('5 categorieën', AI_CATEGORIES.length, 5);
+// Fase 3C: twee nieuwe waarden na de live-run.
+ok('isAiCategory("verzoek")', isAiCategory('verzoek'));
+ok('isTaskCategory("vervanging")', isTaskCategory('vervanging'));
+assertEq('6 categorieën', AI_CATEGORIES.length, 6);
 assertEq('5 escalatieredenen', ESCALATION_REASONS.length, 5);
-assertEq('3 taakcategorieën', TASK_CATEGORIES.length, 3);
+assertEq('4 taakcategorieën', TASK_CATEGORIES.length, 4);
 
 // ─────────────────────────────────────────────────────────────────────────────
 console.log('\n— parseAiTurnResponse: normaal antwoord —');

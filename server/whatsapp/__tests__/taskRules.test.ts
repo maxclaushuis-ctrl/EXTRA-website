@@ -165,9 +165,14 @@ ok(
 
 console.log('\n=== TASK_CATEGORY_LABELS ===');
 assertEq('uren_jixbee heeft een leesbaar label', TASK_CATEGORY_LABELS.uren_jixbee, 'Uren / Jixbee');
+assertEq('vervanging heeft een leesbaar label', TASK_CATEGORY_LABELS.vervanging, 'Vervanging');
 assertEq('contract heeft een leesbaar label', TASK_CATEGORY_LABELS.contract, 'Contract');
 assertEq('overig heeft een leesbaar label', TASK_CATEGORY_LABELS.overig, 'Overig');
-assertEq('precies drie categorieën', Object.keys(TASK_CATEGORY_LABELS).sort(), ['contract', 'overig', 'uren_jixbee']);
+assertEq(
+  'precies vier categorieën',
+  Object.keys(TASK_CATEGORY_LABELS).sort(),
+  ['contract', 'overig', 'uren_jixbee', 'vervanging'],
+);
 
 console.log(`\n${gezakt === 0 ? '✅' : '❌'} taskRules: ${geslaagd} geslaagd, ${gezakt} gezakt\n`);
 process.exit(gezakt === 0 ? 0 : 1);
