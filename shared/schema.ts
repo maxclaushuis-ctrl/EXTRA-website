@@ -1489,6 +1489,21 @@ export const whatsappMessages = pgTable("whatsapp_messages", {
   prospectContactId: integer("prospect_contact_id").references(() => prospectContacts.id, { onDelete: 'set null' }),
   matchCategory: whatsappMatchCategoryEnum("match_category").notNull().default('unmatched'),
   sentByUserId: integer("sent_by_user_id").references(() => users.id, { onDelete: 'set null' }),
+  /**
+   * Waar een UITGAAND bericht vandaan komt. Nodig sinds de Meta-koppeling in
+   * Coexistence draait: Meta stuurt dan ook een echo van alles wat er op de
+   * telefoon zelf (WhatsApp-app op +31 85 130 5915) wordt getypt.
+   *
+   *   null   → rijen van vóór deze kolom; niet meer te herleiden
+   *   'app'  → echo: iemand heeft het op de telefoon getypt
+   *
+   * Alleen 'app' wordt geschreven, en alleen vanuit de webhook. Dashboard- en
+   * AI-berichten blijven op null en zijn al uit elkaar te houden via
+   * sent_by_user_id. Filter daarom altijd met `IS DISTINCT FROM 'app'` en niet
+   * met een positieve match op een andere waarde — anders vallen alle
+   * bestaande rijen (null) buiten de boot.
+   */
+  sentSource: text("sent_source"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

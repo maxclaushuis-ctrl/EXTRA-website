@@ -130,6 +130,15 @@ const BERICHTEN: Message[] = [
     mediaUrl: null, mediaMimeType: null, status: 'delivered', errorCode: null, errorMessage: null,
     matchCategory: 'candidate', createdAt: min(4),
   },
+  {
+    // Fase 3D: app-echo. Uitgaand, géén sentByUserId (we weten niet wie het op
+    // de telefoon typte) maar wél sentSource='app'. Staat hier zodat het derde
+    // afzenderlabel in ChatView zichtbaar is zonder database of webhook.
+    id: 4, direction: 'outbound', waMessageId: 'wa4', fromNumber: '31851305915', toNumber: '31612345678',
+    messageType: 'text', body: 'Ja joh, breaktijd staat al goed. Ik kijk morgenvroeg naar de rest!',
+    mediaUrl: null, mediaMimeType: null, status: 'delivered', errorCode: null, errorMessage: null,
+    matchCategory: 'candidate', sentByUserId: null, sentSource: 'app', createdAt: min(2),
+  },
 ];
 
 const TAKEN: Task[] = [

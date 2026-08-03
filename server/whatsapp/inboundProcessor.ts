@@ -10,6 +10,8 @@
  *   2. Status-events → applyStatusEvent, incl. failed + blocked → opt-out
  *   3. Inkomende berichten → normalisatie, matching, idempotente insert,
  *      conversation-upsert, STOP-detectie, auto-reply-trigger
+ *   4. App-echo's (Meta Coexistence) → berichten die op de telefoon zelf zijn
+ *      getypt, zodat het dashboard niet meer half-blind is
  *
  * Dependencies zijn injecteerbaar (voor unit-tests zonder database); zonder
  * expliciete deps worden de echte modules lazy geïmporteerd.
@@ -41,6 +43,10 @@ export interface InboundProcessorDeps {
     applyStatusEvent(waMessageId: string, status: string, errorCode?: string, errorMessage?: string): Promise<boolean>;
     resolveAndUpsertConversation(args: { phoneNumber: string; inbound: boolean; bodyPreview: string; at: Date }): Promise<InboundMatch>;
     insertInboundMessage(msg: any): Promise<number | null>;
+    /** Fase 3D: echo van een bericht dat op de telefoon zelf is getypt. */
+    insertAppEcho(msg: any): Promise<number | null>;
+    /** Haalt een gesprek uit de "wacht op planner"-wachtrij. */
+    clearEscalation(phoneNumber: string): Promise<void>;
     describeNonTextMessage(type: string, msg: any): string;
   };
   optInService: {
@@ -232,6 +238,113 @@ export async function processIncomingPayload(
             }
           } catch (e: any) {
             console.error(`${logPrefix} fout bij verwerken message:`, e?.message, e?.stack);
+          }
+        }
+      }
+
+      // 3. App-echo's (Meta Coexistence, veld smb_message_echoes).
+      //
+      // Dit zijn berichten die iemand in de WhatsApp-app op de telefoon zelf
+      // heeft getypt. Zonder deze tak mist het dashboard precies die helft van
+      // het gesprek: de klant ziet een antwoord, de planner in de inbox niet.
+      // Berichten die wij via de Cloud API sturen zitten hier NIET in — die
+      // sluit Meta expliciet uit, dus er ontstaat geen dubbele rij.
+      //
+      // Let op de richting: `from` is óns eigen nummer, `to` is de klant. Het
+      // gesprek hangt dus aan `to`, niet aan `from` zoals bij inbound.
+      if (Array.isArray(value.message_echoes)) {
+        for (const echo of value.message_echoes) {
+          try {
+            const type: string = echo?.type || 'unknown';
+
+            // Intrekken en bewerken: alleen loggen, zoals afgesproken. Beide
+            // verwijzen naar een origineel bericht dat wij mogelijk nooit
+            // hebben gezien (van vóór de koppeling), en er hangt geen weergave
+            // in de inbox aan. Bewust géén update of delete op bestaande
+            // rijen: dat is een datawijziging, en die hoort niet stilletjes
+            // uit een webhook te komen.
+            if (type === 'revoke' || type === 'edit') {
+              const origineel = echo?.[type]?.original_message_id || '?';
+              console.log(`${logPrefix} app-echo ${type} (origineel wa_message_id=${origineel}) → alleen gelogd, geen wijziging`);
+              continue;
+            }
+
+            const toRaw = String(echo?.to || '');
+            const normalizedTo = normalizePhone(toRaw);
+            if (!normalizedTo) {
+              console.warn(`${logPrefix} app-echo met ongeldig to-nummer: "${toRaw}"`);
+              continue;
+            }
+
+            const at = echo.timestamp ? new Date(Number(echo.timestamp) * 1000) : new Date();
+
+            let body_: string;
+            let mediaUrl: string | null = null;
+            let mediaMime: string | null = null;
+
+            if (type === 'text') {
+              body_ = echo.text?.body || '';
+            } else if (['image', 'audio', 'document', 'video', 'sticker'].includes(type)) {
+              body_ = storage.describeNonTextMessage(type, echo);
+              mediaUrl = echo[type]?.id || null;
+              mediaMime = echo[type]?.mime_type || null;
+            } else {
+              body_ = storage.describeNonTextMessage(type, echo);
+            }
+
+            // inbound: false — dit is een UITGAAND bericht. De ongelezen-teller
+            // en last_inbound_at (waar de 24-uursklok op draait) blijven dus
+            // ongemoeid; alleen de preview en het tijdstip in de lijst schuiven
+            // mee, precies zoals bij een bericht uit het dashboard.
+            const match = await storage.resolveAndUpsertConversation({
+              phoneNumber: normalizedTo,
+              inbound: false,
+              bodyPreview: body_,
+              at,
+            });
+
+            const inserted = await storage.insertAppEcho({
+              direction: 'outbound',
+              waMessageId: echo.id || null,
+              fromNumber: 'extra', // ons eigen nummer; zelfde placeholder als bij dashboard-sends
+              toNumber: normalizedTo,
+              messageType: ['text', 'image', 'audio', 'document', 'video', 'location', 'sticker', 'contacts', 'interactive'].includes(type) ? type : 'unknown',
+              body: body_,
+              mediaUrl,
+              mediaMimeType: mediaMime,
+              rawPayload: echo,
+              // Al verstuurd voordat wij ervan hoorden. Latere status-events
+              // (delivered/read) komen gewoon binnen op hetzelfde wa_message_id.
+              status: 'sent',
+              candidateId: match.candidateId,
+              prospectContactId: match.prospectContactId,
+              matchCategory: match.category,
+            });
+
+            if (inserted === null) {
+              console.log(`${logPrefix} duplicate app-echo wa_message_id=${echo.id} → skip`);
+            } else {
+              console.log(`${logPrefix} app-echo ${type} naar ${normalizedTo} → match=${match.category} (verstuurd vanaf de telefoon)`);
+
+              // Wie vanaf zijn telefoon antwoordt heeft het gesprek net zo
+              // goed opgepakt als iemand die het vanuit het dashboard doet.
+              // Zonder dit blijft het bovenaan de "wacht op planner"-wachtrij
+              // hangen terwijl er allang gereageerd is. Zelfde aanroep als na
+              // een dashboard-send; clearEscalation raakt alleen rijen die
+              // daadwerkelijk geëscaleerd zijn.
+              //
+              // BEWUST alleen bij een verse insert: bij een herhaalde webhook
+              // (inserted === null) is dit al eerder gebeurd, en zou een
+              // NIEUWE escalatie die intussen is ontstaan onterecht worden
+              // weggegooid.
+              try {
+                await storage.clearEscalation(normalizedTo);
+              } catch (e: any) {
+                console.error(`${logPrefix} clearEscalation na app-echo mislukt:`, e?.message);
+              }
+            }
+          } catch (e: any) {
+            console.error(`${logPrefix} fout bij verwerken app-echo:`, e?.message, e?.stack);
           }
         }
       }

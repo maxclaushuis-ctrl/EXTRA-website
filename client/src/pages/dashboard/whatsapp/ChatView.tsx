@@ -1,5 +1,5 @@
 /**
- * ChatView — header met avatar/naam/subregel + assigned-chip + snooze-klokje,
+ * ChatView — header met naam/subregel + assigned-chip + snooze-klokje,
  * gele window-warning-balk, dag-scheiders, bubbels (in=wit / out=#d9fdd3) met
  * 🤖 AI-agent- of 👤 planner-tag, en composer met emoji/paperclip/✨/verzendknop.
  * Stijl 1-op-1 uit mockups/extra-whatsapp-mockup.html.
@@ -8,7 +8,7 @@ import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
 import type { Conversation, Message, TeamMember } from '../../../api/whatsappClient';
 import {
   WA, WA_TEKST, WA_GEWICHT, WA_GLYPH,
-  avatarColor, initials, formatTime, dayLabel, snoozeRemaining, voornaamVan, formatPhone,
+  formatTime, dayLabel, snoozeRemaining, voornaamVan, formatPhone,
 } from './theme';
 
 interface Props {
@@ -179,30 +179,26 @@ export default function ChatView(props: Props) {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         borderBottom: `1px solid ${WA.border}`,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: WA_GEWICHT.bold, fontSize: WA_TEKST.body, background: avatarColor(naam),
-          }}>{initials(naam)}</div>
+        {/* Geen avatar-cirkel: naam en subregel beginnen links, op de plek waar
+            eerst de cirkel stond. Geen gap dus, anders bleef er een lege kolom. */}
+        <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: WA_TEKST.h3, fontWeight: WA_GEWICHT.semibold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{naam}</div>
             <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subline(conv)}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, color: '#54656f', position: 'relative' }}>
-          {/* Assigned-chip met mini-avatar */}
+          {/* Assigned-chip. Ook hier is de mini-avatar weg: dat was dezelfde
+              initialen-cirkel, alleen kleiner, en de voornaam ernaast zei het
+              al. De chip houdt zijn paarse rand zodat "toegewezen" en "niet
+              toegewezen" (gestippeld, grijs) uit elkaar te houden blijven
+              zonder dat er een cirkel voor nodig is. */}
           {conv.assignedToName ? (
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 6, background: '#fff',
-              border: `1px solid ${WA.border}`, padding: '4px 10px 4px 4px',
-              borderRadius: 20, fontSize: WA_TEKST.secundair, color: WA.text,
+              display: 'flex', alignItems: 'center', gap: 6, background: '#f1e9ff',
+              border: `1px solid ${WA.purple}`, padding: '4px 11px',
+              borderRadius: 20, fontSize: WA_TEKST.secundair, fontWeight: WA_GEWICHT.semibold, color: WA.purple,
             }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: '50%', background: WA.purple,
-                color: '#fff', fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>{initials(conv.assignedToName)}</div>
               {voornaamVan(conv.assignedToName)}
             </div>
           ) : (
@@ -341,8 +337,21 @@ export default function ChatView(props: Props) {
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
               }}
             >
+              {/* Herkomst van een uitgaand bericht. De echo-tak staat BEWUST
+                  vooraan: een bericht dat op de telefoon is getypt heeft geen
+                  sentByUserId (we weten niet wie het typte) en zou in de oude
+                  volgorde als "AI-agent" worden gelabeld. */}
               {uit && (
-                m.sentByUserId != null ? (
+                m.sentSource === 'app' ? (
+                  <div
+                    title="Verstuurd vanaf de WhatsApp-app op de telefoon, niet vanuit dit dashboard"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      fontSize: 10, fontWeight: 700, color: '#8a5a00', background: '#fdf1d6',
+                      padding: '2px 7px', borderRadius: 8, marginBottom: 5,
+                    }}
+                  >📱 Planner (telefoon)</div>
+                ) : m.sentByUserId != null ? (
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
                     fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, color: '#008069', background: '#e3f7ee',

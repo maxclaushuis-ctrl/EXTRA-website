@@ -62,37 +62,25 @@ export const WA_TEKST = {
 export const WA_GEWICHT = TYPOGRAFIE.gewichten;
 
 /**
- * Geen tekst maar tekening: glyphs die als plaatje functioneren (initialen in
- * een avatar-cirkel, emoji-knoppen in de composer). Die horen niet op een
+ * Geen tekst maar tekening: glyphs die als plaatje functioneren (de
+ * emoji-knoppen in de composer, het snooze-klokje). Die horen niet op een
  * tekstniveau — een emoji van 13px is onbruikbaar klein — maar de getallen
  * staan hier zodat ook zij op één plek liggen in plaats van los in de JSX.
+ *
+ * Er stond hier ook avatarGroot: 28, voor de initialen in de 80px-cirkel van
+ * het profielpaneel. Die cirkel bestaat niet meer, dus het getal is weg: een
+ * maat die niets meer opmeet is geen maat.
  */
 export const WA_GLYPH = {
-  avatarGroot: 28, // 80px-cirkel in het profielpaneel
   icoon: 18,       // emoji-knoppen in de composer, snooze-klokje
   icoonKlein: 16,  // verzendknop, profielpaneel-toggle
 } as const;
 
-// Vaste avatar-kleuren (uit de mockup + aanvullingen in dezelfde toon).
-const AVATAR_COLORS = ['#7c3aed', '#008069', '#e07a5f', '#3d5a80', '#f0a500', '#b5179e', '#0077b6', '#2a9d8f'];
-
-/** Deterministische avatar-kleur op basis van een naam-hash. */
-export function avatarColor(name: string | null | undefined): string {
-  const s = (name || '?').trim();
-  let hash = 0;
-  for (let i = 0; i < s.length; i++) {
-    hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
-  }
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
-
-/** Initialen: "Sanne de Vries" → "SV" (eerste + laatste woord). */
-export function initials(name: string | null | undefined): string {
-  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+// avatarColor() en initials() stonden hier. Beide zijn weg samen met de
+// avatar-cirkels in ConversationList, ChatView en ProfilePanel; er was daarna
+// geen enkele aanroep meer over in de module. Bewust verwijderd en niet
+// "voor het geval dat" laten staan: een geëxporteerde helper die nergens
+// gebruikt wordt, wordt vanzelf weer ergens ingeplugd.
 
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();

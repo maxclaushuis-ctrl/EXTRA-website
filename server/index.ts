@@ -73,6 +73,16 @@ app.use((req, res, next) => {
 });
 
 
+// ── Healthcheck ───────────────────────────────────────────────────────────
+// Bewust hier, vóór de sessie-middleware en vóór de CORS-poort: deze route
+// raakt de database niet en heeft geen enkele afhankelijkheid die kan hangen.
+// De promote-stap van een deploy heeft een goedkoop doelwit nodig; landt die
+// check op de SPA-route, dan meet hij de hele render- en databaseketen mee en
+// faalt hij op traagheid die niets met gezondheid te maken heeft.
+app.get(['/healthz', '/api/healthz'], (_req, res) => {
+  res.status(200).type('text/plain').send('ok');
+});
+
 // Strikte CORS — alleen origins op de allowlist krijgen credentialed CORS-headers,
 // ongeacht NODE_ENV. Server-to-server calls (zonder Origin header) en same-origin
 // requests worden doorgelaten zonder CORS-headers. Onbekende cross-origin requests
@@ -120,13 +130,24 @@ app.use((req, res, next) => {
 // Verplichte secrets — geen fallback toegestaan, zelfs niet in development.
 // De app weigert te starten als één van deze ontbreekt om sessie-vervalsing en
 // onbetrouwbare HMAC-tokens (unsubscribe-links) te voorkomen.
-if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET environment variable is niet ingesteld. Stel deze in voordat de app start.');
+//
+// Waarom een expliciete melding en process.exit in plaats van een throw: een
+// throw op moduleniveau levert in de deploy-logs een stacktrace op waarin de
+// oorzaak ondersneeuwt, en Replit meldt dan alleen "built successfully but
+// failed to start". Deploy-secrets staan bovendien los van workspace-secrets,
+// dus dit is een reëel scenario. Beide ontbrekende namen worden in één keer
+// genoemd, anders moet je twee keer publiceren om twee namen te vinden.
+const ONTBREKENDE_SECRETS = ['SESSION_SECRET', 'UNSUBSCRIBE_SECRET'].filter(
+  naam => !process.env[naam],
+);
+if (ONTBREKENDE_SECRETS.length > 0) {
+  console.error(
+    `[start] FATAAL: verplichte environment variable(s) niet ingesteld: ${ONTBREKENDE_SECRETS.join(', ')}. ` +
+      `Zet ze in de secrets van de deployment (die staan los van de workspace-secrets) en publiceer opnieuw.`,
+  );
+  process.exit(1);
 }
-if (!process.env.UNSUBSCRIBE_SECRET) {
-  throw new Error('UNSUBSCRIBE_SECRET environment variable is not set');
-}
-const SESSION_SECRET = process.env.SESSION_SECRET;
+const SESSION_SECRET = process.env.SESSION_SECRET as string;
 
 // Voeg sessie middleware toe (PostgreSQL store zodat autoscale werkt)
 app.use(session({
@@ -211,7 +232,35 @@ async function ensureAdminAccounts() {
   }
 }
 
-(async () => {
+/**
+ * Al het databasewerk dat bij het opstarten gebeurt: de admin-controle, de
+ * herstelquery's en de idempotente schema-migraties.
+ *
+ * Waarom dit een aparte functie is en niet langer inline in de opstart-IIFE
+ * staat: dit werk stond vóór server.listen(), zonder enige begrenzing. Een
+ * `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` neemt in Postgres éérst een
+ * ACCESS EXCLUSIVE lock op de tabel en kijkt pás daarna of er iets te wijzigen
+ * valt — ook als de kolom er al is. Tijdens een deploy draait de oude versie
+ * nog en die bevraagt whatsapp_conversations continu (de inbox pollt). De
+ * nieuwe instantie kan daar onbeperkt op blijven wachten, waardoor de poort
+ * nooit opengaat en de promote-stap afbreekt met "built successfully but
+ * failed to start". Vandaar: eigen timeouts hieronder, en de aanroeper zet er
+ * bovendien een harde tijdslimiet omheen.
+ *
+ * lock_timeout: wachten we langer dan 5 seconden op een lock, dan geven we op.
+ * statement_timeout: een query die zelf langer dan 30 seconden duurt is hier
+ * per definitie fout. Beide gelden alleen voor deze sessies, niet globaal.
+ * Alle stappen zijn idempotent, dus een afgebroken poging is niet erg: de
+ * volgende start doet hem gewoon opnieuw.
+ */
+async function opstartDatabasewerk() {
+  try {
+    await pool.query(`SET lock_timeout = '5s'`);
+    await pool.query(`SET statement_timeout = '30s'`);
+  } catch (err: any) {
+    console.warn('[start] kon lock_timeout/statement_timeout niet zetten:', err?.message || err);
+  }
+
   // Verifieer bij start dat er minimaal één actief admin-account in de database staat
   await ensureAdminAccounts();
 
@@ -297,6 +346,29 @@ async function ensureAdminAccounts() {
     console.error('[migration] Fout bij aanmaken whatsapp_tasks:', err.message);
   }
 
+  // Schema-migratie (WhatsApp Fase 3D): herkomst van uitgaande berichten.
+  // Puur additief: één nullable kolom erbij, geen bestaande rij wordt
+  // aangeraakt en geen default die de tabel herschrijft. Alleen de echo's die
+  // Meta terugstuurt (Coexistence — verstuurd vanaf de telefoon zelf) krijgen
+  // hier 'app' in; alles wat er al staat blijft null.
+  try {
+    await pool.query(`ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS sent_source text`);
+  } catch (err: any) {
+    console.error('[migration] Fout bij toevoegen sent_source-kolom:', err.message);
+  }
+}
+
+/** Hoe lang het opstarten maximaal op de database wacht voordat de poort opengaat. */
+const OPSTART_DB_MAX_MS = 10_000;
+
+(async () => {
+  // Het databasewerk start hier, maar wordt bewust niet hier afgewacht — de
+  // race staat vlak vóór server.listen(). Eigen .catch zodat een afwijzing
+  // nooit als unhandled rejection het proces omlegt.
+  const databasewerk = opstartDatabasewerk().catch(err => {
+    console.error('[start] opstart-databasewerk mislukt (niet-kritiek, app start door):', err?.message || err);
+  });
+
   // Registreer 301 redirects vóór alle andere routes
   // zodat old Wix URLs een echte HTTP 301 terugkrijgen.
   registerRedirects(app);
@@ -342,10 +414,13 @@ async function ensureAdminAccounts() {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Poort: Autoscale geeft PORT mee en verwacht dat de app daarop luistert.
+  // Stond die hardgecodeerd op 5000, dan luistert de app in een deploy op een
+  // poort waar de healthcheck niet kijkt en faalt de promote-stap zonder dat
+  // er iets mis is met de code. 5000 blijft de terugval voor de workspace,
+  // want dat is daar de enige poort die niet gefirewalld is.
+  const port = Number(process.env.PORT) || 5000;
+  if (process.env.PORT) log(`[start] PORT uit de omgeving overgenomen: ${port}`);
 
   // ── Zelfherstellend opstarten ─────────────────────────────────────────────
   // Probleem in de praktijk: een oud (zombie-)serverproces blijft poort 5000
@@ -382,10 +457,39 @@ async function ensureAdminAccounts() {
   }
 
   ruimOudeServerprocessenOp();
-  // Salesflow-schema garanderen (idempotent) — geen handmatige migraties nodig.
-  await ensureSalesflowSchema().catch(err => console.error("[salesflow] schema-check mislukt (niet-kritiek):", err?.message || err));
-  // Tabel voor eenmalige wachtwoord-instel-tokens (idempotent).
-  await ensureAuthResetSchema().catch(err => console.error("[auth] schema-check mislukt (niet-kritiek):", err?.message || err));
+
+  // Schema-checks van salesflow en auth-reset horen bij hetzelfde opstartwerk
+  // en vallen daarom onder dezelfde tijdslimiet hieronder.
+  const restantDatabasewerk = Promise.all([
+    ensureSalesflowSchema().catch(err => console.error("[salesflow] schema-check mislukt (niet-kritiek):", err?.message || err)),
+    ensureAuthResetSchema().catch(err => console.error("[auth] schema-check mislukt (niet-kritiek):", err?.message || err)),
+  ]);
+
+  // ── De poort gaat hoe dan ook open ────────────────────────────────────────
+  // Normaal is dit databasewerk in tientallen milliseconden klaar en verandert
+  // er niets aan de volgorde: eerst migreren, dan luisteren. Loopt het vast op
+  // een lock van de nog draaiende oude versie, dan wachten we hooguit
+  // OPSTART_DB_MAX_MS en gaan we alsnog luisteren. Het werk loopt op de
+  // achtergrond door en is idempotent, dus er gaat niets verloren; de
+  // waarschuwing hieronder maakt in de deploy-logs zichtbaar dát het gebeurde.
+  // Zonder deze grens is een blokkerende lock niet te onderscheiden van een
+  // kapotte build, en meldt Replit alleen "built successfully but failed to
+  // start".
+  let databasewerkKlaar = false;
+  const alleOpstartQueries = Promise.all([databasewerk, restantDatabasewerk])
+    .then(() => { databasewerkKlaar = true; });
+  await Promise.race([
+    alleOpstartQueries,
+    new Promise(resolve => setTimeout(resolve, OPSTART_DB_MAX_MS)),
+  ]);
+  if (!databasewerkKlaar) {
+    console.warn(
+      `[start] opstart-databasewerk nog niet klaar na ${OPSTART_DB_MAX_MS / 1000}s — ` +
+        `de poort gaat nu open, de migraties lopen op de achtergrond door. ` +
+        `Meestal betekent dit dat een ALTER TABLE wacht op een lock van de nog draaiende vorige versie.`,
+    );
+    alleOpstartQueries.then(() => log('[start] opstart-databasewerk alsnog afgerond'));
+  }
 
   let listenPogingen = 0;
   server.on("error", (err: any) => {
@@ -396,6 +500,7 @@ async function ensureAdminAccounts() {
       setTimeout(() => server.listen({ port, host: "0.0.0.0", reusePort: true }), 1500);
       return;
     }
+    console.error(`[start] FATAAL: server kon niet op poort ${port} luisteren:`, err?.message || err);
     throw err;
   });
 
@@ -423,7 +528,15 @@ async function ensureAdminAccounts() {
     // ('candidate'). Idempotent en respecteert handmatige overrides via manual_category.
     backfillKandidaatInboxCategory().catch(err => console.warn('Backfill kandidaat-inbox-category mislukt (niet-kritiek):', err?.message || err));
   });
-})();
+})().catch(err => {
+  // Zonder deze catch is elke afwijzing in het opstartpad een unhandled
+  // rejection: Node stopt dan met een kale stacktrace en de deploy-log toont
+  // alleen "built successfully but failed to start". Eén herkenbare regel met
+  // de werkelijke oorzaak scheelt een halve avond zoeken.
+  console.error('[start] FATAAL bij het opstarten:', err?.message || err);
+  if (err?.stack) console.error(err.stack);
+  process.exit(1);
+});
 
 async function backfillKandidaatInboxCategory() {
   const sql = `

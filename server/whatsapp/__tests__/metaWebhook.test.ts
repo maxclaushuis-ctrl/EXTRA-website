@@ -32,6 +32,8 @@ interface CallLog {
   applyStatusEvent: any[][];
   resolveAndUpsertConversation: any[][];
   insertInboundMessage: any[][];
+  insertAppEcho: any[][];
+  clearEscalation: any[][];
   findConversationContact: any[][];
   handleBlockedByUser: any[][];
   handleIncomingStop: any[][];
@@ -41,12 +43,15 @@ interface CallLog {
 function makeMockDeps(opts?: {
   applyStatusEventResult?: boolean;
   insertResult?: number | null;
+  echoInsertResult?: number | null;
   matchCategory?: 'candidate' | 'prospect' | 'unmatched';
 }): { deps: InboundProcessorDeps; calls: CallLog } {
   const calls: CallLog = {
     applyStatusEvent: [],
     resolveAndUpsertConversation: [],
     insertInboundMessage: [],
+    insertAppEcho: [],
+    clearEscalation: [],
     findConversationContact: [],
     handleBlockedByUser: [],
     handleIncomingStop: [],
@@ -64,6 +69,8 @@ function makeMockDeps(opts?: {
         return { candidateId: 42, prospectContactId: null, category: opts?.matchCategory ?? 'candidate', displayName: 'Test Persoon' };
       },
       async insertInboundMessage(msg: any) { calls.insertInboundMessage.push([msg]); return opts?.insertResult === undefined ? 123 : opts.insertResult; },
+      async insertAppEcho(msg: any) { calls.insertAppEcho.push([msg]); return opts?.echoInsertResult === undefined ? 456 : opts.echoInsertResult; },
+      async clearEscalation(phone: string) { calls.clearEscalation.push([phone]); },
       describeNonTextMessage(type: string) { return `[${type}]`; },
     },
     optInService: {
@@ -83,11 +90,23 @@ function makeMockDeps(opts?: {
 }
 
 // Meta entry[]-payload zoals Meta Cloud API die POST.
-function metaEntryPayload(value: any) {
+function metaEntryPayload(value: any, field = 'messages') {
   return {
     object: 'whatsapp_business_account',
-    entry: [{ id: 'WABA_ID', changes: [{ field: 'messages', value }] }],
+    entry: [{ id: 'WABA_ID', changes: [{ field, value }] }],
   };
+}
+
+/**
+ * Echo-payload zoals Meta die in Coexistence stuurt op het veld
+ * smb_message_echoes: `from` is óns nummer, `to` is de klant.
+ */
+function echoPayload(echoes: any[]) {
+  return metaEntryPayload({
+    messaging_product: 'whatsapp',
+    metadata: { display_phone_number: '+31 85 130 5915', phone_number_id: 'PNID' },
+    message_echoes: echoes,
+  }, 'smb_message_echoes');
 }
 
 async function main() {
@@ -292,6 +311,128 @@ async function main() {
     }, deps);
     assertEq('insertInboundMessage aangeroepen', calls.insertInboundMessage.length, 1);
     assertEq('  → waMessageId', calls.insertInboundMessage[0]?.[0]?.waMessageId, 'D360_001');
+  }
+
+  // ─── 11. App-echo: tekstbericht vanaf de telefoon ────────────────────────
+  console.log('\n— processIncomingPayload: app-echo (tekst vanaf de telefoon) —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(echoPayload([{
+      id: 'wamid.ECHO001',
+      from: '31851305915',          // ons eigen nummer
+      to: '31600000999',            // de klant
+      timestamp: '1722500200',
+      type: 'text',
+      text: { body: 'Ja hoor, ik regel het even' },
+    }]), deps);
+
+    assertEq('insertAppEcho aangeroepen', calls.insertAppEcho.length, 1);
+    const echo = calls.insertAppEcho[0]?.[0];
+    assertEq('  → direction outbound', echo?.direction, 'outbound');
+    assertEq('  → waMessageId', echo?.waMessageId, 'wamid.ECHO001');
+    // Het gesprek hangt aan de KLANT (to), niet aan ons eigen nummer (from).
+    assertEq('  → toNumber = klant', echo?.toNumber, '31600000999');
+    assertEq('  → fromNumber = extra (ons nummer)', echo?.fromNumber, 'extra');
+    assertEq('  → body', echo?.body, 'Ja hoor, ik regel het even');
+    assertEq('  → messageType', echo?.messageType, 'text');
+    assertEq('  → status sent (al de deur uit)', echo?.status, 'sent');
+    assertEq('  → matchCategory uit de match', echo?.matchCategory, 'candidate');
+    assertEq('  → candidateId uit de match', echo?.candidateId, 42);
+
+    // De ongelezen-teller mag NIET omhoog: dit is een uitgaand bericht.
+    assertEq('conversation-upsert aangeroepen', calls.resolveAndUpsertConversation.length, 1);
+    const conv = calls.resolveAndUpsertConversation[0]?.[0];
+    assertEq('  → inbound=false (ongelezen-teller ongemoeid)', conv?.inbound, false);
+    assertEq('  → op het klantnummer', conv?.phoneNumber, '31600000999');
+    assertEq('  → preview is de echo-tekst', conv?.bodyPreview, 'Ja hoor, ik regel het even');
+    assertEq('  → tijdstip uit de echo', (conv?.at as Date)?.toISOString(), new Date(1722500200 * 1000).toISOString());
+
+    // Een echo is geen inkomend bericht: geen inbound-insert, geen auto-reply,
+    // geen STOP-detectie. Anders zou de AI op ons eigen bericht antwoorden.
+    assertEq('géén insertInboundMessage', calls.insertInboundMessage.length, 0);
+    assertEq('géén auto-reply op eigen bericht', calls.tryAutoReply.length, 0);
+    assertEq('géén STOP-handler', calls.handleIncomingStop.length, 0);
+
+    // Antwoorden vanaf de telefoon telt als oppakken: uit de wachtrij.
+    assertEq('clearEscalation aangeroepen', calls.clearEscalation.length, 1);
+    assertEq('  → op het klantnummer', calls.clearEscalation[0]?.[0], '31600000999');
+  }
+
+  // ─── 12. App-echo: duplicate webhook → geen tweede rij ───────────────────
+  console.log('\n— processIncomingPayload: app-echo duplicate —');
+  {
+    const { deps, calls } = makeMockDeps({ echoInsertResult: null });
+    await processIncomingPayload(echoPayload([{
+      id: 'wamid.ECHO001', from: '31851305915', to: '31600000999',
+      timestamp: '1722500200', type: 'text', text: { body: 'nogmaals' },
+    }]), deps);
+    assertEq('insertAppEcho geprobeerd', calls.insertAppEcho.length, 1);
+    // null = "bestond al". De verwerking loopt netjes door (dit assert wordt
+    // alleen bereikt als er geen exception is gegooid) en er komt geen tweede
+    // insert-poging.
+    assertEq('precies één insert-poging, geen retry', calls.insertAppEcho.length, 1);
+    assertEq('conversation-upsert wel gedraaid (preview blijft kloppen)', calls.resolveAndUpsertConversation.length, 1);
+    // Cruciaal: bij een herhaalde webhook NIET nogmaals de escalatie wissen.
+    // Er kan intussen een nieuwe escalatie zijn ontstaan, en die zou dan
+    // stilletjes uit de wachtrij verdwijnen.
+    assertEq('géén clearEscalation bij duplicate', calls.clearEscalation.length, 0);
+  }
+
+  // ─── 13. App-echo: media ─────────────────────────────────────────────────
+  console.log('\n— processIncomingPayload: app-echo (afbeelding) —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(echoPayload([{
+      id: 'wamid.ECHO002', from: '31851305915', to: '31600000999',
+      timestamp: '1722500300', type: 'image',
+      image: { id: 'MEDIA_ID_1', mime_type: 'image/jpeg' },
+    }]), deps);
+    const echo = calls.insertAppEcho[0]?.[0];
+    assertEq('  → messageType image', echo?.messageType, 'image');
+    assertEq('  → mediaUrl = media-id', echo?.mediaUrl, 'MEDIA_ID_1');
+    assertEq('  → mediaMimeType', echo?.mediaMimeType, 'image/jpeg');
+    assertEq('  → body beschrijvend', echo?.body, '[image]');
+  }
+
+  // ─── 14. App-echo: revoke en edit worden alleen gelogd ───────────────────
+  console.log('\n— processIncomingPayload: app-echo revoke/edit —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(echoPayload([
+      { id: 'wamid.ECHO003', from: '31851305915', to: '31600000999', type: 'revoke', revoke: { original_message_id: 'wamid.ECHO001' } },
+      { id: 'wamid.ECHO004', from: '31851305915', to: '31600000999', type: 'edit', edit: { original_message_id: 'wamid.ECHO001' }, text: { body: 'aangepast' } },
+    ]), deps);
+    assertEq('geen insert bij revoke/edit', calls.insertAppEcho.length, 0);
+    assertEq('geen conversation-wijziging bij revoke/edit', calls.resolveAndUpsertConversation.length, 0);
+    assertEq('geen clearEscalation bij revoke/edit', calls.clearEscalation.length, 0);
+  }
+
+  // ─── 15. App-echo met ongeldig to-nummer → overgeslagen ──────────────────
+  console.log('\n— processIncomingPayload: app-echo zonder bruikbaar to-nummer —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(echoPayload([
+      { id: 'wamid.ECHO005', from: '31851305915', to: '', type: 'text', text: { body: 'x' } },
+      { id: 'wamid.ECHO006', from: '31851305915', to: '31600000999', type: 'text', text: { body: 'wel goed' } },
+    ]), deps);
+    assertEq('alleen de bruikbare echo ingeschoten', calls.insertAppEcho.length, 1);
+    assertEq('  → dat is de tweede', calls.insertAppEcho[0]?.[0]?.waMessageId, 'wamid.ECHO006');
+  }
+
+  // ─── 16. Echo's en inkomende berichten in één payload ────────────────────
+  console.log('\n— processIncomingPayload: messages én message_echoes in één value —');
+  {
+    const { deps, calls } = makeMockDeps();
+    await processIncomingPayload(metaEntryPayload({
+      contacts: [{ profile: { name: 'Klant' }, wa_id: '31600000999' }],
+      messages: [{ id: 'wamid.IN9', from: '31600000999', type: 'text', text: { body: 'vraag' } }],
+      message_echoes: [{ id: 'wamid.ECHO007', from: '31851305915', to: '31600000999', type: 'text', text: { body: 'antwoord vanaf telefoon' } }],
+    }), deps);
+    assertEq('inkomend bericht verwerkt', calls.insertInboundMessage.length, 1);
+    assertEq('echo verwerkt', calls.insertAppEcho.length, 1);
+    assertEq('twee conversation-upserts', calls.resolveAndUpsertConversation.length, 2);
+    assertEq('  → eerste inbound', calls.resolveAndUpsertConversation[0]?.[0]?.inbound, true);
+    assertEq('  → tweede outbound', calls.resolveAndUpsertConversation[1]?.[0]?.inbound, false);
   }
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

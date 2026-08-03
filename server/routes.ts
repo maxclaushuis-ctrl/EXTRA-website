@@ -11575,8 +11575,10 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   // De verwerking zelf staat in server/whatsapp/inboundProcessor.ts en is daar
   // los te testen: statuses → applyStatusEvent (incl. failed+blocked → opt-out),
   // messages → normalisatie, matching, idempotente insert, STOP-detectie en
-  // auto-reply. Die module unwrapt álle entry[]/changes[]-elementen, niet
-  // alleen het eerste.
+  // auto-reply, message_echoes → berichten die op de telefoon zelf zijn getypt.
+  // Die module unwrapt álle entry[]/changes[]-elementen, niet alleen het
+  // eerste, en kijkt niet naar `field` — een smb_message_echoes-change loopt er
+  // dus net zo goed doorheen als een messages-change.
   async function verwerkInkomendeWebhookBody(req: Request, res: Response, logPrefix = '[WA webhook]') {
     await processIncomingPayload(req.body || {}, {
       tryAutoReply,
@@ -11686,6 +11688,86 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     } catch {
       return res.json({ configured: false, url: null, secretSet: !!WEBHOOK_SECRET });
     }
+  });
+
+  // GET /api/whatsapp/diagnose — één plek waar je ziet of de koppeling klopt.
+  //
+  // Waarom dit bestaat: bij een storing ("berichten komen niet aan") is de
+  // vraag altijd dezelfde — draait productie op de juiste provider, staan de
+  // secrets in de omgeving van de deployment (die staan los van de
+  // workspace-secrets), en wanneer kwam er voor het laatst écht iets binnen.
+  // Zonder dit endpoint is dat alleen uit de deploy-logs te halen.
+  //
+  // HARDE REGEL: dit endpoint geeft NOOIT een secretwaarde terug, alleen of
+  // een variabele gezet is. Ook de foutmelding van de provider wordt afgekapt.
+  // Admin-only, net als de rest van dit blok.
+  app.get('/api/whatsapp/diagnose', adminMiddleware, async (_req: Request, res: Response) => {
+    // .trim() omdat een per ongeluk meegekopieerde spatie of newline in een
+    // Replit-secret anders als "gezet" telt terwijl de vergelijking faalt.
+    const gezet = (naam: string) => Boolean((process.env[naam] || '').trim());
+
+    const provider = waProvider.activeProvider();
+
+    // Elke query apart in een try: één ontbrekende tabel mag de rest van het
+    // beeld niet weghalen, juist bij een storing wil je zien wat er wél is.
+    async function eenRij(query: any): Promise<any | null> {
+      try {
+        const r: any = await db.execute(query);
+        const rows = r.rows ?? r ?? [];
+        return rows[0] ?? null;
+      } catch (err: any) {
+        return { fout: String(err?.message || err).slice(0, 200) };
+      }
+    }
+
+    const inkomend = await eenRij(sql`
+      SELECT MAX(created_at) AS laatste FROM whatsapp_messages WHERE direction = 'inbound'
+    `);
+    const uitgaandGoed = await eenRij(sql`
+      SELECT MAX(created_at) AS laatste FROM whatsapp_messages
+      WHERE direction = 'outbound' AND status IN ('sent', 'delivered', 'read')
+    `);
+    const uitgaandFout = await eenRij(sql`
+      SELECT created_at, error_code, error_message FROM whatsapp_messages
+      WHERE direction = 'outbound' AND status = 'failed'
+      ORDER BY created_at DESC LIMIT 1
+    `);
+
+    return res.json({
+      provider: {
+        actief: provider,
+        // Let op: 360dialog is de terugval zodra WHATSAPP_PROVIDER niet exact
+        // 'meta' is. Staat het nummer al bij Meta (coexistence), dan falen
+        // uitgaande berichten dan met een fout van de 360dialog-gateway.
+        whatsappProviderEnvGezet: gezet('WHATSAPP_PROVIDER'),
+        versturenGeconfigureerd: waProvider.isSendConfigured(),
+        configFout: waProvider.configErrorMessage(),
+      },
+      // Alleen booleans — nooit waarden.
+      secrets: {
+        META_WA_BOT_ACCESS_TOKEN: gezet('META_WA_BOT_ACCESS_TOKEN'),
+        META_WA_BOT_PHONE_NUMBER_ID: gezet('META_WA_BOT_PHONE_NUMBER_ID'),
+        META_WA_BOT_WABA_ID: gezet('META_WA_BOT_WABA_ID'),
+        // Zonder dit secret weigert POST /api/whatsapp/meta-webhook élk
+        // inkomend bericht met 503, terwijl de GET-handshake gezond oogt.
+        META_WA_BOT_APP_SECRET: gezet('META_WA_BOT_APP_SECRET'),
+        META_WA_BOT_VERIFY_TOKEN: gezet('META_WA_BOT_VERIFY_TOKEN'),
+        WHATSAPP_360_API_KEY: gezet('WHATSAPP_360_API_KEY'),
+        WHATSAPP_WEBHOOK_SECRET: gezet('WHATSAPP_WEBHOOK_SECRET'),
+        AI_INTEGRATIONS_OPENAI_API_KEY: gezet('AI_INTEGRATIONS_OPENAI_API_KEY') || gezet('OPENAI_API_KEY'),
+      },
+      verkeer: {
+        laatsteInkomend: inkomend?.laatste ?? null,
+        laatsteUitgaandGeslaagd: uitgaandGoed?.laatste ?? null,
+        laatsteUitgaandeFout: uitgaandFout
+          ? {
+              tijdstip: uitgaandFout.created_at ?? null,
+              code: uitgaandFout.error_code ?? null,
+              melding: String(uitgaandFout.error_message ?? '').slice(0, 300) || null,
+            }
+          : null,
+      },
+    });
   });
 
   // ─── Conversation endpoints ──────────────────────────────────────────────
