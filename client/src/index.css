@@ -405,16 +405,33 @@
 /* ───────────────────────────────────────────────────────────
    Inklapbare hoofd-sidebar (DashboardMockup)
    Wanneer aside.dh-sidebar-collapsed actief is wordt de menubalk
-   teruggebracht tot een rail van iconen. We gebruiken positionele
-   selectors zodat we niet elk individueel menu-item hoeven te
-   markeren.
+   teruggebracht tot een rail van iconen.
+
+   Deze regels haakten eerst aan Tailwind-klassen: button.gap-3 voor
+   de menu-items en button.justify-between voor de sectiekoppen. Toen
+   de navigatie op huisstijl.ts werd gezet verhuisden gap en padding
+   naar een inline style en verdween .gap-3 uit de klassenlijst.
+   Daarmee raakten deze regels stilletjes niets meer: de labels bleven
+   staan in een balk van 64px, afgesneden en over elkaar heen. Zo'n
+   opmaakklasse is geen afspraak, hij verandert mee met de vormgeving.
+   Daarom hangen we nu aan twee eigen klassen die alleen hiervoor
+   bestaan — dh-nav-item op elke menuknop en dh-nav-groepkop op elke
+   sectiekop — plus een vangnet op `nav button` voor een knop waar de
+   klasse ooit bij vergeten wordt.
    ─────────────────────────────────────────────────────────── */
-aside.dh-sidebar-collapsed nav button.justify-between { display: none !important; }
-aside.dh-sidebar-collapsed nav button.gap-3 > span,
-aside.dh-sidebar-collapsed .dh-userinfo button.gap-3 > span,
+aside.dh-sidebar-collapsed .dh-nav-groepkop,
 aside.dh-sidebar-collapsed .dh-systeem-row { display: none !important; }
-aside.dh-sidebar-collapsed nav button.gap-3,
-aside.dh-sidebar-collapsed .dh-userinfo button.gap-3 {
+
+/* Alles wat tekst is binnen een menuknop gaat weg: het label, maar ook
+   de telbadges (ml-auto) die anders half over het icoon zouden vallen. */
+aside.dh-sidebar-collapsed .dh-nav-item > span,
+aside.dh-sidebar-collapsed nav button > span { display: none !important; }
+
+/* Wat overblijft is het icoon; dat hoort gecentreerd in de rail te
+   staan. !important is nodig omdat gap en padding uit huisstijl.ts als
+   inline style op de knop staan. */
+aside.dh-sidebar-collapsed .dh-nav-item,
+aside.dh-sidebar-collapsed nav button {
   justify-content: center !important;
   gap: 0 !important;
   padding-left: 0 !important;
