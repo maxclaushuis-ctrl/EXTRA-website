@@ -147,6 +147,27 @@ export async function updateOutboundResult(
 }
 
 /**
+ * Koppel een gedownload bestand aan een bericht.
+ *
+ * Raakt media_url NIET aan: daar blijft het ruwe media-id van de provider in
+ * staan, ongeacht of de download is gelukt. Alleen media_object_path (en
+ * eventueel de bestandsnaam en het definitieve mime-type) wordt gezet, zodat
+ * de UI aan één kolom genoeg heeft om te weten of er echt iets te tonen is.
+ */
+export async function updateMessageMedia(
+  id: number,
+  media: { objectPath: string; mimeType?: string | null; filename?: string | null },
+): Promise<void> {
+  const set: Record<string, unknown> = {
+    mediaObjectPath: media.objectPath,
+    updatedAt: new Date(),
+  };
+  if (media.mimeType) set.mediaMimeType = media.mimeType;
+  if (media.filename) set.mediaFilename = media.filename;
+  await db.update(whatsappMessages).set(set).where(eq(whatsappMessages.id, id));
+}
+
+/**
  * Update status op basis van wa_message_id (vanuit 360dialog statuses[]).
  * Geeft true terug als een rij is geüpdatet.
  */
