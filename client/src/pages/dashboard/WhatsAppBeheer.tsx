@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil, MessageCircle, Briefcase, UserPlus, Building2, Upload, Plus, X, Trash2, SlidersHorizontal, Tag } from 'lucide-react';
+import { Sparkles, Settings as SettingsIcon, Hourglass, AlertTriangle, Pencil, MessageCircle, Briefcase, UserPlus, Building2, Upload, Plus, X, Trash2, SlidersHorizontal, Tag, Contact } from 'lucide-react';
+import { KLEUR } from '@/lib/huisstijl';
 import {
   haalGesprekken,
   haalBerichten,
@@ -550,7 +551,14 @@ export default function WhatsAppBeheer() {
 
   function convDisplayName(c: Conversation): string {
     if (c.displayName) return c.displayName;
+    if (c.importedContactName) return c.importedContactName;
     return 'Onbekend';
+  }
+
+  // Naam komt uit de eenmalige contactenimport, niet uit een échte match —
+  // bepaalt of het dunne signaal-icoontje naast de naam getoond wordt.
+  function isGeimporteerdeNaam(c: Conversation): boolean {
+    return !c.displayName && !!c.importedContactName;
   }
 
   function threadSubline(c: Conversation): string {
@@ -1087,12 +1095,17 @@ export default function WhatsAppBeheer() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
-                          <div style={{
-                            fontSize: 13, fontWeight: unread ? 700 : 600,
-                            color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {name}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: 13, fontWeight: unread ? 700 : 600,
+                              color: name === 'Onbekend' ? '#9CA3AF' : NAVY,
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                              {name}
+                            </div>
+                            {isGeimporteerdeNaam(c) && (
+                              <Contact size={11} strokeWidth={1.5} color={KLEUR.muted} style={{ flexShrink: 0 }} />
+                            )}
                           </div>
                           <div style={{ fontSize: 10, color: '#9CA3AF', flexShrink: 0 }}>
                             {timeAgo(c.lastMessageAt)}
@@ -1170,6 +1183,11 @@ export default function WhatsAppBeheer() {
                               convDisplayName(selectedConv)
                             )}
                           </div>
+                          {isGeimporteerdeNaam(selectedConv) && (
+                            <span title="Naam uit geïmporteerde contactenlijst" style={{ display: 'inline-flex', flexShrink: 0 }}>
+                              <Contact size={13} strokeWidth={1.5} color={KLEUR.muted} />
+                            </span>
+                          )}
                           {/* Naam toevoegen/bewerken — voor onbekend contact = nieuw record aanmaken,
                               voor bekend contact (candidate/prospect) = voor- en achternaam wijzigen
                               op het onderliggende record. */}
