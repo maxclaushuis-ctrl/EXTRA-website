@@ -3,8 +3,8 @@
  * Bouwt op `whatsapp_messages` + `whatsapp_conversations` tabellen.
  */
 import { db } from '../db';
-import { whatsappMessages, whatsappConversations, whatsappTasks, type InsertWhatsappMessage } from '@shared/schema';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { whatsappMessages, whatsappConversations, whatsappTasks, whatsappImportedContacts, type InsertWhatsappMessage } from '@shared/schema';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { matchPhoneToContact, type MatchCategory } from './matcher';
 import { normalizePhone } from './phone';
 import type { AiTaskSuggestion } from './aiClassifier';
@@ -253,7 +253,7 @@ export async function listConversations(args: {
     .limit(limit)
     .offset(offset);
 
-  return rows.map(r => {
+  const resultaat = rows.map(r => {
     const c = r.conv;
     const aiLast = r.aiHandledLast === true;
     const gesnoozed = !!c.snoozedUntil && new Date(c.snoozedUntil).getTime() > Date.now();
@@ -264,8 +264,36 @@ export async function listConversations(args: {
     else if (gesnoozed) displayStatus = 'gesnoozed';
     else if (aiLast) displayStatus = 'afgehandeld_ai';
     else displayStatus = 'open';
-    return { ...c, aiHandledLast: aiLast, displayStatus };
+    return { ...c, aiHandledLast: aiLast, displayStatus, importedContactName: null as string | null };
   });
+
+  // Eenmalige contactenimport (augustus 2026) als laatste redmiddel voor een
+  // naam: alléén opgezocht voor gesprekken zonder échte match (geen
+  // display_name). Raakt display_name/match_category/manual_category nooit
+  // aan — bestaande matches blijven dus altijd ongemoeid. Zie
+  // shared/schema.ts (whatsappImportedContacts) en scripts/import-contacten.ts.
+  const zonderEchteNaam = resultaat.filter(c => !c.displayName);
+  if (zonderEchteNaam.length > 0) {
+    const genormaliseerd = new Map<string, string>(); // genormaliseerd nummer -> phoneNumber van de rij
+    for (const c of zonderEchteNaam) {
+      const n = normalizePhone(c.phoneNumber);
+      if (n) genormaliseerd.set(n, c.phoneNumber);
+    }
+    if (genormaliseerd.size > 0) {
+      const gevonden = await db
+        .select({ phone: whatsappImportedContacts.phone, name: whatsappImportedContacts.name })
+        .from(whatsappImportedContacts)
+        .where(inArray(whatsappImportedContacts.phone, Array.from(genormaliseerd.keys())));
+      const naamPerNummer = new Map(gevonden.map(g => [g.phone, g.name]));
+      for (const c of resultaat) {
+        if (c.displayName) continue;
+        const n = normalizePhone(c.phoneNumber);
+        if (n) c.importedContactName = naamPerNummer.get(n) ?? null;
+      }
+    }
+  }
+
+  return resultaat;
 }
 
 /**

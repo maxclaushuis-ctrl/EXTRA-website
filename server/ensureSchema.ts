@@ -68,6 +68,27 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS manual_category whatsapp_match_category
       `),
   },
+  {
+    // Migratie 0013 — zie migrations/manual/0013_wa_imported_contacts/
+    omschrijving: "whatsapp_imported_contacts: tabel voor geïmporteerde telefooncontacten",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS whatsapp_imported_contacts (
+          id          serial PRIMARY KEY,
+          phone       text NOT NULL,
+          name        text NOT NULL,
+          imported_at timestamp NOT NULL DEFAULT now()
+        )
+      `),
+  },
+  {
+    omschrijving: "whatsapp_imported_contacts: unieke index op phone",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS wa_imported_contacts_phone_unique
+          ON whatsapp_imported_contacts (phone)
+      `),
+  },
 ];
 
 /**
