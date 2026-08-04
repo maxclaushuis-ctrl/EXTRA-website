@@ -1562,6 +1562,23 @@ export const whatsappConversations = pgTable("whatsapp_conversations", {
   inboxStatusIdx: index("wa_conv_inbox_status_idx").on(table.inboxStatus),
 }));
 
+/**
+ * Eenmalige import van telefooncontacten (augustus 2026), alleen om een naam
+ * te tonen bij WhatsApp-nummers die niet matchen met een kandidaat, medewerker,
+ * klant of prospect. Bewust GEEN kandidaat/medewerker/klant-record: telt niet
+ * mee in die lijsten of tellers, en wordt nergens anders gebruikt dan als
+ * fallback-naam in de WhatsApp-inbox (zie server/whatsapp/storage.ts,
+ * listConversations). Gevuld door scripts/import-contacten.ts.
+ */
+export const whatsappImportedContacts = pgTable("whatsapp_imported_contacts", {
+  id: serial("id").primaryKey(),
+  phone: text("phone").notNull(),   // genormaliseerd via server/whatsapp/phone.ts, zelfde formaat als whatsapp_conversations.phone_number
+  name: text("name").notNull(),
+  importedAt: timestamp("imported_at").defaultNow().notNull(),
+}, (table) => ({
+  phoneIdx: uniqueIndex("wa_imported_contacts_phone_unique").on(table.phone),
+}));
+
 // Telefoonnummer-normalisatie issues — losse tabel zodat we ongeldige
 // nummers handmatig kunnen nakijken zonder de bron-tabel te vervuilen.
 export const phoneNormalizationIssues = pgTable("phone_normalization_issues", {

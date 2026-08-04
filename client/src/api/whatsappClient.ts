@@ -8,6 +8,14 @@ export interface Conversation {
   prospectContactId: number | null;
   matchCategory: 'candidate' | 'prospect' | 'unmatched';
   displayName: string | null;
+  /**
+   * Alléén-lezen fallback-naam uit de eenmalige contactenimport (augustus
+   * 2026), server-side opgezocht wanneer er geen échte match is. Nooit een
+   * vervanging voor displayName — puur voor weergave. Zie
+   * server/whatsapp/storage.ts (listConversations) en
+   * scripts/import-contacten.ts.
+   */
+  importedContactName?: string | null;
   contactCompany: string | null;
   contactNotes: string | null;
   assignedToId: number | null;
