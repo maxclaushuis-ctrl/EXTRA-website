@@ -29,10 +29,13 @@ interface Props {
 }
 
 export default function NavGroepKop({ label, expanded, onToggle, eerste }: Props) {
+  // dh-nav-groepkop: in de ingeklapte zijbalk verdwijnt de hele kop (zie
+  // index.css). Een sectietitel als "MARKETING & SEO" past niet in een rail
+  // van 64px en is daar ook niet nodig — de iconen staan er onder elkaar.
   return (
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between transition-colors"
+      className="dh-nav-groepkop w-full flex items-center justify-between transition-colors"
       style={{
         fontSize: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontSize,
         fontWeight: HUISSTIJL.TYPOGRAFIE.sidebarGroupHeader.fontWeight,

@@ -10,6 +10,7 @@
  * Openen:   /layout-harness.html            (profielpaneel open)
  *           /layout-harness.html?profiel=dicht
  *           /layout-harness.html?weergave=nav  (de linker hoofdnavigatie)
+ *           /layout-harness.html?weergave=nav&stand=ingeklapt
  *           /layout-harness.html?weergave=crm-leads&data=gevuld
  *           /layout-harness.html?weergave=crm-leads&data=leeg
  *           /layout-harness.html?weergave=crm-leads&data=fout   (403 van de server)
@@ -225,24 +226,34 @@ const BERICHTEN: Message[] = [
  * De linker hoofdnavigatie zoals DashboardMockup hem neerzet: het logoblok,
  * daaronder de groepen. COMMUNICATIE komt uit CommunicatieNav, de overige
  * koppen uit NavGroepKop — dezelfde componenten, dus dezelfde marges.
+ *
+ * ?weergave=nav&stand=ingeklapt zet dezelfde klassen op de aside als
+ * DashboardMockup doet bij een ingeklapte zijbalk (dh-sidebar-collapsed, w-16
+ * en de mini-variant van het logo), zodat de ingeklapte stand met de échte
+ * regels uit index.css te fotograferen is.
  */
-function NavHarness() {
+function NavHarness({ ingeklapt }: { ingeklapt: boolean }) {
   const [communicatie, setCommunicatie] = useState(true);
   const [medewerkers, setMedewerkers] = useState(false);
   const [bedrijven, setBedrijven] = useState(false);
   const [tab, setTab] = useState<string>('whatsapp-taken');
 
   return (
-    <div
-      className="flex flex-col bg-white"
-      style={{ width: HUISSTIJL.MAAT.sidebarBreedte, borderRight: `1px solid ${HUISSTIJL.KLEUR.rand}`, height: '100vh' }}
+    <aside
+      className={`flex flex-col bg-white ${ingeklapt ? 'w-16 dh-sidebar-collapsed' : ''}`}
+      style={{
+        width: ingeklapt ? undefined : HUISSTIJL.MAAT.sidebarBreedte,
+        borderRight: `1px solid ${HUISSTIJL.KLEUR.rand}`,
+        height: '100vh',
+      }}
     >
       <div
         className="flex items-center justify-between"
         style={{ padding: HUISSTIJL.MAAT.sidebarLogoPadding, minHeight: HUISSTIJL.MAAT.sidebarLogoMinHoogte }}
       >
         <div className="flex items-center gap-2 min-w-0">
-          <div className="min-w-0">
+          <img src={extraLogo} alt="EXTRA" className="dh-logo-mini w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay * 0.85}px` }} />
+          <div className="dh-logo-text min-w-0">
             <img src={extraLogo} alt="EXTRA" className="w-auto" style={{ height: `${HUISSTIJL.MAAT.logoHoogteDisplay}px` }} />
             <div className="mt-1" style={{ ...HUISSTIJL.TYPOGRAFIE.topbarSubtitel, fontSize: '11px', color: HUISSTIJL.KLEUR.muted }}>Dashboard</div>
           </div>
@@ -265,7 +276,7 @@ function NavHarness() {
         <NavGroepKop label="Medewerkers" expanded={medewerkers} onToggle={() => setMedewerkers(v => !v)} />
         <NavGroepKop label="Bedrijven" expanded={bedrijven} onToggle={() => setBedrijven(v => !v)} />
       </nav>
-    </div>
+    </aside>
   );
 }
 
@@ -343,9 +354,10 @@ function CrmHarness() {
 
 // Welke weergave: buiten de componenten beslist, niet met een vroege return
 // binnenin — dat zou de hooks eronder overslaan.
-const weergave = new URLSearchParams(window.location.search).get('weergave');
+const params = new URLSearchParams(window.location.search);
+const weergave = params.get('weergave');
 createRoot(document.getElementById('root')!).render(
-  weergave === 'nav' ? <NavHarness />
+  weergave === 'nav' ? <NavHarness ingeklapt={params.get('stand') === 'ingeklapt'} />
     : weergave === 'crm-leads' ? <CrmHarness />
     : <Harness />,
 );

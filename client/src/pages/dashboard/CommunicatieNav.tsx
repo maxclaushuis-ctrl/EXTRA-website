@@ -66,11 +66,14 @@ function MenuItem({
   children?: React.ReactNode;
 }) {
   const actief = activeTab === tab;
+  // dh-nav-item is het haakje voor de ingeklapte zijbalk (zie index.css): in
+  // die stand verdwijnt alle tekst in de knop en blijft het icoon gecentreerd
+  // over. title= hierboven wordt dan de tooltip, want het label is weg.
   return (
     <button
       onClick={() => onSelect(tab)}
       title={label}
-      className="w-full flex items-center rounded-xl mb-1 transition-colors"
+      className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
       style={{
         fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
         fontWeight: actief ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
