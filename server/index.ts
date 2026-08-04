@@ -12,6 +12,7 @@ import { registerRedirects } from "./redirects";
 import { registerLlmsTxt } from "./llms";
 import { scheduleSalesflowDailyJob, ensureSalesflowSchema } from "./salesflow";
 import { ensureAuthResetSchema } from "./authReset";
+import { ensureDatabaseSchema, logSchemaDrift } from "./ensureSchema";
 import path from "path";
 import fs from "fs";
 
@@ -458,11 +459,15 @@ const OPSTART_DB_MAX_MS = 10_000;
 
   ruimOudeServerprocessenOp();
 
-  // Schema-checks van salesflow en auth-reset horen bij hetzelfde opstartwerk
-  // en vallen daarom onder dezelfde tijdslimiet hieronder.
+  // Schema-checks van salesflow, auth-reset en de centrale aanvullingen horen
+  // bij hetzelfde opstartwerk en vallen daarom onder dezelfde tijdslimiet
+  // hieronder. ensureDatabaseSchema vangt zijn fouten per stap zelf al af, maar
+  // de .catch blijft staan zodat een onverwachte fout de andere twee niet
+  // meesleurt.
   const restantDatabasewerk = Promise.all([
     ensureSalesflowSchema().catch(err => console.error("[salesflow] schema-check mislukt (niet-kritiek):", err?.message || err)),
     ensureAuthResetSchema().catch(err => console.error("[auth] schema-check mislukt (niet-kritiek):", err?.message || err)),
+    ensureDatabaseSchema().catch(err => console.error("[schema] schema-aanvulling mislukt (niet-kritiek):", err?.message || err)),
   ]);
 
   // ── De poort gaat hoe dan ook open ────────────────────────────────────────
@@ -477,7 +482,13 @@ const OPSTART_DB_MAX_MS = 10_000;
   // start".
   let databasewerkKlaar = false;
   const alleOpstartQueries = Promise.all([databasewerk, restantDatabasewerk])
-    .then(() => { databasewerkKlaar = true; });
+    .then(() => {
+      databasewerkKlaar = true;
+      // Pas ná alle aanvullingen vergelijken, anders meldt de controle tabellen
+      // als ontbrekend die een regel eerder nog aangemaakt worden. Bewust niet
+      // afgewacht: het is een rapport in het log, geen voorwaarde om te starten.
+      void logSchemaDrift();
+    });
   await Promise.race([
     alleOpstartQueries,
     new Promise(resolve => setTimeout(resolve, OPSTART_DB_MAX_MS)),
