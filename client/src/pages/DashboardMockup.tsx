@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest, fetchJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Gift, LayoutDashboard, Trophy, Tag, BarChart3, Mail, Receipt,
@@ -721,7 +721,7 @@ export default function DashboardMockup() {
 
   const { data: kpiData, isLoading: kpiLoading, refetch: refetchKpi } = useQuery<any>({
     queryKey: ['/api/admin/kpi', kpiFromDate, kpiToDate],
-    queryFn: () => fetch(`/api/admin/kpi${kpiQueryString ? '?' + kpiQueryString : ''}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<any>(`/api/admin/kpi${kpiQueryString ? '?' + kpiQueryString : ''}`),
     enabled: isAuthenticated && user?.role === 'admin',
     staleTime: 30000,
   });
@@ -1024,7 +1024,7 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                  className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                   style={{
                     fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                     fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1057,7 +1057,7 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                  className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                   style={{
                     fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                     fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1097,7 +1097,7 @@ export default function DashboardMockup() {
                   key={item.tab}
                   onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
                   title={item.label}
-                  className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                  className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                   style={{
                     fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                     fontWeight: activeTab === item.tab ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1121,7 +1121,7 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('blog'); setSidebarOpen(false); }}
                 title="Blog & SEO"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                 style={{
                   fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                   fontWeight: activeTab === 'blog' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1142,7 +1142,7 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('vacatures-cms'); setSidebarOpen(false); }}
                 title="Vacatures & SEO"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                 style={{
                   fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                   fontWeight: activeTab === 'vacatures-cms' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1163,7 +1163,7 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('stats'); setSidebarOpen(false); }}
                 title="Website Statistieken"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                 style={{
                   fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                   fontWeight: activeTab === 'stats' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1179,7 +1179,7 @@ export default function DashboardMockup() {
               <button
                 onClick={() => { setActiveTab('kpi'); setSidebarOpen(false); }}
                 title="KPI & Rapportage"
-                className="w-full flex items-center rounded-xl mb-1 transition-colors"
+                className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
                 style={{
                   fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
                   fontWeight: activeTab === 'kpi' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1210,7 +1210,7 @@ export default function DashboardMockup() {
           <button
             onClick={() => { setActiveTab('admin-beheer'); setSidebarOpen(false); }}
             title="Admin-accounts"
-            className="w-full flex items-center rounded-xl mb-1 transition-colors"
+            className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
             style={{
               fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
               fontWeight: activeTab === 'admin-beheer' ? HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightActief : HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1238,7 +1238,7 @@ export default function DashboardMockup() {
           <button
             onClick={() => { setChangePwData({ current: '', next: '', confirm: '' }); setChangePwError(''); setChangePasswordOpen(true); }}
             title="Wachtwoord wijzigen"
-            className="w-full flex items-center rounded-xl mb-1 transition-colors"
+            className="dh-nav-item w-full flex items-center rounded-xl mb-1 transition-colors"
             style={{
               fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
               fontWeight: HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,
@@ -1253,7 +1253,7 @@ export default function DashboardMockup() {
           <button
             onClick={() => logout()}
             title="Uitloggen"
-            className="w-full flex items-center rounded-xl transition-colors hover:text-red-600"
+            className="dh-nav-item w-full flex items-center rounded-xl transition-colors hover:text-red-600"
             style={{
               fontSize: HUISSTIJL.TYPOGRAFIE.menuItem.fontSize,
               fontWeight: HUISSTIJL.TYPOGRAFIE.menuItem.fontWeightInactief,

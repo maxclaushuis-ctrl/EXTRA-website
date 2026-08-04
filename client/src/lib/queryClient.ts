@@ -11,6 +11,50 @@ async function defaultQueryFn({ queryKey }: QueryFunctionContext): Promise<unkno
   return response.json();
 }
 
+/**
+ * GET met JSON-antwoord, voor een eigen queryFn die query-parameters nodig
+ * heeft en dus niet op defaultQueryFn hierboven kan leunen.
+ *
+ * Waarom dit bestaat: een eigen queryFn werd op meerdere plekken geschreven
+ * als `fetch(url).then(r => r.json())`. Die keten kijkt niet naar de
+ * HTTP-status, dus een 403 van adminMiddleware ({"message":"Geen toegang"})
+ * of een 500 ({"message":"Fout bij ..."}) komt binnen als een gewóón geslaagd
+ * antwoord. React Query zet dat foutobject dan in `data`, en de component
+ * denkt een lijst te hebben terwijl er een object staat. Het gevolg is geen
+ * nette foutmelding maar een crash verderop, bij de eerste .filter() of
+ * .map(). Zo'n mislukte aanroep hoort te falen op het moment dat hij mislukt.
+ */
+export async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url, { credentials: 'include' });
+  if (!response.ok) {
+    const errorText = await response.text();
+    let melding = errorText;
+    try { melding = JSON.parse(errorText)?.message || errorText; } catch { /* geen JSON */ }
+    const error: any = new Error(
+      response.status === 401 || response.status === 403
+        ? 'Geen toegang — log opnieuw in en probeer het nog eens.'
+        : melding || `Serverfout (${response.status})`,
+    );
+    error.status = response.status;
+    throw error;
+  }
+  return response.json() as Promise<T>;
+}
+
+/**
+ * Zelfde als fetchJson, maar voor endpoints die een lijst horen terug te
+ * geven. Krijgt de client iets anders (een foutobject, een enkel record),
+ * dan faalt de query met een leesbare melding in plaats van dat het probleem
+ * pas verderop in de render opduikt als "x.filter is not a function".
+ */
+export async function fetchJsonList<T>(url: string): Promise<T[]> {
+  const data = await fetchJson<unknown>(url);
+  if (!Array.isArray(data)) {
+    throw new Error(`Onverwacht antwoord van ${url}: er werd een lijst verwacht.`);
+  }
+  return data as T[];
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

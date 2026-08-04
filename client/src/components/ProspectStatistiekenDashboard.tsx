@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { fetchJson } from "@/lib/queryClient";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartTooltip,
   Legend, ResponsiveContainer, BarChart, Cell,
@@ -210,19 +211,19 @@ export default function ProspectStatistiekenDashboard() {
   // Queries
   const overviewQ = useQuery<OverviewData>({
     queryKey: ['/api/admin/stats/overview', vanaf, tot, selectedBranches.join(',')],
-    queryFn: () => fetch(`/api/admin/stats/overview?${buildParams()}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<OverviewData>(`/api/admin/stats/overview?${buildParams()}`),
     staleTime: 60_000,
   });
 
   const campagnesQ = useQuery<CampagnesData>({
     queryKey: ['/api/admin/stats/campaigns', vanaf, tot, selectedBranches.join(','), sortBy, sortDir, page],
-    queryFn: () => fetch(`/api/admin/stats/campaigns?${buildParams({ sort_by: sortBy, sort_dir: sortDir, page: String(page), per_page: '10' })}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<CampagnesData>(`/api/admin/stats/campaigns?${buildParams({ sort_by: sortBy, sort_dir: sortDir, page: String(page), per_page: '10' })}`),
     staleTime: 60_000,
   });
 
   const activityQ = useQuery<ActivityData>({
     queryKey: ['/api/admin/stats/activity', activityOffset],
-    queryFn: () => fetch(`/api/admin/stats/activity?limit=20&offset=${activityOffset}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<ActivityData>(`/api/admin/stats/activity?limit=20&offset=${activityOffset}`),
     staleTime: 60_000,
   });
 
