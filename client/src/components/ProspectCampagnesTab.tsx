@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, fetchJson, fetchJsonList } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { FUNCTIEGROEPEN } from "@shared/schema";
 import EmailBuilderPage from "@/components/EmailBuilderPage";
@@ -809,7 +809,7 @@ function ABRapportageTab({ campaign }: { campaign: Campaign }) {
 
   const { data: stats, isLoading, refetch } = useQuery<ABStats>({
     queryKey: ['/api/admin/prospect-campaigns', campaign.id, 'ab-stats'],
-    queryFn: () => fetch(`/api/admin/prospect-campaigns/${campaign.id}/ab-stats`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<ABStats>(`/api/admin/prospect-campaigns/${campaign.id}/ab-stats`),
     refetchInterval: 60_000,
     enabled: campaign.abTestActief,
   });
@@ -1118,7 +1118,7 @@ interface FlowStats {
 function FlowVoortgangTab({ campaignId }: { campaignId: number }) {
   const { data: stats, isLoading, refetch } = useQuery<FlowStats>({
     queryKey: ['/api/admin/prospect-campaigns', campaignId, 'flow-stats'],
-    queryFn: () => fetch(`/api/admin/prospect-campaigns/${campaignId}/flow-stats`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<FlowStats>(`/api/admin/prospect-campaigns/${campaignId}/flow-stats`),
     refetchInterval: 30_000,
   });
 
@@ -1853,7 +1853,7 @@ export default function ProspectCampagnesTab() {
   const { data: recipients = [], isLoading: recipLoading } = useQuery<Recipient[]>({
     queryKey: ['/api/admin/prospect-campaigns', selectedId, 'recipients'],
     enabled: !!selectedId && detailTab === 'ontvangers',
-    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/recipients`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJsonList<Recipient>(`/api/admin/prospect-campaigns/${selectedId}/recipients`),
   });
 
   // Voor concept/geplande campagnes: bereken nu welke contacten op het
@@ -1871,7 +1871,7 @@ export default function ProspectCampagnesTab() {
   const { data: segmentPreviewRaw, isLoading: segLoading } = useQuery<SegmentPreview>({
     queryKey: ['/api/admin/prospect-campaigns', selectedId, 'segment-preview'],
     enabled: !!selectedId && detailTab === 'ontvangers' && isPlannedOrConcept,
-    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/segment-preview`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<SegmentPreview>(`/api/admin/prospect-campaigns/${selectedId}/segment-preview`),
   });
 
   // Lokale shadow-state voor uitsluitingen. Gesynchroniseerd met server bij
@@ -1939,7 +1939,7 @@ export default function ProspectCampagnesTab() {
   const { data: campaignStats, isLoading: statsLoading } = useQuery<CampaignStats>({
     queryKey: ['/api/admin/prospect-campaigns', selectedId, 'stats'],
     enabled: !!selectedId && detailTab === 'statistieken' && isSentStatus(selectedCampaign?.status ?? ''),
-    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/stats`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<CampaignStats>(`/api/admin/prospect-campaigns/${selectedId}/stats`),
     refetchInterval: 30000,
   });
 
@@ -1950,7 +1950,7 @@ export default function ProspectCampagnesTab() {
   const { data: klikAnalyse, isLoading: klikLoading } = useQuery<KlikAnalyseData>({
     queryKey: ['/api/admin/prospect-campaigns', selectedId, 'click-analyse'],
     enabled: !!selectedId && detailTab === 'statistieken' && isSentStatus(selectedCampaign?.status ?? ''),
-    queryFn: () => fetch(`/api/admin/prospect-campaigns/${selectedId}/click-analyse`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<KlikAnalyseData>(`/api/admin/prospect-campaigns/${selectedId}/click-analyse`),
   });
 
   const [klikAnalyseOpen, setKlikAnalyseOpen] = useState(false);
