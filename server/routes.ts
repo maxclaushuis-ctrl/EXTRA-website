@@ -12718,6 +12718,18 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       patch.phone = genormaliseerd;
     }
 
+    // Naam: firstName altijd verplicht als hij wordt meegestuurd (voornaam kan
+    // niet leeg zijn), lastName mag leeg — niet iedereen heeft een achternaam
+    // in het systeem staan.
+    if (body.firstName !== undefined) {
+      const f = String(body.firstName).trim();
+      if (!f) return res.status(400).json({ error: 'Voornaam mag niet leeg zijn' });
+      patch.firstName = f;
+    }
+    if (body.lastName !== undefined) {
+      patch.lastName = String(body.lastName).trim();
+    }
+
     if (Object.keys(patch).length === 0) {
       return res.status(400).json({ error: 'Niets om op te slaan' });
     }
@@ -12749,6 +12761,8 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       success: true,
       contactId: rij.id,
       name: [rij.firstName, rij.lastName].filter(Boolean).join(' ') || null,
+      firstName: rij.firstName,
+      lastName: rij.lastName,
       phone: rij.phone,
       status: rij.status,
       functie: rij.functie,

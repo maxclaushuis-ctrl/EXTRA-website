@@ -4,10 +4,12 @@
  * Stijl uit mockups/extra-whatsapp-mockup.html; data via bestaande endpoints.
  */
 import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
+import { Contact as ContactIcon } from 'lucide-react';
 import {
   haalContacten,
   updateContactOptIn,
   updateContactProfiel,
+  updateConversationCategory,
   haalNotities,
   maakNotitie,
   updateLabels,
@@ -27,6 +29,15 @@ import {
   type WaProfielPatch,
 } from '../../../api/whatsappClient';
 import { WA, WA_TEKST, WA_GEWICHT, formatDate, formatPhone, voornaamVan } from './theme';
+import { KLEUR } from '../../../lib/huisstijl';
+
+// Volgorde en labels identiek aan Sidebar/ConversationList: candidate=Medewerkers
+// (aangenomen), unmatched=Kandidaten, prospect=Klanten.
+const TABBLAD_OPTIES: Array<{ waarde: 'candidate' | 'unmatched' | 'prospect'; label: string }> = [
+  { waarde: 'candidate', label: 'Medewerkers' },
+  { waarde: 'unmatched', label: 'Kandidaten' },
+  { waarde: 'prospect', label: 'Klanten' },
+];
 
 interface Props {
   conv: Conversation;
@@ -149,9 +160,12 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   const [showLabelInput, setShowLabelInput] = useState(false);
   const [optInBusy, setOptInBusy] = useState(false);
   const [catBusy, setCatBusy] = useState(false);
+  const [tabBusy, setTabBusy] = useState(false);
 
   // Fase 3E — bewerkbare profielvelden.
-  type Veld = 'functie' | 'status' | 'phone';
+  type Veld = 'naam' | 'functie' | 'status' | 'phone';
+  /** Losse tekst-state voor het naamveld: opslaan gebeurt op blur/Enter, zelfde ritme als telefoon. */
+  const [naamInput, setNaamInput] = useState('');
   /** Welk veld nu een verzoek heeft lopen (control staat zolang uit). */
   const [veldBezig, setVeldBezig] = useState<Veld | null>(null);
   /** Korte terugkoppeling per veld; verdwijnt vanzelf. Geen opslaan-knop. */
@@ -176,7 +190,29 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     finally { setCatBusy(false); }
   }
 
-  const naam = conv.displayName || `+${conv.phoneNumber}`;
+  /**
+   * Handmatige tab-override — verplaatst dit gesprek naar Medewerkers/
+   * Kandidaten/Klanten, zonder dat de automatische matcher het terugzet.
+   * Geen apart 'handmatig ingedeeld'-label: de gekozen waarde wint stilzwijgend.
+   */
+  async function handleTabblad(next: 'candidate' | 'unmatched' | 'prospect') {
+    setTabBusy(true);
+    try {
+      await updateConversationCategory(conv.phoneNumber, next);
+      onConversationChanged();
+    } catch { /* stil falen; de poll zet de waarde terug */ }
+    finally { setTabBusy(false); }
+  }
+
+  // Naam: een gekoppeld contact (candidate/employee-record) is de bewerkbare
+  // bron van waarheid — die kan net gewijzigd zijn zonder dat conv.displayName
+  // al is bijgewerkt (dat veld wordt apart door de matcher gezet). Klanten
+  // hebben geen zo'n record (contact is dan null) en vallen terug op
+  // conv.displayName. Helemaal onbekende nummers tonen, waar bekend, de naam
+  // uit de eenmalige contactenimport met een dun icoontje als signaal.
+  const contactNaam = contact ? [contact.firstName, contact.lastName].filter(Boolean).join(' ') : '';
+  const naam = contactNaam || conv.displayName || conv.importedContactName || `+${conv.phoneNumber}`;
+  const naamUitImport = !contactNaam && !conv.displayName && !!conv.importedContactName;
   const rol = conv.matchCategory === 'candidate' ? 'Medewerker'
     : conv.matchCategory === 'prospect' ? 'Klant'
     : 'Kandidaat';
@@ -218,6 +254,11 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     setTelInput(formatPhone(contact?.phone || conv.phoneNumber || ''));
   }, [contact?.contactId, contact?.phone, conv.phoneNumber]);
 
+  // Naamveld volgt het geladen contact, zelfde ritme als telefoon hierboven.
+  useEffect(() => {
+    setNaamInput([contact?.firstName, contact?.lastName].filter(Boolean).join(' '));
+  }, [contact?.contactId, contact?.firstName, contact?.lastName]);
+
   /** Alleen cijfers, om "+31 6 12 34 56 78" met "31612345678" te kunnen vergelijken. */
   const cijfers = (v: string | null | undefined) => (v || '').replace(/\D/g, '');
 
@@ -249,8 +290,11 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
         functie: r.functie ?? contact.functie,
         sourceStatus: r.status ?? contact.sourceStatus,
         phone: r.phone ?? contact.phone,
+        firstName: r.firstName ?? contact.firstName,
+        lastName: r.lastName ?? contact.lastName,
       });
       if (r.phone) setTelInput(formatPhone(r.phone));
+      if (veld === 'naam') setNaamInput([r.firstName, r.lastName].filter(Boolean).join(' '));
       setVeldMelding({ veld, tekst: 'Opgeslagen', kleur: '#059669' });
 
       if (veld === 'status' && r.uitContactenlijst) {
@@ -270,6 +314,7 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     } catch (e: any) {
       setContact(vorige);
       setTelInput(formatPhone(vorige.phone || conv.phoneNumber || ''));
+      setNaamInput([vorige.firstName, vorige.lastName].filter(Boolean).join(' '));
       setVeldMelding({ veld, tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
     } finally {
       setVeldBezig(null);
@@ -351,7 +396,14 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
         background: WA.panel, padding: '13px 16px',
         borderBottom: `1px solid ${WA.border}`,
       }}>
-        <div style={{ fontWeight: WA_GEWICHT.bold, fontSize: WA_TEKST.h3 }}>{naam}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontWeight: WA_GEWICHT.bold, fontSize: WA_TEKST.h3 }}>{naam}</div>
+          {naamUitImport && (
+            <span title="Naam uit geïmporteerde contactenlijst" style={{ display: 'inline-flex', flexShrink: 0 }}>
+              <ContactIcon size={13} strokeWidth={1.5} color={KLEUR.muted} />
+            </span>
+          )}
+        </div>
         <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub, marginTop: 2 }}>
           {rol} sinds {formatDate(conv.createdAt)}
         </div>
@@ -364,6 +416,32 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       <Section title="Profiel">
         {contact ? (
           <>
+            <EditRow
+              k="Naam"
+              melding={veldMelding?.veld === 'naam' ? veldMelding : null}
+            >
+              <input
+                value={naamInput}
+                disabled={veldBezig !== null}
+                onChange={e => setNaamInput(e.target.value)}
+                // Opslaan op blur én Enter, niet op elke toetsaanslag — zelfde
+                // ritme als het telefoonveld hieronder.
+                onBlur={() => {
+                  const ingevoerd = naamInput.trim();
+                  const huidig = [contact.firstName, contact.lastName].filter(Boolean).join(' ');
+                  if (!ingevoerd || ingevoerd === huidig) { setNaamInput(huidig); return; }
+                  // Eerste woord = voornaam, de rest = achternaam. Simpel en
+                  // voorspelbaar; tussenvoegsels ("van der") komen gewoon in de
+                  // achternaam terecht, precies zoals ze getypt worden.
+                  const [voornaam, ...rest] = ingevoerd.split(/\s+/);
+                  bewaarProfiel('naam', { firstName: voornaam, lastName: rest.join(' ') });
+                }}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                placeholder="Naam"
+                style={{ ...VELD_STIJL, outline: 'none' }}
+              />
+            </EditRow>
+
             <EditRow
               k="Functie"
               melding={veldMelding?.veld === 'functie' ? veldMelding : null}
@@ -501,6 +579,29 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
             Wacht op planner — {ESCALATION_REASON_LABELS[conv.escalationReason]}
           </div>
         )}
+      </Section>
+
+      {/* Tabblad — handmatig verplaatsen tussen Medewerkers/Kandidaten/Klanten.
+          Losstaand van "Onderwerp" hierboven: dat is de AI-gelabelde inhoud van
+          het gesprek, dit is welk tabblad het gesprek toont. Bewust geen apart
+          label of tag: de gekozen waarde wint gewoon stilzwijgend van de
+          automatische matching. */}
+      <Section title="Tabblad">
+        <select
+          value={conv.matchCategory}
+          disabled={tabBusy}
+          onChange={e => handleTabblad(e.target.value as 'candidate' | 'unmatched' | 'prospect')}
+          title="Verplaats dit gesprek naar een ander tabblad. Handmatige keuze blijft staan ook bij nieuwe berichten."
+          style={{
+            width: '100%', fontSize: WA_TEKST.secundair, padding: '7px 9px', borderRadius: 8,
+            border: `1px solid ${WA.border}`, background: '#fff', color: WA.text,
+            fontFamily: 'inherit', cursor: tabBusy ? 'wait' : 'pointer',
+          }}
+        >
+          {TABBLAD_OPTIES.map(o => (
+            <option key={o.waarde} value={o.waarde}>{o.label}</option>
+          ))}
+        </select>
       </Section>
 
       {/* Labels */}

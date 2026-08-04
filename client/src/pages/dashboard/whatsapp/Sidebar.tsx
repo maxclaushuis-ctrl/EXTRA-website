@@ -161,7 +161,7 @@ export default function Sidebar(props: Props) {
           onClick={onToggleHideAiHandled}
           title="Verberg gesprekken waarin de AI-agent het laatste woord had"
         >
-          🤖 AI-afgehandeld verbergen{hideAiHandled && hiddenAiCount > 0 ? ` (${hiddenAiCount})` : ''}
+          🤖 AI-afgehandeld{hideAiHandled && hiddenAiCount > 0 ? ` (${hiddenAiCount})` : ''}
         </FilterChip>
       </div>
 
