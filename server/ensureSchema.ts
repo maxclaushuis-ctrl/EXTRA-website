@@ -52,6 +52,22 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS temperature text
       `),
   },
+  {
+    // Migratie 0012 — zie migrations/manual/0012_wa_conversations_manual_category/
+    //
+    // manual_category is op 5 mei 2026 (commit ec282e3) aan shared/schema.ts
+    // toegevoegd, vóórdat dit bestand bestond — en dus nooit in een
+    // ensure*Schema-stap terechtgekomen. Zelfde risico als de crm_companies-
+    // storing van 4 augustus: de kolom staat in de code (en de dropdown in het
+    // WhatsApp-profielpaneel gebruikt hem al), maar niemand heeft ooit
+    // gecontroleerd of hij ook echt in de database staat.
+    omschrijving: "whatsapp_conversations: manual_category (handmatige tab-override)",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE whatsapp_conversations
+          ADD COLUMN IF NOT EXISTS manual_category whatsapp_match_category
+      `),
+  },
 ];
 
 /**
