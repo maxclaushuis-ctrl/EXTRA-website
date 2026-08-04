@@ -89,6 +89,23 @@ const AANVULLINGEN: Aanvulling[] = [
           ON whatsapp_imported_contacts (phone)
       `),
   },
+  {
+    // Migratie 0014 — zie migrations/manual/0014_wa_messages_media/
+    //
+    // media_object_path en media_filename komen uit de wa-media-branch, die
+    // net als manual_category ouder is dan dit bestand — dus nooit in een
+    // ensure*Schema-stap vastgelegd. Zelfde risico als eerder: de kolommen
+    // staan in de code (ChatView en de media-serveerroute gebruiken ze al),
+    // maar zonder deze stap is nooit gegarandeerd dat ze ook in de database
+    // staan.
+    omschrijving: "whatsapp_messages: media_object_path en media_filename",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE whatsapp_messages
+          ADD COLUMN IF NOT EXISTS media_object_path text,
+          ADD COLUMN IF NOT EXISTS media_filename     text
+      `),
+  },
 ];
 
 /**
