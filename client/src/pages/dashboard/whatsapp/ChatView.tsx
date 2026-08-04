@@ -7,7 +7,7 @@
 import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
 import type { Conversation, Message, TeamMember } from '../../../api/whatsappClient';
 import {
-  WA, WA_TEKST, WA_GEWICHT, WA_GLYPH,
+  WA, WA_TEKST, WA_GEWICHT, WA_GLYPH, WA_MEDIA,
   formatTime, dayLabel, snoozeRemaining, voornaamVan, formatPhone,
 } from './theme';
 
@@ -56,6 +56,24 @@ function statusChecks(status: string): { symbool: string; kleur: string } | null
   }
 }
 
+/**
+ * URL van de bijlage bij een bericht. preview=1 levert het bestand inline
+ * (Content-Disposition: inline), zonder die vlag komt het als download binnen.
+ * Het opslagpad zelf komt nooit naar de client — de server zoekt het op bij
+ * het bericht-id.
+ */
+function bijlageUrl(messageId: number, preview: boolean): string {
+  return `/api/whatsapp/messages/${messageId}/media${preview ? '?preview=1' : ''}`;
+}
+
+/** Leesbare bestandsnaam voor de downloadregel bij documenten. */
+function bijlageNaam(m: Message): string {
+  if (m.mediaFilename) return m.mediaFilename;
+  const uitBody = (m.body || '').match(/^\[document:\s*(.+?)\]$/);
+  if (uitBody) return uitBody[1];
+  return 'Bijlage';
+}
+
 // Snooze-presets: 1 uur / vanmiddag 14:00 / morgenochtend 09:00.
 function presetVanmiddag(): Date {
   const d = new Date();
@@ -80,6 +98,8 @@ export default function ChatView(props: Props) {
   const [showSnoozeMenu, setShowSnoozeMenu] = useState(false);
   const [customSnooze, setCustomSnooze] = useState('');
   const [showCustomSnooze, setShowCustomSnooze] = useState(false);
+  /** Foto op volledig formaat; null = dicht. Zie de overlay onderaan. */
+  const [vergroot, setVergroot] = useState<{ src: string; alt: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -87,8 +107,18 @@ export default function ChatView(props: Props) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, conv?.phoneNumber]);
 
-  // Sluit snooze-menu wanneer een ander gesprek geselecteerd wordt.
-  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setAttachedFile(null); }, [conv?.phoneNumber]);
+  // Sluit snooze-menu wanneer een ander gesprek geselecteerd wordt. Een open
+  // foto hoort daar ook bij: die gaat over het vorige gesprek.
+  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setAttachedFile(null); setVergroot(null); }, [conv?.phoneNumber]);
+
+  // Escape sluit de vergrote foto. Alleen geregistreerd zolang er één open
+  // staat, zodat we niet bij elk toetsaanslag in de composer meeluisteren.
+  useEffect(() => {
+    if (!vergroot) return;
+    const opToets = (e: KeyboardEvent) => { if (e.key === 'Escape') setVergroot(null); };
+    window.addEventListener('keydown', opToets);
+    return () => window.removeEventListener('keydown', opToets);
+  }, [vergroot]);
 
   const plannerVoornaam = useMemo(() => {
     const map = new Map<number, string>();
@@ -322,7 +352,14 @@ export default function ChatView(props: Props) {
           const uit = m.direction === 'outbound';
           const checks = uit ? statusChecks(m.status) : null;
           const isMedia = m.messageType !== 'text' && m.messageType !== 'unknown';
-          const mediaLink = m.mediaUrl && /^https?:\/\//i.test(m.mediaUrl) ? m.mediaUrl : null;
+          // Hier stond een test op /^https?:\/\//. Die kon nooit slagen: Meta
+          // levert in de webhook een media-id, geen URL, dus viel elk
+          // mediabericht terug op de kale tekstbeschrijving. Nu bepaalt de
+          // server of het bestand er daadwerkelijk staat (heeftBijlage) en
+          // halen we het op via het bericht-id.
+          const heeftBestand = m.heeftBijlage === true;
+          const isAfbeelding = heeftBestand && (m.messageType === 'image' || m.messageType === 'sticker');
+          const bijschrift = (m.body || '').replace(/^\[(afbeelding|video|sticker|document)(:\s*)?/, '').replace(/\]$/, '').trim();
           return (
             <div
               key={m.id}
@@ -365,20 +402,62 @@ export default function ChatView(props: Props) {
                   }}>🤖 AI-agent</div>
                 )
               )}
-              <div>
-                {isMedia && (
-                  <span style={{ marginRight: 4 }}>📎</span>
-                )}
-                {m.body || (isMedia ? `[${m.messageType}]` : '')}
-                {mediaLink && (
-                  <>
-                    {' '}
-                    <a href={mediaLink} target="_blank" rel="noreferrer" style={{ color: WA.purple, fontSize: WA_TEKST.body }}>
-                      Bijlage openen
-                    </a>
-                  </>
-                )}
-              </div>
+              {/* Bijlage. Een foto vult de bubbel met het bijschrift eronder,
+                  zoals WhatsApp zelf; audio en video krijgen een speler; al het
+                  overige een downloadregel met de bestandsnaam. Staat het
+                  bestand er niet (download mislukt of bericht van vóór deze
+                  functie), dan blijft de oude tekstweergave over. */}
+              {isAfbeelding ? (
+                <div>
+                  <img
+                    src={bijlageUrl(m.id, true)}
+                    alt={bijschrift || 'Bijlage'}
+                    onClick={() => setVergroot({ src: bijlageUrl(m.id, true), alt: bijschrift || 'Bijlage' })}
+                    style={{
+                      display: 'block', maxWidth: '100%', maxHeight: WA_MEDIA.voorbeeldMaxHoogte,
+                      borderRadius: WA_MEDIA.radius, cursor: 'zoom-in',
+                    }}
+                  />
+                  {bijschrift && (
+                    <div style={{ marginTop: WA_MEDIA.bijschriftMarge }}>{bijschrift}</div>
+                  )}
+                </div>
+              ) : heeftBestand && m.messageType === 'video' ? (
+                <div>
+                  <video
+                    src={bijlageUrl(m.id, true)}
+                    controls
+                    style={{
+                      display: 'block', maxWidth: '100%', maxHeight: WA_MEDIA.voorbeeldMaxHoogte,
+                      borderRadius: WA_MEDIA.radius,
+                    }}
+                  />
+                  {bijschrift && (
+                    <div style={{ marginTop: WA_MEDIA.bijschriftMarge }}>{bijschrift}</div>
+                  )}
+                </div>
+              ) : heeftBestand && m.messageType === 'audio' ? (
+                <audio src={bijlageUrl(m.id, true)} controls style={{ display: 'block', maxWidth: '100%', height: WA_MEDIA.audioHoogte }} />
+              ) : heeftBestand ? (
+                <a
+                  href={bijlageUrl(m.id, false)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    color: WA.purple, fontSize: WA_TEKST.body, fontWeight: WA_GEWICHT.medium,
+                    textDecoration: 'none', wordBreak: 'break-all',
+                  }}
+                >
+                  <span style={{ fontSize: WA_GLYPH.icoonKlein }}>📄</span>
+                  <span>{bijlageNaam(m)}</span>
+                </a>
+              ) : (
+                <div>
+                  {isMedia && (
+                    <span style={{ marginRight: 4 }}>📎</span>
+                  )}
+                  {m.body || (isMedia ? `[${m.messageType}]` : '')}
+                </div>
+              )}
               <div style={{
                 display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
                 gap: 4, marginTop: 3, fontSize: WA_TEKST.mini, color: WA.textSub,
@@ -476,6 +555,28 @@ export default function ChatView(props: Props) {
           }}
         >➤</button>
       </form>
+
+      {/* Foto op volledig formaat. Klik ergens of Escape sluit hem weer;
+          bewust geen aparte sluitknop-in-de-hoek, de hele overlay is de knop. */}
+      {vergroot && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={vergroot.alt}
+          onClick={() => setVergroot(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.82)', cursor: 'zoom-out',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+          }}
+        >
+          <img
+            src={vergroot.src}
+            alt={vergroot.alt}
+            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: WA_MEDIA.radius }}
+          />
+        </div>
+      )}
     </div>
   );
 }

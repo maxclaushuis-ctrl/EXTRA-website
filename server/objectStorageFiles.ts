@@ -10,6 +10,7 @@ const UPLOAD_TIMEOUT_MS = 30_000;
 
 export const CV_PREFIX = 'cvs';
 export const WA_AI_PREFIX = 'wa-ai-attachments';
+export const WA_MEDIA_PREFIX = 'wa-media';
 
 /** Faalt luid na een time-out i.p.v. oneindig te blijven hangen (bv. trage Object Storage in deploy). */
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -118,4 +119,19 @@ export function downloadWaAiAttachmentBuffer(storagePath: string): Promise<Buffe
 
 export function deleteWaAiAttachmentStorage(storagePath: string): Promise<boolean> {
   return deleteFileFromObjectStorage(storagePath);
+}
+
+// ─── WhatsApp media (foto's, documenten, audio, video uit gesprekken) ────────
+//
+// Zowel inkomende media (via de Meta media-API binnengehaald) als media die
+// vanuit het dashboard wordt verstuurd. Het pad komt terecht in
+// whatsapp_messages.media_object_path; het ruwe Meta media-id blijft in
+// media_url staan.
+
+export function uploadWaMedia(buffer: Buffer, originalFilename: string, mimeType: string): Promise<string> {
+  return uploadFileToObjectStorage(buffer, WA_MEDIA_PREFIX, originalFilename, mimeType);
+}
+
+export function downloadWaMediaBuffer(storagePath: string): Promise<Buffer | null> {
+  return downloadFileBuffer(storagePath);
 }

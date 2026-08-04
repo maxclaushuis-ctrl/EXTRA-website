@@ -4,8 +4,9 @@
  *
  * Run met:  npx tsx server/whatsapp/__tests__/metaClient.test.ts
  */
-import { META_GRAPH_BASE_URL, isMetaConfigured, sendTextMessage, sendTemplateMessage, sendMediaMessage, markAsRead } from '../metaClient';
+import { META_GRAPH_BASE_URL, isMetaConfigured, sendTextMessage, sendTemplateMessage, sendMediaMessage, markAsRead, downloadMedia, MEDIA_MAX_BYTES } from '../metaClient';
 import * as waProvider from '../provider';
+import { extensieVoorMime, bestandsnaamVoor } from '../mediaService';
 
 let passed = 0;
 let failed = 0;
@@ -25,6 +26,24 @@ function assertEq(label: string, actual: unknown, expected: unknown) {
 interface RecordedCall { url: string; init: any; }
 const recorded: RecordedCall[] = [];
 const realFetch = globalThis.fetch;
+
+/**
+ * Variant van mockFetch voor de media-download: die tweede stap levert geen
+ * JSON maar ruwe bytes, en de test moet kunnen controleren dát het bytes zijn.
+ * Handler mag per aanroep een ander Content-Type en een Buffer teruggeven.
+ */
+function mockFetchBinair(handler: (url: string, init: any) => { status: number; body: any; contentType?: string }) {
+  recorded.length = 0;
+  (globalThis as any).fetch = async (url: any, init: any) => {
+    recorded.push({ url: String(url), init });
+    const { status, body, contentType } = handler(String(url), init);
+    const payload = Buffer.isBuffer(body) ? new Uint8Array(body) : (typeof body === 'string' ? body : JSON.stringify(body));
+    return new Response(payload as any, {
+      status,
+      headers: { 'Content-Type': contentType || 'application/json' },
+    });
+  };
+}
 
 function mockFetch(handler: (url: string, init: any) => { status: number; body: any }) {
   recorded.length = 0;
@@ -177,6 +196,123 @@ async function main() {
   ok('errorMessage bevat details', (p3.errorMessage || '').includes('window verlopen'));
   assertEq('httpStatus', p3.httpStatus, 400);
   assertEq('httpStatusForFailure → 400', waProvider.httpStatusForFailure(p3), 400);
+
+  // ─── downloadMedia: de tweestapsflow ───────────────────────────────────────
+  //
+  // Meta stuurt in de webhook een media-ID, nooit een URL. Stap 1 ruilt dat ID
+  // bij de Graph API in voor een tijdelijke CDN-link, stap 2 haalt de bytes op.
+  // De valkuil zit in stap 2: die lookaside-URL ziet eruit als een gewone
+  // publieke link maar antwoordt 401 zonder hetzelfde Bearer-token. Daar gaat
+  // de eerste assert hieronder expliciet op staan.
+  console.log('\n— downloadMedia: succes (twee stappen, beide met token) —');
+  process.env.WHATSAPP_PROVIDER = 'meta';
+  process.env.META_WA_BOT_ACCESS_TOKEN = 'TEST_TOKEN_abc123';
+  process.env.META_WA_BOT_PHONE_NUMBER_ID = '111222333444555';
+
+  const nepBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46]); // JPEG-magic
+  const CDN_URL = 'https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=MEDIA1&ext=1&hash=xyz';
+
+  mockFetchBinair((url, init) => {
+    if (url.startsWith(`${META_GRAPH_BASE_URL}/MEDIA1`)) {
+      return { status: 200, body: { url: CDN_URL, mime_type: 'image/jpeg', sha256: 'abc', file_size: nepBytes.length, id: 'MEDIA1' } };
+    }
+    if (url === CDN_URL) {
+      // Precies wat het echte CDN doet zonder token.
+      if (init?.headers?.['Authorization'] !== 'Bearer TEST_TOKEN_abc123') {
+        return { status: 401, body: { error: { message: 'Unauthorized' } } };
+      }
+      return { status: 200, body: nepBytes, contentType: 'image/jpeg' };
+    }
+    return { status: 404, body: {} };
+  });
+
+  const d1 = await downloadMedia('MEDIA1');
+  assertEq('ok', d1.ok, true);
+  assertEq('twee fetches (id → url, url → bytes)', recorded.length, 2);
+  assertEq('stap 1 gaat naar /{media-id}', recorded[0]?.url, `${META_GRAPH_BASE_URL}/MEDIA1`);
+  assertEq('stap 1 method GET', recorded[0]?.init?.method, 'GET');
+  assertEq('stap 1 met Bearer-token', recorded[0]?.init?.headers?.['Authorization'], 'Bearer TEST_TOKEN_abc123');
+  assertEq('stap 2 gaat naar de CDN-url uit stap 1', recorded[1]?.url, CDN_URL);
+  assertEq('stap 2 óók met Bearer-token (anders 401)', recorded[1]?.init?.headers?.['Authorization'], 'Bearer TEST_TOKEN_abc123');
+  ok('buffer teruggegeven', Buffer.isBuffer(d1.buffer));
+  assertEq('bytes ongewijzigd', d1.buffer?.toString('hex'), nepBytes.toString('hex'));
+  assertEq('mimeType uit stap 1', d1.mimeType, 'image/jpeg');
+  assertEq('fileSize = werkelijke lengte', d1.fileSize, nepBytes.length);
+  assertEq('geen filename bij een foto', d1.filename, undefined);
+
+  console.log('\n— downloadMedia: document met bestandsnaam —');
+  const pdfBytes = Buffer.from('%PDF-1.4 nep', 'utf8');
+  mockFetchBinair((url) => url.includes('/MEDIA2')
+    ? { status: 200, body: { url: 'https://lookaside.fbsbx.com/doc', mime_type: 'application/pdf', filename: 'Arriva-rit.pdf', file_size: pdfBytes.length } }
+    : { status: 200, body: pdfBytes, contentType: 'application/pdf' });
+  const d2 = await downloadMedia('MEDIA2');
+  assertEq('ok', d2.ok, true);
+  assertEq('filename doorgegeven', d2.filename, 'Arriva-rit.pdf');
+  assertEq('mimeType pdf', d2.mimeType, 'application/pdf');
+
+  console.log('\n— downloadMedia: CDN geeft 401 (token vergeten) —');
+  mockFetchBinair((url) => url.includes('/MEDIA3')
+    ? { status: 200, body: { url: 'https://lookaside.fbsbx.com/geheim', mime_type: 'image/jpeg', file_size: 10 } }
+    : { status: 401, body: { error: { message: 'Unauthorized', code: 401 } } });
+  const d3 = await downloadMedia('MEDIA3');
+  assertEq('ok=false', d3.ok, false);
+  ok('foutmelding aanwezig', !!d3.error?.message);
+  ok('geen buffer', d3.buffer === undefined);
+
+  console.log('\n— downloadMedia: bestand te groot —');
+  mockFetchBinair(() => ({ status: 200, body: { url: 'https://lookaside.fbsbx.com/groot', mime_type: 'video/mp4', file_size: MEDIA_MAX_BYTES + 1 } }));
+  const d4 = await downloadMedia('MEDIA4');
+  assertEq('ok=false', d4.ok, false);
+  assertEq('errorcode media_too_large', d4.error?.code, 'media_too_large');
+  assertEq('bytes zijn niet opgehaald', recorded.length, 1);
+
+  console.log('\n— downloadMedia: onbruikbare invoer en Meta-fout —');
+  mockFetchBinair(() => ({ status: 200, body: {} }));
+  const d5 = await downloadMedia('');
+  assertEq('leeg media-id → invalid_media', d5.error?.code, 'invalid_media');
+  assertEq('geen enkele fetch gedaan', recorded.length, 0);
+
+  mockFetchBinair(() => ({ status: 400, body: { error: { message: 'Unsupported get request', code: 100 } } }));
+  const d6 = await downloadMedia('BESTAATNIET');
+  assertEq('Graph-fout → ok=false', d6.ok, false);
+  assertEq('errorcode uit Meta', d6.error?.code, '100');
+
+  delete process.env.META_WA_BOT_ACCESS_TOKEN;
+  const d7 = await downloadMedia('MEDIA1');
+  assertEq('zonder token → not_configured', d7.error?.code, 'not_configured');
+  process.env.META_WA_BOT_ACCESS_TOKEN = 'TEST_TOKEN_abc123';
+
+  // ─── provider.downloadMedia ────────────────────────────────────────────────
+  console.log('\n— provider.downloadMedia —');
+  process.env.WHATSAPP_PROVIDER = 'meta';
+  mockFetchBinair((url) => url.includes('/MEDIA9')
+    ? { status: 200, body: { url: 'https://lookaside.fbsbx.com/x', mime_type: 'image/png', file_size: nepBytes.length } }
+    : { status: 200, body: nepBytes, contentType: 'image/png' });
+  const pm1 = await waProvider.downloadMedia('MEDIA9');
+  assertEq('meta → ok', pm1.ok, true);
+  assertEq('provider in resultaat', pm1.provider, 'meta');
+  assertEq('mimeType doorgegeven', pm1.mimeType, 'image/png');
+
+  // 360dialog krijgt bewust geen implementatie: die tak verdwijnt in fase 4 en
+  // er is geen bericht dat er én binnenkomt én deze functie nodig heeft.
+  process.env.WHATSAPP_PROVIDER = '360dialog';
+  process.env.WHATSAPP_360_API_KEY = 'D360_TEST_KEY';
+  const pm2 = await waProvider.downloadMedia('MEDIA9');
+  assertEq('360dialog → ok=false', pm2.ok, false);
+  assertEq('errorCode not_supported', pm2.errorCode, 'not_supported');
+  process.env.WHATSAPP_PROVIDER = 'meta';
+
+  // ─── mediaService: bestandsnaam en extensie ────────────────────────────────
+  console.log('\n— mediaService: extensie + bestandsnaam —');
+  assertEq('image/jpeg → jpg', extensieVoorMime('image/jpeg'), 'jpg');
+  assertEq('application/pdf → pdf', extensieVoorMime('application/pdf'), 'pdf');
+  assertEq('audio/ogg met codec-suffix → ogg', extensieVoorMime('audio/ogg; codecs=opus'), 'ogg');
+  assertEq('onbekend mime → subtype', extensieVoorMime('image/heic'), 'heic');
+  assertEq('geen mime → bin', extensieVoorMime(null), 'bin');
+  assertEq('bestaande naam wint', bestandsnaamVoor({ type: 'document', meegegeven: 'Arriva-rit.pdf', mimeType: 'application/pdf' }), 'Arriva-rit.pdf');
+  assertEq('anders: type + staart van wa-id + extensie',
+    bestandsnaamVoor({ type: 'image', mimeType: 'image/jpeg', waMessageId: 'wamid.HBgLMzE2MTIzNDU2Nzg=' }), 'image-zNDU2Nzg.jpg');
+  assertEq('zonder wa-id → nette fallback', bestandsnaamVoor({ type: 'audio', mimeType: 'audio/ogg' }), 'audio-bestand.ogg');
 
   // configErrorMessage per provider
   console.log('\n— configErrorMessage —');

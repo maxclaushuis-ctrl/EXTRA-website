@@ -1479,8 +1479,24 @@ export const whatsappMessages = pgTable("whatsapp_messages", {
   toNumber: text("to_number").notNull(),     // E.164 zonder +
   messageType: text("message_type").notNull(), // text|image|audio|document|video|location|sticker|contacts|interactive|unknown
   body: text("body"),                          // platte tekst, of beschrijving voor media
+  /**
+   * De ruwe verwijzing zoals de provider hem aanleverde. Bij Meta is dat een
+   * media-ID (een getallenreeks), NIET een URL — Meta stuurt in de webhook
+   * nooit een directe link. Deze kolom blijft altijd ongewijzigd staan, ook
+   * nadat het bestand is binnengehaald, zodat één kolom nooit twee soorten
+   * waarden kan bevatten afhankelijk van de downloadstatus.
+   */
   mediaUrl: text("media_url"),
   mediaMimeType: text("media_mime_type"),
+  /**
+   * Pad in Replit Object Storage (/replit-objstore-…) van het daadwerkelijk
+   * gedownloade bestand, of null als de download niet (of nog niet) is gelukt.
+   * Dit is de enige kolom waar de UI op mag afgaan om te bepalen of er een
+   * echt bestand te tonen is; media_url alleen zegt niets.
+   */
+  mediaObjectPath: text("media_object_path"),
+  /** Oorspronkelijke bestandsnaam, voor de downloadlink bij documenten. */
+  mediaFilename: text("media_filename"),
   rawPayload: jsonb("raw_payload"),            // volledige 360dialog payload voor debugging
   status: text("status").notNull().default('received'), // received|queued|sent|delivered|read|failed
   errorCode: text("error_code"),

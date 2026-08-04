@@ -76,6 +76,26 @@ export const WA_GLYPH = {
   icoonKlein: 16,  // verzendknop, profielpaneel-toggle
 } as const;
 
+/**
+ * Maten voor bijlagen in de berichtbubbel. Om dezelfde reden hier en niet in
+ * de JSX als WA_GLYPH hierboven: het zijn tekeningen, geen tekst, en ze horen
+ * op één plek te liggen.
+ *
+ * De bubbel is maximaal 62% van de kolom; een voorbeeldweergave die daar
+ * binnen past leest als WhatsApp zelf, waar de foto de bubbel vult en het
+ * bijschrift eronder staat.
+ */
+export const WA_MEDIA = {
+  /** Maximale hoogte van de voorbeeldweergave in de bubbel. */
+  voorbeeldMaxHoogte: 280,
+  /** Hoekafronding van de voorbeeldweergave; volgt die van de bubbel. */
+  radius: 6,
+  /** Ruimte tussen de foto en het bijschrift eronder. */
+  bijschriftMarge: 6,
+  /** Vaste hoogte van de audiospeler, zodat bubbels niet gaan verspringen. */
+  audioHoogte: 40,
+} as const;
+
 // avatarColor() en initials() stonden hier. Beide zijn weg samen met de
 // avatar-cirkels in ConversationList, ChatView en ProfilePanel; er was daarna
 // geen enkele aanroep meer over in de module. Bewust verwijderd en niet

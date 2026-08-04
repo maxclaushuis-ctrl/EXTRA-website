@@ -247,3 +247,118 @@ export async function uploadMedia(args: {
     clearTimeout(timer);
   }
 }
+
+// ─── Media downloaden ────────────────────────────────────────────────────────
+
+/** Maximale bestandsgrootte die we binnenhalen. Gelijk aan het documentplafond
+ *  van WhatsApp zelf; groter kan de Cloud API niet eens afleveren. */
+export const MEDIA_MAX_BYTES = 25 * 1024 * 1024;
+
+export interface MetaMediaDownload {
+  ok: boolean;
+  buffer?: Buffer;
+  mimeType?: string;
+  /** Bestandsnaam zoals Meta hem kent; vaak alleen aanwezig bij documenten. */
+  filename?: string;
+  fileSize?: number;
+  error?: MetaError;
+}
+
+/**
+ * Haal de bytes achter een media-ID op.
+ *
+ * Meta levert in de webhook alleen een ID. Daar zijn twee stappen voor nodig:
+ *
+ *   1. GET /{media-id}  → JSON met een tijdelijke CDN-url (lookaside.fbsbx.com),
+ *      het mime_type en de bestandsgrootte. Die url leeft maar een paar minuten.
+ *   2. GET <die url>    → de bytes zelf. LET OP: ook deze tweede call heeft het
+ *      Bearer-token nodig. Zonder Authorization-header antwoordt de CDN met 401,
+ *      wat de klassieke valkuil is bij deze API.
+ *
+ * Daarom moet dit direct bij binnenkomst gebeuren en niet pas wanneer iemand
+ * het gesprek opent — dan is de url allang verlopen.
+ */
+export async function downloadMedia(mediaId: string): Promise<MetaMediaDownload> {
+  if (!isMetaConfigured()) {
+    return {
+      ok: false,
+      error: { code: 'not_configured', message: 'META_WA_BOT_ACCESS_TOKEN of META_WA_BOT_PHONE_NUMBER_ID niet ingesteld' },
+    };
+  }
+  if (!mediaId) {
+    return { ok: false, error: { code: 'invalid_media', message: 'media-id ontbreekt' } };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    // Stap 1: ID → tijdelijke CDN-url.
+    const metaResp = await fetch(`${META_GRAPH_BASE_URL}/${encodeURIComponent(mediaId)}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    const metaText = await metaResp.text();
+    let metaData: any = {};
+    try { metaData = JSON.parse(metaText); } catch { /* niet-JSON respons */ }
+
+    if (!metaResp.ok || metaData?.error || !metaData?.url) {
+      return { ok: false, error: parseMetaError(metaData, metaResp.status, metaText) };
+    }
+
+    const mimeType: string = metaData.mime_type || 'application/octet-stream';
+    const gemeld = Number(metaData.file_size || 0);
+    if (gemeld > MEDIA_MAX_BYTES) {
+      return {
+        ok: false,
+        error: {
+          code: 'media_too_large',
+          message: `Bestand is ${Math.round(gemeld / 1024 / 1024)} MB en daarmee groter dan de limiet van ${MEDIA_MAX_BYTES / 1024 / 1024} MB`,
+        },
+      };
+    }
+
+    // Stap 2: de bytes zelf — mét hetzelfde token.
+    const binResp = await fetch(String(metaData.url), {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    if (!binResp.ok) {
+      const tekst = await binResp.text().catch(() => '');
+      return { ok: false, error: parseMetaError(null, binResp.status, tekst) };
+    }
+
+    const arrayBuffer = await binResp.arrayBuffer();
+    if (arrayBuffer.byteLength > MEDIA_MAX_BYTES) {
+      // Meta's file_size kan ontbreken of afwijken; hier weten we het zeker.
+      return {
+        ok: false,
+        error: {
+          code: 'media_too_large',
+          message: `Bestand is ${Math.round(arrayBuffer.byteLength / 1024 / 1024)} MB en daarmee groter dan de limiet van ${MEDIA_MAX_BYTES / 1024 / 1024} MB`,
+        },
+      };
+    }
+
+    return {
+      ok: true,
+      buffer: Buffer.from(arrayBuffer),
+      mimeType,
+      filename: metaData.filename || undefined,
+      fileSize: arrayBuffer.byteLength,
+    };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}

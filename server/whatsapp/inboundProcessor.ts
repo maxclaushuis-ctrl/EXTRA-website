@@ -48,6 +48,8 @@ export interface InboundProcessorDeps {
     /** Haalt een gesprek uit de "wacht op planner"-wachtrij. */
     clearEscalation(phoneNumber: string): Promise<void>;
     describeNonTextMessage(type: string, msg: any): string;
+    /** Koppelt een gedownload bestand aan een bericht (laat media_url ongemoeid). */
+    updateMessageMedia(id: number, media: { objectPath: string; mimeType?: string | null; filename?: string | null }): Promise<void>;
   };
   optInService: {
     isBlockedByUserError(errorCode?: string | null, errorMessage?: string | null): boolean;
@@ -59,6 +61,17 @@ export interface InboundProcessorDeps {
   normalizePhone(raw: string): string | null;
   /** Auto-reply-trigger; optioneel (bv. uit in tests). */
   tryAutoReply?: (opts: AutoReplyArgs) => Promise<void>;
+  /**
+   * Media binnenhalen bij de provider en in Object Storage zetten. Injecteerbaar
+   * zodat tests geen netwerk en geen bucket nodig hebben.
+   */
+  haalMediaOpEnBewaar?: (args: {
+    mediaId: string;
+    type: string;
+    mimeTypeUitPayload?: string | null;
+    filenameUitPayload?: string | null;
+    waMessageId?: string | null;
+  }) => Promise<{ ok: boolean; objectPath?: string; mimeType?: string; filename?: string; fout?: string }>;
   /** Log-prefix, bv. '[WA webhook]' of '[WA meta-webhook]'. */
   logPrefix?: string;
 }
@@ -67,8 +80,12 @@ async function defaultDeps(): Promise<InboundProcessorDeps> {
   const storage = await import('./storage');
   const optInService = await import('./optInService');
   const { normalizePhone } = await import('./phone');
-  return { storage, optInService, normalizePhone };
+  const { haalMediaOpEnBewaar } = await import('./mediaService');
+  return { storage, optInService, normalizePhone, haalMediaOpEnBewaar };
 }
+
+/** Types waarvan Meta een media-id meestuurt dat wij kunnen ophalen. */
+const MEDIA_TYPES = ['image', 'audio', 'document', 'video', 'sticker'];
 
 /**
  * Unwrap: Meta/Cloud API stuurt { object, entry: [{ changes: [{ value: {...} }] }] };
@@ -101,8 +118,46 @@ export async function processIncomingPayload(
   const base = (deps?.storage && deps?.optInService && deps?.normalizePhone)
     ? (deps as InboundProcessorDeps)
     : { ...(await defaultDeps()), ...deps };
-  const { storage, optInService, normalizePhone, tryAutoReply } = base;
+  const { storage, optInService, normalizePhone, tryAutoReply, haalMediaOpEnBewaar } = base;
   const logPrefix = base.logPrefix || '[WA webhook]';
+
+  /**
+   * Bestand ophalen en aan het bericht koppelen. Bewust ná de insert en in een
+   * eigen try/catch: een mislukte download mag nooit het opslaan van het
+   * bericht zelf blokkeren. Lukt het niet, dan blijft de tekstbeschrijving
+   * staan en zit het ruwe media-id nog in media_url voor diagnose.
+   */
+  async function bewaarMedia(args: {
+    messageId: number;
+    mediaId: string;
+    type: string;
+    mimeTypeUitPayload?: string | null;
+    filenameUitPayload?: string | null;
+    waMessageId?: string | null;
+  }): Promise<void> {
+    if (!haalMediaOpEnBewaar) return;
+    try {
+      const res = await haalMediaOpEnBewaar({
+        mediaId: args.mediaId,
+        type: args.type,
+        mimeTypeUitPayload: args.mimeTypeUitPayload,
+        filenameUitPayload: args.filenameUitPayload,
+        waMessageId: args.waMessageId,
+      });
+      if (!res.ok || !res.objectPath) {
+        console.warn(`${logPrefix} media ${args.type} (media_id=${args.mediaId}) niet opgehaald: ${res.fout || 'onbekende fout'}`);
+        return;
+      }
+      await storage.updateMessageMedia(args.messageId, {
+        objectPath: res.objectPath,
+        mimeType: res.mimeType,
+        filename: res.filename,
+      });
+      console.log(`${logPrefix} media ${args.type} opgeslagen → ${res.objectPath}`);
+    } catch (err: any) {
+      console.warn(`${logPrefix} media ${args.type} (media_id=${args.mediaId}) mislukt: ${err?.message || err}`);
+    }
+  }
 
   try {
     const values = extractWebhookValues(body);
@@ -167,15 +222,26 @@ export async function processIncomingPayload(
             const at = msg.timestamp ? new Date(Number(msg.timestamp) * 1000) : new Date();
             const type: string = msg.type || 'unknown';
 
+            // Intrekken en bewerken: alleen loggen — dezelfde afspraak als bij
+            // de app-echo's hieronder. Zonder deze guard viel een 'edit' door
+            // naar de default van describeNonTextMessage en belandde er een
+            // kaal "[edit]" in de inbox, zonder enige context over welk
+            // bericht er dan bewerkt was.
+            if (type === 'revoke' || type === 'edit') {
+              const origineel = msg?.[type]?.original_message_id || '?';
+              console.log(`${logPrefix} inkomende ${type} (origineel wa_message_id=${origineel}) → alleen gelogd, geen wijziging`);
+              continue;
+            }
+
             let body_: string;
             let mediaUrl: string | null = null;
             let mediaMime: string | null = null;
 
             if (type === 'text') {
               body_ = msg.text?.body || '';
-            } else if (['image', 'audio', 'document', 'video', 'sticker'].includes(type)) {
+            } else if (MEDIA_TYPES.includes(type)) {
               body_ = storage.describeNonTextMessage(type, msg);
-              mediaUrl = msg[type]?.id || null; // media-id; download-URL haal je later op via de media-API
+              mediaUrl = msg[type]?.id || null; // ruw Meta media-id; blijft hier staan, ook na de download
               mediaMime = msg[type]?.mime_type || null;
             } else {
               body_ = storage.describeNonTextMessage(type, msg);
@@ -208,6 +274,20 @@ export async function processIncomingPayload(
               console.log(`${logPrefix} duplicate wa_message_id=${msg.id} → skip`);
             } else {
               console.log(`${logPrefix} inbound ${type} van ${normalizedFrom} → match=${match.category} (${contactProfile || '?'})`);
+
+              // Bijlage meteen binnenhalen: de CDN-url achter het media-id is
+              // maar een paar minuten geldig, dus wachten tot iemand het
+              // gesprek opent is geen optie.
+              if (mediaUrl && MEDIA_TYPES.includes(type)) {
+                await bewaarMedia({
+                  messageId: inserted,
+                  mediaId: mediaUrl,
+                  type,
+                  mimeTypeUitPayload: mediaMime,
+                  filenameUitPayload: msg?.[type]?.filename || null,
+                  waMessageId: msg.id || null,
+                });
+              }
 
               // Fase 1: STOP-detectie. Bij een opt-out keyword:
               //   - opt-in op 'opt_out' zetten voor candidate/employee/prospect
@@ -284,9 +364,9 @@ export async function processIncomingPayload(
 
             if (type === 'text') {
               body_ = echo.text?.body || '';
-            } else if (['image', 'audio', 'document', 'video', 'sticker'].includes(type)) {
+            } else if (MEDIA_TYPES.includes(type)) {
               body_ = storage.describeNonTextMessage(type, echo);
-              mediaUrl = echo[type]?.id || null;
+              mediaUrl = echo[type]?.id || null; // ruw Meta media-id; blijft hier staan, ook na de download
               mediaMime = echo[type]?.mime_type || null;
             } else {
               body_ = storage.describeNonTextMessage(type, echo);
@@ -325,6 +405,20 @@ export async function processIncomingPayload(
               console.log(`${logPrefix} duplicate app-echo wa_message_id=${echo.id} → skip`);
             } else {
               console.log(`${logPrefix} app-echo ${type} naar ${normalizedTo} → match=${match.category} (verstuurd vanaf de telefoon)`);
+
+              // Ook wat Max of een planner vanaf de telefoon stuurt halen we
+              // binnen; anders staat de ene helft van het gesprek wel in beeld
+              // en de andere helft niet.
+              if (mediaUrl && MEDIA_TYPES.includes(type)) {
+                await bewaarMedia({
+                  messageId: inserted,
+                  mediaId: mediaUrl,
+                  type,
+                  mimeTypeUitPayload: mediaMime,
+                  filenameUitPayload: echo?.[type]?.filename || null,
+                  waMessageId: echo.id || null,
+                });
+              }
 
               // Wie vanaf zijn telefoon antwoordt heeft het gesprek net zo
               // goed opgepakt als iemand die het vanuit het dashboard doet.

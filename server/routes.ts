@@ -52,7 +52,7 @@ import { db } from "./db";
 import { users, candidates as candidatesTable, applications } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { checkInactiveUsers, updateUserActivity, getInactivityWarningUsers, InactivityReport } from "./inactivity-management";
-import { uploadCvFile, downloadCvFile, isObjectStoragePath, uploadWaAiAttachment, downloadWaAiAttachmentBuffer, deleteWaAiAttachmentStorage } from './objectStorageFiles';
+import { uploadCvFile, downloadCvFile, isObjectStoragePath, uploadWaAiAttachment, downloadWaAiAttachmentBuffer, deleteWaAiAttachmentStorage, uploadWaMedia, downloadWaMediaBuffer } from './objectStorageFiles';
 
 import { calculateRoleBasedPoints, awardWorkSessionPoints, getEmployeeTypeRules, updateEmployeeType, WorkSession } from "./role-based-points";
 import rateLimit from "express-rate-limit";
@@ -11480,6 +11480,10 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       toNumber: normalized,
       messageType: waType,
       body: caption || null,
+      // Blijft null: media_url bevat de ruwe media-referentie van de provider,
+      // en die krijgen we alleen bij binnenkomende berichten uit de webhook.
+      // Bij een dashboard-send hebben wíj het bestand — dat gaat hieronder
+      // rechtstreeks naar Object Storage, in media_object_path.
       mediaUrl: null,
       candidateId: match.candidateId,
       prospectContactId: match.prospectContactId,
@@ -11487,6 +11491,20 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       sentByUserId: userId,
       rawPayload: { type: waType, to: normalized, filename: file.originalname, mime, size: file.size, caption },
     });
+
+    // De buffer die we tóch al in het geheugen hebben ook bewaren, anders is
+    // wat wij zelf sturen in de historie net zo onzichtbaar als wat er
+    // binnenkomt. Nooit fataal: mislukt dit, dan gaat het bericht gewoon weg.
+    try {
+      const objectPath = await uploadWaMedia(file.buffer, file.originalname || `${waType}`, mime);
+      await waStorage.updateMessageMedia(messageRowId, {
+        objectPath,
+        mimeType: mime,
+        filename: file.originalname || null,
+      });
+    } catch (opslagFout: any) {
+      console.warn('WhatsApp stuur-media: bewaren in Object Storage mislukt:', opslagFout?.message || opslagFout);
+    }
 
     try {
       // Stap 1: upload media naar de actieve provider (Node's native FormData/Blob — Node 18+)
@@ -11813,7 +11831,54 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
     const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 500);
     const rows = await waStorage.getMessagesForPhone(phone, limit);
-    res.json(rows);
+    // Het object-storage-pad blijft server-side; de client krijgt alleen een
+    // vlag te zien en haalt het bestand op via /messages/:id/media.
+    res.json(rows.map((r: any) => {
+      const { mediaObjectPath, ...rest } = r;
+      return { ...rest, heeftBijlage: isObjectStoragePath(mediaObjectPath) };
+    }));
+  });
+
+  /**
+   * Serveer de bijlage van één WhatsApp-bericht.
+   *
+   * Gemodelleerd op de CV-route: ?preview=1 → inline (voor de <img> in de
+   * chatbubbel), zonder → attachment (voor de downloadlink bij documenten).
+   * Achter adminMiddleware, want dit is klantcorrespondentie.
+   */
+  app.get('/api/whatsapp/messages/:id/media', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(String(req.params.id), 10);
+      if (!Number.isFinite(id)) return res.status(400).json({ error: 'Ongeldig bericht-id' });
+
+      const [row] = await db
+        .select({
+          mediaObjectPath: whatsappMessages.mediaObjectPath,
+          mediaMimeType: whatsappMessages.mediaMimeType,
+          mediaFilename: whatsappMessages.mediaFilename,
+        })
+        .from(whatsappMessages)
+        .where(drizzleEq(whatsappMessages.id, id))
+        .limit(1);
+
+      if (!row || !isObjectStoragePath(row.mediaObjectPath)) {
+        return res.status(404).json({ error: 'Geen bijlage bij dit bericht' });
+      }
+
+      const buffer = await downloadWaMediaBuffer(row.mediaObjectPath!);
+      if (!buffer) return res.status(404).json({ error: 'Bijlage niet meer beschikbaar' });
+
+      const isPreview = req.query.preview === '1';
+      const naam = row.mediaFilename || row.mediaObjectPath!.split('/').pop() || 'bijlage';
+      const safeName = encodeURIComponent(naam);
+
+      res.setHeader('Content-Type', row.mediaMimeType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `${isPreview ? 'inline' : 'attachment'}; filename="${safeName}"`);
+      return res.send(buffer);
+    } catch (error) {
+      console.error('Fout bij serveren WhatsApp-bijlage:', error);
+      return res.status(500).json({ error: 'Fout bij ophalen bijlage' });
+    }
   });
 
   app.post('/api/whatsapp/conversations/:phoneNumber/mark-read', adminMiddleware, async (req: Request, res: Response) => {
