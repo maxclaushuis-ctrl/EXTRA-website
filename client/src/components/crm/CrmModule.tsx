@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest, fetchJson, fetchJsonList } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -835,7 +835,7 @@ function CrmCompanyDrawer({ companyId, onClose, allCompanies }: {
 
   const { data: company, isLoading } = useQuery<any>({
     queryKey: ['/api/admin/crm/companies', companyId],
-    queryFn: () => fetch(`/api/admin/crm/companies/${companyId}`, { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJson<any>(`/api/admin/crm/companies/${companyId}`),
     enabled: !!companyId,
   });
 
@@ -1412,6 +1412,27 @@ function CompanyRow({ company, onClick, showAbc = false }: { company: any; onCli
   );
 }
 
+/**
+ * Wat je ziet als de lijst niet opgehaald kon worden.
+ *
+ * Vóór deze wijziging bestond deze staat niet: een mislukte aanroep kwam
+ * binnen als geslaagd antwoord met een foutobject erin, en dat sloeg pas
+ * verderop om in een crashscherm ("x.filter is not a function"). Nu staat de
+ * reden er gewoon, met een knop om het opnieuw te proberen.
+ */
+function LaadFoutKaart({ melding, onRetry }: { melding?: string; onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+      <AlertTriangle className="h-10 w-10 mb-3 text-orange-300" />
+      <p className="text-sm font-medium text-gray-700">Kon de gegevens niet laden</p>
+      <p className="text-xs text-gray-500 mt-1 max-w-md">{melding || 'Er ging iets mis bij het ophalen.'}</p>
+      <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8 mt-4" onClick={onRetry}>
+        <RefreshCw className="h-3.5 w-3.5" />Opnieuw proberen
+      </Button>
+    </div>
+  );
+}
+
 // ── CRM Leads Tab ──────────────────────────────────────────────────────────
 
 export function CrmLeadsTab() {
@@ -1432,9 +1453,9 @@ export function CrmLeadsTab() {
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  const { data: companies = [], isLoading, refetch } = useQuery<any[]>({
+  const { data: companies = [], isLoading, isError, error, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'prospects'],
-    queryFn: () => fetch('/api/admin/crm/companies?isClient=false', { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJsonList<any>('/api/admin/crm/companies?isClient=false'),
   });
 
   const dedupeMutation = useMutation({
@@ -1532,6 +1553,8 @@ export function CrmLeadsTab() {
       <div className="bg-white border rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-gray-400 text-sm"><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Laden...</div>
+        ) : isError ? (
+          <LaadFoutKaart melding={(error as any)?.message} onRetry={() => refetch()} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <Building2 className="h-10 w-10 mb-3 text-gray-200" />
@@ -1577,9 +1600,9 @@ export function CrmKlantenTab() {
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  const { data: companies = [], isLoading, refetch } = useQuery<any[]>({
+  const { data: companies = [], isLoading, isError, error, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'klanten'],
-    queryFn: () => fetch('/api/admin/crm/companies?isClient=true', { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJsonList<any>('/api/admin/crm/companies?isClient=true'),
   });
 
   const filtered = useMemo(() => companies.filter((c: any) => {
@@ -1646,6 +1669,8 @@ export function CrmKlantenTab() {
       <div className="bg-white border rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-gray-400 text-sm"><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Laden...</div>
+        ) : isError ? (
+          <LaadFoutKaart melding={(error as any)?.message} onRetry={() => refetch()} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <Building2 className="h-10 w-10 mb-3 text-gray-200" />
@@ -1686,21 +1711,25 @@ export function CrmRemindersTab({ onOpenCompany }: { onOpenCompany?: (companyId:
   const [editReminder, setEditReminder] = useState<any>(null);
   const [bevestigVerwijder, setBevestigVerwijder] = useState<number | null>(null);
 
-  // Defensief: geeft de server iets anders terug dan een lijst (bv. oude
-  // servercode of een foutobject), dan vallen we terug op een lege lijst.
-  const { data: remindersData, isLoading } = useQuery<any[]>({
+  // Hier stond een .catch(() => []) plus een Array.isArray-vangnet. Dat maakte
+  // een mislukte aanroep onzichtbaar: de lijst bleef leeg zonder dat iemand
+  // zag dát er iets misging. fetchJsonList laat de query nu eerlijk falen,
+  // waarna de foutkaart hieronder de melding toont met een knop om te
+  // herproberen.
+  const { data: reminders = [], isLoading, isError, error, refetch } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/reminders'],
-    queryFn: () => fetch('/api/admin/crm/reminders', { credentials: 'include' }).then(r => r.json()).catch(() => []),
+    queryFn: () => fetchJsonList<any>('/api/admin/crm/reminders'),
     refetchInterval: 60000,
   });
-  const reminders = Array.isArray(remindersData) ? remindersData : [];
   // Eigenaren volgen automatisch de admin-accounts (zelfde bron als Salesflow).
-  const { data: ownersData } = useQuery<{ id: number; naam: string; email: string }[]>({
+  // Hier blijft de terugval op CRM_OWNERS wél staan: dit is een hulplijstje
+  // voor een dropdown, geen inhoud van de pagina. Mislukt het, dan werkt het
+  // scherm gewoon door met de vaste namen.
+  const { data: owners = [] } = useQuery<{ id: number; naam: string; email: string }[]>({
     queryKey: ['/api/sales/flow/owners'],
-    queryFn: () => fetch('/api/sales/flow/owners', { credentials: 'include' }).then(r => r.ok ? r.json() : []).catch(() => []),
+    queryFn: () => fetchJsonList<{ id: number; naam: string; email: string }>('/api/sales/flow/owners').catch(() => []),
     staleTime: 300000,
   });
-  const owners = Array.isArray(ownersData) ? ownersData : [];
   const ownerOpties: [string, string][] = owners.length > 0
     ? owners.map(o => [o.email.split('@')[0].toLowerCase(), o.naam] as [string, string])
     : CRM_OWNERS.map(o => [o, o.charAt(0).toUpperCase() + o.slice(1)] as [string, string]);
@@ -1802,6 +1831,8 @@ export function CrmRemindersTab({ onOpenCompany }: { onOpenCompany?: (companyId:
       <div className="space-y-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-gray-400 text-sm"><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Laden...</div>
+        ) : isError ? (
+          <LaadFoutKaart melding={(error as any)?.message} onRetry={() => refetch()} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <Bell className="h-10 w-10 mb-3 text-gray-200" />
@@ -1879,14 +1910,20 @@ export function CrmRemindersTab({ onOpenCompany }: { onOpenCompany?: (companyId:
 // ── CRM Dashboard Widgets ──────────────────────────────────────────────────
 
 export function CrmDashboardWidgets() {
+  // Deze widgets staan náást andere blokken op het dashboard. Faalt een van de
+  // twee, dan blijft dat blok leeg en werkt de rest van de pagina door — de
+  // `= []` hieronder doet dat vanzelf, omdat React Query bij een fout geen
+  // data zet. Dat werkte voorheen niet: een foutobject kwam binnen als
+  // geslaagd antwoord, waardoor `= []` nooit aan bod kwam en de .filter()
+  // hieronder de hele pagina omlegde.
   const { data: reminders = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/reminders'],
-    queryFn: () => fetch('/api/admin/crm/reminders', { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJsonList<any>('/api/admin/crm/reminders'),
     staleTime: 60000,
   });
   const { data: prospects = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/crm/companies', 'prospects'],
-    queryFn: () => fetch('/api/admin/crm/companies?isClient=false', { credentials: 'include' }).then(r => r.json()),
+    queryFn: () => fetchJsonList<any>('/api/admin/crm/companies?isClient=false'),
     staleTime: 60000,
   });
 

@@ -10,6 +10,9 @@
  * Openen:   /layout-harness.html            (profielpaneel open)
  *           /layout-harness.html?profiel=dicht
  *           /layout-harness.html?weergave=nav  (de linker hoofdnavigatie)
+ *           /layout-harness.html?weergave=crm-leads&data=gevuld
+ *           /layout-harness.html?weergave=crm-leads&data=leeg
+ *           /layout-harness.html?weergave=crm-leads&data=fout   (403 van de server)
  *
  * De nav-weergave gebruikt de ECHTE CommunicatieNav en NavGroepKop uit het
  * dashboard, niet een namaakje: die twee zijn er juist voor losgeknipt. Wat
@@ -17,6 +20,10 @@
  */
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
+import { TooltipProvider } from './components/ui/tooltip';
+import { CrmLeadsTab } from './components/crm/CrmModule';
 /**
  * DEZELFDE CSS ALS DE ECHTE APP. Deze regel ontbrak, en dat is precies waarom
  * screenshots uit de harness een vertekend beeld gaven: main.tsx importeert
@@ -54,8 +61,48 @@ const nep: Record<string, unknown> = {
   '/api/whatsapp/contacten': { total: 1, items: [nepContact] },
   '/notes': [],
 };
+/**
+ * Drie nepbedrijven voor de CRM-weergave. Genoeg variatie om de kolommen te
+ * laten zien (type, functies, fase, eigenaar, potentie) zonder database.
+ */
+const NEPBEDRIJVEN = [
+  {
+    id: 1, name: 'Hotel De Zwaan', city: 'Amsterdam', region: 'Noord-Holland',
+    type: 'hotel', phase: 'afspraak_gepland', owner: 'max', potential: 'hoog',
+    isClient: false, tags: ['warm'], functions: ['housekeeping', 'bediening'], reminders: [],
+  },
+  {
+    id: 2, name: 'Restaurant Vuur & Vlam', city: 'Haarlem', region: 'Noord-Holland',
+    type: 'restaurant', phase: 'nieuw', owner: 'eveline', potential: 'midden',
+    isClient: false, tags: [], functions: ['bediening'], reminders: [],
+  },
+  {
+    id: 3, name: 'Congrescentrum Zuidas', city: 'Amsterdam', region: 'Noord-Holland',
+    type: 'eventlocatie', phase: 'voorstel_verstuurd', owner: 'charlotte', potential: 'hoog',
+    isClient: false, tags: ['groot'], functions: ['bediening', 'afwas', 'keuken'], reminders: [],
+  },
+];
+
+/**
+ * Welke situatie de CRM-weergave nabootst: ?data=gevuld | leeg | fout.
+ * 'fout' geeft exact terug wat adminMiddleware in server/routes.ts stuurt bij
+ * een verlopen sessie — 403 met {"message":"Geen toegang"}. Dát antwoord was
+ * de oorzaak van de crash "E.filter is not a function".
+ */
+const crmData = new URLSearchParams(window.location.search).get('data') || 'gevuld';
+
 window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(typeof input === 'string' ? input : (input as Request).url ?? input);
+  if (url.includes('/api/admin/crm/companies')) {
+    if (crmData === 'fout') {
+      return new Response(JSON.stringify({ message: 'Geen toegang' }), {
+        status: 403, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify(crmData === 'leeg' ? [] : NEPBEDRIJVEN), {
+      status: 200, headers: { 'Content-Type': 'application/json' },
+    });
+  }
   // Fase 3E: het opslaan van een profielveld echoot de patch terug, zodat de
   // bevestiging en de waarschuwing in de harness te zien zijn zonder database.
   if (url.includes('/profiel')) {
@@ -277,9 +324,28 @@ function Harness() {
   );
 }
 
+/**
+ * De ECHTE CrmLeadsTab uit components/crm/CrmModule.tsx, met de gesmoorde
+ * fetch hierboven als server. Geen namaakcomponent: alleen zo bewijst een
+ * screenshot iets over de pagina die bij Max crashte.
+ */
+function CrmHarness() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <div style={{ background: '#f9fafb', minHeight: '100vh' }}>
+          <CrmLeadsTab />
+        </div>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
 // Welke weergave: buiten de componenten beslist, niet met een vroege return
 // binnenin — dat zou de hooks eronder overslaan.
 const weergave = new URLSearchParams(window.location.search).get('weergave');
 createRoot(document.getElementById('root')!).render(
-  weergave === 'nav' ? <NavHarness /> : <Harness />,
+  weergave === 'nav' ? <NavHarness />
+    : weergave === 'crm-leads' ? <CrmHarness />
+    : <Harness />,
 );
