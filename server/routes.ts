@@ -736,9 +736,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session.userId) {
         return res.status(200).json(null);
       }
-      
-      const user = await storage.getUser(req.session.userId);
-      
+
+      // Database is leidend — zelfde volgorde als /api/auth/login. Zonder
+      // deze DB-check eerst kon een sessie voor een admin die alleen in de
+      // database bestaat (niet in MemStorage) hier de verkeerde gebruiker
+      // teruggeven zodra het sessie-userId toevallig samenviel met het id
+      // van een bestaand MemStorage-account (bijv. een medewerker-testaccount)
+      // — de login zelf slaagde dan wel, maar direct daarna overschreef deze
+      // route de sessie-gebruiker in de UI met iemand anders.
+      const [dbUser] = await db.select().from(users).where(eq(users.id, req.session.userId));
+      const user = dbUser ?? await storage.getUser(req.session.userId);
+
       if (!user) {
         return res.status(404).json({ message: "Gebruiker niet gevonden" });
       }
