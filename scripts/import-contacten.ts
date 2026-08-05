@@ -37,10 +37,13 @@ import { sql } from "drizzle-orm";
 import { objectStorageClient } from "../server/replit_integrations/object_storage";
 import { db, pool } from "../server/db";
 import { whatsappImportedContacts } from "@shared/schema";
-import { normalizePhoneDetailed, type NormalizationFailure } from "../server/whatsapp/phone";
+import {
+  normalizePhoneDetailed,
+  type NormalizationFailure,
+} from "../server/whatsapp/phone";
 
-const BUCKET_NAME = "repl-default-bucket-7c5eba1c-3949-42fa-9952-c5ed7cbbea1d";
-const OBJECT_PREFIX = "Objects/";
+const BUCKET_NAME = "replit-objstore-5625f2c9-9983-4f81-9f79-b2cfe14b8e56";
+const OBJECT_PREFIX = "";
 // Losse spaties/underscores/hoofdletters genegeerd bij het zoeken naar het bestand.
 const VERWACHTE_NAAM_FRAGMENT = "individuelecontacten";
 
@@ -55,7 +58,9 @@ function normaliseerVoorVergelijking(naam: string): string {
 async function vindBestand(): Promise<string> {
   const bucket = objectStorageClient.bucket(BUCKET_NAME);
   const [files] = await bucket.getFiles({ prefix: OBJECT_PREFIX });
-  const xlsxBestanden = files.filter(f => f.name.toLowerCase().endsWith(".xlsx"));
+  const xlsxBestanden = files.filter((f) =>
+    f.name.toLowerCase().endsWith(".xlsx"),
+  );
 
   if (xlsxBestanden.length === 0) {
     throw new Error(
@@ -63,7 +68,7 @@ async function vindBestand(): Promise<string> {
     );
   }
 
-  const treffer = xlsxBestanden.find(f =>
+  const treffer = xlsxBestanden.find((f) =>
     normaliseerVoorVergelijking(f.name).includes(VERWACHTE_NAAM_FRAGMENT),
   );
   if (treffer) return treffer.name;
@@ -79,13 +84,16 @@ async function vindBestand(): Promise<string> {
   throw new Error(
     `Kan niet automatisch bepalen welk bestand het is — meerdere .xlsx-bestanden gevonden ` +
       `onder "${OBJECT_PREFIX}" en geen ervan bevat "${VERWACHTE_NAAM_FRAGMENT}":\n` +
-      xlsxBestanden.map(f => `  - ${f.name}`).join("\n") +
+      xlsxBestanden.map((f) => `  - ${f.name}`).join("\n") +
       `\nPas VERWACHTE_NAAM_FRAGMENT in dit script aan, of geef het pad hardcoded op.`,
   );
 }
 
 /** Bouwt het te normaliseren kandidaat-nummer op uit Phone Number + Country Code van dezelfde rij. */
-function bouwKandidaatNummer(phoneNumberRaw: string, countryCodeRaw: string): { kandidaat: string | null; reden?: "geen_landcode" } {
+function bouwKandidaatNummer(
+  phoneNumberRaw: string,
+  countryCodeRaw: string,
+): { kandidaat: string | null; reden?: "geen_landcode" } {
   const phone = phoneNumberRaw.trim();
   if (phone.startsWith("+")) return { kandidaat: phone };
 
@@ -119,7 +127,9 @@ async function main() {
 
   const file = objectStorageClient.bucket(BUCKET_NAME).file(objectName);
   const [buffer] = await file.download();
-  console.log(`Opgehaald (${(buffer.length / 1024).toFixed(0)} KB), inlezen...\n`);
+  console.log(
+    `Opgehaald (${(buffer.length / 1024).toFixed(0)} KB), inlezen...\n`,
+  );
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as any);
@@ -146,8 +156,10 @@ async function main() {
     if (!col) return "";
     const raw = row.getCell(col).value;
     if (raw == null) return "";
-    if (typeof raw === "object" && "text" in (raw as any)) return String((raw as any).text ?? "");
-    if (typeof raw === "object" && "result" in (raw as any)) return String((raw as any).result ?? "");
+    if (typeof raw === "object" && "text" in (raw as any))
+      return String((raw as any).text ?? "");
+    if (typeof raw === "object" && "result" in (raw as any))
+      return String((raw as any).result ?? "");
     return String(raw).trim();
   }
 
@@ -190,7 +202,10 @@ async function main() {
       continue;
     }
 
-    const { kandidaat, reden } = bouwKandidaatNummer(phoneNumberRaw, countryCodeRaw);
+    const { kandidaat, reden } = bouwKandidaatNummer(
+      phoneNumberRaw,
+      countryCodeRaw,
+    );
     if (!kandidaat) {
       overgeslagen[reden!]++;
       continue;
@@ -218,17 +233,24 @@ async function main() {
   }
   await batchWegschrijven();
 
-  const totaalOvergeslagen = Object.values(overgeslagen).reduce((a, b) => a + b, 0);
+  const totaalOvergeslagen = Object.values(overgeslagen).reduce(
+    (a, b) => a + b,
+    0,
+  );
 
   console.log("\n\n=== Rapport ===");
   console.log(`Totaal aantal regels in het bestand: ${totaalRijen}`);
   console.log(`Verwerkt (upsert gedaan):            ${verwerktTotaal}`);
-  console.log(`  waarvan unieke telefoonnummers:     ${uniekeNummers.size} (dubbele regels overschrijven elkaar, laatste wint)`);
+  console.log(
+    `  waarvan unieke telefoonnummers:     ${uniekeNummers.size} (dubbele regels overschrijven elkaar, laatste wint)`,
+  );
   console.log(`Overgeslagen:                         ${totaalOvergeslagen}`);
   for (const [reden, aantal] of Object.entries(overgeslagen)) {
     if (aantal > 0) console.log(`  - ${reden}: ${aantal}`);
   }
-  console.log("\nKlaar. Nummers zonder echte match tonen nu, waar bekend, een naam in de WhatsApp-inbox.");
+  console.log(
+    "\nKlaar. Nummers zonder echte match tonen nu, waar bekend, een naam in de WhatsApp-inbox.",
+  );
 }
 
 main()
@@ -236,7 +258,7 @@ main()
     await pool.end();
     process.exit(0);
   })
-  .catch(async err => {
+  .catch(async (err) => {
     console.error("\nImport mislukt:", err?.message || err);
     await pool.end().catch(() => {});
     process.exit(1);
