@@ -472,6 +472,14 @@ export const updateLabels = (phoneNumber: string, labels: string[]) =>
 export const updateConversationCategory = (phoneNumber: string, category: 'candidate' | 'prospect' | 'unmatched' | null) =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/category`, { category });
 
+/**
+ * Handmatige naam voor een gesprek zonder gekoppeld kandidaat/medewerker-
+ * record (onbekend nummer of klant/prospect). Zie server/routes.ts voor
+ * waarom dit veilig samengaat met een latere échte match.
+ */
+export const updateConversationDisplayName = (phoneNumber: string, displayName: string) =>
+  put<{ success: boolean; displayName: string }>(`/conversations/${encodeURIComponent(phoneNumber)}/naam`, { displayName });
+
 export const haalNotities = (phoneNumber: string) =>
   get<InternalNote[]>(`/conversations/${encodeURIComponent(phoneNumber)}/notes`);
 

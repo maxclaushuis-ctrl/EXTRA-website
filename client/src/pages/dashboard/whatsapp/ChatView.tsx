@@ -5,11 +5,13 @@
  * Stijl 1-op-1 uit mockups/extra-whatsapp-mockup.html.
  */
 import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
+import { Contact as ContactIcon } from 'lucide-react';
 import type { Conversation, Message, TeamMember } from '../../../api/whatsappClient';
 import {
   WA, WA_TEKST, WA_GEWICHT, WA_GLYPH, WA_MEDIA,
   formatTime, dayLabel, snoozeRemaining, voornaamVan, formatPhone,
 } from './theme';
+import { KLEUR } from '../../../lib/huisstijl';
 
 interface Props {
   conv: Conversation | null;
@@ -169,7 +171,13 @@ export default function ChatView(props: Props) {
     );
   }
 
-  const naam = conv.displayName || `+${conv.phoneNumber}`;
+  // Zelfde volgorde als Sidebar/ConversationList/ProfilePanel: echte match >
+  // geïmporteerde contactenlijst (eenmalige import, aug. 2026) > kaal nummer.
+  // Deze header miste de importedContactName-fallback nog, waardoor iemand
+  // die in de gesprekkenlijst wél een naam toonde, in de chat zelf alsnog
+  // als kaal nummer verscheen.
+  const naam = conv.displayName || conv.importedContactName || `+${conv.phoneNumber}`;
+  const naamUitImport = !conv.displayName && !!conv.importedContactName;
   const snoozeRest = snoozeRemaining(conv.snoozedUntil);
 
   async function handleSubmit(e: FormEvent) {
@@ -213,7 +221,14 @@ export default function ChatView(props: Props) {
             eerst de cirkel stond. Geen gap dus, anders bleef er een lege kolom. */}
         <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: WA_TEKST.h3, fontWeight: WA_GEWICHT.semibold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{naam}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              <div style={{ fontSize: WA_TEKST.h3, fontWeight: WA_GEWICHT.semibold, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{naam}</div>
+              {naamUitImport && (
+                <span title="Naam uit geïmporteerde contactenlijst" style={{ display: 'inline-flex', flexShrink: 0 }}>
+                  <ContactIcon size={12} strokeWidth={1.5} color={KLEUR.muted} />
+                </span>
+              )}
+            </div>
             <div style={{ fontSize: WA_TEKST.secundair, color: WA.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subline(conv)}</div>
           </div>
         </div>
