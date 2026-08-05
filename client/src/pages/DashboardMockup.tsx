@@ -875,9 +875,7 @@ export default function DashboardMockup() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
           <div className="text-center mb-6">
-            <div className="bg-purple-600 text-white font-bold text-2xl px-4 py-2 rounded inline-block mb-4">
-              EXTRA
-            </div>
+            <img src={extraLogo} alt="EXTRA" className="h-8 w-auto mx-auto mb-4" />
             <h1 className="text-xl font-bold text-gray-900">Beheerdersdashboard</h1>
             <p className="text-gray-500 mt-1">Log in om toegang te krijgen</p>
           </div>
@@ -889,6 +887,7 @@ export default function DashboardMockup() {
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="jouw-naam@doehetextra.nl"
+                autoComplete="email"
                 required
               />
             </div>
@@ -899,6 +898,7 @@ export default function DashboardMockup() {
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
               />
             </div>

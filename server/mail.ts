@@ -25,7 +25,7 @@ export function getEmailBannerSrc(): string {
 }
 
 // Gedeelde responsive CSS voor alle e-mails
-function emailMobileCss(): string {
+export function emailMobileCss(): string {
   return `<style type="text/css">
     body { margin:0 !important; padding:0 !important; }
     img { max-width:100% !important; height:auto !important; }

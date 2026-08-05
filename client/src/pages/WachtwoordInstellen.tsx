@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiRequest } from '@/lib/queryClient';
+import extraLogo from '@assets/extra-logo-zwart.svg';
 
 export default function WachtwoordInstellen() {
   const token = new URLSearchParams(window.location.search).get('token') ?? '';
@@ -37,7 +38,7 @@ export default function WachtwoordInstellen() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
         <div className="text-center mb-6">
-          <div className="bg-purple-600 text-white font-bold text-2xl px-4 py-2 rounded inline-block mb-4">EXTRA</div>
+          <img src={extraLogo} alt="EXTRA" className="h-8 w-auto mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900">Wachtwoord instellen</h1>
           <p className="text-gray-500 mt-1 text-sm">Kies een sterk wachtwoord voor je admin-account.</p>
         </div>
@@ -52,16 +53,26 @@ export default function WachtwoordInstellen() {
           <p className="text-red-500 text-sm text-center">Deze link is ongeldig. Vraag op de loginpagina een nieuwe aan via "Wachtwoord vergeten?".</p>
         ) : (
           <form onSubmit={opslaan} className="space-y-4">
+            {/*
+              autoComplete="new-password" op beide velden: zonder deze hint gokt
+              de wachtwoordmanager van de browser zelf bij welk account dit nieuwe
+              wachtwoord hoort (meestal het laatst-gebruikte opgeslagen account op
+              dit domein) — dat leidde tot een "wachtwoord bijgewerkt voor account
+              X" melding die niets met het daadwerkelijke, token-gebonden account
+              op de server te maken had. Deze pagina toont bewust geen e-mailadres
+              (dat zou verklappen bij welk account de link hoort vóór het token is
+              gevalideerd), dus een "echt" username-veld kan hier niet.
+            */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nieuw wachtwoord</label>
-              <Input type="password" value={pw1} onChange={e => setPw1(e.target.value)} autoFocus required />
+              <Input type="password" value={pw1} onChange={e => setPw1(e.target.value)} autoComplete="new-password" autoFocus required />
               <p className={`text-xs mt-1 ${sterkGenoeg ? 'text-green-600' : 'text-gray-400'}`}>
                 Minimaal 12 tekens, met minstens één letter en één cijfer.
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Herhaal wachtwoord</label>
-              <Input type="password" value={pw2} onChange={e => setPw2(e.target.value)} required />
+              <Input type="password" value={pw2} onChange={e => setPw2(e.target.value)} autoComplete="new-password" required />
             </div>
             {fout && <p className="text-red-500 text-sm">{fout}</p>}
             <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={bezig}>
