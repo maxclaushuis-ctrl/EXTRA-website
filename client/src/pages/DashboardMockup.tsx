@@ -469,7 +469,16 @@ export default function DashboardMockup() {
     setIsLoggingIn(true);
     setLoginError('');
     try {
-      await login(loginEmail, loginPassword);
+      // login() gooit zelf geen fout bij mislukte inloggegevens — hij vangt
+      // die intern af en geeft { success: false } terug (zie AuthContext.tsx,
+      // en zo wordt het ook al elders gebruikt, bijv. dashboard/index.tsx).
+      // Zonder deze check bleef hier bij een mislukte poging altijd stil:
+      // geen rode melding, alleen een toast die makkelijk gemist wordt.
+      const result = await login(loginEmail, loginPassword);
+      if (!result.success) {
+        setLoginError('Ongeldige inloggegevens');
+        return;
+      }
       // Invalidate all queries to refetch with new auth
       queryClient.invalidateQueries();
     } catch (error: any) {
