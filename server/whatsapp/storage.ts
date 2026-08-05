@@ -210,9 +210,15 @@ export type ConversationDisplayStatus =
 /**
  * Lijst gesprekken, eventueel gefilterd op categorie.
  *
- * Fase 3 voegt twee dingen toe:
- *  - sortering: wacht-op-planner bovenaan (nieuwste escalatie eerst)
- *  - afgeleide velden `aiHandledLast` en `displayStatus` per rij
+ * Fase 3 voegt afgeleide velden `aiHandledLast` en `displayStatus` per rij toe.
+ *
+ * Sortering is puur op laatste bericht (nieuwste eerst), zoals een gewone
+ * chat-app. Eerder pinden we gesprekken die op de planner wachten (escalatie)
+ * altijd bovenaan, los van het laatste bericht — dat maakte de volgorde
+ * onvoorspelbaar zodra het bijbehorende ESCALATIE-label niet meer in de lijst
+ * stond (zie ConversationList.tsx), en is op verzoek losgelaten. Een gesprek
+ * dat op de planner wacht blijft gewoon vindbaar via displayStatus/filters —
+ * alleen de positie in de lijst is niet langer los van de berichttijd.
  */
 export async function listConversations(args: {
   category?: 'candidate' | 'prospect' | 'unmatched';
@@ -264,13 +270,7 @@ export async function listConversations(args: {
     })
     .from(whatsappConversations)
     .where(whereCond as any)
-    .orderBy(
-      sql`CASE WHEN ${whatsappConversations.escalatedAt} IS NOT NULL
-                AND ${whatsappConversations.inboxStatus} = 'open'
-               THEN 0 ELSE 1 END`,
-      sql`${whatsappConversations.escalatedAt} DESC NULLS LAST`,
-      desc(whatsappConversations.lastMessageAt),
-    )
+    .orderBy(desc(whatsappConversations.lastMessageAt))
     .limit(limit)
     .offset(offset);
 
