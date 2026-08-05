@@ -5,9 +5,11 @@
  * Zonder avatar-cirkel: die toonde alleen initialen (of een neutraal icoon bij
  * een onbekende naam) en voegde dus niets toe aan wat de naam er al naast zei.
  */
+import { Contact } from 'lucide-react';
 import type { AiCategory, Conversation, EscalationReason } from '../../../api/whatsappClient';
 import { AI_CATEGORY_LABELS, ESCALATION_REASON_LABELS } from '../../../api/whatsappClient';
 import { WA, WA_TEKST, WA_GEWICHT, relativeTime, snoozeRemaining } from './theme';
+import { KLEUR } from '../../../lib/huisstijl';
 
 // Label → tag-stijl uit de mockup: NIEUW=paars, SPOED=rood, klant=amber.
 function tagStyle(label: string): { text: string; bg: string } | null {
@@ -72,7 +74,10 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
   return (
     <div style={{ flex: 1, overflowY: 'auto' }}>
       {conversations.map(c => {
-        const naam = c.displayName || `+${c.phoneNumber}`;
+        const naam = c.displayName || c.importedContactName || `+${c.phoneNumber}`;
+        // Naam komt uit de eenmalige contactenimport, niet uit een échte match —
+        // bepaalt of het dunne signaal-icoontje naast de naam getoond wordt.
+        const geimporteerdeNaam = !c.displayName && !!c.importedContactName;
         const active = c.phoneNumber === selectedPhone;
         const rest = snoozedView ? snoozeRemaining(c.snoozedUntil) : null;
         // Categorie krijgt voorrang op de vrije labels: die zijn handwerk en
@@ -106,6 +111,11 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                     fontSize: WA_TEKST.body, fontWeight: WA_GEWICHT.semibold, color: WA.text,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>{naam}</span>
+                  {geimporteerdeNaam && (
+                    <span title="Naam uit geïmporteerde contactenlijst" style={{ display: 'inline-flex', flexShrink: 0 }}>
+                      <Contact size={11} strokeWidth={1.5} color={KLEUR.muted} />
+                    </span>
+                  )}
                   {escalatie && (
                     <span
                       title={`Wacht op planner — ${ESCALATION_REASON_LABELS[escalatie]}`}

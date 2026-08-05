@@ -670,12 +670,16 @@ export interface WaProfielPatch {
   functie?: string;
   status?: string;
   phone?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface WaProfielResultaat {
   success: boolean;
   contactId: number;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   phone: string | null;
   status: string | null;
   functie: string | null;
