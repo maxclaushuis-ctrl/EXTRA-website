@@ -1,59 +1,23 @@
 /**
- * Gesprekkenlijst in de sidebar — items met naam, preview, relatieve tijd,
- * unread-badge en label-tags.
+ * Gesprekkenlijst in de sidebar — items met naam, preview, relatieve tijd en
+ * unread-badge. Bewust compact: escalatiereden, onderwerp-categorie en
+ * handmatige labels staan hier niet meer (dat maakte de lijst te druk), op
+ * één uitzondering na — een gesprek met categorie "afmelding" krijgt een
+ * rood label "Afmelding", omdat de planner dat op de lijst wil kunnen zien.
+ * Al het andere blijft gewoon zichtbaar in het profielpaneel.
  *
  * Zonder avatar-cirkel: die toonde alleen initialen (of een neutraal icoon bij
  * een onbekende naam) en voegde dus niets toe aan wat de naam er al naast zei.
  */
 import { Contact } from 'lucide-react';
 import type { AiCategory, Conversation, EscalationReason } from '../../../api/whatsappClient';
-import { AI_CATEGORY_LABELS, ESCALATION_REASON_LABELS } from '../../../api/whatsappClient';
+import { AI_CATEGORY_LABELS } from '../../../api/whatsappClient';
 import { WA, WA_TEKST, WA_GEWICHT, relativeTime, snoozeRemaining } from './theme';
 import { KLEUR } from '../../../lib/huisstijl';
 
-// Label → tag-stijl uit de mockup: NIEUW=paars, SPOED=rood, klant=amber.
-function tagStyle(label: string): { text: string; bg: string } | null {
-  const l = label.toLowerCase();
-  if (l === 'nieuw') return { text: 'NIEUW', bg: WA.purple };
-  if (l === 'spoed' || l === 'urgent') return { text: 'SPOED', bg: '#e63946' };
-  if (l === 'klant') return { text: 'klant', bg: '#f0a500' };
-  return { text: l, bg: '#6b7280' };
-}
-
-/**
- * Fase 3: escalatiereden als badge NAAST DE NAAM, dus zichtbaar zonder het
- * gesprek te openen. Kleur zegt hoe dringend: rood = boos, amber = iemand
- * wacht op contact, grijs = de AI kwam er inhoudelijk niet uit.
- */
-const ESCALATIE_KLEUR: Record<EscalationReason, string> = {
-  boos: '#e63946',
-  wil_telefonisch: '#f0a500',
-  mens_gevraagd: '#f0a500',
-  buiten_kennisbank: '#6b7280',
-  overig: '#6b7280',
-};
-
-/**
- * Fase 3C: het onderwerp-label van de AI als badge in de lijst. Dat was het
- * doel van automatisch labelen — zien waar een gesprek over gaat zonder het
- * te openen — maar tot nu toe stond het label alleen in het gesprek zelf.
- *
- * Exhaustief getypt op AiCategory, net als CATEGORIE_KLEUR in TakenPanel.tsx:
- * een nieuwe categorie zonder kleur is dan een compile-fout, geen stille
- * grijze badge.
- *
- * Rood en amber komen hier BEWUST niet voor: die twee kleuren betekenen in
- * deze lijst "iemand wacht op een mens" (ESCALATIE_KLEUR). Een onderwerp is
- * nooit dringend uit zichzelf.
- */
-const CATEGORIE_KLEUR: Record<AiCategory, string> = {
-  sollicitatie: '#2a9d8f',
-  afmelding: '#7048b6',
-  klacht: '#b5179e',
-  algemene_vraag: '#0077b6',
-  verzoek: '#4f772d',
-  overig: '#667781',
-};
+// Kleur voor het enige badge dat nog in de lijst zelf staat — zie de
+// vereenvoudiging hieronder bij ConversationList.
+const AFMELDING_ROOD = '#e63946';
 
 interface Props {
   conversations: Conversation[];
@@ -80,11 +44,14 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
         const geimporteerdeNaam = !c.displayName && !!c.importedContactName;
         const active = c.phoneNumber === selectedPhone;
         const rest = snoozedView ? snoozeRemaining(c.snoozedUntil) : null;
-        // Categorie krijgt voorrang op de vrije labels: die zijn handwerk en
-        // staan lang niet overal, de categorie staat er (bijna) altijd. Samen
-        // met de unread-badge passen er hooguit twee tags op één regel.
+        // De lijst toont bewust geen escalatiereden, onderwerp-categorie of
+        // handmatige labels meer — dat maakte de lijst te druk. Al die
+        // informatie blijft ongewijzigd zichtbaar in het profielpaneel zodra
+        // het gesprek open staat; hier in de compacte lijst is "Afmelding"
+        // de enige uitzondering, omdat de planner die in één oogopslag wil
+        // zien zonder elk gesprek open te hoeven klikken.
         const categorie = (c.aiCategory || null) as AiCategory | null;
-        const tags = (c.labels || []).map(tagStyle).filter(Boolean).slice(0, categorie ? 1 : 2) as Array<{ text: string; bg: string }>;
+        const isAfmelding = categorie === 'afmelding';
         // Alleen tonen zolang het gesprek écht openstaat; opgelost/spam wacht op niemand.
         const escalatie = (c.displayStatus === 'wacht_op_planner' && c.escalationReason)
           ? (c.escalationReason as EscalationReason)
@@ -116,16 +83,6 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                       <Contact size={11} strokeWidth={1.5} color={KLEUR.muted} />
                     </span>
                   )}
-                  {escalatie && (
-                    <span
-                      title={`Wacht op planner — ${ESCALATION_REASON_LABELS[escalatie]}`}
-                      style={{
-                        flexShrink: 0, fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, letterSpacing: 0.2,
-                        padding: '2px 6px', borderRadius: 9, whiteSpace: 'nowrap',
-                        color: '#fff', background: ESCALATIE_KLEUR[escalatie],
-                      }}
-                    >{ESCALATION_REASON_LABELS[escalatie].toUpperCase()}</span>
-                  )}
                   {!escalatie && c.displayStatus === 'afgehandeld_ai' && (
                     <span title="Laatste bericht is door de AI-agent beantwoord"
                       style={{ flexShrink: 0, fontSize: WA_TEKST.badge, opacity: 0.65 }}>🤖</span>
@@ -151,25 +108,19 @@ export default function ConversationList({ conversations, selectedPhone, onSelec
                       background: '#e1f2fb', color: '#5c6f7a',
                     }}>⏰ {rest}</span>
                   )}
-                  {categorie && (
+                  {isAfmelding && (
                     <span
                       title={
-                        `Onderwerp: ${AI_CATEGORY_LABELS[categorie] ?? categorie}` +
+                        `Onderwerp: ${AI_CATEGORY_LABELS.afmelding}` +
                         (c.aiCategorySource === 'handmatig' ? ' (handmatig gezet)' : '')
                       }
                       style={{
                         fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, padding: '2px 7px', borderRadius: 10,
                         whiteSpace: 'nowrap',
-                        color: '#fff', background: CATEGORIE_KLEUR[categorie] ?? CATEGORIE_KLEUR.overig,
+                        color: '#fff', background: AFMELDING_ROOD,
                       }}
-                    >{AI_CATEGORY_LABELS[categorie] ?? categorie}</span>
+                    >Afmelding</span>
                   )}
-                  {tags.map(t => (
-                    <span key={t.text} style={{
-                      fontSize: WA_TEKST.mini, fontWeight: WA_GEWICHT.bold, padding: '2px 7px', borderRadius: 10,
-                      color: '#fff', background: t.bg,
-                    }}>{t.text}</span>
-                  ))}
                   {c.unreadCount > 0 && (
                     <span style={{
                       background: WA.unread, color: '#fff', fontSize: WA_TEKST.badge, fontWeight: WA_GEWICHT.bold,
