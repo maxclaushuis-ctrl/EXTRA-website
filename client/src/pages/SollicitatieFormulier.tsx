@@ -632,7 +632,10 @@ export default function SollicitatieFormulier() {
           <div className="flex items-center gap-4">
             <img src={extraLogoWit} alt="EXTRA" className="h-8 w-auto" />
             <div className="w-px h-6 bg-white/30" />
-            <span className="text-base font-semibold tracking-wide">Sollicitatieformulier</span>
+            {/* Enige <h1> op deze pagina — stond hier eerder als kale <span>,
+                waardoor de pagina (buiten de "Opgeslagen!"-bevestiging) geen
+                H1 had. Zelfde opmaak, nu wel semantisch correct. */}
+            <h1 className="text-base font-semibold tracking-wide">Sollicitatieformulier</h1>
           </div>
           <span className="text-purple-200 text-sm font-medium">
             {displayDotIndex + 1} / {totalDisplayDots}
