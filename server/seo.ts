@@ -24,6 +24,7 @@ import {
   type RouteMeta,
 } from "@shared/routeMeta";
 import { storage } from "./storage";
+import type { VacancyPost } from "@shared/schema";
 
 interface PageMeta {
   title: string;
@@ -31,8 +32,8 @@ interface PageMeta {
   canonicalUrl: string;
   noindex?: boolean;
   lang?: "nl" | "en";
-  /** Extra JSON-LD die aan de <head> wordt toegevoegd (al ge-stringificeerd). */
-  jsonLd?: string;
+  /** Extra JSON-LD-blokken die aan de <head> worden toegevoegd (al ge-stringificeerd, één <script> per entry). */
+  jsonLd?: string[];
 }
 
 const escapeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -69,8 +70,9 @@ export function injectMeta(shell: string, meta: PageMeta, fragment?: string): st
     html = html.replace(/<html lang="nl">/, `<html lang="en">`);
     html = html.replace(/(<meta\s+property="og:locale"\s+content=")[^"]*(")/, `$1en_US$2`);
   }
-  if (meta.jsonLd) {
-    html = html.replace("</head>", `<script type="application/ld+json">${meta.jsonLd}</script>\n</head>`);
+  if (meta.jsonLd && meta.jsonLd.length > 0) {
+    const scripts = meta.jsonLd.map((json) => `<script type="application/ld+json">${json}</script>`).join("\n");
+    html = html.replace("</head>", `${scripts}\n</head>`);
   }
   if (fragment) {
     html = html.replace('<div id="root"></div>', `<div id="root">${fragment}</div>`);
@@ -115,14 +117,93 @@ function breadcrumbJsonLd(routePath: string, pageTitle: string, lang?: "nl" | "e
 }
 
 function metaFromRoute(m: RouteMeta): PageMeta {
+  const breadcrumb = m.noindex ? undefined : breadcrumbJsonLd(m.canonical ?? m.path, m.title, m.lang);
   return {
     title: m.title,
     description: m.description,
     canonicalUrl: `${SITE_ORIGIN}${m.canonical ?? m.path}`,
     noindex: m.noindex,
     lang: m.lang,
-    jsonLd: m.noindex ? undefined : breadcrumbJsonLd(m.canonical ?? m.path, m.title, m.lang),
+    jsonLd: breadcrumb ? [breadcrumb] : undefined,
   };
+}
+
+/** Rollende validThrough (P12/Google-advies voor doorlopende werving): 90 dagen vanaf datePosted. */
+const VALID_THROUGH_DAYS = 90;
+
+function vacancyValidThrough(vacancy: VacancyPost): Date {
+  const posted = new Date(vacancy.publishedAt || vacancy.createdAt || Date.now());
+  const validThrough = new Date(posted);
+  validThrough.setDate(validThrough.getDate() + VALID_THROUGH_DAYS);
+  return validThrough;
+}
+
+const EMPLOYMENT_TYPE_BY_SERVICE_TYPE: Record<string, string> = {
+  Fulltime: "FULL_TIME",
+  Parttime: "PART_TIME",
+  Bijbaan: "PART_TIME",
+  Oproep: "TEMPORARY",
+};
+
+/**
+ * JobPosting JSON-LD (P12). Verplicht voor Google Jobs-indexering; ontbrak
+ * volledig in de server-response — alleen client-side geïnjecteerd (dus
+ * onzichtbaar voor crawlers zonder JavaScript, en pas zichtbaar ná hydratie
+ * voor de rest). Wordt hier bij elke request live uit de database opgebouwd,
+ * dus altijd actueel — ook voor vacatures waarvoor nog geen prerender-fragment
+ * bestaat.
+ *
+ * jobLocation gebruikt bewust vacancy.location/region (nooit hardcoded
+ * Amsterdam) — dus ook correct voor bijv. de Kurhaus-vacatures in Scheveningen.
+ * Straatniveau (streetAddress/postalCode) staat niet in vacancy_posts en wordt
+ * daarom weggelaten in plaats van verzonnen; Google vereist alleen
+ * addressCountry en raadt addressLocality sterk aan.
+ */
+function jobPostingJsonLd(vacancy: VacancyPost, canonicalUrl: string): string {
+  const posted = new Date(vacancy.publishedAt || vacancy.createdAt || Date.now());
+  const description = stripHtml(
+    [vacancy.introductionText, vacancy.aboutRole, vacancy.workEnvironment].filter(Boolean).join("\n\n")
+  ) || stripHtml(vacancy.shortDescription || vacancy.title);
+
+  const schema: Record<string, any> = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: vacancy.title,
+    description,
+    datePosted: posted.toISOString(),
+    validThrough: vacancyValidThrough(vacancy).toISOString(),
+    employmentType: EMPLOYMENT_TYPE_BY_SERVICE_TYPE[vacancy.serviceType] || "OTHER",
+    directApply: true,
+    identifier: {
+      "@type": "PropertyValue",
+      name: "EXTRA",
+      value: String(vacancy.id),
+    },
+    hiringOrganization: { "@id": "https://www.doehetextra.nl/#organization" },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: vacancy.location,
+        addressRegion: vacancy.region,
+        addressCountry: "NL",
+      },
+    },
+  };
+
+  if (vacancy.salaryMin) {
+    schema.baseSalary = {
+      "@type": "MonetaryAmount",
+      currency: "EUR",
+      value: {
+        "@type": "QuantitativeValue",
+        value: Number(vacancy.salaryMin),
+        unitText: "HOUR",
+      },
+    };
+  }
+
+  return JSON.stringify(schema);
 }
 
 /**
@@ -185,7 +266,9 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
                   155
                 ),
                 canonicalUrl: `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`,
-                jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title),
+                jsonLd: [breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title)].filter(
+                  (v): v is string => !!v
+                ),
               },
               // Fragment op basis van het opgevraagde pad (niet de canonical):
               // /blog/:slug en /nieuws/:slug serveren vandaag dezelfde content
@@ -198,17 +281,28 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
           }
         } else if (dyn.type === "vacature") {
           const vacancy = await storage.getVacancyPostBySlug(slug);
-          if (vacancy && vacancy.status === "published") {
+          // P12: een vacature waarvan de (rollende) validThrough al verstreken is,
+          // mag geen 200 met verouderd JobPosting-schema meer krijgen — ook niet
+          // als de status in het CMS nog op "published" staat.
+          const expired = vacancy ? vacancyValidThrough(vacancy) < new Date() : false;
+          if (vacancy && vacancy.status === "published" && !expired) {
+            const canonicalUrl = vacancy.canonicalUrl || `${SITE_ORIGIN}${dyn.canonicalBase}/${vacancy.slug}`;
             return send(
               200,
               {
-                title: truncate(vacancy.metaTitle || `${vacancy.title} | Horeca vacature Amsterdam | EXTRA`, 70),
+                title: truncate(
+                  vacancy.metaTitle || `${vacancy.title} | Horeca vacature ${vacancy.location} | EXTRA`,
+                  70
+                ),
                 description: truncate(
                   stripHtml(vacancy.metaDescription || vacancy.shortDescription || vacancy.title),
                   155
                 ),
-                canonicalUrl: vacancy.canonicalUrl || `${SITE_ORIGIN}${dyn.canonicalBase}/${vacancy.slug}`,
-                jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${vacancy.slug}`, vacancy.title),
+                canonicalUrl,
+                jsonLd: [
+                  breadcrumbJsonLd(`${dyn.canonicalBase}/${vacancy.slug}`, vacancy.title),
+                  jobPostingJsonLd(vacancy, canonicalUrl),
+                ].filter((v): v is string => !!v),
               },
               fragmentFor(normalized)
             );

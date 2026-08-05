@@ -120,64 +120,11 @@ export default function VacatureDetail() {
   if (isLoading) return null;
   if (!vacature) return null;
 
-  // Doorlopende werving: rollende validThrough van 90 dagen (advies van Google).
-  const validThroughDate = new Date(vacature.datePosted);
-  validThroughDate.setDate(validThroughDate.getDate() + 90);
-
-  const employmentType =
-    vacature.serviceType === "Fulltime" ? "FULL_TIME"
-    : vacature.serviceType === "Parttime" || vacature.serviceType === "Bijbaan" ? "PART_TIME"
-    : ["PART_TIME", "TEMPORARY"]; // Oproep
-
-  const jobPostingSchema: Record<string, any> = {
-    "@context": "https://schema.org",
-    "@type": "JobPosting",
-    "title": vacature.title,
-    "description": vacature.fullDescription,
-    "employmentType": employmentType,
-    "datePosted": vacature.datePosted,
-    "validThrough": validThroughDate.toISOString(),
-    "directApply": true,
-    "hiringOrganization": {
-      "@type": "Organization",
-      "name": "EXTRA Uitzendbureau",
-      "sameAs": "https://www.doehetextra.nl",
-      "logo": "https://www.doehetextra.nl/logo.png",
-    },
-    "jobLocation": {
-      "@type": "Place",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": vacature.location,
-        "addressRegion": vacature.region,
-        "addressCountry": "NL",
-      },
-    },
-  };
-
-  // All-in uurloon — alleen meesturen als er een echt bedrag is.
-  if (vacature.salaryMin) {
-    jobPostingSchema.baseSalary = {
-      "@type": "MonetaryAmount",
-      "currency": "EUR",
-      "value": {
-        "@type": "QuantitativeValue",
-        "value": vacature.salaryMin,
-        "unitText": "HOUR",
-      },
-    };
-  }
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.doehetextra.nl/" },
-      { "@type": "ListItem", "position": 2, "name": "Vacatures", "item": "https://www.doehetextra.nl/vacatures" },
-      { "@type": "ListItem", "position": 3, "name": vacature.title, "item": `https://www.doehetextra.nl/vacatures/${vacature.slug}` },
-    ],
-  };
-
+  // JobPosting- en BreadcrumbList-schema staan sinds P12 server-side in
+  // server/seo.ts (jobPostingJsonLd/breadcrumbJsonLd) — die zitten al in de
+  // initiële server-response, vóór hydratie. Hier nogmaals genereren zou
+  // dezelfde twee JSON-LD-blokken dubbel op de pagina zetten na hydratie.
+  // FAQPage staat (nog) niet server-side en blijft daarom hier client-side.
   const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -201,8 +148,6 @@ export default function VacatureDetail() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-purple-200">
-      <script type="application/ld+json">{JSON.stringify(jobPostingSchema)}</script>
-      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
       <PublicNav forceDark={false} />
 
