@@ -10,6 +10,7 @@ import {
   updateContactOptIn,
   updateContactProfiel,
   updateConversationCategory,
+  updateConversationDisplayName,
   haalNotities,
   maakNotitie,
   updateLabels,
@@ -180,6 +181,15 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
    */
   const [profielWaarschuwing, setProfielWaarschuwing] = useState<string | null>(null);
 
+  // Losse tekst-state + status voor het naamveld van gesprekken ZONDER
+  // gekoppeld contact (bv. klanten, of nog niet-gematchte nummers). Los van
+  // naamInput/veldBezig/veldMelding hierboven, want dat pad schrijft naar
+  // het contact-record (bewaarProfiel) — dit pad schrijft rechtstreeks naar
+  // whatsappConversations.displayName via een eigen endpoint.
+  const [naamZonderContactInput, setNaamZonderContactInput] = useState('');
+  const [naamZonderContactBezig, setNaamZonderContactBezig] = useState(false);
+  const [naamZonderContactMelding, setNaamZonderContactMelding] = useState<{ tekst: string; kleur: string } | null>(null);
+
   /** Fase 3: handmatige override van het onderwerp-label (null = terug naar AI). */
   async function handleCategorie(category: AiCategory | null) {
     setCatBusy(true);
@@ -246,7 +256,17 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     setVeldBezig(null);
     setVeldMelding(null);
     setProfielWaarschuwing(null);
+    setNaamZonderContactBezig(false);
+    setNaamZonderContactMelding(null);
   }, [conv.phoneNumber]);
+
+  // Naamveld zonder gekoppeld contact volgt displayName (handmatig gezet) of,
+  // bij ontbreken daarvan, de naam uit de eenmalige contactenimport — zelfde
+  // volgorde als de `naam`-berekening hieronder, zodat het veld altijd toont
+  // wat er nu daadwerkelijk zichtbaar is in de kop en de gesprekkenlijst.
+  useEffect(() => {
+    setNaamZonderContactInput(conv.displayName || conv.importedContactName || '');
+  }, [conv.phoneNumber, conv.displayName, conv.importedContactName]);
 
   // Het telefoonveld volgt het geladen contact, maar valt terug op het nummer
   // van het gesprek: dat is het nummer waarop we deze persoon kennen.
@@ -328,6 +348,38 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     const t = setTimeout(() => setVeldMelding(null), 2500);
     return () => clearTimeout(t);
   }, [veldMelding]);
+
+  useEffect(() => {
+    if (!naamZonderContactMelding || naamZonderContactMelding.kleur !== '#059669') return;
+    const t = setTimeout(() => setNaamZonderContactMelding(null), 2500);
+    return () => clearTimeout(t);
+  }, [naamZonderContactMelding]);
+
+  /**
+   * Naam opslaan voor een gesprek ZONDER gekoppeld contact — bv. een klant of
+   * een nog niet-gematchte kandidaat. Schrijft rechtstreeks naar
+   * whatsappConversations.displayName; upsertConversation() bewaart die
+   * waarde daarna gewoon, tenzij de matcher ooit een échte naam vindt (zie
+   * server/whatsapp/storage.ts) — dus dit kan nooit een toekomstige, betere
+   * match blokkeren.
+   */
+  async function bewaarNaamZonderContact() {
+    const ingevoerd = naamZonderContactInput.trim();
+    const huidig = conv.displayName || conv.importedContactName || '';
+    if (!ingevoerd || ingevoerd === huidig) { setNaamZonderContactInput(huidig); return; }
+    setNaamZonderContactBezig(true);
+    setNaamZonderContactMelding(null);
+    try {
+      await updateConversationDisplayName(conv.phoneNumber, ingevoerd);
+      setNaamZonderContactMelding({ tekst: 'Opgeslagen', kleur: '#059669' });
+      onConversationChanged();
+    } catch (e: any) {
+      setNaamZonderContactInput(huidig);
+      setNaamZonderContactMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
+    } finally {
+      setNaamZonderContactBezig(false);
+    }
+  }
 
   async function handleAssign(value: string) {
     if (value === '') {
@@ -533,6 +585,22 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
           </>
         ) : (
           <>
+            <EditRow
+              k="Naam"
+              melding={naamZonderContactMelding}
+            >
+              <input
+                value={naamZonderContactInput}
+                disabled={naamZonderContactBezig}
+                onChange={e => setNaamZonderContactInput(e.target.value)}
+                // Opslaan op blur én Enter, zelfde ritme als de andere velden
+                // in dit paneel — niet op elke toetsaanslag.
+                onBlur={bewaarNaamZonderContact}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                placeholder={`+${conv.phoneNumber}`}
+                style={{ ...VELD_STIJL, outline: 'none' }}
+              />
+            </EditRow>
             <InfoRow k="Functie" v={functie} />
             <InfoRow k="Telefoon" v={formatPhone(conv.phoneNumber)} />
             <InfoRow k="Status" v={status} last />

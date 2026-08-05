@@ -11956,6 +11956,30 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     res.json({ success: true });
   });
 
+  /**
+   * Handmatige naam voor een gesprek zónder gekoppeld kandidaat/medewerker-
+   * record (bijv. een onbekend nummer of een klant/prospect-gesprek). Zet
+   * whatsapp_conversations.display_name rechtstreeks — dat is al overal
+   * (lijst, chatheader, profielpaneel) het eerste veld in de naam-fallback,
+   * dus deze wint automatisch van de geïmporteerde-contactenlijst-naam en
+   * het kale telefoonnummer, zonder dat de UI ergens anders hoeft te weten
+   * dat dit "handmatig" is. Een échte match (kandidaat/medewerker/prospect)
+   * blijft wél altijd voorrang houden zodra die er is — upsertConversation
+   * overschrijft display_name alleen als de matcher zelf een niet-lege naam
+   * berekent, zie server/whatsapp/storage.ts.
+   */
+  app.put('/api/whatsapp/conversations/:phoneNumber/naam', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const naam = String(req.body?.displayName ?? '').trim();
+    if (!naam) return res.status(400).json({ error: 'Naam mag niet leeg zijn' });
+    await db.update(whatsappConversations).set({
+      displayName: naam,
+      updatedAt: new Date(),
+    }).where(drizzleEq(whatsappConversations.phoneNumber, phone));
+    res.json({ success: true, displayName: naam });
+  });
+
   // Inbox-status (open/resolved/spam) — gebruikt door de UI-sidebar (Open/Opgelost/Spam/Alle)
   // en door de chat-header acties "Verplaats naar Spam" / "Sluit gesprek".
   app.put('/api/whatsapp/conversations/:phoneNumber/inbox-status', adminMiddleware, async (req: Request, res: Response) => {
