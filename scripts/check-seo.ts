@@ -48,11 +48,22 @@ for (const m of ROUTE_META) {
 }
 
 // 4. Prerender-fragmenten
+//
+// P11: een ontbrekend fragment op een route die expliciet prerender:true
+// heeft, was hier tot nu toe alleen een waarschuwing — dat is precies hoe 8
+// routes (/vacatures, /blog, /nieuws, /cv-upload, /sollicitatieformulier,
+// /beloningssysteem, /hoe-extra-werkt, /over-extra/ons-team) onopgemerkt
+// zonder fragment kwamen te zitten. Een route die zelf zegt dat hij
+// geprerenderd moet worden, moet ook echt een fragment hebben — dat is nu een
+// harde fout. (De dynamische vacature-/blogroutes staan niet in ROUTE_META en
+// worden hier dus niet gecontroleerd; scripts/prerender.ts faalt zelf hard als
+// daar een gepubliceerde vacature of blogartikel zonder fragment overblijft —
+// bewust, want dat vereist databasetoegang, wat deze check expres niet heeft.)
 for (const m of ROUTE_META.filter((x) => x.prerender && !x.noindex)) {
   const n = normalizeMetaPath(m.path);
   const file = path.join(FRAGMENT_DIR, (n === "/" ? "index" : n.slice(1).replace(/\//g, "__")) + ".html");
   if (!fs.existsSync(file)) {
-    warnings.push(`${m.path}: geen prerender-fragment (valt terug op alleen meta-injectie) — draai npm run prerender`);
+    errors.push(`${m.path}: geen prerender-fragment — draai npm run prerender en commit het resultaat`);
     continue;
   }
   const html = fs.readFileSync(file, "utf-8");

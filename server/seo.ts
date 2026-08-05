@@ -176,28 +176,42 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
         if (dyn.type === "blog") {
           const post = await storage.getBlogPostBySlug(slug);
           if (post && post.status === "published") {
-            return send(200, {
-              title: truncate(`${post.title} | EXTRA`, 70),
-              description: truncate(
-                stripHtml((post as any).metaDescription || (post as any).excerpt || (post as any).content || post.title),
-                155
-              ),
-              canonicalUrl: `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`,
-              jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title),
-            });
+            return send(
+              200,
+              {
+                title: truncate(`${post.title} | EXTRA`, 70),
+                description: truncate(
+                  stripHtml((post as any).metaDescription || (post as any).excerpt || (post as any).content || post.title),
+                  155
+                ),
+                canonicalUrl: `${SITE_ORIGIN}${dyn.canonicalBase}/${post.slug}`,
+                jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${post.slug}`, post.title),
+              },
+              // Fragment op basis van het opgevraagde pad (niet de canonical):
+              // /blog/:slug en /nieuws/:slug serveren vandaag dezelfde content
+              // via twee losse routes en krijgen dus allebei hun eigen
+              // geprerenderde fragment (scripts/prerender.ts genereert beide).
+              // Dit was de kern van P11: hier ontbrak de fragment-injectie
+              // volledig, waardoor deze routes altijd een lege shell kregen.
+              fragmentFor(normalized)
+            );
           }
         } else if (dyn.type === "vacature") {
           const vacancy = await storage.getVacancyPostBySlug(slug);
           if (vacancy && vacancy.status === "published") {
-            return send(200, {
-              title: truncate(vacancy.metaTitle || `${vacancy.title} | Horeca vacature Amsterdam | EXTRA`, 70),
-              description: truncate(
-                stripHtml(vacancy.metaDescription || vacancy.shortDescription || vacancy.title),
-                155
-              ),
-              canonicalUrl: vacancy.canonicalUrl || `${SITE_ORIGIN}${dyn.canonicalBase}/${vacancy.slug}`,
-              jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${vacancy.slug}`, vacancy.title),
-            });
+            return send(
+              200,
+              {
+                title: truncate(vacancy.metaTitle || `${vacancy.title} | Horeca vacature Amsterdam | EXTRA`, 70),
+                description: truncate(
+                  stripHtml(vacancy.metaDescription || vacancy.shortDescription || vacancy.title),
+                  155
+                ),
+                canonicalUrl: vacancy.canonicalUrl || `${SITE_ORIGIN}${dyn.canonicalBase}/${vacancy.slug}`,
+                jsonLd: breadcrumbJsonLd(`${dyn.canonicalBase}/${vacancy.slug}`, vacancy.title),
+              },
+              fragmentFor(normalized)
+            );
           }
         }
       } catch (err) {

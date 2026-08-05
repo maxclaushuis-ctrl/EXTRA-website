@@ -245,6 +245,7 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Horeca vacatures Amsterdam | Bediening & chef",
     description:
       "Actuele horeca vacatures in Amsterdam via EXTRA: bediening, chef, bartender en housekeeping bij tophotels en eventlocaties. Solliciteer vandaag nog.",
+    prerender: true,
     priority: "0.9",
     changefreq: "daily",
   },
@@ -262,6 +263,7 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Upload je cv | Solliciteer bij EXTRA",
     description:
       "Upload je cv en solliciteer bij EXTRA. Wij matchen je met horeca werk in Amsterdam dat past bij jouw ervaring en beschikbaarheid. Snel geregeld.",
+    prerender: true,
     priority: "0.6",
     changefreq: "monthly",
   },
@@ -270,6 +272,7 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Sollicitatieformulier | Werken via EXTRA",
     description:
       "Vul het sollicitatieformulier in en ga aan de slag via EXTRA: horeca, housekeeping of logistiek werk in Amsterdam. Binnen enkele minuten geregeld.",
+    prerender: true,
     priority: "0.6",
     changefreq: "monthly",
   },
@@ -366,6 +369,7 @@ export const ROUTE_META: RouteMeta[] = [
     description:
       "Dit is het team van EXTRA: de mensen die dagelijks horecamedewerkers en opdrachtgevers in Amsterdam aan elkaar koppelen. Maak kennis en neem contact op.",
     canonical: "/ons-team",
+    prerender: true,
     priority: "0.6",
     changefreq: "monthly",
   },
@@ -384,6 +388,7 @@ export const ROUTE_META: RouteMeta[] = [
     description:
       "Van aanvraag tot match: zo werkt EXTRA voor werkgevers en medewerkers in de horeca. Bekijk de stappen en start vandaag nog met flexibel personeel.",
     canonical: "/onze-werkwijze",
+    prerender: true,
     priority: "0.7",
     changefreq: "monthly",
   },
@@ -402,6 +407,7 @@ export const ROUTE_META: RouteMeta[] = [
     description:
       "Werken via EXTRA loont dubbel: met het EXTRAATJE-beloningssysteem verdien je punten per shift die je inwisselt voor extra's. Bekijk hoe het werkt.",
     canonical: "/extraatje",
+    prerender: true,
     priority: "0.7",
     changefreq: "monthly",
   },
@@ -428,6 +434,7 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Blog & nieuws | Horeca en werken via EXTRA",
     description:
       "Nieuws en artikelen van EXTRA over werken in de horeca, personeel inhuren, dagbetaling en de Amsterdamse hospitality. Lees de laatste updates.",
+    prerender: true,
     priority: "0.9",
     changefreq: "daily",
   },
@@ -437,6 +444,7 @@ export const ROUTE_META: RouteMeta[] = [
     description:
       "Het laatste nieuws van EXTRA over horeca, flexibel werken en personeel in Amsterdam. Bekijk alle artikelen en updates op onze blogpagina.",
     canonical: "/blog",
+    prerender: true,
     priority: "0.6",
     changefreq: "daily",
   },
