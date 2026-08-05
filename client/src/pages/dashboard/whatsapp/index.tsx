@@ -15,6 +15,7 @@ import {
   haalStats,
   haalTeamMembers,
   markeerGelezen,
+  markeerOngelezen,
   stuurBericht,
   stuurMedia,
   snoozeGesprek,
@@ -206,6 +207,20 @@ export default function WhatsAppInbox() {
     }
   }
 
+  // Net als het bekende WhatsApp-gebaar: geen nieuw bericht, maar een
+  // geheugensteuntje dat dit gesprek nog opgepakt moet worden. Blijft
+  // gewoon het geopende gesprek — anders sluit je 'm net op het moment
+  // dat je 'm juist wilt laten opvallen in de lijst.
+  async function handleMarkUnread() {
+    if (!selectedConv) return;
+    try {
+      await markeerOngelezen(selectedConv.phoneNumber);
+      await refreshConversations();
+    } catch (e: any) {
+      setSendError(e.message || 'Markeren als ongelezen mislukt');
+    }
+  }
+
   return (
     <div style={{
       display: 'flex', height: 'calc(100vh - 57px)', minHeight: 480,
@@ -240,6 +255,7 @@ export default function WhatsAppInbox() {
         aiLoading={aiLoading}
         onAiSuggest={handleAiSuggest}
         onSnooze={handleSnooze}
+        onMarkUnread={handleMarkUnread}
         profielOpen={profielOpen}
         onToggleProfiel={() => setProfielOpen(v => !v)}
       />

@@ -25,6 +25,8 @@ interface Props {
   aiLoading: boolean;
   onAiSuggest: () => void;
   onSnooze: (untilIso: string | null) => Promise<void>;
+  /** Zet dit gesprek terug op ongelezen — net als het WhatsApp-gebaar. */
+  onMarkUnread: () => Promise<void>;
   /** Staat het profielpaneel rechts open? Zie de knop in de header hieronder. */
   profielOpen: boolean;
   onToggleProfiel: () => void;
@@ -93,13 +95,15 @@ function presetMorgenochtend(): Date {
 export default function ChatView(props: Props) {
   const {
     conv, messages, teamMembers, composerText, onComposerText,
-    onSend, sending, sendError, aiLoading, onAiSuggest, onSnooze,
+    onSend, sending, sendError, aiLoading, onAiSuggest, onSnooze, onMarkUnread,
     profielOpen, onToggleProfiel,
   } = props;
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [showSnoozeMenu, setShowSnoozeMenu] = useState(false);
   const [customSnooze, setCustomSnooze] = useState('');
   const [showCustomSnooze, setShowCustomSnooze] = useState(false);
+  /** "⋯"-menu met acties buiten de directe snooze/profiel-knoppen (nu: ongelezen). */
+  const [showMeerMenu, setShowMeerMenu] = useState(false);
   /** Foto op volledig formaat; null = dicht. Zie de overlay onderaan. */
   const [vergroot, setVergroot] = useState<{ src: string; alt: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -111,7 +115,7 @@ export default function ChatView(props: Props) {
 
   // Sluit snooze-menu wanneer een ander gesprek geselecteerd wordt. Een open
   // foto hoort daar ook bij: die gaat over het vorige gesprek.
-  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setAttachedFile(null); setVergroot(null); }, [conv?.phoneNumber]);
+  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setShowMeerMenu(false); setAttachedFile(null); setVergroot(null); }, [conv?.phoneNumber]);
 
   // Escape sluit de vergrote foto. Alleen geregistreerd zolang er één open
   // staat, zodat we niet bij elk toetsaanslag in de composer meeluisteren.
@@ -325,6 +329,37 @@ export default function ChatView(props: Props) {
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = ''; }}
                 >Snooze opheffen ({snoozeRest})</div>
               )}
+            </div>
+          )}
+
+          {/* "⋯"-menu: acties die geen eigen knop verdienen. Nu alleen
+              "Markeer als ongelezen" — net als het lange-inruk-gebaar in
+              WhatsApp zelf, maar dan als menu-item omdat er hier geen
+              lijst-item is om op te drukken. */}
+          <button
+            type="button"
+            title="Meer acties"
+            onClick={() => setShowMeerMenu(v => !v)}
+            style={{
+              border: 'none', cursor: 'pointer', fontSize: WA_GLYPH.icoon, lineHeight: 1,
+              background: showMeerMenu ? '#f1e9ff' : 'transparent',
+              color: showMeerMenu ? WA.purple : '#54656f',
+              borderRadius: 8, padding: '5px 7px',
+            }}
+          >⋯</button>
+          {showMeerMenu && (
+            <div style={{
+              position: 'absolute', top: '110%', right: 0, zIndex: 30,
+              background: '#fff', border: `1px solid ${WA.border}`, borderRadius: 10,
+              boxShadow: '0 6px 24px rgba(0,0,0,.15)', minWidth: 210, overflow: 'hidden',
+              fontSize: WA_TEKST.body, color: WA.text,
+            }}>
+              <div
+                onClick={() => { setShowMeerMenu(false); onMarkUnread(); }}
+                style={{ padding: '9px 14px', cursor: 'pointer' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = WA.panel; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = ''; }}
+              >Markeer als ongelezen</div>
             </div>
           )}
 
