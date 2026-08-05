@@ -199,9 +199,19 @@ async function main() {
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
   const port = (server.address() as any).port;
 
-  const executablePath = process.env.PRERENDER_CHROMIUM ||
-    fs.readdirSync("/opt/pw-browsers").filter(d => /^chromium-\d+$/.test(d))
-      .map(d => `/opt/pw-browsers/${d}/chrome-linux/chrome`).find(p => fs.existsSync(p));
+  // /opt/pw-browsers is specifiek voor de cloud-sandbox waarin dit script
+  // ontwikkeld is en bestaat niet overal (bijv. niet in Replit) — als die map
+  // ontbreekt, valt dit terug op Playwright's eigen browserresolutie (werkt
+  // zodra `npx playwright install chromium` is gedraaid), in plaats van hier
+  // hard te crashen.
+  const executablePath = process.env.PRERENDER_CHROMIUM || (() => {
+    try {
+      return fs.readdirSync("/opt/pw-browsers").filter(d => /^chromium-\d+$/.test(d))
+        .map(d => `/opt/pw-browsers/${d}/chrome-linux/chrome`).find(p => fs.existsSync(p));
+    } catch {
+      return undefined;
+    }
+  })();
   const browser = await chromium.launch({ executablePath, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   // Analytics/fonts extern niet nodig tijdens prerender
