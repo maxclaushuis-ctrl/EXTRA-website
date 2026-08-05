@@ -48,21 +48,71 @@ interface PrerenderRoute {
   dynamic?: boolean;
 }
 
+/** Minimale vorm van server/storage die dit script nodig heeft. */
+interface DynamicContentSource {
+  getBlogPosts(filters?: { status?: string; category?: string; limit?: number; offset?: number }): Promise<{ posts: any[]; total: number }>;
+  getBlogPostBySlug(slug: string): Promise<any | undefined>;
+  getVacancyPosts(filters?: { status?: string; functionType?: string; location?: string; limit?: number; offset?: number }): Promise<{ posts: any[]; total: number }>;
+  getVacancyPostBySlug(slug: string): Promise<any | undefined>;
+}
+
+/**
+ * Bouwt een DynamicContentSource op basis van een lokaal JSON-bestand
+ * ({ posts: BlogPost[], vacancies: VacancyPost[] }), voor omgevingen zonder
+ * databasetoegang (bijv. deze cloud-sandbox) maar met wél een export van een
+ * omgeving die die toegang wel heeft — zie scripts/export-dynamic-content.ts.
+ * Puur read-only, spiegelt exact wat /api/vacatures en /api/blog al publiek
+ * teruggeven.
+ */
+function jsonContentSource(jsonPath: string): DynamicContentSource {
+  const raw = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+  const posts: any[] = raw.posts || [];
+  const vacancies: any[] = raw.vacancies || [];
+  return {
+    async getBlogPosts(filters) {
+      const filtered = posts.filter((p) => !filters?.status || p.status === filters.status);
+      return { posts: filtered, total: filtered.length };
+    },
+    async getBlogPostBySlug(slug) {
+      return posts.find((p) => p.slug === slug);
+    },
+    async getVacancyPosts(filters) {
+      const filtered = vacancies.filter((v) => !filters?.status || v.status === filters.status);
+      return { posts: filtered, total: filtered.length };
+    },
+    async getVacancyPostBySlug(slug) {
+      return vacancies.find((v) => v.slug === slug);
+    },
+  };
+}
+
 /**
  * Dynamische import van server/storage, één keer geprobeerd en gecachet.
  * server/db.ts gooit bij import direct een fout als DATABASE_URL ontbreekt —
  * vandaar de dynamische import in plaats van een top-level import, zodat het
  * hele script niet crasht wanneer er (bewust) geen databasetoegang is.
+ *
+ * PRERENDER_DYNAMIC_JSON gaat vóór DATABASE_URL: handig in een omgeving die
+ * geen databasetoegang heeft maar wel een export daarvan gekregen heeft.
  */
-let storagePromise: Promise<typeof import("../server/storage")["storage"] | null> | null = null;
-function getStorage() {
+let storagePromise: Promise<DynamicContentSource | null> | null = null;
+function getStorage(): Promise<DynamicContentSource | null> {
   if (!storagePromise) {
-    storagePromise = !process.env.DATABASE_URL
-      ? Promise.resolve(null)
-      : import("../server/storage").then((m) => m.storage).catch((err) => {
-          console.error(`✗ Kon server/storage niet laden: ${err.message}`);
-          return null;
-        });
+    if (process.env.PRERENDER_DYNAMIC_JSON) {
+      try {
+        storagePromise = Promise.resolve(jsonContentSource(process.env.PRERENDER_DYNAMIC_JSON));
+      } catch (err: any) {
+        console.error(`✗ Kon PRERENDER_DYNAMIC_JSON niet lezen: ${err.message}`);
+        storagePromise = Promise.resolve(null);
+      }
+    } else {
+      storagePromise = !process.env.DATABASE_URL
+        ? Promise.resolve(null)
+        : import("../server/storage").then((m) => m.storage).catch((err) => {
+            console.error(`✗ Kon server/storage niet laden: ${err.message}`);
+            return null;
+          });
+    }
   }
   return storagePromise;
 }
@@ -77,9 +127,10 @@ async function fetchDynamicRoutes(): Promise<PrerenderRoute[]> {
   const storage = await getStorage();
   if (!storage) {
     console.warn(
-      "⚠ DATABASE_URL niet gezet (of database niet bereikbaar) — vacature- en blogpagina's " +
-        "worden overgeslagen. Draai `npm run prerender` in een omgeving met databasetoegang " +
-        "om die fragmenten te genereren."
+      "⚠ Geen databasetoegang (DATABASE_URL niet gezet en geen geldige PRERENDER_DYNAMIC_JSON) " +
+        "— vacature- en blogpagina's worden overgeslagen. Draai `npm run prerender` in een " +
+        "omgeving met databasetoegang, of geef PRERENDER_DYNAMIC_JSON mee met een export uit " +
+        "scripts/export-dynamic-content.ts, om die fragmenten te genereren."
     );
     return [];
   }
