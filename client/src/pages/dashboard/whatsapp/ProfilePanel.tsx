@@ -119,6 +119,31 @@ const FUNCTIE_WEERGAVE: Record<string, string> = {
   frontoffice: 'Front office', 'front-office': 'Front office',
 };
 
+/**
+ * Functie-dropdown voor gesprekken ZONDER gekoppeld contact (bv. Jorge: een
+ * kandidaat die net voor het eerst appt en nog geen kandidaat/medewerker-
+ * record heeft). Er is dan geen contact.functie-kolom om naar te schrijven,
+ * dus gebruiken we hetzelfde label-mechanisme als de Labels-sectie hieronder
+ * — de canonieke waarde staat links, dezelfde die FUNCTIE_WEERGAVE hierboven
+ * al herkent zodat de rest van het dashboard (bv. de subregel in ChatView)
+ * de keuze meteen correct toont.
+ */
+const FUNCTIE_CATEGORIE_OPTIES: Array<{ waarde: string; label: string }> = [
+  { waarde: 'logistiek', label: 'Logistiek' },
+  { waarde: 'chef', label: 'Chef' },
+  { waarde: 'horeca', label: 'Horecamedewerker' },
+  { waarde: 'housekeeping', label: 'Housekeeping' },
+  { waarde: 'frontoffice', label: 'Front office' },
+];
+
+/** Elke bekende schrijfwijze van een functie-label wijst terug naar zijn canonieke waarde hierboven. */
+const FUNCTIE_LABEL_NAAR_CATEGORIE: Record<string, string> = {
+  horeca: 'horeca', horecamedewerker: 'horeca', bediening: 'horeca',
+  chef: 'chef', housekeeping: 'housekeeping',
+  logistiek: 'logistiek', orderpicker: 'logistiek',
+  frontoffice: 'frontoffice', 'front-office': 'frontoffice',
+};
+
 const STATUS_WEERGAVE: Record<string, string> = {
   in_behandeling: 'Sollicitant',
   gepland: 'In kennismaking',
@@ -190,6 +215,12 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   const [naamZonderContactBezig, setNaamZonderContactBezig] = useState(false);
   const [naamZonderContactMelding, setNaamZonderContactMelding] = useState<{ tekst: string; kleur: string } | null>(null);
 
+  // Functie-dropdown voor diezelfde contactloze gesprekken — zie
+  // FUNCTIE_CATEGORIE_OPTIES hierboven. Schrijft naar conv.labels, dus geen
+  // los input-veld nodig (geen tussenstate om te typen, alleen een keuze).
+  const [functieZonderContactBezig, setFunctieZonderContactBezig] = useState(false);
+  const [functieZonderContactMelding, setFunctieZonderContactMelding] = useState<{ tekst: string; kleur: string } | null>(null);
+
   /** Fase 3: handmatige override van het onderwerp-label (null = terug naar AI). */
   async function handleCategorie(category: AiCategory | null) {
     setCatBusy(true);
@@ -258,6 +289,8 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     setProfielWaarschuwing(null);
     setNaamZonderContactBezig(false);
     setNaamZonderContactMelding(null);
+    setFunctieZonderContactBezig(false);
+    setFunctieZonderContactMelding(null);
   }, [conv.phoneNumber]);
 
   // Naamveld zonder gekoppeld contact volgt displayName (handmatig gezet) of,
@@ -282,10 +315,10 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   /** Alleen cijfers, om "+31 6 12 34 56 78" met "31612345678" te kunnen vergelijken. */
   const cijfers = (v: string | null | undefined) => (v || '').replace(/\D/g, '');
 
-  const functie =
-    (contact?.functie && (FUNCTIE_WEERGAVE[contact.functie.toLowerCase()] || contact.functie)) ||
-    (conv.labels || []).map(l => FUNCTIE_WEERGAVE[l]).find(Boolean) ||
-    '—';
+  // Voor de Functie-dropdown bij gesprekken zónder gekoppeld contact: de
+  // canonieke categorie die al in conv.labels staat, ongeacht welke
+  // schrijfwijze — zodat de dropdown een eerder gekozen waarde herkent.
+  const huidigeFunctieCategorie = (conv.labels || []).map(l => FUNCTIE_LABEL_NAAR_CATEGORIE[l]).find(Boolean) || '';
   const status =
     (contact?.sourceStatus && (STATUS_WEERGAVE[contact.sourceStatus] || contact.sourceStatus)) ||
     (conv.inboxStatus === 'resolved' ? 'Opgelost' : conv.inboxStatus === 'spam' ? 'Spam' : 'Open');
@@ -355,6 +388,12 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     return () => clearTimeout(t);
   }, [naamZonderContactMelding]);
 
+  useEffect(() => {
+    if (!functieZonderContactMelding || functieZonderContactMelding.kleur !== '#059669') return;
+    const t = setTimeout(() => setFunctieZonderContactMelding(null), 2500);
+    return () => clearTimeout(t);
+  }, [functieZonderContactMelding]);
+
   /**
    * Naam opslaan voor een gesprek ZONDER gekoppeld contact — bv. een klant of
    * een nog niet-gematchte kandidaat. Schrijft rechtstreeks naar
@@ -378,6 +417,30 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       setNaamZonderContactMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
     } finally {
       setNaamZonderContactBezig(false);
+    }
+  }
+
+  /**
+   * Functie kiezen voor een gesprek zonder gekoppeld contact. Er is geen
+   * kandidaat/medewerker-record om naartoe te schrijven, dus vervangt dit de
+   * bestaande functie-achtige labels (elke schrijfwijze uit
+   * FUNCTIE_LABEL_NAAR_CATEGORIE) door precies de nieuw gekozen — nooit
+   * stapelen, net zoals contact.functie ook maar één waarde tegelijk is.
+   * Lege keuze ("— kies een functie —") verwijdert 'm gewoon weer.
+   */
+  async function bewaarFunctieZonderContact(nieuweCategorie: string) {
+    setFunctieZonderContactBezig(true);
+    setFunctieZonderContactMelding(null);
+    try {
+      const overigeLabels = (conv.labels || []).filter(l => !(l in FUNCTIE_LABEL_NAAR_CATEGORIE));
+      const volgende = nieuweCategorie ? [...overigeLabels, nieuweCategorie] : overigeLabels;
+      await updateLabels(conv.phoneNumber, volgende);
+      setFunctieZonderContactMelding({ tekst: 'Opgeslagen', kleur: '#059669' });
+      onConversationChanged();
+    } catch (e: any) {
+      setFunctieZonderContactMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
+    } finally {
+      setFunctieZonderContactBezig(false);
     }
   }
 
@@ -601,7 +664,22 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
                 style={{ ...VELD_STIJL, outline: 'none' }}
               />
             </EditRow>
-            <InfoRow k="Functie" v={functie} />
+            <EditRow
+              k="Functie"
+              melding={functieZonderContactMelding}
+            >
+              <select
+                value={huidigeFunctieCategorie}
+                disabled={functieZonderContactBezig}
+                onChange={e => bewaarFunctieZonderContact(e.target.value)}
+                style={{ ...VELD_STIJL, cursor: functieZonderContactBezig ? 'wait' : 'pointer' }}
+              >
+                <option value="">— kies een functie —</option>
+                {FUNCTIE_CATEGORIE_OPTIES.map(o => (
+                  <option key={o.waarde} value={o.waarde}>{o.label}</option>
+                ))}
+              </select>
+            </EditRow>
             <InfoRow k="Telefoon" v={formatPhone(conv.phoneNumber)} />
             <InfoRow k="Status" v={status} last />
           </>
