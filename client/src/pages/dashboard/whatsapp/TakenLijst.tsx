@@ -18,6 +18,11 @@ import { useState } from 'react';
 import type { Task, TaskCategory, TaskStatus, TeamMember } from '../../../api/whatsappClient';
 import { TASK_CATEGORY_LABELS } from '../../../api/whatsappClient';
 import { WA, WA_TEKST, WA_GEWICHT, relativeTime } from './theme';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Radix' Select.Item accepteert geen lege string als value — zie dezelfde
+// sentinel in ProfilePanel.tsx. "Niemand toegewezen" gebruikt 'm hieronder.
+const LEEG_WAARDE = '__leeg__';
 
 export type TakenAssigneeFilter = 'alle' | 'mij' | 'niemand';
 
@@ -135,21 +140,20 @@ function TaakRegel({
         </div>
 
         {/* Toewijzen. Leeg = van niemand; dan pakt wie tijd heeft hem op. */}
-        <select
-          value={task.assignedToId ?? ''}
-          onChange={e => onAssign(task, e.target.value === '' ? null : Number(e.target.value))}
-          style={{
-            marginTop: 5, fontSize: WA_TEKST.mini, padding: '2px 4px', maxWidth: '100%',
-            border: `1px solid ${WA.border}`, borderRadius: 5,
-            background: '#fff', color: task.assignedToId ? WA.text : WA.textSub,
-            fontFamily: 'inherit', cursor: 'pointer',
-          }}
+        <Select
+          value={task.assignedToId != null ? String(task.assignedToId) : LEEG_WAARDE}
+          onValueChange={v => onAssign(task, v === LEEG_WAARDE ? null : Number(v))}
         >
-          <option value="">Niemand toegewezen</option>
-          {teamMembers.map(m => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
+          <SelectTrigger className="mt-[5px] h-6 w-auto max-w-full px-1.5 py-0.5 text-[11px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="start">
+            <SelectItem value={LEEG_WAARDE}>Niemand toegewezen</SelectItem>
+            {teamMembers.map(m => (
+              <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
