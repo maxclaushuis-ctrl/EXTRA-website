@@ -179,6 +179,21 @@ export async function sendMediaMessage(to: string, media: MetaMediaSpec): Promis
   });
 }
 
+/**
+ * Plaats (of verwijder, bij emoji='') onze eigen reactie-emoji op een eerder
+ * bericht — hetzelfde gebaar als lang-indrukken in de WhatsApp-app zelf.
+ * Net als sendTextMessage alleen mogelijk binnen het 24-uurs service-window.
+ */
+export async function sendReactionMessage(to: string, waMessageId: string, emoji: string): Promise<MetaSendResult> {
+  return postMessages({
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'reaction',
+    reaction: { message_id: waMessageId, emoji },
+  });
+}
+
 /** Markeer een inkomend bericht als gelezen (blauwe vinkjes bij de afzender). */
 export async function markAsRead(waMessageId: string): Promise<MetaSendResult> {
   return postMessages({

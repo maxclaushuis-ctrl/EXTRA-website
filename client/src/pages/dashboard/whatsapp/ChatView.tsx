@@ -27,6 +27,8 @@ interface Props {
   onSnooze: (untilIso: string | null) => Promise<void>;
   /** Zet dit gesprek terug op ongelezen — net als het WhatsApp-gebaar. */
   onMarkUnread: () => Promise<void>;
+  /** Plaats onze reactie-emoji op een bericht; lege string verwijdert 'm weer. */
+  onReact: (messageId: number, emoji: string) => Promise<void>;
   /** Staat het profielpaneel rechts open? Zie de knop in de header hieronder. */
   profielOpen: boolean;
   onToggleProfiel: () => void;
@@ -78,6 +80,10 @@ function bijlageNaam(m: Message): string {
   return 'Bijlage';
 }
 
+// Snel-reactie-set — dezelfde zes die WhatsApp zelf als eerste rij toont bij
+// lang-indrukken op een bericht.
+const SNEL_REACTIES = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
 // Snooze-presets: 1 uur / vanmiddag 14:00 / morgenochtend 09:00.
 function presetVanmiddag(): Date {
   const d = new Date();
@@ -95,7 +101,7 @@ function presetMorgenochtend(): Date {
 export default function ChatView(props: Props) {
   const {
     conv, messages, teamMembers, composerText, onComposerText,
-    onSend, sending, sendError, aiLoading, onAiSuggest, onSnooze, onMarkUnread,
+    onSend, sending, sendError, aiLoading, onAiSuggest, onSnooze, onMarkUnread, onReact,
     profielOpen, onToggleProfiel,
   } = props;
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
@@ -106,6 +112,10 @@ export default function ChatView(props: Props) {
   const [showMeerMenu, setShowMeerMenu] = useState(false);
   /** Foto op volledig formaat; null = dicht. Zie de overlay onderaan. */
   const [vergroot, setVergroot] = useState<{ src: string; alt: string } | null>(null);
+  /** Welke bubbel de muis er nu overheen heeft — bepaalt of het reactie-icoontje zichtbaar is. */
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  /** Bericht-id waarvan het snel-reactie-menu open staat, of null. */
+  const [reactMenuFor, setReactMenuFor] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,7 +125,7 @@ export default function ChatView(props: Props) {
 
   // Sluit snooze-menu wanneer een ander gesprek geselecteerd wordt. Een open
   // foto hoort daar ook bij: die gaat over het vorige gesprek.
-  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setShowMeerMenu(false); setAttachedFile(null); setVergroot(null); }, [conv?.phoneNumber]);
+  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setShowMeerMenu(false); setAttachedFile(null); setVergroot(null); setReactMenuFor(null); setHoveredId(null); }, [conv?.phoneNumber]);
 
   // Escape sluit de vergrote foto. Alleen geregistreerd zolang er één open
   // staat, zodat we niet bij elk toetsaanslag in de composer meeluisteren.
@@ -410,13 +420,19 @@ export default function ChatView(props: Props) {
           const heeftBestand = m.heeftBijlage === true;
           const isAfbeelding = heeftBestand && (m.messageType === 'image' || m.messageType === 'sticker');
           const bijschrift = (m.body || '').replace(/^\[(afbeelding|video|sticker|document)(:\s*)?/, '').replace(/\]$/, '').trim();
+          const toontReactieMenu = reactMenuFor === m.id;
           return (
             <div
               key={m.id}
+              onMouseEnter={() => setHoveredId(m.id)}
+              onMouseLeave={() => setHoveredId(h => (h === m.id ? null : h))}
               style={{
                 maxWidth: '62%', padding: '7px 9px 8px 10px', borderRadius: 8,
                 fontSize: WA_TEKST.body, lineHeight: 1.35, position: 'relative',
-                boxShadow: '0 1px 1px rgba(0,0,0,.08)', marginBottom: 2,
+                boxShadow: '0 1px 1px rgba(0,0,0,.08)',
+                // Ruimte voor het reactie-badge dat aan de onderrand hangt —
+                // zonder deze marge overlapt het de volgende bubbel eronder.
+                marginBottom: m.ownReactionEmoji ? 14 : 2,
                 alignSelf: uit ? 'flex-end' : 'flex-start',
                 background: uit ? WA.bubbleOut : WA.bubbleIn,
                 borderTopRightRadius: uit ? 0 : 8,
@@ -424,6 +440,66 @@ export default function ChatView(props: Props) {
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
               }}
             >
+              {/* Reactie-icoontje — verschijnt bij hover, net als in de
+                  WhatsApp-app zelf (daar via lang-indrukken). Klik opent een
+                  rijtje snel-reacties; kiezen stuurt 'm meteen naar WhatsApp. */}
+              <button
+                type="button"
+                title="Reageren met een emoji"
+                onClick={() => setReactMenuFor(v => (v === m.id ? null : m.id))}
+                style={{
+                  position: 'absolute', top: 4, [uit ? 'left' : 'right']: -32,
+                  width: 26, height: 26, borderRadius: '50%', border: `1px solid ${WA.border}`,
+                  background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.15)',
+                  display: (hoveredId === m.id || toontReactieMenu) ? 'flex' : 'none',
+                  alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  fontSize: 13, lineHeight: 1, padding: 0, zIndex: 6,
+                }}
+              >🙂</button>
+              {toontReactieMenu && (
+                <div
+                  style={{
+                    position: 'absolute', top: -42, [uit ? 'right' : 'left']: 0, zIndex: 20,
+                    background: '#fff', border: `1px solid ${WA.border}`, borderRadius: 22,
+                    boxShadow: '0 4px 14px rgba(0,0,0,.18)', padding: '4px 6px',
+                    display: 'flex', alignItems: 'center', gap: 2,
+                  }}
+                >
+                  {SNEL_REACTIES.map(emoji => (
+                    <span
+                      key={emoji}
+                      onClick={() => { setReactMenuFor(null); onReact(m.id, m.ownReactionEmoji === emoji ? '' : emoji); }}
+                      title={m.ownReactionEmoji === emoji ? 'Reactie verwijderen' : undefined}
+                      style={{
+                        cursor: 'pointer', fontSize: 19, padding: '3px 4px', borderRadius: 8,
+                        background: m.ownReactionEmoji === emoji ? WA.panel : 'transparent',
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLSpanElement).style.background = WA.panel; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLSpanElement).style.background = m.ownReactionEmoji === emoji ? WA.panel : 'transparent'; }}
+                    >{emoji}</span>
+                  ))}
+                  {m.ownReactionEmoji && (
+                    <span
+                      title="Reactie verwijderen"
+                      onClick={() => { setReactMenuFor(null); onReact(m.id, ''); }}
+                      style={{ cursor: 'pointer', fontSize: 13, padding: '3px 6px', color: WA.textSub }}
+                    >✕</span>
+                  )}
+                </div>
+              )}
+              {/* Onze eigen reactie — hangt als badge aan de onderrand, zoals
+                  in de WhatsApp-app zelf. */}
+              {m.ownReactionEmoji && (
+                <div
+                  title="Jouw reactie"
+                  style={{
+                    position: 'absolute', bottom: -11, [uit ? 'right' : 'left']: 8,
+                    background: '#fff', border: `1px solid ${WA.border}`, borderRadius: 12,
+                    padding: '1px 6px', fontSize: 13, lineHeight: '16px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,.15)', zIndex: 5,
+                  }}
+                >{m.ownReactionEmoji}</div>
+              )}
               {/* Herkomst van een uitgaand bericht. De echo-tak staat BEWUST
                   vooraan: een bericht dat op de telefoon is getypt heeft geen
                   sentByUserId (we weten niet wie het typte) en zou in de oude

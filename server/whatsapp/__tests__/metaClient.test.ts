@@ -4,7 +4,7 @@
  *
  * Run met:  npx tsx server/whatsapp/__tests__/metaClient.test.ts
  */
-import { META_GRAPH_BASE_URL, isMetaConfigured, sendTextMessage, sendTemplateMessage, sendMediaMessage, markAsRead, downloadMedia, MEDIA_MAX_BYTES } from '../metaClient';
+import { META_GRAPH_BASE_URL, isMetaConfigured, sendTextMessage, sendTemplateMessage, sendMediaMessage, sendReactionMessage, markAsRead, downloadMedia, MEDIA_MAX_BYTES } from '../metaClient';
 import * as waProvider from '../provider';
 import { extensieVoorMime, bestandsnaamVoor } from '../mediaService';
 
@@ -149,6 +149,19 @@ async function main() {
   const rNoMedia = await sendMediaMessage('31612345678', { type: 'image' } as any);
   assertEq('zonder id/link → invalid_media', rNoMedia.error?.code, 'invalid_media');
 
+  // ─── sendReactionMessage payload ──────────────────────────────────────────
+  console.log('\n— sendReactionMessage —');
+  mockFetch(() => ({ status: 200, body: { messages: [{ id: 'wamid.REACT1' }] } }));
+  const rReact = await sendReactionMessage('31612345678', 'wamid.INB001', '👍');
+  assertEq('ok', rReact.ok, true);
+  const reactPayload = JSON.parse(recorded[0]?.init?.body || '{}');
+  assertEq('type reaction', reactPayload.type, 'reaction');
+  assertEq('reaction object', reactPayload.reaction, { message_id: 'wamid.INB001', emoji: '👍' });
+  mockFetch(() => ({ status: 200, body: { messages: [{ id: 'wamid.REACT2' }] } }));
+  await sendReactionMessage('31612345678', 'wamid.INB001', '');
+  const reactWegPayload = JSON.parse(recorded[0]?.init?.body || '{}');
+  assertEq('lege emoji = reactie verwijderen', reactWegPayload.reaction, { message_id: 'wamid.INB001', emoji: '' });
+
   // ─── markAsRead payload ───────────────────────────────────────────────────
   console.log('\n— markAsRead —');
   mockFetch(() => ({ status: 200, body: { success: true } }));
@@ -196,6 +209,27 @@ async function main() {
   ok('errorMessage bevat details', (p3.errorMessage || '').includes('window verlopen'));
   assertEq('httpStatus', p3.httpStatus, 400);
   assertEq('httpStatusForFailure → 400', waProvider.httpStatusForFailure(p3), 400);
+
+  // provider.sendReaction bij meta en bij 360dialog — zelfde berichtvorm, ander transport
+  process.env.WHATSAPP_PROVIDER = 'meta';
+  mockFetch(() => ({ status: 200, body: { messages: [{ id: 'wamid.REACT_META' }] } }));
+  const pr1 = await waProvider.sendReaction('31612345678', 'wamid.INB002', '❤️');
+  assertEq('provider=meta in resultaat', pr1.provider, 'meta');
+  assertEq('waMessageId doorgegeven', pr1.waMessageId, 'wamid.REACT_META');
+  const prMetaPayload = JSON.parse(recorded[0]?.init?.body || '{}');
+  assertEq('type reaction (meta)', prMetaPayload.type, 'reaction');
+  assertEq('reaction object (meta)', prMetaPayload.reaction, { message_id: 'wamid.INB002', emoji: '❤️' });
+
+  process.env.WHATSAPP_PROVIDER = '360dialog';
+  process.env.WHATSAPP_360_API_KEY = 'D360_TEST_KEY';
+  mockFetch(() => ({ status: 200, body: { messages: [{ id: 'wamid.REACT_D360' }] } }));
+  const pr2 = await waProvider.sendReaction('31612345678', 'wamid.INB002', '👍');
+  assertEq('provider=360dialog in resultaat', pr2.provider, '360dialog');
+  assertEq('oude 360dialog-URL', recorded[0]?.url, 'https://waba-v2.360dialog.io/messages');
+  assertEq('D360-API-KEY header', recorded[0]?.init?.headers?.['D360-API-KEY'], 'D360_TEST_KEY');
+  const prD360Payload = JSON.parse(recorded[0]?.init?.body || '{}');
+  assertEq('reaction object (360dialog)', prD360Payload.reaction, { message_id: 'wamid.INB002', emoji: '👍' });
+  process.env.WHATSAPP_PROVIDER = 'meta';
 
   // ─── downloadMedia: de tweestapsflow ───────────────────────────────────────
   //

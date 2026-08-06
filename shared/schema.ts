@@ -1520,6 +1520,14 @@ export const whatsappMessages = pgTable("whatsapp_messages", {
    * bestaande rijen (null) buiten de boot.
    */
   sentSource: text("sent_source"),
+  /**
+   * De emoji waarmee WIJ (EXTRA, vanuit het dashboard) op dit bericht hebben
+   * gereageerd — hetzelfde gebaar als lang-indrukken in de WhatsApp-app zelf.
+   * null = geen reactie (of weer verwijderd). Bewust één kolom voor één
+   * reactie: WhatsApp staat toch maar één reactie per afzender per bericht
+   * toe, een nieuwe reactie vervangt de vorige.
+   */
+  ownReactionEmoji: text("own_reaction_emoji"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

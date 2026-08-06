@@ -115,6 +115,8 @@ export interface Message {
    * sentByUserId. Alleen 'app' wordt ooit geschreven.
    */
   sentSource?: string | null;
+  /** Onze eigen reactie-emoji op dit bericht (null = geen). Zie reageerOpBericht(). */
+  ownReactionEmoji?: string | null;
   createdAt: string;
 }
 
@@ -218,6 +220,9 @@ export const markeerGelezen = (phoneNumber: string) =>
   post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-read`);
 export const markeerOngelezen = (phoneNumber: string) =>
   post<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/mark-unread`);
+/** Plaats onze reactie-emoji op een bericht; lege string verwijdert 'm weer. */
+export const reageerOpBericht = (messageId: number, emoji: string) =>
+  post<{ success: boolean; emoji: string | null }>(`/messages/${messageId}/react`, { emoji });
 export const updateInboxStatus = (phoneNumber: string, status: 'open' | 'resolved' | 'spam') =>
   put<{ success: boolean }>(`/conversations/${encodeURIComponent(phoneNumber)}/inbox-status`, { status });
 

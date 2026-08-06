@@ -106,6 +106,18 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS media_filename     text
       `),
   },
+  {
+    // Migratie 0015 — zie migrations/manual/0015_wa_own_reaction/
+    //
+    // own_reaction_emoji: de emoji waarmee wij vanuit het dashboard op een
+    // bericht reageren (nieuwe functie). Uitsluitend additief.
+    omschrijving: "whatsapp_messages: own_reaction_emoji",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE whatsapp_messages
+          ADD COLUMN IF NOT EXISTS own_reaction_emoji text
+      `),
+  },
 ];
 
 /**
