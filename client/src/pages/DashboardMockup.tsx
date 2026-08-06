@@ -275,6 +275,11 @@ export default function DashboardMockup() {
   const [adminCreateOpen, setAdminCreateOpen] = useState(false);
   const [adminCreateData, setAdminCreateData] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const [adminCreateLoading, setAdminCreateLoading] = useState(false);
+  // Validatiefouten stonden voorheen alléén in een toast — die verschijnt
+  // rechtsonder, buiten beeld van de (donker overschaduwde) dialoog, en werd
+  // daardoor gemist: leek dan alsof de knop niets deed. Nu ook inline in de
+  // dialoog zelf, waar je 'm niet kan missen.
+  const [adminCreateError, setAdminCreateError] = useState<string | null>(null);
   const [adminDeleteId, setAdminDeleteId] = useState<number | null>(null);
   const [adminDeleteNaam, setAdminDeleteNaam] = useState('');
   const [adminDeleteStep, setAdminDeleteStep] = useState<1 | 2>(1);
@@ -6893,7 +6898,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
             /* Admin-accounts Tab */
             <div>
               {/* Aanmaken-dialoog */}
-              <Dialog open={adminCreateOpen} onOpenChange={(open) => { setAdminCreateOpen(open); if (!open) setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' }); }}>
+              <Dialog open={adminCreateOpen} onOpenChange={(open) => { setAdminCreateOpen(open); if (!open) { setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' }); setAdminCreateError(null); } }}>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>Nieuw admin-account aanmaken</DialogTitle>
@@ -6905,7 +6910,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         <input
                           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                           value={adminCreateData.firstName}
-                          onChange={e => setAdminCreateData(d => ({ ...d, firstName: e.target.value }))}
+                          onChange={e => { setAdminCreateData(d => ({ ...d, firstName: e.target.value })); setAdminCreateError(null); }}
                           placeholder="Charlotte"
                         />
                       </div>
@@ -6914,7 +6919,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         <input
                           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                           value={adminCreateData.lastName}
-                          onChange={e => setAdminCreateData(d => ({ ...d, lastName: e.target.value }))}
+                          onChange={e => { setAdminCreateData(d => ({ ...d, lastName: e.target.value })); setAdminCreateError(null); }}
                           placeholder="De Vries"
                         />
                       </div>
@@ -6925,7 +6930,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         type="email"
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={adminCreateData.email}
-                        onChange={e => setAdminCreateData(d => ({ ...d, email: e.target.value }))}
+                        onChange={e => { setAdminCreateData(d => ({ ...d, email: e.target.value })); setAdminCreateError(null); }}
                         placeholder="charlotte@doehetextra.nl"
                       />
                     </div>
@@ -6935,12 +6940,17 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                         type="text"
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={adminCreateData.password}
-                        onChange={e => setAdminCreateData(d => ({ ...d, password: e.target.value }))}
+                        onChange={e => { setAdminCreateData(d => ({ ...d, password: e.target.value })); setAdminCreateError(null); }}
                         placeholder="Minimaal 12 tekens"
                       />
                       <p className="text-xs text-gray-500 mt-1">Minimaal 12 tekens, met minstens één letter en één cijfer.</p>
                       <p className="text-xs text-gray-400 mt-1">Dit wachtwoord wordt per e-mail verstuurd aan de nieuwe gebruiker.</p>
                     </div>
+                    {adminCreateError && (
+                      <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        {adminCreateError}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-3 justify-end pt-2">
                     <Button variant="outline" size="sm" onClick={() => setAdminCreateOpen(false)}>Annuleren</Button>
@@ -6949,25 +6959,36 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                       className="bg-purple-600 hover:bg-purple-700 text-white"
                       disabled={adminCreateLoading}
                       onClick={async () => {
-                        // Client-side validatie mét zichtbare melding — de knop
-                        // is bewust niet "stil" disabled, zodat er nooit
-                        // "niets" gebeurt bij een klik.
+                        // Validatiefouten komen zowel als toast (rechtsonder) áls
+                        // hier inline in de dialoog te staan — met alleen een
+                        // toast bleef het venster gewoon openstaan zonder dat er
+                        // iets zichtbaars veranderde in het scherm waar iemand
+                        // naar kijkt, wat aanvoelde als "de knop doet niks".
+                        setAdminCreateError(null);
                         const { firstName, lastName, email, password } = adminCreateData;
                         if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
-                          toast({ title: 'Vul alle velden in', description: 'Voornaam, achternaam, e-mailadres en tijdelijk wachtwoord zijn verplicht.', variant: 'destructive' });
+                          const msg = 'Voornaam, achternaam, e-mailadres en tijdelijk wachtwoord zijn verplicht.';
+                          setAdminCreateError(msg);
+                          toast({ title: 'Vul alle velden in', description: msg, variant: 'destructive' });
                           return;
                         }
                         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-                          toast({ title: 'Ongeldig e-mailadres', description: 'Controleer het e-mailadres en probeer het opnieuw.', variant: 'destructive' });
+                          const msg = 'Controleer het e-mailadres en probeer het opnieuw.';
+                          setAdminCreateError(msg);
+                          toast({ title: 'Ongeldig e-mailadres', description: msg, variant: 'destructive' });
                           return;
                         }
                         // Zelfde eisen als server (authReset.wachtwoordSterkGenoeg)
                         if (password.length < 12) {
-                          toast({ title: 'Wachtwoord te kort', description: 'Het wachtwoord moet minimaal 12 tekens lang zijn.', variant: 'destructive' });
+                          const msg = `Het wachtwoord moet minimaal 12 tekens lang zijn (nu ${password.length}).`;
+                          setAdminCreateError(msg);
+                          toast({ title: 'Wachtwoord te kort', description: msg, variant: 'destructive' });
                           return;
                         }
                         if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-                          toast({ title: 'Wachtwoord te zwak', description: 'Gebruik minimaal één letter en één cijfer.', variant: 'destructive' });
+                          const msg = 'Gebruik minimaal één letter en één cijfer.';
+                          setAdminCreateError(msg);
+                          toast({ title: 'Wachtwoord te zwak', description: msg, variant: 'destructive' });
                           return;
                         }
                         setAdminCreateLoading(true);
@@ -6985,9 +7006,11 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                           }
                           setAdminCreateOpen(false);
                           setAdminCreateData({ firstName: '', lastName: '', email: '', password: '' });
+                          setAdminCreateError(null);
                           queryClient.invalidateQueries({ queryKey: ['/api/users'] });
                         } catch (err: any) {
                           const msg = err?.data?.message || err?.message || 'Er is iets misgegaan.';
+                          setAdminCreateError(msg);
                           toast({ title: 'Account aanmaken mislukt', description: msg, variant: 'destructive', duration: 10000 });
                         } finally {
                           setAdminCreateLoading(false);
