@@ -293,13 +293,28 @@ async function main() {
   assertEq('provider in resultaat', pm1.provider, 'meta');
   assertEq('mimeType doorgegeven', pm1.mimeType, 'image/png');
 
-  // 360dialog krijgt bewust geen implementatie: die tak verdwijnt in fase 4 en
-  // er is geen bericht dat er én binnenkomt én deze functie nodig heeft.
+  // 360dialog: media-download via hetzelfde twee-staps-patroon als Meta, maar
+  // met D360-API-KEY en een url-transformatie (lookaside.fbsbx.com →
+  // waba-v2.360dialog.io) — zie docs.360dialog.com/docs/messaging/media en
+  // provider.ts's d360DownloadMedia().
   process.env.WHATSAPP_PROVIDER = '360dialog';
   process.env.WHATSAPP_360_API_KEY = 'D360_TEST_KEY';
+  mockFetchBinair((url) => url.includes('/MEDIA9')
+    ? { status: 200, body: { url: 'https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=1&ext=2&hash=3', mime_type: 'image/png', file_size: nepBytes.length } }
+    : { status: 200, body: nepBytes, contentType: 'image/png' });
   const pm2 = await waProvider.downloadMedia('MEDIA9');
-  assertEq('360dialog → ok=false', pm2.ok, false);
-  assertEq('errorCode not_supported', pm2.errorCode, 'not_supported');
+  assertEq('360dialog → ok', pm2.ok, true);
+  assertEq('provider in resultaat', pm2.provider, '360dialog');
+  assertEq('mimeType doorgegeven', pm2.mimeType, 'image/png');
+  assertEq('metadata-call gebruikt D360-API-KEY', recorded[0]?.init?.headers?.['D360-API-KEY'], 'D360_TEST_KEY');
+  assertEq('download-url: host vervangen door 360dialog-endpoint', recorded[1]?.url, 'https://waba-v2.360dialog.io/whatsapp_business/attachments/?mid=1&ext=2&hash=3');
+  assertEq('download-call gebruikt D360-API-KEY', recorded[1]?.init?.headers?.['D360-API-KEY'], 'D360_TEST_KEY');
+
+  process.env.WHATSAPP_PROVIDER = '360dialog';
+  delete process.env.WHATSAPP_360_API_KEY;
+  const pm3 = await waProvider.downloadMedia('MEDIA9');
+  assertEq('360dialog zonder key → not_configured', pm3.errorCode, 'not_configured');
+  process.env.WHATSAPP_360_API_KEY = 'D360_TEST_KEY';
   process.env.WHATSAPP_PROVIDER = 'meta';
 
   // ─── mediaService: bestandsnaam en extensie ────────────────────────────────
