@@ -227,24 +227,105 @@ export interface ProviderMediaDownload {
   provider: WhatsAppProviderName;
 }
 
+/** Zelfde praktische limiet als bij Meta (metaClient.MEDIA_MAX_BYTES). */
+const D360_MEDIA_MAX_BYTES = 25 * 1024 * 1024;
+
 /**
- * Haal de bytes achter een media-id op bij de actieve provider.
- *
- * Alleen geïmplementeerd voor Meta. 360dialog kent een vergelijkbare
- * twee-staps-flow, maar die tak wordt in fase 4 sowieso verwijderd en de
- * media-weergave is pas gebouwd nadat de Meta-koppeling live stond — er is
- * dus geen enkel bericht dat via 360dialog binnenkomt én deze functie nodig
- * heeft. Bewust een nette fout in plaats van ongeteste code die niemand ooit
- * aanroept.
+ * 360dialog-media ophalen — twee stappen, zie
+ * docs.360dialog.com/docs/messaging/media/upload-retrieve-or-delete-media:
+ *   1. GET /{media-id} met D360-API-KEY → JSON met url/mime_type/file_size.
+ *      De `url` wijst naar Meta's eigen CDN (lookaside.fbsbx.com).
+ *   2. Die host vervangen door het 360dialog-endpoint en met dezelfde
+ *      D360-API-KEY ophalen — de link is daarna maar 5 minuten geldig, dus
+ *      dit moet direct bij binnenkomst gebeuren (zie bewaarMedia() in
+ *      inboundProcessor.ts).
  */
+async function d360DownloadMedia(mediaId: string): Promise<ProviderMediaDownload> {
+  if (!d360Key()) {
+    return { ok: false, provider: '360dialog', errorCode: 'not_configured', errorMessage: 'WHATSAPP_360_API_KEY niet ingesteld' };
+  }
+  if (!mediaId) {
+    return { ok: false, provider: '360dialog', errorCode: 'invalid_media', errorMessage: 'media-id ontbreekt' };
+  }
+
+  try {
+    const metaResp = await fetch(`${d360BaseUrl()}/${encodeURIComponent(mediaId)}`, {
+      method: 'GET',
+      headers: { 'D360-API-KEY': d360Key() },
+    });
+    const metaText = await metaResp.text();
+    let metaData: any = {};
+    try { metaData = JSON.parse(metaText); } catch { /* niet-JSON respons */ }
+
+    if (!metaResp.ok || !metaData?.url) {
+      const errMsg = metaData?.error?.message || metaData?.message || metaText.slice(0, 500);
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: String(metaResp.status),
+        errorMessage: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg),
+      };
+    }
+
+    const mimeType: string = metaData.mime_type || 'application/octet-stream';
+    const gemeld = Number(metaData.file_size || 0);
+    if (gemeld > D360_MEDIA_MAX_BYTES) {
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: 'media_too_large',
+        errorMessage: `Bestand is ${Math.round(gemeld / 1024 / 1024)} MB en daarmee groter dan de limiet van ${D360_MEDIA_MAX_BYTES / 1024 / 1024} MB`,
+      };
+    }
+
+    let downloadUrl: string;
+    try {
+      const parsed = new URL(String(metaData.url));
+      downloadUrl = `${d360BaseUrl()}${parsed.pathname}${parsed.search}`;
+    } catch {
+      downloadUrl = String(metaData.url);
+    }
+
+    const binResp = await fetch(downloadUrl, {
+      method: 'GET',
+      headers: { 'D360-API-KEY': d360Key() },
+    });
+    if (!binResp.ok) {
+      const tekst = await binResp.text().catch(() => '');
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: String(binResp.status),
+        errorMessage: tekst.slice(0, 500) || `HTTP ${binResp.status}`,
+      };
+    }
+
+    const arrayBuffer = await binResp.arrayBuffer();
+    if (arrayBuffer.byteLength > D360_MEDIA_MAX_BYTES) {
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: 'media_too_large',
+        errorMessage: `Bestand is ${Math.round(arrayBuffer.byteLength / 1024 / 1024)} MB en daarmee groter dan de limiet van ${D360_MEDIA_MAX_BYTES / 1024 / 1024} MB`,
+      };
+    }
+
+    return {
+      ok: true,
+      provider: '360dialog',
+      buffer: Buffer.from(arrayBuffer),
+      mimeType,
+      filename: metaData.filename || undefined,
+    };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+/** Haal de bytes achter een media-id op bij de actieve provider. */
 export async function downloadMedia(mediaId: string): Promise<ProviderMediaDownload> {
   if (activeProvider() !== 'meta') {
-    return {
-      ok: false,
-      provider: activeProvider(),
-      errorCode: 'not_supported',
-      errorMessage: 'Media downloaden is alleen geïmplementeerd voor de Meta Cloud API',
-    };
+    return d360DownloadMedia(mediaId);
   }
   const res = await metaClient.downloadMedia(mediaId);
   if (res.ok) {

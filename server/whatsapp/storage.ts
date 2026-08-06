@@ -578,6 +578,10 @@ export function describeNonTextMessage(type: string, msg: any): string {
     case 'audio':       return `[audio]`;
     case 'document':    return `[document${filename ? ': ' + filename : caption ? ': ' + caption : ''}]`;
     case 'sticker':     return `[sticker]`;
+    case 'reaction': {
+      const emoji = msg?.reaction?.emoji;
+      return emoji ? `reageerde met ${emoji}` : '[reactie verwijderd]';
+    }
     case 'location':    return `[locatie ${msg?.location?.latitude ?? '?'}, ${msg?.location?.longitude ?? '?'}]`;
     case 'contacts':    return `[contact gedeeld]`;
     case 'interactive': return `[interactief antwoord: ${msg?.interactive?.button_reply?.title || msg?.interactive?.list_reply?.title || 'onbekend'}]`;
