@@ -116,6 +116,15 @@ export default function ChatView(props: Props) {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   /** Bericht-id waarvan het snel-reactie-menu open staat, of null. */
   const [reactMenuFor, setReactMenuFor] = useState<number | null>(null);
+  /**
+   * Timer voor het (met een kleine vertraging) verbergen van het reactie-
+   * icoontje. Zonder vertraging verdween het icoontje meteen zodra de muis
+   * de bubbel verliet — ook al was de muis nog onderweg náár het icoontje
+   * zelf, dat een paar pixels ernaast staat. Bij het verlaten plannen we het
+   * verbergen in plaats van het meteen te doen; komt de muis op de bubbel of
+   * het icoontje terug, dan maken we die planning weer ongedaan.
+   */
+  const hoverHideTimer = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -125,7 +134,17 @@ export default function ChatView(props: Props) {
 
   // Sluit snooze-menu wanneer een ander gesprek geselecteerd wordt. Een open
   // foto hoort daar ook bij: die gaat over het vorige gesprek.
-  useEffect(() => { setShowSnoozeMenu(false); setShowCustomSnooze(false); setShowMeerMenu(false); setAttachedFile(null); setVergroot(null); setReactMenuFor(null); setHoveredId(null); }, [conv?.phoneNumber]);
+  useEffect(() => {
+    setShowSnoozeMenu(false); setShowCustomSnooze(false); setShowMeerMenu(false);
+    setAttachedFile(null); setVergroot(null); setReactMenuFor(null); setHoveredId(null);
+    if (hoverHideTimer.current != null) { window.clearTimeout(hoverHideTimer.current); hoverHideTimer.current = null; }
+  }, [conv?.phoneNumber]);
+
+  // Opruimen bij het weghalen van dit component — anders vuurt een geplande
+  // verberging nog na, terwijl de pagina er al niet meer is.
+  useEffect(() => () => {
+    if (hoverHideTimer.current != null) window.clearTimeout(hoverHideTimer.current);
+  }, []);
 
   // Escape sluit de vergrote foto. Alleen geregistreerd zolang er één open
   // staat, zodat we niet bij elk toetsaanslag in de composer meeluisteren.
@@ -206,6 +225,24 @@ export default function ChatView(props: Props) {
     setShowSnoozeMenu(false);
     setShowCustomSnooze(false);
     await onSnooze(until ? until.toISOString() : null);
+  }
+
+  /** Reactie-icoontje meteen tonen; maakt een eventueel geplande verberging ongedaan. */
+  function toonReactieIcoon(id: number) {
+    if (hoverHideTimer.current != null) { window.clearTimeout(hoverHideTimer.current); hoverHideTimer.current = null; }
+    setHoveredId(id);
+  }
+  /**
+   * Reactie-icoontje pas na een korte vertraging verbergen — geeft de muis de
+   * tijd om van de bubbel naar het (net ernaast staande) icoontje te bewegen
+   * zonder dat het onderweg al verdwijnt.
+   */
+  function verbergReactieIcoonVertraagd(id: number) {
+    if (hoverHideTimer.current != null) window.clearTimeout(hoverHideTimer.current);
+    hoverHideTimer.current = window.setTimeout(() => {
+      hoverHideTimer.current = null;
+      setHoveredId(h => (h === id ? null : h));
+    }, 250);
   }
 
   // Berichten groeperen per dag voor de dag-scheiders.
@@ -424,8 +461,8 @@ export default function ChatView(props: Props) {
           return (
             <div
               key={m.id}
-              onMouseEnter={() => setHoveredId(m.id)}
-              onMouseLeave={() => setHoveredId(h => (h === m.id ? null : h))}
+              onMouseEnter={() => toonReactieIcoon(m.id)}
+              onMouseLeave={() => verbergReactieIcoonVertraagd(m.id)}
               style={{
                 maxWidth: '62%', padding: '7px 9px 8px 10px', borderRadius: 8,
                 fontSize: WA_TEKST.body, lineHeight: 1.35, position: 'relative',
@@ -447,6 +484,8 @@ export default function ChatView(props: Props) {
                 type="button"
                 title="Reageren met een emoji"
                 onClick={() => setReactMenuFor(v => (v === m.id ? null : m.id))}
+                onMouseEnter={() => toonReactieIcoon(m.id)}
+                onMouseLeave={() => verbergReactieIcoonVertraagd(m.id)}
                 style={{
                   position: 'absolute', top: 4, [uit ? 'left' : 'right']: -32,
                   width: 26, height: 26, borderRadius: '50%', border: `1px solid ${WA.border}`,
