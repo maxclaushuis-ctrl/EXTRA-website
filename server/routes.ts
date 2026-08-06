@@ -11889,6 +11889,56 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     }
   });
 
+  /**
+   * Plaats (of verwijder, met emoji="") onze eigen reactie-emoji op een
+   * bericht — hetzelfde gebaar als lang-indrukken in de WhatsApp-app zelf,
+   * nu ook vanuit het dashboard. Werkt op zowel inkomende als uitgaande
+   * berichten; het telefoonnummer om naartoe te reageren is altijd de
+   * ANDERE partij, nooit 'extra' zelf (zie de from/to-conventie hierboven
+   * bij /stuur en de inboundProcessor).
+   */
+  app.post('/api/whatsapp/messages/:id/react', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(String(req.params.id), 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Ongeldig bericht-id' });
+
+    const emojiRaw = req.body?.emoji;
+    const emoji = typeof emojiRaw === 'string' ? emojiRaw.trim() : '';
+    // Eén emoji is genoeg voor WhatsApp; dit endpoint is niet bedoeld voor
+    // vrije tekst — een te lange waarde wijst op verkeerd gebruik.
+    if (emoji.length > 8) return res.status(400).json({ error: 'emoji is te lang' });
+
+    const configError = waProvider.configErrorMessage();
+    if (configError) return res.status(503).json({ error: configError });
+
+    const [row] = await db
+      .select({
+        waMessageId: whatsappMessages.waMessageId,
+        fromNumber: whatsappMessages.fromNumber,
+        toNumber: whatsappMessages.toNumber,
+        direction: whatsappMessages.direction,
+      })
+      .from(whatsappMessages)
+      .where(drizzleEq(whatsappMessages.id, id))
+      .limit(1);
+
+    if (!row) return res.status(404).json({ error: 'Bericht niet gevonden' });
+    if (!row.waMessageId) {
+      return res.status(400).json({ error: 'Dit bericht heeft geen WhatsApp-id — waarschijnlijk van vóór deze functie' });
+    }
+
+    const to = row.direction === 'inbound' ? row.fromNumber : row.toNumber;
+    const result = await waProvider.sendReaction(to, row.waMessageId, emoji);
+    if (!result.ok) {
+      return res.status(waProvider.httpStatusForFailure(result)).json({ error: `${result.provider}: ${result.errorMessage}` });
+    }
+
+    await db.update(whatsappMessages)
+      .set({ ownReactionEmoji: emoji || null, updatedAt: new Date() })
+      .where(drizzleEq(whatsappMessages.id, id));
+
+    res.json({ success: true, emoji: emoji || null });
+  });
+
   app.post('/api/whatsapp/conversations/:phoneNumber/mark-read', adminMiddleware, async (req: Request, res: Response) => {
     const phone = normalizePhone(req.params.phoneNumber);
     if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });

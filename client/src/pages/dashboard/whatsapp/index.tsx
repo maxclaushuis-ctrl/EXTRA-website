@@ -16,6 +16,7 @@ import {
   haalTeamMembers,
   markeerGelezen,
   markeerOngelezen,
+  reageerOpBericht,
   stuurBericht,
   stuurMedia,
   snoozeGesprek,
@@ -221,6 +222,17 @@ export default function WhatsAppInbox() {
     }
   }
 
+  /** Onze eigen reactie-emoji op een bericht plaatsen of (met emoji='') verwijderen. */
+  async function handleReact(messageId: number, emoji: string) {
+    if (!selectedPhone) return;
+    try {
+      await reageerOpBericht(messageId, emoji);
+      setMessages(await haalBerichten(selectedPhone));
+    } catch (e: any) {
+      setSendError(e.message || 'Reageren mislukt');
+    }
+  }
+
   return (
     <div style={{
       display: 'flex', height: 'calc(100vh - 57px)', minHeight: 480,
@@ -256,6 +268,7 @@ export default function WhatsAppInbox() {
         onAiSuggest={handleAiSuggest}
         onSnooze={handleSnooze}
         onMarkUnread={handleMarkUnread}
+        onReact={handleReact}
         profielOpen={profielOpen}
         onToggleProfiel={() => setProfielOpen(v => !v)}
       />

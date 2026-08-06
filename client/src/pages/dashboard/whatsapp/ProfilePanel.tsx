@@ -5,6 +5,7 @@
  */
 import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
 import { Contact as ContactIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   haalContacten,
   updateContactOptIn,
@@ -103,8 +104,10 @@ function EditRow({ k, children, last, melding }: {
   );
 }
 
-// Gedeelde stijl voor de drie bewerkbare velden, zodat select en input niet
-// twee verschillende hoogtes krijgen naast elkaar in dezelfde sectie.
+// Gedeelde stijl voor de bewerkbare tekstvelden (Naam/Telefoon blijven kale
+// <input>'s — de dropdowns hiernaast gebruiken sinds kort het gedeelde
+// Select-component, zie SELECT_TRIGGER_COMPACT hieronder, en niet meer dit
+// object).
 const VELD_STIJL = {
   width: '100%', maxWidth: 165, fontSize: 12.5, padding: '4px 6px',
   borderRadius: 6, border: `1px solid ${WA.border}`,
@@ -112,11 +115,54 @@ const VELD_STIJL = {
   textAlign: 'right' as const,
 };
 
+/**
+ * Radix' Select.Item accepteert geen lege string als value (die is intern
+ * gereserveerd om de placeholder te tonen). Voor de velden hieronder die wél
+ * een "niets gekozen"-status kennen (Functie, Onderwerp, Toewijzen) staat
+ * deze sentinel voor die lege waarde; bij het opslaan wordt hij weer terug-
+ * vertaald naar '' / null.
+ */
+const LEEG_WAARDE = '__leeg__';
+
+// Compacte trigger-stijl voor de dropdowns in een EditRow (label links,
+// veld rechts, net als de Naam/Telefoon-invoervelden ernaast) — dezelfde
+// rechthoek/pijltje-look als de filterbalken elders in het systeem (zie
+// bijv. de Kandidaten-lijst), maar smal genoeg voor dit rechterpaneel.
+const SELECT_TRIGGER_COMPACT = 'h-8 w-[150px] px-2 py-1 text-xs';
+// Volle breedte voor de dropdowns die los in een Section staan (Onderwerp,
+// Tabblad, Toewijzen) — zelfde hoogte/tekstgrootte als bijv. SalesFlowTab.
+const SELECT_TRIGGER_VOL = 'h-9 w-full text-sm';
+
 const FUNCTIE_WEERGAVE: Record<string, string> = {
   horeca: 'Horeca', horecamedewerker: 'Horeca', bediening: 'Horeca',
   chef: 'Chef', housekeeping: 'Housekeeping',
   logistiek: 'Logistiek', orderpicker: 'Logistiek',
   frontoffice: 'Front office', 'front-office': 'Front office',
+};
+
+/**
+ * Functie-dropdown voor gesprekken ZONDER gekoppeld contact (bv. Jorge: een
+ * kandidaat die net voor het eerst appt en nog geen kandidaat/medewerker-
+ * record heeft). Er is dan geen contact.functie-kolom om naar te schrijven,
+ * dus gebruiken we hetzelfde label-mechanisme als de Labels-sectie hieronder
+ * — de canonieke waarde staat links, dezelfde die FUNCTIE_WEERGAVE hierboven
+ * al herkent zodat de rest van het dashboard (bv. de subregel in ChatView)
+ * de keuze meteen correct toont.
+ */
+const FUNCTIE_CATEGORIE_OPTIES: Array<{ waarde: string; label: string }> = [
+  { waarde: 'logistiek', label: 'Logistiek' },
+  { waarde: 'chef', label: 'Chef' },
+  { waarde: 'horeca', label: 'Horecamedewerker' },
+  { waarde: 'housekeeping', label: 'Housekeeping' },
+  { waarde: 'frontoffice', label: 'Front office' },
+];
+
+/** Elke bekende schrijfwijze van een functie-label wijst terug naar zijn canonieke waarde hierboven. */
+const FUNCTIE_LABEL_NAAR_CATEGORIE: Record<string, string> = {
+  horeca: 'horeca', horecamedewerker: 'horeca', bediening: 'horeca',
+  chef: 'chef', housekeeping: 'housekeeping',
+  logistiek: 'logistiek', orderpicker: 'logistiek',
+  frontoffice: 'frontoffice', 'front-office': 'frontoffice',
 };
 
 const STATUS_WEERGAVE: Record<string, string> = {
@@ -190,6 +236,12 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   const [naamZonderContactBezig, setNaamZonderContactBezig] = useState(false);
   const [naamZonderContactMelding, setNaamZonderContactMelding] = useState<{ tekst: string; kleur: string } | null>(null);
 
+  // Functie-dropdown voor diezelfde contactloze gesprekken — zie
+  // FUNCTIE_CATEGORIE_OPTIES hierboven. Schrijft naar conv.labels, dus geen
+  // los input-veld nodig (geen tussenstate om te typen, alleen een keuze).
+  const [functieZonderContactBezig, setFunctieZonderContactBezig] = useState(false);
+  const [functieZonderContactMelding, setFunctieZonderContactMelding] = useState<{ tekst: string; kleur: string } | null>(null);
+
   /** Fase 3: handmatige override van het onderwerp-label (null = terug naar AI). */
   async function handleCategorie(category: AiCategory | null) {
     setCatBusy(true);
@@ -258,6 +310,8 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     setProfielWaarschuwing(null);
     setNaamZonderContactBezig(false);
     setNaamZonderContactMelding(null);
+    setFunctieZonderContactBezig(false);
+    setFunctieZonderContactMelding(null);
   }, [conv.phoneNumber]);
 
   // Naamveld zonder gekoppeld contact volgt displayName (handmatig gezet) of,
@@ -282,10 +336,10 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   /** Alleen cijfers, om "+31 6 12 34 56 78" met "31612345678" te kunnen vergelijken. */
   const cijfers = (v: string | null | undefined) => (v || '').replace(/\D/g, '');
 
-  const functie =
-    (contact?.functie && (FUNCTIE_WEERGAVE[contact.functie.toLowerCase()] || contact.functie)) ||
-    (conv.labels || []).map(l => FUNCTIE_WEERGAVE[l]).find(Boolean) ||
-    '—';
+  // Voor de Functie-dropdown bij gesprekken zónder gekoppeld contact: de
+  // canonieke categorie die al in conv.labels staat, ongeacht welke
+  // schrijfwijze — zodat de dropdown een eerder gekozen waarde herkent.
+  const huidigeFunctieCategorie = (conv.labels || []).map(l => FUNCTIE_LABEL_NAAR_CATEGORIE[l]).find(Boolean) || '';
   const status =
     (contact?.sourceStatus && (STATUS_WEERGAVE[contact.sourceStatus] || contact.sourceStatus)) ||
     (conv.inboxStatus === 'resolved' ? 'Opgelost' : conv.inboxStatus === 'spam' ? 'Spam' : 'Open');
@@ -355,6 +409,12 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     return () => clearTimeout(t);
   }, [naamZonderContactMelding]);
 
+  useEffect(() => {
+    if (!functieZonderContactMelding || functieZonderContactMelding.kleur !== '#059669') return;
+    const t = setTimeout(() => setFunctieZonderContactMelding(null), 2500);
+    return () => clearTimeout(t);
+  }, [functieZonderContactMelding]);
+
   /**
    * Naam opslaan voor een gesprek ZONDER gekoppeld contact — bv. een klant of
    * een nog niet-gematchte kandidaat. Schrijft rechtstreeks naar
@@ -378,6 +438,30 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       setNaamZonderContactMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
     } finally {
       setNaamZonderContactBezig(false);
+    }
+  }
+
+  /**
+   * Functie kiezen voor een gesprek zonder gekoppeld contact. Er is geen
+   * kandidaat/medewerker-record om naartoe te schrijven, dus vervangt dit de
+   * bestaande functie-achtige labels (elke schrijfwijze uit
+   * FUNCTIE_LABEL_NAAR_CATEGORIE) door precies de nieuw gekozen — nooit
+   * stapelen, net zoals contact.functie ook maar één waarde tegelijk is.
+   * Lege keuze ("— kies een functie —") verwijdert 'm gewoon weer.
+   */
+  async function bewaarFunctieZonderContact(nieuweCategorie: string) {
+    setFunctieZonderContactBezig(true);
+    setFunctieZonderContactMelding(null);
+    try {
+      const overigeLabels = (conv.labels || []).filter(l => !(l in FUNCTIE_LABEL_NAAR_CATEGORIE));
+      const volgende = nieuweCategorie ? [...overigeLabels, nieuweCategorie] : overigeLabels;
+      await updateLabels(conv.phoneNumber, volgende);
+      setFunctieZonderContactMelding({ tekst: 'Opgeslagen', kleur: '#059669' });
+      onConversationChanged();
+    } catch (e: any) {
+      setFunctieZonderContactMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
+    } finally {
+      setFunctieZonderContactBezig(false);
     }
   }
 
@@ -498,24 +582,26 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
               k="Functie"
               melding={veldMelding?.veld === 'functie' ? veldMelding : null}
             >
-              <select
-                value={(contact.functie || '').toLowerCase()}
+              <Select
+                value={(contact.functie || '').toLowerCase() || LEEG_WAARDE}
                 disabled={veldBezig !== null}
-                onChange={e => bewaarProfiel('functie', { functie: e.target.value })}
-                style={{ ...VELD_STIJL, cursor: veldBezig ? 'wait' : 'pointer' }}
+                onValueChange={v => bewaarProfiel('functie', { functie: v === LEEG_WAARDE ? '' : v })}
               >
-                {/* Bestaande vrije-tekstwaarde die niet in de lijst staat blijft
-                    zichtbaar tot je hem vervangt — anders lijkt het veld leeg
-                    terwijl er wel degelijk iets in de database staat. */}
-                {!WA_FUNCTIES.includes((contact.functie || '').toLowerCase() as any) && (
-                  <option value={(contact.functie || '').toLowerCase()}>
-                    {contact.functie ? (FUNCTIE_WEERGAVE[contact.functie.toLowerCase()] || contact.functie) : '— niet ingevuld —'}
-                  </option>
-                )}
-                {WA_FUNCTIES.map(f => (
-                  <option key={f} value={f}>{WA_FUNCTIE_LABELS[f]}</option>
-                ))}
-              </select>
+                <SelectTrigger className={SELECT_TRIGGER_COMPACT}><SelectValue /></SelectTrigger>
+                <SelectContent align="end">
+                  {/* Bestaande vrije-tekstwaarde die niet in de lijst staat blijft
+                      zichtbaar tot je hem vervangt — anders lijkt het veld leeg
+                      terwijl er wel degelijk iets in de database staat. */}
+                  {!WA_FUNCTIES.includes((contact.functie || '').toLowerCase() as any) && (
+                    <SelectItem value={(contact.functie || '').toLowerCase() || LEEG_WAARDE}>
+                      {contact.functie ? (FUNCTIE_WEERGAVE[contact.functie.toLowerCase()] || contact.functie) : '— niet ingevuld —'}
+                    </SelectItem>
+                  )}
+                  {WA_FUNCTIES.map(f => (
+                    <SelectItem key={f} value={f}>{WA_FUNCTIE_LABELS[f]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </EditRow>
 
             <EditRow
@@ -545,32 +631,34 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
               last
               melding={veldMelding?.veld === 'status' ? veldMelding : null}
             >
-              <select
-                value={contact.sourceStatus || ''}
+              <Select
+                value={contact.sourceStatus || LEEG_WAARDE}
                 disabled={veldBezig !== null}
-                onChange={e => bewaarProfiel('status', { status: e.target.value })}
-                style={{ ...VELD_STIJL, cursor: veldBezig ? 'wait' : 'pointer' }}
+                onValueChange={v => bewaarProfiel('status', { status: v === LEEG_WAARDE ? '' : v })}
               >
-                {(() => {
-                  const set = WA_STATUSSEN[contact.contactType === 'medewerker' ? 'medewerker' : 'kandidaat'];
-                  const huidig = contact.sourceStatus || '';
-                  return (
-                    <>
-                      {/* Zelfde reden als bij Functie: een status die niet in
-                          deze set hoort (bv. een medewerker die ooit als
-                          kandidaat is aangemaakt) blijft leesbaar staan. */}
-                      {huidig && !set.some(s => s.waarde === huidig) && (
-                        <option value={huidig}>{STATUS_WEERGAVE[huidig] || huidig}</option>
-                      )}
-                      {set.map(s => (
-                        <option key={s.waarde} value={s.waarde}>
-                          {s.label}{s.uitLijst ? ' ⚠' : ''}
-                        </option>
-                      ))}
-                    </>
-                  );
-                })()}
-              </select>
+                <SelectTrigger className={SELECT_TRIGGER_COMPACT}><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent align="end">
+                  {(() => {
+                    const set = WA_STATUSSEN[contact.contactType === 'medewerker' ? 'medewerker' : 'kandidaat'];
+                    const huidig = contact.sourceStatus || '';
+                    return (
+                      <>
+                        {/* Zelfde reden als bij Functie: een status die niet in
+                            deze set hoort (bv. een medewerker die ooit als
+                            kandidaat is aangemaakt) blijft leesbaar staan. */}
+                        {huidig && !set.some(s => s.waarde === huidig) && (
+                          <SelectItem value={huidig}>{STATUS_WEERGAVE[huidig] || huidig}</SelectItem>
+                        )}
+                        {set.map(s => (
+                          <SelectItem key={s.waarde} value={s.waarde}>
+                            {s.label}{s.uitLijst ? ' ⚠' : ''}
+                          </SelectItem>
+                        ))}
+                      </>
+                    );
+                  })()}
+                </SelectContent>
+              </Select>
             </EditRow>
 
             {profielWaarschuwing && (
@@ -601,7 +689,24 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
                 style={{ ...VELD_STIJL, outline: 'none' }}
               />
             </EditRow>
-            <InfoRow k="Functie" v={functie} />
+            <EditRow
+              k="Functie"
+              melding={functieZonderContactMelding}
+            >
+              <Select
+                value={huidigeFunctieCategorie || LEEG_WAARDE}
+                disabled={functieZonderContactBezig}
+                onValueChange={v => bewaarFunctieZonderContact(v === LEEG_WAARDE ? '' : v)}
+              >
+                <SelectTrigger className={SELECT_TRIGGER_COMPACT}><SelectValue /></SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value={LEEG_WAARDE}>— kies een functie —</SelectItem>
+                  {FUNCTIE_CATEGORIE_OPTIES.map(o => (
+                    <SelectItem key={o.waarde} value={o.waarde}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </EditRow>
             <InfoRow k="Telefoon" v={formatPhone(conv.phoneNumber)} />
             <InfoRow k="Status" v={status} last />
           </>
@@ -611,21 +716,19 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       {/* Fase 3 — onderwerp: door de AI bepaald, door de planner te overrulen.
           Eén veld, geen tweede statusveld dat kan afwijken. */}
       <Section title="Onderwerp">
-        <select
-          value={conv.aiCategory ?? ''}
+        <Select
+          value={conv.aiCategory ?? LEEG_WAARDE}
           disabled={catBusy}
-          onChange={e => handleCategorie(e.target.value === '' ? null : (e.target.value as AiCategory))}
-          style={{
-            width: '100%', fontSize: WA_TEKST.secundair, padding: '7px 9px', borderRadius: 8,
-            border: `1px solid ${WA.border}`, background: '#fff', color: WA.text,
-            fontFamily: 'inherit', cursor: catBusy ? 'wait' : 'pointer',
-          }}
+          onValueChange={v => handleCategorie(v === LEEG_WAARDE ? null : (v as AiCategory))}
         >
-          <option value="">— nog niet bepaald —</option>
-          {AI_CATEGORIES.map(c => (
-            <option key={c} value={c}>{AI_CATEGORY_LABELS[c]}</option>
-          ))}
-        </select>
+          <SelectTrigger className={SELECT_TRIGGER_VOL}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={LEEG_WAARDE}>— nog niet bepaald —</SelectItem>
+            {AI_CATEGORIES.map(c => (
+              <SelectItem key={c} value={c}>{AI_CATEGORY_LABELS[c]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div style={{ fontSize: WA_TEKST.badge, color: WA.textSub, marginTop: 6, lineHeight: 1.45 }}>
           {conv.aiCategorySource === 'handmatig' ? (
             <>
@@ -655,21 +758,21 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
           label of tag: de gekozen waarde wint gewoon stilzwijgend van de
           automatische matching. */}
       <Section title="Tabblad">
-        <select
+        <Select
           value={conv.matchCategory}
           disabled={tabBusy}
-          onChange={e => handleTabblad(e.target.value as 'candidate' | 'unmatched' | 'prospect')}
-          title="Verplaats dit gesprek naar een ander tabblad. Handmatige keuze blijft staan ook bij nieuwe berichten."
-          style={{
-            width: '100%', fontSize: WA_TEKST.secundair, padding: '7px 9px', borderRadius: 8,
-            border: `1px solid ${WA.border}`, background: '#fff', color: WA.text,
-            fontFamily: 'inherit', cursor: tabBusy ? 'wait' : 'pointer',
-          }}
+          onValueChange={v => handleTabblad(v as 'candidate' | 'unmatched' | 'prospect')}
         >
-          {TABBLAD_OPTIES.map(o => (
-            <option key={o.waarde} value={o.waarde}>{o.label}</option>
-          ))}
-        </select>
+          <SelectTrigger
+            className={SELECT_TRIGGER_VOL}
+            title="Verplaats dit gesprek naar een ander tabblad. Handmatige keuze blijft staan ook bij nieuwe berichten."
+          ><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {TABBLAD_OPTIES.map(o => (
+              <SelectItem key={o.waarde} value={o.waarde}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Section>
 
       {/* Labels */}
@@ -732,20 +835,18 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
 
       {/* Toewijzen */}
       <Section title="Toewijzen">
-        <select
-          value={conv.assignedToId ?? ''}
-          onChange={e => handleAssign(e.target.value)}
-          style={{
-            width: '100%', fontSize: WA_TEKST.body, padding: '7px 8px', borderRadius: 8,
-            border: `1px solid ${WA.border}`, background: '#fff', color: WA.text,
-            outline: 'none', fontFamily: 'inherit', cursor: 'pointer',
-          }}
+        <Select
+          value={conv.assignedToId != null ? String(conv.assignedToId) : LEEG_WAARDE}
+          onValueChange={v => handleAssign(v === LEEG_WAARDE ? '' : v)}
         >
-          <option value="">Niet toegewezen</option>
-          {teamMembers.map(m => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
+          <SelectTrigger className={SELECT_TRIGGER_VOL}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={LEEG_WAARDE}>Niet toegewezen</SelectItem>
+            {teamMembers.map(m => (
+              <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Section>
 
       {/* Interne notities (inklapbaar) */}

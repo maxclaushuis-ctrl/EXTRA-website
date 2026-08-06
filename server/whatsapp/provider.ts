@@ -176,6 +176,23 @@ export async function sendTemplate(
   return d360PostMessages({ messaging_product: 'whatsapp', to, type: 'template', template });
 }
 
+/**
+ * Plaats (of verwijder, bij emoji='') onze eigen reactie-emoji op een eerder
+ * bericht via de actieve provider — zelfde `type: 'reaction'`-berichtvorm bij
+ * beide providers, alleen het transport verschilt (net als sendText/sendMedia).
+ */
+export async function sendReaction(to: string, waMessageId: string, emoji: string): Promise<ProviderSendResult> {
+  if (activeProvider() === 'meta') {
+    return fromMetaResult(await metaClient.sendReactionMessage(to, waMessageId, emoji));
+  }
+  return d360PostMessages({
+    messaging_product: 'whatsapp',
+    to,
+    type: 'reaction',
+    reaction: { message_id: waMessageId, emoji },
+  });
+}
+
 /** Stuur media (per media-id of link) via de actieve provider. */
 export async function sendMedia(to: string, media: ProviderMediaSpec): Promise<ProviderSendResult> {
   if (activeProvider() === 'meta') {
