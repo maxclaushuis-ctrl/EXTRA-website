@@ -71,6 +71,25 @@ function RevealSection({ children, className = "", delay = 0 }: { children: Reac
   );
 }
 
+/**
+ * P15: deze 6 slugs zijn concepttekst, nooit als echt blogartikel gepubliceerd
+ * in de database. Ze bleven op /blog/:slug 200 renderen zolang de SPA al
+ * geladen was (via deze static-fallback-array), maar server/seo.ts kent alleen
+ * database-artikelen — dus een crawler of iemand die de URL direct opent kreeg
+ * een harde 404. Bas signaleerde dit op 27 juli; volgens het SEO-plan (P15)
+ * moeten de links weg tot de artikelen echt gepubliceerd zijn. De tekst blijft
+ * hieronder staan (zie NIET_GEPUBLICEERDE_SLUGS-filter verderop en in
+ * NieuwsArtikel.tsx) zodat ze klaarstaan om in de CMS overgezet te worden.
+ */
+const NIET_GEPUBLICEERDE_SLUGS = new Set([
+  "vijf-tips-onvergetelijke-gastervaring",
+  "perfecte-catering-bedrijfsevent",
+  "barista-als-visitekaartje",
+  "medewerker-van-de-maand-priya",
+  "personeelstekort-horeca-2026",
+  "housekeeping-standaarden-verhogen",
+]);
+
 const allArticles = [
   {
     slug: "vijf-tips-onvergetelijke-gastervaring",
@@ -166,7 +185,9 @@ export default function NieuwsPage() {
     readTime: p.readTime || '5 min',
     fromDb: true,
   }));
-  const staticFallbacks = allArticles.filter(a => !dbSlugs.has(a.slug));
+  // P15: NIET_GEPUBLICEERDE_SLUGS blijven hier ook uitgesloten zolang ze nog
+  // niet als echt artikel in de database staan — zie de toelichting hierboven.
+  const staticFallbacks = allArticles.filter(a => !dbSlugs.has(a.slug) && !NIET_GEPUBLICEERDE_SLUGS.has(a.slug));
   const combined = [...dbArticles, ...staticFallbacks];
 
   // Collect all categories from both sources

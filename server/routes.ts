@@ -9382,7 +9382,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (referenceUrls) contextBlock += `\nReferentie artikelen (gebruik als inspiratie voor structuur en diepgang):\n${referenceUrls}`;
 
       // Build internal links block
-      const defaultInternalLinks = '/horeca-uitzendbureau-amsterdam, /werkgevers, /ik-zoek-extra-werk';
+      // P15: /werkgevers bestond niet (404) — AI-gegenereerde artikelen namen
+      // deze default steeds over, dus elk nieuw artikel kreeg dezelfde kapotte
+      // link. /personeelsaanvraag is de bestaande pagina waar die knop naar
+      // hoort te wijzen.
+      const defaultInternalLinks = '/horeca-uitzendbureau-amsterdam, /personeelsaanvraag, /ik-zoek-extra-werk';
       const allInternalLinks = internalLinks
         ? `${internalLinks}\n${defaultInternalLinks}`
         : defaultInternalLinks;

@@ -416,6 +416,36 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.3",
     changefreq: "yearly",
   },
+  // P15: /voorwaarden, /cookiebeleid en /nen-4400-1-certificering bestonden
+  // nog niet, terwijl er intern al naar gelinkt werd (footer, WerkwijzePage) —
+  // dat gaf 404's voor bezoekers en crawlers. Nu echte pagina's.
+  {
+    path: "/voorwaarden",
+    title: "Algemene voorwaarden | EXTRA",
+    description:
+      "Lees de algemene voorwaarden van EXTRA: onze dienstverlening, tarieven en facturatie, annulering, aansprakelijkheid en het toepasselijk recht.",
+    prerender: true,
+    priority: "0.3",
+    changefreq: "yearly",
+  },
+  {
+    path: "/cookiebeleid",
+    title: "Cookiebeleid | EXTRA",
+    description:
+      "Lees welke cookies doehetextra.nl gebruikt, waarom we ze gebruiken en hoe je cookies zelf kunt beheren of uitschakelen via je browserinstellingen.",
+    prerender: true,
+    priority: "0.3",
+    changefreq: "yearly",
+  },
+  {
+    path: "/nen-4400-1-certificering",
+    title: "NEN 4400-1 certificering | EXTRA",
+    description:
+      "EXTRA is geregistreerd volgens de NEN 4400-1-norm. Lees wat die norm inhoudt en wat dat betekent voor opdrachtgevers en medewerkers van EXTRA.",
+    prerender: true,
+    priority: "0.4",
+    changefreq: "yearly",
+  },
   {
     path: "/blog",
     title: "Blog & nieuws | Horeca en werken via EXTRA",

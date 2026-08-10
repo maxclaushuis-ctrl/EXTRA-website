@@ -188,9 +188,10 @@ export default function PublicFooter() {
                 ))}
               </ul>
 
-              {/* NEN trust badge */}
-              <div
-                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
+              {/* NEN trust badge — sinds P15 een link naar de eigen certificeringspagina */}
+              <Link
+                href="/nen-4400-1-certificering"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-purple-500/20 transition-colors"
                 style={{
                   background: "rgba(124,58,237,0.12)",
                   border: "1px solid rgba(124,58,237,0.25)",
@@ -201,7 +202,7 @@ export default function PublicFooter() {
                   <p className="text-xs font-bold text-purple-300">NEN 4400-1 gecertificeerd</p>
                   <p className="text-[10px] text-purple-400/60 leading-tight">Gecertificeerd uitzendbureau</p>
                 </div>
-              </div>
+              </Link>
             </div>
 
           </div>
@@ -218,9 +219,14 @@ export default function PublicFooter() {
               <Link href="/privacybeleid" className="hover:text-white transition-colors">
                 Privacybeleid
               </Link>
-              {/* /voorwaarden en /cookiebeleid verwijderd: die pagina's bestaan niet
-                  (waren kapotte interne links die met echte 404's zichtbaar zouden worden).
-                  Terugzetten zodra de pagina's er zijn. */}
+              {/* P15: /voorwaarden en /cookiebeleid waren hier verwijderd omdat de
+                  pagina's nog niet bestonden (kapotte interne links). Nu terug. */}
+              <Link href="/voorwaarden" className="hover:text-white transition-colors">
+                Algemene voorwaarden
+              </Link>
+              <Link href="/cookiebeleid" className="hover:text-white transition-colors">
+                Cookiebeleid
+              </Link>
               <Link href="/contact" className="hover:text-white transition-colors">
                 Contact
               </Link>
