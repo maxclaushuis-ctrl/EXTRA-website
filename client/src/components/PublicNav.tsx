@@ -11,6 +11,13 @@ interface PublicNavProps {
   forceDark?: boolean;
 }
 
+/**
+ * Moet 1-op-1 overeenkomen met HREFLANG_GROUPS in shared/routeMeta.ts — dat
+ * is de canonieke bron voor welke NL-pagina bij welke EN-pagina hoort.
+ * P14: 3 entries hier weken af van die mapping (o.a. /beloningssysteem, de
+ * P14-duplicaat van /extraatje) en zijn gecorrigeerd; zie de toelichting bij
+ * HREFLANG_GROUPS voor de content-vergelijking die de keuze onderbouwt.
+ */
 const LANG_MAP: Record<string, string> = {
   "/": "/en",
   "/horeca-personeel-gezocht": "/en/hospitality-staff-amsterdam",
@@ -22,11 +29,11 @@ const LANG_MAP: Record<string, string> = {
   "/ons-team": "/en/our-team",
   "/contact": "/en/contact",
   "/klantcases-horeca": "/en/client-stories",
-  "/horeca-uitzendbureau-amsterdam-werkwijze": "/en/how-we-work",
-  "/beloningssysteem": "/en/rewards",
+  "/onze-werkwijze": "/en/how-we-work",
+  "/extraatje": "/en/rewards",
   "/horeca-vacatures-amsterdam": "/en/hospitality-jobs",
   "/horeca-werk": "/en/hospitality-work",
-  "/housekeeping-vacatures-amsterdam": "/en/housekeeping-jobs",
+  "/housekeeping-werk": "/en/housekeeping-jobs",
   "/chef-vacatures-amsterdam": "/en/chef-jobs",
   "/front-office-vacatures-amsterdam": "/en/front-office-jobs",
   "/en": "/",
@@ -39,11 +46,11 @@ const LANG_MAP: Record<string, string> = {
   "/en/our-team": "/ons-team",
   "/en/contact": "/contact",
   "/en/client-stories": "/klantcases-horeca",
-  "/en/how-we-work": "/horeca-uitzendbureau-amsterdam-werkwijze",
-  "/en/rewards": "/beloningssysteem",
+  "/en/how-we-work": "/onze-werkwijze",
+  "/en/rewards": "/extraatje",
   "/en/hospitality-jobs": "/horeca-vacatures-amsterdam",
   "/en/hospitality-work": "/horeca-werk",
-  "/en/housekeeping-jobs": "/housekeeping-vacatures-amsterdam",
+  "/en/housekeeping-jobs": "/housekeeping-werk",
   "/en/chef-jobs": "/chef-vacatures-amsterdam",
   "/en/front-office-jobs": "/front-office-vacatures-amsterdam",
 };
@@ -195,7 +202,7 @@ export default function PublicNav({ forceDark = false }: PublicNavProps) {
           items: [
             { label: "Onze werkwijze", href: "/horeca-uitzendbureau-amsterdam-werkwijze", icon: Clock },
             { label: "Klantcases", href: "/klantcases-horeca", icon: Trophy },
-            { label: "Beloningssysteem", href: "/beloningssysteem", icon: Gift },
+            { label: "Beloningssysteem", href: "/extraatje", icon: Gift },
             { label: "Ons team", href: "/ons-team", icon: Users },
           ],
         },

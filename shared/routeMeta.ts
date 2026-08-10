@@ -11,7 +11,15 @@
  * Regels (afgedwongen door scripts/check-seo.mjs):
  *  - title: max 60 tekens, primaire keyword vooraan, uniek
  *  - description: 120–155 tekens, uniek, met concrete CTA waar passend
- *  - canonical: self-referencing, behalve bij bewuste duplicaten (bijv. /nieuws → /blog)
+ *  - canonical: self-referencing, behalve bij bewuste duplicaten
+ *
+ * P14: de vier bekende duplicaten (/nieuws, /beloningssysteem, /hoe-extra-werkt,
+ * /over-extra/ons-team) hebben hier bewust GEEN entry meer — ze zijn een echte
+ * server-side 301 geworden (server/redirects.ts) en worden dus nooit meer met
+ * een 200 geserveerd, dus een entry hier zou dode metadata zijn. Het
+ * `canonical`-veld hieronder blijft bestaan voor een toekomstig duplicaat dat
+ * nog wél als losse pagina moet blijven bestaan (dan is canonical zonder 301
+ * de juiste keuze, zie de originele /nieuws-situatie vóór P14).
  */
 
 export interface RouteMeta {
@@ -363,16 +371,11 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.7",
     changefreq: "monthly",
   },
-  {
-    path: "/over-extra/ons-team",
-    title: "Team EXTRA | Wie zorgen er voor jouw personeel?",
-    description:
-      "Dit is het team van EXTRA: de mensen die dagelijks horecamedewerkers en opdrachtgevers in Amsterdam aan elkaar koppelen. Maak kennis en neem contact op.",
-    canonical: "/ons-team",
-    prerender: true,
-    priority: "0.6",
-    changefreq: "monthly",
-  },
+  // /over-extra/ons-team had hier eerder een entry met canonical: "/ons-team"
+  // — sinds P14 is dat pad een echte server-side 301 (server/redirects.ts),
+  // dus nooit meer met een 200 geserveerd. Zie de toelichting bij /nieuws
+  // verderop voor waarom zo'n entry dan verwijderd wordt in plaats van blijven
+  // staan.
   {
     path: "/onze-werkwijze",
     title: "Onze werkwijze | Zo werkt EXTRA voor jou",
@@ -382,16 +385,8 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.8",
     changefreq: "monthly",
   },
-  {
-    path: "/hoe-extra-werkt",
-    title: "Hoe EXTRA werkt | Werkwijze in duidelijke stappen",
-    description:
-      "Van aanvraag tot match: zo werkt EXTRA voor werkgevers en medewerkers in de horeca. Bekijk de stappen en start vandaag nog met flexibel personeel.",
-    canonical: "/onze-werkwijze",
-    prerender: true,
-    priority: "0.7",
-    changefreq: "monthly",
-  },
+  // /hoe-extra-werkt had hier eerder een entry met canonical: "/onze-werkwijze"
+  // — sinds P14 een echte server-side 301, zelfde reden als hierboven.
   {
     path: "/extraatje",
     title: "EXTRAATJE | Het beloningssysteem van EXTRA",
@@ -401,16 +396,8 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.8",
     changefreq: "monthly",
   },
-  {
-    path: "/beloningssysteem",
-    title: "Beloningssysteem voor horecamedewerkers | EXTRA",
-    description:
-      "Werken via EXTRA loont dubbel: met het EXTRAATJE-beloningssysteem verdien je punten per shift die je inwisselt voor extra's. Bekijk hoe het werkt.",
-    canonical: "/extraatje",
-    prerender: true,
-    priority: "0.7",
-    changefreq: "monthly",
-  },
+  // /beloningssysteem had hier eerder een entry met canonical: "/extraatje"
+  // — sinds P14 een echte server-side 301, zelfde reden als hierboven.
   {
     path: "/contact",
     title: "Contact | EXTRA horeca uitzendbureau Amsterdam",
@@ -438,16 +425,12 @@ export const ROUTE_META: RouteMeta[] = [
     priority: "0.9",
     changefreq: "daily",
   },
-  {
-    path: "/nieuws",
-    title: "Nieuws | Updates van EXTRA",
-    description:
-      "Het laatste nieuws van EXTRA over horeca, flexibel werken en personeel in Amsterdam. Bekijk alle artikelen en updates op onze blogpagina.",
-    canonical: "/blog",
-    prerender: true,
-    priority: "0.6",
-    changefreq: "daily",
-  },
+  // /nieuws had hier eerder een entry met canonical: "/blog" — sinds P14 is
+  // /nieuws een echte server-side 301 naar /blog (server/redirects.ts,
+  // REDIRECT_PATTERNS), dus deze route wordt nooit meer met een 200 vanuit
+  // server/seo.ts geserveerd. Een ROUTE_META-entry die nooit meer gerenderd
+  // wordt is geen metadata meer, dus weg — de canonical stond hier alleen om
+  // hetzelfde probleem op te lossen dat de 301 nu structureel afdekt.
 
   // ── ENGELS ─────────────────────────────────────────────────────────
   {
@@ -646,15 +629,21 @@ export function normalizeMetaPath(p: string): string {
   return lower !== "/" && lower.endsWith("/") ? lower.slice(0, -1) : lower;
 }
 
-/** Dynamische routepatronen die server-side een DB-lookup krijgen. */
+/**
+ * Dynamische routepatronen die server-side een DB-lookup krijgen.
+ *
+ * /nieuws/:slug stond hier vroeger ook (canonicalBase "/blog"), maar sinds
+ * P14 vangt server/redirects.ts (REDIRECT_PATTERNS) elke /nieuws/:slug al af
+ * met een 301 vóórdat het verzoek hier komt — dus dat patroon werd nooit meer
+ * gematcht en is verwijderd in plaats van als dode code te blijven staan.
+ */
 export const DYNAMIC_ROUTE_PATTERNS = [
   { pattern: /^\/blog\/([^/]+)$/, type: "blog" as const, canonicalBase: "/blog" },
-  { pattern: /^\/nieuws\/([^/]+)$/, type: "blog" as const, canonicalBase: "/blog" },
   { pattern: /^\/vacatures\/([^/]+)$/, type: "vacature" as const, canonicalBase: "/vacatures" },
 ];
 
 /**
- * CENTRALE HREFLANG-KOPPELING (P13)
+ * CENTRALE HREFLANG-KOPPELING (P13, 2 paren gecorrigeerd tijdens P14)
  *
  * Eén bron van waarheid voor welke NL-pagina bij welke EN-pagina hoort.
  * server/seo.ts leidt hier bij elke request de hreflang-alternates + x-default
@@ -671,13 +660,32 @@ export const DYNAMIC_ROUTE_PATTERNS = [
  * de twee NL-duplicaten /beloningssysteem en /hoe-extra-werkt canonicaliseren
  * zelf al naar die pagina's, dus hun hreflang-partner is dezelfde).
  *
+ * P14-correctie: bij het bijwerken van de taalwisselaar (client/src/components/
+ * PublicNav.tsx, LANG_MAP) bleek die tabel op 5 punten van deze mapping af te
+ * wijken. Bij woord-voor-woord vergelijking van title/description bleken 2
+ * daarvan hier fout gekoppeld te zijn (op "Amsterdam in de titel" i.p.v. de
+ * werkelijke tekstinhoud):
+ *  - /en/hospitality-staff-amsterdam ↔ /horeca-personeel-gezocht (niet
+ *    /horeca-personeel-amsterdam — de EN-description noemt letterlijk
+ *    "hotels, restaurants, caterers and events", identiek aan de lijst in
+ *    /horeca-personeel-gezocht; /horeca-personeel-amsterdam noemt een heel
+ *    andere lijst, "bediening, keuken en housekeeping").
+ *  - /en/hospitality-work ↔ /horeca-werk (niet /horeca-werk-amsterdam — de
+ *    EN-description "Work when you want at hotels, restaurants and events"
+ *    is een letterlijke vertaling van /horeca-werk's "Werk wanneer jij wilt
+ *    bij hotels, restaurants en events"; /horeca-werk-amsterdam gebruikt een
+ *    andere formulering, "Kies je eigen shifts").
+ * De overige 3 afwijkingen zaten in LANG_MAP zelf (die tabel is daar
+ * gecorrigeerd, deze mapping bleek al juist), plus /beloningssysteem dat door
+ * P14 sowieso naar /extraatje canonicaliseert.
+ *
  * Alleen routes die hier voorkomen krijgen hreflang-tags; NL-only landingspaginas
- * zonder Engelse vertaling (bijv. /horeca-personeel-gezocht) krijgen er terecht
- * geen — daar is niets om naar te verwijzen.
+ * zonder Engelse vertaling (bijv. /horeca-personeel) krijgen er terecht geen —
+ * daar is niets om naar te verwijzen.
  */
 export const HREFLANG_GROUPS: { nl: string; en: string }[] = [
   { nl: "/", en: "/en" },
-  { nl: "/horeca-personeel-amsterdam", en: "/en/hospitality-staff-amsterdam" },
+  { nl: "/horeca-personeel-gezocht", en: "/en/hospitality-staff-amsterdam" },
   { nl: "/hotelpersoneel-inhuren", en: "/en/hotel-staffing-amsterdam" },
   { nl: "/eventpersoneel-inhuren", en: "/en/event-staff-amsterdam" },
   { nl: "/cateringpersoneel-inhuren", en: "/en/catering-staff-amsterdam" },
@@ -689,7 +697,7 @@ export const HREFLANG_GROUPS: { nl: string; en: string }[] = [
   { nl: "/onze-werkwijze", en: "/en/how-we-work" },
   { nl: "/extraatje", en: "/en/rewards" },
   { nl: "/horeca-vacatures-amsterdam", en: "/en/hospitality-jobs" },
-  { nl: "/horeca-werk-amsterdam", en: "/en/hospitality-work" },
+  { nl: "/horeca-werk", en: "/en/hospitality-work" },
   { nl: "/housekeeping-werk", en: "/en/housekeeping-jobs" },
   { nl: "/chef-vacatures-amsterdam", en: "/en/chef-jobs" },
   { nl: "/front-office-vacatures-amsterdam", en: "/en/front-office-jobs" },

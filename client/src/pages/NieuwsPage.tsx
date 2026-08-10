@@ -254,7 +254,7 @@ export default function NieuwsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
             {filtered.map((article, i) => (
               <RevealSection key={article.slug} delay={i * 80}>
-                <Link href={`/nieuws/${article.slug}`}>
+                <Link href={`/blog/${article.slug}`}>
                   <article
                     className="group relative bg-white/[0.04] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/[0.08] transition-all duration-500 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1 focus-within:border-purple-500/30 focus-within:shadow-2xl focus-within:shadow-purple-500/10 cursor-pointer"
                     tabIndex={0}

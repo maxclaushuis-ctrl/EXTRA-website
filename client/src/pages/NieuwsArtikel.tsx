@@ -283,7 +283,7 @@ export default function NieuwsArtikel() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white px-5">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Artikel niet gevonden</h1>
-        <Link href="/nieuws" className="text-purple-600 font-semibold hover:underline flex items-center gap-2">
+        <Link href="/blog" className="text-purple-600 font-semibold hover:underline flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" /> Terug naar nieuws
         </Link>
       </div>
@@ -333,7 +333,7 @@ export default function NieuwsArtikel() {
         <div className="relative bg-white overflow-hidden">
           <XPatternBg count={4} opacity={0.04} color="rgba(139,92,246,1)" />
           <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8 lg:px-6 py-10 sm:py-16">
-            <Link href="/nieuws" className="inline-flex items-center gap-1.5 text-sm text-purple-600 font-medium hover:text-purple-800 mb-6 sm:mb-8 group">
+            <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-purple-600 font-medium hover:text-purple-800 mb-6 sm:mb-8 group">
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" /> Alle artikelen
             </Link>
 
@@ -411,7 +411,7 @@ export default function NieuwsArtikel() {
 
           {/* Teruglink boven artikel */}
           <Link
-            href="/nieuws"
+            href="/blog"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:text-purple-800 transition-colors mb-8 group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -552,7 +552,7 @@ export default function NieuwsArtikel() {
             {related.map(rel => {
               const relCat = categoryColors[rel.category] || { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" };
               return (
-                <Link key={rel.slug} href={`/nieuws/${rel.slug}`}>
+                <Link key={rel.slug} href={`/blog/${rel.slug}`}>
                   <article className="group bg-white rounded-2xl overflow-hidden border border-purple-100 hover:border-purple-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                     <div className="relative h-[160px] sm:h-[180px] overflow-hidden">
                       <img src={rel.image} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -577,7 +577,7 @@ export default function NieuwsArtikel() {
           </div>
           <div className="text-center mt-10">
             <Link
-              href="/nieuws"
+              href="/blog"
               className="inline-flex items-center gap-2 text-purple-600 font-bold hover:text-purple-800 transition-colors text-sm sm:text-base"
             >
               <ArrowLeft className="w-4 h-4" /> Alle artikelen bekijken

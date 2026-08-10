@@ -282,7 +282,7 @@ export default function IkZoekExtraWerk() {
               </a>
 
               {/* Ons Team */}
-              <a href="/over-extra/ons-team" className={`flex items-center gap-2 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
+              <a href="/ons-team" className={`flex items-center gap-2 text-[13px] xl:text-[16px] font-bold px-3 xl:px-5 py-2.5 xl:py-3 rounded-lg transition-all ${scrolled ? "text-gray-800 hover:text-purple-600 hover:bg-purple-50/50" : "text-white/90 hover:text-white hover:bg-white/10"}`}>
                 <Users className="w-5 h-5" />
                 Ons Team
               </a>
@@ -350,7 +350,7 @@ export default function IkZoekExtraWerk() {
                 Werkwijze
               </a>
               {/* Ons Team */}
-              <a href="/over-extra/ons-team" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
+              <a href="/ons-team" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-800 font-bold text-base hover:bg-purple-50 transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
                   <Users className="w-4 h-4 text-purple-600" />
                 </div>
@@ -985,7 +985,7 @@ export default function IkZoekExtraWerk() {
                   Horeca & hospitality
                 </h2>
               </div>
-              <Link href="/nieuws" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors">
+              <Link href="/blog" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors">
                 Lees alle artikelen <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -993,7 +993,7 @@ export default function IkZoekExtraWerk() {
           <div className="hidden sm:grid sm:grid-cols-3 gap-5 sm:gap-6">
             {blogs.map(({ tag, title, datum, image }, i) => (
               <RevealSection key={title} delay={i * 120}>
-                <Link href="/nieuws" className="group relative rounded-2xl overflow-hidden cursor-pointer block aspect-[3/4]">
+                <Link href="/blog" className="group relative rounded-2xl overflow-hidden cursor-pointer block aspect-[3/4]">
                   <img
                     src={image}
                     alt={title}
@@ -1016,7 +1016,7 @@ export default function IkZoekExtraWerk() {
           <div className="sm:hidden flex flex-col gap-4">
             {blogs.map(({ tag, title, datum, image }, i) => (
               <RevealSection key={title} delay={i * 80}>
-                <Link href="/nieuws" className="group relative rounded-2xl overflow-hidden cursor-pointer block aspect-[16/9]">
+                <Link href="/blog" className="group relative rounded-2xl overflow-hidden cursor-pointer block aspect-[16/9]">
                   <img
                     src={image}
                     alt={title}
@@ -1035,7 +1035,7 @@ export default function IkZoekExtraWerk() {
             ))}
           </div>
           <div className="text-center mt-8 sm:hidden">
-            <Link href="/nieuws" className="inline-flex items-center gap-1.5 text-sm font-bold text-purple-600">
+            <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm font-bold text-purple-600">
               Lees alle artikelen <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

@@ -134,7 +134,10 @@ export default function HoeExtraWerkt() {
     setMeta("og:type", "website", true);
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
-    canonical.href = "https://www.doehetextra.nl/hoe-extra-werkt";
+    // P14: dit component rendert sinds de duplicate-content-opruiming alleen
+    // nog op /onze-werkwijze — /hoe-extra-werkt is nu een server-side 301
+    // ernaartoe (server/redirects.ts) en laadt deze component dus niet meer.
+    canonical.href = "https://www.doehetextra.nl/onze-werkwijze";
     return () => { canonical?.remove(); };
   }, []);
 

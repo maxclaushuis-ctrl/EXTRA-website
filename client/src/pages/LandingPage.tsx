@@ -381,7 +381,7 @@ function NewsSection() {
         <RevealSection delay={300}>
           <div className="flex justify-center mt-10 sm:mt-14">
             <Link
-              href="/nieuws"
+              href="/blog"
               className="group inline-flex items-center gap-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold text-base px-8 py-4 rounded-full shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105"
             >
               Lees EXTRA
@@ -1856,7 +1856,7 @@ export default function LandingPage() {
                     { label: "Housekeeping vacatures", href: "/housekeeping-vacatures-amsterdam" },
                     { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
                     { label: "Front office vacatures", href: "/front-office-vacatures-amsterdam" },
-                    { label: "EXTRAATje beloningen", href: "/beloningssysteem" },
+                    { label: "EXTRAATje beloningen", href: "/extraatje" },
                   ].map((l) => (
                     <li key={l.href}>
                       <a href={l.href} className="text-sm text-purple-300/60 hover:text-white transition-colors inline-block">
