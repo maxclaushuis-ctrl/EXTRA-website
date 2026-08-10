@@ -125,8 +125,9 @@ export default function EventStaffAmsterdam() {
 
     setMeta('description', 'Need event staff in Amsterdam? EXTRA supplies experienced hospitality teams for conferences, galas, festivals and corporate events. From 5 to 100+ staff, delivered fast.');
     setLink('canonical', 'https://www.doehetextra.nl/en/event-staff-amsterdam');
-    setLink('alternate', 'https://www.doehetextra.nl/eventpersoneel-inhuren', 'nl');
-    setLink('alternate', 'https://www.doehetextra.nl/en/event-staff-amsterdam', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
     setMeta('og:title', 'Event Staff Amsterdam | EXTRA', 'property');
     setMeta('og:description', 'Experienced event hospitality teams for conferences, galas, festivals and corporate events. Handpicked staff, delivered in 48 hours.', 'property');
     setMeta('og:url', 'https://www.doehetextra.nl/en/event-staff-amsterdam', 'property');

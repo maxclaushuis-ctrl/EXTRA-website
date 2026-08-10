@@ -112,8 +112,9 @@ export default function RestaurantStaffAmsterdam() {
 
     setMeta('description', 'Need restaurant staff in Amsterdam? EXTRA supplies experienced waitstaff, bartenders, runners and kitchen support. Handpicked, fast delivery, all on payroll.');
     setLink('canonical', 'https://www.doehetextra.nl/en/restaurant-staff-amsterdam');
-    setLink('alternate', 'https://www.doehetextra.nl/horecapersoneel-restaurants', 'nl');
-    setLink('alternate', 'https://www.doehetextra.nl/en/restaurant-staff-amsterdam', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
     setMeta('og:title', 'Restaurant Staff Amsterdam | EXTRA', 'property');
     setMeta('og:description', 'Flexible restaurant staff in Amsterdam. Experienced waitstaff, bartenders, runners and kitchen support for any dining concept. All on payroll.', 'property');
     setMeta('og:url', 'https://www.doehetextra.nl/en/restaurant-staff-amsterdam', 'property');

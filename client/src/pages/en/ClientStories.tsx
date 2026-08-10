@@ -39,8 +39,9 @@ export default function ClientStories() {
     const l = (rel: string, href: string, hl?: string) => { const sel = hl ? `link[rel="${rel}"][hreflang="${hl}"]` : `link[rel="${rel}"]`; let el = document.querySelector(sel) as HTMLLinkElement; if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); if (hl) el.setAttribute('hreflang', hl); document.head.appendChild(el); } el.setAttribute('href', href); };
     s('description', 'Read what hotels, event venues and cultural institutions in Amsterdam say about working with EXTRA for reliable hospitality staffing.');
     l('canonical', 'https://www.doehetextra.nl/en/client-stories');
-    l('alternate', 'https://www.doehetextra.nl/klantcases-horeca', 'nl');
-    l('alternate', 'https://www.doehetextra.nl/en/client-stories', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
   }, []);
 
   return (

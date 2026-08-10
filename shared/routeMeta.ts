@@ -652,3 +652,53 @@ export const DYNAMIC_ROUTE_PATTERNS = [
   { pattern: /^\/nieuws\/([^/]+)$/, type: "blog" as const, canonicalBase: "/blog" },
   { pattern: /^\/vacatures\/([^/]+)$/, type: "vacature" as const, canonicalBase: "/vacatures" },
 ];
+
+/**
+ * CENTRALE HREFLANG-KOPPELING (P13)
+ *
+ * Eén bron van waarheid voor welke NL-pagina bij welke EN-pagina hoort.
+ * server/seo.ts leidt hier bij elke request de hreflang-alternates + x-default
+ * uit af (zie hreflangTags() aldaar) — nooit per pagina los gezet, zodat beide
+ * kanten per definitie synchroon blijven. Vóór P13 declareerde alleen de
+ * EN-kant (client-side, per pagina hardcoded) hreflang-alternates; de NL-kant
+ * verwees nergens naar terug ("Incomplete_group") en x-default ontbrak overal.
+ *
+ * Elke entry hier moet naar bestaande, self-canonical routes in ROUTE_META
+ * wijzen (geen pad dat zelf een afwijkende `canonical` heeft — zie
+ * hreflangTags(), die dat ook afdwingt). Waar een EN-pagina geen 1-op-1 NL-pad
+ * met identieke naam heeft, is het inhoudelijk best passende NL-landingspagina
+ * gekozen (bijv. /en/rewards ↔ /extraatje, /en/how-we-work ↔ /onze-werkwijze —
+ * de twee NL-duplicaten /beloningssysteem en /hoe-extra-werkt canonicaliseren
+ * zelf al naar die pagina's, dus hun hreflang-partner is dezelfde).
+ *
+ * Alleen routes die hier voorkomen krijgen hreflang-tags; NL-only landingspaginas
+ * zonder Engelse vertaling (bijv. /horeca-personeel-gezocht) krijgen er terecht
+ * geen — daar is niets om naar te verwijzen.
+ */
+export const HREFLANG_GROUPS: { nl: string; en: string }[] = [
+  { nl: "/", en: "/en" },
+  { nl: "/horeca-personeel-amsterdam", en: "/en/hospitality-staff-amsterdam" },
+  { nl: "/hotelpersoneel-inhuren", en: "/en/hotel-staffing-amsterdam" },
+  { nl: "/eventpersoneel-inhuren", en: "/en/event-staff-amsterdam" },
+  { nl: "/cateringpersoneel-inhuren", en: "/en/catering-staff-amsterdam" },
+  { nl: "/horecapersoneel-restaurants", en: "/en/restaurant-staff-amsterdam" },
+  { nl: "/over-extra", en: "/en/about" },
+  { nl: "/ons-team", en: "/en/our-team" },
+  { nl: "/contact", en: "/en/contact" },
+  { nl: "/klantcases-horeca", en: "/en/client-stories" },
+  { nl: "/onze-werkwijze", en: "/en/how-we-work" },
+  { nl: "/extraatje", en: "/en/rewards" },
+  { nl: "/horeca-vacatures-amsterdam", en: "/en/hospitality-jobs" },
+  { nl: "/horeca-werk-amsterdam", en: "/en/hospitality-work" },
+  { nl: "/housekeeping-werk", en: "/en/housekeeping-jobs" },
+  { nl: "/chef-vacatures-amsterdam", en: "/en/chef-jobs" },
+  { nl: "/front-office-vacatures-amsterdam", en: "/en/front-office-jobs" },
+];
+
+/** Snelle lookup: genormaliseerd pad → de andere taalversie. Uit HREFLANG_GROUPS afgeleid, niet los onderhouden. */
+export const HREFLANG_PARTNER: Record<string, { path: string; lang: "nl" | "en" }> = Object.fromEntries(
+  HREFLANG_GROUPS.flatMap(({ nl, en }) => [
+    [normalizeMetaPath(nl), { path: en, lang: "en" as const }],
+    [normalizeMetaPath(en), { path: nl, lang: "nl" as const }],
+  ])
+);

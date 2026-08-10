@@ -19,6 +19,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import {
   ROUTE_META_BY_PATH,
   DYNAMIC_ROUTE_PATTERNS,
+  HREFLANG_PARTNER,
   SITE_ORIGIN,
   normalizeMetaPath,
   type RouteMeta,
@@ -34,6 +35,8 @@ interface PageMeta {
   lang?: "nl" | "en";
   /** Extra JSON-LD-blokken die aan de <head> worden toegevoegd (al ge-stringificeerd, één <script> per entry). */
   jsonLd?: string[];
+  /** P13: kant-en-klare <link rel="alternate" hreflang="..."> tags, al ge-stringificeerd. */
+  hreflang?: string[];
 }
 
 const escapeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -73,6 +76,9 @@ export function injectMeta(shell: string, meta: PageMeta, fragment?: string): st
   if (meta.jsonLd && meta.jsonLd.length > 0) {
     const scripts = meta.jsonLd.map((json) => `<script type="application/ld+json">${json}</script>`).join("\n");
     html = html.replace("</head>", `${scripts}\n</head>`);
+  }
+  if (meta.hreflang && meta.hreflang.length > 0) {
+    html = html.replace("</head>", `${meta.hreflang.join("\n")}\n</head>`);
   }
   if (fragment) {
     html = html.replace('<div id="root"></div>', `<div id="root">${fragment}</div>`);
@@ -116,15 +122,40 @@ function breadcrumbJsonLd(routePath: string, pageTitle: string, lang?: "nl" | "e
   });
 }
 
+/**
+ * P13: hreflang-alternates + x-default, afgeleid uit HREFLANG_GROUPS in
+ * shared/routeMeta.ts — dat is de enige plek waar NL/EN-paren onderhouden
+ * worden, hier wordt nooit iets hardcoded. x-default wijst altijd naar de
+ * Nederlandse versie (de standaardtaal van doehetextra.nl).
+ *
+ * Alleen aangeroepen voor self-canonical routes (metaFromRoute laat het weg
+ * zodra m.canonical gezet is): een duplicaat-pagina die zelf al naar een
+ * andere canonical wijst, hoort geen eigen hreflang-set te dragen — dat zou
+ * canonical en hreflang tegenstrijdige signalen laten geven.
+ */
+function hreflangTags(ownCanonicalPath: string): string[] | undefined {
+  const partner = HREFLANG_PARTNER[normalizeMetaPath(ownCanonicalPath)];
+  if (!partner) return undefined;
+  const nlPath = partner.lang === "en" ? ownCanonicalPath : partner.path;
+  const enPath = partner.lang === "en" ? partner.path : ownCanonicalPath;
+  return [
+    `<link rel="alternate" hreflang="nl" href="${SITE_ORIGIN}${nlPath}" />`,
+    `<link rel="alternate" hreflang="en" href="${SITE_ORIGIN}${enPath}" />`,
+    `<link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}${nlPath}" />`,
+  ];
+}
+
 function metaFromRoute(m: RouteMeta): PageMeta {
-  const breadcrumb = m.noindex ? undefined : breadcrumbJsonLd(m.canonical ?? m.path, m.title, m.lang);
+  const canonicalPath = m.canonical ?? m.path;
+  const breadcrumb = m.noindex ? undefined : breadcrumbJsonLd(canonicalPath, m.title, m.lang);
   return {
     title: m.title,
     description: m.description,
-    canonicalUrl: `${SITE_ORIGIN}${m.canonical ?? m.path}`,
+    canonicalUrl: `${SITE_ORIGIN}${canonicalPath}`,
     noindex: m.noindex,
     lang: m.lang,
     jsonLd: breadcrumb ? [breadcrumb] : undefined,
+    hreflang: m.canonical || m.noindex ? undefined : hreflangTags(canonicalPath),
   };
 }
 

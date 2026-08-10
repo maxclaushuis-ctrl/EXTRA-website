@@ -41,8 +41,9 @@ export default function AboutExtra() {
     const l = (rel: string, href: string, hl?: string) => { const sel = hl ? `link[rel="${rel}"][hreflang="${hl}"]` : `link[rel="${rel}"]`; let el = document.querySelector(sel) as HTMLLinkElement; if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); if (hl) el.setAttribute('hreflang', hl); document.head.appendChild(el); } el.setAttribute('href', href); };
     s('description', 'EXTRA is a young, energetic hospitality staffing agency in Amsterdam. We connect the best hotel, restaurant and event professionals with leading venues across the Netherlands.');
     l('canonical', 'https://www.doehetextra.nl/en/about');
-    l('alternate', 'https://www.doehetextra.nl/over-extra', 'nl');
-    l('alternate', 'https://www.doehetextra.nl/en/about', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
     s('og:title', 'About EXTRA | Hospitality Staffing Amsterdam', 'property');
     s('og:description', 'EXTRA is a young, energetic hospitality staffing agency in Amsterdam. Meet the team behind the platform.', 'property');
   }, []);

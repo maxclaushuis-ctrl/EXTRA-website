@@ -113,8 +113,9 @@ export default function CateringStaffAmsterdam() {
 
     setMeta('description', 'Need catering staff in Amsterdam? EXTRA supplies experienced service staff, runners, bar staff and kitchen support for caterers and large events. Fast, reliable, all on payroll.');
     setLink('canonical', 'https://www.doehetextra.nl/en/catering-staff-amsterdam');
-    setLink('alternate', 'https://www.doehetextra.nl/cateringpersoneel-inhuren', 'nl');
-    setLink('alternate', 'https://www.doehetextra.nl/en/catering-staff-amsterdam', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
     setMeta('og:title', 'Catering Staff Amsterdam | EXTRA', 'property');
     setMeta('og:description', 'Experienced catering staff for productions of any scale. Service staff, runners, bar staff and kitchen support — all on payroll.', 'property');
     setMeta('og:url', 'https://www.doehetextra.nl/en/catering-staff-amsterdam', 'property');

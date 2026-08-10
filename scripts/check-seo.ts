@@ -10,7 +10,7 @@
  */
 import fs from "fs";
 import path from "path";
-import { ROUTE_META, normalizeMetaPath } from "../shared/routeMeta";
+import { ROUTE_META, HREFLANG_GROUPS, normalizeMetaPath } from "../shared/routeMeta";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const FRAGMENT_DIR = path.join(ROOT, "client", "public", "prerender");
@@ -72,6 +72,33 @@ for (const m of ROUTE_META.filter((x) => x.prerender && !x.noindex)) {
   if (h1s > 1) warnings.push(`${m.path}: prerender-fragment bevat ${h1s} <h1>-tags (1 verwacht)`);
   if (/<script(?![^>]*application\/ld\+json)/.test(html))
     errors.push(`${m.path}: prerender-fragment bevat een niet-JSON-LD <script> (verwijst mogelijk naar verouderde assets)`);
+}
+
+// 5. Hreflang-koppeling (P13): elke entry in HREFLANG_GROUPS moet naar een
+// bestaande, self-canonical, indexeerbare route wijzen — anders geeft
+// server/seo.ts (hreflangTags()) straks een tegenstrijdig of dood signaal af.
+// Elk pad mag hoogstens in één groep voorkomen: zit een pad in twee groepen,
+// dan zou het twee verschillende "vertalingen" claimen, wat bidirectionaliteit
+// (A ↔ B) breekt.
+{
+  const seenInGroup = new Map<string, string>(); // genormaliseerd pad -> "nl:.." / "en:.." herkomst
+  for (const { nl, en } of HREFLANG_GROUPS) {
+    for (const [p, lang] of [[nl, "nl"], [en, "en"]] as const) {
+      const n = normalizeMetaPath(p);
+      const target = byPath.get(n);
+      if (!target) {
+        errors.push(`hreflang-groep (${nl} ↔ ${en}): ${p} bestaat niet in ROUTE_META`);
+        continue;
+      }
+      if (target.noindex) errors.push(`hreflang-groep (${nl} ↔ ${en}): ${p} heeft noindex, hoort niet in een hreflang-groep`);
+      if (target.canonical) errors.push(`hreflang-groep (${nl} ↔ ${en}): ${p} heeft zelf een afwijkende canonical (${target.canonical}) — hreflang hoort op de canonical-pagina zelf te staan`);
+      const effectiveLang = target.lang ?? "nl"; // NL-routes laten lang meestal ongezet (default nl)
+      if (effectiveLang !== lang) errors.push(`hreflang-groep (${nl} ↔ ${en}): ${p} heeft lang="${target.lang}" in ROUTE_META, verwacht "${lang}"`);
+      const dup = seenInGroup.get(n);
+      if (dup && dup !== `${nl}|${en}`) errors.push(`${p} komt in meerdere hreflang-groepen voor (ook in ${dup})`);
+      seenInGroup.set(n, `${nl}|${en}`);
+    }
+  }
 }
 
 if (warnings.length) console.warn(`⚠ Waarschuwingen:\n  - ${warnings.join("\n  - ")}\n`);
