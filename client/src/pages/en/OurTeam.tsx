@@ -53,8 +53,9 @@ export default function OurTeam() {
     const l = (rel: string, href: string, hl?: string) => { const sel = hl ? `link[rel="${rel}"][hreflang="${hl}"]` : `link[rel="${rel}"]`; let el = document.querySelector(sel) as HTMLLinkElement; if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); if (hl) el.setAttribute('hreflang', hl); document.head.appendChild(el); } el.setAttribute('href', href); };
     s('description', 'Meet the EXTRA team. Young professionals dedicated to better hospitality staffing in Amsterdam and beyond.');
     l('canonical', 'https://www.doehetextra.nl/en/our-team');
-    l('alternate', 'https://www.doehetextra.nl/ons-team', 'nl');
-    l('alternate', 'https://www.doehetextra.nl/en/our-team', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
   }, []);
 
   return (

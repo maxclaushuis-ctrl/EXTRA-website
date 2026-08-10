@@ -32,8 +32,9 @@ export default function ContactEn() {
     const l = (rel: string, href: string, hl?: string) => { const sel = hl ? `link[rel="${rel}"][hreflang="${hl}"]` : `link[rel="${rel}"]`; let el = document.querySelector(sel) as HTMLLinkElement; if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); if (hl) el.setAttribute('hreflang', hl); document.head.appendChild(el); } el.setAttribute('href', href); };
     s('description', 'Get in touch with EXTRA. Questions about hospitality staffing, partnerships or working with us in Amsterdam?');
     l('canonical', 'https://www.doehetextra.nl/en/contact');
-    l('alternate', 'https://www.doehetextra.nl/contact', 'nl');
-    l('alternate', 'https://www.doehetextra.nl/en/contact', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
   }, []);
 
   const onSubmit = (data: ContactValues) => {

@@ -52,8 +52,9 @@ export default function HospitalityJobsAmsterdam() {
     const l = (rel: string, href: string, hl?: string) => { const sel = hl ? `link[rel="${rel}"][hreflang="${hl}"]` : `link[rel="${rel}"]`; let el = document.querySelector(sel) as HTMLLinkElement; if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); if (hl) el.setAttribute('hreflang', hl); document.head.appendChild(el); } el.setAttribute('href', href); };
     s('description', 'Looking for hospitality work in Amsterdam? EXTRA places F&B staff, housekeepers, chefs and front office professionals at top hotels, event venues and restaurants. Apply now.');
     l('canonical', 'https://www.doehetextra.nl/en/hospitality-jobs');
-    l('alternate', 'https://www.doehetextra.nl/horeca-vacatures-amsterdam', 'nl');
-    l('alternate', 'https://www.doehetextra.nl/en/hospitality-jobs', 'en');
+    // hreflang-alternates (nl/en/x-default) komen sinds P13 server-side uit
+    // shared/routeMeta.ts (HREFLANG_GROUPS) — hier hardcoded zetten zou ze na
+    // hydratie weer overschrijven met een niet-onderhouden, x-default-loze set.
   }, []);
 
   return (
