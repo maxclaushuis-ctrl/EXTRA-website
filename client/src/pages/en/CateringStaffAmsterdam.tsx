@@ -82,10 +82,10 @@ function GrainOverlay() {
 }
 
 const appScreens = [
-  { key: "dashboard", img: screenDashboard, label: "Dashboard" },
-  { key: "rewards", img: screenRewards, label: "Rewards" },
-  { key: "challenges", img: screenUitdagingen, label: "Challenges" },
-  { key: "leaderboard", img: screenRanglijst, label: "Leaderboard" },
+  { key: "dashboard", img: screenDashboard, label: "Dashboard", alt: "Screenshot of the EXTRAATje dashboard in the catering staff app: points balance, bronze status and popular rewards" },
+  { key: "rewards", img: screenRewards, label: "Rewards", alt: "Screenshot of the rewards catalogue in the EXTRAATje app, showing redeemable gifts such as a JBL speaker and AirPods" },
+  { key: "challenges", img: screenUitdagingen, label: "Challenges", alt: "Screenshot of an active challenge in the EXTRAATje app: earning extra points by working more shifts" },
+  { key: "leaderboard", img: screenRanglijst, label: "Leaderboard", alt: "Screenshot of the leaderboard in the EXTRAATje app showing catering staff members' point rankings" },
 ];
 
 export default function CateringStaffAmsterdam() {
@@ -677,7 +677,7 @@ export default function CateringStaffAmsterdam() {
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-gray-900 rounded-b-xl z-20" />
                     <div className="relative">
                       {appScreens.map((screen, i) => (
-                        <img key={screen.key} src={screen.img} alt={screen.label} className={`w-full transition-opacity duration-500 ${activeScreen === i ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`} />
+                        <img key={screen.key} src={screen.img} alt={screen.alt} className={`w-full transition-opacity duration-500 ${activeScreen === i ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`} />
                       ))}
                     </div>
                   </div>
