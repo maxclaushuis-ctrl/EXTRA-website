@@ -306,15 +306,23 @@ function Router() {
           {/* Blog */}
           <Route path="/blog" component={NieuwsPage} />
           <Route path="/blog/:slug" component={NieuwsArtikel} />
-          <Route path="/nieuws" component={NieuwsPage} />
-          <Route path="/nieuws/:slug" component={NieuwsArtikel} />
+          {/* P14: /nieuws en /blog renderden dezelfde component op twee URL's
+              (identieke content, zie shared/routeMeta.ts canonical: "/blog" op
+              /nieuws). Server-side 301 (server/redirects.ts REDIRECT_PATTERNS)
+              vangt alle echte navigatie af; deze stubs zijn de fallback voor
+              wie al client-side in de SPA zit — zelfde patroon als de andere
+              window.location.replace-stubs hieronder. */}
+          <Route path="/nieuws">{() => { window.location.replace('/blog'); return null; }}</Route>
+          <Route path="/nieuws/:slug">{(params) => { window.location.replace(`/blog/${params.slug}`); return null; }}</Route>
 
           {/* Over EXTRA sub-routes */}
-          <Route path="/over-extra/ons-team" component={OnsTeam} />
+          {/* P14: /over-extra/ons-team was een tweede URL voor dezelfde OnsTeam-
+              component als /ons-team (identieke content). Server-side 301 vangt
+              echte navigatie af; deze stub is de client-side fallback. */}
+          <Route path="/over-extra/ons-team">{() => { window.location.replace('/ons-team'); return null; }}</Route>
           <Route path="/over-extra" component={OverExtra} />
           <Route path="/onze-werkwijze" component={HoeExtraWerkt} />
           <Route path="/ons-team" component={OnsTeam} />
-          <Route path="/beloningssysteem" component={Extraatje} />
           <Route path="/klantcases-horeca" component={KlantcasesHoreca} />
           <Route path="/BHG-group" component={BHGGroupPage} />
           <Route path="/xebia" component={XebiaPage} />
@@ -326,7 +334,12 @@ function Router() {
           <Route path="/horeca-werk" component={HorecaWerk} />
           <Route path="/housekeeping-werk" component={HousekeepingWerk} />
           <Route path="/extraatje" component={Extraatje} />
-          <Route path="/hoe-extra-werkt" component={HoeExtraWerkt} />
+          {/* P14: /beloningssysteem en /hoe-extra-werkt waren tweede URL's voor
+              dezelfde Extraatje- resp. HoeExtraWerkt-component als /extraatje
+              en /onze-werkwijze (identieke content). Server-side 301 vangt
+              echte navigatie af; deze stubs zijn de client-side fallback. */}
+          <Route path="/beloningssysteem">{() => { window.location.replace('/extraatje'); return null; }}</Route>
+          <Route path="/hoe-extra-werkt">{() => { window.location.replace('/onze-werkwijze'); return null; }}</Route>
           <Route path="/ik-zoek-extra-werk">{() => { window.location.replace('/horeca-vacatures-amsterdam'); return null; }}</Route>
           <Route path="/dagbetaling">{() => { window.location.replace('/dagbetaling'); return null; }}</Route>
           <Route path="/vacatures" component={Vacatures} />

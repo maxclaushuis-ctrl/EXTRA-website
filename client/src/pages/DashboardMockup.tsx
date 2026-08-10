@@ -5379,7 +5379,7 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
                               <td className="px-3 py-3">
                                 <div className="flex items-center gap-1 justify-end">
                                   {post.status === 'published' && (
-                                    <a href={`/nieuws/${post.slug}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-purple-600 transition-colors" title="Bekijk artikel">
+                                    <a href={`/blog/${post.slug}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-purple-600 transition-colors" title="Bekijk artikel">
                                       <Eye className="h-3.5 w-3.5" />
                                     </a>
                                   )}

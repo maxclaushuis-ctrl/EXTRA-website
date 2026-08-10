@@ -84,7 +84,7 @@ const teamPreview = [
 
 const NAV_LINKS = [
   { label: "Wie zijn wij?", href: "/over-extra" },
-  { label: "Ons team", href: "/over-extra/ons-team" },
+  { label: "Ons team", href: "/ons-team" },
   { label: "Beloningssysteem", href: "/extraatje" },
   { label: "Aanmelden", href: "/aanmelden" },
 ];
@@ -163,7 +163,7 @@ export default function OverExtra() {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href="/over-extra/ons-team"
+              href="/ons-team"
               className="group bg-white text-purple-900 font-bold px-7 py-3.5 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
             >
               <Users className="w-5 h-5" /> Maak kennis met ons team <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -337,7 +337,7 @@ export default function OverExtra() {
                   Jong, energiek en een tikje eigenwijs, precies zoals we het leuk vinden.
                 </p>
               </div>
-              <Link href="/over-extra/ons-team" className="inline-flex items-center gap-2 text-purple-300 hover:text-white font-semibold text-sm transition-colors">
+              <Link href="/ons-team" className="inline-flex items-center gap-2 text-purple-300 hover:text-white font-semibold text-sm transition-colors">
                 Heel het team zien <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -354,7 +354,7 @@ export default function OverExtra() {
             </div>
             <div className="text-center mt-8 sm:mt-10">
               <Link
-                href="/over-extra/ons-team"
+                href="/ons-team"
                 className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2"
               >
                 <Users className="w-5 h-5" /> Heel het team bekijken <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

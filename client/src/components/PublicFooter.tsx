@@ -151,7 +151,7 @@ export default function PublicFooter() {
                   { label: "Chef vacatures", href: "/chef-vacatures-amsterdam" },
                   { label: "Front office vacatures", href: "/front-office-vacatures-amsterdam" },
                   { label: "Hoe werkt dagbetaling", href: "/dagbetaling" },
-                  { label: "EXTRAATje beloningen", href: "/beloningssysteem" },
+                  { label: "EXTRAATje beloningen", href: "/extraatje" },
                 ].map((l) => (
                   <li key={l.href}>
                     <Link

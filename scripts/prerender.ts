@@ -141,11 +141,13 @@ async function fetchDynamicRoutes(): Promise<PrerenderRoute[]> {
     ]);
     const routes: PrerenderRoute[] = [];
     for (const p of posts) {
-      // /blog/:slug en /nieuws/:slug serveren vandaag identieke content (zelfde
-      // component); zolang P14 die duplicatie niet heeft opgelost zijn het twee
-      // los crawlbare routes die allebei hun eigen fragment nodig hebben.
+      // Vóór P14 kreeg /nieuws/:slug hier ook een eigen fragment: /blog/:slug
+      // en /nieuws/:slug serveerden identieke content via twee los crawlbare
+      // routes. P14 maakte /nieuws/:slug een echte server-side 301 naar
+      // /blog/:slug (server/redirects.ts) — dat pad wordt dus nooit meer met
+      // een 200 geserveerd, dus een fragment ervoor genereren is verspilde
+      // moeite bij elke toekomstige nieuwe blogpost.
       routes.push({ path: `/blog/${p.slug}`, dynamic: true });
-      routes.push({ path: `/nieuws/${p.slug}`, dynamic: true });
     }
     for (const v of vacancies) routes.push({ path: `/vacatures/${v.slug}`, dynamic: true });
     return routes;

@@ -114,34 +114,76 @@ const REDIRECT_MAP: Record<string, string> = {
   "/en/werk-zoeken":                    "/en/hospitality-jobs",
   "/en/uitzendbureau-hilversum":        "/",
   "/en/uitzendbureau-utrecht":          "/",
+
+  // ── P14: DUPLICATE CONTENT (identieke pagina, twee URL's) ───
+  // Elk paar rendert vandaag dezelfde component (zie client/src/App.tsx) op
+  // twee URL's — geen echte inhoudelijke duplicatie in de database, maar wel
+  // twee indexeerbare paden voor precies dezelfde tekst. shared/routeMeta.ts
+  // zet de canonical al langer goed (dat loste het dubbele-content-signaal al
+  // op voor Google), dit voegt de daadwerkelijke 301 toe zodat bezoekers en
+  // linkwaarde ook echt op de canonieke URL landen.
+  "/beloningssysteem":                  "/extraatje",
+  "/hoe-extra-werkt":                   "/onze-werkwijze",
+  "/over-extra/ons-team":               "/ons-team",
 };
+
+/**
+ * Patroon-gebaseerde 301's: voor wanneer de bestemming van elk pad hetzelfde
+ * vaste voorvoegsel volgt in plaats van één-op-één in REDIRECT_MAP te passen.
+ *
+ * P14: /nieuws en /blog zijn twee indexpagina's voor dezelfde artikelen
+ * (zelfde NieuwsPage/NieuwsArtikel-component, zie client/src/App.tsx) — /blog
+ * is al de canonical in shared/routeMeta.ts. Eén vaste REDIRECT_MAP-regel per
+ * artikel zou bij elk nieuw artikel weer vergeten worden; dit patroon werkt
+ * voor de index én voor elke huidige én toekomstige /nieuws/:slug zonder dat
+ * daar iets voor bijgehouden hoeft te worden.
+ */
+const REDIRECT_PATTERNS: { pattern: RegExp; to: (match: RegExpMatchArray) => string }[] = [
+  { pattern: /^\/nieuws(\/.*)?$/, to: (m) => `/blog${m[1] ?? ""}` },
+];
 
 /**
  * Normaliseert een inkomend pad:
  *  - lowercase
  *  - verwijdert trailing slash (behalve root "/")
  */
-function normalizePath(p: string): string {
+export function normalizePath(p: string): string {
   const lower = p.toLowerCase();
   return lower !== "/" && lower.endsWith("/") ? lower.slice(0, -1) : lower;
 }
 
 /**
- * Registreert een middleware die alle paden in REDIRECT_MAP
- * afhandelt met een HTTP 301 (permanent redirect).
+ * Pure resolutiefunctie, los van Express — zodat REDIRECT_MAP en
+ * REDIRECT_PATTERNS getest kunnen worden zonder een server op te tuigen (zie
+ * server/redirects.test.ts). Geeft het bestemmingspad terug (zonder
+ * query-string) of `null` als er geen match is.
+ */
+export function resolveRedirect(path: string): string | null {
+  const normalized = normalizePath(path);
+
+  const destination = REDIRECT_MAP[normalized];
+  if (destination) return destination;
+
+  for (const { pattern, to } of REDIRECT_PATTERNS) {
+    const match = normalized.match(pattern);
+    if (match) return to(match);
+  }
+
+  return null;
+}
+
+/**
+ * Registreert een middleware die alle paden in REDIRECT_MAP en
+ * REDIRECT_PATTERNS afhandelt met een HTTP 301 (permanent redirect).
  *
  * Werkt met én zonder trailing slash, en op elk domein/subdomein.
  */
 export function registerRedirects(app: Express): void {
   app.use((req: Request, res: Response, next: NextFunction) => {
-    const normalized = normalizePath(req.path);
-    const destination = REDIRECT_MAP[normalized];
-
+    const destination = resolveRedirect(req.path);
     if (destination) {
       // Behoud eventuele query-string (bijv. ?ref=google)
-      const qs = req.url.includes("?")
-        ? req.url.slice(req.url.indexOf("?"))
-        : "";
+      const qs = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
       return res.redirect(301, destination + qs);
     }
 
