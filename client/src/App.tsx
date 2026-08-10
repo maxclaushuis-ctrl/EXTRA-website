@@ -52,6 +52,9 @@ const BHGGroupPage = lazy(() => import("@/pages/BHGGroupPage"));
 const XebiaPage = lazy(() => import("@/pages/XebiaPage"));
 const Contact = lazy(() => import("@/pages/Contact"));
 const Privacybeleid = lazy(() => import("@/pages/Privacybeleid"));
+const AlgemeneVoorwaarden = lazy(() => import("@/pages/AlgemeneVoorwaarden"));
+const Cookiebeleid = lazy(() => import("@/pages/Cookiebeleid"));
+const Nen4400Certificering = lazy(() => import("@/pages/Nen4400Certificering"));
 
 const LandingPageEn = lazy(() => import("@/pages/en/LandingPageEn"));
 const HospitalityStaffAmsterdam = lazy(() => import("@/pages/en/HospitalityStaffAmsterdam"));
@@ -166,6 +169,7 @@ const PUBLIC_PATHS = [
   '/horeca-personeel-amsterdam', '/horeca-personeel', '/flexibel-horeca-personeel',
   '/blog', '/onze-werkwijze', '/beloningssysteem', '/ons-team',
   '/klantcases-horeca', '/contact', '/privacybeleid',
+  '/voorwaarden', '/cookiebeleid', '/nen-4400-1-certificering',
   '/vacatures',
   '/en',
   '/en/hospitality-staff-amsterdam', '/en/hotel-staffing-amsterdam',
@@ -346,6 +350,11 @@ function Router() {
           <Route path="/vacatures/:slug" component={VacatureDetail} />
           <Route path="/contact" component={Contact} />
           <Route path="/privacybeleid" component={Privacybeleid} />
+          {/* P15: bestonden nog niet, terwijl er wel intern naar gelinkt werd
+              (footer, WerkwijzePage) — daardoor 404's in de crawl. */}
+          <Route path="/voorwaarden" component={AlgemeneVoorwaarden} />
+          <Route path="/cookiebeleid" component={Cookiebeleid} />
+          <Route path="/nen-4400-1-certificering" component={Nen4400Certificering} />
           <Route path="/dashboard" component={DashboardMockup} />
           <Route path="/wachtwoord-instellen" component={WachtwoordInstellen} />
 

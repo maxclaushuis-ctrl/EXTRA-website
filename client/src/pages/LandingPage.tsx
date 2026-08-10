@@ -1885,8 +1885,10 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <div
-                  className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
+                {/* P15: was een niet-klikbaar blokje; nu een link naar de eigen certificeringspagina */}
+                <a
+                  href="/nen-4400-1-certificering"
+                  className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-purple-500/20 transition-colors"
                   style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)" }}
                 >
                   <Shield className="w-4 h-4 text-purple-400 shrink-0" />
@@ -1894,7 +1896,7 @@ export default function LandingPage() {
                     <p className="text-xs font-bold text-purple-300">NEN 4400-1 gecertificeerd</p>
                     <p className="text-[10px] text-purple-400/60 leading-tight">Gecertificeerd uitzendbureau</p>
                   </div>
-                </div>
+                </a>
               </div>
 
             </div>

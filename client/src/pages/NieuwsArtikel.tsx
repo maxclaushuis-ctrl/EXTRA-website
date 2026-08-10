@@ -74,6 +74,25 @@ interface Article {
   content: ArticleBlock[];
 }
 
+/**
+ * P15: deze 6 slugs zijn concepttekst, nooit als echt blogartikel gepubliceerd
+ * in de database — zie de uitgebreide toelichting bij dezelfde constante in
+ * NieuwsPage.tsx. De volledige `articles`-inhoud hieronder blijft bewust
+ * staan (iemand met een directe link ziet nog steeds de content, en de tekst
+ * staat klaar om in de CMS overgezet te worden); alleen de "gerelateerde
+ * artikelen"-widget verderop in dit bestand sluit ze uit, zodat een bezoek aan
+ * een wél gepubliceerd artikel niet alsnog naar deze 404-gevoelige URL's
+ * linkt.
+ */
+const NIET_GEPUBLICEERDE_SLUGS = new Set([
+  "vijf-tips-onvergetelijke-gastervaring",
+  "perfecte-catering-bedrijfsevent",
+  "barista-als-visitekaartje",
+  "medewerker-van-de-maand-priya",
+  "personeelstekort-horeca-2026",
+  "housekeeping-standaarden-verhogen",
+]);
+
 const articles: Article[] = [
   {
     slug: "vijf-tips-onvergetelijke-gastervaring",
@@ -366,7 +385,7 @@ export default function NieuwsArtikel() {
                 <h3 className="text-lg sm:text-xl font-bold mb-2">Horeca personeel nodig?</h3>
                 <p className="text-purple-200 text-sm sm:text-base mb-4">EXTRA is hét horeca uitzendbureau in Amsterdam. Flexibel, betrouwbaar en snel geschakeld.</p>
                 <div className="flex flex-wrap gap-3">
-                  <Link href="/werkgevers" className="bg-white text-purple-700 font-semibold px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors">Personeel aanvragen</Link>
+                  <Link href="/personeelsaanvraag" className="bg-white text-purple-700 font-semibold px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors">Personeel aanvragen</Link>
                   <Link href="/ik-zoek-extra-werk" className="border border-white/30 text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-colors">Werk zoeken</Link>
                 </div>
               </div>
@@ -382,7 +401,10 @@ export default function NieuwsArtikel() {
   // Fall back to static article
   const article = staticArticle!;
   const cat = categoryColors[article.category] || { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" };
-  const related = articles.filter(a => a.slug !== slug).slice(0, 3);
+  // P15: niet-gepubliceerde concept-slugs nooit aanbevelen vanaf een artikel
+  // dat wél publiek staat — anders blijft de site zelf een 404-gevoelige URL
+  // aan het linken, ook als de bloglijst ze niet meer toont.
+  const related = articles.filter(a => a.slug !== slug && !NIET_GEPUBLICEERDE_SLUGS.has(a.slug)).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
