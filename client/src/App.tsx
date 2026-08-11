@@ -211,7 +211,10 @@ function useRouteMetaSync(location: string) {
     document.querySelector('meta[property="og:title"]')?.setAttribute("content", meta.title);
     document.querySelector('meta[property="og:description"]')?.setAttribute("content", meta.description);
     document.querySelector('meta[property="og:url"]')?.setAttribute("content", `${SITE_ORIGIN}${canonicalPath}`);
-    document.querySelector('meta[name="robots"]')?.setAttribute("content", meta.noindex ? "noindex, nofollow" : "index, follow");
+    document.querySelector('meta[name="robots"]')?.setAttribute(
+      "content",
+      meta.noindex ? (meta.follow ? "noindex, follow" : "noindex, nofollow") : "index, follow"
+    );
   }, [location]);
 }
 

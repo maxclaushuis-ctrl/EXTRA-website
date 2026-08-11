@@ -31,6 +31,14 @@ export interface RouteMeta {
   canonical?: string;
   /** true → noindex,nofollow (interne tools, brochures, dashboards) */
   noindex?: boolean;
+  /**
+   * P18: alleen relevant in combinatie met noindex: true. true → "noindex,
+   * follow" in plaats van het standaard "noindex, nofollow". Voor pagina's
+   * die zelf niet in de zoekresultaten horen (bijv. klantspecifieke
+   * landingspagina's) maar waarvan de uitgaande links wel gewoon gevolgd
+   * mogen worden om de rest van de site te ontdekken/waarderen.
+   */
+  follow?: boolean;
   /** true → scripts/prerender.mjs maakt een statisch HTML-fragment voor deze route */
   prerender?: boolean;
   /** 'en' voor Engelstalige pagina's (og:locale) */
@@ -171,8 +179,13 @@ export const ROUTE_META: RouteMeta[] = [
     description:
       "Zo werkt BHG Group met EXTRA: flexibel horecapersoneel dat de locaties kent en meebeweegt met de bezetting. Lees de samenwerking en vraag zelf aan.",
     prerender: true,
-    priority: "0.6",
-    changefreq: "monthly",
+    // P18: klantspecifieke landingspagina, bewust niet gelinkt vanuit de site
+    // en niet bedoeld voor de zoekresultaten. noindex zodat hij niet als
+    // orphan-pagina in een volgende audit terugkomt; follow zodat de
+    // uitgaande links op de pagina (naar bijv. /cateringpersoneel-inhuren)
+    // gewoon meetellen.
+    noindex: true,
+    follow: true,
   },
   {
     path: "/xebia",
@@ -180,8 +193,9 @@ export const ROUTE_META: RouteMeta[] = [
     description:
       "Zo ondersteunt EXTRA Xebia met hospitality-professionals op kantoor: ontvangst, catering en events. Lees de case en ontdek wat EXTRA kan leveren.",
     prerender: true,
-    priority: "0.6",
-    changefreq: "monthly",
+    // P18: zelfde situatie als /BHG-group hierboven.
+    noindex: true,
+    follow: true,
   },
 
   // ── KANDIDATEN (NL) ────────────────────────────────────────────────

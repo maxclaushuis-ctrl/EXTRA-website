@@ -273,8 +273,15 @@ async function main() {
   fs.mkdirSync(OUT_COMMITTED, { recursive: true });
   fs.mkdirSync(OUT_DIST, { recursive: true });
 
+  // P18: prerenderen is een crawlbaarheids-keuze (ook voor JS-loze AI-crawlers
+  // die geen JavaScript uitvoeren), los van of een route in de zoekresultaten
+  // hoort te staan — dat laatste regelt noindex al in server/seo.ts. Vóór P18
+  // vielen die twee samen (elke noindex-route had ook prerender: false), maar
+  // /BHG-group en /xebia zijn nu noindex: true mét prerender: true: bewust
+  // niet in Google, maar nog altijd een volwaardige, direct deelbare
+  // klantpagina die niet als lege shell moet laden.
   const staticRoutes: PrerenderRoute[] = ROUTE_META
-    .filter((m) => m.prerender && !m.noindex)
+    .filter((m) => m.prerender)
     .map((m) => ({ path: m.path }));
   const dynamicRoutes = await fetchDynamicRoutes();
   const routes: PrerenderRoute[] = [...staticRoutes, ...dynamicRoutes];

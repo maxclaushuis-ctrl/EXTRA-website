@@ -32,6 +32,8 @@ interface PageMeta {
   description: string;
   canonicalUrl: string;
   noindex?: boolean;
+  /** P18: alleen relevant met noindex: true — true → "noindex, follow" i.p.v. "noindex, nofollow". */
+  follow?: boolean;
   lang?: "nl" | "en";
   /** Extra JSON-LD-blokken die aan de <head> worden toegevoegd (al ge-stringificeerd, één <script> per entry). */
   jsonLd?: string[];
@@ -56,7 +58,7 @@ export function injectMeta(shell: string, meta: PageMeta, fragment?: string): st
   );
   html = html.replace(
     /(<meta\s+name="robots"\s+content=")[^"]*(")/,
-    `$1${meta.noindex ? "noindex, nofollow" : "index, follow"}$2`
+    `$1${meta.noindex ? (meta.follow ? "noindex, follow" : "noindex, nofollow") : "index, follow"}$2`
   );
   html = html.replace(/(<meta\s+property="og:url"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.canonicalUrl)}$2`);
   html = html.replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/, `$1${escapeAttr(meta.title)}$2`);
@@ -153,6 +155,7 @@ function metaFromRoute(m: RouteMeta): PageMeta {
     description: m.description,
     canonicalUrl: `${SITE_ORIGIN}${canonicalPath}`,
     noindex: m.noindex,
+    follow: m.follow,
     lang: m.lang,
     jsonLd: breadcrumb ? [breadcrumb] : undefined,
     hreflang: m.canonical || m.noindex ? undefined : hreflangTags(canonicalPath),

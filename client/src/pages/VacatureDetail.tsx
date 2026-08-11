@@ -377,6 +377,12 @@ export default function VacatureDetail() {
                   </Button>
                 </Link>
               </div>
+              <p className="text-purple-100/80 text-sm mt-6">
+                Liever eerst rustig alles invullen?{" "}
+                <Link href="/sollicitatieformulier" className="text-white font-semibold underline underline-offset-2 hover:text-purple-50">
+                  Naar het sollicitatieformulier
+                </Link>
+              </p>
             </RevealSection>
           </div>
         </section>

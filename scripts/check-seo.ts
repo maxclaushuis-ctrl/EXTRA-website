@@ -11,6 +11,12 @@
  *    title-tags op. Zie NieuwsArtikel.tsx voor het concrete geval dat deze
  *    check moest voorkomen.
  *
+ * (P18) De prerender-fragment-checks (punt 4) draaien op elke prerender:true
+ * route, ook een noindex-route zoals /BHG-group of /xebia — prerenderen is
+ * een crawlbaarheids-keuze, los van of de route in de zoekresultaten hoort.
+ * Alleen de title-/description-lengte- en uniciteitschecks (punt 1 en 2)
+ * blijven beperkt tot de indexeerbare set.
+ *
  * Bewust deterministisch en zonder browser/netwerk, zodat hij veilig in de
  * Replit-deploybuild kan draaien.
  */
@@ -67,7 +73,12 @@ for (const m of ROUTE_META) {
 // worden hier dus niet gecontroleerd; scripts/prerender.ts faalt zelf hard als
 // daar een gepubliceerde vacature of blogartikel zonder fragment overblijft —
 // bewust, want dat vereist databasetoegang, wat deze check expres niet heeft.)
-for (const m of ROUTE_META.filter((x) => x.prerender && !x.noindex)) {
+// P18: geen `!x.noindex` meer hier — sinds /BHG-group en /xebia noindex maar
+// wél prerender:true zijn (zie shared/routeMeta.ts), is prerenderen een
+// crawlbaarheids-keuze los van indexeerbaarheid. Alleen punt 1 (title-/
+// description-lengtes) en punt 2 (uniciteit) blijven op de indexeerbare set
+// draaien — die gaan wél over hoe de pagina in de zoekresultaten verschijnt.
+for (const m of ROUTE_META.filter((x) => x.prerender)) {
   const n = normalizeMetaPath(m.path);
   const file = path.join(FRAGMENT_DIR, (n === "/" ? "index" : n.slice(1).replace(/\//g, "__")) + ".html");
   if (!fs.existsSync(file)) {
@@ -100,7 +111,7 @@ for (const m of ROUTE_META.filter((x) => x.prerender && !x.noindex)) {
 // npm run prerender in een omgeving mét DATABASE_URL heeft gedraaid.
 if (fs.existsSync(FRAGMENT_DIR)) {
   const knownFragmentPaths = new Set(
-    ROUTE_META.filter((x) => x.prerender && !x.noindex).map((m) => {
+    ROUTE_META.filter((x) => x.prerender).map((m) => {
       const n = normalizeMetaPath(m.path);
       return n === "/" ? "index.html" : n.slice(1).replace(/\//g, "__") + ".html";
     })

@@ -672,6 +672,18 @@ export default function SollicitatieFormulier() {
             </div>
           </div>
 
+          {/* Alleen op de eerste sectie: link naar de lichtere cv-upload-pagina
+              voor wie geen volledig sollicitatieformulier wil invullen. */}
+          {currentSection === 0 && (
+            <p className="mx-6 mt-6 text-sm text-gray-500">
+              Wil je liever alleen je cv achterlaten?{" "}
+              <a href="/cv-upload" className="text-purple-700 font-semibold underline underline-offset-2 hover:text-purple-800">
+                Ga naar cv-upload
+              </a>
+              .
+            </p>
+          )}
+
           {/* Formulier hersteld banner */}
           {wasRestored && (
             <div className="mx-6 mt-6 flex items-center justify-between gap-3 bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">

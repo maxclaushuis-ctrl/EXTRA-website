@@ -891,6 +891,13 @@ export default function EventPersoneelGezocht() {
                 </div>
               ))}
             </div>
+            <p className="text-purple-200/60 text-sm mt-8 sm:mt-10">
+              Op zoek naar een compleet team voor één specifiek evenement?{" "}
+              <a href="/evenementen-personeel-inhuren" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">
+                Bekijk evenementen personeel inhuren
+              </a>
+              .
+            </p>
           </RevealSection>
         </div>
       </section>
