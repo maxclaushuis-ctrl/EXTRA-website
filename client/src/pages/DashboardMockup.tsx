@@ -41,6 +41,7 @@ import TakenPagina from './dashboard/TakenPagina';
 import WhatsAppAIInstellingen from './dashboard/WhatsAppAIInstellingen';
 import WhatsAppContacten from './dashboard/WhatsAppContacten';
 import WhatsAppTemplates from './dashboard/WhatsAppTemplates';
+import WhatsAppGroepen from './dashboard/WhatsAppGroepen';
 import NotificationCenter from '@/components/NotificationCenter';
 import NotificatieBel from '@/components/NotificatieBel';
 import ProspectStatistiekenDashboard from '@/components/ProspectStatistiekenDashboard';
@@ -4788,6 +4789,9 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
 
           ) : activeTab === 'whatsapp-templates' ? (
             <WhatsAppTemplates />
+
+          ) : activeTab === 'whatsapp-groepsgesprekken' ? (
+            <WhatsAppGroepen />
 
           ) : activeTab === 'crm-leads' ? (
             <CrmLeadsTab />

@@ -12673,6 +12673,113 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     }
   });
 
+  // ─── GROEPSGESPREKKEN (door EXTRA zelf aangemaakte WhatsApp-groepen, max 8
+  // deelnemers) ────────────────────────────────────────────────────────────
+  // Logica in server/whatsapp/groupChats.ts. Bewust een ander URL-segment dan
+  // /api/whatsapp/groups hierboven — dat zijn interne verzendlijsten voor
+  // bulkberichten, geen echte WhatsApp-groep, en de twee mogen niet door
+  // elkaar gaan lopen.
+  const waGroupChats = await import('./whatsapp/groupChats');
+
+  async function huidigeGebruikerNaam(req: Request): Promise<{ userId: number | null; naam: string | null }> {
+    const userId = (req.session as any)?.userId ?? null;
+    if (!userId) return { userId: null, naam: null };
+    const { users: usersTable } = await import('@shared/schema');
+    const rows = await db.select({ firstName: usersTable.firstName, lastName: usersTable.lastName })
+      .from(usersTable).where(drizzleEq(usersTable.id, userId)).limit(1);
+    const naam = rows.length ? `${rows[0].firstName} ${rows[0].lastName}`.trim() : null;
+    return { userId, naam: naam || null };
+  }
+
+  app.get('/api/whatsapp/admin/groepsgesprekken', adminMiddleware, async (_req: Request, res: Response) => {
+    const rows = await waGroupChats.listGroupChats();
+    res.json(rows);
+  });
+
+  app.get('/api/whatsapp/admin/groepsgesprekken/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    const chat = await waGroupChats.getGroupChatById(id);
+    if (!chat) return res.status(404).json({ error: 'Groepsgesprek niet gevonden' });
+    const messages = await waGroupChats.listGroupMessages(id);
+    res.json({ ...chat, messages });
+  });
+
+  app.post('/api/whatsapp/admin/groepsgesprekken', adminMiddleware, async (req: Request, res: Response) => {
+    const { naam, omschrijving, deelnemers } = req.body || {};
+    if (!naam || typeof naam !== 'string' || !naam.trim()) {
+      return res.status(400).json({ error: 'naam is verplicht' });
+    }
+    const { userId, naam: gebruikerNaam } = await huidigeGebruikerNaam(req);
+    try {
+      const result = await waGroupChats.createGroupChat({
+        subject: naam,
+        description: omschrijving ?? null,
+        participants: Array.isArray(deelnemers)
+          ? deelnemers.map((d: any) => ({ phone: d?.telefoon ?? d?.phone ?? '', naam: d?.naam ?? d?.name ?? null }))
+          : [],
+        createdByUserId: userId,
+        createdByName: gebruikerNaam,
+      });
+      if (!result.ok) {
+        return res.status(400).json({ ok: false, error: result.errors?.[0]?.message || result.providerError || 'Onbekende fout', errors: result.errors, providerError: result.providerError });
+      }
+      res.json({ ok: true, groupChat: result.groupChat });
+    } catch (err: any) {
+      console.error('[wa-groepsgesprekken] aanmaken mislukt:', err);
+      res.status(500).json({ ok: false, error: err?.message || 'Onbekende fout bij aanmaken groep' });
+    }
+  });
+
+  app.post('/api/whatsapp/admin/groepsgesprekken/:id/berichten', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    const { tekst } = req.body || {};
+    if (!tekst || typeof tekst !== 'string' || !tekst.trim()) {
+      return res.status(400).json({ error: 'tekst is verplicht' });
+    }
+    const { userId, naam } = await huidigeGebruikerNaam(req);
+    try {
+      const result = await waGroupChats.sendGroupChatMessage(id, tekst, { userId, name: naam });
+      if (!result.ok) {
+        return res.status(400).json({ ok: false, error: result.errors?.[0]?.message || result.providerError || 'Onbekende fout', errors: result.errors, providerError: result.providerError });
+      }
+      res.json({ ok: true, message: result.message });
+    } catch (err: any) {
+      console.error('[wa-groepsgesprekken] versturen mislukt:', err);
+      res.status(500).json({ ok: false, error: err?.message || 'Onbekende fout bij versturen' });
+    }
+  });
+
+  // "Ververs deelnemers" — geen automatische webhook-sync (zie groupChats.ts),
+  // dus dit is de enige manier om de deelnemerslijst/status bij te werken
+  // nadat iemand via de uitnodigingslink is toegetreden.
+  app.post('/api/whatsapp/admin/groepsgesprekken/:id/ververs', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    try {
+      const result = await waGroupChats.refreshParticipants(id);
+      if (!result.ok) return res.status(400).json({ ok: false, error: result.providerError || 'Onbekende fout' });
+      res.json({ ok: true, groupChat: result.groupChat });
+    } catch (err: any) {
+      console.error('[wa-groepsgesprekken] verversen mislukt:', err);
+      res.status(500).json({ ok: false, error: err?.message || 'Onbekende fout bij verversen' });
+    }
+  });
+
+  app.delete('/api/whatsapp/admin/groepsgesprekken/:id/deelnemers/:phone', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    try {
+      const result = await waGroupChats.removeParticipant(id, req.params.phone);
+      if (!result.ok) return res.status(400).json({ error: result.providerError || 'Onbekende fout' });
+      res.json(result.groupChat);
+    } catch (err: any) {
+      console.error('[wa-groepsgesprekken] deelnemer verwijderen mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij verwijderen deelnemer' });
+    }
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   // FASE 1 — CONTACTEN (sollicitanten + kandidaten + medewerkers)
   // ═══════════════════════════════════════════════════════════════════════════

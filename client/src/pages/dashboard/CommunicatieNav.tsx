@@ -1,6 +1,6 @@
 /**
  * De groep COMMUNICATIE uit de linker hoofdnavigatie: WhatsApp · Taken ·
- * Contacten · AI-instellingen.
+ * Contacten · AI-instellingen · Groepsgesprekken.
  *
  * Waarom een eigen component en niet gewoon JSX in DashboardMockup.tsx, waar
  * de andere groepen staan: DashboardMockup hangt aan useAuth(), react-query en
@@ -16,11 +16,11 @@
  * ⚠️ Alle maten en kleuren komen uit huisstijl.ts. Losse px- of hex-waarden
  * horen hier niet — zie de regel boven in dat bestand.
  */
-import { MessageSquare, ListChecks, Users, Sparkles, FileText } from 'lucide-react';
+import { MessageSquare, ListChecks, Users, Sparkles, FileText, UsersRound } from 'lucide-react';
 import { HUISSTIJL } from '@/lib/huisstijl';
 import NavGroepKop from './NavGroepKop';
 
-export type CommunicatieTab = 'whatsapp' | 'whatsapp-taken' | 'whatsapp-contacten' | 'whatsapp-ai' | 'whatsapp-templates';
+export type CommunicatieTab = 'whatsapp' | 'whatsapp-taken' | 'whatsapp-contacten' | 'whatsapp-ai' | 'whatsapp-templates' | 'whatsapp-groepsgesprekken';
 
 interface Props {
   activeTab: string;
@@ -130,6 +130,11 @@ export default function CommunicatieNav({
           <MenuItem icon={Users} label="Contacten" tab="whatsapp-contacten" activeTab={activeTab} onSelect={onSelect} />
           <MenuItem icon={Sparkles} label="AI-instellingen" tab="whatsapp-ai" activeTab={activeTab} onSelect={onSelect} />
           <MenuItem icon={FileText} label="Templates" tab="whatsapp-templates" activeTab={activeTab} onSelect={onSelect} />
+          {/* Eigen item, bewust een ander icoon en label dan "Templates": dit
+              zijn WhatsApp-groepen die je hier zelf aanmaakt om mee te
+              chatten (max 8 deelnemers) — geen relatie met de interne
+              bulk-verzendlijsten die in de backend ook "groepen" heten. */}
+          <MenuItem icon={UsersRound} label="Groepsgesprekken" tab="whatsapp-groepsgesprekken" activeTab={activeTab} onSelect={onSelect} />
         </>
       )}
     </>

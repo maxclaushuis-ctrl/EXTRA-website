@@ -126,6 +126,17 @@ async function postMessages(payload: Record<string, any>): Promise<MetaSendResul
   }
 }
 
+/** Stuur een tekstbericht naar een groep (i.p.v. een los contact) — zie groups-sectie onderin dit bestand. */
+export async function sendGroupTextMessage(groupId: string, body: string): Promise<MetaSendResult> {
+  return postMessages({
+    messaging_product: 'whatsapp',
+    recipient_type: 'group',
+    to: groupId,
+    type: 'text',
+    text: { body },
+  });
+}
+
 /** Stuur een gewoon tekstbericht (binnen het 24-uurs customer-care window). */
 export async function sendTextMessage(to: string, body: string): Promise<MetaSendResult> {
   return postMessages({
@@ -522,6 +533,232 @@ export async function deleteTemplate(name: string): Promise<MetaTemplateResult> 
     const r = await fetch(url, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    return { ok: true };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ─── Groepsbeheer (WhatsApp Groups API, max 8 deelnemers) ──────────────────
+// Aanmaken/lijst gaan via /{PHONE_NUMBER_ID}/groups (net als /messages
+// hierboven); invite-link/info/deelnemers zijn group-id-scoped
+// (/{GROUP_ID}/...). Vereist een Official Business Account (OBA) bij Meta —
+// dat kan ik niet zelf verifiëren, dus een ontbrekende OBA-status komt
+// gewoon als een gewone MetaError terug (meestal een permission-fout), niet
+// als een aparte "not eligible"-tak.
+
+export interface MetaGroupCreateResult {
+  ok: boolean;
+  groupId?: string;
+  inviteLink?: string;
+  error?: MetaError;
+}
+
+export async function createGroup(args: {
+  subject: string;
+  description?: string;
+  joinApprovalMode?: 'auto_approve' | 'approval_required';
+}): Promise<MetaGroupCreateResult> {
+  if (!isMetaConfigured()) {
+    return { ok: false, error: { code: 'not_configured', message: 'META_WA_BOT_ACCESS_TOKEN of META_WA_BOT_PHONE_NUMBER_ID niet ingesteld' } };
+  }
+
+  const url = `${META_GRAPH_BASE_URL}/${phoneNumberId()}/groups`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken()}` },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        subject: args.subject,
+        ...(args.description ? { description: args.description } : {}),
+        ...(args.joinApprovalMode ? { join_approval_mode: args.joinApprovalMode } : {}),
+      }),
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    // Meta's documentatie is niet consistent over of group-id en invite_link
+    // meteen in de create-respons zitten of pas via aparte calls opgehaald
+    // moeten worden — dus beide vormen tolereren en, bij ontbrekende
+    // invite_link, de aanroepende laag (groupChats.ts) die apart laten ophalen.
+    const groupId = data?.id ?? data?.group_id ?? undefined;
+    return {
+      ok: true,
+      groupId: groupId != null ? String(groupId) : undefined,
+      inviteLink: data?.invite_link ?? undefined,
+    };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export interface MetaGroupInviteLinkResult {
+  ok: boolean;
+  inviteLink?: string;
+  error?: MetaError;
+}
+
+/** Haal de (bestaande) uitnodigingslink van een groep op. */
+export async function getGroupInviteLink(groupId: string): Promise<MetaGroupInviteLinkResult> {
+  if (!isMetaConfigured()) {
+    return { ok: false, error: { code: 'not_configured', message: 'META_WA_BOT_ACCESS_TOKEN niet ingesteld' } };
+  }
+
+  const url = `${META_GRAPH_BASE_URL}/${encodeURIComponent(groupId)}/invite_link`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    return { ok: true, inviteLink: data?.invite_link ?? undefined };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export interface MetaGroupParticipant {
+  phone: string;
+  name?: string;
+}
+
+export interface MetaGroupInfoResult {
+  ok: boolean;
+  subject?: string;
+  description?: string;
+  participants?: MetaGroupParticipant[];
+  participantCount?: number;
+  suspended?: boolean;
+  error?: MetaError;
+}
+
+/** Actuele groepsinfo + deelnemerslijst — gebruikt door de "ververs deelnemers"-actie. */
+export async function getGroupInfo(groupId: string): Promise<MetaGroupInfoResult> {
+  if (!isMetaConfigured()) {
+    return { ok: false, error: { code: 'not_configured', message: 'META_WA_BOT_ACCESS_TOKEN niet ingesteld' } };
+  }
+
+  const fields = 'subject,description,participants,join_approval_mode,suspended,total_participant_count';
+  const url = `${META_GRAPH_BASE_URL}/${encodeURIComponent(groupId)}?fields=${fields}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    const participants: MetaGroupParticipant[] = Array.isArray(data?.participants)
+      ? data.participants.map((p: any) => ({
+          phone: String(p?.user ?? p?.wa_id ?? p?.phone ?? ''),
+          name: p?.name ?? undefined,
+        })).filter((p: MetaGroupParticipant) => !!p.phone)
+      : [];
+    return {
+      ok: true,
+      subject: data?.subject ?? undefined,
+      description: data?.description ?? undefined,
+      participants,
+      participantCount: typeof data?.total_participant_count === 'number' ? data.total_participant_count : participants.length,
+      suspended: !!data?.suspended,
+    };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export interface MetaGroupActionResult {
+  ok: boolean;
+  error?: MetaError;
+}
+
+/** Verwijder één of meer deelnemers uit een groep. */
+export async function removeGroupParticipants(groupId: string, phones: string[]): Promise<MetaGroupActionResult> {
+  if (!isMetaConfigured()) {
+    return { ok: false, error: { code: 'not_configured', message: 'META_WA_BOT_ACCESS_TOKEN niet ingesteld' } };
+  }
+  if (phones.length === 0) return { ok: true };
+
+  const url = `${META_GRAPH_BASE_URL}/${encodeURIComponent(groupId)}/participants`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken()}` },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        participants: phones.map(user => ({ user })),
+      }),
       signal: controller.signal,
     });
     const rawText = await r.text();
