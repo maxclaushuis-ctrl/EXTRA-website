@@ -937,6 +937,16 @@ export default function Aanmelden() {
           {step !== "success" && step !== "rejected" && <ProgressBarComponent stepNumber={stepNumber} t={t} />}
 
           {step === "basics" && (
+            <p className="text-center text-sm text-white/60 mb-4 sm:mb-5">
+              {lang === "NL" ? (
+                <>Wil je alleen je cv achterlaten zonder de hele aanmelding? <a href="/cv-upload" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">Ga naar cv-upload</a>.</>
+              ) : (
+                <>Just want to drop off your CV without the full sign-up? <a href="/cv-upload" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">Go to CV upload</a>.</>
+              )}
+            </p>
+          )}
+
+          {step === "basics" && (
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-950/50 border border-white/10 p-6 sm:p-10 lg:p-12">
               <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-2">

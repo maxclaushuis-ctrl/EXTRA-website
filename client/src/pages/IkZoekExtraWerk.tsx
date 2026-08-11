@@ -1137,6 +1137,13 @@ export default function IkZoekExtraWerk() {
                 Stel een vraag via WhatsApp <ChevronRight className="w-5 h-5" />
               </a>
             </div>
+            <p className="text-purple-200/70 text-sm mt-6">
+              Of vul direct het{" "}
+              <Link href="/sollicitatieformulier" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">
+                sollicitatieformulier
+              </Link>{" "}
+              in.
+            </p>
           </RevealSection>
         </div>
       </section>
