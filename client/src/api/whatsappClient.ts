@@ -521,6 +521,86 @@ export const stuurTemplateBericht = (
   extraVariabelen?: Record<string, string>,
 ) => post<BulkSendResult>(`/groups/${groupId}/send`, { templateKey, reason, extraVariabelen });
 
+// ─── Groepsgesprekken (door EXTRA zelf aangemaakte WhatsApp-groepen, max 8
+// deelnemers) — ander concept dan Group/GroupMember hierboven, die zijn
+// interne verzendlijsten voor bulkberichten, geen echte WhatsApp-groep. ────
+export type GroupChatStatus = 'active' | 'suspended' | 'deleted';
+
+export interface GroupChatParticipant {
+  phone: string;
+  naam: string | null;
+}
+
+export interface GroupChat {
+  id: number;
+  providerGroupId: string;
+  subject: string;
+  description: string | null;
+  inviteLink: string | null;
+  joinApprovalMode: string;
+  participants: GroupChatParticipant[];
+  participantCount: number;
+  status: GroupChatStatus;
+  createdByUserId: number | null;
+  createdByName: string | null;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  participantsSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GroupChatMessage {
+  id: number;
+  groupChatId: number;
+  direction: 'inbound' | 'outbound';
+  waMessageId: string | null;
+  participantPhone: string | null;
+  participantName: string | null;
+  messageType: string;
+  body: string | null;
+  sentByUserId: number | null;
+  sentByName: string | null;
+  status: string;
+  errorCode: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+export interface GroupChatDetail extends GroupChat {
+  messages: GroupChatMessage[];
+}
+
+export interface GroupChatValidationError { field: string; message: string; }
+
+export interface GroupChatActionResult {
+  ok: boolean;
+  groupChat?: GroupChat;
+  message?: GroupChatMessage;
+  errors?: GroupChatValidationError[];
+  providerError?: string;
+  error?: string;
+}
+
+export const haalGroepsgesprekken = () => get<GroupChat[]>('/admin/groepsgesprekken');
+export const haalGroepsgesprek = (id: number) => get<GroupChatDetail>(`/admin/groepsgesprekken/${id}`);
+
+export const maakGroepsgesprek = (input: {
+  naam: string;
+  omschrijving?: string;
+  deelnemers?: Array<{ telefoon: string; naam?: string }>;
+}) => postAction<GroupChatActionResult>(`/admin/groepsgesprekken`, input);
+
+export const stuurGroepsBericht = (id: number, tekst: string) =>
+  postAction<GroupChatActionResult>(`/admin/groepsgesprekken/${id}/berichten`, { tekst });
+
+/** "Ververs deelnemers" — geen automatische sync, zie server/whatsapp/groupChats.ts. */
+export const versGroepsgesprek = (id: number) =>
+  postAction<GroupChatActionResult>(`/admin/groepsgesprekken/${id}/ververs`, undefined);
+
+export const verwijderGroepsDeelnemer = (id: number, phone: string) =>
+  del<GroupChat>(`/admin/groepsgesprekken/${id}/deelnemers/${encodeURIComponent(phone)}`);
+
 export interface ImportCandidate {
   id: number;
   name: string;

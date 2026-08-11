@@ -1768,6 +1768,77 @@ export const whatsappTemplates = pgTable("whatsapp_templates", {
 export type WhatsappTemplate = typeof whatsappTemplates.$inferSelect;
 export type InsertWhatsappTemplate = typeof whatsappTemplates.$inferInsert;
 
+// ─── WhatsApp-groepsgesprekken: door EXTRA zelf aangemaakte groepen (max 8
+// deelnemers, de grens van de WhatsApp Groups API) met klanten/medewerkers —
+// zodat zo'n gesprek niet meer op de eigen telefoon van één planner staat,
+// maar voor iedereen in het dashboard zichtbaar en te gebruiken is.
+//
+// Bewust een aparte tabel en NIET hetzelfde als whatsappGroups/
+// whatsappGroupMembers hierboven: die zijn interne verzendlijsten voor
+// bulkberichten (géén echte WhatsApp-groep — geen provider group_id, geen
+// wederzijds gesprek). Een groepsgesprek loopt ook NIET door de matcher/
+// AI-classificatie/taken-pijplijn van whatsapp_conversations: het heeft geen
+// kandidaat/prospect-eigenaar, en de AI reageert er niet automatisch in.
+export const whatsappGroupChatStatusEnum = pgEnum('whatsapp_group_chat_status', ['active', 'suspended', 'deleted']);
+
+export const whatsappGroupChats = pgTable("whatsapp_group_chats", {
+  id: serial("id").primaryKey(),
+  // Group-ID zoals de provider (Meta/360dialog) teruggeeft bij het aanmaken.
+  providerGroupId: text("provider_group_id").notNull(),
+  subject: text("subject").notNull(),
+  description: text("description"),
+  inviteLink: text("invite_link"),
+  joinApprovalMode: text("join_approval_mode").notNull().default('auto_approve'),
+  // { phone, naam }[] — lokale kopie voor weergave. Ververst via de
+  // "ververs deelnemers"-actie (GET .../groups/:id?fields=participants) en
+  // NIET automatisch via een group_participants_update-webhook: het exacte
+  // schema daarvan kon ik bij het bouwen niet met zekerheid vaststellen, dus
+  // liever een handmatige, betrouwbare ververs-knop dan aannames op een
+  // ongeverifieerd webhook-formaat.
+  participants: jsonb("participants").notNull().default([]),
+  participantCount: integer("participant_count").notNull().default(0),
+  status: whatsappGroupChatStatusEnum("status").notNull().default('active'),
+  createdByUserId: integer("created_by_user_id").references(() => users.id, { onDelete: 'set null' }),
+  createdByName: text("created_by_name"),
+  lastMessageAt: timestamp("last_message_at"),
+  lastMessagePreview: text("last_message_preview"),
+  participantsSyncedAt: timestamp("participants_synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  providerGroupIdx: uniqueIndex("wa_group_chat_provider_id_unique").on(table.providerGroupId),
+  statusIdx: index("wa_group_chat_status_idx").on(table.status),
+}));
+
+export const whatsappGroupMessages = pgTable("whatsapp_group_messages", {
+  id: serial("id").primaryKey(),
+  groupChatId: integer("group_chat_id").references(() => whatsappGroupChats.id, { onDelete: 'cascade' }).notNull(),
+  direction: whatsappDirectionEnum("direction").notNull(),
+  waMessageId: text("wa_message_id"),
+  // Bij inbound: het (genormaliseerde) nummer van de deelnemer die het
+  // bericht stuurde. Bij outbound: null — verstuurd namens EXTRA als geheel,
+  // niet namens één los deelnemer.
+  participantPhone: text("participant_phone"),
+  participantName: text("participant_name"),
+  messageType: text("message_type").notNull().default('text'),
+  body: text("body"),
+  rawPayload: jsonb("raw_payload"),
+  sentByUserId: integer("sent_by_user_id").references(() => users.id, { onDelete: 'set null' }),
+  sentByName: text("sent_by_name"),
+  status: text("status").notNull().default('received'),
+  errorCode: text("error_code"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  groupIdx: index("wa_group_msg_group_idx").on(table.groupChatId, table.createdAt),
+  waIdIdx: uniqueIndex("wa_group_msg_wa_id_unique").on(table.waMessageId),
+}));
+
+export type WhatsappGroupChat = typeof whatsappGroupChats.$inferSelect;
+export type InsertWhatsappGroupChat = typeof whatsappGroupChats.$inferInsert;
+export type WhatsappGroupChatMessage = typeof whatsappGroupMessages.$inferSelect;
+export type InsertWhatsappGroupChatMessage = typeof whatsappGroupMessages.$inferInsert;
+
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
 export type WhatsappConversation = typeof whatsappConversations.$inferSelect;

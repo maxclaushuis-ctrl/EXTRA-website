@@ -62,6 +62,22 @@ export interface InboundProcessorDeps {
   /** Auto-reply-trigger; optioneel (bv. uit in tests). */
   tryAutoReply?: (opts: AutoReplyArgs) => Promise<void>;
   /**
+   * Groepsgesprekken (whatsapp_group_chats) — optioneel zodat bestaande
+   * tests die geen groepen injecteren gewoon blijven werken; zonder deze
+   * deps wordt een groepsbericht gelogd en overgeslagen, nooit een crash.
+   */
+  groupChats?: {
+    insertInboundGroupMessage(args: {
+      providerGroupId: string;
+      waMessageId: string | null;
+      participantPhone: string | null;
+      participantName: string | null;
+      messageType: string;
+      body: string;
+      rawPayload: any;
+    }): Promise<number | null>;
+  };
+  /**
    * Media binnenhalen bij de provider en in Object Storage zetten. Injecteerbaar
    * zodat tests geen netwerk en geen bucket nodig hebben.
    */
@@ -81,7 +97,8 @@ async function defaultDeps(): Promise<InboundProcessorDeps> {
   const optInService = await import('./optInService');
   const { normalizePhone } = await import('./phone');
   const { haalMediaOpEnBewaar } = await import('./mediaService');
-  return { storage, optInService, normalizePhone, haalMediaOpEnBewaar };
+  const groupChats = await import('./groupChats');
+  return { storage, optInService, normalizePhone, haalMediaOpEnBewaar, groupChats };
 }
 
 /** Types waarvan Meta een media-id meestuurt dat wij kunnen ophalen. */
@@ -118,7 +135,7 @@ export async function processIncomingPayload(
   const base = (deps?.storage && deps?.optInService && deps?.normalizePhone)
     ? (deps as InboundProcessorDeps)
     : { ...(await defaultDeps()), ...deps };
-  const { storage, optInService, normalizePhone, tryAutoReply, haalMediaOpEnBewaar } = base;
+  const { storage, optInService, normalizePhone, tryAutoReply, haalMediaOpEnBewaar, groupChats } = base;
   const logPrefix = base.logPrefix || '[WA webhook]';
 
   /**
@@ -214,13 +231,52 @@ export async function processIncomingPayload(
           try {
             const fromRaw = String(msg.from || '');
             const normalizedFrom = normalizePhone(fromRaw);
+            const type: string = msg.type || 'unknown';
+
+            // Groepsbericht (msg.group_id aanwezig): eigen, veel eenvoudigere
+            // tak, die nooit doorvalt naar de 1-op-1 matcher/AI-pijplijn
+            // hieronder — een groep heeft geen kandidaat/prospect-eigenaar.
+            // Zie server/whatsapp/groupChats.ts. Bewust VOOR de
+            // ongeldig-from-nummer-guard: een groepsbericht mag niet
+            // wegvallen op een niet-normaliseerbaar deelnemersnummer, dat
+            // wordt dan gewoon null.
+            if (msg.group_id) {
+              if (type === 'revoke' || type === 'edit') {
+                console.log(`${logPrefix} groepsbericht ${type} (group_id=${msg.group_id}) → alleen gelogd, geen wijziging`);
+                continue;
+              }
+              if (!groupChats) {
+                console.warn(`${logPrefix} groepsbericht ontvangen (group_id=${msg.group_id}) maar groupChats-deps ontbreken → overgeslagen`);
+                continue;
+              }
+              const groupBody = type === 'text' ? (msg.text?.body || '') : storage.describeNonTextMessage(type, msg);
+              try {
+                const inserted = await groupChats.insertInboundGroupMessage({
+                  providerGroupId: String(msg.group_id),
+                  waMessageId: msg.id || null,
+                  participantPhone: normalizedFrom,
+                  participantName: contactProfile || null,
+                  messageType: type === 'text' ? 'text' : 'unknown',
+                  body: groupBody,
+                  rawPayload: msg,
+                });
+                if (inserted === null) {
+                  console.log(`${logPrefix} groepsbericht overgeslagen (onbekende groep of duplicate, group_id=${msg.group_id})`);
+                } else {
+                  console.log(`${logPrefix} inbound groepsbericht van ${normalizedFrom || '?'} in group_id=${msg.group_id}`);
+                }
+              } catch (e: any) {
+                console.error(`${logPrefix} fout bij verwerken groepsbericht:`, e?.message);
+              }
+              continue;
+            }
+
             if (!normalizedFrom) {
               console.warn(`${logPrefix} ongeldig from-nummer: "${fromRaw}"`);
               continue;
             }
 
             const at = msg.timestamp ? new Date(Number(msg.timestamp) * 1000) : new Date();
-            const type: string = msg.type || 'unknown';
 
             // Intrekken en bewerken: alleen loggen — dezelfde afspraak als bij
             // de app-echo's hieronder. Zonder deze guard viel een 'edit' door

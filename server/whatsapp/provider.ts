@@ -521,3 +521,231 @@ export async function deleteTemplate(name: string): Promise<ProviderTemplateResu
   }
   return d360DeleteTemplate(name);
 }
+
+// ─── Groepsbeheer (WhatsApp Groups API, max 8 deelnemers) ──────────────────
+// Zelfde provider-switch als bij templates. 360dialog-endpoints volgens
+// docs.360dialog.com/docs/messaging/groups/group-management — payloadvorm is
+// voor beide providers identiek (die van Meta's eigen Graph API), alleen het
+// transport wisselt.
+
+export interface ProviderGroupCreateResult {
+  ok: boolean;
+  groupId?: string;
+  inviteLink?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  provider: WhatsAppProviderName;
+}
+
+export interface ProviderGroupParticipant {
+  phone: string;
+  name?: string;
+}
+
+export interface ProviderGroupInfoResult {
+  ok: boolean;
+  subject?: string;
+  description?: string;
+  participants?: ProviderGroupParticipant[];
+  participantCount?: number;
+  suspended?: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+  provider: WhatsAppProviderName;
+}
+
+export interface ProviderGroupActionResult {
+  ok: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+  provider: WhatsAppProviderName;
+}
+
+function d360GroupsBaseUrl(): string {
+  return `${d360BaseUrl()}/groups`;
+}
+
+function d360ParseError(data: any, r: Response, responseText: string): { errorCode: string; errorMessage: string } {
+  const errorMsg = data?.error?.message || data?.message || responseText.slice(0, 500);
+  return {
+    errorCode: data?.error?.code ? String(data.error.code) : String(r.status),
+    errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+  };
+}
+
+async function d360CreateGroup(args: {
+  subject: string;
+  description?: string;
+  joinApprovalMode?: 'auto_approve' | 'approval_required';
+}): Promise<ProviderGroupCreateResult> {
+  try {
+    const r = await fetch(d360GroupsBaseUrl(), {
+      method: 'POST',
+      headers: d360Headers(),
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        subject: args.subject,
+        ...(args.description ? { description: args.description } : {}),
+        ...(args.joinApprovalMode ? { join_approval_mode: args.joinApprovalMode } : {}),
+      }),
+    });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, provider: '360dialog', ...d360ParseError(data, r, responseText) };
+    }
+    const groupId = data?.id ?? data?.group_id ?? undefined;
+    return {
+      ok: true,
+      provider: '360dialog',
+      groupId: groupId != null ? String(groupId) : undefined,
+      inviteLink: data?.invite_link ?? undefined,
+    };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+async function d360GetGroupInviteLink(groupId: string): Promise<{ ok: boolean; inviteLink?: string; errorCode?: string; errorMessage?: string }> {
+  try {
+    const r = await fetch(`${d360GroupsBaseUrl()}/${encodeURIComponent(groupId)}/invite_link`, {
+      method: 'GET',
+      headers: d360Headers(),
+    });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+    if (!r.ok || data?.error) {
+      return { ok: false, ...d360ParseError(data, r, responseText) };
+    }
+    return { ok: true, inviteLink: data?.invite_link ?? undefined };
+  } catch (err: any) {
+    return { ok: false, errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+async function d360GetGroupInfo(groupId: string): Promise<ProviderGroupInfoResult> {
+  try {
+    const fields = 'subject,description,participants,join_approval_mode,suspended,total_participant_count';
+    const r = await fetch(`${d360GroupsBaseUrl()}/${encodeURIComponent(groupId)}?fields=${fields}`, {
+      method: 'GET',
+      headers: d360Headers(),
+    });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+    if (!r.ok || data?.error) {
+      return { ok: false, provider: '360dialog', ...d360ParseError(data, r, responseText) };
+    }
+    const participants: ProviderGroupParticipant[] = Array.isArray(data?.participants)
+      ? data.participants.map((p: any) => ({
+          phone: String(p?.user ?? p?.wa_id ?? p?.phone ?? ''),
+          name: p?.name ?? undefined,
+        })).filter((p: ProviderGroupParticipant) => !!p.phone)
+      : [];
+    return {
+      ok: true,
+      provider: '360dialog',
+      subject: data?.subject ?? undefined,
+      description: data?.description ?? undefined,
+      participants,
+      participantCount: typeof data?.total_participant_count === 'number' ? data.total_participant_count : participants.length,
+      suspended: !!data?.suspended,
+    };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+async function d360RemoveGroupParticipants(groupId: string, phones: string[]): Promise<ProviderGroupActionResult> {
+  if (phones.length === 0) return { ok: true, provider: '360dialog' };
+  try {
+    const r = await fetch(`${d360GroupsBaseUrl()}/${encodeURIComponent(groupId)}/participants`, {
+      method: 'DELETE',
+      headers: d360Headers(),
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        participants: phones.map(user => ({ user })),
+      }),
+    });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+    if (!r.ok || data?.error) {
+      return { ok: false, provider: '360dialog', ...d360ParseError(data, r, responseText) };
+    }
+    return { ok: true, provider: '360dialog' };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+/** Maak een nieuwe WhatsApp-groep aan bij de actieve provider (max 8 deelnemers, join via uitnodigingslink). */
+export async function createGroup(args: {
+  subject: string;
+  description?: string;
+  joinApprovalMode?: 'auto_approve' | 'approval_required';
+}): Promise<ProviderGroupCreateResult> {
+  if (activeProvider() === 'meta') {
+    const res = await metaClient.createGroup(args);
+    if (res.ok) return { ok: true, provider: 'meta', groupId: res.groupId, inviteLink: res.inviteLink };
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  return d360CreateGroup(args);
+}
+
+/** Haal de uitnodigingslink van een groep op bij de actieve provider. */
+export async function getGroupInviteLink(groupId: string): Promise<{ ok: boolean; inviteLink?: string; errorCode?: string; errorMessage?: string; provider: WhatsAppProviderName }> {
+  const provider = activeProvider();
+  if (provider === 'meta') {
+    const res = await metaClient.getGroupInviteLink(groupId);
+    if (res.ok) return { ok: true, provider: 'meta', inviteLink: res.inviteLink };
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  const res = await d360GetGroupInviteLink(groupId);
+  return { ...res, provider: '360dialog' };
+}
+
+/** Haal actuele groepsinfo + deelnemerslijst op bij de actieve provider — "ververs deelnemers". */
+export async function getGroupInfo(groupId: string): Promise<ProviderGroupInfoResult> {
+  if (activeProvider() === 'meta') {
+    const res = await metaClient.getGroupInfo(groupId);
+    if (res.ok) {
+      return {
+        ok: true,
+        provider: 'meta',
+        subject: res.subject,
+        description: res.description,
+        participants: res.participants,
+        participantCount: res.participantCount,
+        suspended: res.suspended,
+      };
+    }
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  return d360GetGroupInfo(groupId);
+}
+
+/** Verwijder één of meer deelnemers uit een groep bij de actieve provider. */
+export async function removeGroupParticipants(groupId: string, phones: string[]): Promise<ProviderGroupActionResult> {
+  if (activeProvider() === 'meta') {
+    const res = await metaClient.removeGroupParticipants(groupId, phones);
+    if (res.ok) return { ok: true, provider: 'meta' };
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  return d360RemoveGroupParticipants(groupId, phones);
+}
+
+/** Stuur een tekstbericht naar een groep via de actieve provider. */
+export async function sendGroupText(groupId: string, body: string): Promise<ProviderSendResult> {
+  if (activeProvider() === 'meta') {
+    return fromMetaResult(await metaClient.sendGroupTextMessage(groupId, body));
+  }
+  return d360PostMessages({ messaging_product: 'whatsapp', recipient_type: 'group', to: groupId, type: 'text', text: { body } });
+}
