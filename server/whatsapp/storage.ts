@@ -285,7 +285,20 @@ export async function listConversations(args: {
     else if (gesnoozed) displayStatus = 'gesnoozed';
     else if (aiLast) displayStatus = 'afgehandeld_ai';
     else displayStatus = 'open';
-    return { ...c, aiHandledLast: aiLast, displayStatus, importedContactName: null as string | null };
+    return {
+      ...c,
+      aiHandledLast: aiLast,
+      displayStatus,
+      importedContactName: null as string | null,
+      // Best-effort (of handmatig gecorrigeerde) voornaam/achternaam van de
+      // eenmalige contactenimport — zie het blok hieronder. Nodig zodat het
+      // profielpaneel deze apart kan tonen/bewerken i.p.v. alleen de
+      // samengevoegde naam (die overal in dit bestand "importedContactName"
+      // heet); templates lezen dit overigens niet rechtstreeks, alleen
+      // whatsapp_group_members (zie routes.ts resolveValue).
+      importedFirstName: null as string | null,
+      importedLastName: null as string | null,
+    };
   });
 
   // Eenmalige contactenimport (augustus 2026) als laatste redmiddel voor een
@@ -302,14 +315,23 @@ export async function listConversations(args: {
     }
     if (genormaliseerd.size > 0) {
       const gevonden = await db
-        .select({ phone: whatsappImportedContacts.phone, name: whatsappImportedContacts.name })
+        .select({
+          phone: whatsappImportedContacts.phone,
+          name: whatsappImportedContacts.name,
+          firstName: whatsappImportedContacts.firstName,
+          lastName: whatsappImportedContacts.lastName,
+        })
         .from(whatsappImportedContacts)
         .where(inArray(whatsappImportedContacts.phone, Array.from(genormaliseerd.keys())));
-      const naamPerNummer = new Map(gevonden.map(g => [g.phone, g.name]));
+      const perNummer = new Map(gevonden.map(g => [g.phone, g]));
       for (const c of resultaat) {
         if (c.displayName) continue;
         const n = normalizePhone(c.phoneNumber);
-        if (n) c.importedContactName = naamPerNummer.get(n) ?? null;
+        const g = n ? perNummer.get(n) : undefined;
+        if (!g) continue;
+        c.importedContactName = g.name ?? null;
+        c.importedFirstName = g.firstName ?? null;
+        c.importedLastName = g.lastName ?? null;
       }
     }
   }

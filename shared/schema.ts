@@ -1593,11 +1593,23 @@ export const whatsappConversations = pgTable("whatsapp_conversations", {
  * mee in die lijsten of tellers, en wordt nergens anders gebruikt dan als
  * fallback-naam in de WhatsApp-inbox (zie server/whatsapp/storage.ts,
  * listConversations). Gevuld door scripts/import-contacten.ts.
+ *
+ * firstName/lastName (later toegevoegd): `name` komt rechtstreeks uit iemands
+ * telefoon-adresboek ("Saved Name") en is daardoor van alles — een echte naam,
+ * een rol ("Chef Jan"), een bedrijf ("Hotel Okura - Marie"), soms maar één
+ * woord. Voor {voornaam}-variabelen in templates is een losse voornaam nodig,
+ * dus deze twee kolommen: gevuld via een best-effort gok (eerste woord =
+ * voornaam, rest = achternaam — zie scripts/split-imported-contact-names.ts
+ * en server/whatsapp/nameLogic.ts) en daarna vrij te corrigeren per contact
+ * via het profielpaneel. Nooit automatisch overschreven zodra een van
+ * beiden gezet is — zie de backfillscript-voorwaarde.
  */
 export const whatsappImportedContacts = pgTable("whatsapp_imported_contacts", {
   id: serial("id").primaryKey(),
   phone: text("phone").notNull(),   // genormaliseerd via server/whatsapp/phone.ts, zelfde formaat als whatsapp_conversations.phone_number
   name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   importedAt: timestamp("imported_at").defaultNow().notNull(),
 }, (table) => ({
   phoneIdx: uniqueIndex("wa_imported_contacts_phone_unique").on(table.phone),
