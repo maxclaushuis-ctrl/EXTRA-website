@@ -118,6 +118,70 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS own_reaction_emoji text
       `),
   },
+  {
+    // Migratie 0016 — zie migrations/manual/0016_wa_templates/
+    omschrijving: "whatsapp_templates: enums (category, status)",
+    uitvoeren: () =>
+      db.execute(sql`
+        DO $$ BEGIN
+          CREATE TYPE whatsapp_template_category AS ENUM ('UTILITY', 'MARKETING');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      `).then(() => db.execute(sql`
+        DO $$ BEGIN
+          CREATE TYPE whatsapp_template_status AS ENUM ('concept', 'in_review', 'approved', 'rejected');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      `)),
+  },
+  {
+    // Migratie 0016 — zie migrations/manual/0016_wa_templates/
+    omschrijving: "whatsapp_templates: tabel voor templates-beheer (aanmaken/indienen/statussync)",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS whatsapp_templates (
+          id                 serial PRIMARY KEY,
+          key                text NOT NULL,
+          name               text NOT NULL,
+          description        text,
+          category           whatsapp_template_category NOT NULL DEFAULT 'UTILITY',
+          language           text NOT NULL DEFAULT 'nl',
+          body_preview       text NOT NULL DEFAULT '',
+          variables          jsonb NOT NULL DEFAULT '[]',
+          status             whatsapp_template_status NOT NULL DEFAULT 'concept',
+          cta_signup         boolean NOT NULL DEFAULT false,
+          button_text        text,
+          button_url         text,
+          button_dynamic     boolean NOT NULL DEFAULT false,
+          button_example     text,
+          example_values     jsonb NOT NULL DEFAULT '{}',
+          meta_status_reason text,
+          meta_status_raw    text,
+          submitted_at       timestamp,
+          status_synced_at   timestamp,
+          created_at         timestamp NOT NULL DEFAULT now(),
+          updated_at         timestamp NOT NULL DEFAULT now()
+        )
+      `),
+  },
+  {
+    omschrijving: "whatsapp_templates: unieke index op key + index op status",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS wa_template_key_unique ON whatsapp_templates (key)
+      `).then(() => db.execute(sql`
+        CREATE INDEX IF NOT EXISTS wa_template_status_idx ON whatsapp_templates (status)
+      `)),
+  },
+  {
+    // Templates versturen loopt via de bestaande groepen/bulkverzending —
+    // deze twee kolommen onderscheiden een template-verzending van vrije tekst.
+    omschrijving: "whatsapp_bulk_sends: template_key en reason (voor template-verzendingen)",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE whatsapp_bulk_sends
+          ADD COLUMN IF NOT EXISTS template_key text,
+          ADD COLUMN IF NOT EXISTS reason       text
+      `),
+  },
 ];
 
 /**

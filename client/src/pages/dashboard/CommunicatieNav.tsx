@@ -16,11 +16,11 @@
  * ⚠️ Alle maten en kleuren komen uit huisstijl.ts. Losse px- of hex-waarden
  * horen hier niet — zie de regel boven in dat bestand.
  */
-import { MessageSquare, ListChecks, Users, Sparkles } from 'lucide-react';
+import { MessageSquare, ListChecks, Users, Sparkles, FileText } from 'lucide-react';
 import { HUISSTIJL } from '@/lib/huisstijl';
 import NavGroepKop from './NavGroepKop';
 
-export type CommunicatieTab = 'whatsapp' | 'whatsapp-taken' | 'whatsapp-contacten' | 'whatsapp-ai';
+export type CommunicatieTab = 'whatsapp' | 'whatsapp-taken' | 'whatsapp-contacten' | 'whatsapp-ai' | 'whatsapp-templates';
 
 interface Props {
   activeTab: string;
@@ -129,6 +129,7 @@ export default function CommunicatieNav({
 
           <MenuItem icon={Users} label="Contacten" tab="whatsapp-contacten" activeTab={activeTab} onSelect={onSelect} />
           <MenuItem icon={Sparkles} label="AI-instellingen" tab="whatsapp-ai" activeTab={activeTab} onSelect={onSelect} />
+          <MenuItem icon={FileText} label="Templates" tab="whatsapp-templates" activeTab={activeTab} onSelect={onSelect} />
         </>
       )}
     </>

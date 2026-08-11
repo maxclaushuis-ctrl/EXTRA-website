@@ -1708,8 +1708,65 @@ export const whatsappBulkSends = pgTable("whatsapp_bulk_sends", {
   failedCount: integer("failed_count").default(0).notNull(),
   sentByUserId: integer("sent_by_user_id"),
   sentByName: text("sent_by_name"),
+  // Gezet wanneer deze verzending een goedgekeurd WhatsApp-template gebruikte
+  // (i.p.v. vrije tekst) — verwijst naar whatsapp_templates.key. Null voor
+  // alle bestaande en toekomstige vrije-tekst bulkverzendingen.
+  templateKey: text("template_key"),
+  // Verplichte aanleiding bij template-verzendingen, voor het audit-spoor.
+  reason: text("reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ─── WhatsApp templates: aanmaken, indienen bij de provider, statussync ─────
+// Versturen van een goedgekeurd template naar ontvangers loopt bewust NIET
+// via een eigen opt-in/ontvanger-systeem, maar via de bestaande groepen
+// (whatsappGroups/whatsappGroupMembers) en whatsappBulkSends hierboven —
+// zie server/routes.ts POST /api/whatsapp/groups/:id/send.
+export const whatsappTemplateCategoryEnum = pgEnum('whatsapp_template_category', ['UTILITY', 'MARKETING']);
+export const whatsappTemplateStatusEnum = pgEnum('whatsapp_template_status', ['concept', 'in_review', 'approved', 'rejected']);
+
+export const whatsappTemplates = pgTable("whatsapp_templates", {
+  id: serial("id").primaryKey(),
+  // Slug + exacte naam waaronder het template bij de provider (Meta/360dialog)
+  // wordt geregistreerd. Uniek, wordt na indienen niet meer gewijzigd.
+  key: text("key").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: whatsappTemplateCategoryEnum("category").notNull().default('UTILITY'),
+  language: text("language").notNull().default('nl'),
+  // Bodytekst met leesbare {variabele}-placeholders (bv. "Hoi {voornaam}"),
+  // NIET de Meta-vorm {{1}} — die conversie gebeurt pas bij het indienen,
+  // zie toProviderBodyText() in server/whatsapp/templates.ts.
+  bodyPreview: text("body_preview").notNull().default(''),
+  // Geordende lijst van variabelenamen (eerste-voorkomen-volgorde in
+  // bodyPreview). Enige bron van waarheid voor de positionele mapping naar
+  // {{1}}, {{2}}, ... — zie extractVariables() in templates.ts.
+  variables: jsonb("variables").notNull().default([]),
+  // Uitsluitend afgeleid van de provider-status (mapProviderStatus in
+  // templates.ts) — er is bewust geen handmatige "goedgekeurd"-vinkje.
+  status: whatsappTemplateStatusEnum("status").notNull().default('concept'),
+  // Vaste "Aanmelden"-knop met dynamische shift-deeplink; wint altijd van
+  // buttonText/buttonUrl hieronder wanneer beide gezet zouden zijn.
+  ctaSignup: boolean("cta_signup").notNull().default(false),
+  buttonText: text("button_text"),
+  buttonUrl: text("button_url"),
+  buttonDynamic: boolean("button_dynamic").notNull().default(false),
+  buttonExample: text("button_example"),
+  // { variabele: voorbeeldwaarde } — verplicht per variabele vóór indienen.
+  exampleValues: jsonb("example_values").notNull().default({}),
+  metaStatusReason: text("meta_status_reason"),
+  metaStatusRaw: text("meta_status_raw"),
+  submittedAt: timestamp("submitted_at"),
+  statusSyncedAt: timestamp("status_synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  keyIdx: uniqueIndex("wa_template_key_unique").on(table.key),
+  statusIdx: index("wa_template_status_idx").on(table.status),
+}));
+
+export type WhatsappTemplate = typeof whatsappTemplates.$inferSelect;
+export type InsertWhatsappTemplate = typeof whatsappTemplates.$inferInsert;
 
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;

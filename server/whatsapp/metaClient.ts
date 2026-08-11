@@ -377,3 +377,171 @@ export async function downloadMedia(mediaId: string): Promise<MetaMediaDownload>
     clearTimeout(timer);
   }
 }
+
+// ─── Template-beheer (aanmaken/indienen, opvragen, verwijderen) ────────────
+// Deze drie calls gaan naar de WABA (/{WABA_ID}/message_templates), NIET naar
+// de phone-number-id-scoped /messages-endpoint hierboven — vandaar wabaId()
+// i.p.v. phoneNumberId() en een aparte configuratiecheck.
+
+function templatesConfigured(): boolean {
+  return !!(accessToken() && wabaId());
+}
+
+function templatesNotConfiguredError(): MetaError {
+  return { code: 'not_configured', message: 'META_WA_BOT_ACCESS_TOKEN of META_WA_BOT_WABA_ID niet ingesteld' };
+}
+
+export interface MetaTemplateResult {
+  ok: boolean;
+  id?: string;
+  status?: string;
+  category?: string;
+  error?: MetaError;
+}
+
+/**
+ * Dien een nieuw template in voor goedkeuring bij Meta. `components` volgt
+ * exact de Graph API-vorm: [{ type:'BODY', text, example:{body_text:[[...]]} },
+ * optioneel { type:'BUTTONS', buttons:[{type:'URL',text,url,example?:[...]}] }].
+ * Geeft het door Meta toegekende `status` terug (meestal 'PENDING' direct na
+ * indienen) — zie mapProviderStatus() in templates.ts voor de vertaling.
+ */
+export async function submitTemplate(args: {
+  name: string;
+  language: string;
+  category: 'UTILITY' | 'MARKETING';
+  components: any[];
+}): Promise<MetaTemplateResult> {
+  if (!templatesConfigured()) return { ok: false, error: templatesNotConfiguredError() };
+
+  const url = `${META_GRAPH_BASE_URL}/${wabaId()}/message_templates`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken()}` },
+      body: JSON.stringify({
+        name: args.name,
+        language: args.language,
+        category: args.category,
+        components: args.components,
+      }),
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    return { ok: true, id: data?.id ? String(data.id) : undefined, status: data?.status, category: data?.category };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export interface MetaTemplateListItem {
+  name: string;
+  language: string;
+  status: string;
+  category?: string;
+  id?: string;
+  rejectedReason?: string;
+}
+
+export interface MetaTemplateListResult {
+  ok: boolean;
+  templates?: MetaTemplateListItem[];
+  error?: MetaError;
+}
+
+/** Haal alle templates op die bij deze WABA geregistreerd staan (voor statussync). */
+export async function listTemplates(): Promise<MetaTemplateListResult> {
+  if (!templatesConfigured()) return { ok: false, error: templatesNotConfiguredError() };
+
+  const url = `${META_GRAPH_BASE_URL}/${wabaId()}/message_templates?fields=name,language,status,category,id,rejected_reason&limit=200`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    const templates: MetaTemplateListItem[] = Array.isArray(data?.data)
+      ? data.data.map((t: any) => ({
+          name: String(t?.name ?? ''),
+          language: String(t?.language ?? ''),
+          status: String(t?.status ?? ''),
+          category: t?.category ?? undefined,
+          id: t?.id != null ? String(t.id) : undefined,
+          rejectedReason: t?.rejected_reason ?? undefined,
+        }))
+      : [];
+    return { ok: true, templates };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Verwijder een template bij Meta (op naam — geldt voor alle taalvarianten van die naam). */
+export async function deleteTemplate(name: string): Promise<MetaTemplateResult> {
+  if (!templatesConfigured()) return { ok: false, error: templatesNotConfiguredError() };
+
+  const url = `${META_GRAPH_BASE_URL}/${wabaId()}/message_templates?name=${encodeURIComponent(name)}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${accessToken()}` },
+      signal: controller.signal,
+    });
+    const rawText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(rawText); } catch { /* niet-JSON */ }
+
+    if (!r.ok || data?.error) {
+      return { ok: false, error: parseMetaError(data, r.status, rawText) };
+    }
+    return { ok: true };
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    return {
+      ok: false,
+      error: {
+        code: isAbort ? 'timeout' : 'network_error',
+        message: isAbort ? `Meta API timeout na ${REQUEST_TIMEOUT_MS / 1000}s` : (err?.message || String(err)),
+      },
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
