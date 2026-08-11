@@ -1,9 +1,15 @@
 /**
  * SEO BUILD-CHECK — draait vóór elke build (npm run build) en faalt hard bij:
- *  - titles > 62 tekens of dubbele titles
+ *  - titles > 60 tekens of dubbele titles
  *  - descriptions buiten 110–160 tekens of dubbele descriptions (indexeerbare routes)
  *  - een canonical die naar een route met noindex of een andere canonical wijst
  *  - prerender-fragmenten zonder (precies één) H1 of met verwijzingen naar build-assets
+ *  - (P17) een prerender-fragment dat zelf een <title>-tag bevat — de shell zet
+ *    via injectMeta() al precies één <title> in <head>; een <title> die
+ *    daarnaast in het fragment terechtkomt (bijv. een component die op eigen
+ *    houtje een <title>-JSX-tag rendert) levert dus altijd een pagina met twee
+ *    title-tags op. Zie NieuwsArtikel.tsx voor het concrete geval dat deze
+ *    check moest voorkomen.
  *
  * Bewust deterministisch en zonder browser/netwerk, zodat hij veilig in de
  * Replit-deploybuild kan draaien.
@@ -21,8 +27,10 @@ const warnings: string[] = [];
 const indexable = ROUTE_META.filter((m) => !m.noindex);
 
 // 1. Lengtes
+// P17: title-limiet aangescherpt van 62 naar 60 tekens — dat is waar Google
+// de meeste titles in de SERP afkapt, dus 62 was in de praktijk al te ruim.
 for (const m of indexable) {
-  if (m.title.length > 62) errors.push(`${m.path}: title ${m.title.length} tekens (max 62): "${m.title}"`);
+  if (m.title.length > 60) errors.push(`${m.path}: title ${m.title.length} tekens (max 60): "${m.title}"`);
   if (m.description.length < 110 || m.description.length > 160)
     errors.push(`${m.path}: description ${m.description.length} tekens (110–160 vereist)`);
 }
@@ -72,6 +80,43 @@ for (const m of ROUTE_META.filter((x) => x.prerender && !x.noindex)) {
   if (h1s > 1) warnings.push(`${m.path}: prerender-fragment bevat ${h1s} <h1>-tags (1 verwacht)`);
   if (/<script(?![^>]*application\/ld\+json)/.test(html))
     errors.push(`${m.path}: prerender-fragment bevat een niet-JSON-LD <script> (verwijst mogelijk naar verouderde assets)`);
+  // P17: de shell zet al precies één <title> in <head> via injectMeta(). Een
+  // <title>-tag die daarnaast in het #root-fragment terechtkomt (bijv. een
+  // component die zelf <title>{...}</title> rendert) levert dus een pagina
+  // met twee title-tags op — altijd fout, ongeacht de inhoud van die tag.
+  const titleTagsInFragment = (html.match(/<title[\s>]/g) || []).length;
+  if (titleTagsInFragment > 0)
+    errors.push(
+      `${m.path}: prerender-fragment bevat ${titleTagsInFragment} <title>-tag(s) — de shell zet al een <title> in <head>, dit levert dubbele title-tags op`
+    );
+}
+
+// 4b. Dezelfde <title>- en H1-checks, maar dan over ALLE fragmenten in
+// FRAGMENT_DIR — dus ook de dynamische vacature-/blogfragmenten die
+// scripts/prerender.ts genereert en die (bewust, zie de toelichting bij punt
+// 4) niet in ROUTE_META staan en dus niet door de loop hierboven komen. Deze
+// check heeft geen databasetoegang nodig: hij leest alleen wat er al op schijf
+// staat, dus hij vangt ook een regressie op een dynamische route zodra
+// npm run prerender in een omgeving mét DATABASE_URL heeft gedraaid.
+if (fs.existsSync(FRAGMENT_DIR)) {
+  const knownFragmentPaths = new Set(
+    ROUTE_META.filter((x) => x.prerender && !x.noindex).map((m) => {
+      const n = normalizeMetaPath(m.path);
+      return n === "/" ? "index.html" : n.slice(1).replace(/\//g, "__") + ".html";
+    })
+  );
+  for (const file of fs.readdirSync(FRAGMENT_DIR)) {
+    if (!file.endsWith(".html") || knownFragmentPaths.has(file)) continue; // al gecontroleerd hierboven
+    const html = fs.readFileSync(path.join(FRAGMENT_DIR, file), "utf-8");
+    const titleTagsInFragment = (html.match(/<title[\s>]/g) || []).length;
+    if (titleTagsInFragment > 0)
+      errors.push(
+        `prerender/${file}: fragment bevat ${titleTagsInFragment} <title>-tag(s) — de shell zet al een <title> in <head>, dit levert dubbele title-tags op`
+      );
+    const h1sInFragment = (html.match(/<h1[\s>]/g) || []).length;
+    if (h1sInFragment === 0) errors.push(`prerender/${file}: fragment bevat geen <h1>`);
+    if (h1sInFragment > 1) warnings.push(`prerender/${file}: fragment bevat ${h1sInFragment} <h1>-tags (1 verwacht)`);
+  }
 }
 
 // 5. Hreflang-koppeling (P13): elke entry in HREFLANG_GROUPS moet naar een

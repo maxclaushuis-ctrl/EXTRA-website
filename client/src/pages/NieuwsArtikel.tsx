@@ -290,6 +290,20 @@ export default function NieuwsArtikel() {
     window.scrollTo(0, 0);
   }, [slug]);
 
+  // P17: dit was voorheen een letterlijke <title>-JSX-tag in de returned markup
+  // (zie hieronder verwijderd). In React 18 wordt zo'n tag niet naar <head>
+  // gehoist — hij deed dus niets voor de titel in de browsertab, maar kwam wél
+  // mee in het door scripts/prerender.ts vastgelegde #root-fragment. Omdat
+  // server/seo.ts voor /blog/:slug al een eigen <title> in <head> zet (op basis
+  // van post.title), leverde dat een pagina met twee <title>-tags op zodra een
+  // artikel een metaTitle had. Dit is de daadwerkelijke client-side titel-sync
+  // voor SPA-navigatie tussen artikelen, zonder een extra tag in de body.
+  useEffect(() => {
+    if (dbPost?.metaTitle) {
+      document.title = dbPost.metaTitle;
+    }
+  }, [dbPost]);
+
   if (dbLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -332,7 +346,6 @@ export default function NieuwsArtikel() {
     return (
       <div className="min-h-screen bg-white font-sans antialiased" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
-        {dbPost.metaTitle && <title>{dbPost.metaTitle}</title>}
 
         <PublicNav />
 
