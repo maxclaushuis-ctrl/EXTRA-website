@@ -12396,8 +12396,9 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   });
 
   // ─── GROEPEN + BULK VERZENDING ──────────────────────────────────────────────
-  const { whatsappGroups, whatsappGroupMembers, whatsappBulkSends } = await import('@shared/schema');
+  const { whatsappGroups, whatsappGroupMembers, whatsappBulkSends, whatsappTemplates } = await import('@shared/schema');
   const { and: drizzleAnd, asc: drizzleAsc, inArray: drizzleInArray } = await import('drizzle-orm');
+  const waTemplates = await import('./whatsapp/templates');
 
   app.get('/api/whatsapp/groups', adminMiddleware, async (_req: Request, res: Response) => {
     const groups = await db.select().from(whatsappGroups).orderBy(drizzleDesc(whatsappGroups.updatedAt));
@@ -12556,6 +12557,120 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       .orderBy(drizzleAsc(whatsappConversations.displayName))
       .limit(200);
     res.json(contacts);
+  });
+
+  // ─── TEMPLATES (aanmaken, indienen bij Meta/360dialog, statussync) ─────────
+  // Logica in server/whatsapp/templates.ts. Versturen van een goedgekeurd
+  // template gaat NIET via deze routes maar via POST /groups/:id/send
+  // hieronder (templateKey-parameter) — dat hergebruikt dezelfde
+  // groep/ontvanger-selectie als vrije-tekst bulkverzendingen.
+  app.get('/api/whatsapp/admin/templates', adminMiddleware, async (_req: Request, res: Response) => {
+    const rows = await waTemplates.listAllTemplates();
+    res.json(rows);
+  });
+
+  app.get('/api/whatsapp/admin/templates/:key', adminMiddleware, async (req: Request, res: Response) => {
+    const row = await waTemplates.getTemplateByKey(req.params.key);
+    if (!row) return res.status(404).json({ error: 'Template niet gevonden' });
+    res.json(row);
+  });
+
+  app.post('/api/whatsapp/admin/templates', adminMiddleware, async (req: Request, res: Response) => {
+    const { naam, omschrijving, categorie, taal, bodyTekst, voorbeeldwaarden, knopTekst, knopUrl, knopDynamisch, knopVoorbeeld } = req.body || {};
+    if (!naam || typeof naam !== 'string' || !naam.trim()) {
+      return res.status(400).json({ error: 'naam is verplicht' });
+    }
+    if (!bodyTekst || typeof bodyTekst !== 'string' || !bodyTekst.trim()) {
+      return res.status(400).json({ error: 'bodyTekst is verplicht' });
+    }
+    if (categorie && !waTemplates.TEMPLATE_CATEGORIES.includes(categorie)) {
+      return res.status(400).json({ error: `categorie moet ${waTemplates.TEMPLATE_CATEGORIES.join(' of ')} zijn` });
+    }
+    const buttonErrors = waTemplates.validateButtonFields({ buttonText: knopTekst, buttonUrl: knopUrl });
+    if (buttonErrors.length > 0) return res.status(400).json({ error: buttonErrors[0].message, errors: buttonErrors });
+
+    try {
+      const row = await waTemplates.createTemplate({
+        name: naam,
+        description: omschrijving ?? null,
+        category: categorie || 'UTILITY',
+        language: taal || 'nl',
+        bodyPreview: bodyTekst,
+        exampleValues: voorbeeldwaarden || {},
+        buttonText: knopTekst ?? null,
+        buttonUrl: knopUrl ?? null,
+        buttonDynamic: !!knopDynamisch,
+        buttonExample: knopVoorbeeld ?? null,
+      });
+      res.json(row);
+    } catch (err: any) {
+      console.error('[wa-templates] aanmaken mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij aanmaken template' });
+    }
+  });
+
+  app.put('/api/whatsapp/admin/templates/:key', adminMiddleware, async (req: Request, res: Response) => {
+    const { naam, omschrijving, categorie, taal, bodyTekst, voorbeeldwaarden, knopTekst, knopUrl, knopDynamisch, knopVoorbeeld } = req.body || {};
+    if (categorie && !waTemplates.TEMPLATE_CATEGORIES.includes(categorie)) {
+      return res.status(400).json({ error: `categorie moet ${waTemplates.TEMPLATE_CATEGORIES.join(' of ')} zijn` });
+    }
+    if (knopTekst !== undefined || knopUrl !== undefined) {
+      const buttonErrors = waTemplates.validateButtonFields({ buttonText: knopTekst, buttonUrl: knopUrl });
+      if (buttonErrors.length > 0) return res.status(400).json({ error: buttonErrors[0].message, errors: buttonErrors });
+    }
+    try {
+      const row = await waTemplates.updateTemplate(req.params.key, {
+        name: naam,
+        description: omschrijving,
+        category: categorie,
+        language: taal,
+        bodyPreview: bodyTekst,
+        exampleValues: voorbeeldwaarden,
+        buttonText: knopTekst,
+        buttonUrl: knopUrl,
+        buttonDynamic: knopDynamisch,
+        buttonExample: knopVoorbeeld,
+      });
+      res.json(row);
+    } catch (err: any) {
+      if (err instanceof waTemplates.TemplateEditNotAllowedError) {
+        return res.status(409).json({ error: err.message });
+      }
+      console.error('[wa-templates] bewerken mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij bewerken template' });
+    }
+  });
+
+  app.delete('/api/whatsapp/admin/templates/:key', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await waTemplates.deleteTemplate(req.params.key);
+      res.json(result);
+    } catch (err: any) {
+      console.error('[wa-templates] verwijderen mislukt:', err);
+      res.status(400).json({ error: err?.message || 'Onbekende fout bij verwijderen template' });
+    }
+  });
+
+  app.post('/api/whatsapp/admin/templates/:key/indienen', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await waTemplates.submitTemplateToProvider(req.params.key);
+      if (!result.ok) return res.status(400).json(result);
+      res.json(result);
+    } catch (err: any) {
+      console.error('[wa-templates] indienen mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij indienen template' });
+    }
+  });
+
+  app.post('/api/whatsapp/admin/templates/:key/status', adminMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await waTemplates.syncTemplateStatus(req.params.key);
+      if (!result.ok) return res.status(400).json(result);
+      res.json(result);
+    } catch (err: any) {
+      console.error('[wa-templates] statussync mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij statussync' });
+    }
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -12856,10 +12971,156 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     });
   });
 
+  /**
+   * Verstuur een goedgekeurd WhatsApp-template naar alle leden van een groep.
+   * Losgetrokken uit de hoofdroute hieronder zodat de vrije-tekst-verzending
+   * (het bestaande, ongewijzigde pad) leesbaar blijft. Zelfde groep/leden-
+   * iteratie en whatsapp_bulk_sends-logging als vrije tekst, met als verschil:
+   * sendTemplate() i.p.v. sendText(), en templateKey/reason vastgelegd voor
+   * het audit-spoor.
+   */
+  async function sendGroupTemplate(
+    req: Request,
+    res: Response,
+    id: number,
+    templateKey: string,
+    reason: string | undefined,
+    extraVariabelen: Record<string, string> | undefined,
+  ) {
+    if (!reason || typeof reason !== 'string' || !reason.trim()) {
+      return res.status(400).json({ error: 'reason (aanleiding) is verplicht bij een template-verzending' });
+    }
+    const template = await waTemplates.getTemplateByKey(templateKey);
+    if (!template) return res.status(404).json({ error: `Template "${templateKey}" niet gevonden` });
+    if (template.status !== 'approved') {
+      return res.status(400).json({ error: `Template heeft status "${template.status}" — alleen goedgekeurde templates kunnen verstuurd worden` });
+    }
+    if (template.buttonDynamic) {
+      return res.status(400).json({ error: 'Templates met een dynamische knop kunnen nog niet via groepsverzending verstuurd worden' });
+    }
+
+    const variables: string[] = Array.isArray(template.variables) ? (template.variables as string[]) : [];
+    const AUTO_VARS = new Set(['voornaam', 'achternaam', 'naam']);
+    const extra = (extraVariabelen && typeof extraVariabelen === 'object') ? extraVariabelen : {};
+    const missing = variables.filter(v => !AUTO_VARS.has(v.toLowerCase()) && !(extra[v] && String(extra[v]).trim()));
+    if (missing.length > 0) {
+      return res.status(400).json({ error: `Voorbeeldwaarde ontbreekt voor: ${missing.join(', ')}` });
+    }
+
+    const bulkConfigError = waProvider.configErrorMessage();
+    if (bulkConfigError) return res.status(503).json({ error: bulkConfigError });
+
+    const group = await db.select().from(whatsappGroups).where(drizzleEq(whatsappGroups.id, id)).limit(1);
+    if (!group.length) return res.status(404).json({ error: 'Groep niet gevonden' });
+    const members = await db.select().from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, id));
+    if (members.length === 0) return res.status(400).json({ error: 'Groep heeft geen leden' });
+
+    const userId = (req.session as any).userId;
+    const { users: usersTable } = await import('@shared/schema');
+    const user = await db.select({ firstName: usersTable.firstName, lastName: usersTable.lastName })
+      .from(usersTable).where(drizzleEq(usersTable.id, userId)).limit(1);
+    const senderName = user.length ? `${user[0].firstName} ${user[0].lastName}` : 'Admin';
+
+    const [bulkRecord] = await db.insert(whatsappBulkSends).values({
+      groupId: id,
+      groupName: group[0].name,
+      messageBody: template.bodyPreview,
+      totalRecipients: members.length,
+      sentCount: 0,
+      failedCount: 0,
+      sentByUserId: userId,
+      sentByName: senderName,
+      templateKey: template.key,
+      reason: reason.trim(),
+    }).returning();
+
+    const resolveValue = (varName: string, m: typeof members[number]): string => {
+      const first = (m.firstName || '').trim();
+      const last = (m.lastName || '').trim();
+      const full = (m.displayName || `${first} ${last}`).trim();
+      const lower = varName.toLowerCase();
+      if (lower === 'voornaam') return first;
+      if (lower === 'achternaam') return last;
+      if (lower === 'naam') return full;
+      return String(extra[varName] ?? '');
+    };
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const results: Array<{ phone: string; displayName: string | null; status: 'sent' | 'failed'; error?: string }> = [];
+
+    for (const member of members) {
+      const now = new Date();
+      const values = variables.map(v => resolveValue(v, member));
+      const personalizedBody = variables.reduce(
+        (body, v, i) => body.replace(new RegExp(`\\{${v}\\}`, 'g'), values[i] || ''),
+        template.bodyPreview,
+      );
+      const components: any[] = [];
+      if (values.length > 0) {
+        components.push({ type: 'body', parameters: values.map(text => ({ type: 'text', text })) });
+      }
+      try {
+        const match = await waStorage.resolveAndUpsertConversation({
+          phoneNumber: member.phoneNumber,
+          inbound: false,
+          bodyPreview: personalizedBody,
+          at: now,
+        });
+
+        const messageRowId = await waStorage.insertOutboundQueued({
+          direction: 'outbound',
+          fromNumber: 'extra',
+          toNumber: member.phoneNumber,
+          messageType: 'template',
+          body: personalizedBody,
+          candidateId: match.candidateId,
+          prospectContactId: match.prospectContactId,
+          matchCategory: match.category,
+          sentByUserId: userId,
+          rawPayload: { type: 'template', template: { name: template.key, language: { code: template.language }, components }, to: member.phoneNumber },
+        });
+
+        const result = await waProvider.sendTemplate(member.phoneNumber, template.key, template.language, components);
+
+        if (!result.ok) {
+          await waStorage.updateOutboundResult(messageRowId, {
+            status: 'failed',
+            errorCode: result.errorCode ?? null,
+            errorMessage: result.errorMessage ?? null,
+          });
+          failedCount++;
+          results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'failed', error: result.errorMessage || 'Onbekende fout' });
+        } else {
+          const waId = result.waMessageId || null;
+          await waStorage.updateOutboundResult(messageRowId, { waMessageId: waId, status: 'sent' });
+          sentCount++;
+          results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'sent' });
+        }
+      } catch (err: any) {
+        failedCount++;
+        results.push({ phone: member.phoneNumber, displayName: member.displayName, status: 'failed', error: err.message || 'Onbekende fout' });
+      }
+    }
+
+    await db.update(whatsappBulkSends).set({ sentCount, failedCount }).where(drizzleEq(whatsappBulkSends.id, bulkRecord.id));
+    console.log(`[WA Bulk] Groep "${group[0].name}" → template "${template.key}": ${sentCount} verzonden, ${failedCount} mislukt (door ${senderName})`);
+    return res.json({ bulkSendId: bulkRecord.id, total: members.length, sent: sentCount, failed: failedCount, results });
+  }
+
   app.post('/api/whatsapp/groups/:id/send', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
-    const { tekst } = req.body;
+    const { tekst, templateKey, reason, extraVariabelen } = req.body || {};
+
+    // ─── Template-verzending (goedgekeurd sjabloon, buiten het 24u-window) ──
+    // Alternatief pad t.o.v. de vrije-tekst-verzending hieronder: zelfde groep/
+    // leden-iteratie en whatsapp_bulk_sends-logging, alleen met sendTemplate()
+    // i.p.v. sendText() en een verplichte aanleiding voor het audit-spoor.
+    if (templateKey) {
+      return sendGroupTemplate(req, res, id, templateKey, reason, extraVariabelen);
+    }
+
     if (!tekst || typeof tekst !== 'string' || !tekst.trim()) {
       return res.status(400).json({ error: 'tekst is verplicht' });
     }

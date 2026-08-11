@@ -356,3 +356,168 @@ export async function downloadMedia(mediaId: string): Promise<ProviderMediaDownl
     errorMessage: e.details ? `${e.message} — ${e.details}` : e.message,
   };
 }
+
+// ─── Template-beheer (aanmaken/indienen, opvragen, verwijderen) ────────────
+// Zelfde provider-switch als hierboven, maar deze drie calls gaan naar de
+// WABA-scoped templates-endpoints i.p.v. het messages-endpoint. Payload-vorm
+// is voor beide providers identiek (zie server/whatsapp/templates.ts); alleen
+// het transport wisselt.
+
+export interface ProviderTemplateResult {
+  ok: boolean;
+  id?: string;
+  status?: string;
+  category?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  provider: WhatsAppProviderName;
+}
+
+export interface ProviderTemplateListItem {
+  name: string;
+  language: string;
+  status: string;
+  category?: string;
+  rejectedReason?: string;
+}
+
+export interface ProviderTemplateListResult {
+  ok: boolean;
+  templates?: ProviderTemplateListItem[];
+  errorCode?: string;
+  errorMessage?: string;
+  provider: WhatsAppProviderName;
+}
+
+function d360TemplatesBaseUrl(): string {
+  return `${d360BaseUrl()}/v1/configs/templates`;
+}
+
+async function d360SubmitTemplate(args: {
+  name: string;
+  language: string;
+  category: 'UTILITY' | 'MARKETING';
+  components: any[];
+}): Promise<ProviderTemplateResult> {
+  try {
+    const r = await fetch(d360TemplatesBaseUrl(), {
+      method: 'POST',
+      headers: d360Headers(),
+      body: JSON.stringify({
+        name: args.name,
+        language: args.language,
+        category: args.category,
+        components: args.components,
+      }),
+    });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+
+    if (!r.ok || data?.error) {
+      const errorMsg = data?.error?.message || data?.message || responseText.slice(0, 500);
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: data?.error?.code ? String(data.error.code) : String(r.status),
+        errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+      };
+    }
+    return { ok: true, provider: '360dialog', id: data?.id != null ? String(data.id) : undefined, status: data?.status, category: data?.category };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+async function d360ListTemplates(): Promise<ProviderTemplateListResult> {
+  try {
+    const r = await fetch(`${d360TemplatesBaseUrl()}?limit=1000`, { headers: d360Headers() });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+
+    if (!r.ok || data?.error) {
+      const errorMsg = data?.error?.message || data?.message || responseText.slice(0, 500);
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: data?.error?.code ? String(data.error.code) : String(r.status),
+        errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+      };
+    }
+    const rows: any[] = Array.isArray(data?.waba_templates) ? data.waba_templates : [];
+    const templates: ProviderTemplateListItem[] = rows.map((t: any) => ({
+      name: String(t?.name ?? ''),
+      language: String(t?.language ?? ''),
+      status: String(t?.status ?? ''),
+      category: t?.category ?? undefined,
+      rejectedReason: t?.rejected_reason ?? undefined,
+    }));
+    return { ok: true, provider: '360dialog', templates };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+async function d360DeleteTemplate(name: string): Promise<ProviderTemplateResult> {
+  try {
+    const r = await fetch(`${d360TemplatesBaseUrl()}/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      headers: d360Headers(),
+    });
+    const responseText = await r.text();
+    let data: any = {};
+    try { data = JSON.parse(responseText); } catch { /* niet-JSON respons */ }
+
+    if (!r.ok || data?.error) {
+      const errorMsg = data?.error?.message || data?.message || responseText.slice(0, 500);
+      return {
+        ok: false,
+        provider: '360dialog',
+        errorCode: data?.error?.code ? String(data.error.code) : String(r.status),
+        errorMessage: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+      };
+    }
+    return { ok: true, provider: '360dialog' };
+  } catch (err: any) {
+    return { ok: false, provider: '360dialog', errorCode: 'network_error', errorMessage: err?.message || String(err) };
+  }
+}
+
+/** Dien een nieuw template in bij de actieve provider. */
+export async function submitTemplate(args: {
+  name: string;
+  language: string;
+  category: 'UTILITY' | 'MARKETING';
+  components: any[];
+}): Promise<ProviderTemplateResult> {
+  if (activeProvider() === 'meta') {
+    const res = await metaClient.submitTemplate(args);
+    if (res.ok) return { ok: true, provider: 'meta', id: res.id, status: res.status, category: res.category };
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  return d360SubmitTemplate(args);
+}
+
+/** Haal alle bij de actieve provider geregistreerde templates op (voor statussync). */
+export async function listTemplates(): Promise<ProviderTemplateListResult> {
+  if (activeProvider() === 'meta') {
+    const res = await metaClient.listTemplates();
+    if (res.ok) return { ok: true, provider: 'meta', templates: res.templates };
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  return d360ListTemplates();
+}
+
+/** Verwijder een template bij de actieve provider (op naam). */
+export async function deleteTemplate(name: string): Promise<ProviderTemplateResult> {
+  if (activeProvider() === 'meta') {
+    const res = await metaClient.deleteTemplate(name);
+    if (res.ok) return { ok: true, provider: 'meta' };
+    const e = res.error!;
+    return { ok: false, provider: 'meta', errorCode: e.code, errorMessage: e.details ? `${e.message} — ${e.details}` : e.message };
+  }
+  return d360DeleteTemplate(name);
+}

@@ -416,6 +416,111 @@ export const stuurBulkBericht = (groupId: number, tekst: string) =>
 export const haalBulkVerzendingen = () =>
   get<BulkSendRecord[]>('/bulk-sends');
 
+// ─── Templates (aanmaken, indienen bij Meta/360dialog, statussync) ─────────
+// Versturen van een goedgekeurd template loopt via stuurTemplateBericht()
+// hieronder — dat hergebruikt dezelfde /groups/:id/send-route als
+// stuurBulkBericht, alleen met templateKey/reason i.p.v. tekst.
+
+export type TemplateCategory = 'UTILITY' | 'MARKETING';
+export type TemplateStatus = 'concept' | 'in_review' | 'approved' | 'rejected';
+
+export interface WhatsappTemplate {
+  id: number;
+  key: string;
+  name: string;
+  description: string | null;
+  category: TemplateCategory;
+  language: string;
+  bodyPreview: string;
+  variables: string[];
+  status: TemplateStatus;
+  buttonText: string | null;
+  buttonUrl: string | null;
+  buttonDynamic: boolean;
+  buttonExample: string | null;
+  exampleValues: Record<string, string>;
+  metaStatusReason: string | null;
+  metaStatusRaw: string | null;
+  submittedAt: string | null;
+  statusSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TemplateFormInput {
+  naam: string;
+  omschrijving?: string;
+  categorie: TemplateCategory;
+  taal?: string;
+  bodyTekst: string;
+  voorbeeldwaarden?: Record<string, string>;
+  knopTekst?: string;
+  knopUrl?: string;
+  knopDynamisch?: boolean;
+  knopVoorbeeld?: string;
+}
+
+export interface TemplateValidationError { field: string; message: string; }
+
+export interface TemplateActionResult {
+  ok: boolean;
+  template?: WhatsappTemplate;
+  errors?: TemplateValidationError[];
+  providerError?: string;
+  error?: string;
+}
+
+/** Leest {variabele}-placeholders uit bodytekst, eerste-voorkomen-volgorde, gededupliceerd — zelfde regel als server/whatsapp/templates.ts. */
+export function extractVariabelen(bodyTekst: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const re = /\{(\w+)\}/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(bodyTekst || '')) !== null) {
+    if (!seen.has(m[1])) {
+      seen.add(m[1]);
+      out.push(m[1]);
+    }
+  }
+  return out;
+}
+
+export const haalTemplates = () => get<WhatsappTemplate[]>('/admin/templates');
+export const haalTemplate = (key: string) => get<WhatsappTemplate>(`/admin/templates/${encodeURIComponent(key)}`);
+export const maakTemplate = (input: TemplateFormInput) => post<WhatsappTemplate>('/admin/templates', input);
+export const bewerkTemplate = (key: string, input: Partial<TemplateFormInput>) =>
+  put<WhatsappTemplate>(`/admin/templates/${encodeURIComponent(key)}`, input);
+export const verwijderTemplate = (key: string) =>
+  del<{ ok: boolean; providerError?: string }>(`/admin/templates/${encodeURIComponent(key)}`);
+
+/**
+ * dienTemplateIn/verversTemplateStatus gebruiken bewust geen post<T> — die
+ * gooit bij een 4xx altijd een generieke fout, terwijl deze twee routes bij
+ * falen juist gestructureerde details teruggeven (veldfouten of de kale
+ * providerfout) die de UI per stuk wil kunnen tonen.
+ */
+async function postAction<T>(path: string, body?: any): Promise<T> {
+  const r = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return (await r.json().catch(() => ({ ok: false, error: `${path}: ${r.status}` }))) as T;
+}
+
+export const dienTemplateIn = (key: string) =>
+  postAction<TemplateActionResult>(`/admin/templates/${encodeURIComponent(key)}/indienen`);
+export const verversTemplateStatus = (key: string) =>
+  postAction<TemplateActionResult>(`/admin/templates/${encodeURIComponent(key)}/status`);
+
+export const stuurTemplateBericht = (
+  groupId: number,
+  templateKey: string,
+  reason: string,
+  extraVariabelen?: Record<string, string>,
+) => post<BulkSendResult>(`/groups/${groupId}/send`, { templateKey, reason, extraVariabelen });
+
 export interface ImportCandidate {
   id: number;
   name: string;
