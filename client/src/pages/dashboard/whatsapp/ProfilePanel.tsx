@@ -12,6 +12,7 @@ import {
   updateContactProfiel,
   updateConversationCategory,
   updateConversationDisplayName,
+  updateImportedContactName,
   haalNotities,
   maakNotitie,
   updateLabels,
@@ -236,6 +237,19 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   const [naamZonderContactBezig, setNaamZonderContactBezig] = useState(false);
   const [naamZonderContactMelding, setNaamZonderContactMelding] = useState<{ tekst: string; kleur: string } | null>(null);
 
+  // Losse voornaam/achternaam-correctie voor diezelfde contactloze gesprekken
+  // — dit is NIET hetzelfde als naamZonderContact hierboven (die schrijft één
+  // samengevoegde weergavenaam naar whatsappConversations.displayName). Dit
+  // pad schrijft de gesplitste voornaam/achternaam naar
+  // whatsapp_imported_contacts, want dát is wat WhatsApp-template-variabelen
+  // als {{voornaam}} straks nodig hebben (zie server/routes.ts
+  // .../geimporteerde-naam). Best-effort ingevuld door de eenmalige backfill,
+  // hier per contact handmatig te corrigeren.
+  const [voornaamCorrectieInput, setVoornaamCorrectieInput] = useState('');
+  const [achternaamCorrectieInput, setAchternaamCorrectieInput] = useState('');
+  const [naamCorrectieBezig, setNaamCorrectieBezig] = useState(false);
+  const [naamCorrectieMelding, setNaamCorrectieMelding] = useState<{ tekst: string; kleur: string } | null>(null);
+
   // Functie-dropdown voor diezelfde contactloze gesprekken — zie
   // FUNCTIE_CATEGORIE_OPTIES hierboven. Schrijft naar conv.labels, dus geen
   // los input-veld nodig (geen tussenstate om te typen, alleen een keuze).
@@ -312,6 +326,8 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
     setNaamZonderContactMelding(null);
     setFunctieZonderContactBezig(false);
     setFunctieZonderContactMelding(null);
+    setNaamCorrectieBezig(false);
+    setNaamCorrectieMelding(null);
   }, [conv.phoneNumber]);
 
   // Naamveld zonder gekoppeld contact volgt displayName (handmatig gezet) of,
@@ -321,6 +337,13 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   useEffect(() => {
     setNaamZonderContactInput(conv.displayName || conv.importedContactName || '');
   }, [conv.phoneNumber, conv.displayName, conv.importedContactName]);
+
+  // Voornaam/achternaam-correctievelden volgen de laatst bekende (best-effort
+  // of al eerder handmatig gecorrigeerde) split uit de contactenimport.
+  useEffect(() => {
+    setVoornaamCorrectieInput(conv.importedFirstName || '');
+    setAchternaamCorrectieInput(conv.importedLastName || '');
+  }, [conv.phoneNumber, conv.importedFirstName, conv.importedLastName]);
 
   // Het telefoonveld volgt het geladen contact, maar valt terug op het nummer
   // van het gesprek: dat is het nummer waarop we deze persoon kennen.
@@ -410,6 +433,12 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
   }, [naamZonderContactMelding]);
 
   useEffect(() => {
+    if (!naamCorrectieMelding || naamCorrectieMelding.kleur !== '#059669') return;
+    const t = setTimeout(() => setNaamCorrectieMelding(null), 2500);
+    return () => clearTimeout(t);
+  }, [naamCorrectieMelding]);
+
+  useEffect(() => {
     if (!functieZonderContactMelding || functieZonderContactMelding.kleur !== '#059669') return;
     const t = setTimeout(() => setFunctieZonderContactMelding(null), 2500);
     return () => clearTimeout(t);
@@ -438,6 +467,41 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
       setNaamZonderContactMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
     } finally {
       setNaamZonderContactBezig(false);
+    }
+  }
+
+  /**
+   * Voornaam/achternaam opslaan voor WhatsApp-templatevariabelen zoals
+   * {{voornaam}} — voor een gesprek zónder gekoppeld kandidaat/prospect-
+   * record. Schrijft naar whatsapp_imported_contacts (zie
+   * PUT .../geimporteerde-naam), NIET naar whatsappConversations.displayName
+   * — dat blijft de losse "Naam"-editor hierboven. Beide velden leeg is niet
+   * toegestaan (de server wijst dat ook af), zodat er nooit een lege rij
+   * ontstaat die een latere echte match in de weg zou kunnen zitten.
+   */
+  async function bewaarNaamCorrectie() {
+    const voornaam = voornaamCorrectieInput.trim();
+    const achternaam = achternaamCorrectieInput.trim();
+    const huidigVoornaam = conv.importedFirstName || '';
+    const huidigAchternaam = conv.importedLastName || '';
+    if (voornaam === huidigVoornaam && achternaam === huidigAchternaam) return;
+    if (!voornaam && !achternaam) {
+      setVoornaamCorrectieInput(huidigVoornaam);
+      setAchternaamCorrectieInput(huidigAchternaam);
+      return;
+    }
+    setNaamCorrectieBezig(true);
+    setNaamCorrectieMelding(null);
+    try {
+      await updateImportedContactName(conv.phoneNumber, voornaam, achternaam);
+      setNaamCorrectieMelding({ tekst: 'Opgeslagen', kleur: '#059669' });
+      onConversationChanged();
+    } catch (e: any) {
+      setVoornaamCorrectieInput(huidigVoornaam);
+      setAchternaamCorrectieInput(huidigAchternaam);
+      setNaamCorrectieMelding({ tekst: e?.message || 'Opslaan mislukt', kleur: '#b91c1c' });
+    } finally {
+      setNaamCorrectieBezig(false);
     }
   }
 
@@ -689,6 +753,41 @@ export default function ProfilePanel({ conv, teamMembers, onQuickReply, onConver
                 style={{ ...VELD_STIJL, outline: 'none' }}
               />
             </EditRow>
+            {/* Los van "Naam" hierboven (die is voor de weergave in dit
+                dashboard): voornaam/achternaam die WhatsApp-templates zoals
+                {{voornaam}} straks gebruiken. Best-effort voorgevuld vanuit
+                de eenmalige contactenimport, hier per contact te corrigeren. */}
+            <EditRow
+              k="Voornaam"
+              melding={null}
+            >
+              <input
+                value={voornaamCorrectieInput}
+                disabled={naamCorrectieBezig}
+                onChange={e => setVoornaamCorrectieInput(e.target.value)}
+                onBlur={bewaarNaamCorrectie}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                placeholder="—"
+                style={{ ...VELD_STIJL, outline: 'none' }}
+              />
+            </EditRow>
+            <EditRow
+              k="Achternaam"
+              melding={naamCorrectieMelding}
+            >
+              <input
+                value={achternaamCorrectieInput}
+                disabled={naamCorrectieBezig}
+                onChange={e => setAchternaamCorrectieInput(e.target.value)}
+                onBlur={bewaarNaamCorrectie}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                placeholder="—"
+                style={{ ...VELD_STIJL, outline: 'none' }}
+              />
+            </EditRow>
+            <div style={{ fontSize: 10, color: WA.textSub, textAlign: 'right', marginTop: -4, marginBottom: 6 }}>
+              Voor WhatsApp-sjablonen (bv. {'{{voornaam}}'}) — best-effort, controleer bij twijfel.
+            </div>
             <EditRow
               k="Functie"
               melding={functieZonderContactMelding}

@@ -259,6 +259,22 @@ const AANVULLINGEN: Aanvulling[] = [
         CREATE UNIQUE INDEX IF NOT EXISTS wa_group_msg_wa_id_unique ON whatsapp_group_messages (wa_message_id)
       `)),
   },
+  {
+    // Migratie 0018 — zie migrations/manual/0018_wa_imported_contacts_namen/
+    //
+    // first_name/last_name op de eenmalige contactenimport: nodig voor
+    // {voornaam}-variabelen in templates. Gevuld via een eenmalig
+    // backfillscript (scripts/split-imported-contact-names.ts, best-effort
+    // gok op basis van het bestaande name-veld) en daarna per contact vrij
+    // te corrigeren — zie server/whatsapp/nameLogic.ts.
+    omschrijving: "whatsapp_imported_contacts: first_name en last_name",
+    uitvoeren: () =>
+      db.execute(sql`
+        ALTER TABLE whatsapp_imported_contacts
+          ADD COLUMN IF NOT EXISTS first_name text,
+          ADD COLUMN IF NOT EXISTS last_name  text
+      `),
+  },
 ];
 
 /**

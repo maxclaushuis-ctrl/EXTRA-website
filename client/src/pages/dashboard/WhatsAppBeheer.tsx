@@ -679,13 +679,12 @@ export default function WhatsAppBeheer() {
     if (importTab === 'whatsapp') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
         const c = availableContacts.find(ac => ac.phoneNumber === phone);
-        // displayName uit het bestaande WA-contact opsplitsen op de eerste spatie
-        // zodat {{voornaam}}/{{achternaam}}-variabelen ook hier werken.
+        // Server stuurt nu de echte voornaam/achternaam mee waar bekend
+        // (gekoppelde kandidaat/prospect of geïmporteerd contact) zodat
+        // {{voornaam}}/{{achternaam}}-variabelen kloppen — niet meer zelf op
+        // de eerste spatie in displayName gokken.
         const dn = c?.displayName || '';
-        const parts = dn.trim().split(/\s+/);
-        const firstName = parts[0] || undefined;
-        const lastName = parts.slice(1).join(' ') || undefined;
-        return { phoneNumber: phone, displayName: dn || undefined, firstName, lastName };
+        return { phoneNumber: phone, displayName: dn || undefined, firstName: c?.firstName || undefined, lastName: c?.lastName || undefined };
       });
     } else if (importTab === 'kandidaten') {
       membersToAdd = Array.from(selectedContacts).map(phone => {
@@ -2031,7 +2030,7 @@ export default function WhatsAppBeheer() {
                                           +{c.phoneNumber}
                                           {c.contactCompany ? ` \u00B7 ${c.contactCompany}` : ''}
                                           <span style={{ marginLeft: 4, fontSize: 9, color: '#94A3B8' }}>
-                                            {c.matchCategory === 'candidate' ? 'Medewerker' : c.matchCategory === 'prospect' ? 'Klant' : 'Kandidaat'}
+                                            {c.matchCategory === 'candidate' ? 'Medewerker' : c.matchCategory === 'prospect' ? 'Klant' : c.matchCategory === 'imported' ? 'Geïmporteerd contact' : 'Kandidaat'}
                                           </span>
                                         </div>
                                       </div>

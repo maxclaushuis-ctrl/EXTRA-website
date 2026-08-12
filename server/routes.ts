@@ -12042,6 +12042,42 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     res.json({ success: true, displayName: naam });
   });
 
+  /**
+   * Handmatige correctie van voornaam/achternaam voor een geïmporteerd
+   * telefooncontact (whatsapp_imported_contacts, de eenmalige import van
+   * augustus 2026) — het "handmatig corrigeren"-stuk van de best-effort
+   * naam-split (zie scripts/split-imported-contact-names.ts en
+   * server/whatsapp/nameLogic.ts). Werkt rechtstreeks op het telefoonnummer,
+   * NIET op een gekoppeld kandidaat/prospect-record — voor dié twee bestaat
+   * al PUT .../edit-naam hierboven, en die blijft ook na deze wijziging
+   * gewoon voorrang houden (zie de naam-resolutie in ProfilePanel.tsx).
+   * Upsert: als er nog helemaal geen rij bestaat voor dit nummer (bv. een
+   * volledig ongematcht nummer dat nooit in de import zat), wordt er eentje
+   * aangemaakt — het NOT NULL name-veld krijgt dan de samengevoegde
+   * voornaam+achternaam, of bij twee lege velden het telefoonnummer zelf.
+   */
+  app.put('/api/whatsapp/conversations/:phoneNumber/geimporteerde-naam', adminMiddleware, async (req: Request, res: Response) => {
+    const phone = normalizePhone(req.params.phoneNumber);
+    if (!phone) return res.status(400).json({ error: 'Ongeldig telefoonnummer' });
+    const { whatsappImportedContacts } = await import('@shared/schema');
+    const firstName = String(req.body?.firstName ?? '').trim();
+    const lastName = String(req.body?.lastName ?? '').trim();
+    if (!firstName && !lastName) {
+      return res.status(400).json({ error: 'Voornaam of achternaam is verplicht' });
+    }
+    const naam = [firstName, lastName].filter(Boolean).join(' ') || phone;
+    await db.insert(whatsappImportedContacts).values({
+      phone,
+      name: naam,
+      firstName: firstName || null,
+      lastName: lastName || null,
+    }).onConflictDoUpdate({
+      target: whatsappImportedContacts.phone,
+      set: { name: naam, firstName: firstName || null, lastName: lastName || null },
+    });
+    res.json({ success: true, firstName: firstName || null, lastName: lastName || null });
+  });
+
   // Inbox-status (open/resolved/spam) — gebruikt door de UI-sidebar (Open/Opgelost/Spam/Alle)
   // en door de chat-header acties "Verplaats naar Spam" / "Sluit gesprek".
   app.put('/api/whatsapp/conversations/:phoneNumber/inbox-status', adminMiddleware, async (req: Request, res: Response) => {
@@ -12399,6 +12435,89 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   const { whatsappGroups, whatsappGroupMembers, whatsappBulkSends, whatsappTemplates } = await import('@shared/schema');
   const { and: drizzleAnd, asc: drizzleAsc, inArray: drizzleInArray } = await import('drizzle-orm');
   const waTemplates = await import('./whatsapp/templates');
+  const { splitFullName } = await import('./whatsapp/nameLogic');
+
+  // Herbruikbare naam-resolutie voor telefoonnummers, gebruikt door zowel
+  // GET .../available-contacts als POST .../members (server-side redmiddel
+  // wanneer de aanroeper zelf geen voornaam/achternaam meestuurt). Volgorde:
+  //   1. gekoppelde kandidaat (candidates.firstName/lastName — echte split)
+  //   2. gekoppelde prospect (prospectContacts.voornaam/achternaam waar
+  //      aanwezig, anders best-effort split van het legacy name-veld)
+  //   3. eenmalig geïmporteerd telefooncontact (whatsapp_imported_contacts —
+  //      first_name/last_name na de backfill, anders best-effort split)
+  //   4. best-effort split van de gespreks-weergavenaam zelf
+  // Nummers die nergens matchen, komen niet in de resultaat-Map terecht.
+  async function resolveNamesForPhones(
+    phoneNumbers: string[],
+  ): Promise<Map<string, { firstName: string; lastName: string; displayName: string | null }>> {
+    const { prospectContacts, whatsappImportedContacts } = await import('@shared/schema');
+    const result = new Map<string, { firstName: string; lastName: string; displayName: string | null }>();
+    if (phoneNumbers.length === 0) return result;
+
+    const convRows = await db.select({
+      phoneNumber: whatsappConversations.phoneNumber,
+      displayName: whatsappConversations.displayName,
+      candidateId: whatsappConversations.candidateId,
+      prospectContactId: whatsappConversations.prospectContactId,
+    }).from(whatsappConversations)
+      .where(drizzleInArray(whatsappConversations.phoneNumber, phoneNumbers));
+
+    const candidateIds = Array.from(new Set(convRows.map(r => r.candidateId).filter((x): x is number => x != null)));
+    const prospectIds = Array.from(new Set(convRows.map(r => r.prospectContactId).filter((x): x is number => x != null)));
+
+    const candidateNameMap = new Map<number, { firstName: string; lastName: string }>();
+    if (candidateIds.length > 0) {
+      const rows = await db.select({
+        id: candidatesTable.id, firstName: candidatesTable.firstName, lastName: candidatesTable.lastName,
+      }).from(candidatesTable).where(drizzleInArray(candidatesTable.id, candidateIds));
+      for (const r of rows) candidateNameMap.set(r.id, { firstName: r.firstName, lastName: r.lastName });
+    }
+
+    const prospectNameMap = new Map<number, { firstName: string; lastName: string }>();
+    if (prospectIds.length > 0) {
+      const rows = await db.select({
+        id: prospectContacts.id, voornaam: prospectContacts.voornaam, achternaam: prospectContacts.achternaam, name: prospectContacts.name,
+      }).from(prospectContacts).where(drizzleInArray(prospectContacts.id, prospectIds));
+      for (const r of rows) {
+        prospectNameMap.set(
+          r.id,
+          (r.voornaam || r.achternaam) ? { firstName: r.voornaam || '', lastName: r.achternaam || '' } : splitFullName(r.name),
+        );
+      }
+    }
+
+    const matchedPhones = new Set<string>();
+    for (const r of convRows) {
+      matchedPhones.add(r.phoneNumber);
+      let split: { firstName: string; lastName: string };
+      if (r.candidateId != null && candidateNameMap.has(r.candidateId)) {
+        split = candidateNameMap.get(r.candidateId)!;
+      } else if (r.prospectContactId != null && prospectNameMap.has(r.prospectContactId)) {
+        split = prospectNameMap.get(r.prospectContactId)!;
+      } else {
+        split = splitFullName(r.displayName);
+      }
+      result.set(r.phoneNumber, { ...split, displayName: r.displayName });
+    }
+
+    const resterend = phoneNumbers.filter(p => !matchedPhones.has(p));
+    if (resterend.length > 0) {
+      const importedRows = await db.select({
+        phone: whatsappImportedContacts.phone,
+        name: whatsappImportedContacts.name,
+        firstName: whatsappImportedContacts.firstName,
+        lastName: whatsappImportedContacts.lastName,
+      }).from(whatsappImportedContacts).where(drizzleInArray(whatsappImportedContacts.phone, resterend));
+      for (const r of importedRows) {
+        const split = (r.firstName || r.lastName)
+          ? { firstName: r.firstName || '', lastName: r.lastName || '' }
+          : splitFullName(r.name);
+        result.set(r.phone, { ...split, displayName: r.name });
+      }
+    }
+
+    return result;
+  }
 
   app.get('/api/whatsapp/groups', adminMiddleware, async (_req: Request, res: Response) => {
     const groups = await db.select().from(whatsappGroups).orderBy(drizzleDesc(whatsappGroups.updatedAt));
@@ -12470,17 +12589,34 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     // werkt het lid alleen op phoneNumber (legacy gedrag, blijft compatibel).
     const ALLOWED_TYPES = new Set(['sollicitant', 'kandidaat', 'medewerker']);
 
+    // Server-side redmiddel: als de aanroeper geen voornaam/achternaam
+    // meestuurt, alsnog een echte split proberen te vinden (gekoppelde
+    // kandidaat/prospect of geïmporteerd contact) in plaats van een lid
+    // zonder voornaam op te slaan — anders faalt {{voornaam}} bij versturen.
+    const zonderNaam = members
+      .filter((m: any) => m.phoneNumber && !(m.firstName || '').trim() && !(m.lastName || '').trim())
+      .map((m: any) => normalizePhone(m.phoneNumber) || m.phoneNumber);
+    const naamRedmiddel = await resolveNamesForPhones(Array.from(new Set(zonderNaam)));
+
     const toInsert = members
       .filter((m: any) => m.phoneNumber && !existingSet.has(normalizePhone(m.phoneNumber) || m.phoneNumber))
       .map((m: any) => {
-        const first = (m.firstName || '').trim() || null;
-        const last = (m.lastName || '').trim() || null;
+        const genormaliseerdNummer = normalizePhone(m.phoneNumber) || m.phoneNumber;
+        let first = (m.firstName || '').trim() || null;
+        let last = (m.lastName || '').trim() || null;
+        if (!first && !last) {
+          const redmiddel = naamRedmiddel.get(genormaliseerdNummer);
+          if (redmiddel) {
+            first = redmiddel.firstName || null;
+            last = redmiddel.lastName || null;
+          }
+        }
         const composed = [first, last].filter(Boolean).join(' ') || null;
         const ct = m.contactType && ALLOWED_TYPES.has(m.contactType) ? m.contactType : null;
         const cid = ct && Number.isFinite(Number(m.contactId)) ? Number(m.contactId) : null;
         return {
           groupId: id,
-          phoneNumber: normalizePhone(m.phoneNumber) || m.phoneNumber,
+          phoneNumber: genormaliseerdNummer,
           displayName: (m.displayName && m.displayName.trim()) || composed,
           firstName: first,
           lastName: last,
@@ -12539,6 +12675,9 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
   app.get('/api/whatsapp/groups/:id/available-contacts', adminMiddleware, async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig groep-ID' });
+    const { whatsappImportedContacts } = await import('@shared/schema');
+    const { notInArray: drizzleNotInArray } = await import('drizzle-orm');
+
     const existing = await db.select({ phoneNumber: whatsappGroupMembers.phoneNumber })
       .from(whatsappGroupMembers).where(drizzleEq(whatsappGroupMembers.groupId, id));
     const existingPhones = existing.map(e => e.phoneNumber);
@@ -12547,7 +12686,7 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     if (existingPhones.length > 0) {
       whereCond = drizzleSql`${whatsappConversations.phoneNumber} NOT IN (${drizzleSql.join(existingPhones.map(p => drizzleSql`${p}`), drizzleSql`, `)})`;
     }
-    const contacts = await db.select({
+    const convRows = await db.select({
       phoneNumber: whatsappConversations.phoneNumber,
       displayName: whatsappConversations.displayName,
       matchCategory: whatsappConversations.matchCategory,
@@ -12556,7 +12695,59 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
       .where(whereCond)
       .orderBy(drizzleAsc(whatsappConversations.displayName))
       .limit(200);
-    res.json(contacts);
+
+    // Echte voornaam/achternaam meesturen waar bekend, i.p.v. de aanroeper
+    // zelf de weergavenaam te laten gokken/splitsen (zie resolveNamesForPhones
+    // hierboven) — dit is de bugfix: deze data bestond al, ging alleen
+    // eerder verloren omdat dit endpoint hem niet doorgaf.
+    const naamMap = await resolveNamesForPhones(convRows.map(r => r.phoneNumber));
+    const contacts = convRows.map(r => {
+      const n = naamMap.get(r.phoneNumber);
+      return {
+        phoneNumber: r.phoneNumber,
+        displayName: r.displayName,
+        matchCategory: r.matchCategory,
+        contactCompany: r.contactCompany,
+        firstName: n?.firstName || null,
+        lastName: n?.lastName || null,
+      };
+    });
+
+    // Eenmalig geïmporteerde telefooncontacten (~5500, augustus 2026) die nog
+    // geen eigen WhatsApp-gesprek hebben — anders al hierboven gevonden.
+    // Voorheen helemaal niet beschikbaar om aan een groep toe te voegen.
+    // Best-effort voornaam/achternaam (na de backfill via
+    // scripts/split-imported-contact-names.ts), per contact achteraf
+    // handmatig te corrigeren in het profielpaneel — geen garantie.
+    const excludePhones = new Set([...existingPhones, ...convRows.map(r => r.phoneNumber)]);
+    const importedWhere = excludePhones.size > 0
+      ? drizzleNotInArray(whatsappImportedContacts.phone, Array.from(excludePhones))
+      : undefined;
+    const importedRows = await db.select({
+      phone: whatsappImportedContacts.phone,
+      name: whatsappImportedContacts.name,
+      firstName: whatsappImportedContacts.firstName,
+      lastName: whatsappImportedContacts.lastName,
+    }).from(whatsappImportedContacts)
+      .where(importedWhere)
+      .orderBy(drizzleAsc(whatsappImportedContacts.name))
+      .limit(200);
+
+    const importedContacts = importedRows.map(r => {
+      const split = (r.firstName || r.lastName)
+        ? { firstName: r.firstName || '', lastName: r.lastName || '' }
+        : splitFullName(r.name);
+      return {
+        phoneNumber: r.phone,
+        displayName: r.name,
+        matchCategory: 'imported' as const,
+        contactCompany: null as string | null,
+        firstName: split.firstName || null,
+        lastName: split.lastName || null,
+      };
+    });
+
+    res.json([...contacts, ...importedContacts]);
   });
 
   // ─── TEMPLATES (aanmaken, indienen bij Meta/360dialog, statussync) ─────────

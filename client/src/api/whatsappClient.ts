@@ -16,6 +16,14 @@ export interface Conversation {
    * scripts/import-contacten.ts.
    */
   importedContactName?: string | null;
+  /**
+   * Voornaam/achternaam bij bovenstaande — best-effort gesplitst (of
+   * handmatig gecorrigeerd, zie PUT .../geimporteerde-naam) op
+   * whatsapp_imported_contacts. Alleen gezet wanneer importedContactName
+   * ook gezet is (dus ook alléén-lezen-fallback, zelfde voorwaarden).
+   */
+  importedFirstName?: string | null;
+  importedLastName?: string | null;
   contactCompany: string | null;
   contactNotes: string | null;
   assignedToId: number | null;
@@ -361,8 +369,13 @@ export interface GroupMember {
 export interface AvailableContact {
   phoneNumber: string;
   displayName: string | null;
-  matchCategory: 'candidate' | 'prospect' | 'unmatched';
+  matchCategory: 'candidate' | 'prospect' | 'unmatched' | 'imported';
   contactCompany: string | null;
+  // Echte voornaam/achternaam waar bekend (gekoppelde kandidaat/prospect of
+  // geïmporteerd telefooncontact) — best-effort gegokt bij 'imported' en bij
+  // 'unmatched' contacten zonder koppeling, zie server/whatsapp/nameLogic.ts.
+  firstName: string | null;
+  lastName: string | null;
 }
 
 export interface BulkSendResult {
@@ -669,6 +682,17 @@ export const updateConversationCategory = (phoneNumber: string, category: 'candi
  */
 export const updateConversationDisplayName = (phoneNumber: string, displayName: string) =>
   put<{ success: boolean; displayName: string }>(`/conversations/${encodeURIComponent(phoneNumber)}/naam`, { displayName });
+
+/**
+ * Handmatige correctie van voornaam/achternaam op whatsapp_imported_contacts
+ * (de eenmalige contactenimport) — voor gesprekken zonder gekoppeld
+ * kandidaat/prospect-record. Zie server/routes.ts voor de upsert-logica.
+ */
+export const updateImportedContactName = (phoneNumber: string, firstName: string, lastName: string) =>
+  put<{ success: boolean; firstName: string | null; lastName: string | null }>(
+    `/conversations/${encodeURIComponent(phoneNumber)}/geimporteerde-naam`,
+    { firstName, lastName },
+  );
 
 export const haalNotities = (phoneNumber: string) =>
   get<InternalNote[]>(`/conversations/${encodeURIComponent(phoneNumber)}/notes`);
