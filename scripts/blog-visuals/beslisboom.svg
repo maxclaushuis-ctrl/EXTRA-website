@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img"
+     aria-label="Beslisboom die per hotelgrootte en bezettingspatroon het passende housekeepingmodel aangeeft">
+  <defs>
+    <style>
+      .h  { font-family: 'Poppins', 'DejaVu Sans', sans-serif; font-weight: 700; }
+      .b  { font-family: 'Poppins', 'DejaVu Sans', sans-serif; font-weight: 400; }
+      .sb { font-family: 'Poppins', 'DejaVu Sans', sans-serif; font-weight: 600; }
+    </style>
+    <marker id="pijl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C4B5FD"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="700" fill="#FFFFFF"/>
+
+  <text class="h" x="48" y="60" font-size="30" fill="#111111">Welk model past bij jouw hotel?</text>
+  <text class="b" x="48" y="92" font-size="17" fill="#6B7280">Twee vragen: hoeveel kamers, en hoe hard schommelt je bezetting?</text>
+
+  <!-- Startvraag -->
+  <rect x="440" y="126" width="320" height="72" rx="14" fill="#7C3AED"/>
+  <text class="sb" x="600" y="160" font-size="18" fill="#FFFFFF" text-anchor="middle">Hoeveel kamers heb je?</text>
+  <text class="b"  x="600" y="182" font-size="13" fill="#DDD6FE" text-anchor="middle">start hier</text>
+
+  <!-- Verbindingslijnen naar de drie takken -->
+  <path d="M 600 198 L 600 226 L 210 226 L 210 268" stroke="#C4B5FD" stroke-width="2.5" fill="none" marker-end="url(#pijl)"/>
+  <path d="M 600 198 L 600 268" stroke="#C4B5FD" stroke-width="2.5" fill="none" marker-end="url(#pijl)"/>
+  <path d="M 600 198 L 600 226 L 990 226 L 990 268" stroke="#C4B5FD" stroke-width="2.5" fill="none" marker-end="url(#pijl)"/>
+
+  <!-- Tak 1: minder dan 50 -->
+  <g>
+    <rect x="60" y="272" width="300" height="58" rx="10" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+    <text class="sb" x="210" y="308" font-size="17" fill="#5B21B6" text-anchor="middle">Minder dan 50</text>
+
+    <rect x="60" y="352" width="300" height="196" rx="14" fill="#FAFAFB" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text class="sb" x="210" y="390" font-size="17" fill="#111111" text-anchor="middle">Eigen team + inleen</text>
+    <text class="b" x="86" y="424" font-size="14" fill="#374151">Houd de aansturing zelf in huis</text>
+    <text class="b" x="86" y="450" font-size="14" fill="#374151">en vul de drukke dagen aan</text>
+    <text class="b" x="86" y="476" font-size="14" fill="#374151">met ingeleende krachten.</text>
+    <text class="b" x="86" y="514" font-size="13" fill="#9CA3AF">Uitbesteden levert hier zelden</text>
+    <text class="b" x="86" y="534" font-size="13" fill="#9CA3AF">een besparing op.</text>
+  </g>
+
+  <!-- Tak 2: 50 tot 150 -->
+  <g>
+    <rect x="450" y="272" width="300" height="58" rx="10" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+    <text class="sb" x="600" y="308" font-size="17" fill="#5B21B6" text-anchor="middle">50 tot 150</text>
+
+    <rect x="450" y="352" width="300" height="196" rx="14" fill="#7C3AED"/>
+    <text class="sb" x="600" y="390" font-size="17" fill="#FFFFFF" text-anchor="middle">Vaste kern + flexibele schil</text>
+    <text class="b" x="476" y="424" font-size="14" fill="#EDE9FE">Basisbezetting op eigen mensen,</text>
+    <text class="b" x="476" y="450" font-size="14" fill="#EDE9FE">pieken en uitval via inleen.</text>
+    <text class="b" x="476" y="488" font-size="13" fill="#DDD6FE">Je grootste variabele kostenpost</text>
+    <text class="b" x="476" y="508" font-size="13" fill="#DDD6FE">volgt je bezetting, zonder dat je</text>
+    <text class="b" x="476" y="528" font-size="13" fill="#DDD6FE">kwaliteit uit handen geeft.</text>
+  </g>
+
+  <!-- Tak 3: meer dan 150 -->
+  <g>
+    <rect x="840" y="272" width="300" height="58" rx="10" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+    <text class="sb" x="990" y="308" font-size="17" fill="#5B21B6" text-anchor="middle">Meer dan 150</text>
+
+    <rect x="840" y="352" width="300" height="196" rx="14" fill="#FAFAFB" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text class="sb" x="990" y="382" font-size="16" fill="#111111" text-anchor="middle">Stabiele bezetting?</text>
+    <text class="b" x="866" y="414" font-size="14" fill="#374151">Ja, en geen eigen aansturing:</text>
+    <text class="sb" x="866" y="436" font-size="14" fill="#5B21B6">uitbesteden kan rust geven.</text>
+    <text class="b" x="866" y="472" font-size="14" fill="#374151">Nee, sterk wisselend:</text>
+    <text class="sb" x="866" y="494" font-size="14" fill="#5B21B6">vaste kern + flexibele schil.</text>
+    <text class="b" x="866" y="528" font-size="13" fill="#9CA3AF">Reken door wat er gebeurt als je</text>
+    <text class="b" x="866" y="548" font-size="13" fill="#9CA3AF">over drie jaar wilt wisselen.</text>
+  </g>
+
+  <!-- Voet -->
+  <rect x="48" y="596" width="1104" height="2" fill="#E5E7EB"/>
+  <text class="b" x="48" y="630" font-size="14" fill="#6B7280">Let op: kortere verblijven betekenen meer vertrekkamers per bezette kamer. Je housekeepingbehoefte stijgt dus sneller dan je bezettingsgraad.</text>
+  <text class="sb" x="1152" y="662" font-size="14" fill="#7C3AED" text-anchor="end">doehetextra.nl</text>
+</svg>
