@@ -275,6 +275,27 @@ const AANVULLINGEN: Aanvulling[] = [
           ADD COLUMN IF NOT EXISTS last_name  text
       `),
   },
+  {
+    // Migratie 0019 — zie migrations/manual/0019_assistant_kennis/
+    //
+    // Kennisbank van de dashboard-AI-assistent: door het team vastgelegde
+    // begrippen/werkafspraken die bij elke vraag in de systeemprompt
+    // meegaan. Zie shared/schema.ts (assistantKennis) en
+    // server/assistant/assistent.ts.
+    omschrijving: "assistant_kennis: kennisbank voor de dashboard-AI-assistent",
+    uitvoeren: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS assistant_kennis (
+          id         serial PRIMARY KEY,
+          titel      text NOT NULL,
+          tekst      text NOT NULL,
+          enabled    boolean NOT NULL DEFAULT true,
+          sort_order integer NOT NULL DEFAULT 0,
+          created_at timestamp NOT NULL DEFAULT now(),
+          updated_at timestamp NOT NULL DEFAULT now()
+        )
+      `),
+  },
 ];
 
 /**

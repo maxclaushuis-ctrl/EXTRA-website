@@ -9,6 +9,8 @@
 import {
   ACTIE_TTL_MS,
   TOOL_DEFINITIES,
+  bouwKennisBlok,
+  bouwSysteemPrompt,
   isActieVerlopen,
   ontbrekendeVariabelen,
   parsePeriode,
@@ -134,6 +136,50 @@ assertEq(
 {
   const actieTool = TOOL_DEFINITIES.find(t => t.function.name === 'zet_template_verzending_klaar');
   assertEq('actie-tool vereist groep+template+reden', (actieTool?.function.parameters as any)?.required, ['groep', 'template', 'reden']);
+}
+
+// 19. De sollicitanten-tool bestaat (intakeformulieren ≠ aanmeldingen)
+assertEq(
+  'sollicitanten_overzicht bestaat',
+  TOOL_DEFINITIES.some(t => t.function.name === 'sollicitanten_overzicht'),
+  true,
+);
+
+console.log('\n— bouwKennisBlok() / bouwSysteemPrompt() —');
+
+// 20. Lege kennisbank → geen blok, geen kop in de prompt
+assertEq('lege lijst → lege string', bouwKennisBlok([]), '');
+assertEq(
+  'prompt zonder kennis bevat geen kennis-kop',
+  bouwSysteemPrompt(NU, []).includes('KENNIS VAN EXTRA'),
+  false,
+);
+
+// 21. Regels komen letterlijk in blok en prompt terecht
+{
+  const kennis = [{ titel: 'Sollicitanten', tekst: 'De ingevulde HR-intakeformulieren, niet de website-aanmeldingen.' }];
+  const blok = bouwKennisBlok(kennis);
+  assertEq('blok bevat titel', blok.includes('Sollicitanten'), true);
+  assertEq('blok bevat tekst', blok.includes('intakeformulieren'), true);
+  const prompt = bouwSysteemPrompt(NU, kennis);
+  assertEq('prompt bevat kennis-kop', prompt.includes('KENNIS VAN EXTRA'), true);
+  assertEq('prompt bevat de regel', prompt.includes('intakeformulieren'), true);
+}
+
+// 22. Lege/whitespace-regels worden overgeslagen
+assertEq(
+  'regel met lege tekst telt niet mee',
+  bouwKennisBlok([{ titel: 'Iets', tekst: '   ' }]),
+  '',
+);
+
+// 23. Meerdere regels, volgorde behouden
+{
+  const blok = bouwKennisBlok([
+    { titel: 'A', tekst: 'eerste' },
+    { titel: 'B', tekst: 'tweede' },
+  ]);
+  assertEq('volgorde behouden', blok.indexOf('eerste') < blok.indexOf('tweede'), true);
 }
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

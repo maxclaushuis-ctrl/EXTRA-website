@@ -14,13 +14,18 @@
  * = schone lei. Bewust — dit is een vraag-en-antwoordhulp, geen archief.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Send, Sparkles, X } from 'lucide-react';
+import { BookOpen, Loader2, Plus, Send, Sparkles, Trash2, X } from 'lucide-react';
 import {
   annuleerActie,
   bevestigActie,
+  haalKennis,
+  maakKennis,
   stelVraag,
+  updateKennis,
+  verwijderKennis,
   type ActieVoorstel,
   type AssistentBericht,
+  type KennisRegel,
 } from '../api/assistentClient';
 
 interface ChatBericht extends AssistentBericht {
@@ -91,8 +96,147 @@ function ActieKaart({ actie, status, onBevestig, onAnnuleer }: {
   );
 }
 
+/**
+ * Kennisbank-beheer, in het widget zelf (boek-icoon in de kop). Hier legt
+ * het team begrippen en werkafspraken vast die de assistent bij élke vraag
+ * meekrijgt — "één keer opschrijven, daarna weet hij het". Wijzigingen
+ * werken direct: de server leest de kennisbank per vraag vers uit de
+ * database, dus geen herstart nodig.
+ */
+function KennisWeergave() {
+  const [regels, setRegels] = useState<KennisRegel[]>([]);
+  const [laden, setLaden] = useState(true);
+  const [fout, setFout] = useState<string | null>(null);
+  const [nieuweTitel, setNieuweTitel] = useState('');
+  const [nieuweTekst, setNieuweTekst] = useState('');
+  const [opslaanBezig, setOpslaanBezig] = useState(false);
+
+  useEffect(() => {
+    haalKennis()
+      .then(setRegels)
+      .catch(e => setFout(e?.message || 'Kennisbank laden mislukt'))
+      .finally(() => setLaden(false));
+  }, []);
+
+  async function voegToe() {
+    const titel = nieuweTitel.trim();
+    const tekst = nieuweTekst.trim();
+    if (!titel || !tekst || opslaanBezig) return;
+    setOpslaanBezig(true);
+    setFout(null);
+    try {
+      const rij = await maakKennis(titel, tekst);
+      setRegels(prev => [...prev, rij]);
+      setNieuweTitel('');
+      setNieuweTekst('');
+    } catch (e: any) {
+      setFout(e?.message || 'Opslaan mislukt');
+    } finally {
+      setOpslaanBezig(false);
+    }
+  }
+
+  async function zetAanUit(regel: KennisRegel) {
+    // Optimistisch omzetten; bij een fout draait de catch het terug.
+    setRegels(prev => prev.map(r => (r.id === regel.id ? { ...r, enabled: !regel.enabled } : r)));
+    try {
+      await updateKennis(regel.id, { enabled: !regel.enabled });
+    } catch (e: any) {
+      setRegels(prev => prev.map(r => (r.id === regel.id ? { ...r, enabled: regel.enabled } : r)));
+      setFout(e?.message || 'Wijzigen mislukt');
+    }
+  }
+
+  async function verwijder(regel: KennisRegel) {
+    if (!window.confirm(`Kennisregel "${regel.titel}" verwijderen?`)) return;
+    try {
+      await verwijderKennis(regel.id);
+      setRegels(prev => prev.filter(r => r.id !== regel.id));
+    } catch (e: any) {
+      setFout(e?.message || 'Verwijderen mislukt');
+    }
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50">
+      <p className="text-xs text-gray-500 px-1">
+        Leg hier begrippen en werkafspraken vast — bijvoorbeeld <em>"sollicitanten = de ingevulde
+        intakeformulieren"</em>. De assistent leest dit bij elke vraag mee, dus één keer opschrijven is genoeg.
+      </p>
+
+      {laden && (
+        <div className="flex items-center gap-2 text-xs text-gray-500 px-1">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Kennisbank laden…
+        </div>
+      )}
+
+      {regels.map(regel => (
+        <div key={regel.id} className={`rounded-xl border bg-white p-3 ${regel.enabled ? 'border-gray-200' : 'border-gray-200 opacity-55'}`}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-[13px] font-semibold text-gray-800 break-words">{regel.titel}</div>
+              <div className="text-xs text-gray-600 mt-0.5 whitespace-pre-wrap break-words">{regel.tekst}</div>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={() => zetAanUit(regel)}
+                title={regel.enabled ? 'Uitzetten (assistent gebruikt deze regel dan niet)' : 'Aanzetten'}
+                className={`w-8 h-[18px] rounded-full relative transition-colors ${regel.enabled ? 'bg-purple-600' : 'bg-gray-300'}`}
+              >
+                <span className={`absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white transition-all ${regel.enabled ? 'left-[16px]' : 'left-[2px]'}`} />
+              </button>
+              <button
+                onClick={() => verwijder(regel)}
+                title="Verwijderen"
+                className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {!laden && regels.length === 0 && (
+        <div className="text-xs text-gray-400 px-1">Nog geen kennisregels — voeg de eerste hieronder toe.</div>
+      )}
+
+      <div className="rounded-xl border border-dashed border-purple-300 bg-white p-3 space-y-2">
+        <input
+          value={nieuweTitel}
+          onChange={e => setNieuweTitel(e.target.value)}
+          placeholder="Begrip of onderwerp (bijv. Sollicitanten)"
+          maxLength={200}
+          className="w-full text-[13px] px-2.5 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+        <textarea
+          value={nieuweTekst}
+          onChange={e => setNieuweTekst(e.target.value)}
+          placeholder="Wat moet de assistent hierover weten? (bijv. Met sollicitanten bedoelen we de ingevulde HR-intakeformulieren, niet de website-aanmeldingen.)"
+          maxLength={4000}
+          rows={3}
+          className="w-full text-[13px] px-2.5 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
+        />
+        <button
+          onClick={voegToe}
+          disabled={opslaanBezig || !nieuweTitel.trim() || !nieuweTekst.trim()}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-700 text-white text-xs font-semibold hover:bg-purple-800 disabled:opacity-40"
+        >
+          {opslaanBezig ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+          Toevoegen
+        </button>
+      </div>
+
+      {fout && (
+        <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{fout}</div>
+      )}
+    </div>
+  );
+}
+
 export default function AiAssistent() {
   const [open, setOpen] = useState(false);
+  const [weergave, setWeergave] = useState<'chat' | 'kennis'>('chat');
   const [berichten, setBerichten] = useState<ChatBericht[]>([]);
   const [invoer, setInvoer] = useState('');
   const [bezig, setBezig] = useState(false);
@@ -172,14 +316,30 @@ export default function AiAssistent() {
           <Sparkles className="w-5 h-5" />
           <div>
             <div className="text-sm font-bold leading-tight">AI-assistent</div>
-            <div className="text-[11px] text-purple-200 leading-tight">Vraag naar je dashboard-data</div>
+            <div className="text-[11px] text-purple-200 leading-tight">
+              {weergave === 'kennis' ? 'Kennisbank — wat de assistent moet weten' : 'Vraag naar je dashboard-data'}
+            </div>
           </div>
         </div>
-        <button onClick={() => setOpen(false)} aria-label="Sluiten" className="p-1 rounded-lg hover:bg-white/15">
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setWeergave(w => (w === 'kennis' ? 'chat' : 'kennis'))}
+            aria-label={weergave === 'kennis' ? 'Terug naar de chat' : 'Kennisbank openen'}
+            title={weergave === 'kennis' ? 'Terug naar de chat' : 'Kennisbank: leg begrippen en werkafspraken vast'}
+            className={`p-1 rounded-lg hover:bg-white/15 ${weergave === 'kennis' ? 'bg-white/20' : ''}`}
+          >
+            <BookOpen className="w-4 h-4" />
+          </button>
+          <button onClick={() => setOpen(false)} aria-label="Sluiten" className="p-1 rounded-lg hover:bg-white/15">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
+      {weergave === 'kennis' ? (
+        <KennisWeergave />
+      ) : (
+      <>
       {/* Berichten */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50">
         {berichten.length === 0 && (
@@ -255,6 +415,8 @@ export default function AiAssistent() {
           <Send className="w-4 h-4" />
         </button>
       </form>
+      </>
+      )}
     </div>
   );
 }

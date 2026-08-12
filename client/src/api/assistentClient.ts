@@ -68,3 +68,52 @@ export async function annuleerActie(id: string): Promise<void> {
     credentials: 'include',
   });
 }
+
+// ─── Kennisbank ──────────────────────────────────────────────────────────────
+// Begrippen/werkafspraken die het team één keer vastlegt en die de assistent
+// daarna bij elke vraag meekrijgt. Beheer via het boek-icoon in het widget.
+
+export interface KennisRegel {
+  id: number;
+  titel: string;
+  tekst: string;
+  enabled: boolean;
+  sortOrder: number;
+}
+
+export async function haalKennis(): Promise<KennisRegel[]> {
+  const r = await fetch(`${BASE}/kennis`, { headers, credentials: 'include' });
+  return verwerk<KennisRegel[]>(r, '/kennis');
+}
+
+export async function maakKennis(titel: string, tekst: string): Promise<KennisRegel> {
+  const r = await fetch(`${BASE}/kennis`, {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: JSON.stringify({ titel, tekst }),
+  });
+  return verwerk<KennisRegel>(r, '/kennis');
+}
+
+export async function updateKennis(
+  id: number,
+  patch: Partial<Pick<KennisRegel, 'titel' | 'tekst' | 'enabled'>>,
+): Promise<KennisRegel> {
+  const r = await fetch(`${BASE}/kennis/${id}`, {
+    method: 'PUT',
+    headers,
+    credentials: 'include',
+    body: JSON.stringify(patch),
+  });
+  return verwerk<KennisRegel>(r, '/kennis');
+}
+
+export async function verwijderKennis(id: number): Promise<void> {
+  const r = await fetch(`${BASE}/kennis/${id}`, {
+    method: 'DELETE',
+    headers,
+    credentials: 'include',
+  });
+  await verwerk<{ success: boolean }>(r, '/kennis');
+}

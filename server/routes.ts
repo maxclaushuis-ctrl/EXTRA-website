@@ -13591,6 +13591,56 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     res.json({ success: true });
   });
 
+  // Kennisbank van de assistent: begrippen/werkafspraken die het team één
+  // keer vastlegt en die daarna bij elke vraag in de systeemprompt meegaan.
+  // Beheer zit in het chatwidget zelf (boek-icoon). Tabel: assistant_kennis
+  // (migratie 0019).
+  const { assistantKennis } = await import('@shared/schema');
+
+  app.get('/api/admin/assistent/kennis', adminMiddleware, async (_req: Request, res: Response) => {
+    const rijen = await db.select().from(assistantKennis)
+      .orderBy(drizzleAsc(assistantKennis.sortOrder), drizzleAsc(assistantKennis.id));
+    res.json(rijen);
+  });
+
+  app.post('/api/admin/assistent/kennis', adminMiddleware, async (req: Request, res: Response) => {
+    const titel = String(req.body?.titel ?? '').trim();
+    const tekst = String(req.body?.tekst ?? '').trim();
+    if (!titel || !tekst) return res.status(400).json({ error: 'titel en tekst zijn verplicht' });
+    if (titel.length > 200) return res.status(400).json({ error: 'titel is te lang (max 200 tekens)' });
+    if (tekst.length > 4000) return res.status(400).json({ error: 'tekst is te lang (max 4000 tekens)' });
+    const [rij] = await db.insert(assistantKennis).values({ titel, tekst }).returning();
+    res.json(rij);
+  });
+
+  app.put('/api/admin/assistent/kennis/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (req.body?.titel !== undefined) {
+      const titel = String(req.body.titel).trim();
+      if (!titel || titel.length > 200) return res.status(400).json({ error: 'Ongeldige titel' });
+      patch.titel = titel;
+    }
+    if (req.body?.tekst !== undefined) {
+      const tekst = String(req.body.tekst).trim();
+      if (!tekst || tekst.length > 4000) return res.status(400).json({ error: 'Ongeldige tekst' });
+      patch.tekst = tekst;
+    }
+    if (req.body?.enabled !== undefined) patch.enabled = !!req.body.enabled;
+    const [rij] = await db.update(assistantKennis).set(patch)
+      .where(drizzleEq(assistantKennis.id, id)).returning();
+    if (!rij) return res.status(404).json({ error: 'Kennisregel niet gevonden' });
+    res.json(rij);
+  });
+
+  app.delete('/api/admin/assistent/kennis/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    await db.delete(assistantKennis).where(drizzleEq(assistantKennis.id, id));
+    res.json({ success: true });
+  });
+
   // ─── IMPORT: Kandidaten uit database ────────────────────────────────────────
   app.get('/api/whatsapp/import/candidates', adminMiddleware, async (req: Request, res: Response) => {
     const groupId = parseInt(String(req.query.groupId || '0'));

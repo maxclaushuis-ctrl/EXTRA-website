@@ -19,12 +19,14 @@ import { db } from '../db';
 import { and, gte, lte, sql } from 'drizzle-orm';
 import {
   candidates,
+  applications,
   staffingRequests,
   employees,
   crmCompanies,
   blogPosts,
   whatsappGroups,
   whatsappGroupMembers,
+  assistantKennis,
 } from '@shared/schema';
 import { isGa4Configured, fetchGa4BezoekersPeriode } from '../ga4';
 import { getStats as waConversatieStats } from '../whatsapp/storage';
@@ -121,6 +123,34 @@ const uitvoerders: Record<string, ToolUitvoerder> = {
       perStatus: telPer(rijen, r => r.status),
       perFunctie: telPer(rijen, r => r.functionType),
       metCv: rijen.filter(r => r.hasCv).length,
+    };
+  },
+
+  // Sollicitanten = de ingevulde HR-intakeformulieren (applications-tabel,
+  // het tabblad "Sollicitanten") — een ANDERE telling dan aanmeldingen_
+  // overzicht hierboven (candidates, website-aanmeldingen). Zonder datums
+  // telt dit alles, net als het dashboardtabblad zelf.
+  async sollicitanten_overzicht(args, _ctx, nu) {
+    const heeftPeriode = !!(args?.van || args?.tot);
+    const periode = heeftPeriode ? parsePeriode(args?.van, args?.tot, nu) : null;
+    const rijen = await db
+      .select({
+        functionType: applications.functionType,
+        status: applications.status,
+        interviewer: applications.interviewer,
+      })
+      .from(applications)
+      .where(
+        periode
+          ? and(gte(applications.createdAt, periode.van), lte(applications.createdAt, periode.tot))
+          : undefined,
+      );
+    return {
+      periode: periode ? { van: periode.vanIso, tot: periode.totIso } : 'alles (geen periode opgegeven)',
+      totaal: rijen.length,
+      perFunctie: telPer(rijen, r => r.functionType),
+      perStatus: telPer(rijen, r => r.status),
+      perInterviewer: telPer(rijen, r => r.interviewer),
     };
   },
 
@@ -354,8 +384,24 @@ export async function beantwoordVraag(berichten: AssistentBericht[]): Promise<As
     content: String(b.tekst ?? '').slice(0, 4000),
   }));
 
+  // Kennisbank: door het team vastgelegde begrippen/werkafspraken gaan bij
+  // élke vraag mee in de systeemprompt ("één keer opschrijven, daarna weet
+  // hij het"). Vers uit de database per vraag, zodat een zojuist toegevoegde
+  // regel meteen meedoet — geen cache, geen herstart nodig. Een DB-storing
+  // hier mag een gewone vraag niet blokkeren: dan gewoon zonder kennis door.
+  let kennis: { titel: string; tekst: string }[] = [];
+  try {
+    kennis = await db
+      .select({ titel: assistantKennis.titel, tekst: assistantKennis.tekst })
+      .from(assistantKennis)
+      .where(sql`${assistantKennis.enabled} = true`)
+      .orderBy(assistantKennis.sortOrder, assistantKennis.id);
+  } catch (err) {
+    console.error('[assistent] kennisbank laden mislukt (ga door zonder):', err);
+  }
+
   const modelBerichten: any[] = [
-    { role: 'system', content: bouwSysteemPrompt(nu) },
+    { role: 'system', content: bouwSysteemPrompt(nu, kennis) },
     ...geschiedenis,
   ];
   const ctx: UitvoerContext = { actie: null };
