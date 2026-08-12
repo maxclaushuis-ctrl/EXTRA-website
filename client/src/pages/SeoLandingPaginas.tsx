@@ -57,7 +57,17 @@ function useLandingSchemas(cfg: LandingConfig) {
         "name": cfg.serviceSchema.naam,
         "description": cfg.serviceSchema.beschrijving,
         "serviceType": cfg.serviceSchema.naam,
-        "provider": { "@id": "https://www.doehetextra.nl/#organization" },
+        // Was een "@id"-verwijzing naar "#organization", een node die nergens
+        // op de site gedefinieerd stond — Google kan zo'n losse verwijzing
+        // niet oplossen. Zelfde bug en zelfde fix als hiringOrganization in
+        // server/seo.ts (JobPosting): de Organization-gegevens rechtstreeks
+        // inline zetten.
+        "provider": {
+          "@type": "Organization",
+          "name": "EXTRA",
+          "sameAs": "https://www.doehetextra.nl",
+          "logo": "https://www.doehetextra.nl/logo.png",
+        },
         "areaServed": { "@type": "City", "name": "Amsterdam" },
       });
     }

@@ -191,7 +191,18 @@ const EMPLOYMENT_TYPE_BY_SERVICE_TYPE: Record<string, string> = {
  * Amsterdam) — dus ook correct voor bijv. de Kurhaus-vacatures in Scheveningen.
  * Straatniveau (streetAddress/postalCode) staat niet in vacancy_posts en wordt
  * daarom weggelaten in plaats van verzonnen; Google vereist alleen
- * addressCountry en raadt addressLocality sterk aan.
+ * addressCountry en raadt addressLocality sterk aan. (Search Console meldt dit
+ * als niet-kritiek — een suggestie, geen blokkerend probleem — zie de
+ * kritieke fix hieronder voor het daadwerkelijke probleem.)
+ *
+ * hiringOrganization verwees eerder naar een "@id" ("#organization") dat
+ * nergens in de site gedefinieerd stond — geen enkele pagina publiceert een
+ * Organization-node met dat @id, dus Google kon de verwijzing niet oplossen
+ * en zag een object zonder "@type". Dat was het kritieke probleem dat
+ * Search Console meldde ("Ongeldig objecttype voor veld 'hiringOrganization'"
+ * — hierdoor toont Google de vacature niet in Zoeken naar vacatures). Fix:
+ * de Organization-gegevens rechtstreeks inline zetten, zelfde patroon als
+ * elders in de site (bijv. het publisher-object in NieuwsArtikel.tsx).
  */
 function jobPostingJsonLd(vacancy: VacancyPost, canonicalUrl: string): string {
   const posted = new Date(vacancy.publishedAt || vacancy.createdAt || Date.now());
@@ -213,7 +224,12 @@ function jobPostingJsonLd(vacancy: VacancyPost, canonicalUrl: string): string {
       name: "EXTRA",
       value: String(vacancy.id),
     },
-    hiringOrganization: { "@id": "https://www.doehetextra.nl/#organization" },
+    hiringOrganization: {
+      "@type": "Organization",
+      name: "EXTRA",
+      sameAs: SITE_ORIGIN,
+      logo: `${SITE_ORIGIN}/logo.png`,
+    },
     jobLocation: {
       "@type": "Place",
       address: {
