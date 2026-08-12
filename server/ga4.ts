@@ -142,3 +142,33 @@ export async function fetchGa4Devices(days = 30) {
     sessions: Number(row.metricValues?.[0]?.value ?? 0),
   }));
 }
+
+/**
+ * Bezoekerscijfers voor een expliciete datumperiode (jjjj-mm-dd t/m
+ * jjjj-mm-dd) — voor de dashboard-AI-assistent ("hoeveel bezoekers in
+ * juni?"), waar de bestaande fetchers alleen met "N dagen terug vanaf
+ * vandaag" werken. GA4 accepteert kalenderdatums rechtstreeks in
+ * dateRanges, dus geen omrekening nodig.
+ */
+export async function fetchGa4BezoekersPeriode(startDate: string, endDate: string) {
+  const client = getClient();
+  const propertyId = getPropertyId();
+
+  const [response] = await client.runReport({
+    property: `properties/${propertyId}`,
+    dateRanges: [{ startDate, endDate }],
+    metrics: [
+      { name: "sessions" },
+      { name: "totalUsers" },
+      { name: "screenPageViews" },
+    ],
+  });
+
+  const m = response.rows?.[0]?.metricValues ?? [];
+  return {
+    periode: { van: startDate, tot: endDate },
+    sessies: Number(m[0]?.value ?? 0),
+    bezoekers: Number(m[1]?.value ?? 0),
+    paginaweergaven: Number(m[2]?.value ?? 0),
+  };
+}

@@ -16,7 +16,7 @@
     "contacten:split-namen": "tsx scripts/split-imported-contact-names.ts",
     "seed:vacatures": "tsx scripts/seed-vacatures.ts",
     "wa:classificatie-live": "tsx scripts/wa-classificatie-live.ts",
-    "wa:test": "tsx server/whatsapp/__tests__/aiClassifier.test.ts && tsx server/whatsapp/__tests__/phone.test.ts && tsx server/whatsapp/__tests__/metaWebhook.test.ts && tsx server/whatsapp/__tests__/metaClient.test.ts && tsx server/whatsapp/__tests__/taskRules.test.ts && tsx server/whatsapp/__tests__/templates.test.ts && tsx server/whatsapp/__tests__/groupChatLogic.test.ts && tsx server/whatsapp/__tests__/nameLogic.test.ts"
+    "wa:test": "tsx server/whatsapp/__tests__/aiClassifier.test.ts && tsx server/whatsapp/__tests__/phone.test.ts && tsx server/whatsapp/__tests__/metaWebhook.test.ts && tsx server/whatsapp/__tests__/metaClient.test.ts && tsx server/whatsapp/__tests__/taskRules.test.ts && tsx server/whatsapp/__tests__/templates.test.ts && tsx server/whatsapp/__tests__/groupChatLogic.test.ts && tsx server/whatsapp/__tests__/nameLogic.test.ts && tsx server/whatsapp/__tests__/assistentLogic.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
