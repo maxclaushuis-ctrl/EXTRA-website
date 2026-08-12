@@ -13545,6 +13545,52 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     res.json(rows);
   });
 
+  // ─── AI-ASSISTENT (dashboard) ───────────────────────────────────────────────
+  // Beantwoordt vragen over dashboard-data via function-calling en kan
+  // template-verzendingen KLAARZETTEN. Kern in server/assistant/assistent.ts,
+  // pure logica in server/assistant/assistentLogic.ts. Uitvoeren van een
+  // klaargezette actie gebeurt uitsluitend via het bevestig-endpoint
+  // hieronder, dat het bestaande sendGroupTemplate-pad hergebruikt — dus met
+  // dezelfde validaties, rate-limiting en bulk-send-administratie als een
+  // handmatige verzending. De assistent verstuurt zelf nooit iets.
+  const waAssistent = await import('./assistant/assistent');
+
+  app.post('/api/admin/assistent/vraag', adminMiddleware, async (req: Request, res: Response) => {
+    const { berichten } = req.body || {};
+    if (!Array.isArray(berichten) || berichten.length === 0) {
+      return res.status(400).json({ error: 'berichten (array) is verplicht' });
+    }
+    const geldig = berichten.every(
+      (b: any) => b && (b.rol === 'gebruiker' || b.rol === 'assistent') && typeof b.tekst === 'string',
+    );
+    if (!geldig) {
+      return res.status(400).json({ error: 'elk bericht heeft rol ("gebruiker"|"assistent") en tekst (string) nodig' });
+    }
+    try {
+      const resultaat = await waAssistent.beantwoordVraag(berichten);
+      res.json(resultaat);
+    } catch (err: any) {
+      console.error('[assistent] vraag mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij de AI-assistent' });
+    }
+  });
+
+  // Bevestigen = uitvoeren. whatsappSendLimiter net als bij handmatig
+  // versturen; neemActie() haalt de actie op én verwijdert hem (eenmalig
+  // uitvoerbaar — dubbelklik of replay kan nooit twee keer versturen).
+  app.post('/api/admin/assistent/acties/:id/bevestig', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
+    const actie = waAssistent.neemActie(req.params.id);
+    if (!actie) {
+      return res.status(410).json({ error: 'Deze actie is verlopen of al uitgevoerd — vraag de assistent om hem opnieuw klaar te zetten' });
+    }
+    return sendGroupTemplate(req, res, actie.groepId, actie.templateKey, actie.reden, actie.extraVariabelen);
+  });
+
+  app.delete('/api/admin/assistent/acties/:id', adminMiddleware, async (req: Request, res: Response) => {
+    waAssistent.verwijderActie(req.params.id);
+    res.json({ success: true });
+  });
+
   // ─── IMPORT: Kandidaten uit database ────────────────────────────────────────
   app.get('/api/whatsapp/import/candidates', adminMiddleware, async (req: Request, res: Response) => {
     const groupId = parseInt(String(req.query.groupId || '0'));
