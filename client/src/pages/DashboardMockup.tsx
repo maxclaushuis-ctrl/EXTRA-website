@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AiAssistent from '@/components/AiAssistent';
 import { queryClient, apiRequest, fetchJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -7447,6 +7448,10 @@ jan@example.com,Jan,Jansen,twv_verstrekt,2024-01-01,2025-01-01,Verlengd</code>
           )}
         </div>
       </main>
+
+      {/* Zwevende AI-assistent — buiten <main> zodat hij op elke tab zichtbaar
+          is en geen last heeft van de sidebar-margin of overflow-auto. */}
+      <AiAssistent />
 
       {/* iOS Safari installation guide */}
       <Dialog open={showIOSGuide} onOpenChange={setShowIOSGuide}>

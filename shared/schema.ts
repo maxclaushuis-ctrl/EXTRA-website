@@ -1907,6 +1907,27 @@ export type InsertWhatsappAiKnowledge = typeof whatsappAiKnowledge.$inferInsert;
 export type WhatsappAiAttachment = typeof whatsappAiAttachments.$inferSelect;
 export type InsertWhatsappAiAttachment = typeof whatsappAiAttachments.$inferInsert;
 
+// ─── Dashboard-AI-assistent: kennisbank ──────────────────────────────────────
+// Door het team vastgelegde begrippen en werkafspraken ("sollicitanten = de
+// ingevulde intakeformulieren", "de Marriott-groep = verzendgroep X") die de
+// assistent bij élke vraag als context meekrijgt — zie
+// server/assistant/assistent.ts (bouwSysteemPrompt-injectie). Zelfde vorm als
+// whatsapp_ai_knowledge hierboven, maar bewust een eigen tabel: de WhatsApp-
+// kennisbank stuurt klantgesprekken, deze stuurt interne data-interpretatie —
+// die twee wil je onafhankelijk kunnen bijwerken.
+export const assistantKennis = pgTable("assistant_kennis", {
+  id: serial("id").primaryKey(),
+  titel: text("titel").notNull(),
+  tekst: text("tekst").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type AssistantKennis = typeof assistantKennis.$inferSelect;
+export type InsertAssistantKennis = typeof assistantKennis.$inferInsert;
+
 // ─── Admin notificaties ───────────────────────────────────────────────────────
 export const adminNotificationTypeEnum = pgEnum("admin_notification_type", [
   "new_candidate",       // Nieuwe aanmelding

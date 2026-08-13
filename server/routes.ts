@@ -13545,6 +13545,102 @@ ${waClassifier.buildStructuredOutputInstruction({ withReply: true })}`
     res.json(rows);
   });
 
+  // ─── AI-ASSISTENT (dashboard) ───────────────────────────────────────────────
+  // Beantwoordt vragen over dashboard-data via function-calling en kan
+  // template-verzendingen KLAARZETTEN. Kern in server/assistant/assistent.ts,
+  // pure logica in server/assistant/assistentLogic.ts. Uitvoeren van een
+  // klaargezette actie gebeurt uitsluitend via het bevestig-endpoint
+  // hieronder, dat het bestaande sendGroupTemplate-pad hergebruikt — dus met
+  // dezelfde validaties, rate-limiting en bulk-send-administratie als een
+  // handmatige verzending. De assistent verstuurt zelf nooit iets.
+  const waAssistent = await import('./assistant/assistent');
+
+  app.post('/api/admin/assistent/vraag', adminMiddleware, async (req: Request, res: Response) => {
+    const { berichten } = req.body || {};
+    if (!Array.isArray(berichten) || berichten.length === 0) {
+      return res.status(400).json({ error: 'berichten (array) is verplicht' });
+    }
+    const geldig = berichten.every(
+      (b: any) => b && (b.rol === 'gebruiker' || b.rol === 'assistent') && typeof b.tekst === 'string',
+    );
+    if (!geldig) {
+      return res.status(400).json({ error: 'elk bericht heeft rol ("gebruiker"|"assistent") en tekst (string) nodig' });
+    }
+    try {
+      const resultaat = await waAssistent.beantwoordVraag(berichten);
+      res.json(resultaat);
+    } catch (err: any) {
+      console.error('[assistent] vraag mislukt:', err);
+      res.status(500).json({ error: err?.message || 'Onbekende fout bij de AI-assistent' });
+    }
+  });
+
+  // Bevestigen = uitvoeren. whatsappSendLimiter net als bij handmatig
+  // versturen; neemActie() haalt de actie op én verwijdert hem (eenmalig
+  // uitvoerbaar — dubbelklik of replay kan nooit twee keer versturen).
+  app.post('/api/admin/assistent/acties/:id/bevestig', whatsappSendLimiter, adminMiddleware, async (req: Request, res: Response) => {
+    const actie = waAssistent.neemActie(req.params.id);
+    if (!actie) {
+      return res.status(410).json({ error: 'Deze actie is verlopen of al uitgevoerd — vraag de assistent om hem opnieuw klaar te zetten' });
+    }
+    return sendGroupTemplate(req, res, actie.groepId, actie.templateKey, actie.reden, actie.extraVariabelen);
+  });
+
+  app.delete('/api/admin/assistent/acties/:id', adminMiddleware, async (req: Request, res: Response) => {
+    waAssistent.verwijderActie(req.params.id);
+    res.json({ success: true });
+  });
+
+  // Kennisbank van de assistent: begrippen/werkafspraken die het team één
+  // keer vastlegt en die daarna bij elke vraag in de systeemprompt meegaan.
+  // Beheer zit in het chatwidget zelf (boek-icoon). Tabel: assistant_kennis
+  // (migratie 0019).
+  const { assistantKennis } = await import('@shared/schema');
+
+  app.get('/api/admin/assistent/kennis', adminMiddleware, async (_req: Request, res: Response) => {
+    const rijen = await db.select().from(assistantKennis)
+      .orderBy(drizzleAsc(assistantKennis.sortOrder), drizzleAsc(assistantKennis.id));
+    res.json(rijen);
+  });
+
+  app.post('/api/admin/assistent/kennis', adminMiddleware, async (req: Request, res: Response) => {
+    const titel = String(req.body?.titel ?? '').trim();
+    const tekst = String(req.body?.tekst ?? '').trim();
+    if (!titel || !tekst) return res.status(400).json({ error: 'titel en tekst zijn verplicht' });
+    if (titel.length > 200) return res.status(400).json({ error: 'titel is te lang (max 200 tekens)' });
+    if (tekst.length > 4000) return res.status(400).json({ error: 'tekst is te lang (max 4000 tekens)' });
+    const [rij] = await db.insert(assistantKennis).values({ titel, tekst }).returning();
+    res.json(rij);
+  });
+
+  app.put('/api/admin/assistent/kennis/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (req.body?.titel !== undefined) {
+      const titel = String(req.body.titel).trim();
+      if (!titel || titel.length > 200) return res.status(400).json({ error: 'Ongeldige titel' });
+      patch.titel = titel;
+    }
+    if (req.body?.tekst !== undefined) {
+      const tekst = String(req.body.tekst).trim();
+      if (!tekst || tekst.length > 4000) return res.status(400).json({ error: 'Ongeldige tekst' });
+      patch.tekst = tekst;
+    }
+    if (req.body?.enabled !== undefined) patch.enabled = !!req.body.enabled;
+    const [rij] = await db.update(assistantKennis).set(patch)
+      .where(drizzleEq(assistantKennis.id, id)).returning();
+    if (!rij) return res.status(404).json({ error: 'Kennisregel niet gevonden' });
+    res.json(rij);
+  });
+
+  app.delete('/api/admin/assistent/kennis/:id', adminMiddleware, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Ongeldig ID' });
+    await db.delete(assistantKennis).where(drizzleEq(assistantKennis.id, id));
+    res.json({ success: true });
+  });
+
   // ─── IMPORT: Kandidaten uit database ────────────────────────────────────────
   app.get('/api/whatsapp/import/candidates', adminMiddleware, async (req: Request, res: Response) => {
     const groupId = parseInt(String(req.query.groupId || '0'));
