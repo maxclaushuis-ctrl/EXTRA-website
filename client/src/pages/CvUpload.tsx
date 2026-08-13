@@ -2,7 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { CheckCircle2, Upload, AlertCircle, Loader2, FileText, X } from 'lucide-react';
 import { fetchJson } from '@/lib/queryClient';
 
-type State = 'loading' | 'ready' | 'uploading' | 'success' | 'already_uploaded' | 'invalid' | 'error';
+/**
+ * 'no_token' staat los van 'invalid'. Wie hier zónder token binnenkomt heeft
+ * geen kapotte link — die heeft er gewoon nooit een gehad (bijvoorbeeld via
+ * een zoekresultaat of doordat iemand het adres doorgaf). Die kreeg tot nu toe
+ * "Ongeldige of verlopen link" te lezen, wat suggereert dat er iets stuk is.
+ * Nu krijgt hij een uitleg met de twee routes die wél werken.
+ */
+type State = 'loading' | 'ready' | 'uploading' | 'success' | 'already_uploaded' | 'invalid' | 'no_token' | 'error';
 
 export default function CvUpload() {
   const [state, setState] = useState<State>('loading');
@@ -15,7 +22,7 @@ export default function CvUpload() {
 
   useEffect(() => {
     document.title = 'Upload je cv | EXTRA';
-    if (!token) { setState('invalid'); return; }
+    if (!token) { setState('no_token'); return; }
     // Een serverfout is iets anders dan een ongeldige link. Met het oude
     // `.then(r => r.json())` kwam een HTTP 500 binnen als een gewoon object
     // zonder `valid`, en kreeg de kandidaat "Ongeldige of verlopen link" te
@@ -96,6 +103,44 @@ export default function CvUpload() {
             <div className="bg-white rounded-3xl p-10 text-center shadow-xl shadow-purple-100">
               <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin" style={{ color: '#7c3aed' }} />
               <p className="text-gray-500 text-sm">Bezig met laden…</p>
+            </div>
+          )}
+
+          {/* Geen token — geen fout, maar een verdwaalde bezoeker. Geen rood
+              alarmicoon dus, en twee bruikbare vervolgstappen. */}
+          {state === 'no_token' && (
+            <div className="bg-white rounded-3xl p-8 text-center shadow-xl shadow-purple-100">
+              <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-5">
+                <FileText className="w-8 h-8" style={{ color: '#7c3aed' }} />
+              </div>
+              <h1 className="text-xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Upload je cv
+              </h1>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                Je cv uploaden gaat via een persoonlijke link die je van ons per WhatsApp krijgt.
+                Heb je die nog niet? Meld je dan eerst aan — daarna sturen we hem toe.
+              </p>
+              <div className="flex flex-col gap-2.5">
+                <a
+                  href="/aanmelden"
+                  className="inline-flex items-center justify-center gap-2 font-bold text-white px-6 py-3 rounded-2xl text-sm transition-all active:scale-95"
+                  style={{ background: '#7c3aed' }}
+                >
+                  Aanmelden bij EXTRA
+                </a>
+                <a
+                  href="/sollicitatieformulier"
+                  className="inline-flex items-center justify-center gap-2 font-semibold px-6 py-3 rounded-2xl text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all active:scale-95"
+                >
+                  Naar het sollicitatieformulier
+                </a>
+                <a
+                  href="https://wa.me/31851305915"
+                  className="inline-flex items-center justify-center gap-2 font-semibold px-6 py-3 rounded-2xl text-sm text-gray-500 hover:text-gray-700 transition-all"
+                >
+                  Of app ons je vraag
+                </a>
+              </div>
             </div>
           )}
 
