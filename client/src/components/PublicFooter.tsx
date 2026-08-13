@@ -117,13 +117,17 @@ export default function PublicFooter() {
                   { label: "Personeel aanvragen", href: "/personeelsaanvraag" },
                   { label: "Hoe het werkt", href: "/horeca-uitzendbureau-amsterdam-werkwijze" },
                   { label: "Waarom EXTRA", href: "/horeca-uitzendbureau-amsterdam" },
-                  { label: "Horeca personeel", href: "/horeca-personeel-amsterdam" },
+                  // Label bewust "… Amsterdam": sinds /horeca-personeel er ook
+                  // in staat, moeten de twee labels uit elkaar te houden zijn.
+                  { label: "Horeca personeel Amsterdam", href: "/horeca-personeel-amsterdam" },
+                  { label: "Horeca personeel", href: "/horeca-personeel" },
                   { label: "Hotelpersoneel inhuren", href: "/hotelpersoneel-inhuren" },
                   { label: "Eventpersoneel inhuren", href: "/eventpersoneel-inhuren" },
                   { label: "Evenementen personeel inhuren", href: "/evenementen-personeel-inhuren" },
                   { label: "Cateringpersoneel inhuren", href: "/cateringpersoneel-inhuren" },
                   { label: "Restaurantpersoneel", href: "/horecapersoneel-restaurants" },
                   { label: "Flexibel horecapersoneel", href: "/flexibel-horeca-personeel" },
+                  { label: "Tijdelijk horecapersoneel", href: "/tijdelijk-horeca-personeel" },
                 ].map((l) => (
                   <li key={l.href}>
                     <Link
@@ -143,6 +147,7 @@ export default function PublicFooter() {
               <ul className="space-y-3">
                 {[
                   { label: "Solliciteer direct", href: "/aanmelden" },
+                  { label: "Sollicitatieformulier", href: "/sollicitatieformulier" },
                   { label: "Vacatures", href: "/vacatures" },
                   { label: "Horeca vacatures Amsterdam", href: "/horeca-vacatures-amsterdam" },
                   { label: "Horeca werk Amsterdam", href: "/horeca-werk-amsterdam" },

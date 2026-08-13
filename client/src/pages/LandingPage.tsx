@@ -852,7 +852,7 @@ export default function LandingPage() {
               <a href="/horeca-personeel-gezocht" className="group bg-white text-purple-900 font-bold px-7 py-4 rounded-full text-base hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Ik zoek extra personeel <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="/ik-zoek-extra-werk" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
+              <a href="/horeca-vacatures-amsterdam" className="border-2 border-white/30 text-white font-bold px-7 py-4 rounded-full hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
                 Ik zoek extra werk <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -936,7 +936,7 @@ export default function LandingPage() {
             </RevealSection>
 
             <RevealSection delay={150}>
-              <a href="/ik-zoek-extra-werk" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
+              <a href="/horeca-vacatures-amsterdam" className="group block relative bg-gradient-to-br from-indigo-50 to-white rounded-2xl sm:rounded-[2rem] shadow-lg shadow-indigo-500/5 border-2 border-indigo-100 p-7 sm:p-10 hover:shadow-2xl hover:border-indigo-300 hover:-translate-y-2 transition-all duration-400 h-full overflow-hidden">
                 <div className="absolute top-0 right-0 w-28 sm:w-40 h-28 sm:h-40 bg-gradient-to-bl from-indigo-100 to-transparent rounded-bl-[100%] opacity-60" />
                 <div className="relative">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
@@ -1831,9 +1831,9 @@ export default function LandingPage() {
                     { label: "Hoe het werkt", href: "/horeca-uitzendbureau-amsterdam-werkwijze" },
                     { label: "Waarom EXTRA", href: "/horeca-uitzendbureau-amsterdam" },
                     { label: "Horeca personeel", href: "/horeca-personeel-amsterdam" },
-                    { label: "Hotel personeel", href: "/hotel-personeel-amsterdam" },
-                    { label: "Evenementen personeel", href: "/evenementen-personeel-amsterdam" },
-                    { label: "Catering personeel", href: "/catering-personeel-amsterdam" },
+                    { label: "Hotel personeel", href: "/hotelpersoneel-inhuren" },
+                    { label: "Evenementen personeel", href: "/eventpersoneel-inhuren" },
+                    { label: "Catering personeel", href: "/cateringpersoneel-inhuren" },
                   ].map((l) => (
                     <li key={l.href}>
                       <a href={l.href} className="text-sm text-purple-300/60 hover:text-white transition-colors inline-block">

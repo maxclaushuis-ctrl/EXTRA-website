@@ -162,9 +162,11 @@ export default function HorecaPersoneelAmsterdamPage() {
               {[
                 { label: "Horeca uitzendbureau", href: "/horeca-uitzendbureau-amsterdam" },
                 { label: "Personeel inhuren", href: "/horeca-personeel-inhuren" },
-                { label: "Hotel personeel", href: "/hotel-personeel-amsterdam" },
+                { label: "Hotel personeel", href: "/hotelpersoneel-inhuren" },
                 { label: "Flexibel personeel", href: "/flexibel-horeca-personeel" },
-                { label: "Restaurant personeel", href: "/restaurant-personeel-amsterdam" },
+                { label: "Tijdelijk personeel", href: "/tijdelijk-horeca-personeel" },
+                { label: "Horeca personeel", href: "/horeca-personeel" },
+                { label: "Restaurant personeel", href: "/horecapersoneel-restaurants" },
                 { label: "Horeca vacatures", href: "/horeca-vacatures-amsterdam" }
               ].map((link, i) => (
                 <Link key={i} href={link.href} className="bg-white/5 px-5 py-2.5 rounded-full border border-white/10 text-sm font-medium text-white/60 hover:border-purple-400/50 hover:text-purple-300 transition-all">

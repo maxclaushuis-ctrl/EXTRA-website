@@ -85,10 +85,10 @@ export default function HorecaUitzendbureau() {
               <h3 className="text-xl font-bold text-white/80 mb-8">Gespecialiseerd in diverse branches</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  { href: "/hotel-personeel-amsterdam", title: "Hotel personeel", desc: "Housekeeping, receptie en F&B medewerkers voor de top van de Amsterdamse hotellerie." },
-                  { href: "/evenementen-personeel-amsterdam", title: "Evenementen personeel", desc: "Professionele gastheren, gastvrouwen en bediening voor zakelijke events en publieksbeurzen." },
-                  { href: "/catering-personeel-amsterdam", title: "Catering personeel", desc: "Flexibele krachten voor bedrijfscatering en partycatering op locatie." },
-                  { href: "/restaurant-personeel-amsterdam", title: "Restaurant personeel", desc: "Ervaren kelners en barpersoneel die direct mee kunnen draaien in uw service." }
+                  { href: "/hotelpersoneel-inhuren", title: "Hotel personeel", desc: "Housekeeping, receptie en F&B medewerkers voor de top van de Amsterdamse hotellerie." },
+                  { href: "/eventpersoneel-inhuren", title: "Evenementen personeel", desc: "Professionele gastheren, gastvrouwen en bediening voor zakelijke events en publieksbeurzen." },
+                  { href: "/cateringpersoneel-inhuren", title: "Catering personeel", desc: "Flexibele krachten voor bedrijfscatering en partycatering op locatie." },
+                  { href: "/horecapersoneel-restaurants", title: "Restaurant personeel", desc: "Ervaren kelners en barpersoneel die direct mee kunnen draaien in uw service." }
                 ].map((item, i) => (
                   <RevealSection key={i} delay={i * 100}>
                     <Link href={item.href} className="group block bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-purple-500/40 transition-all duration-300">
@@ -195,13 +195,13 @@ export default function HorecaUitzendbureau() {
             <div className="flex flex-wrap justify-center gap-3">
               {[
                 { label: "Horeca personeel Amsterdam", href: "/horeca-personeel-amsterdam" },
-                { label: "Hotel personeel Amsterdam", href: "/hotel-personeel-amsterdam" },
+                { label: "Hotel personeel Amsterdam", href: "/hotelpersoneel-inhuren" },
                 { label: "Flexibel personeel", href: "/flexibel-horeca-personeel" },
                 { label: "Horeca vacatures", href: "/horeca-vacatures-amsterdam" },
                 { label: "Personeel inhuren", href: "/horeca-personeel-inhuren" },
-                { label: "Restaurant personeel", href: "/restaurant-personeel-amsterdam" },
-                { label: "Catering personeel", href: "/catering-personeel-amsterdam" },
-                { label: "Evenementen personeel", href: "/evenementen-personeel-amsterdam" }
+                { label: "Restaurant personeel", href: "/horecapersoneel-restaurants" },
+                { label: "Catering personeel", href: "/cateringpersoneel-inhuren" },
+                { label: "Evenementen personeel", href: "/eventpersoneel-inhuren" }
               ].map((link, i) => (
                 <Link key={i} href={link.href} className="bg-white/5 px-5 py-2.5 rounded-full border border-white/10 text-sm font-medium text-white/60 hover:border-purple-400/50 hover:text-purple-300 transition-all">
                   {link.label}

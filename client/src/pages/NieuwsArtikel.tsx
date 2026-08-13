@@ -426,7 +426,7 @@ export default function NieuwsArtikel() {
                 <p className="text-purple-200 text-sm sm:text-base mb-4">EXTRA is hét horeca uitzendbureau in Amsterdam. Flexibel, betrouwbaar en snel geschakeld.</p>
                 <div className="flex flex-wrap gap-3">
                   <Link href="/personeelsaanvraag" className="bg-white text-purple-700 font-semibold px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors">Personeel aanvragen</Link>
-                  <Link href="/ik-zoek-extra-werk" className="border border-white/30 text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-colors">Werk zoeken</Link>
+                  <Link href="/horeca-vacatures-amsterdam" className="border border-white/30 text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-colors">Werk zoeken</Link>
                 </div>
               </div>
             </div>

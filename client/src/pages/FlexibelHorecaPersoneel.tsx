@@ -163,7 +163,7 @@ export default function FlexibelHorecaPersoneel() {
                 { label: "Personeel Amsterdam", href: "/horeca-personeel-amsterdam" },
                 { label: "Horeca personeel", href: "/horeca-personeel" },
                 { label: "Personeel inhuren", href: "/horeca-personeel-inhuren" },
-                { label: "Restaurant personeel", href: "/restaurant-personeel-amsterdam" }
+                { label: "Restaurant personeel", href: "/horecapersoneel-restaurants" }
               ].map((link, i) => (
                 <Link key={i} href={link.href} className="bg-white/5 px-5 py-2.5 rounded-full border border-white/10 text-sm font-medium text-white/60 hover:border-purple-400/50 hover:text-purple-300 transition-all">
                   {link.label}

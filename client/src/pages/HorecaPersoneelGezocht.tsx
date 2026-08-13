@@ -206,7 +206,7 @@ export default function HorecaPersoneelGezocht() {
       {/* 2. BREADCRUMB */}
       <div className="bg-white/5 py-4 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <Link href="/personeel-gezocht" className="inline-flex items-center gap-2 text-purple-300 hover:text-white font-medium transition-colors">
+          <Link href="/horeca-personeel-gezocht" className="inline-flex items-center gap-2 text-purple-300 hover:text-white font-medium transition-colors">
             <ChevronLeft className="w-4 h-4" />
             Terug naar Personeel gezocht
           </Link>
@@ -431,7 +431,7 @@ export default function HorecaPersoneelGezocht() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
           <p className="text-sm text-purple-100/40 mb-8 uppercase tracking-widest font-bold">Gerelateerde pagina's</p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
-            <Link href="/personeel-gezocht" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Alle sectoren</Link>
+            <Link href="/horeca-personeel-gezocht" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Alle sectoren</Link>
             <Link href="/personeelsaanvraag" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Personeel aanvragen</Link>
             <Link href="/hotelpersoneel-inhuren" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Hotelpersoneel</Link>
             <Link href="/eventpersoneel-inhuren" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">Eventpersoneel</Link>
