@@ -10269,11 +10269,14 @@ ${vacancies.map(v => `  <url>
       const batchId = batch && batch !== 'alle' ? parseInt(batch, 10) : null;
       const cat = categorie && categorie !== 'alle' ? categorie : null;
 
-      const rules = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", is_end_state AS "isEndState", use_business_days AS "useBusinessDays", behavior, asks_channel AS "asksChannel" FROM salesflow_phase_rules ORDER BY position`);
+      const rules = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", is_end_state AS "isEndState", use_business_days AS "useBusinessDays", behavior, asks_channel AS "asksChannel", asks_appointment AS "asksAppointment" FROM salesflow_phase_rules ORDER BY position`);
       const cards = await db.execute(sql`
         SELECT k.id, k.phase, k.eigenaar_user_id AS "eigenaarUserId", k.position,
                k.next_action_at AS "nextActionAt", k.next_action_type AS "nextActionType",
                k.channel, k.not_reached_count AS "notReachedCount", k.snooze_until AS "snoozeUntil",
+               -- Als tekst, niet als timestamp: een JS-Date zou hier een
+               -- tijdzone-conversie op loslaten en 14:00 als 12:00 tonen.
+               to_char(k.appointment_at, 'YYYY-MM-DD"T"HH24:MI') AS "appointmentAt",
                k.notes, k.batch_id AS "batchId", k.created_by_name AS "createdByName",
                ct.name AS "contactNaam", ct.function AS "contactFunctie", ct.email AS "contactEmail", ct.phone AS "contactPhone",
                co.id AS "companyId", co.name AS "bedrijfNaam", co.categorie, co.city,
@@ -10412,7 +10415,7 @@ ${vacancies.map(v => `  <url>
     }
   });
 
-  // PATCH /api/sales/flow/cards/:id/move  { phase, channel?, snoozeUntil? }  → drag & drop
+  // PATCH /api/sales/flow/cards/:id/move  { phase, channel?, snoozeUntil?, appointmentAt? }  → drag & drop
   app.patch("/api/sales/flow/cards/:id/move", salesMiddleware, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id, 10);
@@ -10421,13 +10424,18 @@ ${vacancies.map(v => `  <url>
         phase: z.string().min(1),
         channel: z.enum(['email','linkedin']).nullable().optional(),
         snoozeUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+        // 'YYYY-MM-DDTHH:MM' — precies wat een datetime-local-veld teruggeeft.
+        // Bewust zonder tijdzone: dit is een agenda-afspraak in de eigen tijd,
+        // geen moment op een wereldwijde tijdlijn.
+        appointmentAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/).nullable().optional(),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
       if (!(await phaseBestaat(parsed.data.phase))) return res.status(400).json({ message: "Onbekende fase" });
       const updated = await moveCardToPhase({
         cardId: id, phase: parsed.data.phase, actorUserId: req.session.userId ?? null,
-        channel: parsed.data.channel, snoozeUntil: parsed.data.snoozeUntil, resetNotReached: parsed.data.phase !== 'nagebeld',
+        channel: parsed.data.channel, snoozeUntil: parsed.data.snoozeUntil,
+        appointmentAt: parsed.data.appointmentAt, resetNotReached: parsed.data.phase !== 'nagebeld',
       });
       return res.json(updated);
     } catch (error: any) {
@@ -10512,6 +10520,7 @@ ${vacancies.map(v => `  <url>
         notes: z.string().nullable().optional(),
         eigenaarUserId: z.number().int().nullable().optional(),
         batchId: z.number().int().nullable().optional(),
+        appointmentAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/).nullable().optional(),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
@@ -10521,6 +10530,7 @@ ${vacancies.map(v => `  <url>
           notes = CASE WHEN ${'notes' in b} THEN ${b.notes ?? null} ELSE notes END,
           eigenaar_user_id = CASE WHEN ${'eigenaarUserId' in b} THEN ${b.eigenaarUserId ?? null}::int ELSE eigenaar_user_id END,
           batch_id = CASE WHEN ${'batchId' in b} THEN ${b.batchId ?? null}::int ELSE batch_id END,
+          appointment_at = CASE WHEN ${'appointmentAt' in b} THEN ${b.appointmentAt ?? null}::timestamp ELSE appointment_at END,
           updated_at = now()
         WHERE id = ${id} RETURNING *`);
       const row = (r.rows ?? r)[0];
@@ -10585,7 +10595,7 @@ ${vacancies.map(v => `  <url>
 
   // GET /api/sales/flow/rules  → alle kolommen (fases)
   app.get("/api/sales/flow/rules", salesMiddleware, async (_req: Request, res: Response) => {
-    const r = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", use_business_days AS "useBusinessDays", is_end_state AS "isEndState", behavior, asks_channel AS "asksChannel" FROM salesflow_phase_rules ORDER BY position`);
+    const r = await db.execute(sql`SELECT phase, label, position, trigger_days AS "triggerDays", trigger_action AS "triggerAction", use_business_days AS "useBusinessDays", is_end_state AS "isEndState", behavior, asks_channel AS "asksChannel", asks_appointment AS "asksAppointment" FROM salesflow_phase_rules ORDER BY position`);
     return res.json(r.rows ?? r);
   });
 
@@ -10597,10 +10607,11 @@ ${vacancies.map(v => `  <url>
         triggerDays: z.number().int().min(0).max(90).nullable().optional(),
         triggerAction: z.string().max(30).nullable().optional(),
         asksChannel: z.boolean().optional(),
+        asksAppointment: z.boolean().optional(),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
-      const { label, triggerDays, triggerAction, asksChannel } = parsed.data;
+      const { label, triggerDays, triggerAction, asksChannel, asksAppointment } = parsed.data;
       // Uniek fase-sleutel afleiden uit het label.
       let base = slugify(label); let phase = base; let i = 2;
       while (await phaseBestaat(phase)) { phase = `${base}_${i++}`; }
@@ -10608,9 +10619,12 @@ ${vacancies.map(v => `  <url>
       const posRow = ((await db.execute(sql`SELECT COALESCE(MIN(position), (SELECT COALESCE(MAX(position),0)+1 FROM salesflow_phase_rules)) AS pos FROM salesflow_phase_rules WHERE is_end_state = true`)).rows ?? [])[0] as any;
       const insertPos = Number(posRow?.pos ?? 1);
       await db.execute(sql`UPDATE salesflow_phase_rules SET position = position + 1 WHERE position >= ${insertPos}`);
+      // Zonder actie hoort er ook geen termijn te staan: een "0" leest als een
+      // termijn en leverde vóór v9 een reminder op die meteen te laat was.
+      const dagen = triggerAction ? (triggerDays ?? null) : null;
       const r = await db.execute(sql`
-        INSERT INTO salesflow_phase_rules (phase, label, position, trigger_days, trigger_action, asks_channel, behavior, is_end_state)
-        VALUES (${phase}, ${label}, ${insertPos}, ${triggerDays ?? null}::int, ${triggerAction ?? null}, ${asksChannel ?? false}::bool, 'normal', false)
+        INSERT INTO salesflow_phase_rules (phase, label, position, trigger_days, trigger_action, asks_channel, asks_appointment, behavior, is_end_state)
+        VALUES (${phase}, ${label}, ${insertPos}, ${dagen}::int, ${triggerAction ?? null}, ${asksChannel ?? false}::bool, ${asksAppointment ?? false}::bool, 'normal', false)
         RETURNING phase, label, position`);
       return res.status(201).json((r.rows ?? r)[0]);
     } catch (error) {
@@ -10665,6 +10679,7 @@ ${vacancies.map(v => `  <url>
         triggerAction: z.string().max(30).nullable().optional(),
         useBusinessDays: z.boolean().optional(),
         asksChannel: z.boolean().optional(),
+        asksAppointment: z.boolean().optional(),
       }).strict();
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Ongeldige velden", errors: parsed.error.flatten() });
@@ -10678,7 +10693,12 @@ ${vacancies.map(v => `  <url>
         triggerAction: 'triggerAction' in b ? (b.triggerAction ?? null) : huidig.trigger_action,
         useBusinessDays: 'useBusinessDays' in b ? b.useBusinessDays : huidig.use_business_days,
         asksChannel: 'asksChannel' in b ? b.asksChannel : huidig.asks_channel,
+        asksAppointment: 'asksAppointment' in b ? b.asksAppointment : huidig.asks_appointment,
       };
+      // Een fase zonder actie (of een afspraakfase) hoort geen termijn te
+      // hebben — anders ontstaat opnieuw de situatie waarin "Geen actie" met
+      // 0 werkdagen tóch een reminder oplevert.
+      if (!nieuw.triggerAction || nieuw.asksAppointment) nieuw.triggerDays = null;
       const r = await db.execute(sql`
         UPDATE salesflow_phase_rules SET
           label = ${nieuw.label},
@@ -10686,6 +10706,7 @@ ${vacancies.map(v => `  <url>
           trigger_action = ${nieuw.triggerAction},
           use_business_days = ${nieuw.useBusinessDays}::bool,
           asks_channel = ${nieuw.asksChannel}::bool,
+          asks_appointment = ${nieuw.asksAppointment}::bool,
           updated_at = now()
         WHERE phase = ${phase} RETURNING *`);
       return res.json((r.rows ?? r)[0]);

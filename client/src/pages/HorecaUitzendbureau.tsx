@@ -152,6 +152,13 @@ export default function HorecaUitzendbureau() {
               <p className="text-white/60 leading-relaxed mb-6">
                 Horeca is hollen of stilstaan. Onze systemen zijn erop ingericht om snel te kunnen schakelen. Via ons platform kunt u eenvoudig aanvragen doen en ziet u direct wie er komt werken. Doordat wij alle administratieve lasten, verzekeringen en loonbetalingen op ons nemen, kunt u zich volledig focussen op uw gasten.
               </p>
+              <p className="text-white/60 leading-relaxed mb-6">
+                Twijfelt u nog tussen inlenen, uitbesteden of zelf mensen in dienst nemen? In ons artikel over{" "}
+                <Link href="/blog/housekeeping-personeel-inhuren" className="text-purple-300 underline underline-offset-4 hover:text-purple-200 transition-colors">
+                  housekeeping personeel inhuren
+                </Link>{" "}
+                zetten we de drie modellen naast elkaar op leiding, cao, kosten, opzegbaarheid en aansprakelijkheid.
+              </p>
             </RevealSection>
           </div>
         </section>

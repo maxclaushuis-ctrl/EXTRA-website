@@ -18,6 +18,7 @@ import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { log } from "./vite";
 import { sendEmail } from "./mail";
+import { beoordeelReminder, faseRegelUitRij } from "./salesflowLogic";
 
 export type SalesflowPhase =
   | "selectie" | "mailing_verstuurd" | "nagebeld" | "bericht_gestuurd"
@@ -82,6 +83,10 @@ export async function ensureSalesflowSchema(): Promise<void> {
   await db.execute(sql`ALTER TABLE salesflow_phase_rules ADD COLUMN IF NOT EXISTS behavior text NOT NULL DEFAULT 'normal'`);
   await db.execute(sql`ALTER TABLE salesflow_phase_rules ADD COLUMN IF NOT EXISTS asks_channel boolean NOT NULL DEFAULT false`);
   await db.execute(sql`ALTER TABLE salesflow_cards ADD COLUMN IF NOT EXISTS created_by_name text`);
+  // Afspraakfase: kolommen met asks_appointment vragen bij het verslepen om een
+  // datum + tijd, en maken juist géén reminder aan (migratie 0011).
+  await db.execute(sql`ALTER TABLE salesflow_phase_rules ADD COLUMN IF NOT EXISTS asks_appointment boolean NOT NULL DEFAULT false`);
+  await db.execute(sql`ALTER TABLE salesflow_cards ADD COLUMN IF NOT EXISTS appointment_at timestamp`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS salesflow_cards_phase_idx ON salesflow_cards (phase, position)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS salesflow_cards_batch_idx ON salesflow_cards (batch_id)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS salesflow_cards_eigenaar_idx ON salesflow_cards (eigenaar_user_id)`);
@@ -107,7 +112,51 @@ export async function ensureSalesflowSchema(): Promise<void> {
     await db.execute(sql`UPDATE salesflow_phase_rules SET behavior = 'snooze' WHERE phase = 'geen_interesse' AND behavior = 'normal'`);
     await db.execute(sql`UPDATE salesflow_phase_rules SET asks_channel = true WHERE phase = 'bericht_gestuurd' AND asks_channel = false`);
   }
-  log("[salesflow] schema gecontroleerd en up-to-date (code-versie v8)");
+
+  // ── Zelfherstel: "Geen actie" mag nooit een reminder opleveren ─────────────
+  //
+  // Tot en met v8 gold de voorwaarde `trigger_days != null` voor het aanmaken
+  // van een reminder. Wie in "Fases instellen" de actie op "Geen actie" zette
+  // maar het aantal werkdagen op 0 liet staan, kreeg daardoor tóch een reminder
+  // — met vervaldatum vandaag en zonder actietype, dus met de nietszeggende
+  // titel "Actie". Die stond de volgende dag meteen als "te laat" op het bord
+  // én in de ochtendmail. Precies wat "Geen actie" hoort te voorkomen.
+  //
+  // De code hieronder maakt de bestaande gegevens weer kloppend. Idempotent:
+  // na de eerste keer vindt hij niets meer.
+
+  // 1. Werkdagen horen leeg te zijn zonder actie — anders blijft de instelling
+  //    in de UI verwarrend ("0" leest als een termijn).
+  await db.execute(sql`
+    UPDATE salesflow_phase_rules SET trigger_days = NULL, updated_at = now()
+    WHERE is_end_state = false AND trigger_action IS NULL AND trigger_days IS NOT NULL`);
+
+  // 2. Reminders die bij zo'n fase horen afsluiten. Alleen reminders die aan
+  //    een kaart hangen die nú in een actieloze fase staat — reminders uit de
+  //    historie blijven ongemoeid.
+  const opgeruimd = await db.execute(sql`
+    UPDATE crm_reminders SET status = 'completed'
+    WHERE status <> 'completed' AND id IN (
+      SELECT k.reminder_id FROM salesflow_cards k
+      JOIN salesflow_phase_rules r ON r.phase = k.phase
+      WHERE k.reminder_id IS NOT NULL
+        AND (r.trigger_action IS NULL OR r.asks_appointment = true)
+    )
+    RETURNING id`);
+
+  // 3. En de kaart zelf weer schoon: geen openstaande actie meer.
+  await db.execute(sql`
+    UPDATE salesflow_cards k SET
+      reminder_id = NULL, next_action_at = NULL, next_action_type = NULL, updated_at = now()
+    FROM salesflow_phase_rules r
+    WHERE r.phase = k.phase
+      AND (r.trigger_action IS NULL OR r.asks_appointment = true)
+      AND (k.reminder_id IS NOT NULL OR k.next_action_at IS NOT NULL)`);
+
+  const n = rows(opgeruimd).length;
+  if (n > 0) log(`[salesflow] ${n} onterechte reminder(s) opgeruimd bij fases zonder actie`);
+
+  log("[salesflow] schema gecontroleerd en up-to-date (code-versie v9)");
 }
 
 /** Voegt N werkdagen (ma–vr) toe aan een datum en geeft 'YYYY-MM-DD'. */
@@ -169,6 +218,7 @@ export async function moveCardToPhase(opts: {
   actorUserId?: number | null;
   channel?: string | null;      // bij 'bericht_gestuurd'
   snoozeUntil?: string | null;  // bij 'geen_interesse'
+  appointmentAt?: string | null; // bij een fase met asks_appointment
   resetNotReached?: boolean;    // reset teller bij fase-wissel weg van 'nagebeld'
 }): Promise<any> {
   const card = one(await db.execute(sql`SELECT * FROM salesflow_cards WHERE id = ${opts.cardId} LIMIT 1`));
@@ -195,7 +245,11 @@ export async function moveCardToPhase(opts: {
   let nextActionType: string | null = null;
   let newReminderId: number | null = null;
 
-  if (!rule.is_end_state && rule.trigger_days != null) {
+  // Of er een reminder komt, staat in één pure functie — zie
+  // server/salesflowLogic.ts voor de voorwaarden en het waarom.
+  const oordeel = beoordeelReminder(faseRegelUitRij(rule));
+
+  if (oordeel.maakt) {
     const base = new Date();
     nextActionAt = rule.use_business_days
       ? addBusinessDays(base, rule.trigger_days)
@@ -222,6 +276,14 @@ export async function moveCardToPhase(opts: {
   const snooze = rule.behavior === "snooze" ? (opts.snoozeUntil ?? null) : null;
   const notReached = opts.resetNotReached ? 0 : card.not_reached_count;
 
+  // Afspraakdatum: alleen overschrijven als de fase erom vraagt én er een
+  // waarde is meegegeven. Bij het wegslepen naar een andere fase blijft de
+  // oude datum staan — sleep je per ongeluk mis, dan ben je hem niet kwijt.
+  const afspraak =
+    rule.asks_appointment && opts.appointmentAt !== undefined
+      ? opts.appointmentAt
+      : (card.appointment_at ?? null);
+
   // 5. Werk de kaart bij.
   const updated = one(await db.execute(sql`
     UPDATE salesflow_cards SET
@@ -231,6 +293,7 @@ export async function moveCardToPhase(opts: {
       reminder_id = ${newReminderId},
       channel = ${opts.channel ?? card.channel ?? null},
       snooze_until = ${snooze}::date,
+      appointment_at = ${afspraak}::timestamp,
       not_reached_count = ${notReached},
       entered_phase_at = now(),
       updated_at = now()

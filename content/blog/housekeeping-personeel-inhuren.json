@@ -1,0 +1,26 @@
+{
+  "title": "Housekeeping personeel inhuren: uitzendbureau, schoonmaakbedrijf of eigen team?",
+  "slug": "housekeeping-personeel-inhuren",
+  "excerpt": "Zelf in dienst nemen, uitbesteden per kamer of inlenen per uur? De drie modellen naast elkaar op leiding, cao, kosten, opzegbaarheid en aansprakelijkheid — met een checklist voor je leverancier.",
+  "metaTitle": "Housekeeping personeel inhuren: 3 modellen vergeleken",
+  "metaDescription": "Uitzendbureau, schoonmaakbedrijf of eigen team? Vergelijk de drie manieren om housekeeping personeel in te huren op cao, leiding, kosten en opzegbaarheid.",
+  "focusKeyword": "housekeeping personeel inhuren",
+  "category": "Housekeeping",
+  "imageUrl": "/images/housekeeping-hotelkamer-amsterdam.webp",
+  "imageAlt": "Opgemaakt hotelbed met verse linnengoed en een nachtkastje in een hotelkamer",
+  "author": "EXTRA Redactie",
+  "readTime": "7 min",
+  "tags": ["housekeeping", "hotels", "inhuren"],
+
+  "_notities": [
+    "metaDescription staat óók zichtbaar als cursieve intro onder de H1 (zie NieuwsArtikel.tsx) — schrijf hem dus als gewone leesbare zin.",
+    "De hero-afbeelding is bewust zonder tekst: de pagina legt er zelf een donkere gradient overheen en zet de titel eronder."
+  ],
+  "_feitencontrole": [
+    "cao voor uitzendkrachten, gelijkwaardige arbeidsvoorwaarden per 1-1-2026 — bevestigd",
+    "artikel 38 cao Schoonmaak (werkgelegenheid bij contractwisseling) — bevestigd",
+    "citaat John van Keulen (80 / 50 kamers) — letterlijk geverifieerd bij de bron (Hospitality Management)",
+    "Temper: hof-arrest juni 2026, cassatie loopt bij de Hoge Raad — als zodanig benoemd",
+    "CBS-verblijfsduurcijfers uit de briefing (1,87 → 1,83) waren NIET te verifiëren en staan daarom bewust niet in de tekst; het onderliggende punt (kortere verblijven = meer vertrekkamers) is kwalitatief gebracht"
+  ]
+}
