@@ -17,3 +17,8 @@ server/db.json
 .env.production
 # Cookie-bestanden bevatten sessie-tokens — nooit committen
 cookies.txt
+# Patchbestanden zijn overdrachtsmiddel, geen broncode: ze worden aangeleverd,
+# met `git am` toegepast en zijn daarna overbodig. Belandden ze tóch in een
+# commit, dan groeide elke `git pull` met duizenden regels die niets met de
+# site te maken hebben.
+*.patch
