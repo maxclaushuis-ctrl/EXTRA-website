@@ -132,10 +132,42 @@ const SKIP_PREFIXES = ["http://", "https://", "mailto:", "tel:", "//", "#"];
 
 const files = walk(CLIENT_SRC);
 const errors: string[] = [];
+/** Links die wél werken, maar via een 301 lopen. Aparte lijst, aparte melding. */
+const omwegen: string[] = [];
 let checked = 0;
+
+/**
+ * Volgt de redirectketen tot het pad dat niet verder doorverwijst.
+ *
+ * Waarom dit gecontroleerd wordt: een interne link naar een pad dat zelf een
+ * 301 geeft werkt prima voor de bezoeker, maar Ahrefs meldt het als "Page has
+ * links to redirect" en het kost bij elke sprong een extra serverronde plus een
+ * beetje linkwaarde. De eindbestemming staat gewoon in server/redirects.ts, dus
+ * er is geen reden om de omweg te laten staan.
+ */
+function eindbestemming(p: string): string {
+  let current = normalize(p);
+  for (let hop = 0; hop < 5; hop++) {
+    const dest = resolveRedirect(current);
+    if (!dest) return current;
+    current = normalize(dest);
+  }
+  return current; // vangnet tegen een cirkel
+}
+
+/** Registreert een href die via een redirect loopt (of laat hem met rust). */
+function controleerOmweg(rel: string, rawHref: string, href: string): void {
+  const doel = resolveRedirect(normalize(href));
+  if (!doel) return;
+  omwegen.push(`${rel}: href="${rawHref}" → wijst beter rechtstreeks naar "${eindbestemming(href)}"`);
+}
 
 // href="/pad" (letterlijke string)
 const LITERAL_HREF = /href=["'](\/[^"'{}]*)["']/g;
+// { label: "…", href: "/pad" } — link-clouds en navigatielijsten gebruiken deze
+// objectvorm; die werd tot nu toe niet gescand, terwijl juist daar de meeste
+// interne links zitten.
+const OBJECT_HREF = /href:\s*["'](\/[^"']*)["']/g;
 // href={`/pad/${iets}`} (template literal met een letterlijk voorvoegsel)
 const TEMPLATE_HREF = /href=\{`(\/[^`]*?)\$\{/g;
 // href={`/pad`} (template literal zonder interpolatie — functioneel gelijk aan een letterlijke string)
@@ -155,6 +187,21 @@ for (const file of files) {
     checked++;
     if (!isKnownRoute(href) && !resolvesToKnownRoute(href)) {
       errors.push(`${rel}: href="${rawHref}" — geen route in App.tsx en geen werkende redirect`);
+    } else {
+      controleerOmweg(rel, rawHref, href);
+    }
+  }
+
+  for (const m of src.matchAll(OBJECT_HREF)) {
+    const rawHref = m[1];
+    if (SKIP_PREFIXES.some((p) => rawHref.startsWith(p)) || rawHref === "") continue;
+    const href = rawHref.split("#")[0];
+    if (href === "") continue;
+    checked++;
+    if (!isKnownRoute(href) && !resolvesToKnownRoute(href)) {
+      errors.push(`${rel}: href: "${rawHref}" — geen route in App.tsx en geen werkende redirect`);
+    } else {
+      controleerOmweg(rel, rawHref, href);
     }
   }
 
@@ -181,8 +228,35 @@ for (const file of files) {
   }
 }
 
+// ── 3. Redirectketens in server/redirects.ts zelf ────────────────────────
+// Een redirect die naar een pad wijst dat zélf doorverwijst kost de crawler
+// twee sprongen. Google volgt ze wel, maar geeft niet alle waarde door en kapt
+// na een paar hops af.
+const ketens: string[] = [];
+{
+  const src = fs.readFileSync(path.join(ROOT, "server", "redirects.ts"), "utf-8");
+  for (const m of src.matchAll(/"(\/[^"]*)":\s*"(\/[^"]*)"/g)) {
+    const volgende = resolveRedirect(normalize(m[2]));
+    if (volgende) ketens.push(`${m[1]} → ${m[2]} → ${volgende} (verwijs meteen naar "${eindbestemming(m[2])}")`);
+  }
+}
+
 if (errors.length) {
   console.error(`✗ ${errors.length} interne link(s) naar een niet-bestaande route:\n  - ${errors.join("\n  - ")}`);
   process.exit(1);
 }
-console.log(`✓ Interne-links-check geslaagd: ${checked} href's gecontroleerd tegen ${routePaths.length} routes, 0 kapotte links.`);
+if (omwegen.length) {
+  console.error(
+    `✗ ${omwegen.length} interne link(s) lopen via een redirect (Ahrefs: "Page has links to redirect"):\n  - ` +
+      omwegen.join("\n  - ")
+  );
+  process.exit(1);
+}
+if (ketens.length) {
+  console.error(`✗ ${ketens.length} redirectketen(s) in server/redirects.ts:\n  - ${ketens.join("\n  - ")}`);
+  process.exit(1);
+}
+console.log(
+  `✓ Interne-links-check geslaagd: ${checked} href's gecontroleerd tegen ${routePaths.length} routes — ` +
+    `0 kapotte links, 0 links via een redirect, 0 redirectketens.`
+);

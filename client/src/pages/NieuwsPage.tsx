@@ -323,7 +323,7 @@ export default function NieuwsPage() {
           <RevealSection delay={400}>
             <div className="flex justify-center mt-12 sm:mt-16">
               <Link
-                href="/landing#contact"
+                href="/#contact"
                 className="group inline-flex items-center gap-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold text-base px-8 py-4 rounded-full shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105"
               >
                 Neem contact op

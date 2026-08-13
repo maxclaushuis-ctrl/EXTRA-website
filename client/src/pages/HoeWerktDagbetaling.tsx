@@ -437,7 +437,7 @@ export default function HoeWerktDagbetaling() {
               <a href="/aanmelden" className="group bg-white text-purple-900 font-bold px-8 py-4 rounded-full text-lg hover:shadow-2xl hover:shadow-white/20 transition-all hover:-translate-y-1 inline-flex items-center justify-center gap-2">
                 Meld je aan in 2 minuten <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="/ik-zoek-extra-werk#functies" className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center justify-center gap-2">
+              <a href="/horeca-vacatures-amsterdam#functies" className="border-2 border-white/30 text-white font-bold px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all hover:-translate-y-1 inline-flex items-center justify-center gap-2">
                 Bekijk functies <ChevronRight className="w-5 h-5" />
               </a>
             </div>

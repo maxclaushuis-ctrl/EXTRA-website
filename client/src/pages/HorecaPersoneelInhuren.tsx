@@ -8,28 +8,28 @@ export default function HorecaPersoneelInhuren() {
   const branches = [
     {
       title: "Hotels",
-      href: "/hotel-personeel-amsterdam",
+      href: "/hotelpersoneel-inhuren",
       icon: Hotel,
       description: "Van housekeeping tot front-office en F&B medewerkers voor luxe hotels.",
       image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
     },
     {
       title: "Eventlocaties",
-      href: "/evenementen-personeel-amsterdam",
+      href: "/eventpersoneel-inhuren",
       icon: PartyPopper,
       description: "Professionele hosts, bediening en barpersoneel voor elk type event.",
       image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800",
     },
     {
       title: "Cateraars",
-      href: "/catering-personeel-amsterdam",
+      href: "/cateringpersoneel-inhuren",
       icon: UtensilsCrossed,
       description: "Flexibel keuken- en bedieningspersoneel dat naadloos aansluit bij uw team.",
       image: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&q=80&w=800",
     },
     {
       title: "Restaurants",
-      href: "/restaurant-personeel-amsterdam",
+      href: "/horecapersoneel-restaurants",
       icon: Building2,
       description: "Ervaren kelners en barpersoneel die direct inzetbaar zijn in de Amsterdamse horeca.",
       image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800",

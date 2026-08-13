@@ -109,7 +109,10 @@ const REDIRECT_MAP: Record<string, string> = {
   // ── OUDE (WIX-)URL'S DIE GOOGLE NOG KENT, ZONDER ROUTE ───
   // Stonden geïndexeerd maar gaven een soft-404 (200 + lege shell).
   "/werken-bij-extra":                  "/horeca-werk",
-  "/krijg-direct-uitbetaald":           "/hoe-werkt-dagbetaling",
+  // Let op ketens: /hoe-werkt-dagbetaling verwijst zélf door naar /dagbetaling,
+  // dus dit kostte twee sprongen. Nu rechtstreeks — zie ook de ketencheck in
+  // scripts/check-internal-links.ts.
+  "/krijg-direct-uitbetaald":           "/dagbetaling",
   "/bijbaan-utrecht":                   "/horeca-werk",
   "/en/werk-zoeken":                    "/en/hospitality-jobs",
   "/en/uitzendbureau-hilversum":        "/",
