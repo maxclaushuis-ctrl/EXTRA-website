@@ -943,6 +943,11 @@ export default function Aanmelden() {
               ) : (
                 <>Just want to drop off your CV without the full sign-up? <a href="/cv-upload" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">Go to CV upload</a>.</>
               )}
+              {lang === "NL" ? (
+                <> Of vul het uitgebreide <a href="/sollicitatieformulier" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">sollicitatieformulier</a> in.</>
+              ) : (
+                <> Or fill in the full <a href="/sollicitatieformulier" className="text-white font-semibold underline underline-offset-2 hover:text-purple-100">application form</a>.</>
+              )}
             </p>
           )}
 

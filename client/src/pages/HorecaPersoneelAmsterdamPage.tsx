@@ -164,6 +164,8 @@ export default function HorecaPersoneelAmsterdamPage() {
                 { label: "Personeel inhuren", href: "/horeca-personeel-inhuren" },
                 { label: "Hotel personeel", href: "/hotel-personeel-amsterdam" },
                 { label: "Flexibel personeel", href: "/flexibel-horeca-personeel" },
+                { label: "Tijdelijk personeel", href: "/tijdelijk-horeca-personeel" },
+                { label: "Horeca personeel", href: "/horeca-personeel" },
                 { label: "Restaurant personeel", href: "/restaurant-personeel-amsterdam" },
                 { label: "Horeca vacatures", href: "/horeca-vacatures-amsterdam" }
               ].map((link, i) => (
