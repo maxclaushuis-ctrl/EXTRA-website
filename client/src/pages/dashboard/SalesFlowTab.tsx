@@ -33,10 +33,11 @@ const dropOpMuispositie: CollisionDetection = (args) => {
 };
 import { Plus, Search, Settings2, Check, ArrowUp, ArrowDown, Trash2, FolderPlus, AlertTriangle, RefreshCw } from 'lucide-react';
 
-interface Rule { phase: string; label: string; position: number; triggerDays: number | null; triggerAction: string | null; isEndState: boolean; behavior?: string; asksChannel?: boolean; useBusinessDays?: boolean; }
+interface Rule { phase: string; label: string; position: number; triggerDays: number | null; triggerAction: string | null; isEndState: boolean; behavior?: string; asksChannel?: boolean; asksAppointment?: boolean; useBusinessDays?: boolean; }
 interface Card {
   id: number; phase: string; eigenaarUserId: number | null; eigenaarNaam: string | null;
   nextActionAt: string | null; nextActionType: string | null; channel: string | null;
+  appointmentAt: string | null;
   notReachedCount: number; snoozeUntil: string | null; notes: string | null; batchId: number | null;
   contactNaam: string; contactFunctie: string | null; contactEmail: string | null;
   companyId: number; bedrijfNaam: string; categorie: string | null; city: string | null;
@@ -45,12 +46,19 @@ interface Card {
 interface Batch { id: number; name: string; categorie: string | null; cardCount: number; }
 interface Owner { id: number; naam: string; email: string; }
 
+// 'none' en 'afspraak' zijn geen echte trigger-acties maar keuzes in dezelfde
+// dropdown: 'none' → geen reminder, 'afspraak' → vraag om een datum en maak
+// evenmin een reminder. Ze worden bij het opslaan vertaald naar
+// triggerAction + asksAppointment (zie opslaan() in FasesInstellen).
 const ACTIE_OPTIES: [string, string][] = [
-  ['none', 'Geen actie'], ['bellen', 'Bellen'], ['opnieuw_bellen', 'Opnieuw bellen'],
+  ['none', 'Geen actie'], ['afspraak', 'Afspraak plannen'],
+  ['bellen', 'Bellen'], ['opnieuw_bellen', 'Opnieuw bellen'],
   ['opvolgen', 'Opvolgen'], ['mailen', 'Mailen'], ['appen', 'Appen'], ['langsgaan', 'Langsgaan'],
 ];
 const actieLabel = (a: string | null | undefined) =>
   ACTIE_OPTIES.find(([v]) => v === a)?.[1] ?? (a ? a.charAt(0).toUpperCase() + a.slice(1) : 'reminder');
+/** Bij deze keuzes is een termijn in werkdagen betekenisloos. */
+const zonderTermijn = (actie: string) => actie === 'none' || actie === 'afspraak';
 
 const foutTekst = (e: any) => e?.data?.message || e?.message || 'Onbekende fout';
 
@@ -59,6 +67,16 @@ function initialen(naam: string) { return naam.split(' ').map(w => w[0]).slice(0
 function statusVan(card: Card, rule?: Rule): { kleur: string; tekst: string; laat: boolean } {
   if (rule?.behavior === 'deal') return { kleur: '#3aa76d', tekst: 'Deal gesloten', laat: false };
   if (rule?.behavior === 'snooze') return { kleur: '#c9ccd8', tekst: card.snoozeUntil ? `Terug op ${fmt(card.snoozeUntil)}` : 'Afgesloten', laat: false };
+  // Afspraakfase: de datum die JIJ hebt ingevoerd, niet een berekende actie.
+  // Een afspraak die geweest is wordt grijs — informatief, nooit 'te laat',
+  // want er hangt bewust geen opvolgactie aan.
+  if (rule?.asksAppointment) {
+    if (!card.appointmentAt) return { kleur: '#c9ccd8', tekst: 'Datum nog invullen', laat: false };
+    const min = minutenTot(card.appointmentAt);
+    if (min < 0) return { kleur: '#c9ccd8', tekst: `Afspraak was ${fmtMoment(card.appointmentAt)}`, laat: false };
+    if (min < 60 * 24) return { kleur: '#e8a13c', tekst: `Afspraak ${fmtMoment(card.appointmentAt)}`, laat: false };
+    return { kleur: '#3aa76d', tekst: `Afspraak ${fmtMoment(card.appointmentAt)}`, laat: false };
+  }
   if (!card.nextActionAt) return { kleur: '#c9ccd8', tekst: 'Geen actie gepland', laat: false };
   const actie = actieLabel(card.nextActionType);
   if (card.daysOverdue > 0) return { kleur: '#d6453d', tekst: `${actie} — ${card.daysOverdue} dg te laat`, laat: true };
@@ -68,6 +86,26 @@ function statusVan(card: Card, rule?: Rule): { kleur: string; tekst: string; laa
 }
 function fmt(d: string) { return new Date(d + 'T00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }); }
 function daysUntil(d: string) { return Math.round((new Date(d + 'T00:00').getTime() - new Date(new Date().toDateString()).getTime()) / 86400000); }
+
+/** 'YYYY-MM-DDTHH:MM' → '19 aug 14:00'. De server stuurt dit als tekst, dus
+ *  hier gebeurt géén tijdzone-conversie: 14:00 blijft 14:00. */
+function fmtMoment(s: string) {
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const datum = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+  const tijd = d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  const vandaag = new Date().toDateString() === d.toDateString();
+  return `${vandaag ? 'vandaag' : datum} ${tijd}`;
+}
+function minutenTot(s: string) { return Math.round((new Date(s).getTime() - Date.now()) / 60000); }
+/** Standaardwaarde voor het datum-tijdveld: morgen 10:00, in lokale tijd. */
+function morgenTien() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(10, 0, 0, 0);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 function KaartView({ card, rule }: { card: Card; rule?: Rule }) {
   const st = statusVan(card, rule);
@@ -109,7 +147,10 @@ function Kolom({ rule, cards, batchId, onBatchAdvance, onKaartOpen }: { rule: Ru
   const { setNodeRef, isOver } = useDroppable({ id: rule.phase });
   const triggerRegel = rule.isEndState
     ? (rule.behavior === 'deal' ? 'Bedrijf → Bestaande klanten' : rule.behavior === 'snooze' ? 'Sluimert → terug in eerste kolom' : 'Eindfase')
-    : rule.triggerDays != null ? `Na ${rule.triggerDays} dagen → ${actieLabel(rule.triggerAction)}` : 'Voorbereiden';
+    : rule.asksAppointment ? 'Afspraakdatum invoeren'
+    : rule.triggerAction && rule.triggerDays != null ? `Na ${rule.triggerDays} dagen → ${actieLabel(rule.triggerAction)}`
+    : rule.triggerAction == null ? 'Geen actie'
+    : 'Voorbereiden';
   return (
     <div ref={setNodeRef} className={`flex-1 min-w-[200px] border-r border-gray-100 last:border-r-0 flex flex-col ${isOver ? 'bg-purple-50/40' : ''}`}>
       <div className="px-3 pt-3 pb-2.5 border-b-2" style={{ borderColor: rule.isEndState ? '#d9ece0' : '#e6e2f5' }}>
@@ -156,6 +197,7 @@ export default function SalesFlowTab() {
   const [detailKaart, setDetailKaart] = useState<Card | null>(null);
   const [kanaalVoor, setKanaalVoor] = useState<{ cardId: number; phase: string } | null>(null);
   const [sluimerVoor, setSluimerVoor] = useState<{ cardId: number; phase: string } | null>(null);
+  const [afspraakVoor, setAfspraakVoor] = useState<{ cardId: number; phase: string; huidig: string | null } | null>(null);
   const [advanceVraag, setAdvanceVraag] = useState<{ batchId: number; fromPhase: string; fromLabel: string; toPhase: string; toLabel: string; aantal: number } | null>(null);
 
   // distance 3: slepen start vrijwel direct; kaarten hebben geen klik-actie dus dit is veilig.
@@ -176,8 +218,11 @@ export default function SalesFlowTab() {
 
   const [moveFout, setMoveFout] = useState<string | null>(null);
   const move = useMutation({
-    mutationFn: (v: { id: number; phase: string; channel?: string; snoozeUntil?: string | null }) =>
-      apiRequest('PATCH', `/api/sales/flow/cards/${v.id}/move`, { phase: v.phase, channel: v.channel ?? null, snoozeUntil: v.snoozeUntil ?? null }),
+    mutationFn: (v: { id: number; phase: string; channel?: string; snoozeUntil?: string | null; appointmentAt?: string | null }) =>
+      apiRequest('PATCH', `/api/sales/flow/cards/${v.id}/move`, {
+        phase: v.phase, channel: v.channel ?? null, snoozeUntil: v.snoozeUntil ?? null,
+        ...(v.appointmentAt !== undefined ? { appointmentAt: v.appointmentAt } : {}),
+      }),
     // Optimistisch: de kaart blijft direct in de nieuwe kolom staan; alleen als
     // de server weigert, springt hij terug mét een zichtbare foutmelding.
     onMutate: async (v) => {
@@ -230,6 +275,7 @@ export default function SalesFlowTab() {
     const card = cards.find(c => c.id === cardId);
     if (!card || !naarFase || card.phase === naarFase) return;
     const rule = ruleByPhase[naarFase];
+    if (rule?.asksAppointment) { setAfspraakVoor({ cardId, phase: naarFase, huidig: card.appointmentAt }); return; }
     if (rule?.asksChannel) { setKanaalVoor({ cardId, phase: naarFase }); return; }
     if (rule?.behavior === 'snooze') { setSluimerVoor({ cardId, phase: naarFase }); return; }
     move.mutate({ id: cardId, phase: naarFase });
@@ -251,7 +297,7 @@ export default function SalesFlowTab() {
       <div className="flex items-start gap-3 flex-wrap mb-5">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Salesflow</h1>
-          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v9</span></p>
+          <p className="text-[13px] text-gray-500">Persoonlijke opvolging van direct mailings — gekoppeld aan Leads &amp; Prospects. <span className="text-gray-300">v10</span></p>
         </div>
         <div className="flex gap-2 ml-2 flex-wrap items-center">
           <SfSelect label="Batch" value={batch} onChange={setBatch} width="w-[190px]"
@@ -292,8 +338,19 @@ export default function SalesFlowTab() {
         <Legenda kleur="#3aa76d" tekst="Actie gepland" />
         <Legenda kleur="#e8a13c" tekst="Vandaag/morgen" />
         <Legenda kleur="#d6453d" tekst="Te laat" />
-        <Legenda kleur="#c9ccd8" tekst="Wacht / sluimert" />
+        <Legenda kleur="#c9ccd8" tekst="Wacht / sluimert / geweest" />
       </div>
+
+      {/* Afspraakdatum invullen bij verplaatsen naar een afspraak-kolom */}
+      <AfspraakDialog
+        open={!!afspraakVoor}
+        huidig={afspraakVoor?.huidig ?? null}
+        onClose={() => setAfspraakVoor(null)}
+        onKies={(waarde) => {
+          if (afspraakVoor) move.mutate({ id: afspraakVoor.cardId, phase: afspraakVoor.phase, appointmentAt: waarde });
+          setAfspraakVoor(null);
+        }}
+      />
 
       <KaartDetail card={detailKaart} rule={detailKaart ? ruleByPhase[detailKaart.phase] : undefined} batches={batches ?? []} onClose={() => setDetailKaart(null)} />
       <PersoonToevoegen open={addOpen} batches={batches ?? []} owners={owners} huidigeBatch={batch} onClose={() => setAddOpen(false)} />
@@ -345,7 +402,16 @@ export default function SalesFlowTab() {
 function KaartDetail({ card, rule, batches, onClose }: { card: Card | null; rule?: Rule; batches: Batch[]; onClose: () => void }) {
   const { toast } = useToast();
   const [bevestig, setBevestig] = useState(false);
-  useEffect(() => { setBevestig(false); }, [card?.id]);
+  const [afspraak, setAfspraak] = useState('');
+  useEffect(() => { setBevestig(false); setAfspraak(card?.appointmentAt ?? ''); }, [card?.id, card?.appointmentAt]);
+  const zetAfspraak = useMutation({
+    mutationFn: (waarde: string | null) => apiRequest('PATCH', `/api/sales/flow/cards/${card!.id}`, { appointmentAt: waarde }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/flow'] });
+      toast({ title: 'Afspraakdatum opgeslagen' });
+    },
+    onError: (e: any) => toast({ title: 'Opslaan mislukt', description: foutTekst(e), variant: 'destructive' }),
+  });
   const verwijder = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/sales/flow/cards/${id}`),
     onSuccess: () => {
@@ -383,6 +449,18 @@ function KaartDetail({ card, rule, batches, onClose }: { card: Card | null; rule
             {rij('Toegevoegd door', card.createdByName)}
             {card.notReachedCount > 0 ? rij('Niet bereikt', `${card.notReachedCount}×`) : null}
           </div>
+          {rule?.asksAppointment && (
+            <div className="border-t border-gray-100 mt-2 pt-2.5">
+              <label className="text-[12px] text-gray-400 block mb-1">Datum en tijd van het gesprek</label>
+              <div className="flex gap-2">
+                <Input type="datetime-local" value={afspraak} onChange={e => setAfspraak(e.target.value)} className="h-9 text-sm" />
+                <Button size="sm" variant="outline" disabled={zetAfspraak.isPending || afspraak === (card.appointmentAt ?? '')}
+                  onClick={() => zetAfspraak.mutate(afspraak === '' ? null : afspraak)} className="shrink-0">
+                  {zetAfspraak.isPending ? 'Bezig…' : 'Opslaan'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter className="flex-row justify-between sm:justify-between">
           {bevestig ? (
@@ -395,6 +473,37 @@ function KaartDetail({ card, rule, batches, onClose }: { card: Card | null; rule
             </Button>
           )}
           <Button variant="outline" onClick={onClose}>Sluiten</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Datum + tijd van het gesprek. Bewust een gewoon datetime-local-veld: de
+ * browser levert daar zelf een kalender bij, in de taal van het systeem, en de
+ * waarde ('YYYY-MM-DDTHH:MM') gaat één op één naar de server — geen
+ * tijdzone-omrekening onderweg.
+ *
+ * "Nog niet bekend" is een volwaardige uitkomst: de kaart mag ook zonder datum
+ * in de kolom staan. Hij toont dan 'Datum nog invullen' in grijs.
+ */
+function AfspraakDialog({ open, huidig, onClose, onKies }: { open: boolean; huidig: string | null; onClose: () => void; onKies: (waarde: string | null) => void }) {
+  const [waarde, setWaarde] = useState('');
+  useEffect(() => { if (open) setWaarde(huidig ?? morgenTien()); }, [open, huidig]);
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Wanneer is de afspraak?</DialogTitle></DialogHeader>
+        <p className="text-[13px] text-gray-500 -mt-1">Deze datum komt op de kaart te staan. Er wordt géén reminder van gemaakt.</p>
+        <Input type="datetime-local" value={waarde} onChange={e => setWaarde(e.target.value)} className="h-9 text-sm"
+          onKeyDown={e => { if (e.key === 'Enter' && waarde) onKies(waarde); }} />
+        <DialogFooter className="flex-row justify-between sm:justify-between">
+          <Button variant="ghost" onClick={() => onKies(null)}>Nog niet bekend</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Annuleren</Button>
+            <Button className="bg-purple-600 hover:bg-purple-700" disabled={!waarde} onClick={() => onKies(waarde)}>Opslaan</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -588,7 +697,12 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
 
   // Lokale bewerkstaat: wijzigingen worden pas doorgevoerd bij "Opslaan".
   const [edits, setEdits] = useState<Record<string, FaseBewerking>>({});
-  const vanRule = (r: Rule): FaseBewerking => ({ label: r.label, triggerDays: r.triggerDays == null ? '' : String(r.triggerDays), triggerAction: r.triggerAction ?? 'none' });
+  const vanRule = (r: Rule): FaseBewerking => ({
+    label: r.label,
+    triggerDays: r.triggerDays == null ? '' : String(r.triggerDays),
+    // asksAppointment wint: die fase heeft per definitie geen trigger-actie.
+    triggerAction: r.asksAppointment ? 'afspraak' : (r.triggerAction ?? 'none'),
+  });
   useEffect(() => {
     if (open) { setEdits(Object.fromEntries(rules.map(r => [r.phase, vanRule(r)]))); setFoutmelding(null); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -624,10 +738,17 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
         const label = e.label.trim();
         if (label && label !== r.label) body.label = label;
         if (!r.isEndState) {
-          const td = e.triggerDays.trim() === '' ? null : parseInt(e.triggerDays, 10);
+          // 'afspraak' is geen trigger-actie maar een vlag; 'none' betekent
+          // geen actie. Beide leveren een lege termijn op — de server dwingt
+          // dat ook af, zodat "Geen actie" nooit meer een reminder oplevert.
+          const wilAfspraak = e.triggerAction === 'afspraak';
+          const ta = zonderTermijn(e.triggerAction) ? null : e.triggerAction;
+          const td = zonderTermijn(e.triggerAction)
+            ? null
+            : (e.triggerDays.trim() === '' ? null : parseInt(e.triggerDays, 10));
           if (!Number.isNaN(td as any) && td !== r.triggerDays) body.triggerDays = td;
-          const ta = e.triggerAction === 'none' ? null : e.triggerAction;
           if (ta !== (r.triggerAction ?? null)) body.triggerAction = ta;
+          if (wilAfspraak !== !!r.asksAppointment) body.asksAppointment = wilAfspraak;
         }
         if (Object.keys(body).length > 0) {
           await apiRequest('PATCH', `/api/sales/flow/rules/${r.phase}`, body);
@@ -658,6 +779,7 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
       <DialogContent className="max-w-2xl">
         <DialogHeader><DialogTitle>Fases instellen</DialogTitle></DialogHeader>
         <p className="text-[12.5px] text-gray-500 -mt-1">Pas kolomnaam, actie en het aantal werkdagen aan en klik op <b>Opslaan</b>. Kolommen toevoegen, verplaatsen of verwijderen gebeurt direct.</p>
+        <p className="text-[12px] text-gray-400 -mt-2"><b>Geen actie</b> = geen reminder. <b>Afspraak plannen</b> vraagt bij het verslepen om een datum en tijd, en maakt evenmin een reminder aan.</p>
         {foutmelding && <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{foutmelding}</div>}
         <div className="space-y-1.5 max-h-[55vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-[auto,1fr,130px,90px,auto] gap-2 px-1 text-[10.5px] font-semibold text-gray-400 uppercase tracking-wide items-center">
@@ -678,7 +800,12 @@ function FasesInstellen({ open, rules, counts, onClose }: { open: boolean; rules
                   <SelectContent>{ACTIE_OPTIES.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
                 </Select>
               )}
-              {r.isEndState ? <span className="text-[12px] text-gray-300 pl-2">—</span> : (
+              {/* Zonder actie is een termijn betekenisloos — het veld staat dan
+                  uit. Voorheen kon je hier "0" laten staan bij "Geen actie",
+                  wat tóch een reminder opleverde die meteen te laat was. */}
+              {r.isEndState || zonderTermijn(val(r).triggerAction) ? (
+                <span className="text-[12px] text-gray-300 pl-2">—</span>
+              ) : (
                 <Input type="number" min={0} max={90} value={val(r).triggerDays} placeholder="geen"
                   onChange={e => zet(r.phase, r, { triggerDays: e.target.value })} className="h-9 text-sm" />
               )}

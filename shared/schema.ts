@@ -1398,6 +1398,9 @@ export const salesflowPhaseRules = pgTable("salesflow_phase_rules", {
   isEndState: boolean("is_end_state").default(false).notNull(),
   behavior: text("behavior").default('normal').notNull(), // 'normal' | 'deal' (→ klant) | 'snooze' (→ sluimer)
   asksChannel: boolean("asks_channel").default(false).notNull(), // vraagt e-mail/LinkedIn bij binnenkomst
+  // Vraagt bij binnenkomst om datum + tijd van de afspraak, en maakt juist
+  // GEEN reminder aan — bedoeld voor een kolom als "Afspraak gepland".
+  asksAppointment: boolean("asks_appointment").default(false).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -1416,6 +1419,7 @@ export const salesflowCards = pgTable("salesflow_cards", {
   channel: text("channel"), // voor 'bericht_gestuurd': 'email' | 'linkedin'
   notReachedCount: integer("not_reached_count").default(0).notNull(),
   snoozeUntil: date("snooze_until"), // geen_interesse/later → automatisch terug naar selectie
+  appointmentAt: timestamp("appointment_at"), // datum + tijd van het gesprek (fases met asksAppointment)
   notes: text("notes"),
   createdByName: text("created_by_name"), // naam van de gebruiker die de kaart toevoegde (vrije tekst)
   enteredPhaseAt: timestamp("entered_phase_at").defaultNow().notNull(),
