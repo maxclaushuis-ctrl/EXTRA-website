@@ -358,15 +358,25 @@ export default function NieuwsArtikel() {
 
         <PublicNav />
 
-        {/* Hero */}
-        <div className="relative pt-16 sm:pt-20 overflow-hidden">
-          <div className="relative h-[260px] sm:h-[360px] lg:h-[440px] overflow-hidden">
+        {/* Hero — loopt bewust ONDER de navigatiebalk door.
+            PublicNav is bovenaan de pagina doorzichtig met een donkere
+            gradient en witte tekst; die is gemaakt om over een hero-afbeelding
+            te liggen. Stond de hero eronder (pt-16/pt-20), dan lag die donkere
+            gradient over de witte pagina-achtergrond: een grijze balk met
+            nauwelijks leesbare witte tekst, en een header die halverwege
+            afgekapt oogde. Nu zit de foto er dus achter, net als op de andere
+            pagina's van de site. */}
+        <div className="relative overflow-hidden">
+          <div className="relative h-[340px] sm:h-[440px] lg:h-[520px] overflow-hidden">
             {dbPost.imageUrl ? (
               <img src={dbPost.imageUrl} alt={dbPost.imageAlt || dbPost.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-purple-900 to-indigo-900" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+            {/* Onderin donker voor de overgang naar de witte contentkolom,
+                bovenin donker genoeg om de witte navigatietekst leesbaar te
+                houden — ook boven een lichte foto. */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/55" />
           </div>
         </div>
 

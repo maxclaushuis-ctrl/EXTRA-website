@@ -136,12 +136,12 @@ const post = {
     'Uitzendbureau, schoonmaakbedrijf of eigen team? Vergelijk de drie manieren om housekeeping personeel in te huren op cao, leiding, kosten en opzegbaarheid.',
   focusKeyword: 'housekeeping personeel inhuren',
   category: 'Housekeeping',
-  imageUrl: '/images/housekeeping-personeel-inhuren-hotel-amsterdam.webp',
-  // Alt beschrijft wat er daadwerkelijk te zien is. Vervang deze visual zodra
-  // er eigen fotografie van een room attendant beschikbaar is — dan hoort hier
-  // een alt als "Room attendant maakt een hotelkamer in Amsterdam gereed voor
-  // check-in".
-  imageAlt: 'Illustratie van een opgemaakt hotelbed bij het artikel over housekeeping personeel inhuren',
+  // Eigen beeld van EXTRA (client/src/assets/images/blog-housekeeping.jpg),
+  // bijgesneden tot een brede band omdat de hero ~3:1 is. Bewust zonder tekst
+  // in de afbeelding: de pagina legt er zelf een donkere gradient overheen en
+  // zet de titel eronder, dus tekst in het beeld valt weg of wordt afgesneden.
+  imageUrl: '/images/housekeeping-hotelkamer-amsterdam.webp',
+  imageAlt: 'Opgemaakt hotelbed met verse linnengoed en een nachtkastje in een hotelkamer',
   author: 'EXTRA Redactie',
   readTime: '7 min',
   tags: ['housekeeping', 'hotels', 'inhuren'],
