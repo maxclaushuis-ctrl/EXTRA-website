@@ -2,18 +2,20 @@
  * npm run seed:blog-housekeeping
  *
  * Plaatst de blog "Housekeeping personeel inhuren" op /blog/housekeeping-personeel-inhuren.
- * Praat via de admin-API met een draaiende server (zelfde aanpak als
- * scripts/seed-vacatures.ts) — geen directe databaseverbinding nodig.
  *
- * IDEMPOTENT, anders dan seed-vacatures.ts: blog_posts heeft géén unique index
- * op slug, dus twee keer draaien zou zonder deze controle een duplicaat
- * opleveren. Het script kijkt daarom eerst of de slug al bestaat en werkt die
- * post dan bij in plaats van een nieuwe aan te maken.
+ * Schrijft RECHTSTREEKS naar de database, net als scripts/import-contacten.ts.
+ * Bewust niet via de admin-API zoals scripts/seed-vacatures.ts doet: die
+ * stuurt een `admin_token`-cookie mee, maar adminMiddleware in server/routes.ts
+ * controleert een échte ingelogde sessie (req.session.userId + userRole).
+ * Een token levert daar dus gewoon 403 op.
  *
- * Draaien:
- *   1. server starten (npm run dev)
- *   2. npm run seed:blog-housekeeping
- *   3. daarna eenmalig `npm run build && npm run prerender` om het
+ * IDEMPOTENT: blog_posts heeft géén unique index op slug, dus zonder controle
+ * zou een tweede run een duplicaat opleveren. Het script zoekt daarom eerst op
+ * slug en werkt die post bij in plaats van een nieuwe aan te maken.
+ *
+ * Draaien (server hoeft NIET te draaien, DATABASE_URL moet gezet zijn):
+ *   1. npm run seed:blog-housekeeping
+ *   2. daarna eenmalig `npm run build && npm run prerender` om het
  *      crawler-fragment te genereren (vereist DATABASE_URL + Chromium).
  *
  * Feitencontrole (augustus 2026) — alleen geverifieerde claims staan in de tekst:
@@ -25,8 +27,9 @@
  *     verifiëren en staan daarom bewust niet in de tekst; het onderliggende
  *     punt (kortere verblijven = meer vertrekkamers) is kwalitatief gebracht.
  */
-const API_BASE = process.env.API_BASE || 'http://localhost:5000';
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'test-token';
+import { eq } from 'drizzle-orm';
+import { db, pool } from '../server/db';
+import { blogPosts } from '@shared/schema';
 
 const SLUG = 'housekeeping-personeel-inhuren';
 
@@ -150,66 +153,40 @@ const post = {
 async function main() {
   console.log('🌱 Blog plaatsen: ' + SLUG + '\n');
 
-  const headers = {
-    'Content-Type': 'application/json',
-    Cookie: `admin_token=${ADMIN_TOKEN}`,
-  };
+  // 1. Bestaat de slug al? Zonder deze controle levert een tweede run een
+  //    duplicaat op — blog_posts heeft geen unique index op slug.
+  const [bestaand] = await db.select({ id: blogPosts.id }).from(blogPosts).where(eq(blogPosts.slug, SLUG));
 
-  // 1. Bestaat de slug al? blog_posts heeft geen unique index, dus zonder deze
-  //    controle levert een tweede run een duplicaat op.
-  const bestaandeRes = await fetch(`${API_BASE}/api/admin/blog`, { headers });
-  if (!bestaandeRes.ok) {
-    throw new Error(
-      `Kan bestaande blogs niet ophalen (${bestaandeRes.status}). Draait de server op ${API_BASE} en klopt ADMIN_TOKEN?`,
-    );
-  }
-  // getBlogPosts levert { posts, total } — geen kale array.
-  const bestaandeBody = (await bestaandeRes.json()) as { posts?: any[] } | any[];
-  const bestaandePosts = Array.isArray(bestaandeBody) ? bestaandeBody : (bestaandeBody?.posts ?? []);
-  const alAanwezig = bestaandePosts.find((p: any) => p?.slug === SLUG) ?? null;
+  // status en publishedAt worden hier gezet met een echt Date-object; dat is
+  // precies wat het publish-endpoint in routes.ts ook doet.
+  const velden = { ...post, status: 'published', publishedAt: new Date(), updatedAt: new Date() };
 
-  // 2. Aanmaken of bijwerken.
-  const res = alAanwezig
-    ? await fetch(`${API_BASE}/api/admin/blog/${alAanwezig.id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(post),
-      })
-    : await fetch(`${API_BASE}/api/admin/blog`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(post),
-      });
-
-  if (!res.ok) {
-    const tekst = await res.text().catch(() => '');
-    throw new Error(`API-fout ${res.status}: ${tekst.slice(0, 400)}`);
-  }
-  const bewaard = (await res.json()) as any;
-
-  // 3. Publiceren via het eigen endpoint: dat zet status + publishedAt
-  //    server-side met een echt Date-object, en pingt de sitemap.
-  const pubRes = await fetch(`${API_BASE}/api/admin/blog/${bewaard.id}/publish`, {
-    method: 'POST',
-    headers,
-  });
-  if (!pubRes.ok) {
-    const tekst = await pubRes.text().catch(() => '');
-    throw new Error(`Publiceren mislukt (${pubRes.status}): ${tekst.slice(0, 200)}`);
+  let id: number;
+  if (bestaand) {
+    await db.update(blogPosts).set(velden).where(eq(blogPosts.id, bestaand.id));
+    id = bestaand.id;
+    console.log(`✅ Bijgewerkt (id ${id})`);
+  } else {
+    const [nieuw] = await db.insert(blogPosts).values(velden).returning({ id: blogPosts.id });
+    id = nieuw.id;
+    console.log(`✅ Aangemaakt (id ${id})`);
   }
 
-  console.log(alAanwezig ? `✅ Bijgewerkt (id ${bewaard.id})` : `✅ Aangemaakt (id ${bewaard.id})`);
-  console.log('✅ Gepubliceerd');
   console.log(`   /blog/${SLUG}\n`);
   console.log('=== Nog te doen ===');
-  console.log('1. npm run build && npm run prerender   (crawler-fragment, vereist DATABASE_URL + Chromium)');
+  console.log('1. npm run build && npm run prerender   (crawler-fragment, vereist Chromium)');
   console.log('2. commit client/public/prerender/blog__' + SLUG + '.html');
-  console.log('3. interne links vanaf /hotelpersoneel-inhuren en /horeca-uitzendbureau-amsterdam toevoegen');
+  console.log('3. interne link vanaf /horeca-uitzendbureau-amsterdam toevoegen');
+  console.log('   (die vanaf /hotelpersoneel-inhuren staat er al in)');
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch((err) => {
+  .then(async () => {
+    await pool.end();
+    process.exit(0);
+  })
+  .catch(async (err) => {
     console.error('❌ Mislukt:', err?.message || err);
+    await pool.end().catch(() => {});
     process.exit(1);
   });
