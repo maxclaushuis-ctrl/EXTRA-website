@@ -119,16 +119,65 @@ hetzelfde idee over drie maanden terugkomt)*
 |---|---|---|
 | | | |
 
-## 6. Praktisch
+## 6. Publiceren
 
-- **Publiceren** kan via het dashboard: **Blog & SEO** → nieuw artikel. Titel,
-  slug, categorie, meta-titel, meta-omschrijving, focuskeyword, leestijd,
-  afbeelding en de HTML in het contentveld.
-- **Let op:** de meta-omschrijving staat ook zichtbaar op de pagina, als cursieve
-  intro onder de titel. Schrijf hem dus als leesbare zin.
-- **Afbeeldingen:** in `client/public/images/`, verwijzen als `/images/naam.webp`.
+**Dev en productie draaien op twee verschillende databases.** Een deploy
+("Republish") zet alleen code live; rijen in `blog_posts` verhuizen niet mee.
+Een artikel dat je in de testomgeving aanmaakt staat dus nooit vanzelf op
+doehetextra.nl. Dat is de valkuil waar de eerste blog op stukliep.
+
+### Eenmalig instellen
+
+1. Replit → **Deployments → Settings → Production app secrets** → kopieer de
+   waarde van `DATABASE_URL`.
+2. Replit → **Secrets** → nieuwe secret `PROD_DATABASE_URL`, plak de waarde.
+3. Open een **nieuwe shell** — secrets worden alleen bij het opstarten geladen.
+
+### Daarna, per artikel
+
+```
+npm run publish:blog <slug>        # direct live op doehetextra.nl
+npm run publish:blog:dev <slug>    # eerst bekijken in de testomgeving
+npm run publish:blog               # toont welke artikelen klaarstaan
+```
+
+Geen deploy nodig na afloop: dit is data, geen code. Twee keer draaien is
+veilig — het script werkt een bestaande slug bij in plaats van een duplicaat te
+maken.
+
+Uitzondering: als een artikel een **nieuwe afbeelding** meebrengt, moet die wél
+mee in een deploy, want dat is code. Dus eerst de patch mergen en republishen,
+daarna pas `publish:blog`.
+
+### Waar een artikel vandaan komt
+
+Twee bestanden in `content/blog/`:
+
+- `<slug>.json` — titel, slug, excerpt, meta-titel, meta-omschrijving,
+  focuskeyword, categorie, afbeelding, auteur, leestijd, tags. Velden die met
+  een underscore beginnen (`_notities`, `_feitencontrole`) zijn documentatie en
+  gaan niet naar de database.
+- `<slug>.html` — de body van het artikel.
+
+Het script controleert vóórdat het schrijft: verplichte velden, of de categorie
+bestaat, of de genoemde afbeeldingen echt in `client/public/images/` staan, en
+of er minstens drie interne links in zitten. Ontbreekt er iets, dan schrijft het
+niets weg en zegt het wat er mis is.
+
+### Aandachtspunten
+
+- De **meta-omschrijving** staat ook zichtbaar op de pagina, als cursieve intro
+  onder de titel. Schrijf hem dus als leesbare zin.
+- **Afbeeldingen** in `client/public/images/`, verwijzen als `/images/naam.webp`.
   Geen tekst in de hero — de pagina legt daar zelf een donkere waas overheen en
   zet de titel eronder.
 - **Interne links:** 3 à 8 per artikel, altijd naar bestaande pagina's uit de
   lijst hierboven. Noteer per artikel ook welke bestaande pagina's ernaartoe
   moeten linken.
+- **Prerender** (`npm run build && npm run prerender`) maakt een statisch
+  fragment voor crawlers zonder JavaScript. Optioneel; Google indexeert de
+  pagina ook zonder. Vereist eenmalig `npx playwright-core install chromium` —
+  let op: `npx playwright install` haalt een verkeerde versie op.
+
+Publiceren via het dashboard (**Blog & SEO → nieuw artikel**) kan ook, mits je
+op de live site bent ingelogd en niet in de testomgeving.
