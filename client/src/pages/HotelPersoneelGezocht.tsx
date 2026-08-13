@@ -401,6 +401,16 @@ export default function HotelPersoneelGezocht() {
                 Vraag hotelpersoneel aan
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
+              {/* Inkomende interne link naar de housekeeping-keuzegids: deze
+                  pagina bedient de transactionele intentie ("inhuren"), de blog
+                  de vergelijkende ("welk model past bij ons"). */}
+              <p className="text-sm text-gray-500 mt-5">
+                Nog aan het oriënteren?{' '}
+                <a href="/blog/housekeeping-personeel-inhuren" className="text-purple-600 font-medium underline underline-offset-2 hover:text-purple-800">
+                  Twijfel je tussen uitbesteden en inlenen van housekeeping
+                </a>
+                {' '}— we zetten de drie modellen naast elkaar.
+              </p>
             </div>
           </RevealSection>
         </div>

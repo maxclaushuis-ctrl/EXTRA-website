@@ -334,12 +334,21 @@ export default function NieuwsArtikel() {
       "@type": "Article",
       "headline": dbPost.title,
       "description": dbPost.metaDescription || dbPost.excerpt,
-      "image": dbPost.imageUrl || `${baseUrl}/og-image.jpg`,
+      // Schema.org wil een absolute URL. imageUrl is in de database een pad
+      // (/images/...), dus dat hier aanvullen in plaats van een relatief pad
+      // door te geven.
+      "image": dbPost.imageUrl
+        ? (dbPost.imageUrl.startsWith('http') ? dbPost.imageUrl : `${baseUrl}${dbPost.imageUrl}`)
+        : `${baseUrl}/og-image.jpg`,
       "datePublished": dbPost.publishedAt || dbPost.createdAt,
       "dateModified": dbPost.updatedAt || dbPost.publishedAt || dbPost.createdAt,
       "author": { "@type": "Organization", "name": dbPost.author || "EXTRA Redactie", "url": baseUrl },
       "publisher": { "@type": "Organization", "name": "EXTRA", "url": baseUrl, "logo": { "@type": "ImageObject", "url": `${baseUrl}/logo.png` } },
-      "url": `${baseUrl}/nieuws/${dbPost.slug}`,
+      // /nieuws/:slug is sinds P14 een 301 naar /blog/:slug (zie
+      // server/redirects.ts). De canonical van dit artikel is /blog/:slug, dus
+      // die hoort hier ook te staan — anders wijst de structured data naar een
+      // URL die meteen doorstuurt.
+      "url": `${baseUrl}/blog/${dbPost.slug}`,
       "keywords": dbPost.focusKeyword,
     };
 
@@ -349,15 +358,25 @@ export default function NieuwsArtikel() {
 
         <PublicNav />
 
-        {/* Hero */}
-        <div className="relative pt-16 sm:pt-20 overflow-hidden">
-          <div className="relative h-[260px] sm:h-[360px] lg:h-[440px] overflow-hidden">
+        {/* Hero — loopt bewust ONDER de navigatiebalk door.
+            PublicNav is bovenaan de pagina doorzichtig met een donkere
+            gradient en witte tekst; die is gemaakt om over een hero-afbeelding
+            te liggen. Stond de hero eronder (pt-16/pt-20), dan lag die donkere
+            gradient over de witte pagina-achtergrond: een grijze balk met
+            nauwelijks leesbare witte tekst, en een header die halverwege
+            afgekapt oogde. Nu zit de foto er dus achter, net als op de andere
+            pagina's van de site. */}
+        <div className="relative overflow-hidden">
+          <div className="relative h-[340px] sm:h-[440px] lg:h-[520px] overflow-hidden">
             {dbPost.imageUrl ? (
               <img src={dbPost.imageUrl} alt={dbPost.imageAlt || dbPost.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-purple-900 to-indigo-900" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+            {/* Onderin donker voor de overgang naar de witte contentkolom,
+                bovenin donker genoeg om de witte navigatietekst leesbaar te
+                houden — ook boven een lichte foto. */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/55" />
           </div>
         </div>
 
@@ -388,7 +407,15 @@ export default function NieuwsArtikel() {
                 [&_blockquote]:border-l-4 [&_blockquote]:border-purple-300 [&_blockquote]:bg-purple-50 [&_blockquote]:px-5 [&_blockquote]:py-4 [&_blockquote]:rounded-r-xl [&_blockquote]:my-8 [&_blockquote]:text-purple-900 [&_blockquote]:italic [&_blockquote]:text-lg
                 [&_.tip]:bg-amber-50 [&_.tip]:border [&_.tip]:border-amber-200 [&_.tip]:rounded-xl [&_.tip]:px-5 [&_.tip]:py-4 [&_.tip]:my-6 [&_.tip]:text-amber-900 [&_.tip]:text-sm
                 [&_a]:text-purple-600 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-purple-800
-                [&_strong]:text-gray-900 [&_strong]:font-semibold"
+                [&_strong]:text-gray-900 [&_strong]:font-semibold
+                [&_h3]:text-base [&_h3]:sm:text-lg [&_h3]:font-bold [&_h3]:text-gray-900 [&_h3]:mt-7 [&_h3]:mb-2.5
+                [&_figure]:my-8
+                [&_img]:w-full [&_img]:h-auto [&_img]:rounded-xl [&_img]:border [&_img]:border-gray-100
+                [&_figcaption]:text-xs [&_figcaption]:text-gray-400 [&_figcaption]:mt-2
+                [&_.tabel-scroll]:overflow-x-auto [&_.tabel-scroll]:my-8
+                [&_table]:w-full [&_table]:my-8 [&_table]:border-collapse [&_table]:text-sm [&_table]:min-w-[560px]
+                [&_th]:border [&_th]:border-gray-200 [&_th]:bg-gray-50 [&_th]:px-3 [&_th]:py-2.5 [&_th]:text-left [&_th]:font-semibold [&_th]:text-gray-900
+                [&_td]:border [&_td]:border-gray-200 [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-gray-700 [&_td]:align-top"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(dbPost.content) }}
             />
 
