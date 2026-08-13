@@ -285,6 +285,14 @@ export const ROUTE_META: RouteMeta[] = [
     title: "Upload je cv | Solliciteer bij EXTRA",
     description:
       "Upload je cv en solliciteer bij EXTRA. Wij matchen je met horeca werk in Amsterdam dat past bij jouw ervaring en beschikbaarheid. Snel geregeld.",
+    // Noindex: deze pagina werkt alléén met een persoonlijke uploadlink uit een
+    // WhatsApp-bericht. Zonder token valt er niets te uploaden, dus wie hier via
+    // Google binnenkomt, komt per definitie verkeerd uit — Ahrefs zag dan ook
+    // een <h1> "Ongeldige of verlopen link" onder een titel die uploaden
+    // belooft. follow: true, want de links naar /aanmelden en het
+    // sollicitatieformulier mogen wél gevolgd worden.
+    noindex: true,
+    follow: true,
     prerender: true,
     priority: "0.6",
     changefreq: "monthly",
