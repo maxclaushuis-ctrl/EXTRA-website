@@ -100,6 +100,7 @@ import {
   type OnboardingTemplateBijlage,
   type OnboardingTemplateMetBijlagen,
 } from "@shared/schema";
+import { vaardighedenUitKandidaat, type EmployeeMetVaardigheden } from "@shared/vaardigheden";
 import { createHash } from "crypto";
 import { db } from "./db";
 import { eq, ilike, or, desc, asc, sql, and, gte, lte, isNull, inArray } from "drizzle-orm";
@@ -4956,7 +4957,7 @@ export class MemStorage implements IStorage {
     search?: string;
     page?: number;
     limit?: number;
-  }): Promise<{ employees: Employee[]; total: number }> {
+  }): Promise<{ employees: EmployeeMetVaardigheden[]; total: number }> {
     const conditions: any[] = [];
     if (filters?.status) conditions.push(eq(employeesTable.status, filters.status as any));
     if (filters?.branche) conditions.push(eq(employeesTable.branche, filters.branche));
@@ -4978,8 +4979,40 @@ export class MemStorage implements IStorage {
     const total = Number(countRow?.count || 0);
     const page = filters?.page || 1;
     const limit = filters?.limit || 500;
-    const employees = await db.select().from(employeesTable).where(whereClause)
-      .orderBy(desc(employeesTable.createdAt)).limit(limit).offset((page - 1) * limit);
+
+    // LEFT JOIN op de kandidaat: de vaardigheden (assistent chef, barista,
+    // cocktails, …) zijn bij de aanmelding uitgevraagd en staan als losse
+    // ja/nee-kolommen op candidates, niet op employees. Een medewerker die
+    // handmatig is aangemaakt heeft geen candidateId; die krijgt hier een lege
+    // lijst en dat is correct — er is hem nooit iets gevraagd.
+    //
+    // Bewust een LEFT JOIN en geen tweede query: de lijst haalt standaard 500
+    // medewerkers op en een N+1 zou daar 500 losse queries van maken.
+    const rijen = await db
+      .select({
+        medewerker: employeesTable,
+        // Bewust alleen deze zes kolommen en niet de hele kandidaatrij: die is
+        // breed (cv-velden, notities, audit) en zou bij 500 medewerkers onnodig
+        // veel data over de lijn trekken. De sleutels moeten gelijk blijven aan
+        // VAARDIGHEDEN in shared/vaardigheden.ts — de test daar bewaakt dat.
+        isAssistantChef: candidatesTable.isAssistantChef,
+        isBarista: candidatesTable.isBarista,
+        canMakeCocktails: candidatesTable.canMakeCocktails,
+        canCarryThreePlates: candidatesTable.canCarryThreePlates,
+        canDoWashing: candidatesTable.canDoWashing,
+        isPromoter: candidatesTable.isPromoter,
+      })
+      .from(employeesTable)
+      .leftJoin(candidatesTable, eq(employeesTable.candidateId, candidatesTable.id))
+      .where(whereClause)
+      .orderBy(desc(employeesTable.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    const employees: EmployeeMetVaardigheden[] = rijen.map(r => ({
+      ...r.medewerker,
+      vaardigheden: vaardighedenUitKandidaat(r),
+    }));
     return { employees, total };
   }
 

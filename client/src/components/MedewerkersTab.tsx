@@ -15,6 +15,7 @@ import {
   CheckCircle2, Briefcase, MapPin, Phone, Calendar, Tag, FileText, Send, AlertCircle,
 } from 'lucide-react';
 import type { Employee, OnboardingLog, OnboardingTemplate, OnboardingBijlage } from '@shared/schema';
+import { telVaardigheden, type EmployeeMetVaardigheden } from '@shared/vaardigheden';
 
 type TemplateLite = Pick<OnboardingTemplate, 'id' | 'naam' | 'taal' | 'functiegroep' | 'opdrachtgever'>;
 type TemplateMetBijlagen = OnboardingTemplate & {
@@ -41,6 +42,12 @@ export default function MedewerkersTab() {
   const [languageFilter, setLanguageFilter] = useState<string>('alles');
   const [onboardingFilter, setOnboardingFilter] = useState<string>('alles');
   const [showFilters, setShowFilters] = useState(false);
+  // Vaardigheid = subfunctie uit het aanmeldformulier (assistent chef, barista, …).
+  // Eigen paneel naast Filters: standaard dicht, en zodra je kiest klapt hij weer
+  // dicht met de keuze zichtbaar op de knop zelf.
+  const [vaardigheidFilter, setVaardigheidFilter] = useState<string | null>(null);
+  const [showVaardigheden, setShowVaardigheden] = useState(false);
+  const [alleVaardigheden, setAlleVaardigheden] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -51,7 +58,7 @@ export default function MedewerkersTab() {
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<number>>(new Set());
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
-  const { data: listData, isLoading } = useQuery<{ employees: Employee[]; total: number }>({
+  const { data: listData, isLoading } = useQuery<{ employees: EmployeeMetVaardigheden[]; total: number }>({
     queryKey: ['/api/admin/employees'],
     refetchInterval: 30000,
   });
@@ -86,9 +93,15 @@ export default function MedewerkersTab() {
       if (languageFilter !== 'alles' && e.language !== languageFilter) return false;
       if (onboardingFilter === 'ja' && !e.onboardingSent) return false;
       if (onboardingFilter === 'nee' && e.onboardingSent) return false;
+      if (vaardigheidFilter && !(e.vaardigheden ?? []).includes(vaardigheidFilter)) return false;
       return true;
     });
-  }, [employees, search, statusFilter, brancheFilter, opdrachtgeverFilter, languageFilter, onboardingFilter]);
+  }, [employees, search, statusFilter, brancheFilter, opdrachtgeverFilter, languageFilter, onboardingFilter, vaardigheidFilter]);
+
+  // Tellingen op de VOLLEDIGE lijst, niet op het gefilterde resultaat: anders
+  // zakt elk getal naar nul zodra je iets kiest, en zie je niet meer waar je
+  // naartoe kunt schakelen.
+  const vaardigheidOpties = useMemo(() => telVaardigheden(employees), [employees]);
 
   const stats = useMemo(() => {
     const totaal = employees.length;
@@ -248,10 +261,83 @@ export default function MedewerkersTab() {
               data-testid="input-search-medewerkers"
             />
           </div>
-          <Button variant="outline" onClick={() => setShowFilters(s => !s)}>
+          {vaardigheidFilter ? (
+            <Button
+              variant="outline"
+              className="border-purple-300 bg-purple-50 text-purple-800 hover:bg-purple-100 hover:text-purple-900 gap-1.5"
+              onClick={() => { setShowVaardigheden(v => !v); setShowFilters(false); }}
+              data-testid="btn-vaardigheid"
+            >
+              {vaardigheidFilter}
+              <span
+                role="button"
+                aria-label="Vaardigheidsfilter wissen"
+                title="Wissen"
+                onClick={e => { e.stopPropagation(); setVaardigheidFilter(null); setShowVaardigheden(false); }}
+                className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-purple-200 text-[11px] leading-none hover:bg-purple-300"
+              >
+                ✕
+              </span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => { setShowVaardigheden(v => !v); setShowFilters(false); }}
+              disabled={vaardigheidOpties.length === 0}
+              title={vaardigheidOpties.length === 0
+                ? 'Nog niemand met een ingevulde vaardigheid — dit komt uit het aanmeldformulier'
+                : undefined}
+              data-testid="btn-vaardigheid"
+            >
+              Vaardigheid {showVaardigheden ? '▴' : '▾'}
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => { setShowFilters(s => !s); setShowVaardigheden(false); }}>
             Filters {showFilters ? '▴' : '▾'}
           </Button>
         </div>
+
+        {/* Vaardigheden — subfuncties zoals opgegeven bij de aanmelding. Klapt
+            dicht zodra je kiest, zodat de rij geen ruimte blijft innemen. */}
+        {showVaardigheden && (
+          <div className="flex flex-wrap gap-2 items-center mt-3 pt-3 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => { setVaardigheidFilter(null); setShowVaardigheden(false); }}
+              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                vaardigheidFilter === null
+                  ? 'bg-purple-600 border-purple-600 text-white font-semibold'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Alle<span className="ml-1.5 opacity-60 text-xs">{employees.length}</span>
+            </button>
+            {(alleVaardigheden ? vaardigheidOpties : vaardigheidOpties.slice(0, 6)).map(v => (
+              <button
+                key={v.label}
+                type="button"
+                onClick={() => { setVaardigheidFilter(v.label); setShowVaardigheden(false); }}
+                className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                  vaardigheidFilter === v.label
+                    ? 'bg-purple-600 border-purple-600 text-white font-semibold'
+                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                data-testid={`chip-vaardigheid-${v.label}`}
+              >
+                {v.label}<span className="ml-1.5 opacity-60 text-xs">{v.aantal}</span>
+              </button>
+            ))}
+            {!alleVaardigheden && vaardigheidOpties.length > 6 && (
+              <button
+                type="button"
+                onClick={() => setAlleVaardigheden(true)}
+                className="text-sm px-3 py-1.5 rounded-full border border-dashed border-gray-300 text-purple-700 hover:bg-gray-50"
+              >
+                Meer… ({vaardigheidOpties.length - 6})
+              </button>
+            )}
+          </div>
+        )}
         {showFilters && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -930,6 +1016,19 @@ function EmployeeDetail({
               </DetailSection>
               <DetailSection title="Werk">
                 <Row icon={Briefcase} label="Functie">{employee.functie || '—'}</Row>
+                {/* Vaardigheden komen uit het aanmeldformulier van de gekoppelde
+                    kandidaat; handmatig aangemaakte medewerkers hebben ze niet. */}
+                <Row icon={Tag} label="Vaardigheden">
+                  {(employee as any).vaardigheden?.length ? (
+                    <span className="flex flex-wrap gap-1.5">
+                      {(employee as any).vaardigheden.map((v: string) => (
+                        <span key={v} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">{v}</span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">niet opgegeven bij aanmelding</span>
+                  )}
+                </Row>
                 <Row icon={Briefcase} label="Branche">{employee.branche || '—'}</Row>
                 <Row icon={Briefcase} label="Opdrachtgever">{employee.opdrachtgever || '—'}</Row>
                 <Row icon={Briefcase} label="Contract">{employee.contractType || '—'}</Row>

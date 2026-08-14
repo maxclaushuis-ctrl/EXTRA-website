@@ -19,6 +19,7 @@
     "publish:blog:dev": "tsx scripts/publish-blog.ts --dev",
     "wa:classificatie-live": "tsx scripts/wa-classificatie-live.ts",
     "sales:test": "tsx server/salesflowLogic.test.ts",
+    "medewerkers:test": "tsx shared/vaardigheden.test.ts",
     "wa:test": "tsx server/whatsapp/__tests__/aiClassifier.test.ts && tsx server/whatsapp/__tests__/phone.test.ts && tsx server/whatsapp/__tests__/metaWebhook.test.ts && tsx server/whatsapp/__tests__/metaClient.test.ts && tsx server/whatsapp/__tests__/taskRules.test.ts && tsx server/whatsapp/__tests__/templates.test.ts && tsx server/whatsapp/__tests__/groupChatLogic.test.ts && tsx server/whatsapp/__tests__/nameLogic.test.ts && tsx server/whatsapp/__tests__/assistentLogic.test.ts"
   },
   "dependencies": {
