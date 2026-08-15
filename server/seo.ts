@@ -25,6 +25,7 @@ import {
   type RouteMeta,
 } from "@shared/routeMeta";
 import { storage } from "./storage";
+import { blogFragment, vacatureFragment } from "./contentFragment";
 import type { VacancyPost } from "@shared/schema";
 
 interface PageMeta {
@@ -310,7 +311,11 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
               // geprerenderde fragment (scripts/prerender.ts genereert beide).
               // Dit was de kern van P11: hier ontbrak de fragment-injectie
               // volledig, waardoor deze routes altijd een lege shell kregen.
-              fragmentFor(normalized)
+              // Is er geen geprerenderd fragment (bij blogartikelen vrijwel
+              // altijd — zie server/contentFragment.ts), bouw hem dan uit de
+              // databasevelden. Zonder deze terugval serveert elk artikel een
+              // lege body aan crawlers die geen JavaScript uitvoeren.
+              fragmentFor(normalized) ?? blogFragment(post as any)
             );
           }
         } else if (dyn.type === "vacature") {
@@ -338,7 +343,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
                   jobPostingJsonLd(vacancy, canonicalUrl),
                 ].filter((v): v is string => !!v),
               },
-              fragmentFor(normalized)
+              fragmentFor(normalized) ?? vacatureFragment(vacancy as any)
             );
           }
         }
