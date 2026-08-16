@@ -32,10 +32,19 @@
 import fs from "fs";
 import path from "path";
 import { resolveRedirect } from "../server/redirects";
-
-const ROOT = path.resolve(import.meta.dirname, "..");
-const CLIENT_SRC = path.join(ROOT, "client", "src");
-const APP_TSX = path.join(CLIENT_SRC, "App.tsx");
+// De routekennis (welke paden bestaan, waar komt een pad uit) is uitgelicht naar
+// een eigen module omdat scripts/content-links.ts dezelfde vraag stelt voor de
+// links die in de database staan. Zie de toelichting daar.
+import {
+  ROOT,
+  CLIENT_SRC,
+  normalize,
+  aantalRoutes,
+  isKnownRoute,
+  resolvesToKnownRoute,
+  eindbestemming,
+  prefixMatchesDynamicRoute,
+} from "./routeKennis";
 
 /**
  * Mappen die bewust buiten scope vallen: het interne, met noindex afgeschermde
@@ -68,65 +77,6 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-function normalize(p: string): string {
-  const lower = p.toLowerCase();
-  return lower !== "/" && lower.endsWith("/") ? lower.slice(0, -1) : lower;
-}
-
-// ── 1. Bekende routes uit App.tsx ────────────────────────────────────────
-const appTsxSource = fs.readFileSync(APP_TSX, "utf-8");
-const routePaths = Array.from(appTsxSource.matchAll(/<Route\s+path="([^"]+)"/g)).map((m) => m[1]);
-
-if (routePaths.length < 50) {
-  console.error(
-    `✗ Slechts ${routePaths.length} <Route path="..."> gevonden in App.tsx — dat lijkt te weinig, ` +
-      `het regex-patroon in dit script sluit vermoedelijk niet meer aan op App.tsx. Controleer handmatig.`
-  );
-  process.exit(1);
-}
-
-interface RoutePattern {
-  raw: string;
-  regex: RegExp;
-  /** true als het pad een :param bevat (dynamische route) */
-  dynamic: boolean;
-  /** statisch voorvoegsel tot aan het eerste :param, voor prefix-matching van template-literal hrefs */
-  staticPrefix: string;
-}
-
-const routePatterns: RoutePattern[] = routePaths.map((raw) => {
-  const dynamic = raw.includes(":");
-  const escaped = raw
-    .split("/")
-    .map((seg) => (seg.startsWith(":") ? "[^/]+" : seg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
-    .join("/");
-  const staticPrefix = raw.split(":")[0];
-  return { raw, regex: new RegExp(`^${escaped}$`, "i"), dynamic, staticPrefix };
-});
-
-function isKnownRoute(p: string): boolean {
-  const n = normalize(p);
-  return routePatterns.some((r) => r.regex.test(n));
-}
-
-/** Volgt server/redirects.ts (max 5 hops, ter bescherming tegen een cirkel) tot een bekende route of geeft null. */
-function resolvesToKnownRoute(p: string): boolean {
-  let current = p;
-  for (let hop = 0; hop < 5; hop++) {
-    const dest = resolveRedirect(current);
-    if (!dest) return false;
-    if (isKnownRoute(dest)) return true;
-    current = dest;
-  }
-  return false;
-}
-
-/** Voor een template-literal href: klopt het statische voorvoegsel met een bekende dynamische route? */
-function prefixMatchesDynamicRoute(prefix: string): boolean {
-  const n = normalize(prefix);
-  return routePatterns.some((r) => r.dynamic && n.startsWith(normalize(r.staticPrefix)));
-}
-
 // ── 2. Scan client/src op href's ─────────────────────────────────────────
 const SKIP_PREFIXES = ["http://", "https://", "mailto:", "tel:", "//", "#"];
 
@@ -135,25 +85,6 @@ const errors: string[] = [];
 /** Links die wél werken, maar via een 301 lopen. Aparte lijst, aparte melding. */
 const omwegen: string[] = [];
 let checked = 0;
-
-/**
- * Volgt de redirectketen tot het pad dat niet verder doorverwijst.
- *
- * Waarom dit gecontroleerd wordt: een interne link naar een pad dat zelf een
- * 301 geeft werkt prima voor de bezoeker, maar Ahrefs meldt het als "Page has
- * links to redirect" en het kost bij elke sprong een extra serverronde plus een
- * beetje linkwaarde. De eindbestemming staat gewoon in server/redirects.ts, dus
- * er is geen reden om de omweg te laten staan.
- */
-function eindbestemming(p: string): string {
-  let current = normalize(p);
-  for (let hop = 0; hop < 5; hop++) {
-    const dest = resolveRedirect(current);
-    if (!dest) return current;
-    current = normalize(dest);
-  }
-  return current; // vangnet tegen een cirkel
-}
 
 /** Registreert een href die via een redirect loopt (of laat hem met rust). */
 function controleerOmweg(rel: string, rawHref: string, href: string): void {
@@ -232,6 +163,13 @@ for (const file of files) {
 // Een redirect die naar een pad wijst dat zélf doorverwijst kost de crawler
 // twee sprongen. Google volgt ze wel, maar geeft niet alle waarde door en kapt
 // na een paar hops af.
+//
+// resolveRedirect() slaat zo'n keten sinds augustus zelf plat, dus een bezoeker
+// merkt er niets meer van. Deze check blijft staan omdat een keten in de
+// declaratie nog steeds een leesbaarheidsprobleem is: wie de map leest, ziet
+// niet waar een pad écht uitkomt. De patroonregels (/nieuws/* → /blog/*) staan
+// bewust buiten deze scan — die kunnen per definitie niet één-op-één worden
+// uitgeschreven, en dáárvoor bestaat de ketenresolutie.
 const ketens: string[] = [];
 {
   const src = fs.readFileSync(path.join(ROOT, "server", "redirects.ts"), "utf-8");
@@ -257,6 +195,6 @@ if (ketens.length) {
   process.exit(1);
 }
 console.log(
-  `✓ Interne-links-check geslaagd: ${checked} href's gecontroleerd tegen ${routePaths.length} routes — ` +
+  `✓ Interne-links-check geslaagd: ${checked} href's gecontroleerd tegen ${aantalRoutes} routes — ` +
     `0 kapotte links, 0 links via een redirect, 0 redirectketens.`
 );

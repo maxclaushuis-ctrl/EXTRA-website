@@ -118,6 +118,25 @@ const REDIRECT_MAP: Record<string, string> = {
   "/en/uitzendbureau-hilversum":        "/",
   "/en/uitzendbureau-utrecht":          "/",
 
+  // ── AHREFS 16 AUGUSTUS: LINK NAAR EEN 404 ────────────────
+  // /werkgevers is nooit gebouwd. P15 loste dat op door de links in de code weg
+  // te halen, maar één AI-gegenereerd blogartikel van vóór die fix draagt de
+  // link nog in zijn HTML — en die HTML staat in de database, niet in de
+  // repository, dus geen enkele build-check kan hem zien.
+  // De 301 is het vangnet: hij vangt ook de externe links en de Google-index die
+  // het pad nog kennen. De link in het artikel zelf wordt rechtgezet met
+  // `npm run content:links:fix` (scripts/content-links.ts) — een redirect is een
+  // pleister, geen reparatie.
+  "/werkgevers":                        "/personeelsaanvraag",
+
+  // ── P14-RESTPUNT: TYPEFOUT IN EEN SLUG ───────────────────
+  // "minimumuurtaief" mist de r van "tarief". Het artikel heeft geen organisch
+  // verkeer en één inkomende link, dus hernoemen kan zonder risico. De rij in de
+  // database wordt omgezet door `npm run content:links:fix`; deze regel houdt de
+  // oude URL bereikbaar voor wie hem al had.
+  "/blog/minimumuurtaief-van-36--voor-zzp-ers":
+    "/blog/minimumuurtarief-van-36-voor-zzp-ers",
+
   // ── P14: DUPLICATE CONTENT (identieke pagina, twee URL's) ───
   // Elk paar rendert vandaag dezelfde component (zie client/src/App.tsx) op
   // twee URL's — geen echte inhoudelijke duplicatie in de database, maar wel
@@ -155,15 +174,8 @@ export function normalizePath(p: string): string {
   return lower !== "/" && lower.endsWith("/") ? lower.slice(0, -1) : lower;
 }
 
-/**
- * Pure resolutiefunctie, los van Express — zodat REDIRECT_MAP en
- * REDIRECT_PATTERNS getest kunnen worden zonder een server op te tuigen (zie
- * server/redirects.test.ts). Geeft het bestemmingspad terug (zonder
- * query-string) of `null` als er geen match is.
- */
-export function resolveRedirect(path: string): string | null {
-  const normalized = normalizePath(path);
-
+/** Eén sprong: exacte match gaat vóór patroon. */
+function eenStap(normalized: string): string | null {
   const destination = REDIRECT_MAP[normalized];
   if (destination) return destination;
 
@@ -173,6 +185,49 @@ export function resolveRedirect(path: string): string | null {
   }
 
   return null;
+}
+
+/** Hoe vaak een redirect maximaal mag doorverwijzen voordat we stoppen. */
+const MAX_SPRONGEN = 5;
+
+/**
+ * Pure resolutiefunctie, los van Express — zodat REDIRECT_MAP en
+ * REDIRECT_PATTERNS getest kunnen worden zonder een server op te tuigen (zie
+ * server/redirects.test.ts). Geeft het bestemmingspad terug (zonder
+ * query-string) of `null` als er geen match is.
+ *
+ * Volgt de keten door tot het pad dat niet verder doorverwijst, zodat de
+ * bezoeker altijd één 301 krijgt in plaats van twee. Dat is niet alleen
+ * sneller: Google geeft bij elke extra sprong minder linkwaarde door en Ahrefs
+ * meldt ketens als apart probleem.
+ *
+ * Ketens ontstaan hier vanzelf zodra een patroon en een exacte regel elkaar
+ * raken. /nieuws/:slug → /blog/:slug is een patroon; komt daar één artikel bij
+ * waarvan de slug is hernoemd, dan zou /nieuws/<oude-slug> zonder deze lus in
+ * twee sprongen aankomen. Dat is niet te voorkomen door regels netjes te
+ * schrijven — alleen door ze door te rekenen.
+ *
+ * `gezien` bewaakt de cirkel (A → B → A): zodra een pad terugkomt stopt de lus
+ * en geldt de laatste geldige bestemming.
+ */
+export function resolveRedirect(path: string): string | null {
+  let huidig = normalizePath(path);
+  const gezien = new Set<string>([huidig]);
+  let bestemming: string | null = null;
+
+  for (let sprong = 0; sprong < MAX_SPRONGEN; sprong++) {
+    const volgende = eenStap(huidig);
+    if (!volgende) break;
+
+    const genormaliseerd = normalizePath(volgende);
+    if (gezien.has(genormaliseerd)) break;
+
+    gezien.add(genormaliseerd);
+    bestemming = volgende;
+    huidig = genormaliseerd;
+  }
+
+  return bestemming;
 }
 
 /**
