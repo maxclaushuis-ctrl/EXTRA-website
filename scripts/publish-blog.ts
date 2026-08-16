@@ -20,6 +20,11 @@
  * Een nieuw artikel toevoegen = twee bestanden neerzetten in content/blog/.
  * Geen scriptwijziging nodig.
  *
+ * Sinds augustus 2026 is er geen handmatige prerender-stap meer nodig: de
+ * server bouwt het fragment voor crawlers zonder JavaScript zelf uit de
+ * databasevelden (server/contentFragment.ts). Het artikel is vanaf het eerste
+ * verzoek volledig zichtbaar.
+ *
  * IDEMPOTENT: blog_posts heeft géén unique index op slug, dus zonder controle
  * zou een tweede run een duplicaat opleveren. Het script zoekt daarom eerst op
  * slug. Twee keer draaien is veilig.
@@ -265,11 +270,17 @@ async function main(): Promise<void> {
 
     if (!alsConcept && !naarDev) {
       console.log('Klaar — het artikel staat live. Geen deploy nodig, dit is data.\n');
+
+      // Dit script schrijft rechtstreeks in de database en gaat dus langs de
+      // admin-API heen — precies de plek waar de automatische IndexNow-melding
+      // hangt (server/routes.ts). Zonder deze regel zou een artikel dat via
+      // publish:blog live gaat als enige nooit worden aangemeld.
+      //
+      // Geforceerd, omdat NODE_ENV in de Replit-shell niet op production staat
+      // terwijl we hier wél naar de productiedatabase schrijven.
+      const { meldAan } = await import('../server/indexnow');
+      await meldAan([`/blog/${meta.slug}`, '/blog'], { geforceerd: true });
     }
-    console.log('Optioneel, voor crawlers zonder JavaScript:');
-    console.log('  npx playwright-core install chromium   (eenmalig)');
-    console.log('  npm run build && npm run prerender');
-    console.log(`  commit client/public/prerender/blog__${meta.slug}.html`);
   } finally {
     await pool.end().catch(() => {});
   }
