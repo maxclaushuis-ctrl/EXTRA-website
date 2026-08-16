@@ -39,11 +39,6 @@ assertEq("trailing slash: /beloningssysteem/ -> /extraatje", resolveRedirect("/b
 console.log("\n— resolveRedirect(): /nieuws -> /blog (patroon) —");
 assertEq("index: /nieuws -> /blog", resolveRedirect("/nieuws"), "/blog");
 assertEq(
-  "artikel: /nieuws/minimumuurtaief-van-36--voor-zzp-ers -> /blog/minimumuurtaief-van-36--voor-zzp-ers",
-  resolveRedirect("/nieuws/minimumuurtaief-van-36--voor-zzp-ers"),
-  "/blog/minimumuurtaief-van-36--voor-zzp-ers"
-);
-assertEq(
   "generaliseert naar een toekomstig, nu nog niet bestaand artikel",
   resolveRedirect("/nieuws/een-artikel-dat-morgen-pas-verschijnt"),
   "/blog/een-artikel-dat-morgen-pas-verschijnt"
@@ -53,6 +48,48 @@ assertEq(
   "geneste segmenten blijven intact",
   resolveRedirect("/nieuws/categorie/artikel"),
   "/blog/categorie/artikel"
+);
+
+console.log("\n— resolveRedirect(): Ahrefs 16 augustus —");
+assertEq(
+  "/werkgevers (bestond nooit) -> /personeelsaanvraag",
+  resolveRedirect("/werkgevers"),
+  "/personeelsaanvraag"
+);
+assertEq(
+  "de bestemming verwijst zelf niet verder door",
+  resolveRedirect("/personeelsaanvraag"),
+  null
+);
+assertEq(
+  "typefout-slug -> gecorrigeerde slug",
+  resolveRedirect("/blog/minimumuurtaief-van-36--voor-zzp-ers"),
+  "/blog/minimumuurtarief-van-36-voor-zzp-ers"
+);
+assertEq(
+  "de gecorrigeerde slug verwijst niet door (geen lus)",
+  resolveRedirect("/blog/minimumuurtarief-van-36-voor-zzp-ers"),
+  null
+);
+
+console.log("\n— resolveRedirect(): ketens worden platgeslagen —");
+// /nieuws/<oude-slug> raakt eerst het patroon (/nieuws/* → /blog/*) en dáárna
+// de exacte regel voor de hernoemde slug. Zonder ketenresolutie zou dat twee
+// 301's kosten; hier hoort één sprong naar de eindbestemming uit te komen.
+assertEq(
+  "patroon + exacte regel = één sprong",
+  resolveRedirect("/nieuws/minimumuurtaief-van-36--voor-zzp-ers"),
+  "/blog/minimumuurtarief-van-36-voor-zzp-ers"
+);
+assertEq(
+  "ook met trailing slash en hoofdletters",
+  resolveRedirect("/Nieuws/Minimumuurtaief-van-36--voor-zzp-ers/"),
+  "/blog/minimumuurtarief-van-36-voor-zzp-ers"
+);
+assertEq(
+  "een artikel zonder hernoeming houdt zijn normale patroonsprong",
+  resolveRedirect("/nieuws/housekeeping-personeel-inhuren"),
+  "/blog/housekeeping-personeel-inhuren"
 );
 
 console.log("\n— resolveRedirect(): geen match —");

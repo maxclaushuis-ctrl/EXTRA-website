@@ -26,7 +26,8 @@ import {
 } from "@shared/routeMeta";
 import { storage } from "./storage";
 import { blogFragment, vacatureFragment } from "./contentFragment";
-import type { VacancyPost } from "@shared/schema";
+import { TtlCache, metCache } from "./paginaCache";
+import type { BlogPost, VacancyPost } from "@shared/schema";
 
 interface PageMeta {
   title: string;
@@ -245,6 +246,25 @@ function jobPostingJsonLd(vacancy: VacancyPost, canonicalUrl: string): string {
  * Registreert de SEO-catch-all. Aanroepen ná express.static, als laatste
  * middleware vóór de error handler (vervangt de oude sendFile-catch-all).
  */
+/**
+ * Korte cache op de DB-lookup van stap 2.
+ *
+ * Alleen deze middleware gebruikt hem: het gaat om de <head> en het fragment
+ * die de server meestuurt, niet om wat de React-app zelf via de API ophaalt.
+ * Een artikel dat je zojuist hebt gepubliceerd of aangepast staat dus meteen
+ * goed in het scherm; alleen de meegeleverde meta kan hooguit een minuut
+ * achterlopen. Dat is de prijs voor het weghalen van een databaseronde per
+ * pagina bij een crawler die zeventien URL's achter elkaar afgaat.
+ *
+ * Zestig seconden is gekozen als "een crawlsessie lang, een redactieronde
+ * niet". De grens van 200 sleutels ligt ruim boven het huidige aantal
+ * artikelen en vacatures samen, en houdt verzonnen slugs in toom.
+ */
+const TTL_MS = 60_000;
+const MAX_SLEUTELS = 200;
+const blogCache = new TtlCache<{ waarde: BlogPost | undefined }>({ ttlMs: TTL_MS, max: MAX_SLEUTELS });
+const vacatureCache = new TtlCache<{ waarde: VacancyPost | undefined }>({ ttlMs: TTL_MS, max: MAX_SLEUTELS });
+
 export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
   const shellPath = path.resolve(distPublicDir, "index.html");
   let shellCache: string | null = null;
@@ -290,7 +310,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
       const slug = decodeURIComponent(match[1]);
       try {
         if (dyn.type === "blog") {
-          const post = await storage.getBlogPostBySlug(slug);
+          const post = await metCache(blogCache, slug, () => storage.getBlogPostBySlug(slug));
           if (post && post.status === "published") {
             return send(
               200,
@@ -319,7 +339,7 @@ export function registerSeoCatchAll(app: Express, distPublicDir: string): void {
             );
           }
         } else if (dyn.type === "vacature") {
-          const vacancy = await storage.getVacancyPostBySlug(slug);
+          const vacancy = await metCache(vacatureCache, slug, () => storage.getVacancyPostBySlug(slug));
           // P12: een vacature waarvan de (rollende) validThrough al verstreken is,
           // mag geen 200 met verouderd JobPosting-schema meer krijgen — ook niet
           // als de status in het CMS nog op "published" staat.
