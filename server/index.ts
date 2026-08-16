@@ -3,7 +3,8 @@ import compression from "compression";
 import helmet from "helmet";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { registerRoutes, pingGoogleSitemap } from "./routes";
+import { registerRoutes } from "./routes";
+import { meldAan } from "./indexnow";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 import { pool } from "./db";
@@ -702,10 +703,12 @@ function scheduleBlogAutoPublish() {
 
   async function runPublishCheck() {
     try {
-      const published = await storage.publishScheduledBlogPosts();
-      if (published > 0) {
-        log(`Blog auto-publish: ${published} artikel(en) gepubliceerd`);
-        pingGoogleSitemap();
+      const slugs = await storage.publishScheduledBlogPosts();
+      if (slugs.length > 0) {
+        log(`Blog auto-publish: ${slugs.length} artikel(en) gepubliceerd`);
+        // Een ingepland artikel gaat 's nachts live zonder dat er iemand bij is;
+        // juist daar is de automatische aanmelding het meest waard.
+        meldAan([...slugs.map((s) => `/blog/${s}`), '/blog']);
       }
     } catch (err) {
       console.error("Fout bij blog auto-publish:", err);

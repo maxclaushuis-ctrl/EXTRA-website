@@ -21,6 +21,8 @@
     "sales:test": "tsx server/salesflowLogic.test.ts",
     "medewerkers:test": "tsx shared/vaardigheden.test.ts",
     "fragment:test": "tsx server/contentFragment.test.ts",
+    "indexnow:test": "tsx server/indexnow.test.ts",
+    "indexnow": "tsx scripts/indexnow.ts",
     "cache:test": "tsx server/paginaCache.test.ts",
     "links:test": "tsx scripts/linkHerschrijver.test.ts",
     "content:links": "tsx scripts/content-links.ts",

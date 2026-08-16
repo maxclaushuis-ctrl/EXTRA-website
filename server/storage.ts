@@ -460,7 +460,8 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
   deleteBlogPost(id: number): Promise<boolean>;
-  publishScheduledBlogPosts(): Promise<number>;
+  /** Geeft de slugs van de artikelen die zojuist gepubliceerd zijn — nodig om ze bij IndexNow aan te melden. */
+  publishScheduledBlogPosts(): Promise<string[]>;
 
   // Vacancy CMS methods
   getVacancyPosts(filters?: { status?: string; functionType?: string; location?: string; limit?: number; offset?: number }): Promise<{ posts: VacancyPost[]; total: number }>;
@@ -3904,12 +3905,16 @@ export class MemStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async publishScheduledBlogPosts(): Promise<number> {
+  async publishScheduledBlogPosts(): Promise<string[]> {
     const now = new Date();
-    const result = await db.update(blogPostsTable)
+    // .returning() in plaats van rowCount: de aanroeper moet wéten wélke
+    // artikelen er live zijn gegaan, om precies die URL's bij IndexNow aan te
+    // melden (server/indexnow.ts). Een telling zegt daar niets over.
+    const rijen = await db.update(blogPostsTable)
       .set({ status: 'published', publishedAt: now, updatedAt: now })
-      .where(and(eq(blogPostsTable.status, 'scheduled'), sql`${blogPostsTable.scheduledAt} <= ${now}`));
-    return result.rowCount ?? 0;
+      .where(and(eq(blogPostsTable.status, 'scheduled'), sql`${blogPostsTable.scheduledAt} <= ${now}`))
+      .returning({ slug: blogPostsTable.slug });
+    return rijen.map((r) => r.slug);
   }
 
   // ── Vacancy CMS ──────────────────────────────────────────────
