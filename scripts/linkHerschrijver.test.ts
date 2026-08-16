@@ -59,14 +59,14 @@ ok(
   beoordeelHref('/blog/minimumuurtaief-van-36--voor-zzp-ers')?.soort === 'omweg'
 );
 eq(
-  'en wijst naar de gecorrigeerde slug',
+  'en wijst naar het herschreven artikel',
   beoordeelHref('/blog/minimumuurtaief-van-36--voor-zzp-ers')?.doel,
-  '/blog/minimumuurtarief-van-36-voor-zzp-ers'
+  '/blog/zzp-inhuren-horeca'
 );
 eq(
   '/nieuws/<oude-slug> komt in één keer op de goede plek uit',
   beoordeelHref('/nieuws/minimumuurtaief-van-36--voor-zzp-ers')?.doel,
-  '/blog/minimumuurtarief-van-36-voor-zzp-ers'
+  '/blog/zzp-inhuren-horeca'
 );
 
 console.log('\n— beoordeelHref(): gewone paden —');

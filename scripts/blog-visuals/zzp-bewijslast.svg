@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img"
+     aria-label="Schema dat laat zien hoe de bewijslast verschuift onder en boven het drempelbedrag van het rechtsvermoeden">
+  <rect width="1200" height="620" fill="#FFFFFF"/>
+
+  <text x="48" y="60" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="30" fill="#111111">Wat het rechtsvermoeden verandert</text>
+  <text x="48" y="92" font-family="DejaVu Sans, Poppins, sans-serif" font-size="17" fill="#6B7280">Niet het tarief, maar de vraag wie iets moet bewijzen</text>
+
+  <!-- Linkerkolom: onder het bedrag -->
+  <rect x="48" y="132" width="536" height="418" rx="16" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="2"/>
+  <rect x="48" y="132" width="536" height="70" rx="16" fill="#7C3AED"/>
+  <rect x="48" y="176" width="536" height="26" fill="#7C3AED"/>
+  <text x="316" y="177" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="22" fill="#FFFFFF" text-anchor="middle">Onder het drempelbedrag</text>
+
+  <text x="80" y="248" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#5B21B6">De zzp'er kan zich beroepen op het vermoeden</text>
+  <text x="80" y="282" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">dat er een arbeidsovereenkomst is.</text>
+
+  <line x1="80" y1="312" x2="552" y2="312" stroke="#DDD6FE" stroke-width="2"/>
+
+  <text x="80" y="352" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Jij moet dan aantonen dat het</text>
+  <text x="80" y="378" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">géén dienstbetrekking is.</text>
+
+  <text x="80" y="424" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">Lukt dat niet, dan gelden loondoorbetaling</text>
+  <text x="80" y="448" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">bij ziekte, ontslagbescherming, vakantiegeld</text>
+  <text x="80" y="472" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">en pensioenafdracht.</text>
+
+  <text x="80" y="518" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#9CA3AF">Het vermoeden is weerlegbaar — geen automatische</text>
+  <text x="80" y="538" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#9CA3AF">herkwalificatie.</text>
+
+  <!-- Rechterkolom: boven het bedrag -->
+  <rect x="616" y="132" width="536" height="418" rx="16" fill="#FAFAFB" stroke="#E5E7EB" stroke-width="2"/>
+  <rect x="616" y="132" width="536" height="70" rx="16" fill="#374151"/>
+  <rect x="616" y="176" width="536" height="26" fill="#374151"/>
+  <text x="884" y="177" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="22" fill="#FFFFFF" text-anchor="middle">Boven het drempelbedrag</text>
+
+  <text x="648" y="248" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#374151">Het vermoeden geldt niet.</text>
+  <text x="648" y="282" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">De bewijslast blijft waar hij was.</text>
+
+  <line x1="648" y1="312" x2="1120" y2="312" stroke="#E5E7EB" stroke-width="2"/>
+
+  <text x="648" y="352" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">Maar schijnzelfstandigheid</text>
+  <text x="648" y="378" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="18" fill="#111111">kan er nog steeds zijn.</text>
+
+  <text x="648" y="424" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">De gewone beoordeling blijft staan: leiding en</text>
+  <text x="648" y="448" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">toezicht, inbedding in de organisatie, vervanging,</text>
+  <text x="648" y="472" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#374151">ondernemersrisico.</text>
+
+  <text x="648" y="518" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#9CA3AF">Een hoog tarief maakt vast ingeroosterd werk</text>
+  <text x="648" y="538" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#9CA3AF">niet zelfstandig.</text>
+
+  <text x="48" y="596" font-family="DejaVu Sans, Poppins, sans-serif" font-size="14" fill="#9CA3AF">Drempelbedrag: €36 in de wettekst (prijspeil 2025), geïndexeerd met het minimumuurloon — in de praktijk €38.</text>
+</svg>

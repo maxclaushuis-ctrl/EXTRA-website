@@ -129,13 +129,20 @@ const REDIRECT_MAP: Record<string, string> = {
   // pleister, geen reparatie.
   "/werkgevers":                        "/personeelsaanvraag",
 
-  // ── P14-RESTPUNT: TYPEFOUT IN EEN SLUG ───────────────────
-  // "minimumuurtaief" mist de r van "tarief". Het artikel heeft geen organisch
-  // verkeer en één inkomende link, dus hernoemen kan zonder risico. De rij in de
-  // database wordt omgezet door `npm run content:links:fix`; deze regel houdt de
-  // oude URL bereikbaar voor wie hem al had.
-  "/blog/minimumuurtaief-van-36--voor-zzp-ers":
-    "/blog/minimumuurtarief-van-36-voor-zzp-ers",
+  // ── HET ZZP-ARTIKEL: TWEE OUDE URL'S, ÉÉN BESTEMMING ─────
+  // Dit artikel is twee keer verhuisd. Eerst om een typefout ("minimumuurtaief"
+  // mist de r van "tarief"), daarna omdat de inhoud niet klopte: het beweerde dat
+  // er een minimumtarief van €36 was vastgesteld. Dat bestaat niet. Wat er wél is
+  // (een rechtsvermoeden vanaf 31 december 2026) is iets heel anders, en een URL
+  // die een verkeerd bedrag roept kun je niet laten staan bij een artikel dat juist
+  // uitlegt dat dat bedrag niet is wat mensen denken.
+  //
+  // Allebei rechtstreeks naar de eindbestemming, niet in een keten: resolveRedirect
+  // slaat ketens weliswaar plat, maar de ketencheck in check-internal-links.ts kijkt
+  // naar de declaratie — en terecht, want een map waarin je moet doorklikken om te
+  // zien waar iets uitkomt, leest niemand goed.
+  "/blog/minimumuurtaief-van-36--voor-zzp-ers":  "/blog/zzp-inhuren-horeca",
+  "/blog/minimumuurtarief-van-36-voor-zzp-ers":  "/blog/zzp-inhuren-horeca",
 
   // ── P14: DUPLICATE CONTENT (identieke pagina, twee URL's) ───
   // Elk paar rendert vandaag dezelfde component (zie client/src/App.tsx) op

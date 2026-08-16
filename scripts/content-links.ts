@@ -45,15 +45,19 @@ import { vondsten, herschrijf, type SlugKennis } from './linkHerschrijver';
  * Elke regel hier hoort een 301 in server/redirects.ts te hebben, anders geeft
  * de oude URL na het hernoemen een 404. Ze horen dus in dezelfde commit thuis.
  *
- * De typefout in "minimumuurtaief" (de r van "tarief" ontbreekt) stond al in de
- * P14-prompt met de aantekening: hernoemen zolang het artikel nauwelijks verkeer
- * of links heeft. De crawl van 16 augustus bevestigt dat — PageRank 0, één
- * inkomende link.
+ * Een hernoeming die is uitgevoerd, haal je hier weg — de 301 blijft staan. Zou
+ * je hem laten staan, dan meldt het script bij elke run "niet meer aanwezig,
+ * overgeslagen", en ruis in een controlescript is precies hoe je stopt met kijken
+ * naar wat het zegt.
  */
 const SLUG_HERNOEMINGEN: { oud: string; nieuw: string }[] = [
+  // Het artikel beweerde dat er een minimumtarief van €36 voor zzp'ers was
+  // vastgesteld. Dat klopt niet, en dat is geen detail: een horeca-ondernemer die
+  // dat leest denkt dat hij klaar is zodra hij dat tarief betaalt. De nieuwe tekst
+  // gaat over het rechtsvermoeden, en de slug hoort daar dan ook bij.
   {
-    oud: 'minimumuurtaief-van-36--voor-zzp-ers',
-    nieuw: 'minimumuurtarief-van-36-voor-zzp-ers',
+    oud: 'minimumuurtarief-van-36-voor-zzp-ers',
+    nieuw: 'zzp-inhuren-horeca',
   },
 ];
 

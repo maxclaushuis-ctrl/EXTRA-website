@@ -61,14 +61,22 @@ assertEq(
   resolveRedirect("/personeelsaanvraag"),
   null
 );
+// Het zzp-artikel is twee keer verhuisd: eerst vanwege een typefout in de slug,
+// daarna omdat de inhoud niet klopte. Beide oude URL's horen rechtstreeks op de
+// eindbestemming uit te komen — niet op elkaar.
 assertEq(
-  "typefout-slug -> gecorrigeerde slug",
+  "typefout-slug -> het herschreven artikel",
   resolveRedirect("/blog/minimumuurtaief-van-36--voor-zzp-ers"),
-  "/blog/minimumuurtarief-van-36-voor-zzp-ers"
+  "/blog/zzp-inhuren-horeca"
 );
 assertEq(
-  "de gecorrigeerde slug verwijst niet door (geen lus)",
+  "tussenliggende slug -> het herschreven artikel",
   resolveRedirect("/blog/minimumuurtarief-van-36-voor-zzp-ers"),
+  "/blog/zzp-inhuren-horeca"
+);
+assertEq(
+  "de eindbestemming verwijst niet door (geen lus)",
+  resolveRedirect("/blog/zzp-inhuren-horeca"),
   null
 );
 
@@ -79,12 +87,12 @@ console.log("\n— resolveRedirect(): ketens worden platgeslagen —");
 assertEq(
   "patroon + exacte regel = één sprong",
   resolveRedirect("/nieuws/minimumuurtaief-van-36--voor-zzp-ers"),
-  "/blog/minimumuurtarief-van-36-voor-zzp-ers"
+  "/blog/zzp-inhuren-horeca"
 );
 assertEq(
   "ook met trailing slash en hoofdletters",
   resolveRedirect("/Nieuws/Minimumuurtaief-van-36--voor-zzp-ers/"),
-  "/blog/minimumuurtarief-van-36-voor-zzp-ers"
+  "/blog/zzp-inhuren-horeca"
 );
 assertEq(
   "een artikel zonder hernoeming houdt zijn normale patroonsprong",

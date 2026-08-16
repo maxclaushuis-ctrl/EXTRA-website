@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img"
+     aria-label="Kalenderblad van 31 december 2026, de datum waarop het rechtsvermoeden op basis van uurtarief ingaat">
+  <defs>
+    <linearGradient id="vlak" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6D28D9"/>
+      <stop offset="100%" stop-color="#4C1D95"/>
+    </linearGradient>
+    <linearGradient id="papier" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F3F0FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#vlak)"/>
+
+  <!-- X-motief, heel subtiel, linksonder -->
+  <g stroke="#8B5CF6" stroke-width="3" opacity="0.35" stroke-linecap="round">
+    <path d="M 60 470 L 150 560 M 150 470 L 60 560"/>
+    <path d="M 190 510 L 250 570 M 250 510 L 190 570"/>
+    <path d="M 1040 90 L 1130 180 M 1130 90 L 1040 180"/>
+  </g>
+
+  <!-- Kalenderblad -->
+  <g>
+    <rect x="430" y="130" width="340" height="370" rx="26" fill="url(#papier)"/>
+    <rect x="430" y="130" width="340" height="86" rx="26" fill="#111111"/>
+    <rect x="430" y="186" width="340" height="30" fill="#111111"/>
+    <text x="600" y="186" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="26"
+          fill="#FFFFFF" text-anchor="middle" letter-spacing="4">DECEMBER</text>
+
+    <text x="600" y="360" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="150"
+          fill="#111111" text-anchor="middle">31</text>
+
+    <line x1="486" y1="400" x2="714" y2="400" stroke="#DDD6FE" stroke-width="3"/>
+    <text x="600" y="450" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="400" font-size="40"
+          fill="#6B7280" text-anchor="middle" letter-spacing="6">2026</text>
+
+    <!-- ringetjes bovenaan -->
+    <g fill="#DDD6FE">
+      <circle cx="520" cy="130" r="9"/>
+      <circle cx="600" cy="130" r="9"/>
+      <circle cx="680" cy="130" r="9"/>
+    </g>
+  </g>
+</svg>
