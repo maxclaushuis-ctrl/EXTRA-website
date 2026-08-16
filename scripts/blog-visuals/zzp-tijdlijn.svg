@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img"
+     aria-label="Tijdlijn met de handhaving op schijnzelfstandigheid van 2025 tot en met 2027">
+  <rect width="1200" height="480" fill="#FFFFFF"/>
+
+  <text x="48" y="58" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="28" fill="#111111">Handhaving op schijnzelfstandigheid</text>
+  <text x="48" y="88" font-family="DejaVu Sans, Poppins, sans-serif" font-size="16" fill="#6B7280">Wat er wanneer verandert voor opdrachtgevers</text>
+
+  <!-- lijn -->
+  <line x1="110" y1="180" x2="1110" y2="180" stroke="#DDD6FE" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- 1: 1 jan 2025 -->
+  <circle cx="180" cy="180" r="14" fill="#7C3AED"/>
+  <text x="180" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="17" fill="#5B21B6" text-anchor="middle">1 jan 2025</text>
+  <rect x="72" y="216" width="216" height="150" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="96" y="252" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#111111">Moratorium voorbij</text>
+  <text x="96" y="284" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">Naheffingen mogelijk,</text>
+  <text x="96" y="306" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">maar alleen over werk</text>
+  <text x="96" y="328" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">vanaf deze datum.</text>
+
+  <!-- 2: 2026 -->
+  <circle cx="480" cy="180" r="14" fill="#7C3AED"/>
+  <text x="480" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="17" fill="#5B21B6" text-anchor="middle">2026</text>
+  <rect x="372" y="216" width="216" height="150" rx="12" fill="#F5F0FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="396" y="252" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#111111">Geen verzuimboetes</text>
+  <text x="396" y="284" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">Vergrijpboetes wél, bij</text>
+  <text x="396" y="306" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">opzet of grove schuld.</text>
+
+  <!-- 3: 31 dec 2026 -->
+  <circle cx="780" cy="180" r="18" fill="#111111"/>
+  <text x="780" y="142" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="17" fill="#111111" text-anchor="middle">31 dec 2026</text>
+  <rect x="672" y="216" width="216" height="150" rx="12" fill="#111111"/>
+  <text x="696" y="252" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#FFFFFF">Rechtsvermoeden</text>
+  <text x="696" y="284" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">Onder het bedrag</text>
+  <text x="696" y="306" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">verschuift de bewijslast</text>
+  <text x="696" y="328" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#E5E7EB">naar de opdrachtgever.</text>
+
+  <!-- 4: 1 jan 2027 -->
+  <circle cx="1050" cy="180" r="14" fill="#9CA3AF"/>
+  <text x="1050" y="146" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="700" font-size="17" fill="#6B7280" text-anchor="middle">1 jan 2027</text>
+  <rect x="942" y="216" width="216" height="150" rx="12" fill="#FAFAFB" stroke="#E5E7EB" stroke-width="1.5"/>
+  <text x="966" y="252" font-family="DejaVu Sans, Poppins, sans-serif" font-weight="600" font-size="16" fill="#111111">Coulance loopt af</text>
+  <text x="966" y="284" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">Verzuimboetes kunnen</text>
+  <text x="966" y="306" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">dan weer worden</text>
+  <text x="966" y="328" font-family="DejaVu Sans, Poppins, sans-serif" font-size="15" fill="#374151">opgelegd.</text>
+
+  <text x="48" y="432" font-family="DejaVu Sans, Poppins, sans-serif" font-size="14" fill="#9CA3AF">Een naheffing volgt op een boekenonderzoek. Het beeld dat er niet wordt gehandhaafd, klopt niet.</text>
+</svg>

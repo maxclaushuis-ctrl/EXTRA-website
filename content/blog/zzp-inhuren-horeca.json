@@ -1,0 +1,32 @@
+{
+  "title": "Zzp'ers inhuren in de horeca: dit verandert er in 2026",
+  "slug": "zzp-inhuren-horeca",
+  "excerpt": "Er komt géén minimumtarief van €36 voor zzp'ers — dat misverstand houdt hardnekkig stand. Wat er wél komt is een rechtsvermoeden per 31 december 2026, en dat verschuift de bewijslast naar jou als opdrachtgever.",
+  "metaTitle": "Zzp'ers inhuren in de horeca: de regels vanaf 2026",
+  "metaDescription": "Geen minimumtarief, wél een rechtsvermoeden vanaf 31 december 2026. Wat de nieuwe wet betekent als je in de horeca met zzp'ers werkt — en wat je nu doet.",
+  "focusKeyword": "zzp inhuren horeca",
+  "category": "Branche",
+  "imageUrl": "/images/zzp-inhuren-horeca.webp",
+  "imageAlt": "Kalenderblad van 31 december 2026, de datum waarop het rechtsvermoeden op basis van uurtarief ingaat",
+  "author": "EXTRA Redactie",
+  "readTime": "8 min",
+  "tags": ["zzp", "wetgeving", "horeca", "schijnzelfstandigheid"],
+
+  "_notities": [
+    "Vervangt het oude artikel op /blog/minimumuurtarief-van-36-voor-zzp-ers. Dat artikel stelde dat er een minimumtarief van €36 was vastgesteld — dat klopt niet, en het gaf horeca-ondernemers een verkeerd beeld van hun risico.",
+    "De rij in blog_posts wordt hernoemd door npm run content:links:fix (SLUG_HERNOEMINGEN in scripts/content-links.ts). Dráái die eerst; publish:blog werkt op slug en zou anders een tweede artikel aanmaken.",
+    "metaDescription staat óók zichtbaar als cursieve intro onder de H1 (NieuwsArtikel.tsx) — geschreven als gewone leesbare zin.",
+    "Bewust geen jaartal in de slug: de regels rond schijnzelfstandigheid schuiven jaarlijks op en dit artikel is bedoeld om bijgewerkt te worden, niet vervangen."
+  ],
+
+  "_feitencontrole": [
+    "Wet invoering rechtsvermoeden van arbeidsovereenkomst op basis van uurtarief (Kamerstuk 36.783), wijziging Boek 7 BW — aangenomen Tweede Kamer 21 april 2026, Eerste Kamer 16 juni 2026, Staatsblad 29 juni 2026 nr. 158. Bevestigd via eerstekamer.nl.",
+    "Inwerkingtreding 31 december 2026 — de wet zelf zegt 'bij koninklijk besluit te bepalen tijdstip'; 31 december 2026 is de vastgestelde datum volgens meerdere vakbronnen. Als zodanig genuanceerd in de tekst.",
+    "Bedrag in de wettekst: €36 (prijspeil 2025), geïndexeerd met het wettelijk minimumuurloon en naar boven afgerond op hele euro's; het toepasselijke bedrag wordt bij ministeriële regeling vastgesteld. Bevestigd.",
+    "Wettelijk minimumuurloon €14,71 per 1 januari 2026 → €37,07 → afgerond €38. Bevestigd via zzpnieuws.nl, dat expliciet benoemt dat de €38 nog niet formeel is vastgelegd.",
+    "Handhaving: moratorium geëindigd 1 januari 2025; naheffingen alleen over werk vanaf die datum; in 2026 geen verzuimboetes (tot 1 januari 2027), vergrijpboetes wél mogelijk bij opzet of grove schuld. Bevestigd via twee onafhankelijke vakbronnen.",
+    "KHN over ingebedde werkzaamheden (bediening, bar, keuken, afwas) — letterlijk geverifieerd op khn.nl.",
+    "SZW-cijfer: circa 15% van de zzp'ers werkt onder het drempelbedrag, op basis van de Zelfstandigen Enquête Arbeid (TNO/CBS). Een uitsplitsing specifiek voor de horeca is in die publicatie NIET gegeven en staat daarom bewust niet in de tekst.",
+    "Tarieven van individuele horecafuncties zijn NIET genoemd: daar is geen betrouwbare openbare bron voor en het artikel verzint geen marktcijfers."
+  ]
+}

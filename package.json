@@ -17,6 +17,7 @@
     "seed:vacatures": "tsx scripts/seed-vacatures.ts",
     "publish:blog": "tsx scripts/publish-blog.ts",
     "publish:blog:dev": "tsx scripts/publish-blog.ts --dev",
+    "blog:opruimen": "tsx scripts/blog-opruimen.ts",
     "wa:classificatie-live": "tsx scripts/wa-classificatie-live.ts",
     "sales:test": "tsx server/salesflowLogic.test.ts",
     "medewerkers:test": "tsx shared/vaardigheden.test.ts",
