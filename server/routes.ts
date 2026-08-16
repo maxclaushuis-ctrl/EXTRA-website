@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
 import { storage } from "./storage";
+import { meldAan } from "./indexnow";
 import { ROUTE_META, SITE_ORIGIN } from "@shared/routeMeta";
 import { moveCardToPhase, markNotReached } from "./salesflow";
 import { geocodeNlAddress } from "./geocode";
@@ -338,17 +339,16 @@ async function scheduleBirthdayCheck() {
   }, timeUntilNextCheck);
 }
 
-async function pingGoogleSitemap() {
-  const sitemapUrl = 'https://www.doehetextra.nl/sitemap.xml';
-  try {
-    const res = await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`);
-    console.log(`Google sitemap ping: ${res.status}`);
-  } catch (err) {
-    console.warn('Google sitemap ping mislukt:', err);
-  }
-}
-
-export { pingGoogleSitemap };
+/**
+ * Google's sitemap-ping (https://www.google.com/ping?sitemap=…) stond hier tot
+ * augustus 2026. Google heeft dat endpoint in 2023 aangekondigd als vervallen en
+ * inmiddels uitgezet; het verzoek gaf al een tijd een 404 en deed dus niets. Het
+ * is vervangen door meldAan() uit server/indexnow.ts, dat wél een werkend
+ * kanaal aanspreekt (Bing, Yandex, Seznam, Naver, Yep, Amazon).
+ *
+ * Voor Google zelf blijft de weg: sitemap.xml plus Search Console. Daar is geen
+ * ping-API meer voor, dat is niet iets wat hier op te lossen valt.
+ */
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize mail service
@@ -9320,6 +9320,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const post = await storage.updateBlogPost(id, req.body);
       if (!post) return res.status(404).json({ error: 'Niet gevonden' });
+      // Alleen bij een gepubliceerd artikel: een concept bijwerken is geen
+      // wijziging die een zoekmachine aangaat. Het herhaalvenster in
+      // indexnow.ts vangt het meermaals opslaan tijdens het redigeren af.
+      if (post.status === 'published') meldAan([`/blog/${post.slug}`]);
       res.json(post);
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -9343,7 +9347,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const post = await storage.updateBlogPost(id, { status: 'published', publishedAt: new Date() });
       if (!post) return res.status(404).json({ error: 'Niet gevonden' });
-      pingGoogleSitemap();
+      // Niet awaiten: de redacteur hoeft niet te wachten op een zoekmachine, en
+      // meldAan() werpt nooit (zie server/indexnow.ts).
+      meldAan([`/blog/${post.slug}`, '/blog']);
       res.json(post);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -9559,6 +9565,7 @@ ${vacancies.map(v => `  <url>
       const id = parseInt(req.params.id);
       const post = await storage.updateVacancyPost(id, req.body);
       if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      if (post.status === 'published') meldAan([`/vacatures/${post.slug}`]);
       res.json(post);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -9581,6 +9588,7 @@ ${vacancies.map(v => `  <url>
       const id = parseInt(req.params.id);
       const post = await storage.updateVacancyPost(id, { status: 'published', publishedAt: new Date() });
       if (!post) return res.status(404).json({ message: 'Niet gevonden' });
+      meldAan([`/vacatures/${post.slug}`, '/vacatures']);
       res.json(post);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
